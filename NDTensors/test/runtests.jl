@@ -5,7 +5,6 @@ ops = Vector{Function}(undef, 1)
 ops[1] = NDTensors.cpu
 
 import Pkg
-Pkg.add("Requires")
 
 use_cuda = false
 if use_cuda
@@ -17,7 +16,7 @@ if use_cuda
   end
 end
 
-use_mtl = true
+use_mtl = false
 if use_mtl
   Pkg.add("Metal")
   using Metal
@@ -32,11 +31,11 @@ end
     "linearalgebra.jl",
     "dense.jl",
     "blocksparse.jl",
-    # "diag.jl",
-    # "emptynumber.jl",
-    # "emptystorage.jl",
-    # "combiner.jl",
-   ]
+    "diag.jl",
+    "emptynumber.jl",
+    "emptystorage.jl",
+    "combiner.jl",
+  ]
     println("Running $filename")
     include(filename)
   end
