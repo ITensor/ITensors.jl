@@ -1,22 +1,29 @@
 using Test
 using NDTensors
-using Pkg: Pkg
-Pkg.add("Requires")
-using Requires
-use_cuda = true
-if use_cuda
-  Pkg.add("CUDA")
-  using CUDA
-end
 
 ops = Vector{Function}(undef, 1)
 ops[1] = NDTensors.cpu
-@require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+
+import Pkg
+
+use_cuda = false
+if use_cuda
+  Pkg.add("CUDA")
+  using CUDA
   CUDA.allowscalar()
   if CUDA.functional()
     push!(ops, NDTensors.cu)
   end
 end
+
+use_mtl = false
+if use_mtl
+  Pkg.add("Metal")
+  using Metal
+  push!(ops, NDTensors.mtl)
+  Metal.allowscalar()
+end
+
 
 @testset "NDTensors" begin
   @testset "$filename" for filename in [
