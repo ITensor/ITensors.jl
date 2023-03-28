@@ -2,9 +2,10 @@ using NDTensors
 using LinearAlgebra
 
 function LinearAlgebra.norm(x::Metal.MtlArray)
-  v = eltype(x)(0.0)
+  v = real(eltype(x))(0.0)
+  @show typeof(v)
   for i in x
-    v += i * i
+    v += real(conj(i) * i)
   end
   return sqrt(v)
 end
