@@ -11,7 +11,8 @@ end
 
 @inline function NDTensors.cu(xs::AbstractArray; unified::Bool=false)
   ElT = eltype(xs)
+  N = ndims(xs)
   return NDTensors.adapt_structure(
-    CuVector{ElT,(unified ? CUDA.Mem.UnifiedBuffer : CUDA.Mem.DeviceBuffer)}, xs
+    CuArray{ElT, N, (unified ? CUDA.Mem.UnifiedBuffer : CUDA.Mem.DeviceBuffer)}, xs
   )
 end
