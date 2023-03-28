@@ -41,5 +41,9 @@ grad[1]
 grad[2]
 grad[3]
 
-@show data(storage(B))
-svd(B, (j))
+ITensors.qr(A, (i,), (j,l,))
+
+typeof(storage(A))
+## This doesn't yet work baceuse making things like onehot create vectors instead of 
+## CuVectors...
+ITensors.svd(A, (i,), (j,l))
