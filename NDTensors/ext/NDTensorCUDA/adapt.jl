@@ -6,7 +6,7 @@ to_vector_type(arraytype::Type{CuArray}) = CuVector
 to_vector_type(arraytype::Type{CuArray{T}}) where {T} = CuVector{T}
 
 @inline function NDTensors.cu(xs; unified::Bool=false)
-  CUDA.cu(xs; unified)
+  return CUDA.cu(xs; unified)
 end
 
 @inline function NDTensors.cu(xs::AbstractArray; unified::Bool=false)

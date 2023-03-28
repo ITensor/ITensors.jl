@@ -4,7 +4,7 @@ using NDTensors
 ops = Vector{Function}(undef, 1)
 ops[1] = NDTensors.cpu
 
-import Pkg
+using Pkg: Pkg
 
 use_cuda = false
 if use_cuda
@@ -23,7 +23,6 @@ if use_mtl
   push!(ops, NDTensors.mtl)
   Metal.allowscalar()
 end
-
 
 @testset "NDTensors" begin
   @testset "$filename" for filename in [

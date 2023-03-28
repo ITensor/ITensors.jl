@@ -673,7 +673,9 @@ copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 #
 
 # Helper functions for different view behaviors
-Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = NDTensors.similartype(A, ElT)(A)#Array{ElT,N}(A)
+function Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N}
+  return NDTensors.similartype(A, ElT)(A)
+end#Array{ElT,N}(A)
 function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
   return convert(AbstractArray{ElT,N}, A)
 end

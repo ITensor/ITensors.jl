@@ -27,11 +27,10 @@ B = mtl(B)
 
 A * B
 
-dim3 = (l,k);
+dim3 = (l, k);
 dim4 = (i,)
 C = ITensor(NDTensors.generic_randn(MtlVector{Float64}, dim(dim3)), dim3)
 D = ITensor(NDTensors.generic_randn(MtlVector{Float64}, dim(dim4)), dim4)
-
 
 f(A, B, C, D) = (A * B * C * D)[]
 using Zygote

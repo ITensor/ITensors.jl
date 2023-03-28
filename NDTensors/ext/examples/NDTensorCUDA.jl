@@ -27,7 +27,7 @@ B = cu(B)
 
 A * B
 
-dim3 = (l,k);
+dim3 = (l, k);
 dim4 = (i,)
 C = ITensor(NDTensors.generic_randn(CuVector, dim(dim3)), dim3)
 D = ITensor(Tensor(CuVector, dim4))
