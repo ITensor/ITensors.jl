@@ -4,7 +4,7 @@ using Compat
 using ITensors
 using ITensors.NDTensors
 using LinearAlgebra
-
+using F_utilities
 import LinearAlgebra: Givens
 
 export slater_determinant_to_mps,

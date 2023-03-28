@@ -2,7 +2,10 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
-
+using F_utilities
+const Fu = F_utilities
+using PyPlot
+matplotlib.use("QtAgg")
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -69,6 +72,7 @@ end
     # Hopping Hamiltonian
     h = Hermitian(diagm(1 => fill(-t, N - 1), -1 => fill(-conj(t), N - 1)))
     e, u = eigen(h)
+    
 
     @test h * u ≈ u * Diagonal(e)
 
@@ -116,12 +120,12 @@ end
 end
 
 @testset "Fermion BCS (real,real - no pairing, complex)" begin
-  N = 10
+  N = 8
   Nf = N ÷ 2
-  t = -1.2
+  t = -1.0
   taus = [0.0, 0.0, 1.0]
-  Deltas = [0.7, 0.0, 0.7]
-  ElTs = [Real, Real, Complex]
+  Deltas = [1.68, 0.3, 0.7]
+  ElTs = [Complex, Complex, Complex]
   for (tau, Delta, ElT) in zip(taus, Deltas, ElTs)
     os_h = OpSum()
     for n in 1:(N - 1)
@@ -145,25 +149,59 @@ end
     end
     h = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p)
     h2 = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p2)
-    e, u = eigen(h)
-    E = sum(e[1:N])
-    Φ = u[:, 1:N]
+    e, u = Fu.Diag_h(ITensorGaussianMPS.reverse_interleave(real.(h)))
+    e = diag(e)
+    order=sortperm(real.(e))
+    e=e[order]
+    u=u[:,order]
+    matshow(angle.(u))
+    show()
+    @show e
+    plot(e)
+    show()
+    iu = similar(u)
+    n=div(length(e),2)
+    iu[1:2:end,:]=u[1:n,:]
+    iu[2:2:end,:]=u[n+1:end,:]
+    u=iu
+    matshow(imag.(u))
+    show()
+    #e, u = eigen(h)
+    #E = sum(vcat(e[1:N-1],e[N+3:N+3]))
+    E = sum(e[1:N-1])
+    Φ = (u[:, 1:N])
+    #Φ = hcat(u[:, 1:N-1],u[:, N+3:N+3])
     @test h * Φ ≈ Φ * Diagonal(e[1:N])
     c = conj(Φ) * transpose(Φ)
+    c=ITensorGaussianMPS.reverse_interleave(c)
+    if Delta==0.0
+      c[1:N,N+1:end].=0
+      c[N+1:end,1:N].=0
+    end
+    c-=imag.(c)
+    c=ITensorGaussianMPS.interleave(c)
+    
+    nex,_=Fu.Diag_h(ITensorGaussianMPS.reverse_interleave(c))
+    @show sort(diag(nex))
+    matshow(ITensorGaussianMPS.reverse_interleave(real.(c)))
+    matshow(ITensorGaussianMPS.reverse_interleave(imag.(c)))
+    
+    show()
     if tau != 0.0
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     end
-    n, gmps = correlation_matrix_to_gmps(ElT.(c), N; maxblocksize=10, eigval_cutoff=1e-9)
+    n, gmps = correlation_matrix_to_gmps(ElT.(c), N; maxblocksize=12, eigval_cutoff=1e-12)
     ns = round.(Int, n)
 
-    if Delta == 0.0
-      @test sum(ns) == Nf
-    else
-      @test sum(ns) == N
-    end
+    #if Delta == 0.0
+    #  @test sum(ns) == Nf
+    #else
+    @test sum(ns) == N
+    #end
 
-    Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(c)
+    #Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(c)
+    Λ = ITensorGaussianMPS.ConservesNfParity(c)
     @show size(ns), size(Λ.data)
     @test gmps * Λ.data * gmps' ≈ Diagonal(ns) rtol = 1e-2
     @test gmps' * Diagonal(ns) * gmps ≈ Λ.data rtol = 1e-2

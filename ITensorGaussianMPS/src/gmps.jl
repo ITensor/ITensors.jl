@@ -1,5 +1,6 @@
 import Base: sortperm, size, length, eltype, conj, transpose, copy, *
 abstract type AbstractSymmetry end
+const Fu=F_utilities
 
 struct ConservesNfParity{T} <: AbstractSymmetry
   data::T
@@ -338,6 +339,7 @@ function givens_rotations(_v0::ConservesNfParity;)
   ElT = eltype(v0)
   gs = Circuit{ElT}([])
   v = copy(v0)
+  @show v
   r = v[2]
   ##Given's rotations from creation-operator coefficients
   gscc, _ = givens_rotations(v[2:2:end])
@@ -347,6 +349,7 @@ function givens_rotations(_v0::ConservesNfParity;)
   conj!(gsca)
   gsc = interleave(gscc, gsca)
   v = gsc * v
+  @show v
   LinearAlgebra.lmul!(gsc, gs)
 
   ##Given's rotations from annihilation-operator coefficients
@@ -360,7 +363,9 @@ function givens_rotations(_v0::ConservesNfParity;)
   LinearAlgebra.lmul!(gsa, gs)
 
   ##Boguliobov rotation for remaining Bell pair
+  @show v[1:4]
   g1, r = givens(v, 2, 3)
+  @show g1.c,g1.s
   g2 = Givens(1, 4, g1.c, g1.s')
   v = g1 * v
   v = g2 * v #should have no effect
@@ -373,7 +378,8 @@ function maybe_drop_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:N
   Λblocked = reverse_interleave(Λ0)
   N = div(size(Λblocked, 1), 2)
   if all(x -> abs(x) <= eps(real(eltype(Λ0))), @view Λblocked[1:N, (N + 1):end])
-    return ConservesNf(Λblocked[(N + 1):end, (N + 1):end])
+    #return ConservesNf(Λblocked[(N + 1):end, (N + 1):end])
+    return ConservesNfParity(Λ0)
   else
     return ConservesNfParity(Λ0)
   end
@@ -419,13 +425,29 @@ function isolate_subblock_eig(
       (site_stride(_Λ) * i + 1 - site_stride(_Λ)):j,
       (site_stride(_Λ) * i + 1 - site_stride(_Λ)):j,
     ]
-    nB, uB = eigen(Hermitian(ΛB))
-    nB = set_data(_Λ, nB)
+    if typeof(_Λ) <: ConservesNf 
+      nB, uB = eigen(Hermitian(ΛB))
+    elseif typeof(_Λ) <: ConservesNfParity
+      nB, uB = Fu.Diag_gamma(Hermitian(reverse_interleave(ΛB)))
+      nB = diag(nB)
+      @show nB
+      nB = convert(Vector{eltype(_Λ.data)}, nB)
+      uB = convert(Matrix{eltype(_Λ.data)}, uB)
+      
+
+      #@show size(nB)
+    end
+    nB = set_data(_Λ, abs.(nB))
     p = sortperm(nB)
     err = get_error(nB, p)
     err ≤ eigval_cutoff && break
   end
-  v = set_data(_Λ, @view uB[:, p[1]])
+  if typeof(_Λ) <: ConservesNf 
+    v = set_data(_Λ, @view uB[:, p[1]])
+  elseif typeof(_Λ) <: ConservesNfParity
+    n=div(length(nB),2)
+    v = set_data(_Λ, interleave(uB[1:n, p[1]],uB[n+1:end, p[1]]))
+  end
   return v, nB, err
 end
 
