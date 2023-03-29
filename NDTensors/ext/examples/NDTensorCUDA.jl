@@ -41,12 +41,12 @@ grad[1]
 grad[2]
 grad[3]
 
-ITensors.qr(A, (i,), (j,l,))
+ITensors.qr(A, (i,), (j, l))
 
 typeof(storage(A))
 ## This doesn't yet work baceuse making things like onehot create vectors instead of 
 ## CuVectors...
-ITensors.svd(A, (i,), (j,l))
+ITensors.svd(A, (i,), (j, l))
 
 s = ITensors.siteinds("S=1/2", 20)
 m = randomMPS(s; linkdims=50)
