@@ -230,7 +230,8 @@ function __init__()
       include("../ext/NDTensorTBLIS/NDTensorTBLIS.jl")
     end
     @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
-      include("linearalgebra/octavian.jl")
+      #include("linearalgebra/octavian.jl")
+      include("../ext/NDTensorOctavian/NDTensorOctavian.jl")
     end
 
     @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
