@@ -2,7 +2,9 @@ using CUDA
 using NDTensors
 
 using ITensors
-
+using Test
+using Adapt
+# using ITensorGPU
 # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
 i = Index(20)
 j = Index(5)
@@ -15,6 +17,7 @@ dim2 = (j, k)
 A = ITensor(NDTensors.generic_randn(CuVector, dim(dim1)), dim1)
 B = ITensor(NDTensors.generic_randn(CuVector, dim(dim2)), dim2)
 C = A * B
+@test eltype(C) == Float64
 
 A = ITensor(Float32, dim1)
 B = ITensor(Float64, dim2)
@@ -25,6 +28,8 @@ fill!(B, randn())
 A = NDTensors.cu(A)
 B = NDTensors.cu(B)
 
+typeof(storage(A * B))
+@which NDTensors.cu(A)
 A * B
 
 dim3 = (l, k);
@@ -37,13 +42,25 @@ f(A, B, C, D) = (A * B * C * D)[]
 using Zygote
 
 grad = gradient(f, A, B, C, D)
-grad[1]
-grad[2]
+typeof(storage(grad[1]))
+typeof(storage(grad[2]))
 grad[3]
+
+decomp = (dim(NDTensors.ind(grad[1], 1)), dim(NDTensors.ind(grad[1], 2)) * dim(NDTensors.ind(grad[1], 3)))
+data = CUDA.reshape(NDTensors.data(storage(grad[1])), decomp)
+U,S,V = svd(data)
+grad[2]
+decomp = (dim(NDTensors.ind(grad[2], 1)), dim(NDTensors.ind(grad[2], 2)))
+data = CUDA.reshape(NDTensors.data(storage(grad[2])), decomp)
+U,S,V = svd(data)
+
+CUDA.memory_status()
+
+grad = nothing
+CUDA.reclaim()
 
 ITensors.qr(A, (i,), (j, l))
 
-typeof(storage(A))
 ## This doesn't yet work baceuse making things like onehot create vectors instead of 
 ## CuVectors...
 ITensors.svd(A, (i,), (j, l))
