@@ -14,5 +14,5 @@ include("import.jl")
 include("octavian.jl")
 
 
-#export backend_octavian
+export backend_octavian
 end
