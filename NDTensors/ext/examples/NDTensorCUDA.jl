@@ -46,13 +46,16 @@ typeof(storage(grad[1]))
 typeof(storage(grad[2]))
 grad[3]
 
-decomp = (dim(NDTensors.ind(grad[1], 1)), dim(NDTensors.ind(grad[1], 2)) * dim(NDTensors.ind(grad[1], 3)))
+decomp = (
+  dim(NDTensors.ind(grad[1], 1)),
+  dim(NDTensors.ind(grad[1], 2)) * dim(NDTensors.ind(grad[1], 3)),
+)
 data = CUDA.reshape(NDTensors.data(storage(grad[1])), decomp)
-U,S,V = svd(data)
+U, S, V = svd(data)
 grad[2]
 decomp = (dim(NDTensors.ind(grad[2], 1)), dim(NDTensors.ind(grad[2], 2)))
 data = CUDA.reshape(NDTensors.data(storage(grad[2])), decomp)
-U,S,V = svd(data)
+U, S, V = svd(data)
 
 CUDA.memory_status()
 
