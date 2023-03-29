@@ -22,8 +22,8 @@ B = ITensor(Float64, dim2)
 fill!(A, randn())
 fill!(B, randn())
 
-A = cu(A)
-B = cu(B)
+A = NDTensors.cu(A)
+B = NDTensors.cu(B)
 
 A * B
 
@@ -47,3 +47,25 @@ typeof(storage(A))
 ## This doesn't yet work baceuse making things like onehot create vectors instead of 
 ## CuVectors...
 ITensors.svd(A, (i,), (j,l))
+
+s = ITensors.siteinds("S=1/2", 20)
+m = randomMPS(s; linkdims=50)
+@which NDTensors.cu(m)
+cm = NDTensors.cu(m);
+
+typeof(storage(m[1]))
+typeof(storage(cm[1]))
+
+inner(cm', cm)
+
+H = NDTensors.cu(randomMPO(s))
+inner(cm', H, cm)
+
+#This currently doesn't work without cu because orthogonalize transforms ITensors back to CPU vectors
+cm = NDTensors.cu(orthogonalize(cm, 1))
+H = NDTensors.cu(orthogonalize(H, 1))
+
+@show storage(cm[1])
+@show storage(H[1])
+
+inner(cm', H, cm)
