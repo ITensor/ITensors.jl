@@ -225,7 +225,7 @@ end
 
 function backend_octavian()
   throw(UndefVarError)
- end
+end
 
 function __init__()
   @static if !isdefined(Base, :get_extension)

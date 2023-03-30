@@ -1,3 +1,1 @@
-import NDTensors: 
-  _gemm!,
-  backend_octavian
+import NDTensors: _gemm!, backend_octavian

@@ -35,7 +35,7 @@ end
 function Base.:*(x::Number, S::Metal.MtlArray)
   newV = similar(S)
   for i in 1:length(S)
-     newV[i] = S[i] * (x)
+    newV[i] = S[i] * (x)
   end
   return newV
 end
