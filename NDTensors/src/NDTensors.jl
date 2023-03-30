@@ -230,15 +230,18 @@ function __init__()
       include("../ext/NDTensorTBLIS/NDTensorTBLIS.jl")
     end
     @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
-      include("linearalgebra/octavian.jl")
+      #include("linearalgebra/octavian.jl")
+      include("../ext/NDTensorOctavian/NDTensorOctavian.jl")
     end
 
+    #@require !ITensorGPU = "d89171c1-af8f-46b3-badf-d2a472317c15" begin
     @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
       println("NDTensors has CUDA")
       if CUDA.functional()
         include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
       end
     end
+    #end
     @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
       println("NDTensors has Metal")
       include("../ext/NDTensorMetal/NDTensorMetal.jl")

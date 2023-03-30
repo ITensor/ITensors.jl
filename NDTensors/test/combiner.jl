@@ -53,7 +53,7 @@ using ITensors: QN, Index
           input_tensor_inds,
         ),
       )
-      combiner_tensor = op(tensor(Combiner([1], [1]), combiner_tensor_inds))
+      combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
 
       output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
       @test output_tensor isa BlockSparseTensor
@@ -70,11 +70,13 @@ using ITensors: QN, Index
 
       # Catch invalid combining
       invalid_input_tensor_inds = (k,)
-      invalid_input_tensor = tensor(
-        BlockSparse(
-          randn(dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])
+      invalid_input_tensor = op(
+        tensor(
+          BlockSparse(
+            randn(dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])
+          ),
+          invalid_input_tensor_inds,
         ),
-        invalid_input_tensor_inds,
       )
       combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
       @test_throws Any contract(invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1))
