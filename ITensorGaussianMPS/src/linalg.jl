@@ -1,7 +1,14 @@
+"""
+Some of the functionality in this script is closely related to routines in the following package
+https://github.com/Jacupo/F_utilities
+and the associated publication
+10.21468/SciPostPhysLectNotes.54
+"""
 
 """Takes a single-particle Hamiltonian in blocked Dirac format and finds the fermionic transformation U that diagonalizes it"""
 function _fermionic_eigen(H)
     #make sure H is Hermitian
+    @assert ishermitian(H)
     H=Hermitian(H)
     ElT=eltype(H)
     #convert from Dirac to Majorana picture
@@ -40,7 +47,7 @@ function fermionic_diag_corr(Λ::Hermitian)
     #shift correlation matrix by half so spectrum is symmetric around 0
     populations, U = fermionic_eigen(Λ-0.5*I)
     n = diag(U'*Λ*U)
-    @assert all(abs.(populations- (n -0.5*ones(size(n)))) .< 1e-8)
+    @assert all(abs.(populations- (n -0.5*ones(size(n)))) .< sqrt(eps(real(eltype(Λ)))))
     return n,U
 end
 
@@ -122,7 +129,7 @@ function make_real_if_possible(U0::AbstractMatrix,spectrum::Vector;sigdigits=14)
 end
 
 """Checks if we can make a degenerate subspace of the eigenbasis of an operator real by multiplying columns or rows with a phase"""
-function make_subspace_real_if_possible(U::AbstractMatrix;atol=1e-11)
+function make_subspace_real_if_possible(U::AbstractMatrix;atol=sqrt(eps(real(eltype(U)))))
     if eltype(U) <: Real
         return U
     end
