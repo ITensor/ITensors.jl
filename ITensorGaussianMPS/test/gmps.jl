@@ -2,10 +2,7 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
-using F_utilities
-const Fu = F_utilities
-using PyPlot
-matplotlib.use("QtAgg")
+
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -152,27 +149,14 @@ end
     end
     h = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p)
     h2 = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p2)
-   # e, u = Fu.Diag_h(ITensorGaussianMPS.reverse_interleave(real.(h)))
     e, u = ITensorGaussianMPS.fermionic_eigen(real.(h))
-   # e = diag(e)
-   # @test e ≈ e2
+
     
     order=sortperm(real.(e))
     e=e[order]
     u=u[:,order]
-    @show e
-    plot(e)
-    show()
-    iu = similar(u)
-    n=div(length(e),2)
-    #iu[1:2:end,:]=u[1:n,:]
-    #iu[2:2:end,:]=u[n+1:end,:]
-    #u=iu
-    #e, u = eigen(h)
-    #E = sum(vcat(e[1:N-1],e[N+3:N+3]))
     E = sum(e[1:N-1])
     Φ = (u[:, 1:N])
-    #Φ = hcat(u[:, 1:N-1],u[:, N+3:N+3])
     @test h * Φ ≈ Φ * Diagonal(e[1:N])
     c = conj(Φ) * transpose(Φ)
     c=ITensorGaussianMPS.reverse_interleave(c)
@@ -182,51 +166,28 @@ end
     end
     c-=imag.(c)
     c=ITensorGaussianMPS.interleave(c)
-    
-    nex,_=Fu.Diag_h(ITensorGaussianMPS.reverse_interleave(c))
-    #@show sort(diag(nex))
-    #matshow(ITensorGaussianMPS.reverse_interleave(real.(c)))
-    #matshow(ITensorGaussianMPS.reverse_interleave(imag.(c)))
-    
-    show()
     if tau != 0.0
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     elseif ElT<:Real 
       c=real.(c)
-      
     end
-    matshow(abs.(c))
-    show()
     n, gmps = correlation_matrix_to_gmps(ElT.(c), N; maxblocksize=12, eigval_cutoff=1e-12)
     ns = round.(Int, n)
-
-    #if Delta == 0.0
-    #  @test sum(ns) == Nf
-    #else
     @test sum(ns) == N
-    #end
-
-    #Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(c)
+    
     Λ = ITensorGaussianMPS.ConservesNfParity(c)
-    @show eltype(Λ)
-    @show size(ns), size(Λ.data)
-    matshow(real.(gmps * Λ.data * gmps'))
-    matshow(real.(Diagonal(ns)))
-    show()
     @test gmps * Λ.data * gmps' ≈ Diagonal(ns) rtol = 1e-2
     @test gmps' * Diagonal(ns) * gmps ≈ Λ.data rtol = 1e-2
-    @show eltype(gmps' * Diagonal(ns) * gmps)
-    @show eltype(gmps * Λ.data * gmps')
     
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=false)
     h_mpo = MPO(os_h + os_p, s)
-
     psi = correlation_matrix_to_mps(
       s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11
     )
-    @show eltype(psi[1])
+    @test eltype(psi[1])<:ElT
+    
     if tau == 0.0
       sweeps = Sweeps(5)
       _maxlinkdim = 60
@@ -235,9 +196,7 @@ end
       setcutoff!(sweeps, _cutoff)
       E_dmrg, psidmrg = dmrg(h_mpo, psi, sweeps; outputlevel=0)
       E_ni_mpo = inner(psi', h_mpo, psi)
-      #@test E_dmrg*2 ≈ E rtol = 1e-4
       @test E_dmrg ≈ E_ni_mpo rtol = 1e-4
-
       @test inner(psidmrg, psi) ≈ 1 rtol = 1e-4
     end
 
@@ -248,8 +207,6 @@ end
     cc = correlation_matrix(psi, "C", "C")
     cblocked = ITensorGaussianMPS.reverse_interleave(c)
     tol = 1e-5
-    #@show maximum(abs.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]))
-    #@show maximum(abs.(cblocked[1:N, (N + 1):end] - cc[:, :]))
     @test all(abs.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]) .< tol)
     @test all(abs.(cblocked[1:N, 1:N] - ccdag[:, :]) .< tol)
     @test all(abs.(cblocked[1:N, (N + 1):end] - cc[:, :]) .< tol)
