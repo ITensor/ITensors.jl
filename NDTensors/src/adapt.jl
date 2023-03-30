@@ -7,11 +7,9 @@ cpu(x) = fmap(x -> adapt(Array, x), x)
 # Implemented in `ITensorGPU` and `ext/NDTensorCUDA`
 ## TODO deprecate this because we don't actually need our own cu CUDA's version 
 ## works fine!
-function cu(x; unified=false)
-end
+function cu(x; unified=false) end
 
-function mtl(x; unified=false)
-end
+function mtl(x; unified=false) end
 
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))
 
