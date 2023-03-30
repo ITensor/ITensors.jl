@@ -247,8 +247,6 @@ using Test
       # Need to install it here instead of
       # putting it as a dependency in the Project.toml
       # since otherwise it fails for older Julia versions.
-      using Pkg: Pkg
-      Pkg.add("Octavian")
       using Octavian
       NDTensors.backend_octavian()
       @test NDTensors.gemm_backend[] == :Octavian

@@ -8,7 +8,6 @@ using Pkg: Pkg
 
 use_cuda = false
 if use_cuda
-  Pkg.add("CUDA")
   using CUDA
   CUDA.allowscalar()
   if CUDA.functional()
@@ -18,7 +17,6 @@ end
 
 use_mtl = false
 if use_mtl
-  Pkg.add("Metal")
   using Metal
   push!(ops, NDTensors.mtl)
   Metal.allowscalar()
