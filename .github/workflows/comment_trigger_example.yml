@@ -24,7 +24,8 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.comment-branch.outputs.head_ref }}
+          # https://github.com/actions/checkout/issues/331#issuecomment-1438220926
+          ref: refs/pull/${{ github.event.issue.number }}/head
       - name: Setup Node.js 16
         uses: actions/setup-node@v3
         with:
