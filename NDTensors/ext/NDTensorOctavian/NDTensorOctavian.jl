@@ -7,7 +7,6 @@ if isdefined(Base, :get_extension)
 else
   using ..Octavian
 end
-println("Using octavian")
 
 include("import.jl")
 include("octavian.jl")
