@@ -37,4 +37,4 @@ jobs:
           pkg"dev ./NDTensors"
       - name: Run the tests
         run: |
-          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("NDTensors")'
+          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.activate("."); Pkg.test("NDTensors")'
