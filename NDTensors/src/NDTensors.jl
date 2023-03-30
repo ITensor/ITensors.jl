@@ -223,6 +223,10 @@ function disable_tblis()
   return nothing
 end
 
+function backend_octavian()
+  throw(UndefVarError)
+ end
+
 function __init__()
   @static if !isdefined(Base, :get_extension)
     @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin

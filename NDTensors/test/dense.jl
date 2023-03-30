@@ -250,7 +250,7 @@ using Test
       using Pkg: Pkg
       Pkg.add("Octavian")
       using Octavian
-      NDTensorOctavian.backend_octavian()
+      NDTensors.backend_octavian()
       @test NDTensors.gemm_backend[] == :Octavian
       res4 = NDTensors._gemm!('N', 'N', 2.0, a, b, 0.2, copy(c))
       @test res1 ≈ res4

@@ -1,4 +1,4 @@
-function backend_octavian()
+function NDTensors.backend_octavian()
   return NDTensors.gemm_backend[] = :Octavian
 end
 
