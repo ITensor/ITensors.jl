@@ -4,7 +4,6 @@ using Compat
 using ITensors
 using ITensors.NDTensors
 using LinearAlgebra
-using F_utilities
 import LinearAlgebra: Givens
 
 export slater_determinant_to_mps,
@@ -16,9 +15,12 @@ export slater_determinant_to_mps,
   quadratic_hamiltonian,
   quadratic_operator,
   slater_determinant_matrix,
-  slater_determinant_to_gmera
+  slater_determinant_to_gmera,
+  fermionic_eigen,
+  fermionic_diag_corr
 
 include("gmps.jl")
 include("gmera.jl")
+include("linalg.jl")
 
 end

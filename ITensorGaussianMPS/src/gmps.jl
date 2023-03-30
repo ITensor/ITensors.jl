@@ -1,7 +1,5 @@
 import Base: sortperm, size, length, eltype, conj, transpose, copy, *
 abstract type AbstractSymmetry end
-const Fu=F_utilities
-
 struct ConservesNfParity{T} <: AbstractSymmetry
   data::T
 end
