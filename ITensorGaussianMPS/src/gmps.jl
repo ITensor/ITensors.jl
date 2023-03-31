@@ -164,7 +164,9 @@ function quadratic_operator(os::OpSum)
   # detect terms and size of lattice
   for n in 1:nterms
     term = os[n]
-    coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
+    #@show term
+    #@show term.coef
+    coef = isreal(coefficient(term)) ? real(coefficient(term)) : coefficient(term)
     coefs[n] = coef
     quads[n] = quadrant(term)
     length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
@@ -338,16 +340,16 @@ function givens_rotations(_v0::ConservesNfParity;)
   gs = Circuit{ElT}([])
   v = copy(v0)
   # detect if v is actually number-conserving because only defined in terms of annihilation operators
-  if norm(v[2:2:end])<10*eps(real(ElT))
-    r=v[1]
+  if norm(v[2:2:end]) < 10 * eps(real(ElT))
+    r = v[1]
     gsca, _ = givens_rotations(v[1:2:end])
-    replace_indices!(i -> 2 * i-1, gsca)
+    replace_indices!(i -> 2 * i - 1, gsca)
     gscc = Circuit(copy(gsca.rotations))
     replace_indices!(i -> i + 1, gsca)
     conj!(gscc)
     gsc = interleave(gscc, gsca)
     LinearAlgebra.lmul!(gsc, gs)
-    return gs,r
+    return gs, r
   end
   r = v[2]
   # Given's rotations from creation-operator coefficients
@@ -359,8 +361,8 @@ function givens_rotations(_v0::ConservesNfParity;)
   gsc = interleave(gscc, gsca)
   LinearAlgebra.lmul!(gsc, gs)
   # detect if v is actually number-conserving because only defined in terms of creation operators
-  if norm(v[1:2:end])<10*eps(real(ElT))
-    return gs,r
+  if norm(v[1:2:end]) < 10 * eps(real(ElT))
+    return gs, r
   end
   v = gsc * v
   # if we get here, v was actually number-non conserving, so procedure
@@ -387,7 +389,7 @@ end
 function maybe_drop_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number}
   Λblocked = reverse_interleave(Λ0)
   N = div(size(Λblocked, 1), 2)
-  if all(x -> abs(x) <= 10*eps(real(eltype(Λ0))), @view Λblocked[1:N, (N + 1):end])
+  if all(x -> abs(x) <= 10 * eps(real(eltype(Λ0))), @view Λblocked[1:N, (N + 1):end])
     return ConservesNf(Λblocked[(N + 1):end, (N + 1):end])
     #return ConservesNfParity(Λ0)
   else
@@ -423,6 +425,7 @@ function isolate_subblock_eig(
   blocksize = 0
   err = 0.0
   p = Int[]
+  ElT = eltype(_Λ.data)
   nB = eltype(_Λ.data)[]
   uB = 0.0
   ΛB = 0.0
@@ -435,24 +438,35 @@ function isolate_subblock_eig(
       (site_stride(_Λ) * i + 1 - site_stride(_Λ)):j,
       (site_stride(_Λ) * i + 1 - site_stride(_Λ)):j,
     ]
-    
+
     if typeof(_Λ) <: ConservesNf
       nB, uB = eigen(Hermitian(ΛB))
     elseif typeof(_Λ) <: ConservesNfParity
-      m=similar(ΛB)
-      m.=ΛB
-      _ΛB=maybe_drop_pairing_correlations(m)
+      m = similar(ΛB)
+      m .= ΛB
+      _ΛB = maybe_drop_pairing_correlations(m)
       if typeof(_ΛB) <: ConservesNf
         nB, uB = eigen(Hermitian(_ΛB.data))
         #promote basis uB to non-conserving frame
-        N2=size(nB,1) * 2
-        nuB=zeros(eltype(uB),N2,N2)
-        nuB[2:2:N2,1:2:N2] .= uB
-        nuB[1:2:N2,2:2:N2] .= conj(uB)
-        uB=nuB
-        nB=interleave(1 .- nB,nB,)
+        N2 = size(nB, 1) * 2
+        nuB = zeros(eltype(uB), N2, N2)
+        nuB[2:2:N2, 1:2:N2] .= uB
+        nuB[1:2:N2, 2:2:N2] .= conj(uB)
+        uB = nuB
+        nB = interleave(1 .- nB, nB)
       elseif typeof(_ΛB) <: ConservesNfParity
-        nB, uB = ITensorGaussianMPS.fermionic_diag_corr(Hermitian(ΛB))
+        nB, uB = ITensorGaussianMPS.gaussian_diag_corr(Hermitian(ΛB))
+        #try to rotate to real
+        uB = ITensorGaussianMPS.make_real_if_possible(uB, nB .- 0.5)
+        if ElT <: Real
+          if norm(imag.(uB)) <= sqrt(eps(real(ElT)))
+            uB = real(real.(uB))
+          else
+            error(
+              "Not able to construct real fermionic basis for input correlation matrix. Exiting, retry with complex input type.",
+            )
+          end
+        end
       end
     end
     nB = set_data(_Λ, abs.(nB))
@@ -552,14 +566,7 @@ function correlation_matrix_to_gmps(
   maxblocksize::Int=size(Λ0.data, 1),
 ) where {T<:AbstractSymmetry}
   ElT = eltype(Λ0.data)
-  if T<:ConservesNfParity && ElT<:Real && false
-    ElT=complex(ElT)
-    ##FIXME: is there a way to not hardcode Matrix type here? More generally, how to best handle nested parametric types?
-    newT=ConservesNfParity{Matrix{complex(eltype(Λ0.data))}} 
-    Λ = newT(Hermitian(ElT.(copy(Λ0.data))))
-  else
-    Λ = T(Hermitian(copy((Λ0.data))))
-  end
+  Λ = T(Hermitian(copy((Λ0.data))))
   V = Circuit{ElT}([])
   err_tot = 0.0 ### FIXME: keep track of error below
   N = size(Λ.data, 1)
@@ -585,8 +592,8 @@ function correlation_matrix_to_gmps(
     Λ = set_data(Λ, Hermitian(g * Matrix(Λ.data) * g'))
   end
   ###return non-wrapped occupations for backwards compatibility
-  ns=diag(Λ.data)
-  @assert norm(imag.(ns))<=sqrt(eps(real(ElT)))
+  ns = diag(Λ.data)
+  @assert norm(imag.(ns)) <= sqrt(eps(real(ElT)))
 
   return real(real.(ns)), V
 end

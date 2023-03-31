@@ -16,8 +16,9 @@ export slater_determinant_to_mps,
   quadratic_operator,
   slater_determinant_matrix,
   slater_determinant_to_gmera,
-  fermionic_eigen,
-  fermionic_diag_corr
+  gaussian_eigen,
+  gaussian_diag_corr,
+  get_gaussian_GS_corr
 
 include("gmps.jl")
 include("gmera.jl")
