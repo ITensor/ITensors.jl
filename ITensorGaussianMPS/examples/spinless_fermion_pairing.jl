@@ -56,7 +56,7 @@ let
   @show sum(E[1:N])
   Φ = V[:, 1:N]
   c = real.(conj(Φ) * transpose(Φ))
-  
+
   #Get (G)MPS
   psi = ITensorGaussianMPS.correlation_matrix_to_mps(
     sites, c; eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11

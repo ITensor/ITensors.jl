@@ -135,7 +135,7 @@ function make_real_if_possible(U0::AbstractMatrix, spectrum::Vector; sigdigits=1
       subspace = U[:, mask]
       subspace = make_subspace_real_if_possible(subspace)
       U[:, mask] = subspace
-      
+
     else
       mask = rounded_halfspectrum .== e
       # rotate suspace for the negative eigenvalue
