@@ -6,7 +6,7 @@ and the associated publication
 """
 
 """Takes a single-particle Hamiltonian in blocked Dirac format and finds the fermionic transformation U that diagonalizes it"""
-function _gaussian_eigen_blocked(H; pert=nothing)
+function _eigen_gaussian_blocked(H; noise_scale=nothing)
   #make sure H is Hermitian
   @assert ishermitian(H)
   H = Hermitian(H)
@@ -17,8 +17,8 @@ function _gaussian_eigen_blocked(H; pert=nothing)
   h = real(-im .* (Ω * H * Ω'))
   h = (h - h') ./ 2
   #@show size(h)
-  if !isnothing(pert)
-    noise = rand(size(h)...) * pert
+  if !isnothing(noise_scale)
+    noise = rand(size(h)...) * noise_scale
     noise = (noise - noise') ./ 2
     h = h + noise
   end
@@ -39,9 +39,9 @@ function _gaussian_eigen_blocked(H; pert=nothing)
 end
 
 """Takes a single-particle Hamiltonian in interlaced Dirac format and finds the complex fermionic transformation U that diagonalizes it."""
-function gaussian_eigen(H; pert=nothing)
-  d, U = _gaussian_eigen_blocked(
-    ITensorGaussianMPS.reverse_interleave(complex(H)); pert=pert
+function eigen_gaussian(H; noise_scale=nothing)
+  d, U = _eigen_gaussian_blocked(
+    ITensorGaussianMPS.reverse_interleave(complex(H)); noise_scale=noise_scale
   )
   nU = similar(U)
   n = div(size(H, 1), 2)
@@ -51,9 +51,9 @@ function gaussian_eigen(H; pert=nothing)
 end
 
 """Takes a single-particle Hamiltonian in interlaced Dirac format and outputs the ground state correlation matrix (with the input Hamiltonians element type)."""
-function get_gaussian_GS_corr(H::AbstractMatrix; pert=nothing)
+function get_gaussian_GS_corr(H::AbstractMatrix; noise_scale=nothing)
   ElT = eltype(H)
-  d, U = gaussian_eigen(H; pert=pert)
+  d, U = eigen_gaussian(H; noise_scale=noise_scale)
   n = div(size(H, 1), 2)
   c = conj(U[:, 1:n]) * transpose(U[:, 1:n])
   if ElT <: Real && norm(imag.(c)) <= sqrt(eps(real(ElT)))
@@ -63,9 +63,9 @@ function get_gaussian_GS_corr(H::AbstractMatrix; pert=nothing)
 end
 
 """Takes a single-particle correlation matrix in interlaced Dirac format and finds the fermionic transformation U that diagonalizes it"""
-function gaussian_diag_corr(Λ::Hermitian; pert=nothing)
+function diag_corr_gaussian(Λ::Hermitian; noise_scale=nothing)
   #shift correlation matrix by half so spectrum is symmetric around 0
-  populations, U = gaussian_eigen(Λ - 0.5 * I; pert=pert)
+  populations, U = eigen_gaussian(Λ - 0.5 * I; noise_scale=noise_scale)
   n = diag(U' * Λ * U)
   if !all(abs.(populations - (n - 0.5 * ones(size(n)))) .< sqrt(eps(real(eltype(Λ)))))
     @show n
@@ -78,10 +78,10 @@ function gaussian_diag_corr(Λ::Hermitian; pert=nothing)
 end
 
 """Takes a single-particle correlation matrix in interlaced Dirac format and finds the fermionic transformation U that diagonalizes it"""
-function gaussian_diag_corr(Γ::AbstractMatrix; pert=nothing)
+function diag_corr_gaussian(Γ::AbstractMatrix; noise_scale=nothing)
   #enforcing hermitianity
   Γ = (Γ + Γ') / 2.0
-  return gaussian_diag_corr(Hermitian(Γ); pert=pert)
+  return diag_corr_gaussian(Hermitian(Γ); noise_scale=noise_scale)
 end
 
 """Schur decomposition of skew-hermitian matrix"""
@@ -132,19 +132,19 @@ function make_real_if_possible(U0::AbstractMatrix, spectrum::Vector; sigdigits=1
       # handle values close to zero separately
       # rotate subspace for both positive and negative eigenvalue if they are close enough to zero
       mask = vcat(mask, mask)
-      subspace = copy(U[:, :][:, mask])
+      subspace = U[:, mask]
       subspace = make_subspace_real_if_possible(subspace)
-      v = @views U[:, :][:, mask]
-      v .= subspace
+      U[:, mask] = subspace
+      
     else
       mask = rounded_halfspectrum .== e
       # rotate suspace for the negative eigenvalue
-      subspace = copy(U[:, 1:n][:, mask])
+      subspace = U[:, 1:n][:, mask]
       subspace = make_subspace_real_if_possible(subspace)
       v = @views U[:, 1:n][:, mask]
       v .= subspace
       # rotate suspace for the positive eigenvalue
-      subspace = copy(U[:, (n + 1):end][:, mask])
+      subspace = U[:, (n + 1):end][:, mask]
       subspace = make_subspace_real_if_possible(subspace)
       v = @views U[:, (n + 1):end][:, mask]
       v .= subspace

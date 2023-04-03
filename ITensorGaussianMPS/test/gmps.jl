@@ -141,7 +141,7 @@ end
     h = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p)
     @assert ishermitian(h)
     ElT = eltype(h)
-    e, u = ITensorGaussianMPS.gaussian_eigen(h)
+    e, u = ITensorGaussianMPS.eigen_gaussian(h)
     E = sum(e[1:(N)])
     Φ = (u[:, 1:N])
     @test h * Φ ≈ Φ * Diagonal(e[1:N])

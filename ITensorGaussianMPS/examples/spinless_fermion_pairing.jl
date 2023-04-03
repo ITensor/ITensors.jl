@@ -52,14 +52,14 @@ let
   @assert ishermitian(h)
   e = eigvals(Hermitian(h))
   @show e
-  E, V = gaussian_eigen(h)
+  E, V = eigen_gaussian(h)
   @show sum(E[1:N])
   Φ = V[:, 1:N]
-  c = conj(Φ) * transpose(Φ)
-
+  c = real.(conj(Φ) * transpose(Φ))
+  
   #Get (G)MPS
   psi = ITensorGaussianMPS.correlation_matrix_to_mps(
-    sites, real.(c); eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11
+    sites, c; eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11
   )
   @show eltype(psi[1])
   cdagc = correlation_matrix(psi, "C", "Cdag")

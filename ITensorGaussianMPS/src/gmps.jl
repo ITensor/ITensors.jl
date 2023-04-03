@@ -420,7 +420,7 @@ function isolate_subblock_eig(
   startind::Int;
   eigval_cutoff::Float64=1e-8,
   minblocksize::Int=2,
-  maxblocksize::Int=div(size(_Λ.data, 1), 2),
+  maxblocksize::Int=div(size(_Λ.data, 1), 1),
 )
   blocksize = 0
   err = 0.0
@@ -455,7 +455,7 @@ function isolate_subblock_eig(
         uB = nuB
         nB = interleave(1 .- nB, nB)
       elseif typeof(_ΛB) <: ConservesNfParity
-        nB, uB = ITensorGaussianMPS.gaussian_diag_corr(Hermitian(ΛB))
+        nB, uB = ITensorGaussianMPS.diag_corr_gaussian(Hermitian(ΛB))
         #try to rotate to real
         uB = ITensorGaussianMPS.make_real_if_possible(uB, nB .- 0.5)
         if ElT <: Real

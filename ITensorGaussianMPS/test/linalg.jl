@@ -18,9 +18,9 @@ const GMPS = ITensorGaussianMPS
   H[(N + 1):end, (N + 1):end] = hd
   H = (H + H') ./ 2
   # compare spectrum, which can also accurately be computed via standard eigendecomposition   
-  d, U = GMPS._gaussian_eigen_blocked(Hermitian(H))
+  d, U = GMPS._eigen_gaussian_blocked(Hermitian(H))
   d2, _ = eigen(Hermitian(H))
-  d3, _ = GMPS.gaussian_eigen(Hermitian(GMPS.interleave(H)))
+  d3, _ = GMPS.eigen_gaussian(Hermitian(GMPS.interleave(H)))
   @test sort(d) ≈ sort(d2)
   @test sort(d) ≈ sort(d3)
 end
