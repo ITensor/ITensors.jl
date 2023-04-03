@@ -2,38 +2,37 @@ name: Example comment trigger
 
 # https://dev.to/zirkelc/trigger-github-workflow-for-comment-on-pull-request-45l2
 
+on:
+  issue_comment:
+    types: [created]
+
 jobs:
   deploy:
     name: Deploy
     if: github.event.issue.pull_request && contains(github.event.comment.body, '/deploy')
     runs-on: ubuntu-latest
-
     steps:
       - name: Get PR branch
         uses: xt0rted/pull-request-comment-branch@v1
         id: comment-branch
-
       - name: Set latest commit status as pending
         uses: myrotvorets/set-commit-status-action@master
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
           status: pending
-
       - name: Checkout PR branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.comment-branch.outputs.head_ref }}
-
+          # https://github.com/actions/checkout/issues/331#issuecomment-1438220926
+          ref: refs/pull/${{ github.event.issue.number }}/head
       - name: Setup Node.js 16
         uses: actions/setup-node@v3
         with:
           node-version: 16
-
       - name: Deploy
         run: |
           echo "Deploying..."
-
       - name: Set latest commit status as ${{ job.status }}
         uses: myrotvorets/set-commit-status-action@master
         if: always()
@@ -41,7 +40,6 @@ jobs:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
           status: ${{ job.status }}
-
       - name: Add comment to PR
         uses: actions/github-script@v6
         if: always()
