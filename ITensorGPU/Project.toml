@@ -21,7 +21,7 @@ cuTENSOR = "011b41b2-24ef-40a8-b3eb-fa098493e9e1"
 
 [compat]
 Adapt = "3.5"
-CUDA = "4.0 - 4.0.1"
+CUDA = "4.0 - 4.0.1, 4"
 Combinatorics = "1.0.2"
 Functors = "0.2, 0.3, 0.4"
 HDF5 = "0.15.7, 0.16"
