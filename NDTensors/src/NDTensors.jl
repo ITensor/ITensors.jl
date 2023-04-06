@@ -237,14 +237,15 @@ function __init__()
       #include("linearalgebra/octavian.jl")
       include("../ext/NDTensorOctavian/NDTensorOctavian.jl")
     end
-
-    #@require !ITensorGPU = "d89171c1-af8f-46b3-badf-d2a472317c15" begin
-    @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
-      println("NDTensors has CUDA")
-      if CUDA.functional()
-        include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
+    
+    @show isdefined(Main, :ITensorGPU)
+    if !isdefined(Main, :ITensorGPU)
+      @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+        println("NDTensors has CUDA")
+        if CUDA.functional()
+          include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
+        end
       end
-    end
     #end
     @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
       println("NDTensors has Metal")

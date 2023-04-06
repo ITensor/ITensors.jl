@@ -1,5 +1,6 @@
 module ITensorGPU
 
+@show isdefined(Main, :ITensorGPU)
 using Adapt
 using CUDA
 using CUDA.CUBLAS
