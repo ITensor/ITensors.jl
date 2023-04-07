@@ -1,8 +1,7 @@
 module ITensorGPU
 
 using NDTensors
-#if !isdefined()
-NDTensors.set_cuda_backend("ITensorGPU")
+
 using Adapt
 using CUDA
 using CUDA.CUBLAS
@@ -84,7 +83,7 @@ import cuTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
 #const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
 const ContractionPlans = Dict{String,cutensorAlgo_t}()
 
-if !(NDTensors.cuda_backend == "NDTensorCUDA")
+if NDTensors.cuda_backend == "ITensorGPU"
   include("cuarray/set_types.jl")
   include("traits.jl")
   include("adapt.jl")
@@ -96,10 +95,10 @@ if !(NDTensors.cuda_backend == "NDTensorCUDA")
   include("tensor/cudiag.jl")
   include("cuitensor.jl")
   include("mps/cumps.jl")
-end
 
-export cu,
+  export cu,
   cpu, cuITensor, randomCuITensor, cuMPS, randomCuMPS, productCuMPS, randomCuMPO, cuMPO
+end
 
 ## TODO: Is this needed?
 ## const devs = Ref{Vector{CUDAdrv.CuDevice}}()
