@@ -227,6 +227,8 @@ function backend_octavian()
   throw(UndefVarError)
 end
 
+include("preferences.jl")
+
 function __init__()
   @static if !isdefined(Base, :get_extension)
     @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
@@ -238,15 +240,15 @@ function __init__()
       include("../ext/NDTensorOctavian/NDTensorOctavian.jl")
     end
     
-    @show isdefined(Main, :ITensorGPU)
-    if !isdefined(Main, :ITensorGPU)
       @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
-        println("NDTensors has CUDA")
-        if CUDA.functional()
-          include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
+        if cuda_backend == "NDTensorCUDA"
+          println("NDTensors has CUDA")
+          if CUDA.functional()
+            include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
+          end
         end
       end
-    #end
+  
     @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
       println("NDTensors has Metal")
       include("../ext/NDTensorMetal/NDTensorMetal.jl")
