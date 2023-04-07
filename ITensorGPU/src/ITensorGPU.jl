@@ -97,7 +97,7 @@ if NDTensors.cuda_backend() == "ITensorGPU"
   include("mps/cumps.jl")
 
   export cu,
-  cpu, cuITensor, randomCuITensor, cuMPS, randomCuMPS, productCuMPS, randomCuMPO, cuMPO
+    cpu, cuITensor, randomCuITensor, cuMPS, randomCuMPS, productCuMPS, randomCuMPO, cuMPO
 end
 
 ## TODO: Is this needed?
