@@ -4,6 +4,9 @@ using Adapt
 using CUDA
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
+if CUDA.runtime_version() > v"11.0"
+  CUDA.set_runtime_version!("11.8")
+end
 using Functors
 using ITensors
 using LinearAlgebra
@@ -14,10 +17,6 @@ using StaticArrays
 using Strided
 using TimerOutputs
 using cuTENSOR
-
-if CUDA.runtime_version() > v"11.0"
-  CUDA.set_runtime_version!("11.8")
-end
 
 using NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
 
