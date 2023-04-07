@@ -1,6 +1,7 @@
 module ITensorGPU
 
 using NDTensors
+#if !isdefined()
 NDTensors.set_cuda_backend("ITensorGPU")
 using Adapt
 using CUDA
@@ -83,17 +84,19 @@ import cuTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
 #const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
 const ContractionPlans = Dict{String,cutensorAlgo_t}()
 
-include("cuarray/set_types.jl")
-include("traits.jl")
-include("adapt.jl")
-include("tensor/cudense.jl")
-include("tensor/dense.jl")
-include("tensor/culinearalgebra.jl")
-include("tensor/cutruncate.jl")
-include("tensor/cucombiner.jl")
-include("tensor/cudiag.jl")
-include("cuitensor.jl")
-include("mps/cumps.jl")
+if !(NDTensors.cuda_backend == "NDTensorCUDA")
+  include("cuarray/set_types.jl")
+  include("traits.jl")
+  include("adapt.jl")
+  include("tensor/cudense.jl")
+  include("tensor/dense.jl")
+  include("tensor/culinearalgebra.jl")
+  include("tensor/cutruncate.jl")
+  include("tensor/cucombiner.jl")
+  include("tensor/cudiag.jl")
+  include("cuitensor.jl")
+  include("mps/cumps.jl")
+end
 
 export cu,
   cpu, cuITensor, randomCuITensor, cuMPS, randomCuMPS, productCuMPS, randomCuMPO, cuMPO
