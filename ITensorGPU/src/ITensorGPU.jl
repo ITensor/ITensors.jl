@@ -1,6 +1,7 @@
 module ITensorGPU
 
-@show isdefined(Main, :ITensorGPU)
+using NDTensors
+NDTensors.set_cuda_backend("ITensorGPU")
 using Adapt
 using CUDA
 using CUDA.CUBLAS
@@ -8,7 +9,6 @@ using CUDA.CUSOLVER
 using Functors
 using ITensors
 using LinearAlgebra
-using NDTensors
 using Random
 using SimpleTraits
 using StaticArrays
