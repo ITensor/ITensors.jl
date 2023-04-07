@@ -10,4 +10,4 @@ function set_cuda_backend(new_backend::String)
   @info("New CUDA backend set; restart your Julia session for this change to take effect!")
 end
 
-const cuda_backend = @load_preference("cuda_backend", "NDTensorCUDA")
+const cuda_backend() = @load_preference("cuda_backend", "ITensorGPU")

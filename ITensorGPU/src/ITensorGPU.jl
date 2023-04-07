@@ -83,7 +83,7 @@ import cuTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
 #const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
 const ContractionPlans = Dict{String,cutensorAlgo_t}()
 
-if NDTensors.cuda_backend == "ITensorGPU"
+if NDTensors.cuda_backend() == "ITensorGPU"
   include("cuarray/set_types.jl")
   include("traits.jl")
   include("adapt.jl")

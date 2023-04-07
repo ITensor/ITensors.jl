@@ -241,7 +241,7 @@ function __init__()
     end
 
     @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
-      if cuda_backend == "NDTensorCUDA"
+      if cuda_backend() == "NDTensorCUDA"
         println("NDTensors has CUDA")
         if CUDA.functional()
           include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
