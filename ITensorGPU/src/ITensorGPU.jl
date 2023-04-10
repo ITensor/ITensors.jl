@@ -1,6 +1,10 @@
 module ITensorGPU
 
 using NDTensors
+if NDTensors.allow_ndtensorcuda()
+  println("Warning: compiling both ITensorGPU and NDTensorCUDA may cause errors.")
+end
+
 using Adapt
 using CUDA
 using CUDA.CUBLAS
