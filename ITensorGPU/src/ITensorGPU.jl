@@ -6,9 +6,8 @@ using CUDA.CUBLAS
 using CUDA.CUSOLVER
 if CUDA.runtime_version() ≥ v"12.0"
   println(
-    "Warning: currently cuTENSOR fails with CUDA versions 12.0 and higher.\n To deal with this problem we are reducing CUDA version to 11.8",
+    "Warning: currently cuTENSOR fails with CUDA versions 12.0 and higher.\n To deal with this problem suggest reducing CUDA version to 11.8 using the command `CUDA.set_runtime_version!(\"11.8\")`",
   )
-  CUDA.set_runtime_version!("11.8")
 end
 using Functors
 using ITensors
