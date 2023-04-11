@@ -89,3 +89,12 @@ H = NDTensors.cu(orthogonalize(H, 1))
 @show storage(H[1])
 
 inner(cm', H, cm)
+
+
+### TO run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
+using Pkg
+Pkg.activate(".")
+Pkg.add("CUDA")
+Pkg.test("NDTensors")
+
+## TODO create option to turn cuda tests on to allow the use of NDTensor.cu
