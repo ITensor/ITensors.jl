@@ -1,7 +1,4 @@
-using CUDA
-CUDA.set_runtime_version!("11.8")
-
-using ITensorGPU, Test
+using ITensorGPU, Test, CUDA
 
 CUDA.allowscalar(false)
 @testset "ITensorGPU.jl" begin
