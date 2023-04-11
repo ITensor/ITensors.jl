@@ -2,12 +2,17 @@
 # Used to adapt `EmptyStorage` types
 #
 
-to_vector_type(arraytype::Type{CuArray}) = CuVector
-to_vector_type(arraytype::Type{CuArray{T}}) where {T} = CuVector{T}
-
+struct NDTensorCuArrayAdaptor{B} end
+## TODO make this work for unified. This works but overwrites CUDA's adapt_storage. This fails for emptystorage...
 @inline function NDTensors.cu(xs; unified::Bool=false)
-  return fmap(x -> adapt(CuArray, x), xs)
+  return fmap(x -> 
+                adapt(NDTensorCuArrayAdaptor{unified ? Mem.UnifiedBuffer : Mem.DeviceBuffer}(), x), 
+                xs)
 end
+
+
+Adapt.adapt_storage(::NDTensorCuArrayAdaptor{B}, xs::AbstractArray{T,N}) where {T,N,B} =
+  isbits(xs) ? xs : CuArray{T,N,B}(xs)
 
 # @inline function NDTensors.cu(xs::AbstractArray; unified::Bool=false)
 #   ElT = eltype(xs)
