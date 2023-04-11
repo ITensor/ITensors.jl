@@ -7,7 +7,6 @@ ops[1] = NDTensors.cpu
 using Pkg: Pkg
 
 use_cuda = false
-NDTensors.allow_ndtensorcuda(use_cuda)
 if use_cuda
   using CUDA
   CUDA.allowscalar()

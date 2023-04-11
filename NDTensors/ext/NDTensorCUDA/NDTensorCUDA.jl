@@ -1,8 +1,6 @@
 module NDTensorCUDA
 
 using NDTensors
-if NDTensors.allow_ndtensorcuda()
-  println("Loading NDTensorCUDA")
   using Adapt
   using Functors
   using LinearAlgebra: BlasFloat
@@ -21,5 +19,4 @@ if NDTensors.allow_ndtensorcuda()
 
   include("set_types.jl")
   include("adapt.jl")
-end
 end
