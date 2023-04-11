@@ -3,10 +3,8 @@
 #
 
 NDTensors.cu(eltype::Type{<:Number}, x) = fmap(x -> adapt(CuArray{eltype}, x), x)
-NDTensors.cu(x) = fmap(x -> adapt(CuArray, x), x)
 
-NDTensors.to_vector_type(arraytype::Type{CuArray}) = CuVector
-NDTensors.to_vector_type(arraytype::Type{CuArray{T}}) where {T} = CuVector{T}
+NDTensors.cu(x) = fmap(x -> adapt(CuArray, x), x)
 
 function NDTensors.set_eltype_if_unspecified(
   arraytype::Type{CuVector{T}}, eltype::Type
