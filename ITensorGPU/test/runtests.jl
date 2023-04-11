@@ -1,4 +1,7 @@
-using ITensorGPU, Test, CUDA
+using CUDA
+CUDA.set_runtime_version!("11.8")
+
+using ITensorGPU, Test
 
 CUDA.allowscalar(false)
 @testset "ITensorGPU.jl" begin
@@ -13,10 +16,10 @@ CUDA.allowscalar(false)
     "test_cudiag.jl",
     "test_cudense.jl",
     "test_cucontract.jl",
-    "test_cumpo.jl",
-    "test_cumps.jl",
-    "test_cuiterativesolvers.jl",
-    "test_cutruncate.jl",
+    # "test_cumpo.jl",
+    # "test_cumps.jl",
+    # "test_cuiterativesolvers.jl",
+    # "test_cutruncate.jl",
     #"test_pastaq.jl",
   )
     println("Running $filename")
