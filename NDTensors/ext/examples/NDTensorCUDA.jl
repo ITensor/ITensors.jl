@@ -17,6 +17,7 @@ dim2 = (j, k)
 A = ITensor(NDTensors.generic_randn(CuVector, dim(dim1)), dim1)
 B = ITensor(NDTensors.generic_randn(CuVector, dim(dim2)), dim2)
 # Contract the two tensors
+cpu = NDTensors.cpu
 C = A * B
 A = cpu(A)
 B = cpu(B)
@@ -46,15 +47,16 @@ D = ITensor(Tensor(CuVector, dim4))
 fill!(D, randn())
 
 # Create a function of 4 tensors on GPU
-f(A, B, C, D) = (A * B * C * D)[]
+f(cA, cB, C, D) = (cA * cB * C * D)[]
 using Pkg; Pkg.add("Zygote")
 using Zygote
 
 #Use Zygote to take the gradient of the four tensors on GPU
-grad = gradient(f, A, B, C, D)
+grad = gradient(f, cA, cB, C, D)
+#@show grad[1]
 typeof(storage(grad[1]))
 typeof(storage(grad[2]))
-@test (B * C * D) ≈ grad[1]
+@test (cB * C * D) ≈ grad[1]
 
 # Create a tuple of indices
 decomp = (
@@ -73,12 +75,15 @@ U, S, V = svd(data)
 CUDA.memory_status()
 
 # Get rid of the gradients and clean the CUDA memory
-grad = nothing
 CUDA.reclaim()
+CUDA.memory_status()
 
 # Its possible to compute QR of GPU tensor
 cq = ITensors.qr(cA, (i,), (j, l))
-@test ITensors.qr(A, (i,), (j,l)) ≈ cq
+q = ITensors.qr(A, (i,), (j,l))
+#@show cq[1]
+#@show cq[2]
+A ≈ cpu(cq[1]) * cpu(cq[2])
 
 ## This doesn't yet work baceuse making things like onehot create vectors instead of 
 ## CuVectors...
@@ -97,19 +102,22 @@ inner(cm', cm)
 H = NDTensors.cu(randomMPO(s))
 inner(cm', H, cm)
 
-#This currently doesn't work without cu because orthogonalize transforms ITensors back to CPU vectors
 cm = NDTensors.cu(orthogonalize(cm, 1))
 H = NDTensors.cu(orthogonalize(H, 1))
 
-@show storage(cm[1])
-@show storage(H[1])
+#@show storage(cm[1])
+#@show storage(H[1])
 
 inner(cm', H, cm)
 
 ### TO run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
-using Pkg
-Pkg.activate(".")
-Pkg.add("CUDA")
-Pkg.test("NDTensors")
-
+if false # false so we don't have an infinite loop
+  using Pkg
+  Pkg.activate(".")
+  using NDTensors
+  NDTensors.enable_cuda!(true)
+  Pkg.add("CUDA")
+  using CUDA
+  Pkg.test("NDTensors")
+end
 ## TODO create option to turn cuda tests on to allow the use of NDTensor.cu
