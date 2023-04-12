@@ -5,10 +5,10 @@ using ITensors
 using Test
 # using ITensorGPU
 # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
-i = Index(20)
+i = Index(2)
 j = Index(5)
-k = Index(78)
-l = Index(62)
+k = Index(3)
+l = Index(6)
 
 dim1 = (i, j, l)
 dim2 = (j, k)
@@ -89,8 +89,8 @@ A ≈ cpu(cq[1]) * cpu(cq[2])
 ## CuVectors...
 #ITensors.svd(A, (i,), (j, l))
 
-s = ITensors.siteinds("S=1/2", 20)
-m = randomMPS(s; linkdims=50)
+s = ITensors.siteinds("S=1/2", 8)
+m = randomMPS(s; linkdims=4)
 @which NDTensors.cu(m)
 cm = NDTensors.cu(m);
 
