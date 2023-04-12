@@ -17,6 +17,8 @@ function Adapt.adapt_storage(
   return isbits(xs) ? xs : CuArray{T,N,B}(xs)
 end
 
-function NDTensors.adapt_storagetype(::NDTensorCuArrayAdaptor{B}, xs::Type{EmptyStorage{ElT, StoreT}}) where {ElT,StoreT,B}
-  NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT, B}, StoreT))
+function NDTensors.adapt_storagetype(
+  ::NDTensorCuArrayAdaptor{B}, xs::Type{EmptyStorage{ElT,StoreT}}
+) where {ElT,StoreT,B}
+  return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,B}, StoreT))
 end
