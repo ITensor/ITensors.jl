@@ -92,7 +92,7 @@ A ≈ cpu(cq[1]) * cpu(cq[2])
 
 s = ITensors.siteinds("S=1/2", 8)
 m = randomMPS(s; linkdims=4)
-@which NDTensors.cu(m)
+#@which NDTensors.cu(m)
 cm = NDTensors.cu(m);
 
 typeof(storage(m[1]))
