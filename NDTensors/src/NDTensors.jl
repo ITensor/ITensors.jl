@@ -205,6 +205,8 @@ disable_threaded_blocksparse() = _disable_threaded_blocksparse()
 # Optional backends
 #
 
+include("test_preferences.jl")
+
 if !isdefined(Base, :get_extension)
   using Requires
 end
