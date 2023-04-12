@@ -52,6 +52,9 @@ Optional keyword arguments:
      allowed for the bond dimension or rank of the MPS being optimized
   - `cutoff` - float or array of floats specifying the truncation error
      cutoff or threshold to use for truncating the bond dimension or rank of the MPS
+  - `eigsolve_krylovdim::Int = 3` - maximum dimension of Krylov space used to
+     locally solve the eigenvalue problem. Try setting to a higher value if 
+     convergence is slow.
   - `noise` - float or array of floats specifying strength of the "noise term"
      to use to aid convergence
   - `mindim` - integer or array of integers specifying the minimum size of the
@@ -114,6 +117,9 @@ Optional keyword arguments:
      for the bond dimension or rank of the MPS being optimized
   - `cutoff` - float or array of floats specifying the truncation error cutoff
      or threshold to use for truncating the bond dimension or rank of the MPS
+  - `eigsolve_krylovdim::Int = 3` - maximum dimension of Krylov space used to
+     locally solve the eigenvalue problem. Try setting to a higher value if 
+     convergence is slow.
   - `noise` - float or array of floats specifying strength of the "noise term"
      to use to aid convergence
   - `mindim` - integer or array of integers specifying the minimum size of the
@@ -175,6 +181,9 @@ Optional keyword arguments:
      for the bond dimension or rank of the MPS being optimized
   - `cutoff` - float or array of floats specifying the truncation error cutoff
      or threshold to use for truncating the bond dimension or rank of the MPS
+  - `eigsolve_krylovdim::Int = 3` - maximum dimension of Krylov space used to
+     locally solve the eigenvalue problem. Try setting to a higher value if 
+     convergence is slow.
   - `ishermitian=true` - boolean specifying if dmrg should assume the MPO
      represents a Hermitian matrix
   - `noise` - float or array of floats specifying strength of the "noise term"

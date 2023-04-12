@@ -27,6 +27,10 @@ We list some of these with the most fundamental and important ones first:
   try running it for 10 sweeps: is the energy the same or has it significantly decreased?
   If 10 sweeps made a difference, try 20 sweeps.
 
+* Try setting the `eigsolve_krylovdim` keyword argument to a higher value (the default is 3).
+  This may make slowly-converging calculations converge in fewer sweeps, but setting it 
+  too high can make each sweep run slowly.
+
 * Inspect the the **DMRG output**. 
   The ITensor DMRG code reports the maximum bond or link dimension and maximum truncation error
   after each sweep. (The maximums here mean over each DMRG substep making up one sweep.)
