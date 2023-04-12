@@ -17,17 +17,6 @@ function Adapt.adapt_storage(
   return isbits(xs) ? xs : CuArray{T,N,B}(xs)
 end
 
-# @inline function NDTensors.cu(xs::AbstractArray; unified::Bool=false)
-#   ElT = eltype(xs)
-#   N = ndims(xs)
-#   return NDTensors.adapt_structure(
-#     CuArray{ElT,N,(unified ? CUDA.Mem.UnifiedBuffer : CUDA.Mem.DeviceBuffer)}, xs
-#   )
-# end
-
-# @inline function NDTensors.cu(xs::Tensor; unified::Bool=false)
-#   ElT = eltype(xs)
-#   return NDTensors.adapt_structure(
-#     CuVector{ElT,(unified ? CUDA.Mem.UnifiedBuffer : CUDA.Mem.DeviceBuffer)}, xs
-#   )
-# end
+function NDTensors.adapt_storagetype(::NDTensorCuArrayAdaptor{B}, xs::Type{EmptyStorage{ElT, StoreT}}) where {ElT,StoreT,B}
+  NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT, B}, StoreT))
+end
