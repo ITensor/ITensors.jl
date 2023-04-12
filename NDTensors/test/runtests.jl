@@ -7,6 +7,8 @@ ops[1] = NDTensors.cpu
 @show NDTensors.use_cuda
 if NDTensors.use_cuda
   println("Testing with CUDA")
+  using Pkg;
+  Pkg.add("CUDA")
   using CUDA
   CUDA.allowscalar()
   if CUDA.functional()
