@@ -3,7 +3,6 @@ using NDTensors
 
 using ITensors
 using Test
-using Adapt
 # using ITensorGPU
 # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
 i = Index(20)
