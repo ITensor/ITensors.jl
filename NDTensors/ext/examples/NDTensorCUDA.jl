@@ -48,7 +48,8 @@ fill!(D, randn())
 
 # Create a function of 4 tensors on GPU
 f(cA, cB, C, D) = (cA * cB * C * D)[]
-using Pkg; Pkg.add("Zygote")
+using Pkg;
+Pkg.add("Zygote");
 using Zygote
 
 #Use Zygote to take the gradient of the four tensors on GPU
@@ -80,7 +81,7 @@ CUDA.memory_status()
 
 # Its possible to compute QR of GPU tensor
 cq = ITensors.qr(cA, (i,), (j, l))
-q = ITensors.qr(A, (i,), (j,l))
+q = ITensors.qr(A, (i,), (j, l))
 #@show cq[1]
 #@show cq[2]
 A ≈ cpu(cq[1]) * cpu(cq[2])

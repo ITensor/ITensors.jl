@@ -19,7 +19,7 @@ if NDTensors.use_mtl
   using Metal
   push!(ops, NDTensors.mtl)
   Metal.allowscalar()
-  include(joinpath(pkgdir(NDTensors),"ext", "examples", "NDTensorMetal.jl"))
+  include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
 end
 
 @testset "NDTensors" begin
