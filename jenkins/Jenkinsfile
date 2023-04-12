@@ -29,6 +29,9 @@ pipeline {
             sh '''
               julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
+            sh '''
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); using NDTensors; NDTensors.enable_cuda!(true); Pkg.test("NDTensors");'
+            '''
           }
         }
         stage('julia-1.8') {
@@ -52,6 +55,9 @@ pipeline {
           steps {
             sh '''
               julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
+            '''
+            sh '''
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); using NDTensors; NDTensors.enable_cuda!(true); Pkg.test("NDTensors");'
             '''
           }
         }
