@@ -14,7 +14,7 @@ end
 function Adapt.adapt_storage(
   ::NDTensorCuArrayAdaptor{B}, xs::AbstractArray{T,N}
 ) where {T,N,B}
-  return isbits(xs) ? xs : CuArray{T,N,B}(xs)
+  return isbits(xs) ? xs : CuArray{T,1,B}(xs)
 end
 
 function NDTensors.adapt_storagetype(
