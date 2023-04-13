@@ -413,25 +413,21 @@ function trim_rows(
   return Q1, X1
 end
 
-function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
-  qxf = positive ? qr_positive : qr
-  return qx(qxf, T; kwargs...)
-end
-
-function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
-  qxf = positive ? ql_positive : ql
-  return qx(qxf, T; kwargs...)
-end
-
+qr(T::DenseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
+ql(T::DenseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 #
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2}; cutoff=-1.0, kwargs...)
+function qx(qx::Function, T::DenseTensor{<:Any,2}; positive=false, cutoff=-1.0, kwargs...)
   QM1, XM = qx(matrix(T))
   # When qx=qr typeof(QM1)==LinearAlgebra.QRCompactWYQ
   # When qx=ql typeof(QM1)==Matrix and this should be a no-op
   QM = Matrix(QM1)
+  #
+  #  Gauge fix diagonal of X into positive definite form.
+  #
+  positive && qx_positive!(qx,QM,XM)
   #
   #  Do row removal for rank revealing QR/QL.  Probably not worth it to elminate the if statement
   #
@@ -453,56 +449,22 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; cutoff=-1.0, kwargs...)
 end
 
 #
-# Just flip signs between Q and R to get all the diagonals of R >=0.
-# For rectangular M the indexing for "diagonal" is non-trivial.
+#  Semi generic function for gauge fixing the diagonal of X into positive definite form.
+#  becuase the diagonal is difficult to locate for rectangular X (it moves between R and L)
+#  we use qx==ql to know if X is lower or upper.
 #
-"""
-    qr_positive(M::AbstractMatrix)
-
-Compute the QR decomposition of a matrix M
-such that the diagonal elements of R are
-non-negative. Such a QR decomposition of a
-matrix is unique. Returns a tuple (Q,R).
-"""
-function qr_positive(M::AbstractMatrix)
-  sparseQ, R = qr(M)
-  Q = convert(Matrix, sparseQ)
-  nc = size(Q, 2)
-  for c in 1:nc
-    if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
-      sign_Rc = sign(R[c, c])
-      if !isone(sign_Rc)
-        R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
-        Q[:, c] *= sign_Rc
+function qx_positive!(qx::Function, Q::AbstractMatrix,X::AbstractMatrix)
+  nr, nc = size(X)
+  dc = (nc > nr && qx==ql) ? nc - nr : 0 #diag is shifted over by dc if nc>nr
+  for c in 1:Base.min(nr,nc)
+    if X[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Xc = sign(X[c, c + dc])
+      if !isone(sign_Xc)
+        X[c, :] *= sign_Xc 
+        Q[:, c] *= conj(sign_Xc)
       end
     end
   end
-  return (Q, R)
-end
-
-"""
-    ql_positive(M::AbstractMatrix)
-
-Compute the QL decomposition of a matrix M
-such that the diagonal elements of L are
-non-negative. Such a QL decomposition of a
-matrix is unique. Returns a tuple (Q,L).
-"""
-function ql_positive(M::AbstractMatrix)
-  sparseQ, L = ql(M)
-  Q = convert(Matrix, sparseQ)
-  nr, nc = size(L)
-  dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
-  for c in 1:(nc - dc)
-    if L[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
-      sign_Lc = sign(L[c, c + dc])
-      if c <= nr && !isone(sign_Lc)
-        L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
-        Q[:, c] *= conj(sign_Lc)
-      end
-    end
-  end
-  return (Q, L)
 end
 
 #
