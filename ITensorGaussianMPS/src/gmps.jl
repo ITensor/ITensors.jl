@@ -920,15 +920,6 @@ function reverse_interleave(M::AbstractMatrix)
   return M[ordered_inds, ordered_inds]
 end
 
-"""
-    correlation_matrix_to_mps(s::Vector{<:Index},
-                              Λ_up0::AbstractSymmetry,
-                              Λ_dn0::AbstractSymmetry;
-                              eigval_cutoff::Float64 = 1e-8,
-                              maxblocksize::Int = size(Λ, 1),
-                              kwargs...)
-
-
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ_up0::AbstractSymmetry,
