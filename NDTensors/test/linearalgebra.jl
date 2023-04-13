@@ -31,9 +31,14 @@ end
   elt in [Float64, ComplexF64, Float32, ComplexF32],
   positive in [false, true],
   singular in [false, true],
-  rank_reveal in [false, true],
+  rank_reveal in [false,true],
+  pivot in [false,true]
+  
+  if qx==ql && (rank_reveal || pivot)
+    continue
+  end
 
-  eps in Base.eps(real(elt)) * 30
+  eps = Base.eps(real(elt)) * 30
   #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
   cutoff = rank_reveal ? eps * 1.0 : -1.0
   n, m = 4, 8
@@ -49,13 +54,13 @@ end
     end
   end
   # you can set verbose=true if you want to get debug output on rank reduction.
-  Q, X = qx(A; positive=positive, cutoff=cutoff, verbose=false) #X is R or L. 
+  Q, X = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false) #X is R or L. 
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   if dim(Q, 1) == dim(Q, 2)
     @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0, min(n, m))) atol = eps
   end
-  if positive
+  if positive && !rank_reveal
     nr, nc = size(X)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
     diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
@@ -76,11 +81,11 @@ end
       A[i, :] = A[1, :]
     end
   end
-  Q, X = qx(A; positive=positive, cutoff=cutoff, verbose=false)
+  Q, X = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false)
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   #@test array(Q) * array(Q)' no such relationship for tall matrices.
-  if positive
+  if positive  && !rank_reveal
     nr, nc = size(X)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
     diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.

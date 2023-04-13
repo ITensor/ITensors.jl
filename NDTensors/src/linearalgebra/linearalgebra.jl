@@ -367,22 +367,27 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 #
-#  Trim out zero rows of R/X within tolerance cutoff. Also trim the corresponding columns
-#  of Q.  X = R or L
+#  Trim out n rows of R based on norm(R_nn)<cutoff, where R_nn is bottom n rows of R. 
+#  Also trim the corresponding columns of Q. 
 #
 function trim_rows(
-  Q::AbstractMatrix, X::AbstractMatrix, cutoff::Float64; verbose=false, kwargs...
-)
+  Q::AbstractMatrix, R::AbstractMatrix, cutoff::Float64; verbose=false)
+  nr = size(R,1)
+  @assert size(Q,2) == nr #Sanity check.
   #
-  #  Find and count the zero rows.  Bail out if there are none.
+  #  Find the larges n sich than norm(R_nn)<=cutoff.  n=last_row_to_keep+1
   #
-  Xnr, Xnc = size(X)
-  Qnr, Qnc = size(Q)
-  @assert Xnr == Qnc #Sanity check.
-  zeros = map((r) -> (maximum(abs.(X[r, 1:Xnc])) <= cutoff), 1:Xnr)
-  num_zero_rows = sum(zeros)
+  last_row_to_keep=nr
+  for r in  nr:-1:1
+    if norm(R[r:nr,:])>cutoff 
+      last_row_to_keep=r
+      break
+    end
+  end
+
+  num_zero_rows=nr-last_row_to_keep
   if num_zero_rows == 0
-    return Q, X
+    return Q, R
   end
   #
   # Useful output for trouble shooting.
@@ -392,25 +397,8 @@ function trim_rows(
       "Rank Reveal removing $num_zero_rows rows with log10(cutoff)=$(log10(cutoff))"
     )
   end
-  #
-  # Create new Q & X martrices with reduced size.
-  #
-  X1nr = Xnr - num_zero_rows #new dim between Q & X
-  T = eltype(X)
-  X1 = Matrix{T}(undef, X1nr, Xnc)
-  Q1 = Matrix{T}(undef, Qnr, X1nr)
-  #
-  #  Transfer non-zero rows of X and corresponding columns of Q.
-  #
-  r1 = 1 #Row/col counter in new reduced Q & X
-  for r in 1:Xnr
-    if zeros[r] == false
-      X1[r1, :] = X[r, :] #transfer row
-      Q1[:, r1] = Q[:, r] #transfer column
-      r1 += 1 #next row in rank reduced matrices.
-    end #if zero
-  end #for r
-  return Q1, X1
+
+  return Q[:,1:last_row_to_keep], R[1:last_row_to_keep,:]
 end
 
 qr(T::DenseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
@@ -419,21 +407,35 @@ ql(T::DenseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2}; positive=false, cutoff=-1.0, kwargs...)
-  QM1, XM = qx(matrix(T))
-  # When qx=qr typeof(QM1)==LinearAlgebra.QRCompactWYQ
-  # When qx=ql typeof(QM1)==Matrix and this should be a no-op
-  QM = Matrix(QM1)
+function qx(qx::Function, T::DenseTensor{<:Any,2}; positive=false, pivot=false, cutoff=-1.0, verbose=false,kwargs...)
+  do_rank_reduction = cutoff>=0.0
+  if do_rank_reduction && qx==ql
+    @warn "User request ql decomposition with cutoff=$cutoff." *
+    "  Rank reduction requires column pivoting which is not supported for ql decomposition in lapack/ITensors"
+    do_rank_reduction=false
+  end
+  if pivot && qx==ql
+    @warn "User request ql decomposition with column pivoting." *
+    "  Column pivoting is not supported for ql decomposition in lapack/ITensors"
+    pivot=false
+  end
+  pivot=do_rank_reduction
+  
+  if pivot
+    QM, XM, p = qx(matrix(T),Val(true)) #with colun pivoting
+    QM, XM = trim_rows(Matrix(QM), XM, cutoff;verbose=verbose)
+  else
+    QM, XM = qx(matrix(T),Val(false)) #no column pivoting
+    QM = Matrix(QM)
+  end  
   #
-  #  Gauge fix diagonal of X into positive definite form.
+  #  Gauge fix diagonal of X into positive definite form. 
   #
   positive && qx_positive!(qx,QM,XM)
   #
-  #  Do row removal for rank revealing QR/QL.  Probably not worth it to elminate the if statement
+  #  undo the permutation on R, so the T=Q*R again.
   #
-  if cutoff >= 0.0
-    QM, XM = trim_rows(QM, XM, cutoff; kwargs...)
-  end
+  pivot && (XM=XM[:,invperm(p)])
   #
   # Make the new indices to go onto Q and X
   #
@@ -471,7 +473,8 @@ end
 #  Lapack replaces A with Q & L carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
-function ql(A::AbstractMatrix; kwargs...)
+function ql(A::AbstractMatrix,pivot; kwargs...)
+  @assert pivot==Val(false)
   Base.require_one_based_indexing(A)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
