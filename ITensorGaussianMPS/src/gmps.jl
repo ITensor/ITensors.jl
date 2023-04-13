@@ -805,6 +805,17 @@ function correlation_matrix_to_mps(
   return ψ
 end
 
+"""
+    slater_determinant_to_mps(s::Vector{<:Index}, Φ::AbstractMatrix; kwargs...)
+
+Given indices and matrix of orbitals representing a Slater determinant, 
+compute a matrix product state (MPS) approximately having the same correlation 
+matrices as this Slater determinant.
+
+Optional keyword arguments:
+* `eigval_cutoff::Float64=1E-8` - cutoff used to adaptively determine the block size (eigenvalues must be closer to 1 or 0 by an amount smaller than this cutoff for their eigenvectors be labeled as "inactive" orbitals)
+* `maxblocksize::Int` - maximum block size used to compute inactive orbitals. Setting this to a smaller value can lead to faster running times and a smaller MPS bond dimension, though the accuracy may be lower.
+"""
 function slater_determinant_to_mps(s::Vector{<:Index}, Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_mps(s, conj(Φ) * transpose(Φ); kwargs...)
 end
