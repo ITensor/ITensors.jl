@@ -367,11 +367,11 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 #
-#  Trim out zero rows of R/X within tolerance rr_cutoff. Also trim the corresponding columns
+#  Trim out zero rows of R/X within tolerance cutoff. Also trim the corresponding columns
 #  of Q.  X = R or L
 #
 function trim_rows(
-  Q::AbstractMatrix, X::AbstractMatrix, rr_cutoff::Float64; rr_verbose=false, kwargs...
+  Q::AbstractMatrix, X::AbstractMatrix, cutoff::Float64; verbose=false, kwargs...
 )
   #
   #  Find and count the zero rows.  Bail out if there are none.
@@ -379,7 +379,7 @@ function trim_rows(
   Xnr, Xnc = size(X)
   Qnr, Qnc = size(Q)
   @assert Xnr == Qnc #Sanity check.
-  zeros = map((r) -> (maximum(abs.(X[r, 1:Xnc])) <= rr_cutoff), 1:Xnr)
+  zeros = map((r) -> (maximum(abs.(X[r, 1:Xnc])) <= cutoff), 1:Xnr)
   num_zero_rows = sum(zeros)
   if num_zero_rows == 0
     return Q, X
@@ -387,9 +387,9 @@ function trim_rows(
   #
   # Useful output for trouble shooting.
   #
-  if rr_verbose
+  if verbose
     println(
-      "Rank Reveal removing $num_zero_rows rows with log10(rr_cutoff)=$(log10(rr_cutoff))"
+      "Rank Reveal removing $num_zero_rows rows with log10(cutoff)=$(log10(cutoff))"
     )
   end
   #
@@ -427,7 +427,7 @@ end
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2}; rr_cutoff=-1.0, kwargs...)
+function qx(qx::Function, T::DenseTensor{<:Any,2}; cutoff=-1.0, kwargs...)
   QM1, XM = qx(matrix(T))
   # When qx=qr typeof(QM1)==LinearAlgebra.QRCompactWYQ
   # When qx=ql typeof(QM1)==Matrix and this should be a no-op
@@ -435,8 +435,8 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; rr_cutoff=-1.0, kwargs...)
   #
   #  Do row removal for rank revealing QR/QL.  Probably not worth it to elminate the if statement
   #
-  if rr_cutoff >= 0.0
-    QM, XM = trim_rows(QM, XM, rr_cutoff; kwargs...)
+  if cutoff >= 0.0
+    QM, XM = trim_rows(QM, XM, cutoff; kwargs...)
   end
   #
   # Make the new indices to go onto Q and X

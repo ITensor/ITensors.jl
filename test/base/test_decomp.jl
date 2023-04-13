@@ -399,22 +399,22 @@ end
 
     Ainds = inds(A)
     A = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q = qr(A, Ainds[1:ninds]; rr_cutoff=1e-12)
+    Q, R, q = qr(A, Ainds[1:ninds]; cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = rq(A, Ainds[1:ninds]; rr_cutoff=1e-12)
+    R, Q, q = rq(A, Ainds[1:ninds]; cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    L, Q, q = lq(A, Ainds[1:ninds]; rr_cutoff=1e-12)
+    L, Q, q = lq(A, Ainds[1:ninds]; cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    Q, L, q = ql(A, Ainds[1:ninds]; rr_cutoff=1e-12)
+    Q, L, q = ql(A, Ainds[1:ninds]; cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
