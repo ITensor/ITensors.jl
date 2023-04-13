@@ -31,10 +31,10 @@ end
   elt in [Float64, ComplexF64, Float32, ComplexF32],
   positive in [false, true],
   singular in [false, true],
-  rank_reveal in [false,true],
-  pivot in [false,true]
-  
-  if qx==ql && (rank_reveal || pivot)
+  rank_reveal in [false, true],
+  pivot in [false, true]
+
+  if qx == ql && (rank_reveal || pivot)
     continue
   end
 
@@ -85,7 +85,7 @@ end
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   #@test array(Q) * array(Q)' no such relationship for tall matrices.
-  if positive  && !rank_reveal
+  if positive && !rank_reveal
     nr, nc = size(X)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
     diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.

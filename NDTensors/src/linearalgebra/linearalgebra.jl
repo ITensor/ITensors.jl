@@ -370,22 +370,21 @@ end
 #  Trim out n rows of R based on norm(R_nn)<cutoff, where R_nn is bottom n rows of R. 
 #  Also trim the corresponding columns of Q. 
 #
-function trim_rows(
-  Q::AbstractMatrix, R::AbstractMatrix, cutoff::Float64; verbose=false)
-  nr = size(R,1)
-  @assert size(Q,2) == nr #Sanity check.
+function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, cutoff::Float64; verbose=false)
+  nr = size(R, 1)
+  @assert size(Q, 2) == nr #Sanity check.
   #
   #  Find the larges n sich than norm(R_nn)<=cutoff.  n=last_row_to_keep+1
   #
-  last_row_to_keep=nr
-  for r in  nr:-1:1
-    if norm(R[r:nr,:])>cutoff 
-      last_row_to_keep=r
+  last_row_to_keep = nr
+  for r in nr:-1:1
+    if norm(R[r:nr, :]) > cutoff
+      last_row_to_keep = r
       break
     end
   end
 
-  num_zero_rows=nr-last_row_to_keep
+  num_zero_rows = nr - last_row_to_keep
   if num_zero_rows == 0
     return Q, R
   end
@@ -393,12 +392,10 @@ function trim_rows(
   # Useful output for trouble shooting.
   #
   if verbose
-    println(
-      "Rank Reveal removing $num_zero_rows rows with log10(cutoff)=$(log10(cutoff))"
-    )
+    println("Rank Reveal removing $num_zero_rows rows with log10(cutoff)=$(log10(cutoff))")
   end
 
-  return Q[:,1:last_row_to_keep], R[1:last_row_to_keep,:]
+  return Q[:, 1:last_row_to_keep], R[1:last_row_to_keep, :]
 end
 
 qr(T::DenseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
@@ -407,35 +404,43 @@ ql(T::DenseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2}; positive=false, pivot=false, cutoff=-1.0, verbose=false,kwargs...)
-  do_rank_reduction = cutoff>=0.0
-  if do_rank_reduction && qx==ql
+function qx(
+  qx::Function,
+  T::DenseTensor{<:Any,2};
+  positive=false,
+  pivot=false,
+  cutoff=-1.0,
+  verbose=false,
+  kwargs...,
+)
+  do_rank_reduction = cutoff >= 0.0
+  if do_rank_reduction && qx == ql
     @warn "User request ql decomposition with cutoff=$cutoff." *
-    "  Rank reduction requires column pivoting which is not supported for ql decomposition in lapack/ITensors"
-    do_rank_reduction=false
+      "  Rank reduction requires column pivoting which is not supported for ql decomposition in lapack/ITensors"
+    do_rank_reduction = false
   end
-  if pivot && qx==ql
+  if pivot && qx == ql
     @warn "User request ql decomposition with column pivoting." *
-    "  Column pivoting is not supported for ql decomposition in lapack/ITensors"
-    pivot=false
+      "  Column pivoting is not supported for ql decomposition in lapack/ITensors"
+    pivot = false
   end
-  pivot=do_rank_reduction
-  
+  pivot = do_rank_reduction
+
   if pivot
-    QM, XM, p = qx(matrix(T),Val(true)) #with colun pivoting
-    QM, XM = trim_rows(Matrix(QM), XM, cutoff;verbose=verbose)
+    QM, XM, p = qx(matrix(T), Val(true)) #with colun pivoting
+    QM, XM = trim_rows(Matrix(QM), XM, cutoff; verbose=verbose)
   else
-    QM, XM = qx(matrix(T),Val(false)) #no column pivoting
+    QM, XM = qx(matrix(T), Val(false)) #no column pivoting
     QM = Matrix(QM)
-  end  
+  end
   #
   #  Gauge fix diagonal of X into positive definite form. 
   #
-  positive && qx_positive!(qx,QM,XM)
+  positive && qx_positive!(qx, QM, XM)
   #
   #  undo the permutation on R, so the T=Q*R again.
   #
-  pivot && (XM=XM[:,invperm(p)])
+  pivot && (XM = XM[:, invperm(p)])
   #
   # Make the new indices to go onto Q and X
   #
@@ -455,14 +460,14 @@ end
 #  becuase the diagonal is difficult to locate for rectangular X (it moves between R and L)
 #  we use qx==ql to know if X is lower or upper.
 #
-function qx_positive!(qx::Function, Q::AbstractMatrix,X::AbstractMatrix)
+function qx_positive!(qx::Function, Q::AbstractMatrix, X::AbstractMatrix)
   nr, nc = size(X)
-  dc = (nc > nr && qx==ql) ? nc - nr : 0 #diag is shifted over by dc if nc>nr
-  for c in 1:Base.min(nr,nc)
+  dc = (nc > nr && qx == ql) ? nc - nr : 0 #diag is shifted over by dc if nc>nr
+  for c in 1:Base.min(nr, nc)
     if X[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
       sign_Xc = sign(X[c, c + dc])
       if !isone(sign_Xc)
-        X[c, :] *= sign_Xc 
+        X[c, :] *= sign_Xc
         Q[:, c] *= conj(sign_Xc)
       end
     end
@@ -473,8 +478,8 @@ end
 #  Lapack replaces A with Q & L carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
-function ql(A::AbstractMatrix,pivot; kwargs...)
-  @assert pivot==Val(false)
+function ql(A::AbstractMatrix, pivot; kwargs...)
+  @assert pivot == Val(false)
   Base.require_one_based_indexing(A)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))

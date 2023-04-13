@@ -388,8 +388,7 @@ end
     @test A ≈ Q * L atol = 1e-13
   end
 
-  @testset "Rank revealing QR/LQ decomp on MPS dense $elt tensor" for ninds in
-                                                                            [1, 2, 3],
+  @testset "Rank revealing QR/LQ decomp on MPS dense $elt tensor" for ninds in [1, 2, 3],
     elt in [Float64, ComplexF64]
 
     l = Index(5, "l")
@@ -408,7 +407,6 @@ end
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-
   end
 
   @testset "factorize with QR" begin
