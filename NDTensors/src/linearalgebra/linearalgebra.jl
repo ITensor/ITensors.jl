@@ -413,6 +413,9 @@ function qx(
   verbose=false,
   kwargs...,
 )
+  if isnothing(cutoff)
+    cutoff = -1.0
+  end
   do_rank_reduction = cutoff >= 0.0
   if do_rank_reduction && qx == ql
     @warn "User request ql decomposition with cutoff=$cutoff." *
@@ -453,6 +456,31 @@ function qx(
   Q = tensor(Dense(vec(QM)), Qinds)
   X = tensor(Dense(vec(XM)), Xinds)
   return Q, X
+end
+
+# Required by svd_recursive 
+"""
+    qr_positive(M::AbstractMatrix)
+
+Compute the QR decomposition of a matrix M
+such that the diagonal elements of R are
+non-negative. Such a QR decomposition of a
+matrix is unique. Returns a tuple (Q,R).
+"""
+function qr_positive(M::AbstractMatrix)
+  sparseQ, R = qr(M)
+  Q = convert(Matrix, sparseQ)
+  nc = size(Q, 2)
+  for c in 1:nc
+    if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Rc = sign(R[c, c])
+      if !isone(sign_Rc)
+        R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
+        Q[:, c] *= sign_Rc
+      end
+    end
+  end
+  return (Q, R)
 end
 
 #
