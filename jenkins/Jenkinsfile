@@ -27,7 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-             julia --project=monorepo -e using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");
+             julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
             sh '''
               julia -e 'using Pkg; Pkg.activate(joinpath(pwd(), "NDTensors"));Pkg.develop(path=joinpath(pwd())); Pkg.instantiate(); using NDTensors; NDTensors.enable_cuda!(true); using CUDA; include(joinpath(pwd(), "NDTensors", "test", "runtests.jl"))'
@@ -54,7 +54,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
             sh '''
               julia -e 'using Pkg; Pkg.activate(joinpath(pwd(), "NDTensors"));Pkg.develop(path=joinpath(pwd())); Pkg.instantiate(); using NDTensors; NDTensors.enable_cuda!(true); using CUDA; include(joinpath(pwd(), "NDTensors", "test", "runtests.jl"))'
