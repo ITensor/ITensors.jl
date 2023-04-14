@@ -1,6 +1,7 @@
 using ITensorGPU, Test, CUDA
 
 CUDA.allowscalar(false)
+@show CUDA.runtime_version()
 @testset "ITensorGPU.jl" begin
   #@testset "$filename" for filename in ("test_cucontract.jl",)
   #  println("Running $filename with autotune")
