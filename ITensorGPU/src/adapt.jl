@@ -6,9 +6,13 @@ NDTensors.cu(eltype::Type{<:Number}, x) = fmap(x -> adapt(CuArray{eltype}, x), x
 
 NDTensors.cu(x) = fmap(x -> adapt(CuArray, x), x)
 
-function NDTensors.adapt_storagetype(to::Type{<:CUDA.CuArray}, x::Type{<:NDTensors.EmptyStorage})
+function NDTensors.adapt_storagetype(
+  to::Type{<:CUDA.CuArray}, x::Type{<:NDTensors.EmptyStorage}
+)
   store = NDTensors.storagetype(x)
-  return NDTensors.emptytype(NDTensors.similartype(store, CuVector{eltype(x), CUDA.Mem.DeviceBuffer}))
+  return NDTensors.emptytype(
+    NDTensors.similartype(store, CuVector{eltype(x),CUDA.Mem.DeviceBuffer})
+  )
 end
 
 function NDTensors.set_eltype_if_unspecified(

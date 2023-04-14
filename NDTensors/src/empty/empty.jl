@@ -67,8 +67,8 @@ end
 # TODO: should this be `EmptyNumber`?
 EmptyStorage() = EmptyStorage(default_eltype())
 
-storagetype(::Type{EmptyStorage{ElT, StoreT}}) where {ElT, StoreT} = StoreT
-storagetype(::EmptyStorage{ElT, StoreT}) where {ElT, StoreT} = StoreT
+storagetype(::Type{EmptyStorage{ElT,StoreT}}) where {ElT,StoreT} = StoreT
+storagetype(::EmptyStorage{ElT,StoreT}) where {ElT,StoreT} = StoreT
 
 # Get the EmptyStorage version of the TensorStorage
 function emptytype(::Type{StoreT}) where {StoreT}
