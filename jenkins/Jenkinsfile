@@ -30,7 +30,7 @@ pipeline {
               julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); cd("./monorepo"); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!("11.8"); Pkg.test("ITensorGPU");'
             '''
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); cd("./monorepo"); using NDTensors; NDTensors.enable_cuda!(true); using CUDA; using Octavian; Pkg.test("NDTensors");'
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); cd("./monorepo"); using NDTensors; NDTensors.enable_cuda!(true); using CUDA; Pkg.add("Octavian"); using Octavian; Pkg.test("NDTensors");'
             '''
           }
         }
@@ -57,7 +57,7 @@ pipeline {
               julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); cd("./monorepo"); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!("11.8"); Pkg.test("ITensorGPU");'
             '''
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); cd("./monorepo"); using NDTensors; NDTensors.enable_cuda!(true); using CUDA; using Octavian;Pkg.test("NDTensors");'
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); cd("./monorepo"); using NDTensors; NDTensors.enable_cuda!(true); using CUDA; Pkg.add("Octavian"); using Octavian; Pkg.test("NDTensors");'
             '''
           }
         }
