@@ -4,8 +4,8 @@ using NDTensors
 ops = Vector{Function}(undef, 1)
 ops[1] = NDTensors.cpu
 
-@show NDTensors.use_cuda
-if NDTensors.use_cuda
+@show NDTensors.cuda_enabled
+if NDTensors.cuda_enabled
   println("Testing with CUDA")
   using Pkg;
   Pkg.add("CUDA")
@@ -17,7 +17,7 @@ if NDTensors.use_cuda
   end
 end
 
-if NDTensors.use_mtl
+if NDTensors.metal_enabled
   using Metal
   push!(ops, NDTensors.mtl)
   Metal.allowscalar()
