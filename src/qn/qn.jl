@@ -239,7 +239,9 @@ function (a::QN + b::QN)
       ma_dict[bname] = ma_dict[bname] + b[nb]
     end
   end
-  ma = MVector{length(keys(ma_dict)),QNVal}(p[2] for p in sort(collect(ma_dict)))
+  ma = MVector{length(keys(ma_dict)),QNVal}(
+    p[2] for p in sort(collect(ma_dict); by=p -> p[1])
+  )
   return QN(ma)
 end
 
