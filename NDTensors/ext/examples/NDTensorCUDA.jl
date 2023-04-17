@@ -114,11 +114,8 @@ inner(cm', H, cm)
 ### TO run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
 if false # false so we don't have an infinite loop
   using Pkg
-  Pkg.activate(".")
-  using NDTensors
-  NDTensors.enable_cuda!(true)
   Pkg.add("CUDA")
   using CUDA
-  Pkg.test("NDTensors")
+  Pkg.test("NDTensors"; test_args=["cuda"])
 end
 ## TODO create option to turn cuda tests on to allow the use of NDTensor.cu

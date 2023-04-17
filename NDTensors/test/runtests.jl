@@ -1,12 +1,22 @@
 using Test
 using NDTensors
 
-ops = Vector{Function}(undef, 1)
-ops[1] = NDTensors.cpu
+ops = Vector{Function}(undef, 0)
+test_args = copy(ARGS)
 
-@show NDTensors.cuda_enabled
-if NDTensors.cuda_enabled
-  println("Testing with CUDA")
+println("Passing arguments ARGS=$(test_args) to test.")
+if isempty(test_args) || "base" in test_args
+  println(
+  """\nArguments ARGS = $(test_args) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
+)
+push!(ops, NDTensors.cpu)
+end
+
+
+if "cuda" in test_args || "all" in test_args
+  println(
+  """\nArguments ARGS = $(test_args) contain `"cuda"`. Running NDTensorCUDA tests.""",
+)
   using Pkg
   Pkg.add("CUDA")
   using CUDA
@@ -17,7 +27,10 @@ if NDTensors.cuda_enabled
   end
 end
 
-if NDTensors.metal_enabled
+if "metal" in test_args || "all" in test_args
+  println(
+  """\nArguments ARGS = $(test_args) contain`"metal"`. Running NDTensorMetal tests.""",
+)
   using Metal
   push!(ops, NDTensors.mtl)
   Metal.allowscalar()
