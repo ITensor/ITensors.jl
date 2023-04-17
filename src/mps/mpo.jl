@@ -354,7 +354,7 @@ function deprecate_make_inds_match!(
   return ydag, A, x
 end
 
-function _dot(
+function _log_or_not_dot(
   y::MPS, A::MPO, x::MPS, loginner::Bool; make_inds_match::Bool=true, kwargs...
 )::Number
   N = length(A)
@@ -393,7 +393,7 @@ end
 Same as [`inner`](@ref).
 """
 function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
-  return _dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
+  return _log_or_not_dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
 end
 
 """
@@ -403,7 +403,7 @@ end
     Same as [`loginner`](@ref).
 """
 function logdot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
-  return _dot(y, A, x, true; make_inds_match=make_inds_match, kwargs...)
+  return _log_or_not_dot(y, A, x, true; make_inds_match=make_inds_match, kwargs...)
 end
 
 """
