@@ -56,11 +56,7 @@ end
 (qv1::QNVal + qv2::QNVal) = pm(qv1, qv2, +1)
 (qv1::QNVal - qv2::QNVal) = pm(qv1, qv2, -1)
 
-const ZeroVal = QNVal()
-
-const maxQNs = 4
-const QNStorage = SVector{maxQNs,QNVal}
-const MQNStorage = MVector{maxQNs,QNVal}
+const ZeroVal = QNVal("", 0, 0)
 
 """
 A QN object stores a collection of up to four
@@ -76,18 +72,13 @@ the named values. If a name is missing from the
 collection, its value is treated as zero.
 """
 struct QN
-  data::QNStorage
+  data::SVector{<:Any,QNVal}
 
-  function QN()
-    s = QNStorage(ntuple(_ -> ZeroVal, Val(maxQNs)))
-    return new(s)
-  end
-
-  QN(s::QNStorage) = new(s)
+  QN() = new(SVector{0,QNVal}())
+  QN(s::SVector{<:Any,QNVal}) = new(s)
+  QN(m::MVector{<:Any,QNVal}) = new(SVector(m))
+  QN(mqn::NTuple{N,QNVal}) where {N} = new(SVector(mqn))
 end
-
-QN(mqn::MQNStorage) = QN(QNStorage(mqn))
-QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
 
 function hash(obj::QN, h::UInt)
   # TODO: use an MVector or SVector
@@ -117,7 +108,7 @@ q = QN(("P",0,2),("Sz",0)).
 ```
 """
 function QN(qvs...)
-  m = MQNStorage(ntuple(_ -> ZeroVal, Val(maxQNs)))
+  m = MVector(ntuple(_ -> ZeroVal, length(qvs)))
   for (n, qv) in enumerate(qvs)
     m[n] = QNVal(qv...)
   end
@@ -128,7 +119,7 @@ function QN(qvs...)
       error("Duplicate name \"$(name(m[n]))\" in QN")
     end
   end
-  return QN(QNStorage(m))
+  return QN(m)
 end
 
 """
@@ -157,13 +148,13 @@ length(qn::QN) = length(data(qn))
 
 lastindex(qn::QN) = length(qn)
 
-isactive(qn::QN) = isactive(qn[1])
+isactive(qn::QN) = length(qn) > 0 && isactive(qn[1])
 
 function nactive(q::QN)
-  for n in 1:maxQNs
+  for n in 1:length(q.data)
     !isactive(q[n]) && (return n - 1)
   end
-  return maxQNs
+  return length(q.data)
 end
 
 function iterate(qn::QN, state::Int=1)
@@ -181,7 +172,7 @@ corresponding to the string `name`
 """
 function val(q::QN, name_)
   sname = SmallString(name_)
-  for n in 1:maxQNs
+  for n in 1:length(q.data)
     name(q[n]) == sname && return val(q[n])
   end
   return 0
@@ -195,7 +186,7 @@ corresponding to the string `name`
 """
 function modulus(q::QN, name_)
   sname = SmallString(name_)
-  for n in 1:maxQNs
+  for n in 1:length(q.data)
     name(q[n]) == sname && return modulus(q[n])
   end
   return 0
@@ -209,7 +200,7 @@ the same names as q, but with
 all values set to zero.
 """
 function zero(qn::QN)
-  mqn = MQNStorage(undef)
+  mqn = MVector{length(qn.data),QNVal}(undef)
   for i in 1:length(mqn)
     mqn[i] = zero(qn[i])
   end
@@ -217,7 +208,7 @@ function zero(qn::QN)
 end
 
 function (dir::Arrow * qn::QN)
-  mqn = MQNStorage(undef)
+  mqn = MVector{length(qn.data),QNVal}(undef)
   for i in 1:length(mqn)
     mqn[i] = dir * qn[i]
   end
@@ -227,7 +218,7 @@ end
 (qn::QN * dir::Arrow) = (dir * qn)
 
 function -(qn::QN)
-  mqn = MQNStorage(undef)
+  mqn = MVector{length(qn.data),QNVal}(undef)
   for i in 1:length(mqn)
     mqn[i] = -qn[i]
   end
@@ -235,30 +226,21 @@ function -(qn::QN)
 end
 
 function (a::QN + b::QN)
-  !isactive(b[1]) && return a
+  !isactive(b) && return a
 
-  ma = MQNStorage(data(a))
-  for nb in 1:maxQNs
+  #a and b need to be merged based on name, use Dict to do this easily
+  ma_dict = Dict(x.name => x for x in a.data)
+  for nb in 1:length(b.data)
     !isactive(b[nb]) && break
     bname = name(b[nb])
-    for na in 1:maxQNs
-      aname = name(a[na])
-      if !isactive(ma[na])
-        ma[na] = b[nb]
-        break
-      elseif name(ma[na]) == bname
-        ma[na] = ma[na] + b[nb]
-        break
-      elseif (bname < aname) && (na == 1 || bname > name(ma[na - 1]))
-        for j in maxQNs:-1:(na + 1)
-          ma[j] = ma[j - 1]
-        end
-        ma[na] = b[nb]
-        break
-      end
+    if !(bname in keys(ma_dict)) || (!isactive(ma_dict[bname]))
+      ma_dict[bname] = b[nb]
+    else
+      ma_dict[bname] = ma_dict[bname] + b[nb]
     end
   end
-  return QN(QNStorage(ma))
+  ma = MVector{length(keys(ma_dict)),QNVal}(p[2] for p in sort(collect(ma_dict)))
+  return QN(ma)
 end
 
 (a::QN - b::QN) = (a + (-b))
@@ -277,19 +259,26 @@ function NDTensors.insertafter(qn::QN, qv::QNVal, pos::Int)
   return QN(NDTensors.insertafter(Tuple(qn), qv, pos)[1:length(qn)])
 end
 
-function addqnval(qn::QN, qv_add::QNVal)
-  isactive(qn[end]) &&
-    error("Cannot add QNVal, QN already contains maximum number of QNVals")
+function addqnval(qn::QN, qv_add::QNVal)::QN
   for (pos, qv) in enumerate(qn)
     if qv_add < qv || !isactive(qv)
-      return NDTensors.insertafter(qn, qv_add, pos - 1)
+      if pos == 1
+        return QN(MVector{length(qn) + 1,QNVal}(qv_add, qn.data...))
+      else
+        return QN(
+          MVector{length(qn) + 1,QNVal}(
+            qn.data[1:(pos - 1)]..., qv_add, qn.data[pos:end]...
+          ),
+        )
+      end
     end
   end
+  return QN(MVector{length(qn) + 1,QNVal}(qn.data..., qv_add))
 end
 
 # Fills in the qns of qn1 that qn2 has but
 # qn1 doesn't
-function fillqns_from(qn1::QN, qn2::QN)
+function fillqns_from(qn1::QN, qn2::QN)::QN
   # If qn1 has no non-trivial qns, fill
   # with qn2
   !isactive(qn1) && return zero(qn2)
@@ -302,7 +291,7 @@ function fillqns_from(qn1::QN, qn2::QN)
 end
 
 # Make sure qn1 and qn2 have all of the same qns
-function fillqns(qn1::QN, qn2::QN)
+function fillqns(qn1::QN, qn2::QN)::Tuple{QN,QN}
   qn1_filled = fillqns_from(qn1, qn2)
   qn2_filled = fillqns_from(qn2, qn1)
   return qn1_filled, qn2_filled
@@ -310,6 +299,7 @@ end
 
 function isequal_assume_filled(qn1::QN, qn2::QN)
   for (qv1, qv2) in zip(qn1, qn2)
+    # TODO unit tests are erroring out on this line
     modulus(qv1) != modulus(qv2) && error("QNVals must have same modulus to compare")
     qv1 != qv2 && return false
   end
@@ -403,9 +393,9 @@ function write(parent::Union{HDF5.File,HDF5.Group}, gname::AbstractString, q::QN
   g = create_group(parent, gname)
   attributes(g)["type"] = "QN"
   attributes(g)["version"] = 1
-  names = [String(name(q[n])) for n in 1:maxQNs]
-  vals = [val(q[n]) for n in 1:maxQNs]
-  mods = [modulus(q[n]) for n in 1:maxQNs]
+  names = [String(name(qq)) for qq in q.data]
+  vals = [val(qq) for qq in q.data]
+  mods = [modulus(qq) for qq in q.data]
   write(g, "names", names)
   write(g, "vals", vals)
   return write(g, "mods", mods)
@@ -419,6 +409,6 @@ function read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{
   names = read(g, "names")
   vals = read(g, "vals")
   mods = read(g, "mods")
-  mqn = ntuple(n -> QNVal(names[n], vals[n], mods[n]), maxQNs)
+  mqn = ntuple(n -> QNVal(names[n], vals[n], mods[n]), length(names))
   return QN(mqn)
 end

@@ -386,6 +386,7 @@ export
   isfermionic,
   modulus,
   val,
+  QNVal,
 
   # qn/qnindex.jl
   blockdim,

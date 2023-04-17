@@ -64,10 +64,6 @@ import ITensors: nactive
 
     q = QN(("A", 1), ("B", 2), ("C", 3), ("D", 4))
     @test nactive(q) == 4
-
-    @test_throws BoundsError begin
-      q = QN(("A", 1), ("B", 2), ("C", 3), ("D", 4), ("E", 5))
-    end
   end
 
   @testset "Comparison" begin
@@ -99,7 +95,7 @@ import ITensors: nactive
   end
 
   @testset "Ordering" begin
-    z = QN()
+    z = QN(("", 0))
     qa = QN(("Sz", 1), ("Nf", 1))
     qb = QN(("Sz", 0), ("Nf", 2))
     qc = QN(("Sz", 1), ("Nf", 2))
