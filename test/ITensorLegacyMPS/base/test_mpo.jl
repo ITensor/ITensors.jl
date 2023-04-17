@@ -156,7 +156,7 @@ end
     Φ = c .* randomMPS(s; linkdims=4)
     K = randomMPO(s)
 
-    @test log(inner(ψ', K, Φ)) ≈ loginner(ψ', K, Φ)
+    @test log(complex(inner(ψ', K, Φ))) ≈ loginner(ψ', K, Φ)
   end
 
   @testset "inner <By|A|x>" begin
