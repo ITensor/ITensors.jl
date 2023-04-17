@@ -7,16 +7,15 @@ test_args = copy(ARGS)
 println("Passing arguments ARGS=$(test_args) to test.")
 if isempty(test_args) || "base" in test_args
   println(
-  """\nArguments ARGS = $(test_args) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
-)
-push!(ops, NDTensors.cpu)
+    """\nArguments ARGS = $(test_args) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
+  )
+  push!(ops, NDTensors.cpu)
 end
-
 
 if "cuda" in test_args || "all" in test_args
   println(
-  """\nArguments ARGS = $(test_args) contain `"cuda"`. Running NDTensorCUDA tests.""",
-)
+    """\nArguments ARGS = $(test_args) contain `"cuda"`. Running NDTensorCUDA tests."""
+  )
   using Pkg
   Pkg.add("CUDA")
   using CUDA
@@ -29,8 +28,8 @@ end
 
 if "metal" in test_args || "all" in test_args
   println(
-  """\nArguments ARGS = $(test_args) contain`"metal"`. Running NDTensorMetal tests.""",
-)
+    """\nArguments ARGS = $(test_args) contain`"metal"`. Running NDTensorMetal tests."""
+  )
   using Metal
   push!(ops, NDTensors.mtl)
   Metal.allowscalar()
