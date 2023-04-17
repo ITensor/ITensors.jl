@@ -154,9 +154,9 @@ end
     s = siteinds("S=1/2", n)
     ψ = c .* randomMPS(s; linkdims=4)
     Φ = c .* randomMPS(s; linkdims=4)
-    K = randomMPO(sites)
+    K = randomMPO(s)
 
-    @test log(inner(ψ,K,Φ)) ≈ loginner(ψ,K,Φ)
+    @test log(inner(ψ',K,Φ)) ≈ loginner(ψ',K,Φ)
   end
 
 
