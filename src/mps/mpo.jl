@@ -354,8 +354,9 @@ function deprecate_make_inds_match!(
   return ydag, A, x
 end
 
-
-function _dot(y::MPS, A::MPO, x::MPS, loginner::Bool; make_inds_match::Bool=true, kwargs...)::Number
+function _dot(
+  y::MPS, A::MPO, x::MPS, loginner::Bool; make_inds_match::Bool=true, kwargs...
+)::Number
   N = length(A)
   check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
@@ -391,7 +392,9 @@ end
 
 Same as [`inner`](@ref).
 """
-dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...) = _dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
+function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
+  return _dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
+end
 
 """
     logdot(B::MPO, y::MPS, A::MPO, x::MPS)
@@ -399,7 +402,9 @@ dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...) = _dot(y, A, 
     This is useful for larger MPS/MPO, where in the limit of large numbers of sites the inner product can diverge or approach zero.
     Same as [`loginner`](@ref).
 """
-logdot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...) = _dot(y, A, x, true; make_inds_match=make_inds_match, kwargs...)
+function logdot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
+  return _dot(y, A, x, true; make_inds_match=make_inds_match, kwargs...)
+end
 
 """
     inner(y::MPS, A::MPO, x::MPS)
@@ -482,8 +487,6 @@ function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs.
   end
   return O[]
 end
-
-
 
 # TODO: maybe make these into tuple inputs?
 # Also can generalize to:
