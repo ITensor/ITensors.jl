@@ -354,12 +354,8 @@ function deprecate_make_inds_match!(
   return ydag, A, x
 end
 
-"""
-    dot(y::MPS, A::MPO, x::MPS)
 
-Same as [`inner`](@ref).
-"""
-function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
+function _dot(y::MPS, A::MPO, x::MPS, loginner::Bool; make_inds_match::Bool=true, kwargs...)::Number
   N = length(A)
   check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
@@ -367,11 +363,43 @@ function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Num
   ydag, A, x = deprecate_make_inds_match!(dot, ydag, A, x; make_inds_match)
   check_hascommoninds(siteinds, A, y)
   O = ydag[1] * A[1] * x[1]
+  if loginner
+    normO = norm(O)
+    log_inner_tot = log(normO)
+    O ./= normO
+  end
   for j in 2:N
     O = O * ydag[j] * A[j] * x[j]
+    if loginner
+      normO = norm(O)
+      log_inner_tot += log(normO)
+      O ./= normO
+    end
   end
-  return O[]
+  if loginner
+    if !isreal(O[]) || real(O[]) < 0
+      log_inner_tot += log(complex(O[]))
+    end
+    return log_inner_tot
+  else
+    return O[]
+  end
 end
+
+"""
+    dot(y::MPS, A::MPO, x::MPS)
+
+Same as [`inner`](@ref).
+"""
+dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...) = _dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
+
+"""
+    logdot(B::MPO, y::MPS, A::MPO, x::MPS)
+    Compute the logarithm of the inner product `⟨y|A|x⟩` efficiently and exactly.
+    This is useful for larger MPS/MPO, where in the limit of large numbers of sites the inner product can diverge or approach zero.
+    Same as [`loginner`](@ref).
+"""
+logdot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...) = _dot(y, A, x, true; make_inds_match=make_inds_match, kwargs...)
 
 """
     inner(y::MPS, A::MPO, x::MPS)
@@ -406,6 +434,12 @@ inner(y::MPS, A::MPO, x::MPS; kwargs...) = dot(y, A, x; kwargs...)
 function inner(y::MPS, Ax::Apply{Tuple{MPO,MPS}})
   return inner(y', Ax.args[1], Ax.args[2])
 end
+
+"""
+    loginner(y::MPS, A::MPO, x::MPS)
+    Same as [`logdot`](@ref).
+"""
+loginner(y::MPS, A::MPO, x::MPS; kwargs...) = logdot(y, A, x; kwargs...)
 
 """
     dot(B::MPO, y::MPS, A::MPO, x::MPS)
@@ -448,6 +482,8 @@ function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs.
   end
   return O[]
 end
+
+
 
 # TODO: maybe make these into tuple inputs?
 # Also can generalize to:

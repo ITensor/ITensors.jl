@@ -147,6 +147,19 @@ end
     end
   end
 
+  @testset "loginner <y|A|x>" begin
+    n = 4
+    c = 2
+
+    s = siteinds("S=1/2", n)
+    ψ = c .* randomMPS(s; linkdims=4)
+    Φ = c .* randomMPS(s; linkdims=4)
+    K = randomMPO(sites)
+
+    @test log(inner(ψ,K,Φ)) ≈ loginner(ψ,K,Φ)
+  end
+
+
   @testset "inner <By|A|x>" begin
     phi = makeRandomMPS(sites)
 
