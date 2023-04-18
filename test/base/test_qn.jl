@@ -64,6 +64,9 @@ import ITensors: nactive
 
     q = QN(("A", 1), ("B", 2), ("C", 3), ("D", 4))
     @test nactive(q) == 4
+
+    @test QN(("Sz", 0), ("Sx", 0), ("Sy", 2), ("X", 3), ("B", 4)) ==
+      QN(("B", 4), ("Sx", 0), ("Sy", 2), ("Sz", 0), ("X", 3))
   end
 
   @testset "Comparison" begin

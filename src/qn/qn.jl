@@ -59,7 +59,7 @@ end
 const ZeroVal = QNVal("", 0, 0)
 
 """
-A QN object stores a collection of up to four
+A QN object stores a collection of up to N
 named values such as ("Sz",1) or ("N",0).
 These values can include a third integer "m"
 which makes them obey addition modulo m, for
@@ -71,13 +71,15 @@ addition and subtraction element-wise on each of
 the named values. If a name is missing from the
 collection, its value is treated as zero.
 """
-struct QN
-  data::SVector{<:Any,QNVal}
+struct QN{T}
+  data::T
 
-  QN() = new(SVector{0,QNVal}())
-  QN(s::SVector{<:Any,QNVal}) = new(s)
-  QN(m::MVector{<:Any,QNVal}) = new(SVector(m))
-  QN(mqn::NTuple{N,QNVal}) where {N} = new(SVector(mqn))
+  QN() = new{SVector{0,QNVal}}(SVector{0,QNVal}())
+  QN(s::SVector{N,QNVal}) where {N} = new{SVector{N,QNVal}}(s)
+  QN(m::MVector{N,QNVal}) where {N} = new{SVector{N,QNVal}}(SVector(m))
+  QN(mqn::NTuple{N,QNVal}) where {N} = new{SVector{N,QNVal}}(SVector(mqn))
+  QN(mqn::AbstractArray{<:QNVal}) = new{SVector{length(mqn),QNVal}}(SVector(mqn))
+  QN(d::Dict{TKey,QNVal}) where {TKey} = new{Dict{TKey,QNVal}}(d)
 end
 
 function hash(obj::QN, h::UInt)
@@ -85,7 +87,7 @@ function hash(obj::QN, h::UInt)
   # for performance here; put non-zero QNVals
   # to front and slice when passing to hash
   nzqv = QNVal[]
-  for qv in obj.data
+  for qv in data(obj)
     if val(qv) != 0
       push!(nzqv, qv)
     end
@@ -96,7 +98,7 @@ end
 """
     QN(qvs...)
 
-Construct a QN from a set of up to four
+Construct a QN from a set of N
 named value tuples.
 
 Examples
@@ -140,7 +142,10 @@ with optional modulus.
 """
 QN(val::Int, modulus::Int=1) = QN(("", val, modulus))
 
-data(qn::QN) = qn.data
+data(qn::QN{<:AbstractArray}) = qn.data
+function data(qn::QN{<:AbstractDict})
+  return [p[2] for p in sort(collect(qn.data); by=p -> p[1])]
+end
 
 getindex(q::QN, n::Int) = getindex(data(q), n)
 
@@ -151,18 +156,41 @@ lastindex(qn::QN) = length(qn)
 isactive(qn::QN) = length(qn) > 0 && isactive(qn[1])
 
 function nactive(q::QN)
-  for n in 1:length(q.data)
-    !isactive(q[n]) && (return n - 1)
+  d = data(q)
+  for n in 1:length(d)
+    !isactive(d[n]) && (return n - 1)
   end
-  return length(q.data)
+  return length(d)
 end
 
 function iterate(qn::QN, state::Int=1)
-  (state > length(qn)) && return nothing
-  return (qn[state], state + 1)
+  d = data(qn)
+  (state > length(d)) && return nothing
+  return (d[state], state + 1)
 end
 
-keys(qn::QN) = keys(data(qn))
+keys(qn::QN) = keys(qn.data)
+
+"""
+    get_qn_val(q::QN, name)
+
+Get the QNVal within the QN q
+corresponding to the string `name`
+"""
+function get_qn_val(q::QN{<:AbstractArray{<:QNVal}}, name_)
+  sname = SmallString(name_)
+  for n in 1:length(q.data)
+    name(q[n]) == sname && return q[n]
+  end
+  return nothing
+end
+function get_qn_val(q::QN{<:AbstractDict{TKey,<:QNVal}}, name_) where {TKey}
+  sname = TKey(name_)
+  if sname in keys(q)
+    return q[sname]
+  end
+  return nothing
+end
 
 """
     val(q::QN,name)
@@ -171,11 +199,8 @@ Get the value within the QN q
 corresponding to the string `name`
 """
 function val(q::QN, name_)
-  sname = SmallString(name_)
-  for n in 1:length(q.data)
-    name(q[n]) == sname && return val(q[n])
-  end
-  return 0
+  qnval = get_qn_val(q, name_)
+  return qnval === nothing ? 0 : val(qnval)
 end
 
 """
@@ -185,11 +210,8 @@ Get the modulus within the QN q
 corresponding to the string `name`
 """
 function modulus(q::QN, name_)
-  sname = SmallString(name_)
-  for n in 1:length(q.data)
-    name(q[n]) == sname && return modulus(q[n])
-  end
-  return 0
+  qnval = get_qn_val(q, name_)
+  return qnval === nothing ? 0 : modulus(qnval)
 end
 
 """
@@ -199,69 +221,119 @@ Returns a QN object containing
 the same names as q, but with
 all values set to zero.
 """
-function zero(qn::QN)
+function zero(qn::QN{<:AbstractArray})
   mqn = MVector{length(qn.data),QNVal}(undef)
   for i in 1:length(mqn)
     mqn[i] = zero(qn[i])
   end
   return QN(mqn)
 end
+function zero(qn::QN{<:AbstractDict})
+  return QN(Dict(k => zero(v) for (k, v) in collect(qn.data)))
+end
 
-function (dir::Arrow * qn::QN)
+function (dir::Arrow * qn::QN{<:AbstractArray})
   mqn = MVector{length(qn.data),QNVal}(undef)
   for i in 1:length(mqn)
     mqn[i] = dir * qn[i]
   end
   return QN(mqn)
 end
+function (dir::Arrow * qn::QN{<:AbstractDict})
+  return QN(k => dir * v for (k, v) in collect(qn))
+end
 
 (qn::QN * dir::Arrow) = (dir * qn)
 
-function -(qn::QN)
+function -(qn::QN{<:AbstractArray})
   mqn = MVector{length(qn.data),QNVal}(undef)
   for i in 1:length(mqn)
     mqn[i] = -qn[i]
   end
   return QN(mqn)
 end
+function -(qn::QN{<:AbstractDict})
+  return QN(k => -v for (k, v) in collect(qn))
+end
 
-function (a::QN + b::QN)
+function (a::QN{<:AbstractArray} + b::QN{<:AbstractArray})
+  # TODO can't get this to work without mapping to dictionaries
+
+  # #length of keyset needed to determine length of merged vector
+  # keyset = Set{SmallString}(name(x) for x in a.data)
+  # for x in b.data
+  #   isactive(x) && push!(keyset, name(x))
+  # end
+
+  # #create merged vector backfilled with a
+  # ma = MVector{length(keyset),QNVal}(
+  #   ntuple(i -> i < length(a) ? a[i] : ZeroVal, length(keyset))
+  # )
+  # for nb in 1:length(b)
+  #   !isactive(b[nb]) && break
+  #   bname = name(b[nb])
+  #   for na in 1:length(a)
+  #     aname = name(a[na])
+  #     if !isactive(ma[na])
+  #       ma[na] = b[nb]
+  #       break
+  #     elseif name(ma[na]) == bname
+  #       ma[na] = ma[na] + b[nb]
+  #       break
+  #     elseif (bname < aname) && (na == 1 || bname > name(ma[na - 1]))
+  #       for j in length(ma):-1:(na + 1)
+  #         ma[j] = ma[j - 1]
+  #       end
+  #       ma[na] = b[nb]
+  #       break
+  #     end
+  #   end
+  # end
+  # return QN(ma)
+
+  #temporary hack -- move to dictionaries, add, move back to SVector
+  qn = QN(Dict(name(v) => v for v in a.data)) + QN(Dict(name(v) => v for v in b.data))
+  dqn = data(qn)
+  return QN(SVector{length(dqn),QNVal}(dqn))
+end
+function (a::QN{<:AbstractDict} + b::QN{<:AbstractDict})
   !isactive(b) && return a
+  !isactive(a) && return b
 
-  #a and b need to be merged based on name, use Dict to do this easily
-  ma_dict = Dict(x.name => x for x in a.data)
-  for nb in 1:length(b.data)
-    !isactive(b[nb]) && break
-    bname = name(b[nb])
+  #merge a and b dictionaries based on name, isactive
+  ma_dict = Dict(k => v for (k, v) in collect(a.data))
+  for kb in keys(b.data)
+    !isactive(b.data[kb]) && break
+    bname = name(b.data[kb])
     if !(bname in keys(ma_dict)) || (!isactive(ma_dict[bname]))
-      ma_dict[bname] = b[nb]
+      ma_dict[bname] = b.data[kb]
     else
-      ma_dict[bname] = ma_dict[bname] + b[nb]
+      ma_dict[bname] = ma_dict[bname] + b.data[bname]
     end
   end
-  ma = MVector{length(keys(ma_dict)),QNVal}(
-    p[2] for p in sort(collect(ma_dict); by=p -> p[1])
-  )
-  return QN(ma)
+  return QN(ma_dict)
+end
+function (a::QN{<:AbstractArray} + b::QN{<:AbstractDict})
+  return QN(Dict(name(v) => v for v in data(a))) + b
+end
+function (a::QN{<:AbstractDict} + b::QN{<:AbstractArray})
+  return a + QN(Dict(name(v) => v for v in data(b)))
 end
 
 (a::QN - b::QN) = (a + (-b))
 
 function hasname(qn::QN, qv_find::QNVal)
-  for qv in qn
-    name(qv) == name(qv_find) && return true
-  end
-  return false
+  return get_qn_val(qn, name(qv_find)) !== nothing
 end
 
 # Does not perform checks on if QN is already full, drops
 # the last QNVal
 # Rename insert?
-function NDTensors.insertafter(qn::QN, qv::QNVal, pos::Int)
+function NDTensors.insertafter(qn::QN{<:AbstractArray}, qv::QNVal, pos::Int)
   return QN(NDTensors.insertafter(Tuple(qn), qv, pos)[1:length(qn)])
 end
 
-function addqnval(qn::QN, qv_add::QNVal)::QN
+function addqnval(qn::QN{<:AbstractArray}, qv_add::QNVal)::QN
   for (pos, qv) in enumerate(qn)
     if qv_add < qv || !isactive(qv)
       if pos == 1
@@ -276,6 +348,11 @@ function addqnval(qn::QN, qv_add::QNVal)::QN
     end
   end
   return QN(MVector{length(qn) + 1,QNVal}(qn.data..., qv_add))
+end
+function addqnval(qn::QN{<:AbstractDict}, qv_add::QNVal)::QN
+  d = Dict(qn.data)
+  d[name(qv_add)] = qv_add
+  return QN(d)
 end
 
 # Fills in the qns of qn1 that qn2 has but
@@ -301,7 +378,6 @@ end
 
 function isequal_assume_filled(qn1::QN, qn2::QN)
   for (qv1, qv2) in zip(qn1, qn2)
-    # TODO unit tests are erroring out on this line
     modulus(qv1) != modulus(qv2) && error("QNVals must have same modulus to compare")
     qv1 != qv2 && return false
   end
@@ -349,7 +425,7 @@ function have_same_mods(qn1::QN, qn2::QN)
   return true
 end
 
-function removeqn(qn::QN, qn_name::String)
+function removeqn(qn::QN{<:AbstractArray}, qn_name::String)
   ss_qn_name = SmallString(qn_name)
 
   # Find the location of the QNVal to remove
@@ -370,6 +446,10 @@ function removeqn(qn::QN, qn_name::String)
   end
   qn_data = setindex(qn_data, QNVal(), length(qn))
   return QN(qn_data)
+end
+function removeqn(qn::QN{<:AbstractDict}, qn_name::String)
+  ss_qn_name = SmallString(qn_name)
+  return QN(k => v for (k, v) in collect(qn.data) if k != ss_qn_name)
 end
 
 function show(io::IO, q::QN)
