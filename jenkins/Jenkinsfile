@@ -27,7 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.activate(joinpath(pwd(), "test_itensorgpu")); Pkg.develop(path=joinpath(pwd())); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.instantiate(); using CUDA; CUDA.set_runtime_version!(v"11.8"); println("+++ :julia: Running tests");include(joinpath(pwd(), "ITensorGPU", "test", "runtests.jl"))'
+              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.activate(joinpath(pwd(), "test_itensorgpu")); Pkg.develop(path=joinpath(pwd())); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.instantiate(); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!(v"11.8"); println("+++ :julia: Running tests");include(joinpath(pwd(), "ITensorGPU", "test", "runtests.jl"))'
               '''
           }
         }
@@ -51,7 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-            julia -e 'using Pkg; Pkg.Registry.update(); Pkg.activate(joinpath(pwd(), "test_itensorgpu")); Pkg.develop(path=joinpath(pwd())); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.instantiate(); using CUDA; CUDA.set_runtime_version!(v"11.8"); println("+++ :julia: Running tests");include(joinpath(pwd(), "ITensorGPU", "test", "runtests.jl"))'
+            julia -e 'using Pkg; Pkg.Registry.update(); Pkg.activate(joinpath(pwd(), "test_itensorgpu")); Pkg.develop(path=joinpath(pwd())); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.instantiate(); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!(v"11.8"); println("+++ :julia: Running tests");include(joinpath(pwd(), "ITensorGPU", "test", "runtests.jl"))'
             '''
           }
         }
