@@ -65,14 +65,15 @@ decomp = (
   dim(NDTensors.ind(grad[1], 2)) * dim(NDTensors.ind(grad[1], 3)),
 )
 # Reshape the CuVector of data into a matrix
-data = CUDA.reshape(NDTensors.data(storage(grad[1])), decomp)
+cuTensor_data = CUDA.reshape(NDTensors.data(storage(grad[1])), decomp)
 # Use cuBLAS to compute SVD of data
-U, S, V = svd(data)
+U, S, V = svd(cuTensor_data)
 decomp = (dim(NDTensors.ind(grad[2], 1)), dim(NDTensors.ind(grad[2], 2)))
-data = CUDA.reshape(NDTensors.data(storage(grad[2])), decomp)
-U, S, V = svd(data)
+cuTensor_data = CUDA.reshape(NDTensors.data(storage(grad[2])), decomp)
+U, S, V = svd(cuTensor_data)
 
 # These things can take up lots of memory, look at memory usage here
+cuTensor_data = nothing
 CUDA.memory_status()
 
 # Get rid of the gradients and clean the CUDA memory
