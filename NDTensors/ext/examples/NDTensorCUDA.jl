@@ -4,6 +4,10 @@ using NDTensors
 using ITensors
 using Test
 
+using Pkg;
+Pkg.add("Zygote");
+using Zygote
+
 function main() 
   # using ITensorGPU
   # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
@@ -50,9 +54,6 @@ function main()
 
   # Create a function of 4 tensors on GPU
   f(cA, cB, C, D) = (cA * cB * C * D)[]
-  using Pkg;
-  Pkg.add("Zygote");
-  using Zygote
 
   #Use Zygote to take the gradient of the four tensors on GPU
   grad = gradient(f, cA, cB, C, D)
