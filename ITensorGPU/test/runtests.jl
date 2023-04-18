@@ -1,7 +1,8 @@
 using ITensorGPU, Test, CUDA
 
 CUDA.allowscalar(false)
-
+using Pkg
+Pkg.add("Combinatorics")
 @testset "ITensorGPU.jl" begin
   #@testset "$filename" for filename in ("test_cucontract.jl",)
   #  println("Running $filename with autotune")

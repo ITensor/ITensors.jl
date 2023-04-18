@@ -27,8 +27,8 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
-            '''
+              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.activate(joinpath(pwd(), "test_itensorgpu")); Pkg.develop(path=joinpath(pwd())); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.instantiate(); using CUDA; CUDA.set_runtime_version!(v"11.8"); println("+++ :julia: Running tests");include(joinpath(pwd(), "ITensorGPU", "test", "runtests.jl"))'
+              '''
           }
         }
         stage('julia-1.8') {
@@ -51,7 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
+            julia -e 'using Pkg; Pkg.Registry.update(); Pkg.activate(joinpath(pwd(), "test_itensorgpu")); Pkg.develop(path=joinpath(pwd())); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.instantiate(); using CUDA; CUDA.set_runtime_version!(v"11.8"); println("+++ :julia: Running tests");include(joinpath(pwd(), "ITensorGPU", "test", "runtests.jl"))'
             '''
           }
         }
