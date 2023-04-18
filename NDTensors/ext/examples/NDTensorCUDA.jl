@@ -8,7 +8,7 @@ using Pkg;
 Pkg.add("Zygote");
 using Zygote
 
-function main() 
+function main()
   # using ITensorGPU
   # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
   i = Index(2)
@@ -46,7 +46,7 @@ function main()
   typeof(storage(cA * cB))
   @test A * B == cpu(cA * cB)
 
-  dim3 = (l, k);
+  dim3 = (l, k)
   dim4 = (i,)
   C = ITensor(NDTensors.generic_randn(CuVector, dim(dim3)), dim3)
   D = ITensor(Tensor(CuVector, dim4))
@@ -97,7 +97,7 @@ function main()
   s = ITensors.siteinds("S=1/2", 8)
   m = randomMPS(s; linkdims=4)
   #@which NDTensors.cu(m)
-  cm = NDTensors.cu(m);
+  cm = NDTensors.cu(m)
 
   typeof(storage(m[1]))
   typeof(storage(cm[1]))
@@ -113,7 +113,7 @@ function main()
   #@show storage(cm[1])
   #@show storage(H[1])
 
-  inner(cm', H, cm)
+  return inner(cm', H, cm)
 
   ## TODO create option to turn cuda tests on to allow the use of NDTensor.cu
 end
