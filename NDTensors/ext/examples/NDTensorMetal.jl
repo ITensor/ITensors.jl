@@ -2,7 +2,10 @@ using Metal
 using NDTensors
 
 using ITensors
+using Test
+using Zygote
 
+function main()
 # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
 i = Index(20)
 j = Index(5)
@@ -12,33 +15,27 @@ l = Index(62)
 dim1 = (i, j, l)
 dim2 = (j, k)
 
-A = ITensor(NDTensors.generic_randn(MtlVector, dim(dim1)), dim1)
-B = ITensor(NDTensors.generic_randn(MtlVector, dim(dim2)), dim2)
-C = A * B
+cA = ITensor(NDTensors.generic_randn(MtlVector{Float32}, dim(dim1)), dim1)
+cB = ITensor(NDTensors.generic_randn(MtlVector{Float32}, dim(dim2)), dim2)
+cC = cA * cB
 
-A = ITensor(Float64, dim1)
-B = ITensor(Float64, dim2)
+cpu = NDTensors.cpu
+A = cpu(cA)
+B = cpu(cB)
 
-fill!(A, randn())
-fill!(B, randn())
+@test A * B ≈ cpu(cC)
 
-A = mtl(A)
-B = mtl(B)
+#C = A * B
 
-A * B
-
-dim3 = (l, k);
+dim3 = (l, k)
 dim4 = (i,)
-C = ITensor(NDTensors.generic_randn(MtlVector{Float64}, dim(dim3)), dim3)
-D = ITensor(NDTensors.generic_randn(MtlVector{Float64}, dim(dim4)), dim4)
+
+cC = mtl(randomITensor(Float32, dim3))
+cD = mtl(randomITensor(Float32, dim4))
 
 f(A, B, C, D) = (A * B * C * D)[]
-using Zygote
 
-# grad = gradient(f, A, B, C, D)
-# grad[1]
-# grad[2]
-# grad[3]
+grad = gradient(f, cA, cB, cC, cD)
+end
 
-@show data(storage(B))
-svd(B, (j))
+main()
