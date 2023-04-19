@@ -14,5 +14,4 @@ include("imports.jl")
 
 include("adapt.jl")
 include("set_types.jl")
-include("array.jl")
 end
