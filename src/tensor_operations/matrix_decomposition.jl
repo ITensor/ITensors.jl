@@ -458,7 +458,7 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   #
   AC = permute(AC, cL, cR; allow_alias=true)
 
-  QT, XT = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  QT, XT, perm = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
@@ -474,7 +474,7 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   X = settags(X, tags, q)
   q = settags(q, tags)
 
-  return Q, X, q
+  return Q, X, q, perm
 end
 
 #
@@ -482,7 +482,7 @@ end
 #  with swapping the left and right indices.  The X tensor = R or L. 
 #
 function xq(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
-  Q, X, q = qx(A, Rinds, Linds; kwargs...)
+  Q, X, q, perm = qx(A, Rinds, Linds; kwargs...)
   #
   # fix up the tag name for the index between Q and L.
   #  
@@ -490,7 +490,7 @@ function xq(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   X = settags(X, tags, q)
   q = settags(q, tags)
 
-  return X, Q, q
+  return X, Q, q, perm
 end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))

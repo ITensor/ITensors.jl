@@ -24,8 +24,8 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
-@testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular, rank_reveal=$rank_reveal" for qx in
-                                                                                                                  [
+@testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular, rank_reveal=$rank_reveal, pivot=$pivot" for qx in
+                                                                                                                                [
     qr, ql
   ],
   elt in [Float64, ComplexF64, Float32, ComplexF32],
@@ -54,22 +54,34 @@ end
     end
   end
   # you can set verbose=true if you want to get debug output on rank reduction.
-  Q, X = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false) #X is R or L. 
+  Q, X, p = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false) #X is R or L. 
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   if dim(Q, 1) == dim(Q, 2)
     @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0, min(n, m))) atol = eps
   end
-  if positive && !rank_reveal
+  if positive && !rank_reveal && !pivot
     nr, nc = size(X)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
     diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
-  if cutoff > 0 && singular
+  if positive && !isnothing(p)
+    Xp = X[:, p] #permute columns so diag gets restored to the right place.
+    nr, nc = size(Xp)
+    dr = qx == ql ? Base.max(0, nc - nr) : 0
+    diagX = diag(Xp[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
+    @test all(real(diagX) .>= 0.0)
+    @test all(imag(diagX) .== 0.0)
+  end
+
+  if cutoff >= 0 && singular
     @test dim(Q, 2) == 2 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
     @test dim(X, 1) == 2 #Redundant?
+  end
+  if (cutoff >= 0.0 || pivot) && qx == qr
+    @test !isnothing(p)
   end
   #
   # Tall matrix (more rows than cols)
@@ -81,20 +93,31 @@ end
       A[i, :] = A[1, :]
     end
   end
-  Q, X = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false)
+  Q, X, p = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false)
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   #@test array(Q) * array(Q)' no such relationship for tall matrices.
-  if positive && !rank_reveal
+  if positive && !rank_reveal && !pivot
     nr, nc = size(X)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
     diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
+  if positive && !isnothing(p)
+    Xp = X[:, p] #permute columns so diag gets restored to the right place.
+    nr, nc = size(Xp)
+    dr = qx == ql ? Base.max(0, nc - nr) : 0
+    diagX = diag(Xp[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
+    @test all(real(diagX) .>= 0.0)
+    @test all(imag(diagX) .== 0.0)
+  end
   if cutoff > 0 && singular
     @test dim(Q, 2) == 4 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
     @test dim(X, 1) == 4 #Redundant?
+  end
+  if (cutoff >= 0.0 || pivot) && qx == qr
+    @test !isnothing(p)
   end
 end
 

@@ -312,6 +312,7 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
 
   Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
   Xs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+  perms = Vector{Vector{Int64}}(undef, 0)
 
   for (jj, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
@@ -321,9 +322,14 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
       return nothing
     end
 
-    Q, X = QXb
+    Q, X, perm = QXb
     Qs[jj] = Q
     Xs[jj] = X
+    !isnothing(perm) && push!(perms, perm) #save permutation vector for each block.
+  end
+
+  if length(perms) == 0
+    perms = nothing
   end
 
   #
@@ -358,7 +364,7 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
     blockview(X, nzblocksX[n]) .= Xs[n]
   end
 
-  return Q, X
+  return Q, X, perms
 end
 
 function exp(

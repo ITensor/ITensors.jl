@@ -427,7 +427,9 @@ function qx(
       "  Column pivoting is not supported for ql decomposition in lapack/ITensors"
     pivot = false
   end
-  pivot = do_rank_reduction
+  if do_rank_reduction
+    pivot = true
+  end
 
   if pivot
     QM, XM, p = qx(matrix(T), Val(true)) #with colun pivoting
@@ -435,6 +437,7 @@ function qx(
   else
     QM, XM = qx(matrix(T), Val(false)) #no column pivoting
     QM = Matrix(QM)
+    p = nothing
   end
   #
   #  Gauge fix diagonal of X into positive definite form. 
@@ -455,7 +458,7 @@ function qx(
   Xinds = IndsT((q, ind(T, 2)))
   Q = tensor(Dense(vec(QM)), Qinds)
   X = tensor(Dense(vec(XM)), Xinds)
-  return Q, X
+  return Q, X, p
 end
 
 # Required by svd_recursive 

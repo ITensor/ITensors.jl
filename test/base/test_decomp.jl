@@ -87,10 +87,23 @@ function rank_fix(A::ITensor, Linds...)
   At = NDTensors.tensor(AC)
   nc = dim(At, 2)
   @assert nc >= 2
-  for c in 2:nc
-    At[:, c] = At[:, 1] * 1.05^c
+  if hasqns(At)
+    # In this case we make each nz block have rank=1
+    expected_rank = nnzblocks(At)
+    for b in nzblocks(At)
+      bv = ITensors.blockview(At, b)
+      nr, nc = dims(bv)
+      for c in 2:nc
+        bv[:, c] = bv[:, 1] * 1.05^c
+      end
+    end
+  else
+    for c in 2:nc
+      At[:, c] = At[:, 1] * 1.05^c
+    end
+    expected_rank = 1
   end
-  return itensor(At) * dag(CL) * dag(CR)
+  return itensor(At) * dag(CL) * dag(CR), expected_rank
 end
 
 function diag_upper(l::Index, A::ITensor)
@@ -356,23 +369,28 @@ end
     A = randomITensor(l, s, s', r)
     Ainds = inds(A)
 
-    Q, R, q = qr(A, Ainds[1:ninds]; positive=true)
+    Q, R, q, p = qr(A, Ainds[1:ninds]; positive=true)
     @test min(diag_upper(q, R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    Q, L, q = ql(A, Ainds[1:ninds]; positive=true)
+    @test isnothing(p)
+    Q, L, q, p = ql(A, Ainds[1:ninds]; positive=true)
     @test min(diag_lower(q, L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test isnothing(p)
 
-    R, Q, q = rq(A, Ainds[1:ninds]; positive=true)
+    R, Q, q, p = rq(A, Ainds[1:ninds]; positive=true)
     @test min(diag_lower(q, R)...) > 0.0 #transpose R is lower
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    L, Q, q = lq(A, Ainds[1:ninds]; positive=true)
+    @test isnothing(p)
+
+    L, Q, q, p = lq(A, Ainds[1:ninds]; positive=true)
     @test min(diag_upper(q, L)...) > 0.0 #transpose L is upper
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test isnothing(p)
   end
 
   @testset "QR/QL block sparse with positive R" begin
@@ -380,15 +398,18 @@ end
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, dag(s'), r)
-    Q, R, q = qr(A, l, s, dag(s'); positive=true)
+    Q, R, q, p = qr(A, l, s, dag(s'); positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
-    Q, L, q = ql(A, l, s, dag(s'); positive=true)
+    @test isnothing(p)
+
+    Q, L, q, p = ql(A, l, s, dag(s'); positive=true)
     @test min(diag(L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
+    @test isnothing(p)
   end
 
-  @testset "Rank revealing QR/LQ decomp on MPS dense $elt tensor" for ninds in [1, 2, 3],
+  @testset "Rank revealing QR/LQ decomp on MPO dense $elt tensor" for ninds in [1, 2, 3],
     elt in [Float64, ComplexF64]
 
     l = Index(5, "l")
@@ -397,16 +418,44 @@ end
     A = randomITensor(elt, l, s, s', r)
 
     Ainds = inds(A)
-    A = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q = qr(A, Ainds[1:ninds]; cutoff=1e-12)
-    @test dim(q) == 1 #check that we found rank==1
+    A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
+    Q, R, q, p = qr(A, Ainds[1:ninds]; cutoff=1e-12)
+    @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test !isnothing(p)
 
-    L, Q, q = lq(A, Ainds[1:ninds]; cutoff=1e-12)
-    @test dim(q) == 1 #check that we found rank==1
+    L, Q, q, p = lq(A, Ainds[1:ninds]; cutoff=1e-12)
+    @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test !isnothing(p)
+  end
+
+  @testset "Rank revealing QR/LQ decomp on MPO block-sparse  $elt tensor" for ninds in
+                                                                              [1, 2, 3],
+    elt in [Float64]
+
+    space = [QN("Sz", 0) => 4, QN("Sz", -2) => 4, QN("Sz", 2) => 4]
+    site_space = [QN("Sz", -1) => 1, QN("Sz", 1) => 1]
+    l = Index(space, "l")
+    s = Index(site_space, "s")
+    r = Index(space, "r")
+    A = randomITensor(elt, l, s, s', r)
+
+    Ainds = inds(A)
+    A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
+    Q, R, q, p = qr(A, Ainds[1:ninds]; cutoff=1e-12)
+    @test dim(q) == expected_rank #check that we found teh correct rank
+    @test A ≈ Q * R atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+    @test !isnothing(p)
+
+    L, Q, q, p = lq(A, Ainds[1:ninds]; cutoff=1e-12)
+    @test dim(q) == expected_rank #check that we found rank==1
+    @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+    @test !isnothing(p)
   end
 
   @testset "factorize with QR" begin
