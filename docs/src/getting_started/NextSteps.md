@@ -6,7 +6,7 @@
 
 * Read the [ITensor Paper](https://www.scipost.org/SciPostPhysCodeb.4) for a long-form introduction to the design and main features of the ITensor library
 
-* Read the [Advanced ITensor Usage Guide](@ref advanced_usage_guide)
+* Read the [Advanced ITensor usage guide](@ref)
 
 * More Julia language tutorials and resources
     - [From zero to Julia!](https://techytok.com/from-zero-to-julia/)

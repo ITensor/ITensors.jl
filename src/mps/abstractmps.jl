@@ -1372,6 +1372,61 @@ function _add_maxlinkdims(ψ⃗::AbstractMPS...)
   return maxdims
 end
 
+"""
+    +(A::MPS/MPO...; kwargs...)
+    add(A::MPS/MPO...; kwargs...)
+
+Add arbitrary numbers of MPS/MPO with each other, optionally truncating the results.
+
+A cutoff of 1e-15 is used by default, and in general users should set their own
+cutoff for their particular application.
+
+# Keywords
+
+- `cutoff::Real`: singular value truncation cutoff
+- `maxdim::Int`: maximum MPS/MPO bond dimension
+
+# Examples
+
+```julia
+N = 10
+
+s = siteinds("S=1/2", N; conserve_qns = true)
+
+state = n -> isodd(n) ? "↑" : "↓"
+ψ₁ = randomMPS(s, state, 2)
+ψ₂ = randomMPS(s, state, 2)
+ψ₃ = randomMPS(s, state, 2)
+
+ψ = +(ψ₁, ψ₂; cutoff = 1e-8)
+
+# Can use:
+#
+# ψ = ψ₁ + ψ₂
+#
+# but generally you want to set a custom `cutoff` and `maxdim`.
+
+println()
+@show inner(ψ, ψ)
+@show inner(ψ₁, ψ₂) + inner(ψ₁, ψ₂) + inner(ψ₂, ψ₁) + inner(ψ₂, ψ₂)
+
+# Computes ψ₁ + 2ψ₂
+ψ = ψ₁ + 2ψ₂
+
+println()
+@show inner(ψ, ψ)
+@show inner(ψ₁, ψ₁) + 2 * inner(ψ₁, ψ₂) + 2 * inner(ψ₂, ψ₁) + 4 * inner(ψ₂, ψ₂)
+
+# Computes ψ₁ + 2ψ₂ + ψ₃
+ψ = ψ₁ + 2ψ₂ + ψ₃
+
+println()
+@show inner(ψ, ψ)
+@show inner(ψ₁, ψ₁) + 2 * inner(ψ₁, ψ₂) + inner(ψ₁, ψ₃) +
+      2 * inner(ψ₂, ψ₁) + 4 * inner(ψ₂, ψ₂) + 2 * inner(ψ₂, ψ₃) +
+      inner(ψ₃, ψ₁) + 2 * inner(ψ₃, ψ₂) + inner(ψ₃, ψ₃)
+```
+"""
 function +(
   ::Algorithm"densitymatrix", ψ⃗::MPST...; cutoff=1e-15, kwargs...
 ) where {MPST<:AbstractMPS}
@@ -1477,68 +1532,6 @@ function +(::Algorithm"directsum", ψ⃗::MPST...) where {MPST<:AbstractMPS}
   return ϕ
 end
 
-"""
-    +(A::MPS/MPO...; kwargs...)
-    add(A::MPS/MPO...; kwargs...)
-
-Add arbitrary numbers of MPS/MPO with each other, optionally truncating the results.
-
-A cutoff of 1e-15 is used by default, and in general users should set their own
-cutoff for their particular application.
-
-# Keywords
-
-- `cutoff::Real`: singular value truncation cutoff
-- `maxdim::Int`: maximum MPS/MPO bond dimension
-- `alg = "densitymatrix"`: `"densitymatrix"` or `"directsum"`. `"densitymatrix"` adds the MPS/MPO
-   by adding up and diagoanlizing local density matrices site by site in a single
-   sweep through the system, truncating the density matrix with `cutoff` and `maxdim`.
-   `"directsum"` performs a direct sum of each tensors on each site of the input
-   MPS/MPO being summed. It doesn't perform any truncation, and therefore ignores
-   `cutoff` and `maxdim`. The bond dimension of the output is the sum of the bond
-   dimensions of the inputs. You can truncate the resulting MPS/MPO with the `truncate!` function.
-
-# Examples
-
-```julia
-N = 10
-
-s = siteinds("S=1/2", N; conserve_qns = true)
-
-state = n -> isodd(n) ? "↑" : "↓"
-ψ₁ = randomMPS(s, state, 2)
-ψ₂ = randomMPS(s, state, 2)
-ψ₃ = randomMPS(s, state, 2)
-
-ψ = +(ψ₁, ψ₂; cutoff = 1e-8)
-
-# Can use:
-#
-# ψ = ψ₁ + ψ₂
-#
-# but generally you want to set a custom `cutoff` and `maxdim`.
-
-println()
-@show inner(ψ, ψ)
-@show inner(ψ₁, ψ₂) + inner(ψ₁, ψ₂) + inner(ψ₂, ψ₁) + inner(ψ₂, ψ₂)
-
-# Computes ψ₁ + 2ψ₂
-ψ = ψ₁ + 2ψ₂
-
-println()
-@show inner(ψ, ψ)
-@show inner(ψ₁, ψ₁) + 2 * inner(ψ₁, ψ₂) + 2 * inner(ψ₂, ψ₁) + 4 * inner(ψ₂, ψ₂)
-
-# Computes ψ₁ + 2ψ₂ + ψ₃
-ψ = ψ₁ + 2ψ₂ + ψ₃
-
-println()
-@show inner(ψ, ψ)
-@show inner(ψ₁, ψ₁) + 2 * inner(ψ₁, ψ₂) + inner(ψ₁, ψ₃) +
-      2 * inner(ψ₂, ψ₁) + 4 * inner(ψ₂, ψ₂) + 2 * inner(ψ₂, ψ₃) +
-      inner(ψ₃, ψ₁) + 2 * inner(ψ₃, ψ₂) + inner(ψ₃, ψ₃)
-```
-"""
 function +(ψ⃗::AbstractMPS...; alg=Algorithm"densitymatrix"(), kwargs...)
   return +(Algorithm(alg), ψ⃗...; kwargs...)
 end

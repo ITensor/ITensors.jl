@@ -38,7 +38,7 @@ Sz = op(M,s)
 ```
 
 
-## [Making a Custom op Definition](@id custom_op)
+## Making a Custom op Definition
 
 The function `op` is used to obtain operators defined for a 
 given "site type". ITensor includes pre-defined site types such
