@@ -27,7 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.activate("test_itensorgpu"); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd())); cd(joinpath(pwd(), "test_itensorgpu")); Pkg.add("CUDA"); using CUDA; Pkg.add("Preferences"); using Preferences; set_preferences!(Base.UUID("76a88914-d11a-5bdc-97e0-2f5a05c973a2"), Pair("version", "v11.8"); export_prefs=true); Pkg.test("ITensorGPU")'
+              julia --project=ITensorGPU -e 'using Pkg; Pkg.develop(path=pwd()); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!("11.8"); Pkg.instantiate(); Pkg.test()'
               '''
           }
         }
@@ -51,7 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-            julia -e 'using Pkg; Pkg.activate("test_itensorgpu"); Pkg.develop(path=joinpath(pwd(), "ITensorGPU")); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.develop(path=joinpath(pwd())); cd(joinpath(pwd(), "test_itensorgpu")); Pkg.add("CUDA"); using CUDA; Pkg.add("Preferences"); using Preferences; set_preferences!(Base.UUID("76a88914-d11a-5bdc-97e0-2f5a05c973a2"), Pair("version", "v11.8"); export_prefs=true); Pkg.test("ITensorGPU")'
+            julia --project=ITensorGPU -e 'using Pkg; Pkg.develop(path=pwd()); Pkg.develop(path=joinpath(pwd(), "NDTensors")); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!("11.8"); Pkg.instantiate(); Pkg.test()'
             '''
           }
         }
