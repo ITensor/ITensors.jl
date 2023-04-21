@@ -1,4 +1,8 @@
-using ITensorGPU, Test, CUDA
+using CUDA
+
+println("Running ITensorGPU tests with a runtime CUDA version: $(CUDA.runtime_version())")
+
+using ITensorGPU, Test
 
 CUDA.allowscalar(false)
 using Pkg
