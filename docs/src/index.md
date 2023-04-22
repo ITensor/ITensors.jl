@@ -5,7 +5,7 @@ tensor network algorithms.
 
 | **Documentation**|**Citation**|**Build Status**|
 |:----------------:|:----------:|:--------------:|
-| [![docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/)|[![SciPost](https://img.shields.io/badge/SciPost-10.21468-blue.svg)](https://scipost.org/SciPostPhysCodeb.4) [![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822) |[![Tests](https://github.com/ITensor/ITensors.jl/workflows/TestITensors/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATestITensors) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/tree/main/graph/badge.svg)](https://app.codecov.io/gh/ITensor/ITensors.jl/tree/main)|
+| [![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://itensor.github.io/ITensors.jl/dev/)|[![SciPost](https://img.shields.io/badge/SciPost-10.21468-blue.svg)](https://scipost.org/SciPostPhysCodeb.4) [![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822) |[![Tests](https://github.com/ITensor/ITensors.jl/workflows/TestITensors/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATestITensors) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/tree/main/graph/badge.svg)](https://app.codecov.io/gh/ITensor/ITensors.jl/tree/main)|
 
 |**Version**|**Download Statistics**|**Style Guide**|**License**|
 |:---------:|:---------------------:|:-------------:|:---------:|
@@ -62,8 +62,7 @@ We recommend using ITensors.jl with Intel MKL in order to get the best possible 
 
 ## Documentation
 
-- [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) --  **documentation of the most recently tagged version.**
-- [**DEVEL**](https://itensor.github.io/ITensors.jl/dev/) -- *documentation of the in-development version.*
+- [**LATEST**](https://itensor.github.io/ITensors.jl/dev/) -- *documentation of the latest version.*
 
 ## Citation
 
