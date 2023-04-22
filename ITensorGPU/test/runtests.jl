@@ -1,5 +1,11 @@
-using CUDA
+if VERSION < v"1.7"
+  itensorgpu_path = joinpath(pwd(), "..")
+  old_path = pop!(LOAD_PATH)
+  push!(LOAD_PATH, itensorgpu_path)
+  push!(LOAD_PATH, old_path)
+end
 
+using CUDA
 println("Running ITensorGPU tests with a runtime CUDA version: $(CUDA.runtime_version())")
 
 using ITensorGPU, Test
