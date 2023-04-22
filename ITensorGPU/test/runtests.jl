@@ -1,4 +1,4 @@
-if VERSION < v"1.7"
+if VERSION < v"1.8"
   itensorgpu_path = joinpath(pwd(), "..")
   cp(
     joinpath(pwd(), "..", "LocalPreferences.toml"),
