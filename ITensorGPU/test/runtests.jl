@@ -1,6 +1,9 @@
 if VERSION < v"1.7"
   itensorgpu_path = joinpath(pwd(), "..")
-  cp(joinpath(pwd(), "..", "LocalPreferences.toml"), joinpath("$(LOAD_PATH[2])", "JuliaLocalPreferences.toml"))
+  cp(
+    joinpath(pwd(), "..", "LocalPreferences.toml"),
+    joinpath("$(LOAD_PATH[2])", "JuliaLocalPreferences.toml"),
+  )
   #old_path = pop!(LOAD_PATH)
   #push!(LOAD_PATH, itensorgpu_path)
   #push!(LOAD_PATH, old_path)
