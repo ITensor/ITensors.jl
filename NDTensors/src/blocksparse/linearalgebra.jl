@@ -304,7 +304,7 @@ qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #  This code thanks to Niklas Tausendpfund 
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
+function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; block_atol=-1.0, block_rtol=-1.0, atol=-1.0, rtol=-1.0, kwargs...)
   ElT = eltype(T)
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
@@ -316,7 +316,7 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
 
   for (jj, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
-    QXb = qx(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+    QXb = qx(blockT; atol=block_atol, rtol=block_rtol, kwargs...) #call dense qr at src/linearalgebra.jl 387
 
     if (isnothing(QXb))
       return nothing

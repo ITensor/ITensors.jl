@@ -370,15 +370,31 @@ end
 #  Trim out n rows of R based on norm(R_nn)<cutoff, where R_nn is bottom n rows of R. 
 #  Also trim the corresponding columns of Q. 
 #
-function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, cutoff::Float64; verbose=false)
+function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Float64; verbose=false)
   nr = size(R, 1)
   @assert size(Q, 2) == nr #Sanity check.
   #
-  #  Find the larges n sich than norm(R_nn)<=cutoff.  n=last_row_to_keep+1
+  #  Find the largest n such than norm(R_nn)<=cutoff, where Rnn if the bottom right block with rows
+  #  from n:nr.  n=last_row_to_keep+1
   #
   last_row_to_keep = nr
+  do_atol,do_rtol = atol>=0.0,rtol>=0.0
+  # for r in nr:-1:1
+  #   Rnn=norm(R[r:nr, :])
+  #   R11=norm(R[1:r-1, :])
+  #   if (do_atol && Rnn > atol) || (do_rtol && Rnn/R11 > rtol)
+  #     last_row_to_keep = r
+  #     break
+  #   end
+  # end
+  #
+  #  Could also do the same test but only looking at the diagonals
+  #
+  dR=diag(R)
   for r in nr:-1:1
-    if norm(R[r:nr, :]) > cutoff
+    Rnn=norm(dR[r:nr])
+    R11=norm(dR[1:r-1])
+    if (do_atol && Rnn > atol) || (do_rtol && Rnn/R11 > rtol)
       last_row_to_keep = r
       break
     end
@@ -386,13 +402,14 @@ function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, cutoff::Float64; verbos
 
   num_zero_rows = nr - last_row_to_keep
   if num_zero_rows == 0
+    verbose && println("Rank Reveal removing $num_zero_rows rows with atol=$atol, rtol=$rtol")
     return Q, R
   end
   #
   # Useful output for trouble shooting.
   #
   if verbose
-    println("Rank Reveal removing $num_zero_rows rows with log10(cutoff)=$(log10(cutoff))")
+    println("Rank Reveal removing $num_zero_rows rows with atol=$atol, rtol=$rtol")
   end
 
   return Q[:, 1:last_row_to_keep], R[1:last_row_to_keep, :]
@@ -409,22 +426,24 @@ function qx(
   T::DenseTensor{<:Any,2};
   positive=false,
   pivot=false,
-  cutoff=-1.0,
+  atol=-1.0, #absolute tolerance for rank reduction
+  rtol=-1.0, #relative tolerance for rank reduction
+  block_rtol=-1.0, #This is supposed to be for block sparse, but we reluctantly accept it here.
   verbose=false,
   kwargs...,
 )
-  if isnothing(cutoff)
-    cutoff = -1.0
+  if rtol<0.0 && block_rtol>=0.0
+    rtol=block_rtol
   end
-  do_rank_reduction = cutoff >= 0.0
+  do_rank_reduction = (atol >= 0.0) || (rtol >= 0.0)
   if do_rank_reduction && qx == ql
-    @warn "User request ql decomposition with cutoff=$cutoff." *
-      "  Rank reduction requires column pivoting which is not supported for ql decomposition in lapack/ITensors"
+    @warn "User requested rq/ql decomposition with atol=$atol, rtol=$rtol." *
+      "  Rank reduction requires column pivoting which is not supported for rq/ql decomposition in lapack/ITensors"
     do_rank_reduction = false
   end
   if pivot && qx == ql
-    @warn "User request ql decomposition with column pivoting." *
-      "  Column pivoting is not supported for ql decomposition in lapack/ITensors"
+    @warn "User requested rq/ql decomposition with column pivoting." *
+      "  Column pivoting is not supported for rq/ql decomposition in lapack/ITensors"
     pivot = false
   end
   if do_rank_reduction
@@ -433,7 +452,7 @@ function qx(
 
   if pivot
     QM, XM, p = qx(matrix(T), Val(true)) #with colun pivoting
-    QM, XM = trim_rows(Matrix(QM), XM, cutoff; verbose=verbose)
+    QM, XM = trim_rows(Matrix(QM), XM, atol, rtol; verbose=verbose)
   else
     QM, XM = qx(matrix(T), Val(false)) #no column pivoting
     QM = Matrix(QM)

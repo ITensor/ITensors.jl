@@ -40,7 +40,7 @@ end
 
   eps = Base.eps(real(elt)) * 30
   #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
-  cutoff = rank_reveal ? eps * 1.0 : -1.0
+  atol = rank_reveal ? eps * 1.0 : -1.0
   n, m = 4, 8
   #
   # Wide matrix (more columns than rows)
@@ -54,7 +54,7 @@ end
     end
   end
   # you can set verbose=true if you want to get debug output on rank reduction.
-  Q, X, p = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false) #X is R or L. 
+  Q, X, p = qx(A; positive=positive, atol=atol, pivot=pivot, verbose=false) #X is R or L. 
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   if dim(Q, 1) == dim(Q, 2)
@@ -76,11 +76,11 @@ end
     @test all(imag(diagX) .== 0.0)
   end
 
-  if cutoff >= 0 && singular
+  if atol >= 0 && singular
     @test dim(Q, 2) == 2 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
     @test dim(X, 1) == 2 #Redundant?
   end
-  if (cutoff >= 0.0 || pivot) && qx == qr
+  if (atol >= 0.0 || pivot) && qx == qr
     @test !isnothing(p)
   end
   #
@@ -93,7 +93,7 @@ end
       A[i, :] = A[1, :]
     end
   end
-  Q, X, p = qx(A; positive=positive, cutoff=cutoff, pivot=pivot, verbose=false)
+  Q, X, p = qx(A; positive=positive, atol=atol, pivot=pivot, verbose=false)
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   #@test array(Q) * array(Q)' no such relationship for tall matrices.
@@ -112,11 +112,11 @@ end
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
-  if cutoff > 0 && singular
+  if atol > 0 && singular
     @test dim(Q, 2) == 4 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
     @test dim(X, 1) == 4 #Redundant?
   end
-  if (cutoff >= 0.0 || pivot) && qx == qr
+  if (atol >= 0.0 || pivot) && qx == qr
     @test !isnothing(p)
   end
 end

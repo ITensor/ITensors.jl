@@ -409,6 +409,83 @@ end
     @test isnothing(p)
   end
 
+  @testset "Dense rank revealing QR/LQ decomp interface options" for qx in [qr,lq]
+    l = Index(5, "l")
+    s = Index(2, "s")
+    r = Index(5, "r")
+    A = randomITensor(Float64, l, s, s', r)
+    qrinds = inds(A)[1:2]
+    rinds = noncommoninds(A,qrinds)
+    A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
+
+    Q, R = qx(A,l,s) # no pivoting
+    Q, R, iq = qx(A,qrinds) # no pivoting
+    @test dim(iq) == dim(qrinds)
+    Q, R, iq, p = qx(A,qrinds) # no pivoting
+    @test isnothing(p)
+    @test dim(iq) == dim(qrinds)
+
+    #  Q, R, iq, p = qx(A,qrinds; pivot=Val(false)) not supported
+    Q, R, iq, p = qx(A,qrinds; pivot=false) # no pivoting
+    @test isnothing(p)
+    @test dim(iq) == dim(qrinds)
+
+    Q, R, iq, p = qx(A,qrinds; pivot=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test !isnothing(p)
+    @test length(p)==dim(rinds)
+    @test dim(iq) == dim(qrinds)
+
+    if VERSION >= v"1.7"
+      Q, R, iq, p= qx(A,qrinds; pivot=NoPivot()) # no pivoting
+      Q, R, iq, p= qr(A,qrinds; pivot=ColumnNorm()) # column pivoting, no rank reduction
+      Q, R, iq, p= lq(A,qrinds; pivot=RowNorm()) # row pivoting, no rank reduction
+    end
+
+    Q, R, iq, p = qx(A,qrinds; atol=1e-14) # absolute tolerance for rank reduction
+    @test !isnothing(p)
+    @test length(p)==dim(rinds)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, p = qx(A,qrinds; rtol=1e-15) # relative tolerance for rank reduction
+    @test !isnothing(p)
+    @test length(p)==dim(rinds)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, p = qx(A,qrinds; block_rtol=1e-15) # relative tolerance for rank reduction
+    @test !isnothing(p)
+    @test length(p)==dim(rinds)
+    @test dim(iq) == expected_rank
+
+  end
+
+  @testset "Blocksparse rank revealing QR/LQ decomp interface options" begin
+    space = [QN("Sz", 0) => 4, QN("Sz", -2) => 4, QN("Sz", 2) => 4]
+    site_space = [QN("Sz", -1) => 1, QN("Sz", 1) => 1]
+    l = Index(space, "l")
+    s = Index(site_space, "s")
+    r = Index(space, "r")
+    A = randomITensor(Float64, l, s, s', r)
+    qrinds = inds(A)[1:2]
+    rinds = noncommoninds(A,qrinds)
+    A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
+    
+    Q, R, iq, p = qr(A,qrinds; block_atol=1e-14) # absolute tolerance for rank reduction
+    @test !isnothing(p)
+    @test length(p)>0
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, p = qr(A,qrinds;  block_rtol=1e-15) # relative tolerance for rank reduction
+    @test !isnothing(p)
+    @test length(p)>0
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, p = qr(A,qrinds;  block_rtol=1e-15,rtol=1000) # rtol ignored.
+    @test !isnothing(p)
+    @test length(p)>0
+    @test dim(iq) == expected_rank
+    
+  end
+
   @testset "Rank revealing QR/LQ decomp on MPO dense $elt tensor" for ninds in [1, 2, 3],
     elt in [Float64, ComplexF64]
 
@@ -419,13 +496,13 @@ end
 
     Ainds = inds(A)
     A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q, p = qr(A, Ainds[1:ninds]; cutoff=1e-12)
+    Q, R, q, p = qr(A, Ainds[1:ninds]; atol=1e-12)
     @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     @test !isnothing(p)
 
-    L, Q, q, p = lq(A, Ainds[1:ninds]; cutoff=1e-12)
+    L, Q, q, p = lq(A, Ainds[1:ninds]; atol=1e-12)
     @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
@@ -445,13 +522,13 @@ end
 
     Ainds = inds(A)
     A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q, p = qr(A, Ainds[1:ninds]; cutoff=1e-12)
+    Q, R, q, p = qr(A, Ainds[1:ninds]; block_atol=1e-12)
     @test dim(q) == expected_rank #check that we found teh correct rank
     @test A ≈ Q * R atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     @test !isnothing(p)
 
-    L, Q, q, p = lq(A, Ainds[1:ninds]; cutoff=1e-12)
+    L, Q, q, p = lq(A, Ainds[1:ninds]; block_atol=1e-12)
     @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
