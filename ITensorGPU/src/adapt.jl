@@ -15,6 +15,10 @@ function NDTensors.adapt_storagetype(
   )
 end
 
+function NDTensors.storagetype(x::Type{<:NDTensors.EmptyStorage{ElT, StoreT}}) where {ElT, StoreT}
+  return StoreT
+end
+
 function NDTensors.set_eltype_if_unspecified(
   arraytype::Type{CuVector{T}}, eltype::Type
 ) where {T}
