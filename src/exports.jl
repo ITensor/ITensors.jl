@@ -12,6 +12,7 @@ export
   # Types
   Block,
   Spectrum,
+  RowNorm,
   # Methods
   eigs,
   entropy,

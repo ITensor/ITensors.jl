@@ -79,4 +79,6 @@ export
   store,
 
   # linearalgebra.jl
-  qr
+  qr,
+  RowNorm
+  

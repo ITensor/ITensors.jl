@@ -415,8 +415,18 @@ function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Fl
   return Q[:, 1:last_row_to_keep], R[1:last_row_to_keep, :]
 end
 
+struct RowNorm end #for row pivoting lq
+
 qr(T::DenseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 ql(T::DenseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
+
+translate_pivot(pivot::Bool)::Bool=pivot
+if VERSION >= v"1.7" 
+translate_pivot(pivot::NoPivot)::Bool=false
+translate_pivot(pivot::ColumnNorm)::Bool=true
+translate_pivot(pivot::RowNorm)::Bool=true
+end
+
 #
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
@@ -432,6 +442,8 @@ function qx(
   verbose=false,
   kwargs...,
 )
+  pivot=translate_pivot(pivot)
+ 
   if rtol<0.0 && block_rtol>=0.0
     rtol=block_rtol
   end
