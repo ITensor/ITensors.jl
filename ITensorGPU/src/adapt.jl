@@ -15,7 +15,9 @@ function NDTensors.adapt_storagetype(
   )
 end
 
-function NDTensors.storagetype(x::Type{<:NDTensors.EmptyStorage{ElT, StoreT}}) where {ElT, StoreT}
+function NDTensors.storagetype(
+  x::Type{<:NDTensors.EmptyStorage{ElT,StoreT}}
+) where {ElT,StoreT}
   return StoreT
 end
 
