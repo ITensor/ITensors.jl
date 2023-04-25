@@ -92,6 +92,12 @@ end
 
 MPO(sites::Vector{<:Index}, ops) = MPO(Float64, sites, ops)
 
+function MPO(sites::Vector{<:Index}, os::OpSum)
+  return error(
+    "To construct an MPO from an OpSum `opsum` and a set of indices `sites`, you must use MPO(opsum, sites)",
+  )
+end
+
 """
     MPO([::Type{ElT} = Float64, ]sites, op::String)
 
