@@ -394,7 +394,6 @@ export
   nblocks,
   qn
 
-  if VERSION >= v"1.7"
-    export RowNorm
-  end
-
+if VERSION >= v"1.7"
+  export RowNorm
+end

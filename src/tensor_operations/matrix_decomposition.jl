@@ -422,8 +422,10 @@ lq(A::ITensor, Linds...; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs.
 # Core function where both left and right indices are supplied as tuples or vectors
 # Handle default tags and dispatch to generic qx/xq functions.
 #
-function qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", pivot=false, kwargs...)
-  if VERSION >= v"1.7" && typeof(pivot)==RowNorm
+function qr(
+  A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", pivot=false, kwargs...
+)
+  if VERSION >= v"1.7" && typeof(pivot) == RowNorm
     @warn "Please use ColumnNorm() instead of RowNorm() for pivoted qr decomposition."
   end
   return qx(qr, A, Linds, Rinds; tags, pivot=pivot, kwargs...)
@@ -434,8 +436,10 @@ end
 function rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs...)
   return xq(ql, A, Linds, Rinds; tags, kwargs...)
 end
-function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", pivot=false, kwargs...)
-  if VERSION >= v"1.7" && typeof(pivot)==ColumnNorm
+function lq(
+  A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", pivot=false, kwargs...
+)
+  if VERSION >= v"1.7" && typeof(pivot) == ColumnNorm
     @warn "Please use RowNorm() instead of ColumnNorm() for pivoted lq decomposition."
   end
   return xq(qr, A, Linds, Rinds; tags, pivot=pivot, kwargs...)
@@ -488,7 +492,7 @@ end
 #  with swapping the left and right indices.  The X tensor = R or L. 
 #
 function xq(qxf::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
-  Q, X, q, perm = qx(qxf,A, Rinds, Linds; tags=tags, kwargs...)
+  Q, X, q, perm = qx(qxf, A, Rinds, Linds; tags=tags, kwargs...)
   #
   # fix up the tag name for the index between Q and L.
   #  

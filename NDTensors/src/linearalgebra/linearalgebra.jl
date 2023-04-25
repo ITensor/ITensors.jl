@@ -370,7 +370,9 @@ end
 #  Trim out n rows of R based on norm(R_nn)<cutoff, where R_nn is bottom n rows of R. 
 #  Also trim the corresponding columns of Q. 
 #
-function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Float64; verbose=false)
+function trim_rows(
+  Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Float64; verbose=false
+)
   nr = size(R, 1)
   @assert size(Q, 2) == nr #Sanity check.
   #
@@ -378,7 +380,7 @@ function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Fl
   #  from n:nr.  n=last_row_to_keep+1
   #
   last_row_to_keep = nr
-  do_atol,do_rtol = atol>=0.0,rtol>=0.0
+  do_atol, do_rtol = atol >= 0.0, rtol >= 0.0
   # for r in nr:-1:1
   #   Rnn=norm(R[r:nr, :])
   #   R11=norm(R[1:r-1, :])
@@ -390,11 +392,11 @@ function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Fl
   #
   #  Could also do the same test but only looking at the diagonals
   #
-  dR=diag(R)
+  dR = diag(R)
   for r in nr:-1:1
-    Rnn=norm(dR[r:nr])
-    R11=norm(dR[1:r-1])
-    if (do_atol && Rnn > atol) || (do_rtol && Rnn/R11 > rtol)
+    Rnn = norm(dR[r:nr])
+    R11 = norm(dR[1:(r - 1)])
+    if (do_atol && Rnn > atol) || (do_rtol && Rnn / R11 > rtol)
       last_row_to_keep = r
       break
     end
@@ -402,7 +404,8 @@ function trim_rows(Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Fl
 
   num_zero_rows = nr - last_row_to_keep
   if num_zero_rows == 0
-    verbose && println("Rank Reveal removing $num_zero_rows rows with atol=$atol, rtol=$rtol")
+    verbose &&
+      println("Rank Reveal removing $num_zero_rows rows with atol=$atol, rtol=$rtol")
     return Q, R
   end
   #
@@ -422,13 +425,22 @@ end
 qr(T::DenseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 ql(T::DenseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 
-translate_pivot(pivot::Bool)::Bool=pivot
+translate_pivot(pivot::Bool)::Bool = pivot
 if VERSION >= v"1.7"
-  translate_pivot(pivot::NoPivot)::Bool=false
-  translate_pivot(pivot::ColumnNorm)::Bool=true
-  translate_pivot(pivot::RowNorm)::Bool=true
+  translate_pivot(pivot::NoPivot)::Bool = false
+  translate_pivot(pivot::ColumnNorm)::Bool = true
+  translate_pivot(pivot::RowNorm)::Bool = true
 end
 
+matrix(Q::LinearAlgebra.QRCompactWYQ) = Matrix(Q)
+function matrix(Q::MatrixFactorizations.QLPackedQ)
+  n, m = size(Q.factors)
+  if n <= m
+    return Matrix(Q)
+  else
+    return Q * Matrix(LinearAlgebra.I, m, m)
+  end
+end
 #
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
@@ -444,11 +456,10 @@ function qx(
   verbose=false,
   kwargs...,
 )
+  pivot = translate_pivot(pivot)
 
-  pivot=translate_pivot(pivot)
- 
-  if rtol<0.0 && block_rtol>=0.0
-    rtol=block_rtol
+  if rtol < 0.0 && block_rtol >= 0.0
+    rtol = block_rtol
   end
   do_rank_reduction = (atol >= 0.0) || (rtol >= 0.0)
   if do_rank_reduction && qx == ql
@@ -470,7 +481,7 @@ function qx(
     QM, XM = trim_rows(Matrix(QM), XM, atol, rtol; verbose=verbose)
   else
     QM, XM = qx(matrix(T), Val(false)) #no column pivoting
-    QM = Matrix(QM)
+    QM = matrix(QM)
     p = nothing
   end
   #
@@ -537,52 +548,6 @@ function qx_positive!(qx::Function, Q::AbstractMatrix, X::AbstractMatrix)
       end
     end
   end
-end
-
-#
-#  Lapack replaces A with Q & L carefully packed together.  So here we just copy a
-#  before letting lapack overwirte it. 
-#
-function ql(A::AbstractMatrix, pivot; kwargs...)
-  @assert pivot == Val(false)
-  Base.require_one_based_indexing(A)
-  T = eltype(A)
-  AA = similar(A, LinearAlgebra._qreltype(T), size(A))
-  copyto!(AA, A)
-  return ql!(AA; kwargs...)
-end
-#
-# This is where the low level call to lapack actually occurs.  Most of the work is
-# about unpacking Q and L from the A matrix.
-#
-function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
-  tau = Base.similar(A, min(size(A)...))
-  x = LAPACK.geqlf!(A, tau)
-  #save L from the lower portion of A, before orgql! mangles it!
-  nr, nc = size(A)
-  mn = min(nr, nc)
-  L = similar(A, (mn, nc))
-  for r in 1:mn
-    for c in 1:(r + nc - mn)
-      L[r, c] = A[r + nr - mn, c]
-    end
-    for c in (r + 1 + nc - mn):nc
-      L[r, c] = 0.0
-    end
-  end
-  # Now we need shift the orth vectors from the right side of Q over the left side, before
-  if (mn < nc)
-    for r in 1:nr
-      for c in 1:mn
-        A[r, c] = A[r, c + nc - mn]
-      end
-    end
-    for r in 1:nr
-      A = A[:, 1:mn] #whack the extra columns in A.
-    end
-  end
-  LAPACK.orgql!(A, tau)
-  return A, L
 end
 
 # TODO: support alg keyword argument to choose the svd algorithm

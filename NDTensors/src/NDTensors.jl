@@ -8,6 +8,7 @@ using FLoops
 using Folds
 using Random
 using LinearAlgebra
+using MatrixFactorizations
 using StaticArrays
 using Functors
 using HDF5

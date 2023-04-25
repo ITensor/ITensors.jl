@@ -57,4 +57,6 @@ import Adapt: adapt_structure, adapt_storage
 
 import LinearAlgebra: diag, exp, norm, qr
 
+import MatrixFactorizations: ql, rq
+
 import TupleTools: isperm

@@ -81,6 +81,6 @@ export
   # linearalgebra.jl
   qr
 
-  if VERSION >= v"1.7"
-    export RowNorm
-  end
+if VERSION >= v"1.7"
+  export RowNorm
+end
