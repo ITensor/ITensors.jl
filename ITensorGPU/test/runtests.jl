@@ -1,12 +1,9 @@
 if VERSION < v"1.8"
-  itensorgpu_path = joinpath(pwd(), "..")
+  itensorgpu_path = joinpath(@__FILE__, "..")
   cp(
     joinpath(pwd(), "..", "LocalPreferences.toml"),
     joinpath("$(LOAD_PATH[2])", "JuliaLocalPreferences.toml"),
   )
-  #old_path = pop!(LOAD_PATH)
-  #push!(LOAD_PATH, itensorgpu_path)
-  #push!(LOAD_PATH, old_path)
 end
 
 using CUDA
