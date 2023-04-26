@@ -1,5 +1,5 @@
-if VERSION ≤ v"1.8"
-  pushfirst!(LOAD_PATH, "@v#.#")
+if VERSION ≤ v"1.8" && "@v#.#" ∉ LOAD_PATH
+  push!(LOAD_PATH, "@v#.#")
 end
 
 using ITensorGPU, Test, CUDA
@@ -20,14 +20,12 @@ CUDA.allowscalar(false)
     "test_cudense.jl",
     "test_cucontract.jl",
     "test_cumpo.jl",
-    # "test_cumps.jl",
-    # "test_cuiterativesolvers.jl",
-    # "test_cutruncate.jl",
+    "test_cumps.jl",
+    "test_cuiterativesolvers.jl",
+    "test_cutruncate.jl",
     #"test_pastaq.jl",
   )
     println("Running $filename")
     include(filename)
   end
-
-popfirst!(LOAD_PATH)
 end
