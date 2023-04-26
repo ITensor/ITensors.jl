@@ -2,7 +2,9 @@
 # Used to adapt `EmptyStorage` types
 #
 
-NDTensors.cu(eltype::Type{<:Number}, x) = fmap(x -> adapt(CuVector{eltype, default_buffertype()}, x), x)
+function NDTensors.cu(eltype::Type{<:Number}, x)
+  return fmap(x -> adapt(CuVector{eltype,default_buffertype()}, x), x)
+end
 NDTensors.cu(x) = fmap(x -> adapt(CuArray, x), x)
 
 function NDTensors.set_eltype_if_unspecified(
@@ -26,6 +28,6 @@ function NDTensors.adapt_storagetype(
 )
   store = NDTensors.storagetype(x)
   return NDTensors.emptytype(
-    NDTensors.set_datatype(store, CuVector{eltype(store), default_buffertype()})
+    NDTensors.set_datatype(store, CuVector{eltype(store),default_buffertype()})
   )
 end
