@@ -425,11 +425,26 @@ end
 qr(T::DenseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 ql(T::DenseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 
-translate_pivot(pivot::Bool)::Bool = pivot
+# LinearAlgebra qr takes types like Val(true) of ColumnNorm for control of pivoting.
+# We some helper functions to deal with all these types changing between julia versions.
+#
+pivot_to_Bool(pivot::Bool)::Bool = pivot
+pivot_to_Bool(::Val{false})::Bool = false
+pivot_to_Bool(::Val{true})::Bool = true
+if VERSION < v"1.7"
+  call_pivot(bpivot::Bool,::Function)=Val(bpivot)
+end
 if VERSION >= v"1.7"
-  translate_pivot(pivot::NoPivot)::Bool = false
-  translate_pivot(pivot::ColumnNorm)::Bool = true
-  translate_pivot(pivot::RowNorm)::Bool = true
+  pivot_to_Bool(pivot::NoPivot)::Bool = false
+  pivot_to_Bool(pivot::ColumnNorm)::Bool = true
+  pivot_to_Bool(pivot::RowNorm)::Bool = true
+  function call_pivot(bpivot::Bool,qx::Function)
+    if qx==qr
+      return bpivot ? ColumnNorm() : NoPivot() # LinearAlgebra
+    else
+      return Val(bpivot) # MatrixFactorizations
+    end
+  end
 end
 
 matrix(Q::LinearAlgebra.QRCompactWYQ) = Matrix(Q)
@@ -449,14 +464,14 @@ function qx(
   qx::Function,
   T::DenseTensor{<:Any,2};
   positive=false,
-  pivot=false,
+  pivot=call_pivot(false,qx),
   atol=-1.0, #absolute tolerance for rank reduction
   rtol=-1.0, #relative tolerance for rank reduction
   block_rtol=-1.0, #This is supposed to be for block sparse, but we reluctantly accept it here.
   verbose=false,
   kwargs...,
 )
-  pivot = translate_pivot(pivot)
+  bpivot = pivot_to_Bool(pivot) #We need a simple bool for making decisions below.
 
   if rtol < 0.0 && block_rtol >= 0.0
     rtol = block_rtol
@@ -464,23 +479,24 @@ function qx(
   do_rank_reduction = (atol >= 0.0) || (rtol >= 0.0)
   if do_rank_reduction && qx == ql
     @warn "User requested rq/ql decomposition with atol=$atol, rtol=$rtol." *
-      "  Rank reduction requires column pivoting which is not supported for rq/ql decomposition in lapack/ITensors"
+      "  Rank reduction requires column/row pivoting which is not supported for rq/ql decomposition in lapack/ITensors"
     do_rank_reduction = false
   end
-  if pivot && qx == ql
-    @warn "User requested rq/ql decomposition with column pivoting." *
-      "  Column pivoting is not supported for rq/ql decomposition in lapack/ITensors"
-    pivot = false
+  if bpivot && qx == ql
+    @warn "User requested rq/ql decomposition with row/column pivoting." *
+      "  Pivoting is not supported for rq/ql decomposition in lapack/ITensors"
+    bpivot = false
   end
-  if do_rank_reduction
-    pivot = true
+  if do_rank_reduction #if do_rank_reduction==false then don't change bpivot.
+    bpivot = true
   end
 
-  if pivot
-    QM, XM, p = qx(matrix(T), Val(true)) #with colun pivoting
+  pivot = call_pivot(bpivot,qx) #Convert the bool to whatever type the qx function expects.
+  if bpivot
+    QM, XM, p = qx(matrix(T), pivot) #with colun pivoting
     QM, XM = trim_rows(Matrix(QM), XM, atol, rtol; verbose=verbose)
   else
-    QM, XM = qx(matrix(T), Val(false)) #no column pivoting
+    QM, XM = qx(matrix(T), pivot) #no column pivoting
     QM = matrix(QM)
     p = nothing
   end
@@ -491,7 +507,7 @@ function qx(
   #
   #  undo the permutation on R, so the T=Q*R again.
   #
-  pivot && (XM = XM[:, invperm(p)])
+  bpivot && (XM = XM[:, invperm(p)])
   #
   # Make the new indices to go onto Q and X
   #
