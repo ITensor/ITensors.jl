@@ -472,7 +472,7 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   if length(QXp) == 3
     QT, XT, perm = QXp
   else
-    QT, XT = Qxp #ITensorGPU does not return a perm yet.
+    QT, XT = QXp #ITensorGPU does not return a perm yet.
     perm = nothing
   end
 
