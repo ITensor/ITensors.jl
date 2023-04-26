@@ -1,6 +1,5 @@
 module NDTensorCUDA
 
-println("Compiling NDTensors with CUDA")
 using NDTensors
 using Adapt
 using Functors
