@@ -4,8 +4,10 @@ adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 cpu(eltype::Type{<:Number}, x) = fmap(x -> adapt(Array{eltype}, x), x)
 cpu(x) = fmap(x -> adapt(Array, x), x)
 
-# Implemented in `ITensorGPU`
-function cu end
+# Implemented in `ITensorGPU` 
+## TODO deprecate this because we don't actually need our own cu CUDA's version 
+## works fine!
+function cu(x; unified=false) end
 
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))
 
@@ -27,11 +29,10 @@ double_precision(x) = fmap(x -> adapt(double_precision(eltype(x)), x), x)
 # Used to adapt `EmptyStorage` types
 #
 
-function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
-  return set_datatype(x, set_eltype_if_unspecified(to_vector_type(to), eltype(x)))
+function adapt_storagetype(to::Type{<:AbstractVector}, x::Type{<:TensorStorage})
+  return set_datatype(x, set_eltype_if_unspecified(to, eltype(x)))
 end
 
-to_vector_type(arraytype::Type{<:AbstractVector}) = arraytype
-
-to_vector_type(arraytype::Type{Array}) = Vector
-to_vector_type(arraytype::Type{Array{T}}) where {T} = Vector{T}
+function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
+  return set_datatype(x, set_eltype_if_unspecified(set_ndims(to, 1), eltype(x)))
+end
