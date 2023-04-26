@@ -432,14 +432,14 @@ pivot_to_Bool(pivot::Bool)::Bool = pivot
 pivot_to_Bool(::Val{false})::Bool = false
 pivot_to_Bool(::Val{true})::Bool = true
 if VERSION < v"1.7"
-  call_pivot(bpivot::Bool,::Function)=Val(bpivot)
+  call_pivot(bpivot::Bool, ::Function) = Val(bpivot)
 end
 if VERSION >= v"1.7"
   pivot_to_Bool(pivot::NoPivot)::Bool = false
   pivot_to_Bool(pivot::ColumnNorm)::Bool = true
   pivot_to_Bool(pivot::RowNorm)::Bool = true
-  function call_pivot(bpivot::Bool,qx::Function)
-    if qx==qr
+  function call_pivot(bpivot::Bool, qx::Function)
+    if qx == qr
       return bpivot ? ColumnNorm() : NoPivot() # LinearAlgebra
     else
       return Val(bpivot) # MatrixFactorizations
@@ -464,7 +464,7 @@ function qx(
   qx::Function,
   T::DenseTensor{<:Any,2};
   positive=false,
-  pivot=call_pivot(false,qx),
+  pivot=call_pivot(false, qx),
   atol=-1.0, #absolute tolerance for rank reduction
   rtol=-1.0, #relative tolerance for rank reduction
   block_rtol=-1.0, #This is supposed to be for block sparse, but we reluctantly accept it here.
@@ -491,7 +491,7 @@ function qx(
     bpivot = true
   end
 
-  pivot = call_pivot(bpivot,qx) #Convert the bool to whatever type the qx function expects.
+  pivot = call_pivot(bpivot, qx) #Convert the bool to whatever type the qx function expects.
   if bpivot
     QM, XM, p = qx(matrix(T), pivot) #with colun pivoting
     QM, XM = trim_rows(Matrix(QM), XM, atol, rtol; verbose=verbose)
