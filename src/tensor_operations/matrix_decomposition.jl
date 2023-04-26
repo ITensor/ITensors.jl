@@ -468,7 +468,14 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   #
   AC = permute(AC, cL, cR; allow_alias=true)
 
-  QT, XT, perm = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  QXp = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  if length(QXp) == 3
+    QT, XT, perm = QXp
+  else
+    QT, XT = Qxp #ITensorGPU does not return a perm yet.
+    perm = nothing
+  end
+
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
