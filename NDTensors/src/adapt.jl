@@ -9,8 +9,6 @@ cpu(x) = fmap(x -> adapt(Array, x), x)
 ## works fine!
 function cu(x; unified=false) end
 
-function mtl(x; unified=false) end
-
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))
 
 convert_scalartype(eltype::Type{<:Number}, x) = fmap(x -> adapt(eltype, x), x)
@@ -31,10 +29,11 @@ double_precision(x) = fmap(x -> adapt(double_precision(eltype(x)), x), x)
 # Used to adapt `EmptyStorage` types
 #
 
-function adapt_storagetype(to::Type{<:AbstractVector}, x::Type{<:TensorStorage})
-  return set_datatype(x, set_eltype_if_unspecified(to, eltype(x)))
+function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
+  return set_datatype(x, set_eltype_if_unspecified(to_vector_type(to), eltype(x)))
 end
 
-function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
-  return set_datatype(x, set_eltype_if_unspecified(set_ndims(to, 1), eltype(x)))
-end
+to_vector_type(arraytype::Type{<:AbstractVector}) = arraytype
+
+to_vector_type(arraytype::Type{Array}) = Vector
+to_vector_type(arraytype::Type{Array{T}}) where {T} = Vector{T}
