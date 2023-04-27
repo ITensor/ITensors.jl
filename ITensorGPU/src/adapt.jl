@@ -31,3 +31,9 @@ function NDTensors.adapt_storagetype(
     NDTensors.set_datatype(store, CuVector{eltype(store),default_buffertype()})
   )
 end
+
+## In house patch to deal issue of calling ndims with an Array of unspecified eltype
+## https://github.com/JuliaLang/julia/pull/40682
+if VERSION < v"1.7"
+  ndims(::Type{<:CuArray{<:Any,N, <:Any}}) where {N} = N
+end
