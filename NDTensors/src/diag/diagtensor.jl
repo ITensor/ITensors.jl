@@ -31,11 +31,11 @@ function Array(T::DiagTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
 end
 
-function generic_zeros(tensortype::Type{<:DiagTensor}, inds)
+function zeros(tensortype::Type{<:DiagTensor}, inds)
   return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
-function generic_zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
+function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
   return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
