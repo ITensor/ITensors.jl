@@ -5,9 +5,7 @@ cpu(eltype::Type{<:Number}, x) = fmap(x -> adapt(Array{eltype}, x), x)
 cpu(x) = fmap(x -> adapt(Array, x), x)
 
 # Implemented in `ITensorGPU` 
-## TODO deprecate this because we don't actually need our own cu CUDA's version 
-## works fine!
-function cu(x; unified=false) end
+function cu end
 
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))
 
