@@ -386,7 +386,7 @@ end
 function zero_contraction_output(
   T1::TensorT1, T2::TensorT2, indsR::IndsR
 ) where {TensorT1<:Tensor,TensorT2<:Tensor,IndsR}
-  return zeros(contraction_output_type(TensorT1, TensorT2, indsR), indsR)
+  return generic_zeros(contraction_output_type(TensorT1, TensorT2, indsR), indsR)
 end
 
 #
