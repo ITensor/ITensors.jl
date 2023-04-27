@@ -35,7 +35,11 @@ function zeros(tensortype::Type{<:DiagTensor}, inds)
   return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
-function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
+function zeros(tensortype::Type{<:DiagTensor}, inds::Dims)
+  return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
+end
+
+function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple)
   return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
