@@ -28,4 +28,12 @@ using Test
   end
 end
 
+@testset "DiagTensor contractions" begin
+  t = tensor(Diag([1.0, 1.0, 1.0]), (3, 3))
+  A = randomTensor(Dense, (3, 3))
+
+  @test contract(t, (1, -2), t, (-2, 3)) == t
+  @test contract(A, (1, -2), t, (-2, 3)) == A
+  @test contract(A, (-2, 1), t, (-2, 3)) == transpose(A)
+end
 nothing
