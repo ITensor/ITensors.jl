@@ -1,13 +1,18 @@
 module ITensorGPU
+using NDTensors
 
 using Adapt
 using CUDA
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
+if CUDA.runtime_version() ≥ v"12.0"
+  println(
+    "Warning: currently cuTENSOR does not support CUDA runtime versions 12.0 and higher.\n We suggest reducing the CUDA runtime version to below version 12 using the command `CUDA.set_runtime_version!`, for example `CUDA.set_runtime_version!(\"11.8\")`.",
+  )
+end
 using Functors
 using ITensors
 using LinearAlgebra
-using NDTensors
 using Random
 using SimpleTraits
 using StaticArrays

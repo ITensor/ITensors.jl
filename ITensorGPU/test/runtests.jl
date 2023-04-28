@@ -1,4 +1,10 @@
+if VERSION ≤ v"1.8" && "@v#.#" ∉ LOAD_PATH
+  push!(LOAD_PATH, "@v#.#")
+end
+
 using ITensorGPU, Test, CUDA
+
+println("Running ITensorGPU tests with a runtime CUDA version: $(CUDA.runtime_version())")
 
 CUDA.allowscalar(false)
 @testset "ITensorGPU.jl" begin
