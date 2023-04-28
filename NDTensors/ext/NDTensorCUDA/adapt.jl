@@ -15,14 +15,21 @@ struct NDTensorCuArrayAdaptor{B} end
   )
 end
 
+buffertype(::NDTensorCuArrayAdaptor{B}) where {B} = B
+
 function Adapt.adapt_storage(
-  ::NDTensorCuArrayAdaptor{B}, xs::AbstractArray{T,N}
-) where {T,N,B}
-  return isbits(xs) ? xs : CuArray{T,1,B}(xs)
+  adaptor::NDTensorCuArrayAdaptor, xs::AbstractArray
+)
+  ElT = eltype(xs)
+  BufT = buffertype(adaptor)
+  return isbits(xs) ? xs : CuArray{ElT,1,BufT}(xs)
 end
 
 function NDTensors.adapt_storagetype(
-  ::NDTensorCuArrayAdaptor{B}, xs::Type{EmptyStorage{ElT,StoreT}}
-) where {ElT,StoreT,B}
-  return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,B}, StoreT))
+  adaptor::NDTensorCuArrayAdaptor, xs::Type{EmptyStorage}
+)
+  ElT = eltype(xs)
+  BufT = buffertype(adaptor)
+  StoreT = NDTensors.storagetype(xs)
+  return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,BufT}, StoreT))
 end
