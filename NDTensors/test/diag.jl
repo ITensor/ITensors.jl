@@ -1,8 +1,7 @@
 using NDTensors
 using Test
 
-@testset "DiagTensor basic functionality" begin
-  for op in ops
+@testset "DiagTensor basic functionality" for op in ops
     t = op(tensor(Diag(rand(ComplexF64, 100)), (100, 100)))
     @test conj(data(store(t))) == data(store(conj(t)))
     @test typeof(conj(t)) <: DiagTensor
@@ -25,10 +24,9 @@ using Test
     @test Array(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
     @test matrix(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
     @test permutedims(D, (2, 1)) == D
-  end
 end
 
-@testset "DiagTensor contractions" begin
+@testset "DiagTensor contractions" for op in ops
   t = tensor(Diag([1.0, 1.0, 1.0]), (3, 3))
   A = randomTensor(Dense, (3, 3))
 

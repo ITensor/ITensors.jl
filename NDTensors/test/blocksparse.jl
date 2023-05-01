@@ -4,7 +4,7 @@ using Test
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
-  for op in ops
+  @testset "Test for different backend storage" for op in ops
     # Indices
     indsA = ([2, 3], [4, 5])
 
@@ -223,6 +223,7 @@ using Test
       end
     end
   end
+
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2, 3], [4, 5])
 

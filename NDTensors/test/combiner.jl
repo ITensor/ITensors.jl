@@ -5,8 +5,7 @@ using Test
 # Testing generic block indices
 using ITensors: QN, Index
 
-@testset "CombinerTensor basic functionality" begin
-  for op in ops
+@testset "CombinerTensor basic functionality" for op in ops
     @testset "Dense * Combiner" begin
       d = 2
       input_tensor_inds = (d, d, d)
@@ -81,5 +80,4 @@ using ITensors: QN, Index
       combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
       @test_throws Any contract(invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1))
     end
-  end
 end

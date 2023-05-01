@@ -3,8 +3,9 @@ using NDTensors
 using Test
 
 @testset "Dense Tensors" begin
-  for op in ops
-    @testset "DenseTensor basic functionality" begin
+  
+  # Testing with GPU and CPU backends
+    @testset "DenseTensor basic functionality" for op in ops
       A = op(Tensor((3, 4)))
       for I in eachindex(A)
         @test A[I] == 0
@@ -107,7 +108,7 @@ using Test
       @test Array(J * K) ≈ Array(J) * Array(K)
     end
 
-    @testset "Random constructor" begin
+    @testset "Random constructor" for op in ops
       T = op(randomTensor((2, 2)))
       @test dims(T) == (2, 2)
       @test eltype(T) == Float64
@@ -121,7 +122,7 @@ using Test
       @test norm(Tc) ≉ 0
     end
 
-    @testset "Complex Valued Tensors" begin
+    @testset "Complex Valued Tensors" for op in ops
       d1, d2, d3 = 2, 3, 4
       T = op(randomTensor(ComplexF64, (d1, d2, d3)))
 
@@ -136,7 +137,7 @@ using Test
       end
     end
 
-    @testset "Custom inds types" begin
+    @testset "Custom inds types" for op in ops
       struct MyInd
         dim::Int
       end
@@ -171,7 +172,7 @@ using Test
       @test inds(T2) == (MyInd(4), MyInd(3))
     end
 
-    @testset "generic contraction" begin
+    @testset "generic contraction" for op in ops
       # correctness of _gemm!
       for alpha in [0.0, 1.0, 2.0]
         for beta in [0.0, 1.0, 2.0]
@@ -192,7 +193,7 @@ using Test
       end
     end
 
-    @testset "Contraction with size 1 block and NaN" begin
+    @testset "Contraction with size 1 block and NaN" for op in ops
       @testset "No permutation" begin
         R = op(Tensor(ComplexF64, (2, 2, 1)))
         fill!(R, NaN)
@@ -215,7 +216,8 @@ using Test
         @test convert(Array, R) ≈ permutedims(convert(Array, T1), (2, 1, 3)) * T2[1]
       end
     end
-  end
+  
+  # Only CPU backend testing
   @testset "change backends" begin
     a, b, c = [randn(5, 5) for i in 1:3]
     backend_auto()

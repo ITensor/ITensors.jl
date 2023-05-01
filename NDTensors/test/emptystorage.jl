@@ -1,8 +1,8 @@
 using NDTensors
 using Test
 
-@testset "EmptyStorage" begin
-  T = Tensor(EmptyStorage(NDTensors.EmptyNumber), (2, 2))
+@testset "EmptyStorage" for op in ops
+  T = op(Tensor(EmptyStorage(NDTensors.EmptyNumber), (2, 2)))
   @test size(T) == (2, 2)
   @test eltype(T) == NDTensors.EmptyNumber
   @test T[1, 1] == NDTensors.EmptyNumber()
