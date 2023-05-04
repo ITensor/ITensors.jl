@@ -27,7 +27,8 @@ end
 
 
 function NDTensors.adapt_storagetype(
-  adaptor::NDTensorCuArrayAdaptor{B}, xs::Type{EmptyStorage{ElT, StoreT}}
-) where {ElT, StoreT, B}
-  return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,B}, StoreT))
+  adaptor::NDTensorCuArrayAdaptor, xs::Type{EmptyStorage{ElT, StoreT}}
+) where {ElT, StoreT}
+  BufT = buffertype(adaptor)
+  return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,BufT}, StoreT))
 end
