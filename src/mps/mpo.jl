@@ -703,6 +703,16 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   sim!(linkinds, ψ_c)
   sim!(siteinds, commoninds, A_c, ψ_c)
 
+  # In case ψ has a dangling bond on each site
+  all_linkinds = vcat(linkinds(A), linkinds(A_c), linkinds(ψ), linkinds(ψ_c))
+  dangling_inds_ψ = [uniqueinds(ψ[i], A[i], all_linkinds) for i in 1:n]
+  sim_dangling_inds_ψ = [sim.(dangling_inds_ψ[i]) for i in 1:n]
+  function _getsimψ_c(i)
+    t = copy(ψ_c[i])
+    replaceinds!(t, dangling_inds_ψ[i], sim_dangling_inds_ψ[i])
+    return t
+  end
+
   # A version helpful for making the density matrix
   simA_c = sim(siteinds, uniqueinds, A_c, ψ_c)
 
@@ -714,18 +724,21 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
     E[j] = E[j - 1] * ψ[j] * A[j] * A_c[j] * ψ_c[j]
   end
   R = ψ[n] * A[n]
-  simR_c = ψ_c[n] * simA_c[n]
+  simR_c = _getsimψ_c(n) * simA_c[n]
   ρ = E[n - 1] * R * simR_c
   l = linkind(ψ, n - 1)
   ts = isnothing(l) ? "" : tags(l)
-  Lis = siteinds(uniqueinds, A, ψ, n)
-  Ris = siteinds(uniqueinds, simA_c, ψ_c, n)
+  function _siteinds(Ai_, ψi_)
+    return vcat(uniqueinds(Ai_, ψi_, all_linkinds), uniqueinds(ψi_, Ai_, all_linkinds))
+  end
+  Lis = _siteinds(A[n], ψ[n])
+  Ris = _siteinds(simA_c[n], _getsimψ_c(n))
   F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, kwargs...)
   D, U, Ut = F.D, F.V, F.Vt
   l_renorm, r_renorm = F.l, F.r
   ψ_out[n] = Ut
   R = R * dag(Ut) * ψ[n - 1] * A[n - 1]
-  simR_c = simR_c * U * ψ_c[n - 1] * simA_c[n - 1]
+  simR_c = simR_c * U * _getsimψ_c(n - 1) * simA_c[n - 1]
   for j in reverse(2:(n - 1))
     # Determine smallest maxdim to use
     cip = commoninds(ψ[j], E[j - 1])
@@ -733,8 +746,8 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
     prod_dims = dim(cip) * dim(ciA)
     maxdim = min(prod_dims, requested_maxdim)
 
-    s = siteinds(uniqueinds, A, ψ, j)
-    s̃ = siteinds(uniqueinds, simA_c, ψ_c, j)
+    s = _siteinds(A[j], ψ[j])
+    s̃ = _siteinds(simA_c[j], _getsimψ_c(j))
     ρ = E[j - 1] * R * simR_c
     l = linkind(ψ, j - 1)
     ts = isnothing(l) ? "" : tags(l)
@@ -745,7 +758,7 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
     l_renorm, r_renorm = F.l, F.r
     ψ_out[j] = Ut
     R = R * dag(Ut) * ψ[j - 1] * A[j - 1]
-    simR_c = simR_c * U * ψ_c[j - 1] * simA_c[j - 1]
+    simR_c = simR_c * U * _getsimψ_c(j - 1) * simA_c[j - 1]
   end
   if normalize
     R ./= norm(R)
@@ -1050,4 +1063,11 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::
   llim = read(g, "llim")
   v = [read(g, "MPO[$(i)]", ITensor) for i in 1:N]
   return MPO(v, llim, rlim)
+end
+
+function contract(::Algorithm"densitymatrix", M1::MPO, M2::MPO; kwargs...)::MPO
+  t1 = MPO([M1[v] for v in eachindex(M1)])
+  t2 = MPS([M2[v] for v in eachindex(M2)])
+  t12 = contract(t1, t2; alg="densitymatrix", kwargs...)
+  return MPO([t12[v] for v in eachindex(M1)])
 end
