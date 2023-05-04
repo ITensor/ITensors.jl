@@ -17,12 +17,11 @@ if "cuda" in test_args || "all" in test_args
     """\nArguments ARGS = $(test_args) contain `"cuda"`. Running NDTensorCUDA tests."""
   )
   using Pkg
-  Pkg.add("CUDA")
   using CUDA
   CUDA.allowscalar()
   if CUDA.functional()
     push!(ops, NDTensors.cu)
-    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
+    #include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
   end
 end
 

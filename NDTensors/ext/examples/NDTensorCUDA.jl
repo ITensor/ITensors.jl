@@ -4,8 +4,6 @@ using NDTensors
 using ITensors
 using Test
 
-using Pkg;
-Pkg.add("Zygote");
 using Zygote
 
 function main()
