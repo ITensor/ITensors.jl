@@ -43,13 +43,14 @@ CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
 Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extras]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
 Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4"
-ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
 NDTensorCUDA = "CUDA"
@@ -58,4 +59,4 @@ NDTensorTBLIS = "TBLIS"
 NDTensorOctavian = "Octavian"
 
 [targets]
-test = ["CUDA", "Metal", "TBLIS", "Octavian"]
+test = ["CUDA", "Metal", "TBLIS", "Octavian", "Zygote"]
