@@ -367,6 +367,98 @@ let
 end
 ```
 
+## Printing the Entanglement Entropy at Each Step
+
+To obtain the entanglement entropy of an MPS at each step during a DMRG calculation,
+you can use the [Observer](@ref observer) system to make a custom observer object that prints out
+this information.
+
+First we define our custom observer type, `EntanglementObserver`, and overload the `measure!` function
+for it:
+
+```julia
+mutable struct EntanglementObserver <: AbstractObserver
+end
+
+function ITensors.measure!(o::EntanglementObserver; bond, sweep, half_sweep, psi, projected_operator, kwargs...)
+  U,S,V = svd(psi[bond], uniqueinds(psi[bond],psi[bond+1]))
+  SvN = 0.0
+  for n=1:dim(S, 1)
+    p = S[n,n]^2
+    SvN -= p * log(p)
+  end
+  println("  Entanglement across bond $bond = $SvN")
+end
+```
+
+The `measure!` function grabs certain helpful keywords passed to it by DMRG, such as what bond DMRG 
+has just finished optimizing.
+
+Here is a complete sample code including constructing the observer and passing it to DMRG:
+
+```julia
+using ITensors
+
+mutable struct EntanglementObserver <: AbstractObserver
+end
+
+function ITensors.measure!(o::EntanglementObserver; bond, sweep, half_sweep, psi, projected_operator, kwargs...)
+  U,S,V = svd(psi[bond], uniqueinds(psi[bond],psi[bond+1]))
+  SvN = 0.0
+  for n=1:dim(S, 1)
+    p = S[n,n]^2
+    SvN -= p * log(p)
+  end
+  println("  Entanglement across bond $bond = $SvN")
+end
+
+let
+  N = 100
+
+  s = siteinds("S=1/2",N)
+
+  a = OpSum()
+  for n=1:N-1
+    a += "Sz",n,"Sz",n+1
+    a += 0.5,"S+",n,"S-",n+1
+    a += 0.5,"S-",n,"S+",n+1
+  end
+  H = MPO(a,s)
+  psi0 = randomMPS(s,linkdims=4)
+
+  nsweeps = 5
+  maxdim = [10,20,80,160]
+  cutoff = 1E-8
+
+  observer = EntanglementObserver()
+
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff, observer, outputlevel=2)
+
+  return
+end
+```
+
+Example output:
+```
+...
+Sweep 2, half 2, bond (35,36) energy=-44.08644657103751
+  Truncated using cutoff=1.0E-08 maxdim=20 mindim=1
+  Trunc. err=2.54E-07, bond dimension 20
+  Entanglement across bond 35 = 0.7775882479059774
+Sweep 2, half 2, bond (34,35) energy=-44.086696891668424
+  Truncated using cutoff=1.0E-08 maxdim=20 mindim=1
+  Trunc. err=2.12E-07, bond dimension 20
+  Entanglement across bond 34 = 0.7103532704635472
+Sweep 2, half 2, bond (33,34) energy=-44.08696190368391
+  Truncated using cutoff=1.0E-08 maxdim=20 mindim=1
+  Trunc. err=1.29E-07, bond dimension 20
+  Entanglement across bond 33 = 0.7798362911744212
+...
+```
+
+If you only want to see the maximum entanglement during each sweep, you can add a field to the EntanglementObserver
+object that saves the maximum value encountered so far and keep overwriting this field, printing out the most recently observed maximum at the end of each sweep.
+
 
 ## Monitoring the Memory Usage of DMRG
 
