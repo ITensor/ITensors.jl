@@ -42,8 +42,14 @@ function main()
   cB = NDTensors.cu(B)
 
   #Check that backend of contraction is GPU
-  typeof(storage(A * B))
-  typeof(storage(cA * cB))
+  #typeof(storage(A * B))
+  #typeof(storage(cA * cB))
+  storage(cA)
+  storage(cB)
+  cA * cA
+  cB * cB
+  cA * cB
+  storage(cA * cB)
   @test A * B == cpu(cA * cB)
 
   dim3 = (l, k)
@@ -60,8 +66,8 @@ function main()
   #@show grad[1]
   typeof(storage(grad[1]))
   typeof(storage(grad[2]))
+  @test NDTensors.cpu(cB * C * D) ≈ NDTensors.cpu(grad[1])
   @test (cB * C * D) ≈ grad[1]
-
   # Create a tuple of indices
   decomp = (
     dim(NDTensors.ind(grad[1], 1)),
