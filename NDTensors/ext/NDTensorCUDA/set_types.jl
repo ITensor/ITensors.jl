@@ -9,7 +9,7 @@ end
 default_buffertype() = CUDA.Mem.DeviceBuffer
 
 function set_eltype(arraytype::Type{<:CuArray}, eltype::Type)
-  return CuArray{eltype,ndims(arraytype),buffertype(arraytype)}
+  return CuArray{eltype, NDTensors.ndims(arraytype), buffertype(arraytype)}
 end
 
 function set_ndims(arraytype::Type{<:CuArray{T,<:Any,<:Any}}, ndims) where {T}
