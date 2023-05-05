@@ -16,7 +16,6 @@ if "cuda" in test_args || "all" in test_args
   println(
     """\nArguments ARGS = $(test_args) contain `"cuda"`. Running NDTensorCUDA tests."""
   )
-  using Pkg
   using CUDA
   CUDA.allowscalar()
   if CUDA.functional()
