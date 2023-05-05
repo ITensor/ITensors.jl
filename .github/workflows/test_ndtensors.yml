@@ -34,8 +34,8 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          Pkg.develop(path="$(pwd())/NDTensors")
-          Pkg.develop(path="$(pwd())")
+          Pkg.develop(path=".//NDTensors")
+          Pkg.develop(path="./")
       - name: Run the tests
         run: |
           julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("NDTensors")'

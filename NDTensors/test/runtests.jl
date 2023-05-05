@@ -1,6 +1,8 @@
 using Test
 using NDTensors
 
+push!(LOAD_PATH, joinpath(pathof(NDTensors), "test"))
+
 ops = Vector{Function}(undef, 0)
 test_args = copy(ARGS)
 
