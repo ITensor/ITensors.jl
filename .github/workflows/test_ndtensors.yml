@@ -35,6 +35,8 @@ jobs:
         run: |
           using Pkg;
           Pkg.develop(path=".")
+          Pkg.instantiate()
+          Pkg.update()
       - name: Run the tests
         run: |
-          julia --project=NDTensors --depwarn=yes -e 'using Pkg; Pkg.test()'
+          julia --project=NDTensors --depwarn=yes -e 'using Pkg; Pkg.develop(path="."); Pkg.test()'
