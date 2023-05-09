@@ -31,10 +31,11 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - name: Install Julia dependencies
-        shell: julia --project=NDTensors {0}
+        shell: julia --project=monorepo {0}
         run: |
           using Pkg;
           Pkg.develop(path=".")
+          Pkg.develop(path="./NDTensors")
       - name: Run the tests
         run: |
-          julia --project=NDTensors --depwarn=yes -e 'using Pkg; Pkg.develop(path="."); Pkg.test()'
+          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test()'
