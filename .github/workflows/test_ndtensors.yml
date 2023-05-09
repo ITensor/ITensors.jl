@@ -31,7 +31,7 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - name: Install Julia dependencies
-        shell: rm NDTensors/Manifest.toml; julia --project=NDTensors {0}
+        shell: julia --project=NDTensors {0}
         run: |
           using Pkg;
           Pkg.develop(path=".")
