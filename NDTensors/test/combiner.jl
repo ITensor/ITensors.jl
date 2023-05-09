@@ -1,9 +1,9 @@
+# Testing generic block indices
+using ITensors: QN, Index
+
 using NDTensors
 using LinearAlgebra
 using Test
-
-# Testing generic block indices
-using ITensors: QN, Index
 
 @testset "CombinerTensor basic functionality" for op in ops
   @testset "Dense * Combiner" begin
