@@ -91,7 +91,7 @@ function (A::ITensor * B::ITensor)::ITensor
   return contract(A, B)
 end
 
-function contract(A::ITensor, B::ITensor)::ITensor
+function contract(A::ITensor, B::ITensor; matricize=false)::ITensor
   NA::Int = ndims(A)
   NB::Int = ndims(B)
   if NA == 0 && NB == 0
@@ -101,7 +101,11 @@ function contract(A::ITensor, B::ITensor)::ITensor
   elseif NB == 0
     return iscombiner(B) ? _contract(B, A) : B[] * A
   else
-    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
+    if matricize
+      C = matrix_contract(A,B)
+    else
+      C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
+    end
     return C
   end
 end
