@@ -102,7 +102,7 @@ function contract(A::ITensor, B::ITensor; matricize=false)::ITensor
     return iscombiner(B) ? _contract(B, A) : B[] * A
   else
     if matricize
-      C = matrix_contract(A,B)
+      C = matrix_contract(A, B)
     else
       C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
     end
