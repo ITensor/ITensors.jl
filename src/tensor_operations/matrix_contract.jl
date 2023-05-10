@@ -6,7 +6,7 @@ function matrix_contract(A::ITensor, B::ITensor)
 
   labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
   labelsoutput_tensor = NDTensors.contract_labels(labelsA, labelsB)
-  
+
   output_tensor = NDTensors.contraction_output(
     NDTensors.tensor(A), labelsA, NDTensors.Tensor(B), labelsB, labelsoutput_tensor
   )
@@ -19,10 +19,10 @@ function matrix_contract(A::ITensor, B::ITensor)
   dmid = Index(props.dmid)
   dleft = Index(props.dleft)
   dright = Index(props.dright)
-  
+
   vA = NDTensors.data(storage(A))
   vB = NDTensors.data(storage(B))
-  
+
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
     #@timeit_debug timer "_contract!: permutedims A" begin
@@ -34,10 +34,10 @@ function matrix_contract(A::ITensor, B::ITensor)
     #A doesn't have to be permuted
     # Don't do the transpose here, do it later in the regular contract function
     if NDTensors.Atrans(props)
-    #   println("transposing")
-    #   tranA = transpose(NDTensors.ReshapedArray(NDTensors.data(storage(A)), (props.dmid, props.dleft), ()))
+      #   println("transposing")
+      #   tranA = transpose(NDTensors.ReshapedArray(NDTensors.data(storage(A)), (props.dmid, props.dleft), ()))
       AM = itensor(storage(A), (dmid, dleft))
-    #   @show AM
+      #   @show AM
     else
       AM = itensor(storage(A), (dleft, dmid))
     end
@@ -57,5 +57,5 @@ function matrix_contract(A::ITensor, B::ITensor)
     end
   end
 
-  C = contract(AM, BM)
-end 
+  return C = contract(AM, BM)
+end
