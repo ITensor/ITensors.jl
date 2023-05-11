@@ -23,7 +23,7 @@ function matrix_contract(A::ITensor, B::ITensor)
 
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
-    pAinds = map(x->ind(A,x), pA)
+    pAinds = map(x -> ind(A, x), pA)
     #@timeit_debug timer "_contract!: permutedims A" begin
     #Ap = permutedims(NDTensors.tensor(A), pA)
     #end # @timeit
@@ -43,7 +43,7 @@ function matrix_contract(A::ITensor, B::ITensor)
 
   if props.permuteB
     pB = NTuple{NB,Int}(props.PB)
-    pBinds = map(x->ind(B,x), pB)
+    pBinds = map(x -> ind(B, x), pB)
     #@timeit_debug timer "_contract!: permutedims B" begin
     #end # @timeit
     BM = setinds!(permute(B, pBinds), (dmid, dright))
