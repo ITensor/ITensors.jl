@@ -31,54 +31,64 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
     @testset "Test contract ITensor (Scalar*Scalar -> Scalar)" begin
       C = A * B
       @test scalar(C) ≈ scalar(A) * scalar(B)
+      @test C == contract(A, B; matricize=true)
     end
     @testset "Test contract ITensor (Scalar*Vector -> Vector)" begin
       C = A * Ai
       @test array(C) ≈ scalar(A) * array(Ai)
+      @test C == contract(A, Ai; matricize=true)
     end
     @testset "Test contract ITensor (Vector*Scalar -> Vector)" begin
       C = Aj * A
       @test array(C) ≈ scalar(A) * array(Aj)
+      @test C == contract(Aj, A; matricize=true)
     end
     @testset "Test contract ITensors (Vectorᵀ*Vector -> Scalar)" begin
       C = Ai * Bi
       CArray = transpose(array(Ai)) * array(Bi)
       @test CArray ≈ scalar(C)
+      @test C == contract(Ai, Bi; matricize=true)
     end
     @testset "Test contract ITensors (Vector*Vectorᵀ -> Matrix)" begin
       C = Ai * Aj
       for ii in 1:dim(i), jj in 1:dim(j)
         @test C[i => ii, j => jj] ≈ Ai[i => ii] * Aj[j => jj]
       end
+      @test C == contract(Ai, Aj; matricize=true)
     end
     @testset "Test contract ITensors (Matrix*Scalar -> Matrix)" begin
       Aij = permute(Aij, i, j)
       C = Aij * A
       @test array(permute(C, i, j)) ≈ scalar(A) * array(Aij)
+      @test C == contract(Aij, A; matricize=true)
     end
     @testset "Test contract ITensors (Matrix*Vector -> Vector)" begin
       Aij = permute(Aij, i, j)
       C = Aij * Aj
       CArray = array(permute(Aij, i, j)) * array(Aj)
       @test CArray ≈ array(C)
+      @test C == contract(Aij, Aj; matricize=true)
     end
     @testset "Test contract ITensors (Matrixᵀ*Vector -> Vector)" begin
       Aij = permute(Aij, j, i)
       C = Aij * Aj
       CArray = transpose(array(Aij)) * array(Aj)
       @test CArray ≈ array(C)
+      @test C == contract(Aij, Aj; matricize=true)
     end
     @testset "Test contract ITensors (Vector*Matrix -> Vector)" begin
       Aij = permute(Aij, i, j)
       C = Ai * Aij
       CArray = transpose(transpose(array(Ai)) * array(Aij))
       @test CArray ≈ array(C)
+      @test C == contract(Ai, Aij; matricize=true)
     end
     @testset "Test contract ITensors (Vector*Matrixᵀ -> Vector)" begin
       Aij = permute(Aij, j, i)
       C = Ai * Aij
       CArray = transpose(transpose(array(Ai)) * transpose(array(Aij)))
       @test CArray ≈ array(C)
+      @test C == contract(Ai, Aij; matricize=true)
     end
     @testset "Test contract ITensors (Matrix*Matrix -> Scalar)" begin
       Aij = permute(Aij, i, j)
@@ -86,6 +96,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       C = Aij * Bij
       CArray = LinearAlgebra.tr(array(Aij) * transpose(array(Bij)))
       @test CArray ≈ scalar(C)
+      @test C == contract(Aij, Bij; matricize=true)
     end
     @testset "Test contract ITensors (Matrix*Matrix -> Matrix)" begin
       Aij = permute(Aij, i, j)
@@ -93,6 +104,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       C = Aij * Ajk
       CArray = array(Aij) * array(Ajk)
       @test CArray ≈ array(C)
+      @test C == contract(Aij, Ajk; matricize=true)
     end
     @testset "Test contract ITensors (Matrixᵀ*Matrix -> Matrix)" begin
       Aij = permute(Aij, j, i)
@@ -100,6 +112,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       C = Aij * Ajk
       CArray = transpose(array(Aij)) * array(Ajk)
       @test CArray ≈ array(C)
+      @test C == contract(Aij, Ajk; matricize=true)
     end
     @testset "Test contract ITensors (Matrix*Matrixᵀ -> Matrix)" begin
       Aij = permute(Aij, i, j)
@@ -107,6 +120,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       C = Aij * Ajk
       CArray = array(Aij) * transpose(array(Ajk))
       @test CArray ≈ array(C)
+      @test C == contract(Aij, Ajk; matricize=true)
     end
     @testset "Test contract ITensors (Matrixᵀ*Matrixᵀ -> Matrix)" begin
       Aij = permute(Aij, j, i)
@@ -114,6 +128,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       C = Aij * Ajk
       CArray = transpose(array(Aij)) * transpose(array(Ajk))
       @test CArray ≈ array(C)
+      @test C == contract(Aij, Ajk; matricize=true)
     end
     @testset "Test contract ITensors (Matrix⊗Matrix -> 4-tensor)" begin
       C = Aij * Akl
@@ -121,11 +136,13 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
         @test C[i => ii, j => jj, k => kk, l => ll] ≈
           Aij[i => ii, j => jj] * Akl[k => kk, l => ll]
       end
+      @test C == contract(Aij, Akl; matricize=true)
     end
     @testset "Test contract ITensors (3-Tensor*Scalar -> 3-Tensor)" begin
       Aijk = permute(Aijk, i, j, k)
       C = Aijk * A
       @test array(permute(C, i, j, k)) ≈ scalar(A) * array(Aijk) rtol = 1e-12
+      @test C == contract(Aijk, A; matricize=true)
     end
     @testset "Test contract ITensors (3-Tensor*Vector -> Matrix)" begin
       Aijk = permute(Aijk, i, j, k)
@@ -136,6 +153,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
         dim(k),
       )
       @test CArray ≈ array(permute(C, j, k))
+      @test C == contract(Aijk, Ai; matricize=true)
     end
     @testset "Test contract ITensors (Vector*3-Tensor -> Matrix)" begin
       Aijk = permute(Aijk, i, j, k)
@@ -147,6 +165,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
         dim(k),
       )
       @test CArray ≈ array(permute(C, i, k))
+      @test C == contract(Aj, Aijk; matricize=true)
     end
     @testset "Test contract ITensors (3-Tensor*Matrix -> Vector)" begin
       Aijk = permute(Aijk, i, j, k)
@@ -155,6 +174,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       CArray =
         reshape(array(permute(Aijk, j, i, k)), dim(j), dim(i) * dim(k)) * vec(array(Aik))
       @test CArray ≈ array(C)
+      @test C == contract(Aijk, Aik; matricize=true)
     end
     @testset "Test contract ITensors (3-Tensor*Matrix -> 3-Tensor)" begin
       Aijk = permute(Aijk, i, j, k)
@@ -167,6 +187,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
         dim(l),
       )
       @test CArray ≈ array(permute(C, i, k, l))
+      @test C == contract(Aijk, Ajl; matricize=true)
     end
     @testset "Test contract ITensors (Matrix*3-Tensor -> 3-Tensor)" begin
       Aijk = permute(Aijk, i, j, k)
@@ -180,6 +201,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
         dim(j),
       )
       @test CArray ≈ array(permute(C, l, i, j))
+      @test C == contract(Akl, Aijk; matricize=true)
     end
     @testset "Test contract ITensors (3-Tensor*3-Tensor -> 3-Tensor)" begin
       Aijk = permute(Aijk, i, j, k)
@@ -189,6 +211,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
         reshape(array(permute(Aijk, i, j, k)), dim(i), dim(j) * dim(k)) *
         reshape(array(permute(Ajkl, j, k, l)), dim(j) * dim(k), dim(l))
       @test CArray ≈ array(permute(C, i, l))
+      @test C == contract(Aijk, Ajkl; matricize=true)
     end
     @testset "Test contract ITensors (3-Tensor*3-Tensor -> 3-Tensor)" begin
       for inds_ijk in Combinatorics.permutations([i, j, k]),
@@ -201,6 +224,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
           reshape(array(permute(Ajkl, l, j, k)), dim(l), dim(j) * dim(k)) *
           reshape(array(permute(Aijk, j, k, i)), dim(j) * dim(k), dim(i))
         @test CArray ≈ array(permute(C, l, i))
+        @test C == contract(Ajkl, Aijk; matricize=true)
       end
     end
     @testset "Test contract ITensors (4-Tensor*3-Tensor -> 1-Tensor)" begin
@@ -214,6 +238,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
           reshape(array(permute(Ajkl, j, k, l)), 1, dim(j) * dim(k) * dim(l)) *
           reshape(array(permute(Aijkl, j, k, l, i)), dim(j) * dim(k) * dim(l), dim(i))
         @test vec(CArray) ≈ array(permute(C, i))
+        @test C == contract(Ajkl, Aijkl; matricize=true)
       end
     end
     @testset "Test contract ITensors (4-Tensor*3-Tensor -> 3-Tensor)" begin
@@ -231,6 +256,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
           dim(j),
         )
         @test CArray ≈ array(permute(C, α, i, j))
+        @test C == contract(Aklα, Aijkl; matricize=true)
       end
     end
   end # End contraction testset
@@ -265,6 +291,7 @@ end
     B = randomITensor(ComplexF64, j, k)
     C = A * B
     @test array(permute(C, i, k)) ≈ array(A) * array(B)
+    @test C == contract(A, B; matricize=true)
   end
   @testset "Complex ITensor * Real ITensor" begin
     i = Index(2, "i")
@@ -274,6 +301,7 @@ end
     B = randomITensor(Float64, j, k)
     C = A * B
     @test array(permute(C, i, k)) ≈ array(A) * array(B)
+    @test C == contract(A, B; matricize=true)
   end
 
   @testset "Outer Product Real ITensor * Complex ITensor" begin
@@ -283,6 +311,7 @@ end
     B = randomITensor(ComplexF64, j)
     C = A * B
     @test array(permute(C, i, j)) ≈ kron(array(A), transpose(array(B)))
+    @test C == contract(A, B; matricize=true)
   end
 
   @testset "Outer Product: Complex ITensor * Real ITensor" begin
@@ -292,6 +321,7 @@ end
     B = randomITensor(Float64, j)
     C = A * B
     @test array(permute(C, i, j)) ≈ kron(array(A), transpose(array(B)))
+    @test C == contract(A, B; matricize=true)
   end
 end
 
