@@ -162,7 +162,7 @@ A key example could be the Hamiltonian defining a quantum system.
 Given an MPO `W` and an MPS `psi`, you can compute ``\langle\psi|W|\psi\rangle``
 by using the function `inner` as follows:
 ```julia
-ex_W = inner(psi,W,psi)
+ex_W = inner(psi',W,psi)
 ```
 which will return a scalar that may be either real or complex, depending on the properties of
 `psi` and `W`.
