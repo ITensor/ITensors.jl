@@ -23,10 +23,11 @@ function matrix_contract(A::ITensor, B::ITensor)
 
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
+    pAinds = map(x->ind(A,x), pA)
     #@timeit_debug timer "_contract!: permutedims A" begin
-    Ap = permutedims(NDTensors.tensor(A), pA)
+    #Ap = permutedims(NDTensors.tensor(A), pA)
     #end # @timeit
-    AM = ITensor(storage(Ap), (dmid, dleft))
+    AM = setinds!(permute(A, pAinds), (dmid, dleft))
   else
     #A doesn't have to be permuted
     # Don't do the transpose here, do it later in the regular contract function
@@ -42,10 +43,10 @@ function matrix_contract(A::ITensor, B::ITensor)
 
   if props.permuteB
     pB = NTuple{NB,Int}(props.PB)
+    pBinds = map(x->ind(B,x), pB)
     #@timeit_debug timer "_contract!: permutedims B" begin
-    Bp = permutedims(NDTensors.tensor(B), pB)
     #end # @timeit
-    BM = itensor(storage(Bp), (dright, dmid))
+    BM = setinds!(permute(B, pBinds), (dmid, dright))
   else
     if NDTensors.Btrans(props)
       BM = itensor(storage(B), (dright, dmid))
