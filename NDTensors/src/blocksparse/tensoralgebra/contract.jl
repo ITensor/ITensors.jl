@@ -1,3 +1,6 @@
+can_contract(T1::Type{<:Dense}, T2::Type{<:BlockSparse}) = false
+can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
+
 function contract(
   tensor1::BlockSparseTensor,
   labelstensor1,
