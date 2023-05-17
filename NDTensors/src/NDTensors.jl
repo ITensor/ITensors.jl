@@ -95,7 +95,7 @@ include("blocksparse/tensoralgebra/contract_threads.jl")
 include("blocksparse/diagblocksparse.jl")
 include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
-include("blocksparse/linearalgebra.jl")
+include("blocksparse/linearalgebra/linearalgebra.jl")
 
 #####################################
 # Empty
