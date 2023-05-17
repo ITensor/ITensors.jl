@@ -104,11 +104,32 @@ end
 #end
 #BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
 
-Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
+## Both of these functions do not work properly
+function Base.real(::Type{BlockSparse{ElT, DataT, N}}) where {ElT,DataT,N}
+  rElT = real(ElT)
+  rDataT = similartype(DataT, rElT)
+  BlockSparse{rElT, rDataT, N}
+end
 
-complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
+function Base.real(::Type{BlockSparse})
+  ElT = real(default_eltype())
+  DataT = default_datatype(ElT)
+  BlockSparse{ElT, DataT, 1}
+end
 
-ndims(::BlockSparse{T,V,N}) where {T,V,N} = N
+function complex(::Type{BlockSparse})
+  ElT = complex(default_eltype())
+  DataT = default_datatype(ElT)
+  BlockSparse{ElT, DataT, 1}
+end
+
+function Base.complex(::Type{BlockSparse{ElT, DataT, N}}) where {ElT,DataT,N}
+  cElT = complex(ElT)
+  cDataT = similartype(DataT, cElT)
+  BlockSparse{cElT, cDataT, N}
+end
+
+ndims(::BlockSparse{<:Any,<:Any,N}) where {N} = N
 
 eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
