@@ -12,46 +12,35 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
-# TODO: Implement as `fieldtype(storagetype, :data)`.
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
-# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
-# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
-blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
-
-function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
-  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
-end
-
-function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
-  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
-end
+## Constructors
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
-BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
+BlockSparse() = BlockSparse{default_eltype(), default_datatype(), 0}()
+
+BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(set_eltype_if_unspecified(DataT, ElT)(), BlockOffsets{N}())
 
 function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
   return BlockSparse(
-    fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
+    generic_zeros(datatype, dim), blockoffsets; vargs...
   )
 end
 
 function BlockSparse(
   eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
-  return BlockSparse(Vector{eltype}, blockoffsets, dim; vargs...)
+  return BlockSparse(default_datatype(eltype), blockoffsets, dim; vargs...)
 end
 
 function BlockSparse(x::Number, blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(fill(x, dim), blockoffsets; vargs...)
+  return BlockSparse(fill!(default_datatype(eltype(x))(undef, dim),x), blockoffsets; vargs...)
 end
 
 function BlockSparse(
   ::Type{ElT}, ::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...
 ) where {ElT<:Number}
-  return BlockSparse(Vector{ElT}(undef, dim), blockoffsets; vargs...)
+  return BlockSparse(default_datatype(ElT)(undef, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(blockoffsets::BlockOffsets, dim::Integer; vargs...)
@@ -67,6 +56,31 @@ copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
 function setdata(storagetype::Type{<:BlockSparse}, data)
   return error("Not implemented, must specify block offsets as well")
+end
+
+# TODO: check the offsets are the same?
+function copyto!(D1::BlockSparse, D2::BlockSparse)
+  blockoffsets(D1) ≠ blockoffsets(D1) &&
+    error("Cannot copy between BlockSparse storages with different offsets")
+  copyto!(data(D1), data(D2))
+  return D1
+end
+
+## End Constructors
+
+# TODO: Implement as `fieldtype(storagetype, :data)`.
+datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
+# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
+ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
+blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
+
+function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
+  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
+end
+
+function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
+  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
 end
 
 #
@@ -89,14 +103,6 @@ end
 #  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
 #end
 #BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
-
-# TODO: check the offsets are the same?
-function copyto!(D1::BlockSparse, D2::BlockSparse)
-  blockoffsets(D1) ≠ blockoffsets(D1) &&
-    error("Cannot copy between BlockSparse storages with different offsets")
-  copyto!(data(D1), data(D2))
-  return D1
-end
 
 Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
 
