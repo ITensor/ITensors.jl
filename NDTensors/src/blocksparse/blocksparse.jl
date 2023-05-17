@@ -44,18 +44,18 @@ function BlockSparse(
 end
 
 function BlockSparse(blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(Float64, blockoffsets, dim; vargs...)
+  return BlockSparse(default_eltype(), blockoffsets, dim; vargs...)
 end
 
 function BlockSparse(::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(Float64, undef, blockoffsets, dim; vargs...)
+  return BlockSparse(default_eltype(), undef, blockoffsets, dim; vargs...)
 end
 
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
 function setdata(storagetype::Type{<:BlockSparse}, data)
-  return error("Not implemented, must specify block offsets as well")
+  return error("Setting the datatype of $(storagetype) to $(typeof(data)) is currently not implemented.")
 end
 
 # TODO: check the offsets are the same?
