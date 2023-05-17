@@ -71,7 +71,7 @@ end
 # TODO: Implement as `fieldtype(storagetype, :data)`.
 datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
 # TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+ndims(::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
 # TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
 blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
 
@@ -129,44 +129,21 @@ function Base.complex(::Type{BlockSparse{ElT, DataT, N}}) where {ElT,DataT,N}
   BlockSparse{cElT, cDataT, N}
 end
 
-ndims(::BlockSparse{<:Any,<:Any,N}) where {N} = N
+eltype(bs::BlockSparse) = eltype(typeof(bs))
 
-eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
 # with the more general definition (eltype(Nothing) === Any)
-eltype(::BlockSparse{Nothing}) = Nothing
-eltype(::Type{BlockSparse{T}}) where {T} = eltype(T)
-
-dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
-
-can_contract(T1::Type{<:Dense}, T2::Type{<:BlockSparse}) = false
-can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
-
-function promote_rule(
-  ::Type{<:BlockSparse{ElT1,VecT1,N}}, ::Type{<:BlockSparse{ElT2,VecT2,N}}
-) where {ElT1,ElT2,VecT1,VecT2,N}
-  return BlockSparse{promote_type(ElT1, ElT2),promote_type(VecT1, VecT2),N}
+function eltype(BsType::Type{<:BlockSparse})
+  try
+    eltype(datatype(BsType))
+  catch
+    throw("eltype not specified for type $(BsType)")
+  end
 end
 
-function promote_rule(
-  ::Type{<:BlockSparse{ElT1,VecT1,N1}}, ::Type{<:BlockSparse{ElT2,VecT2,N2}}
-) where {ElT1,ElT2,VecT1,VecT2,N1,N2}
-  return BlockSparse{promote_type(ElT1, ElT2),promote_type(VecT1, VecT2),NR} where {NR}
-end
+eltype(::Type{BlockSparse{T}}) where {T} = T
 
-function promote_rule(
-  ::Type{<:BlockSparse{ElT1,Vector{ElT1},N1}}, ::Type{ElT2}
-) where {ElT1,ElT2<:Number,N1}
-  ElR = promote_type(ElT1, ElT2)
-  VecR = Vector{ElR}
-  return BlockSparse{ElR,VecR,N1}
-end
-
-function convert(
-  ::Type{<:BlockSparse{ElR,VecR,N}}, D::BlockSparse{ElD,VecD,N}
-) where {ElR,VecR,N,ElD,VecD}
-  return setdata(D, convert(VecR, data(D)))
-end
+dense(BsType::Type{<:BlockSparse}) = Dense{eltype(BsType),datatype(BsType)}
 
 """
 isblocknz(T::BlockSparse,
