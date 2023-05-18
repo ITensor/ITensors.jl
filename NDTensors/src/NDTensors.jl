@@ -81,9 +81,9 @@ include("linearalgebra/svd.jl")
 #####################################
 # BlockSparseTensor
 #
-include("blocksparse/blockdims.jl")
-include("blocksparse/block.jl")
-include("blocksparse/blockoffsets.jl")
+include("blocksparse/blockdims/blockdims.jl")
+include("blocksparse/blockdims/block.jl")
+include("blocksparse/blockdims/blockoffsets.jl")
 include("blocksparse/blocksparse.jl")
 include("blocksparse/blocksparsetensor.jl")
 include("blocksparse/tensoralgebra/contract.jl")
