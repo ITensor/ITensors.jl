@@ -53,11 +53,6 @@ end
 
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
-setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
-function setdata(storagetype::Type{<:BlockSparse}, data)
-  return error("Setting the datatype of $(storagetype) to $(typeof(data)) is currently not implemented.")
-end
-
 # TODO: check the offsets are the same?
 function copyto!(D1::BlockSparse, D2::BlockSparse)
   blockoffsets(D1) ≠ blockoffsets(D1) &&
@@ -66,14 +61,19 @@ function copyto!(D1::BlockSparse, D2::BlockSparse)
   return D1
 end
 
+#function BlockSparse{ElR}(data::VecT,offsets) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
+#  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
+#end
+#BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
+
 ## End Constructors
 
-# TODO: Implement as `fieldtype(storagetype, :data)`.
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
-# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-ndims(::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
-# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
-blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
+## Set fields
+
+setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
+function setdata(storagetype::Type{<:BlockSparse}, data)
+  return error("Setting the datatype of $(storagetype) to $(typeof(data)) is currently not implemented.")
+end
 
 function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
   return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
@@ -82,27 +82,6 @@ end
 function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
   return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
 end
-
-#
-# Random
-#
-
-function randn(
-  StorageT::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
-) where {ElT<:Number}
-  return randn(Random.default_rng(), StorageT, blockoffsets, dim)
-end
-
-function randn(
-  rng::AbstractRNG, ::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
-) where {ElT<:Number}
-  return BlockSparse(randn(rng, ElT, dim), blockoffsets)
-end
-
-#function BlockSparse{ElR}(data::VecT,offsets) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
-#  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
-#end
-#BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
 
 ## Both of these functions do not work properly
 function Base.real(::Type{BlockSparse{ElT, DataT, N}}) where {ElT,DataT,N}
@@ -129,6 +108,14 @@ function Base.complex(::Type{BlockSparse{ElT, DataT, N}}) where {ElT,DataT,N}
   BlockSparse{cElT, cDataT, N}
 end
 
+## End set fields
+
+# TODO: Implement as `fieldtype(storagetype, :data)`.
+datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
+# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
+ndims(::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
+blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
 eltype(bs::BlockSparse) = eltype(typeof(bs))
 
 # This is necessary since for some reason inference doesn't work
