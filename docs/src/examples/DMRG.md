@@ -380,8 +380,9 @@ for it:
 mutable struct EntanglementObserver <: AbstractObserver
 end
 
-function ITensors.measure!(o::EntanglementObserver; bond, psi, kwargs...)
-  U,S,V = svd(psi[bond], uniqueinds(psi[bond],psi[bond+1]))
+function ITensors.measure!(o::EntanglementObserver; bond, psi, half_sweep, kwargs...)
+  wf_center, other = half_sweep==1 ? (psi[bond+1],psi[bond]) : (psi[bond],psi[bond+1])
+  U,S,V = svd(wf_center, uniqueinds(wf_center,other))
   SvN = 0.0
   for n=1:dim(S, 1)
     p = S[n,n]^2
@@ -402,8 +403,9 @@ using ITensors
 mutable struct EntanglementObserver <: AbstractObserver
 end
 
-function ITensors.measure!(o::EntanglementObserver; bond, psi, kwargs...)
-  U,S,V = svd(psi[bond], uniqueinds(psi[bond],psi[bond+1]))
+function ITensors.measure!(o::EntanglementObserver; bond, psi, half_sweep, kwargs...)
+  wf_center, other = half_sweep==1 ? (psi[bond+1],psi[bond]) : (psi[bond],psi[bond+1])
+  U,S,V = svd(wf_center, uniqueinds(wf_center,other))
   SvN = 0.0
   for n=1:dim(S, 1)
     p = S[n,n]^2
