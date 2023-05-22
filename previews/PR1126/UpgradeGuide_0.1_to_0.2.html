@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Upgrading from 0.1 to 0.2 · ITensors.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">ITensors.jl</a></span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Introduction</a></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="getting_started/DebugChecks.html">Enabling Debug Checks</a></li><li><a class="tocitem" href="getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/DMRG.html">DMRG</a></li><li><a class="tocitem" href="tutorials/QN_DMRG.html">Quantum Number Conserving DMRG</a></li><li><a class="tocitem" href="tutorials/MPSTimeEvolution.html">MPS Time Evolution</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="examples/ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="examples/MPSandMPO.html">MPS and MPO Examples</a></li><li><a class="tocitem" href="examples/DMRG.html">DMRG Examples</a></li><li><a class="tocitem" href="examples/Physics.html">Physics (SiteType) System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="IndexType.html">Index</a></li><li><a class="tocitem" href="IndexSetType.html">Index collections</a></li><li><a class="tocitem" href="ITensorType.html">ITensor</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="QN.html">QN</a></li><li><a class="tocitem" href="SiteType.html">SiteType and op, state, val functions</a></li><li><a class="tocitem" href="IncludedSiteTypes.html">SiteTypes Included with ITensor</a></li><li><input class="collapse-toggle" id="menuitem-5-8" type="checkbox"/><label class="tocitem" for="menuitem-5-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="DMRG.html">DMRG</a></li><li><a class="tocitem" href="Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="OpSum.html">OpSum (AutoMPO)</a></li></ul></li><li><span class="tocitem">Frequently Asked Questions</span><ul><li><a class="tocitem" href="faq/JuliaAndCpp.html">Programming Language (Julia, C++, ...) FAQs</a></li><li><a class="tocitem" href="faq/DMRG.html">DMRG FAQs</a></li><li><a class="tocitem" href="faq/Development.html">ITensor Development FAQs</a></li><li><a class="tocitem" href="faq/RelationshipToOtherLibraries.html">Relationship of ITensor to other tensor libraries FAQs</a></li><li><a class="tocitem" href="faq/JuliaPkg.html">Julia Package Manager FAQs</a></li></ul></li><li><span class="tocitem">Upgrade guides</span><ul><li class="is-active"><a class="tocitem" href="UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a><ul class="internal"><li><a class="tocitem" href="#Upgrading-from-ITensors.jl-0.1-to-0.2"><span>Upgrading from ITensors.jl 0.1 to 0.2</span></a></li><li><a class="tocitem" href="#Major-design-changes:-changes-to-the-ITensor,-IndexSet,-and-IndexVal-types"><span>Major design changes: changes to the <code>ITensor</code>, <code>IndexSet</code>, and <code>IndexVal</code> types</span></a></li><li><a class="tocitem" href="#NDTensors.jl-package-now-being-developed-internally-within-ITensors.jl"><span>NDTensors.jl package now being developed internally within ITensors.jl</span></a></li><li><a class="tocitem" href="#Miscellaneous-breaking-changes"><span>Miscellaneous breaking changes</span></a></li></ul></li></ul></li><li><a class="tocitem" href="Einsum.html">ITensor indices and Einstein notation</a></li><li><span class="tocitem">Advanced Usage Guide</span><ul><li><a class="tocitem" href="AdvancedUsageGuide.html">Advanced Usage Guide</a></li><li><a class="tocitem" href="Multithreading.html">Multithreading</a></li><li><a class="tocitem" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a></li><li><a class="tocitem" href="CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="ContractionSequenceOptimization.html">Contraction sequence optimization</a></li><li><a class="tocitem" href="HDF5FileFormats.html">HDF5 File Formats</a></li></ul></li><li><a class="tocitem" href="DeveloperGuide.html">Developer Guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Upgrade guides</a></li><li class="is-active"><a href="UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/master/docs/src/UpgradeGuide_0.1_to_0.2.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Upgrade-guide"><a class="docs-heading-anchor" href="#Upgrade-guide">Upgrade guide</a><a id="Upgrade-guide-1"></a><a class="docs-heading-anchor-permalink" href="#Upgrade-guide" title="Permalink"></a></h1><h2 id="Upgrading-from-ITensors.jl-0.1-to-0.2"><a class="docs-heading-anchor" href="#Upgrading-from-ITensors.jl-0.1-to-0.2">Upgrading from ITensors.jl 0.1 to 0.2</a><a id="Upgrading-from-ITensors.jl-0.1-to-0.2-1"></a><a class="docs-heading-anchor-permalink" href="#Upgrading-from-ITensors.jl-0.1-to-0.2" title="Permalink"></a></h2><p>The main breaking changes in ITensor.jl v0.2 involve changes to the <code>ITensor</code>, <code>IndexSet</code>, and <code>IndexVal</code> types. Most user code should be fine, but see below for more details.</p><p>In addition, we have moved development of NDTensors.jl into ITensors.jl to simplify the development process until NDTensors is more stable and can be a standalone package. Again, see below for more details.</p><p>For a more comprehensive list of changes, see the <a href="https://github.com/ITensor/ITensors.jl/blob/main/NEWS.md">change log</a> and the <a href="https://github.com/ITensor/ITensors.jl/commits/main">commit history on Github</a>.</p><p>If you have issues upgrading, please reach out by <a href="https://github.com/ITensor/ITensors.jl/issues/new">raising an issue on Github</a> or asking a question on the <a href="http://itensor.org/support/">ITensor support forum</a>.</p><p>Also make sure to run your code with <code>julia --depwarn=yes</code> to see warnings about function names and interfaces that have been deprecated and will be removed in v0.3 of ITensors.jl (these are not listed here).</p><h2 id="Major-design-changes:-changes-to-the-ITensor,-IndexSet,-and-IndexVal-types"><a class="docs-heading-anchor" href="#Major-design-changes:-changes-to-the-ITensor,-IndexSet,-and-IndexVal-types">Major design changes: changes to the <code>ITensor</code>, <code>IndexSet</code>, and <code>IndexVal</code> types</a><a id="Major-design-changes:-changes-to-the-ITensor,-IndexSet,-and-IndexVal-types-1"></a><a class="docs-heading-anchor-permalink" href="#Major-design-changes:-changes-to-the-ITensor,-IndexSet,-and-IndexVal-types" title="Permalink"></a></h2><h3 id="Changes-to-the-ITensor-type"><a class="docs-heading-anchor" href="#Changes-to-the-ITensor-type">Changes to the ITensor type</a><a id="Changes-to-the-ITensor-type-1"></a><a class="docs-heading-anchor-permalink" href="#Changes-to-the-ITensor-type" title="Permalink"></a></h3><h4 id="Removal-of-tensor-order-type-parameter"><a class="docs-heading-anchor" href="#Removal-of-tensor-order-type-parameter">Removal of tensor order type parameter</a><a id="Removal-of-tensor-order-type-parameter-1"></a><a class="docs-heading-anchor-permalink" href="#Removal-of-tensor-order-type-parameter" title="Permalink"></a></h4><p>The tensor order type paramater has been removed from the <code>ITensor</code> type, so you can no longer write <code>ITensor{3}</code> to specify an order 3 ITensor (<a href="https://github.com/ITensor/ITensors.jl/pull/591">PR #591</a>). Code that uses the ITensor order type parameter will now lead to the following error:</p><pre><code class="language-julia">julia&gt; i = Index(2)
+(dim=2|id=588)
+
+julia&gt; ITensor{2}(i&#39;, i)
+ERROR: TypeError: in Type{...} expression, expected UnionAll, got Type{ITensor}
+Stacktrace:
+ [1] top-level scope
+   @ REPL[27]:1</code></pre><p>Simply remove the type parameter:</p><pre><code class="language-julia">julia&gt; ITensor(i&#39;, i)
+ITensor ord=2 (dim=2|id=913)&#39; (dim=2|id=913)
+ITensors.NDTensors.EmptyStorage{ITensors.NDTensors.EmptyNumber, ITensors.NDTensors.Dense{ITensors.NDTensors.EmptyNumber, Vector{ITensors.NDTensors.EmptyNumber}}}</code></pre><p>Pro tip: from the command line, you can replace all examples like that with:</p><pre><code class="language-bash">find . -type f -iname &quot;*.jl&quot; -exec sed -i &#39;s/ITensor{.*}/ITensor/g&#39; &quot;{}&quot; +</code></pre><p>Of course, make sure to back up your code before running this!</p><p>Additionally, a common code pattern may be using the type parameter for dispatch:</p><pre><code class="language-julia">using ITensors
+
+function mynorm(A::ITensor{N}) where {N}
+  return norm(A)^N
+end
+
+function mynorm(A::ITensor{1})
+  return norm(A)
+end
+
+function mynorm(A::ITensor{2})
+  return norm(A)^2
+end</code></pre><p>Instead, you can use an if-statement:</p><pre><code class="language-julia">function mynormN(A::ITensor)
+  return norm(A)^order(A)
+end
+
+function mynorm1(A::ITensor)
+  return norm(A)
+end
+
+function mynorm2(A::ITensor)
+  return norm(A)^2
+end
+
+function mynorm(A::ITensor) 
+  return if order(A) == 1
+    mynorm1(A)
+  elseif order(A) == 2
+    mynorm2(A)
+  else
+    return mynormN(A)
+  end
+end</code></pre><p>Alternatively, you can use the <code>Order</code> type to dispatch on the ITensor order as follows:</p><pre><code class="language-julia">function mynorm(::Order{N}, A::ITensor) where {N}
+  return norm(A)^N
+end
+
+function mynorm(::Order{1}, A::ITensor)
+  return norm(A)
+end
+
+function mynorm(::Order{2}, A::ITensor)
+  return norm(A)^2
+end
+
+function mynorm(A::ITensor)
+  return mynorm(Order(A), A)
+end</code></pre><p><code>Order(A::ITensor)</code> returns the order of the ITensor (like <code>order(A::ITensor)</code>), however as a type that can be dispatched on. Note that it is not type stable, so there will be a small runtime overhead for doing this.</p><h4 id="Change-to-storage-type-of-Index-collection-in-ITensor"><a class="docs-heading-anchor" href="#Change-to-storage-type-of-Index-collection-in-ITensor">Change to storage type of Index collection in ITensor</a><a id="Change-to-storage-type-of-Index-collection-in-ITensor-1"></a><a class="docs-heading-anchor-permalink" href="#Change-to-storage-type-of-Index-collection-in-ITensor" title="Permalink"></a></h4><p>ITensors now store a <code>Tuple</code> of <code>Index</code> instead of an <code>IndexSet</code> (<a href="https://github.com/ITensor/ITensors.jl/pull/626">PR #626</a>). Therefore, calling <code>inds</code> on an ITensor will now just return a <code>Tuple</code>:</p><pre><code class="language-julia">julia&gt; i = Index(2)
+(dim=2|id=770)
+
+julia&gt; j = Index(3)
+(dim=3|id=272)
+
+julia&gt; A = randomITensor(i, j)
+ITensor ord=2 (dim=2|id=770) (dim=3|id=272)
+ITensors.NDTensors.Dense{Float64, Vector{Float64}}
+
+julia&gt; inds(A)
+((dim=2|id=770), (dim=3|id=272))</code></pre><p>while before it returned an <code>IndexSet</code> (in fact, the <code>IndexSet</code> type has been removed, see below for details). In general, this should not affect user code, since a <code>Tuple</code> of <code>Index</code> should have all of the same functions defined for it that <code>IndexSet</code> did. If you find this is not the case, please <a href="https://github.com/ITensor/ITensors.jl/issues/new">raise an issue on Github</a> or on the <a href="http://itensor.org/support/">ITensor support forum</a>.</p><h4 id="ITensor-type-now-directly-wraps-a-Tensor"><a class="docs-heading-anchor" href="#ITensor-type-now-directly-wraps-a-Tensor">ITensor type now directly wraps a Tensor</a><a id="ITensor-type-now-directly-wraps-a-Tensor-1"></a><a class="docs-heading-anchor-permalink" href="#ITensor-type-now-directly-wraps-a-Tensor" title="Permalink"></a></h4><p>The ITensor type no longer has separate field <code>inds</code> and <code>store</code>, just a single field <code>tensor</code> (PR #626). In general you should not be accessing the fields directly, instead you should be using the functions <code>inds(A::ITensor)</code> and <code>storage(A::ITensor)</code>, so this should not affect most code. However, in case you have code like:</p><pre><code class="language-julia">i = Index(2)
+A = randomITensor(i)
+A.inds</code></pre><p>this will error in v0.2 with:</p><pre><code class="language-julia">julia&gt; A.inds
+ERROR: type ITensor has no field inds
+Stacktrace:
+ [1] getproperty(x::ITensor, f::Symbol)
+   @ Base ./Base.jl:33
+ [2] top-level scope
+   @ REPL[43]:1</code></pre><p>and you should change it to:</p><pre><code class="language-julia">inds(A)</code></pre><h3 id="Changes-to-the-ITensor-constructors"><a class="docs-heading-anchor" href="#Changes-to-the-ITensor-constructors">Changes to the ITensor constructors</a><a id="Changes-to-the-ITensor-constructors-1"></a><a class="docs-heading-anchor-permalink" href="#Changes-to-the-ITensor-constructors" title="Permalink"></a></h3><h4 id="Plain-ITensor-constructors-now-return-ITensors-with-EmptyStorage-storage"><a class="docs-heading-anchor" href="#Plain-ITensor-constructors-now-return-ITensors-with-EmptyStorage-storage">Plain ITensor constructors now return ITensors with <code>EmptyStorage</code> storage</a><a id="Plain-ITensor-constructors-now-return-ITensors-with-EmptyStorage-storage-1"></a><a class="docs-heading-anchor-permalink" href="#Plain-ITensor-constructors-now-return-ITensors-with-EmptyStorage-storage" title="Permalink"></a></h4><p><code>ITensor</code> constructors from collections of <code>Index</code>, such as <code>ITensor(i, j, k)</code>, now return an <code>ITensor</code> with <code>EmptyStorage</code> (previously called <code>Empty</code>) storage instead of <code>Dense</code> or <code>BlockSparse</code> storage filled with 0 values. Most operations should still work that worked previously, but please contact us if there are issues (<a href="https://github.com/ITensor/ITensors.jl/pull/641">PR #641</a>).</p><p>For example:</p><pre><code class="language-julia">julia&gt; i = Index(2)
+(dim=2|id=346)
+
+julia&gt; A = ITensor(i&#39;, dag(i))
+ITensor ord=2 (dim=2|id=346)&#39; (dim=2|id=346)
+ITensors.NDTensors.EmptyStorage{ITensors.NDTensors.EmptyNumber, ITensors.NDTensors.Dense{ITensors.NDTensors.EmptyNumber, Vector{ITensors.NDTensors.EmptyNumber}}}
+
+julia&gt; A&#39; * A
+ITensor ord=2 (dim=2|id=346)&#39;&#39; (dim=2|id=346)
+ITensors.NDTensors.EmptyStorage{ITensors.NDTensors.EmptyNumber, ITensors.NDTensors.Dense{ITensors.NDTensors.EmptyNumber, Vector{ITensors.NDTensors.EmptyNumber}}}</code></pre><p>so now contracting two <code>EmptyStorage</code> ITensors returns another <code>EmptyStorage</code> ITensor. You can allocate the storage by setting elements of the ITensor:</p><pre><code class="language-julia">julia&gt; A[i&#39; =&gt; 1, i =&gt; 1] = 0.0
+0.0
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=346)&#39;
+Dim 2: (dim=2|id=346)
+ITensors.NDTensors.Dense{Float64, Vector{Float64}}
+ 2×2
+ 0.0  0.0
+ 0.0  0.0</code></pre><p>Additionally, it will take on the element type of the first value set:</p><pre><code class="language-julia">julia&gt; A = ITensor(i&#39;, dag(i))
+ITensor ord=2 (dim=2|id=346)&#39; (dim=2|id=346)
+ITensors.NDTensors.EmptyStorage{ITensors.NDTensors.EmptyNumber, ITensors.NDTensors.Dense{ITensors.NDTensors.EmptyNumber, Vector{ITensors.NDTensors.EmptyNumber}}}
+
+julia&gt; A[i&#39; =&gt; 1, i =&gt; 1] = 1.0 + 0.0im
+1.0 + 0.0im
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=346)&#39;
+Dim 2: (dim=2|id=346)
+ITensors.NDTensors.Dense{ComplexF64, Vector{ComplexF64}}
+ 2×2
+ 1.0 + 0.0im  0.0 + 0.0im
+ 0.0 + 0.0im  0.0 + 0.0im</code></pre><p>If you have issues upgrading, please let us know.</p><h4 id="Slight-change-to-automatic-conversion-of-element-type-when-constructing-ITensor-from-Array"><a class="docs-heading-anchor" href="#Slight-change-to-automatic-conversion-of-element-type-when-constructing-ITensor-from-Array">Slight change to automatic conversion of element type when constructing ITensor from Array</a><a id="Slight-change-to-automatic-conversion-of-element-type-when-constructing-ITensor-from-Array-1"></a><a class="docs-heading-anchor-permalink" href="#Slight-change-to-automatic-conversion-of-element-type-when-constructing-ITensor-from-Array" title="Permalink"></a></h4><p><code>ITensor</code> constructors from <code>Array</code> now only convert to floating point for <code>Array{Int}</code> and <code>Array{Complex{Int}}</code>. That same conversion is added for QN ITensor constructors to be consistent with non-QN versions (<a href="https://github.com/ITensor/ITensors.jl/pull/620">PR #620</a>). Previously it tried to convert arrays of any element type to the closest floating point type with Julia&#39;s <code>float</code> function. This should not affect most user code.</p><h3 id="Changes-to-the-IndexSet-type"><a class="docs-heading-anchor" href="#Changes-to-the-IndexSet-type">Changes to the IndexSet type</a><a id="Changes-to-the-IndexSet-type-1"></a><a class="docs-heading-anchor-permalink" href="#Changes-to-the-IndexSet-type" title="Permalink"></a></h3><p>The <code>IndexSet</code> type has been removed in favor of Julia&#39;s <code>Tuple</code> and <code>Vector</code> types (<a href="https://github.com/ITensor/ITensors.jl/pull/626">PR #626</a>). <code>ITensor</code>s now contain a <code>Tuple</code> of <code>Index</code>, while set operations like <code>commoninds</code> that used to return <code>IndexSet</code> now return a <code>Vector</code> of <code>Index</code>:</p><pre><code class="language-julia">julia&gt; i = Index(2)
+(dim=2|id=320)
+
+julia&gt; A = randomITensor(i&#39;, i)
+ITensor ord=2 (dim=2|id=320)&#39; (dim=2|id=320)
+ITensors.NDTensors.Dense{Float64, Vector{Float64}}
+
+julia&gt; inds(A) # Previously returned IndexSet, now returns Tuple
+((dim=2|id=320)&#39;, (dim=2|id=320))
+
+julia&gt; commoninds(A&#39;, A) # Previously returned IndexSet, now returns Vector
+1-element Vector{Index{Int64}}:
+ (dim=2|id=320)&#39;</code></pre><p>To help with upgrading code, <code>IndexSet{IndexT}</code> has been redefined as a type alias for <code>Vector{IndexT&lt;:Index}</code> (which is subject to change to some other collection of indices, and likely will be removed in ITensors v0.3). Therefore it no longer has a type parameter for the number of indices, similar to the change to the <code>ITensor</code> type. If you were using the plain <code>IndexSet</code> type, code should generally still work properly. However, if you were using the type parameters of <code>IndexSet</code>, such as:</p><pre><code class="language-julia">function myorder2(is::IndexSet{N}) where {N}
+  return N^2
+end</code></pre><p>then you will need to remove the type parameter and rewrite your code generically to accept <code>Tuple</code> or <code>Vector</code>, such as:</p><pre><code class="language-julia">function myorder2(is)
+  return length(is)^2
+end</code></pre><p>In general you should be able to just remove usages of <code>IndexSet</code> in your code, and can just use <code>Tuple</code> or <code>Vector</code> of <code>Index</code> instead, such as change <code>is = IndexSet(i, j, k)</code> to <code>is = (i, j, k)</code> or <code>is = [i, j, k]</code>. Priming, tagging, and set operations now work generically on those types. If you see issues with upgrading your code, please let us know.</p><h3 id="Changes-to-the-IndexVal-type"><a class="docs-heading-anchor" href="#Changes-to-the-IndexVal-type">Changes to the IndexVal type</a><a id="Changes-to-the-IndexVal-type-1"></a><a class="docs-heading-anchor-permalink" href="#Changes-to-the-IndexVal-type" title="Permalink"></a></h3><p>Similar to the removal of <code>IndexSet</code>, we have also removed the <code>IndexVal</code> type (<a href="https://github.com/ITensor/ITensors.jl/pull/665">PR #665</a>). Now, all use cases of <code>IndexVal</code> can be replaced by using Julia&#39;s <code>Pair</code> type, for example instead of:</p><pre><code class="language-julia">i = Index(2)
+IndexVal(i, 2)</code></pre><p>use:</p><pre><code class="language-julia">i = Index(2)
+i =&gt; 2
+# Or:
+Pair(i, 2)</code></pre><p>Note that we have made <code>IndexVal{IndexT}</code> an alias for <code>Pair{IndexT,Int}</code>, so code using <code>IndexVal</code> such as <code>IndexVal(i, 2)</code> should generally still work. However, we encourage users to change from <code>IndexVal(i, 2)</code> to <code>i =&gt; 2</code>.</p><h2 id="NDTensors.jl-package-now-being-developed-internally-within-ITensors.jl"><a class="docs-heading-anchor" href="#NDTensors.jl-package-now-being-developed-internally-within-ITensors.jl">NDTensors.jl package now being developed internally within ITensors.jl</a><a id="NDTensors.jl-package-now-being-developed-internally-within-ITensors.jl-1"></a><a class="docs-heading-anchor-permalink" href="#NDTensors.jl-package-now-being-developed-internally-within-ITensors.jl" title="Permalink"></a></h2><p>The <code>NDTensors</code> module has been moved into the <code>ITensors</code> package, so <code>ITensors</code> no longer depends on the standalone <code>NDTensors</code> package. This should only effect users who were using both <code>NDTensors</code> and <code>ITensors</code> seperately. If you want to use the latest <code>NDTensors</code> library, you should do <code>using ITensors.NDTensors</code> instead of <code>using NDTensors</code>, and will need to install <code>ITensors</code> with <code>using Pkg; Pkg.add(&quot;ITensors&quot;)</code> in order to use the latest versions of <code>NDTensors</code>. Note the current <code>NDTensors.jl</code> package will still exist, but for now developmentof <code>NDTensors</code> will occur within <code>ITensors.jl</code> (<a href="https://github.com/ITensor/ITensors.jl/pull/650">PR #650</a>).</p><h2 id="Miscellaneous-breaking-changes"><a class="docs-heading-anchor" href="#Miscellaneous-breaking-changes">Miscellaneous breaking changes</a><a id="Miscellaneous-breaking-changes-1"></a><a class="docs-heading-anchor-permalink" href="#Miscellaneous-breaking-changes" title="Permalink"></a></h2><h3 id="state-function-renamed-val,-state-given-a-new-more-general-definition"><a class="docs-heading-anchor" href="#state-function-renamed-val,-state-given-a-new-more-general-definition"><code>state</code> function renamed <code>val</code>, <code>state</code> given a new more general definition</a><a id="state-function-renamed-val,-state-given-a-new-more-general-definition-1"></a><a class="docs-heading-anchor-permalink" href="#state-function-renamed-val,-state-given-a-new-more-general-definition" title="Permalink"></a></h3><p>Rename the <code>state</code> functions currently defined for various site types to <code>val</code> for mapping a string name for an index to an index value (used in ITensor indexing and MPS construction). <code>state</code> functions now return single-index ITensors representing various single-site states (<a href="https://github.com/ITensor/ITensors.jl/pull/664">PR #664</a>). So now to get an Index value from a string, you use:</p><pre><code class="language-julia">N = 10
+s = siteinds(&quot;S=1/2&quot;, N)
+val(s[1], &quot;Up&quot;) == 1
+val(s[1], &quot;Dn&quot;) == 2</code></pre><p><code>state</code> now returns an ITensor corresponding to the state with that value as the only nonzero element:</p><pre><code class="language-julia">julia&gt; @show state(s[1], &quot;Up&quot;);
+state(s[1], &quot;Up&quot;) = ITensor ord=1
+Dim 1: (dim=2|id=597|&quot;S=1/2,Site,n=1&quot;)
+ITensors.NDTensors.Dense{Float64, Vector{Float64}}
+ 2-element
+ 1.0
+ 0.0
+
+julia&gt; @show state(s[1], &quot;Dn&quot;);
+state(s[1], &quot;Dn&quot;) = ITensor ord=1
+Dim 1: (dim=2|id=597|&quot;S=1/2,Site,n=1&quot;)
+ITensors.NDTensors.Dense{Float64, Vector{Float64}}
+ 2-element
+ 0.0
+ 1.0</code></pre><p>which allows for more general states to be defined, such as:</p><pre><code class="language-julia">julia&gt; @show state(s[1], &quot;X+&quot;);
+state(s[1], &quot;X+&quot;) = ITensor ord=1
+Dim 1: (dim=2|id=597|&quot;S=1/2,Site,n=1&quot;)
+ITensors.NDTensors.Dense{Float64, Vector{Float64}}
+ 2-element
+ 0.7071067811865475
+ 0.7071067811865475
+
+julia&gt; @show state(s[1], &quot;X-&quot;);
+state(s[1], &quot;X-&quot;) = ITensor ord=1
+Dim 1: (dim=2|id=597|&quot;S=1/2,Site,n=1&quot;)
+ITensors.NDTensors.Dense{Float64, Vector{Float64}}
+ 2-element
+  0.7071067811865475
+ -0.7071067811865475</code></pre><p>which will be used for making more general MPS product states.</p><p>This should not affect end users in general, besides ones who had customized the previous <code>state</code> function, such as with overloads like:</p><pre><code class="language-julia">ITensors.state(::SiteType&quot;My_S=1/2&quot;, ::StateName&quot;Up&quot;) = 1
+ITensors.state(::SiteType&quot;My_S=1/2&quot;, ::StateName&quot;Dn&quot;) = 2</code></pre><p>which should be changed now to:</p><pre><code class="language-julia">ITensors.val(::SiteType&quot;My_S=1/2&quot;, ::StateName&quot;Up&quot;) = 1
+ITensors.val(::SiteType&quot;My_S=1/2&quot;, ::StateName&quot;Dn&quot;) = 2</code></pre><h3 id="&quot;Qubit&quot;-site-type-QN-convention-change"><a class="docs-heading-anchor" href="#&quot;Qubit&quot;-site-type-QN-convention-change"><code>&quot;Qubit&quot;</code> site type QN convention change</a><a id="&quot;Qubit&quot;-site-type-QN-convention-change-1"></a><a class="docs-heading-anchor-permalink" href="#&quot;Qubit&quot;-site-type-QN-convention-change" title="Permalink"></a></h3><p>The QN convention of the <code>&quot;Qubit&quot;</code> site type is changed to track the total number of 1 bits instead of the net number of 1 bits vs 0 bits (i.e. change the QN from +1/-1 to 0/1) (<a href="https://github.com/ITensor/ITensors.jl/pull/676">PR #676</a>).</p><pre><code class="language-julia">julia&gt; s = siteinds(&quot;Qubit&quot;, 4; conserve_number=true)
+4-element Vector{Index{Vector{Pair{QN, Int64}}}}:
+ (dim=2|id=925|&quot;Qubit,Site,n=1&quot;) &lt;Out&gt;
+ 1: QN(&quot;Number&quot;,0) =&gt; 1
+ 2: QN(&quot;Number&quot;,1) =&gt; 1
+ (dim=2|id=799|&quot;Qubit,Site,n=2&quot;) &lt;Out&gt;
+ 1: QN(&quot;Number&quot;,0) =&gt; 1
+ 2: QN(&quot;Number&quot;,1) =&gt; 1
+ (dim=2|id=8|&quot;Qubit,Site,n=3&quot;) &lt;Out&gt;
+ 1: QN(&quot;Number&quot;,0) =&gt; 1
+ 2: QN(&quot;Number&quot;,1) =&gt; 1
+ (dim=2|id=385|&quot;Qubit,Site,n=4&quot;) &lt;Out&gt;
+ 1: QN(&quot;Number&quot;,0) =&gt; 1
+ 2: QN(&quot;Number&quot;,1) =&gt; 1</code></pre><p>Before it was +1/-1 like <code>&quot;S=1/2&quot;</code>:</p><pre><code class="language-julia">julia&gt; s = siteinds(&quot;S=1/2&quot;, 4; conserve_sz=true)
+4-element Vector{Index{Vector{Pair{QN, Int64}}}}:
+ (dim=2|id=364|&quot;S=1/2,Site,n=1&quot;) &lt;Out&gt;
+ 1: QN(&quot;Sz&quot;,1) =&gt; 1
+ 2: QN(&quot;Sz&quot;,-1) =&gt; 1
+ (dim=2|id=823|&quot;S=1/2,Site,n=2&quot;) &lt;Out&gt;
+ 1: QN(&quot;Sz&quot;,1) =&gt; 1
+ 2: QN(&quot;Sz&quot;,-1) =&gt; 1
+ (dim=2|id=295|&quot;S=1/2,Site,n=3&quot;) &lt;Out&gt;
+ 1: QN(&quot;Sz&quot;,1) =&gt; 1
+ 2: QN(&quot;Sz&quot;,-1) =&gt; 1
+ (dim=2|id=810|&quot;S=1/2,Site,n=4&quot;) &lt;Out&gt;
+ 1: QN(&quot;Sz&quot;,1) =&gt; 1
+ 2: QN(&quot;Sz&quot;,-1) =&gt; 1</code></pre><p>This shouldn&#39;t affect end users in general. The new convention is a bit more intuitive since the quantum number can be thought of as counting the total number of 1 bits in the state, though the conventions can be mapped to each other with a constant.</p><h3 id="maxlinkdim-for-MPS/MPO-with-no-indices"><a class="docs-heading-anchor" href="#maxlinkdim-for-MPS/MPO-with-no-indices"><code>maxlinkdim</code> for MPS/MPO with no indices</a><a id="maxlinkdim-for-MPS/MPO-with-no-indices-1"></a><a class="docs-heading-anchor-permalink" href="#maxlinkdim-for-MPS/MPO-with-no-indices" title="Permalink"></a></h3><p><code>maxlinkdim(::MPS/MPO)</code> returns a minimum of <code>1</code> (previously it returned 0 for MPS/MPO without and link indices) (<a href="https://github.com/ITensor/ITensors.jl/pull/663">PR #663</a>).</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="faq/JuliaPkg.html">« Julia Package Manager FAQs</a><a class="docs-footer-nextpage" href="Einsum.html">ITensor indices and Einstein notation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Monday 22 May 2023 18:48">Monday 22 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
