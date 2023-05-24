@@ -409,7 +409,7 @@ end
     @test isnothing(p)
   end
 
-  @testset "Dense rank revealing QR/LQ decomp interface options" for qx in [qr, lq]
+  @testset "Dense rank revealing QR/LQ decomp interface options" begin
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(5, "r")
@@ -418,36 +418,77 @@ end
     rinds = noncommoninds(A, qrinds)
     A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
 
-    Q, R = qx(A, l, s) # no pivoting
-    Q, R, iq = qx(A, qrinds) # no pivoting
+    Q, R = qr(A, l, s) # no pivoting
+    Q, R, iq = qr(A, qrinds) # no pivoting
     @test dim(iq) == dim(qrinds)
-    Q, R, iq, p = qx(A, qrinds) # no pivoting
-    @test isnothing(p)
+    Q, R, iq, Rp = qr(A, qrinds) # no pivoting
+    @test isnothing(Rp)
     @test dim(iq) == dim(qrinds)
 
     #  Q, R, iq, p = qx(A,qrinds; pivot=Val(false)) not supported
-    Q, R, iq, p = qx(A, qrinds; pivot=false) # no pivoting
-    @test isnothing(p)
+    Q, R, iq, Rp = qr(A, qrinds; pivot=false) # no pivoting
+    @test isnothing(Rp)
     @test dim(iq) == dim(qrinds)
 
-    Q, R, iq, p = qx(A, qrinds; pivot=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
-    @test !isnothing(p)
-    @test length(p) == dim(rinds)
+    Q, R, iq, Rp = qr(A, qrinds; pivot=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test isnothing(Rp)
     @test dim(iq) == dim(qrinds)
 
-    Q, R, iq, p = qx(A, qrinds; atol=1e-14) # absolute tolerance for rank reduction
-    @test !isnothing(p)
-    @test length(p) == dim(rinds)
+    Q, R, iq, Rp = qr(A, qrinds; pivot=true, return_Rp=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == dim(qrinds)
+
+    Q, R, iq, Rp = qr(A, qrinds; atol=1e-14, return_Rp=true) # absolute tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
     @test dim(iq) == expected_rank
 
-    Q, R, iq, p = qx(A, qrinds; rtol=1e-15) # relative tolerance for rank reduction
-    @test !isnothing(p)
-    @test length(p) == dim(rinds)
+    Q, R, iq, Rp = qr(A, qrinds; rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
     @test dim(iq) == expected_rank
 
-    Q, R, iq, p = qx(A, qrinds; block_rtol=1e-15) # relative tolerance for rank reduction
-    @test !isnothing(p)
-    @test length(p) == dim(rinds)
+    Q, R, iq, Rp = qr(A, qrinds; block_rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+
+    #  LQ versions
+
+    L, Q = lq(A, l, s) # no pivoting
+    L, Q, iq = lq(A, qrinds) # no pivoting
+    @test dim(iq) == dim(qrinds)
+    L, Q, iq, Lp = lq(A, qrinds) # no pivoting
+    @test isnothing(Lp)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; pivot=false) # no pivoting
+    @test isnothing(Lp)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; pivot=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test isnothing(Lp)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; pivot=true, return_Rp=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; atol=1e-14, return_Rp=true) # absolute tolerance for rank reduction
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
+    @test dim(iq) == expected_rank
+
+    L, Q, iq, Lp = lq(A, qrinds; rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
+    @test dim(iq) == expected_rank
+
+    L, Q, iq, Lp = lq(A, qrinds; block_rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
     @test dim(iq) == expected_rank
   end
 
@@ -461,36 +502,40 @@ end
       rinds = noncommoninds(A, qrinds)
       A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
 
-      Q, R, iq, p = qr(A, qrinds; pivot=NoPivot()) # no pivoting
-      @test isnothing(p)
+      Q, R, iq, Rp = qr(A, qrinds; pivot=NoPivot()) # no pivoting
+      @test isnothing(Rp)
       @test dim(iq) == dim(qrinds)
 
-      L, Q, iq, p = lq(A, qrinds; pivot=NoPivot()) # no pivoting
-      @test isnothing(p)
+      L, Q, iq, Lp = lq(A, qrinds; pivot=NoPivot()) # no pivoting
+      @test isnothing(Lp)
       @test dim(iq) == dim(qrinds)
 
-      Q, R, iq, p = qr(A, qrinds; pivot=ColumnNorm()) # column pivoting, no rank reduction
-      @test !isnothing(p)
-      @test length(p) == dim(rinds)
+      Q, R, iq, Rp = qr(A, qrinds; pivot=ColumnNorm()) # column pivoting, no rank reduction
+      @test isnothing(Rp)
       @test dim(iq) == dim(qrinds)
 
-      L, Q, iq, p = lq(A, qrinds; pivot=RowNorm()) # row pivoting, no rank reduction
-      @test !isnothing(p)
-      @test length(p) == dim(rinds)
+      Q, R, iq, Rp = qr(A, qrinds; pivot=ColumnNorm(), return_Rp=true) # column pivoting, no rank reduction
+      @test !isnothing(Rp)
+      @test dims(Rp) == dims(R)
+      @test dim(iq) == dim(qrinds)
+
+      L, Q, iq, Lp = lq(A, qrinds; pivot=RowNorm(), return_Rp=true) # row pivoting, no rank reduction
+      @test !isnothing(Lp)
+      @test dims(Lp) == dims(L)
       @test dim(iq) == dim(qrinds)
 
       @test_logs (
         :warn, "Please use ColumnNorm() instead of RowNorm() for pivoted qr decomposition."
-      ) Q, R, iq, p = qr(A, qrinds; pivot=RowNorm()) # column pivoting, no rank reduction
-      @test !isnothing(p)
-      @test length(p) == dim(rinds)
+      ) Q, R, iq, Rp = qr(A, qrinds; pivot=RowNorm(), return_Rp=true) # column pivoting, no rank reduction
+      @test !isnothing(Rp)
+      @test dims(Rp) == dims(R)
       @test dim(iq) == dim(qrinds)
 
       @test_logs (
         :warn, "Please use RowNorm() instead of ColumnNorm() for pivoted lq decomposition."
-      ) L, Q, iq, p = lq(A, qrinds; pivot=ColumnNorm()) # row pivoting, no rank reduction
-      @test !isnothing(p)
-      @test length(p) == dim(rinds)
+      ) L, Q, iq, Lp = lq(A, qrinds; pivot=ColumnNorm(), return_Rp=true) # row pivoting, no rank reduction
+      @test !isnothing(Lp)
+      @test dims(Lp) == dims(L)
       @test dim(iq) == dim(qrinds)
     end
   end
@@ -506,19 +551,23 @@ end
     rinds = noncommoninds(A, qrinds)
     A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
 
-    Q, R, iq, p = qr(A, qrinds; atol=1e-14) # absolute tolerance for rank reduction
-    @test !isnothing(p)
-    @test length(p) > 0
+    Q, R, iq, Rp = qr(A, qrinds; atol=1e-14) # absolute tolerance for rank reduction
+    @test isnothing(Rp)
     @test dim(iq) == expected_rank
 
-    Q, R, iq, p = qr(A, qrinds; block_rtol=1e-15) # relative tolerance for rank reduction
-    @test !isnothing(p)
-    @test length(p) > 0
+    Q, R, iq, Rp = qr(A, qrinds; atol=1e-14, return_Rp=true) # absolute tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
     @test dim(iq) == expected_rank
 
-    Q, R, iq, p = qr(A, qrinds; block_rtol=1e-15, rtol=1000.0) # rtol ignored.
-    @test !isnothing(p)
-    @test length(p) > 0
+    Q, R, iq, Rp = qr(A, qrinds; block_rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, Rp = qr(A, qrinds; block_rtol=1e-15, rtol=1000.0, return_Rp=true) # rtol ignored.
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
     @test dim(iq) == expected_rank
   end
 
@@ -532,17 +581,17 @@ end
 
     Ainds = inds(A)
     A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q, p = qr(A, Ainds[1:ninds]; atol=1e-12)
+    Q, R, q, Rp = qr(A, Ainds[1:ninds]; atol=1e-12)
     @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    @test !isnothing(p)
+    @test isnothing(Rp)
 
-    L, Q, q, p = lq(A, Ainds[1:ninds]; atol=1e-12)
+    L, Q, q, Rp = lq(A, Ainds[1:ninds]; atol=1e-12)
     @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    @test !isnothing(p)
+    @test isnothing(Rp)
   end
 
   @testset "Rank revealing QR/LQ decomp on MPO block-sparse  $elt tensor" for ninds in
@@ -558,17 +607,17 @@ end
 
     Ainds = inds(A)
     A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q, p = qr(A, Ainds[1:ninds]; block_rtol=1e-12)
+    Q, R, q, Rp = qr(A, Ainds[1:ninds]; block_rtol=1e-12)
     @test dim(q) == expected_rank #check that we found teh correct rank
     @test A ≈ Q * R atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-    @test !isnothing(p)
+    @test isnothing(Rp)
 
-    L, Q, q, p = lq(A, Ainds[1:ninds]; block_rtol=1e-12)
+    L, Q, q, Rp = lq(A, Ainds[1:ninds]; block_rtol=1e-12)
     @test dim(q) == expected_rank #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-    @test !isnothing(p)
+    @test isnothing(Rp)
   end
 
   @testset "factorize with QR" begin

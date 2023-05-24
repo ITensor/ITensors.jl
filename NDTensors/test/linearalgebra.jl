@@ -2,7 +2,7 @@ using NDTensors
 using LinearAlgebra
 using Test
 
-# Not available on CI machine that test NDTensors.
+# Not available on CI machine that tests NDTensors.
 # using Random
 # Random.seed!(314159)
 
@@ -32,9 +32,15 @@ end
   positive in [false, true],
   singular in [false, true],
   rank_reveal in [false, true],
-  pivot in [false, true]
+  pivot in [false, true],
+  return_Rp in [false, true]
 
   if qx == ql && (rank_reveal || pivot)
+    continue
+  end
+
+  # avoid warnings.
+  if !(rank_reveal || pivot) && return_Rp
     continue
   end
 
@@ -54,7 +60,9 @@ end
     end
   end
   # you can set verbose=true if you want to get debug output on rank reduction.
-  Q, X, p = qx(A; positive=positive, atol=atol, pivot=pivot, verbose=false) #X is R or L. 
+  Q, X, Xp = qx(
+    A; positive=positive, atol=atol, pivot=pivot, return_Rp=return_Rp, verbose=false
+  ) #X is R or L. 
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   if dim(Q, 1) == dim(Q, 2)
@@ -67,8 +75,7 @@ end
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
-  if positive && !isnothing(p)
-    Xp = X[:, p] #permute columns so diag gets restored to the right place.
+  if positive && !isnothing(Xp)
     nr, nc = size(Xp)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
     diagX = diag(Xp[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
@@ -81,7 +88,7 @@ end
     @test dim(X, 1) == 2 #Redundant?
   end
   if (atol >= 0.0 || pivot) && qx == qr
-    @test !isnothing(p)
+    @test !isnothing(Xp) == return_Rp
   end
   #
   # Tall matrix (more rows than cols)
@@ -93,7 +100,9 @@ end
       A[i, :] = A[1, :]
     end
   end
-  Q, X, p = qx(A; positive=positive, atol=atol, pivot=pivot, verbose=false)
+  Q, X, Xp = qx(
+    A; positive=positive, atol=atol, pivot=pivot, return_Rp=return_Rp, verbose=false
+  )
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   #@test array(Q) * array(Q)' no such relationship for tall matrices.
@@ -104,8 +113,7 @@ end
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
-  if positive && !isnothing(p)
-    Xp = X[:, p] #permute columns so diag gets restored to the right place.
+  if positive && !isnothing(Xp)
     nr, nc = size(Xp)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
     diagX = diag(Xp[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
@@ -117,7 +125,7 @@ end
     @test dim(X, 1) == 4 #Redundant?
   end
   if (atol >= 0.0 || pivot) && qx == qr
-    @test !isnothing(p)
+    @test !isnothing(Xp) == return_Rp
   end
 end
 

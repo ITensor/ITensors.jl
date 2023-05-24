@@ -468,6 +468,7 @@ function qx(
   atol=-1.0, #absolute tolerance for rank reduction
   rtol=-1.0, #relative tolerance for rank reduction
   block_rtol=-1.0, #This is supposed to be for block sparse, but we reluctantly accept it here.
+  return_Rp=false,
   verbose=false,
   kwargs...,
 )
@@ -490,6 +491,11 @@ function qx(
   if do_rank_reduction #if do_rank_reduction==false then don't change bpivot.
     bpivot = true
   end
+  if !bpivot && return_Rp
+    @warn "User requested return of Rp matrix with no pivoting." *
+      "  Please eneable QR/LQ with pivoting to return the Rp matrix."
+    return_Rp = false
+  end
 
   pivot = call_pivot(bpivot, qx) #Convert the bool to whatever type the qx function expects.
   if bpivot
@@ -507,7 +513,12 @@ function qx(
   #
   #  undo the permutation on R, so the T=Q*R again.
   #
-  bpivot && (XM = XM[:, invperm(p)])
+  if bpivot
+    if return_Rp
+      XMp = XM # If requested save the permuted columns version of X
+    end
+    XM = XM[:, invperm(p)] # un-permute the columns of X
+  end
   #
   # Make the new indices to go onto Q and X
   #
@@ -519,7 +530,13 @@ function qx(
   Xinds = IndsT((q, ind(T, 2)))
   Q = tensor(Dense(vec(QM)), Qinds)
   X = tensor(Dense(vec(XM)), Xinds)
-  return Q, X, p
+  if return_Rp
+    Xp = tensor(Dense(vec(XMp)), Xinds)
+  else
+    Xp = nothing
+  end
+
+  return Q, X, Xp
 end
 
 # Required by svd_recursive 

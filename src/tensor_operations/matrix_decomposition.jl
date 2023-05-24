@@ -390,6 +390,8 @@ remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr) = (Q * dag(vαl), R * d
 remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, vαr) = (Q, R * dag(vαr))
 remove_trivial_index(Q::ITensor, R::ITensor, vαl, ::Nothing) = (Q * dag(vαl), R)
 remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, ::Nothing) = (Q, R)
+remove_trivial_index(R::ITensor, vαr) = R * dag(vαr)
+remove_trivial_index(R::ITensor, ::Nothing) = R
 
 #
 #  Force users to knowingly ask for zero indices using qr(A,()) syntax
@@ -447,7 +449,9 @@ end
 #
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
 #
-function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
+function qx(
+  qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, return_Rp=false, kwargs...
+)
   # Strip out any extra indices that are not in A.
   # Unit test test/base/test_itensor.jl line 1469 will fail without this.
   Linds = commoninds(A, Linds)
@@ -468,14 +472,8 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   #
   AC = permute(AC, cL, cR; allow_alias=true)
 
-  QXp = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
-  if length(QXp) == 3
-    QT, XT, perm = QXp
-  else
-    QT, XT = QXp #ITensorGPU does not return a perm yet.
-    perm = nothing
-  end
-
+  QXp = qx(tensor(AC); return_Rp, kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  QT, XT = QXp[1], QXp[2]
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
@@ -489,9 +487,19 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   q = commonind(Q, X)
   Q = settags(Q, tags, q)
   X = settags(X, tags, q)
-  q = settags(q, tags)
 
-  return Q, X, q, perm
+  # repeat all operations of Xp if requested by user.
+  if return_Rp && length(QXp) == 3 # GPU code does not support new features yet, so we check length as well.
+    Xp = itensor(QXp[3]) * dag(CR)
+    Xp = remove_trivial_index(Xp, vαr)
+    Xp = settags(Xp, tags, q)
+  else
+    Xp = nothing
+  end
+
+  q = settags(q, tags) #fix tags of q last.
+
+  return Q, X, q, Xp
 end
 
 #
