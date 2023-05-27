@@ -1071,10 +1071,3 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::
   v = [read(g, "MPO[$(i)]", ITensor) for i in 1:N]
   return MPO(v, llim, rlim)
 end
-
-function contract(::Algorithm"densitymatrix", M1::MPO, M2::MPO; kwargs...)::MPO
-  t1 = MPO([M1[v] for v in eachindex(M1)])
-  t2 = MPS([M2[v] for v in eachindex(M2)])
-  t12 = contract(t1, t2; alg="densitymatrix", kwargs...)
-  return MPO([t12[v] for v in eachindex(M1)])
-end
