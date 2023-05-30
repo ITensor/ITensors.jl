@@ -10,18 +10,6 @@ const BlockDim = Vector{Int}
 # Makes for generic code
 dim(d::BlockDim) = sum(d)
 
-@traitdef is_blocked_inds{indsT}
-@traitimpl is_blocked_inds{indsT} <- is_blocked_inds(indsT)
-function is_blocked_inds(indsT::Type{<:Tuple})
-  all(map(i -> is_blocked_ind(fieldtype(indsT, i)), length(indsT.parameters)))
-end
-
-function is_blocked_inds(inds::Tuple)
-  is_blocked_inds(typeof(inds))
-end
-is_blocked_ind(::Type{<:Int}) = false
-is_blocked_ind(::Type{<:Vector{Int}}) = true
-
 """
     BlockDims{N}
 
