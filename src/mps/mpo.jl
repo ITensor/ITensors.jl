@@ -421,7 +421,7 @@ MPOs. In general it is more efficient and accurate than `inner(y, apply(A, x))`.
 This is helpful for computing the expectation value of an operator `A`, which would be:
 
 ```julia
-inner(x, A, x)
+inner(x', A, x)
 ```
 
 assuming `x` is normalized.
@@ -431,7 +431,7 @@ If you want to compute `⟨By|Ax⟩` you can use `inner(B::MPO, y::MPS, A::MPO, 
 This is helpful for computing the variance of an operator `A`, which would be:
 
 ```julia
-inner(A, x, A, x) - inner(x, A, x) ^ 2
+inner(A, x, A, x) - inner(x', A, x) ^ 2
 ```
 
 assuming `x` is normalized.
