@@ -24,7 +24,7 @@ end
 
 @traitfn function default_storagetype(datatype::Type{<:AbstractArray}, inds::IndsT) where {IndsT<:Tuple; is_blocked_inds{IndsT}}
   datatype = set_parameter_if_unspecified(datatype)
-  return BlockSparse{eltype(datatype),datatype}
+  return BlockSparse{eltype(datatype),datatype, 1}
 end
 
 function default_storagetype(datatype::Type{<:AbstractArray})
