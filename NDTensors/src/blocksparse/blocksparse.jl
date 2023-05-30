@@ -15,16 +15,16 @@ end
 ## Constructors
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
-BlockSparse() = BlockSparse{default_eltype(), default_datatype(), 0}()
+BlockSparse() = BlockSparse{default_eltype(),default_datatype(),0}()
 
-BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(set_eltype_if_unspecified(DataT, ElT)(), BlockOffsets{N}())
+function BlockSparse{ElT,DataT,N}() where {ElT,DataT,N}
+  return BlockSparse(set_eltype_if_unspecified(DataT, ElT)(), BlockOffsets{N}())
+end
 
 function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
-  return BlockSparse(
-    generic_zeros(datatype, dim), blockoffsets; vargs...
-  )
+  return BlockSparse(generic_zeros(datatype, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(
@@ -34,7 +34,9 @@ function BlockSparse(
 end
 
 function BlockSparse(x::Number, blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(fill!(default_datatype(eltype(x))(undef, dim),x), blockoffsets; vargs...)
+  return BlockSparse(
+    fill!(default_datatype(eltype(x))(undef, dim), x), blockoffsets; vargs...
+  )
 end
 
 function BlockSparse(
@@ -72,7 +74,9 @@ end
 
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
 function setdata(storagetype::Type{<:BlockSparse}, data)
-  return error("Setting the datatype of $(storagetype) to $(typeof(data)) is currently not implemented.")
+  return error(
+    "Setting the datatype of $(storagetype) to $(typeof(data)) is currently not implemented.",
+  )
 end
 
 function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
@@ -84,28 +88,28 @@ function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
 end
 
 ## Both of these functions do not work properly
-function Base.real(::Type{BlockSparse{ElT, DataT, N}}) where {ElT,DataT,N}
+function Base.real(::Type{BlockSparse{ElT,DataT,N}}) where {ElT,DataT,N}
   rElT = real(ElT)
   rDataT = similartype(DataT, rElT)
-  BlockSparse{rElT, rDataT, N}
+  return BlockSparse{rElT,rDataT,N}
 end
 
 function Base.real(::Type{BlockSparse})
   ElT = real(default_eltype())
   DataT = default_datatype(ElT)
-  BlockSparse{ElT, DataT, 1}
+  return BlockSparse{ElT,DataT,1}
 end
 
 function complex(::Type{BlockSparse})
   ElT = complex(default_eltype())
   DataT = default_datatype(ElT)
-  BlockSparse{ElT, DataT, 1}
+  return BlockSparse{ElT,DataT,1}
 end
 
-function Base.complex(::Type{BlockSparse{ElT, DataT, N}}) where {ElT,DataT,N}
+function Base.complex(::Type{BlockSparse{ElT,DataT,N}}) where {ElT,DataT,N}
   cElT = complex(ElT)
   cDataT = similartype(DataT, cElT)
-  BlockSparse{cElT, cDataT, N}
+  return BlockSparse{cElT,cDataT,N}
 end
 
 ## End set fields

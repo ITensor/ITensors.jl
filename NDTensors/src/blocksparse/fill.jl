@@ -28,7 +28,6 @@ function randn(
   return tensor(storage, inds)
 end
 
-
 #
 # Zero
 #

@@ -5,8 +5,7 @@
 const BlockSparseTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
-  ## Constructors
-
+## Constructors
 
 function BlockSparseTensor(
   ::Type{ElT}, ::UndefInitializer, boffs::BlockOffsets, inds
@@ -138,117 +137,116 @@ end
 # Index and block operators
 
 # Basic functionality for AbstractArray interface
-  IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
-  
-  # Get the CartesianIndices for the range of indices
-  # of the specified
-  function blockindices(T::BlockSparseTensor{ElT,N}, block) where {ElT,N}
-    return CartesianIndex(blockstart(T, block)):CartesianIndex(blockend(T, block))
-  end
-  
-  """
-  indexoffset(T::BlockSparseTensor,i::Int...) -> offset,block,blockoffset
-  
-  Get the offset in the data of the specified
-  CartesianIndex. If it falls in a block that doesn't
-  exist, return nothing for the offset.
-  Also returns the block the index is found in and the offset
-  within the block.
-  """
-  function indexoffset(T::BlockSparseTensor{ElT,N}, i::Vararg{Int,N}) where {ElT,N}
-    index_within_block, block = blockindex(T, i...)
-    block_dims = blockdims(T, block)
-    offset_within_block = LinearIndices(block_dims)[CartesianIndex(index_within_block)]
-    offset_of_block = offset(T, block)
-    offset_of_i = isnothing(offset_of_block) ? nothing : offset_of_block + offset_within_block
-    return offset_of_i, block, offset_within_block
-  end
-  
-  # TODO: Add a checkbounds
-  # TODO: write this nicer in terms of blockview?
-  #       Could write: 
-  #       block,index_within_block = blockindex(T,i...)
-  #       return blockview(T,block)[index_within_block]
-  @propagate_inbounds function getindex(
-    T::BlockSparseTensor{ElT,N}, i::Vararg{Int,N}
-  ) where {ElT,N}
-    offset, _ = indexoffset(T, i...)
-    isnothing(offset) && return zero(ElT)
-    return storage(T)[offset]
-  end
-  
-  @propagate_inbounds function getindex(T::BlockSparseTensor{ElT,0}) where {ElT}
-    nnzblocks(T) == 0 && return zero(ElT)
-    return storage(T)[]
-  end
-  
-  # These may not be valid if the Tensor has no blocks
-  #@propagate_inbounds getindex(T::BlockSparseTensor{<:Number,1},ind::Int) = storage(T)[ind]
-  
-  #@propagate_inbounds getindex(T::BlockSparseTensor{<:Number,0}) = storage(T)[1]
-  
-  # Add the specified block to the BlockSparseTensor
-  # Insert it such that the blocks remain ordered.
-  # Defaults to adding zeros.
-  # Returns the offset of the new block added.
-  # XXX rename to insertblock!, no need to return offset
-  function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
-    newdim = blockdim(T, newblock)
-    newoffset = nnz(T)
-    insert!(blockoffsets(T), newblock, newoffset)
-    # Insert new block into data
-    # TODO: Make GPU-friendly
-    splice!(data(storage(T)), (newoffset + 1):newoffset, zeros(ElT, newdim))
-    return newoffset
-  end
-  
-  function insertblock!(T::BlockSparseTensor{<:Number,N}, block::Block{N}) where {N}
-    insertblock_offset!(T, block)
-    return T
-  end
-  
-  insertblock!(T::BlockSparseTensor, block) = insertblock!(T, Block(block))
-  
-  # Insert missing diagonal blocks as zero blocks
-  function insert_diag_blocks!(T::AbstractArray)
-    for b in eachdiagblock(T)
-      blockT = blockview(T, b)
-      if isnothing(blockT)
-        # Block was not found in the list, insert it
-        insertblock!(T, b)
-      end
-    end
-  end
-  
-  # TODO: Add a checkbounds
-  @propagate_inbounds function setindex!(
-    T::BlockSparseTensor{ElT,N}, val, i::Vararg{Int,N}
-  ) where {ElT,N}
-    offset, block, offset_within_block = indexoffset(T, i...)
-    if isnothing(offset)
-      offset_of_block = insertblock_offset!(T, block)
-      offset = offset_of_block + offset_within_block
-    end
-    storage(T)[offset] = val
-    return T
-  end
+IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
 
-  @propagate_inbounds function setindex!(
-    T::BlockSparseTensor{ElT,N}, val, b::Block{N}
-  ) where {ElT,N}
-    if !hasblock(T, b)
+# Get the CartesianIndices for the range of indices
+# of the specified
+function blockindices(T::BlockSparseTensor{ElT,N}, block) where {ElT,N}
+  return CartesianIndex(blockstart(T, block)):CartesianIndex(blockend(T, block))
+end
+
+"""
+indexoffset(T::BlockSparseTensor,i::Int...) -> offset,block,blockoffset
+
+Get the offset in the data of the specified
+CartesianIndex. If it falls in a block that doesn't
+exist, return nothing for the offset.
+Also returns the block the index is found in and the offset
+within the block.
+"""
+function indexoffset(T::BlockSparseTensor{ElT,N}, i::Vararg{Int,N}) where {ElT,N}
+  index_within_block, block = blockindex(T, i...)
+  block_dims = blockdims(T, block)
+  offset_within_block = LinearIndices(block_dims)[CartesianIndex(index_within_block)]
+  offset_of_block = offset(T, block)
+  offset_of_i = isnothing(offset_of_block) ? nothing : offset_of_block + offset_within_block
+  return offset_of_i, block, offset_within_block
+end
+
+# TODO: Add a checkbounds
+# TODO: write this nicer in terms of blockview?
+#       Could write: 
+#       block,index_within_block = blockindex(T,i...)
+#       return blockview(T,block)[index_within_block]
+@propagate_inbounds function getindex(
+  T::BlockSparseTensor{ElT,N}, i::Vararg{Int,N}
+) where {ElT,N}
+  offset, _ = indexoffset(T, i...)
+  isnothing(offset) && return zero(ElT)
+  return storage(T)[offset]
+end
+
+@propagate_inbounds function getindex(T::BlockSparseTensor{ElT,0}) where {ElT}
+  nnzblocks(T) == 0 && return zero(ElT)
+  return storage(T)[]
+end
+
+# These may not be valid if the Tensor has no blocks
+#@propagate_inbounds getindex(T::BlockSparseTensor{<:Number,1},ind::Int) = storage(T)[ind]
+
+#@propagate_inbounds getindex(T::BlockSparseTensor{<:Number,0}) = storage(T)[1]
+
+# Add the specified block to the BlockSparseTensor
+# Insert it such that the blocks remain ordered.
+# Defaults to adding zeros.
+# Returns the offset of the new block added.
+# XXX rename to insertblock!, no need to return offset
+function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
+  newdim = blockdim(T, newblock)
+  newoffset = nnz(T)
+  insert!(blockoffsets(T), newblock, newoffset)
+  # Insert new block into data
+  # TODO: Make GPU-friendly
+  splice!(data(storage(T)), (newoffset + 1):newoffset, zeros(ElT, newdim))
+  return newoffset
+end
+
+function insertblock!(T::BlockSparseTensor{<:Number,N}, block::Block{N}) where {N}
+  insertblock_offset!(T, block)
+  return T
+end
+
+insertblock!(T::BlockSparseTensor, block) = insertblock!(T, Block(block))
+
+# Insert missing diagonal blocks as zero blocks
+function insert_diag_blocks!(T::AbstractArray)
+  for b in eachdiagblock(T)
+    blockT = blockview(T, b)
+    if isnothing(blockT)
+      # Block was not found in the list, insert it
       insertblock!(T, b)
     end
-    Tb = T[b]
-    Tb .= val
-    return T
   end
-  
-  getindex(T::BlockSparseTensor, block::Block) = blockview(T, block)
-  
-  to_indices(T::Tensor{<:Any,N}, b::Tuple{Block{N}}) where {N} = blockindices(T, b...)
+end
 
-  
+# TODO: Add a checkbounds
+@propagate_inbounds function setindex!(
+  T::BlockSparseTensor{ElT,N}, val, i::Vararg{Int,N}
+) where {ElT,N}
+  offset, block, offset_within_block = indexoffset(T, i...)
+  if isnothing(offset)
+    offset_of_block = insertblock_offset!(T, block)
+    offset = offset_of_block + offset_within_block
+  end
+  storage(T)[offset] = val
+  return T
+end
+
+@propagate_inbounds function setindex!(
+  T::BlockSparseTensor{ElT,N}, val, b::Block{N}
+) where {ElT,N}
+  if !hasblock(T, b)
+    insertblock!(T, b)
+  end
+  Tb = T[b]
+  Tb .= val
+  return T
+end
+
+getindex(T::BlockSparseTensor, block::Block) = blockview(T, block)
+
+to_indices(T::Tensor{<:Any,N}, b::Tuple{Block{N}}) where {N} = blockindices(T, b...)
+
 # End Index and block operators
 
 nonzeros(T::Tensor) = data(T)
