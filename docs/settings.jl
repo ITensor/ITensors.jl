@@ -46,6 +46,7 @@ settings = Dict(
     "Frequently Asked Questions" => [
       "Programming Language (Julia, C++, ...) FAQs" => "faq/JuliaAndCpp.md",
       "DMRG FAQs" => "faq/DMRG.md",
+      "Quantum Number (QN) FAQs" => "faq/QN.md",
       "ITensor Development FAQs" => "faq/Development.md",
       "Relationship of ITensor to other tensor libraries FAQs" => "faq/RelationshipToOtherLibraries.md",
       "Julia Package Manager FAQs" => "faq/JuliaPkg.md",
