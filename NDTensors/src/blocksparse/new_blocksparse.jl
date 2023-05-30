@@ -5,11 +5,15 @@
 struct BlockSparse{ElT,DataT,N} <: TensorStorage{ElT}
   data::DataT
   blockoffsets::BlockOffsets{N}  # Block number-offset pairs
-  function BlockSparse{ElT, DataT, N}(data::DataT, blockoffsets::BlockOffsets{N}) where {ElT, DataT<:AbstractVector, N}
-    return new{ElT, DataT, N}(data, blockoffsets)
+  function BlockSparse{ElT,DataT,N}(
+    data::DataT, blockoffsets::BlockOffsets{N}
+  ) where {ElT,DataT<:AbstractVector,N}
+    return new{ElT,DataT,N}(data, blockoffsets)
   end
 
-  function BlockSparse{ElT, DataT, N}(data::DataT, blockoffsets::BlockOffsets{N}) where {ElT, DataT<:AbstractArray, N}
+  function BlockSparse{ElT,DataT,N}(
+    data::DataT, blockoffsets::BlockOffsets{N}
+  ) where {ElT,DataT<:AbstractArray,N}
     println("Only Vector-based datatypes are currently supported")
     throw(TypeError)
   end
@@ -17,36 +21,43 @@ end
 
 ## Constructors
 
-function BlockSparse{ElT, DataT, N}() where {ElT, DataT<:AbstractArray, N}
-  return BlockSparse{ElT, DataT, N}(DataT(), BlockOffsets{N}())
+function BlockSparse{ElT,DataT,N}() where {ElT,DataT<:AbstractArray,N}
+  return BlockSparse{ElT,DataT,N}(DataT(), BlockOffsets{N}())
 end
 
 ## Right now I am making this so that it only makes a single block.
-function BlockSparse{ElT, DataT, N}(inds::Tuple) where{ElT, DataT<:AbstractArray, N}
+function BlockSparse{ElT,DataT,N}(inds::Tuple) where {ElT,DataT<:AbstractArray,N}
   size = prod(dims(inds))
-  return BlockSparse{ElT, DataT, N}(DataT(undef, size), BlockOffsets{N}())
+  return BlockSparse{ElT,DataT,N}(DataT(undef, size), BlockOffsets{N}())
 end
 
-function BlockSparse{ElT, DataT, N}(::UndefInitializer, inds::Tuple) where {ElT, DataT<:AbstractArray, N}
-  return BlockSparse{ElT, DataT, N}(similar(DataT, prod(dims(inds))), BlockOffsets{N}())
+function BlockSparse{ElT,DataT,N}(
+  ::UndefInitializer, inds::Tuple
+) where {ElT,DataT<:AbstractArray,N}
+  return BlockSparse{ElT,DataT,N}(similar(DataT, prod(dims(inds))), BlockOffsets{N}())
 end
 
-function BlockSparse{ElT, DataT, N}(::UndefInitializer, inds::Tuple, bs::BlockOffsets) where {ElT, DataT<:AbstractArray, N}
+function BlockSparse{ElT,DataT,N}(
+  ::UndefInitializer, inds::Tuple, bs::BlockOffsets
+) where {ElT,DataT<:AbstractArray,N}
   size = 1
-  for i in eachnzblock(bs) 
+  for i in eachnzblock(bs)
     size *= dim(i)
   end
-  return BlockSparse{ElT, DataT, N}(siilar(DataT, size), bs)
+  return BlockSparse{ElT,DataT,N}(siilar(DataT, size), bs)
 end
 
-function BlockSparse{ElT,DataT, N}(x, inds::Tuple) where {ElT,DataT<:AbstractVector,N}
-  return BlockSparse{ElT,DataT, N}(fill!(similar(DataT, prod(dims(inds))), ElT(x)), BlockOffsets{N}())
+function BlockSparse{ElT,DataT,N}(x, inds::Tuple) where {ElT,DataT<:AbstractVector,N}
+  return BlockSparse{ElT,DataT,N}(
+    fill!(similar(DataT, prod(dims(inds))), ElT(x)), BlockOffsets{N}()
+  )
 end
 
-function BlockSparse{ElT,DataT, N}(x, inds::Tuple, bs::BlockOffsets) where {ElT,DataT<:AbstractVector,N}
-  return BlockSparse{ElT,DataT, N}(fill!(similar(DataT, prod(dims(inds))), ElT(x)), bs)
+function BlockSparse{ElT,DataT,N}(
+  x, inds::Tuple, bs::BlockOffsets
+) where {ElT,DataT<:AbstractVector,N}
+  return BlockSparse{ElT,DataT,N}(fill!(similar(DataT, prod(dims(inds))), ElT(x)), bs)
 end
-
 
 function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
