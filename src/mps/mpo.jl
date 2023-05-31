@@ -1071,8 +1071,7 @@ function expect(M::MPO, ops; kwargs...)
   M = copy(M)
   N = length(M)
   ElT = promote_itensor_eltype(M)
-  s = siteinds(M)
-  s = [noprime(si[1]) for si in s] # only unprimed site indices needed
+  s = firstsiteinds(M) # only unprimed site indices needed
 
   if haskey(kwargs, :site_range)
     @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
