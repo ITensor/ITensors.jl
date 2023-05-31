@@ -5,13 +5,18 @@ default_eltype() = Float64
 
 ## This is a system to determine if inds are blocked or unblocked used for default_storagetype
 @traitdef is_blocked_inds{indsT}
-@traitimpl is_blocked_inds{indsT} < -is_blocked_inds(indsT)
+@traitimpl is_blocked_inds{indsT} <- is_blocked_inds(indsT)
 function is_blocked_inds(indsT::Type{<:Tuple})
   return all(map(i -> is_blocked_ind(fieldtype(indsT, i)), length(indsT.parameters)))
 end
-
 function is_blocked_inds(inds::Tuple)
   return is_blocked_inds(typeof(inds))
+end
+
+@traitdef is_blocked_ind{IndT}
+@traitimpl is_blocked_ind{IndT} <- is_blocked_ind(IndT)
+function is_blocked_ind(ind)
+  return is_blocked_ind(typeof(ind))
 end
 is_blocked_ind(::Type{<:Int}) = false
 is_blocked_ind(::Type{<:Vector{Int}}) = true
