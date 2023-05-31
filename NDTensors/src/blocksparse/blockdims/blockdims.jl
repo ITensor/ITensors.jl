@@ -7,8 +7,8 @@ BlockDim is an idea and not a dispatch type.
 """
 const BlockDim = Vector{Int}
 
-# Makes for generic code
-dim(d::BlockDim) = sum(d)
+# # Makes for generic code
+# dim(d::BlockDim) = sum(d)
 
 """
     BlockDims{N}
@@ -18,20 +18,9 @@ Each entry lists the block sizes in each dimension.
 """
 const BlockDims{N} = NTuple{N,BlockDim}
 
-Base.ndims(ds::Type{<:BlockDims{N}}) where {N} = N
-
 similartype(::Type{<:BlockDims}, ::Type{Val{N}}) where {N} = BlockDims{N}
 
 Base.copy(ds::BlockDims) = ds
-
-"""
-dim(::BlockDims,::Integer)
-
-Return the total extent of the specified dimensions.
-"""
-function dim(ds::BlockDims{N}, i::Integer) where {N}
-  return sum(ds[i])
-end
 
 """
 dims(::BlockDims)
