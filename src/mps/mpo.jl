@@ -1027,6 +1027,100 @@ function sample(rng::AbstractRNG, M::MPO)
   return result
 end
 
+"""
+    expect(M::MPO, op::AbstractString...; kwargs...)
+    expect(M::MPO, op::Matrix{<:Number}...; kwargs...)
+    expect(M::MPO, ops; kwargs...)
+
+Given an MPO `M`, typically viewed as a density matrix,
+and a single operator name, returns
+a vector of the expected value of the operator on
+each site of the MPO.
+
+If multiple operator names are provided, returns a tuple
+of expectation value vectors.
+
+If a container of operator names is provided, returns the
+same type of container with names replaced by vectors
+of expectation values.
+
+# Optional Keyword Arguments
+
+  - `sites = 1:length(psi)`: compute expected values only for sites in the given range
+
+# Examples
+
+```julia
+N = 10
+
+s = siteinds("S=1/2", N)
+rho = MPO(s, fill("Id",N)) # infinite-temperature density matrix
+Z = expect(rho, "Sz") # compute for all sites
+Z = expect(rho, "Sz"; sites=2:4) # compute for sites 2,3,4
+Z3 = expect(rho, "Sz"; sites=3)  # compute for site 3 only (output will be a scalar)
+XZ = expect(rho, ["Sx", "Sz"]) # compute Sx and Sz for all sites
+Z = expect(rho, [1/2 0; 0 -1/2]) # same as expect(rho,"Sz")
+
+s = siteinds("Electron", N)
+rho = MPO(s, fill("Id",N)) # infinite-temperature density matrix
+dens = expect(rho, "Ntot")
+updens, dndens = expect(rho, ["Nup", "Ndn"]) # pass more than one operator
+```
+"""
+function expect(M::MPO, ops; kwargs...)
+  M = copy(M)
+  N = length(M)
+  ElT = promote_itensor_eltype(M)
+  s = firstsiteinds(M) # only unprimed site indices needed
+
+  if haskey(kwargs, :site_range)
+    @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
+    sites = kwargs[:site_range]
+  else
+    sites = get(kwargs, :sites, 1:N)
+  end
+
+  site_range = (sites isa AbstractRange) ? sites : collect(sites)
+  Ns = length(site_range)
+  start_site = first(site_range)
+
+  el_types = map(o -> ishermitian(op(o, s[start_site])) ? real(ElT) : ElT, ops)
+
+  orthogonalize!(M, start_site)
+  norm2_M = inner(M[start_site], M[start_site])
+
+  ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
+  for (entry, j) in enumerate(site_range)
+    orthogonalize!(M, j)
+    for (n, opname) in enumerate(ops)
+      oⱼ = adapt(datatype(M[j]), op(opname, s[j]))
+      val = inner(M[j], apply(oⱼ, M[j])) / norm2_M
+      ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
+    end
+  end
+
+  if sites isa Number
+    return map(arr -> arr[1], ex)
+  end
+  return ex
+end
+
+function expect(M::MPO, op::AbstractString; kwargs...)
+  return first(expect(M, (op,); kwargs...))
+end
+
+function expect(M::MPO, op::Matrix{<:Number}; kwargs...)
+  return first(expect(M, (op,); kwargs...))
+end
+
+function expect(M::MPO, op1::AbstractString, ops::AbstractString...; kwargs...)
+  return expect(M, (op1, ops...); kwargs...)
+end
+
+function expect(M::MPO, op1::Matrix{<:Number}, ops::Matrix{<:Number}...; kwargs...)
+  return expect(M, (op1, ops...); kwargs...)
+end
+
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPO)
   g = create_group(parent, name)
   attributes(g)["type"] = "MPO"
