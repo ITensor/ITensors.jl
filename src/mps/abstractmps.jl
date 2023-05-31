@@ -1474,7 +1474,7 @@ function +(::Algorithm"directsum", ψ⃗::MPST...) where {MPST<:AbstractMPS}
   )
   ϕj = replaceind(ϕj, ljm => dag(ljm_prev))
   ϕ[j] = ϕj
-  return ϕ
+  return convert(MPST, ϕ)
 end
 
 """
