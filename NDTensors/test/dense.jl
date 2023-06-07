@@ -4,9 +4,10 @@ using Test
 
 @testset "Dense Tensors" begin
 
+for dev in devices
   # Testing with GPU and CPU backends
-  @testset "DenseTensor basic functionality" for op in ops
-    A = op(Tensor((3, 4)))
+  @testset "DenseTensor basic functionality" begin
+    A = dev(Tensor((3, 4)))
     for I in eachindex(A)
       @test A[I] == 0
     end
@@ -108,23 +109,23 @@ using Test
     @test Array(J * K) ≈ Array(J) * Array(K)
   end
 
-  @testset "Random constructor" for op in ops
-    T = op(randomTensor((2, 2)))
+  @testset "Random constructor" begin
+    T = dev(randomTensor((2, 2)))
     @test dims(T) == (2, 2)
     @test eltype(T) == Float64
     @test T[1, 1] ≉ 0
     @test norm(T) ≉ 0
 
-    Tc = op(randomTensor(ComplexF64, (2, 2)))
+    Tc = dev(randomTensor(ComplexF64, (2, 2)))
     @test dims(Tc) == (2, 2)
     @test eltype(Tc) == ComplexF64
     @test Tc[1, 1] ≉ 0
     @test norm(Tc) ≉ 0
   end
 
-  @testset "Complex Valued Tensors" for op in ops
+  @testset "Complex Valued Tensors" begin
     d1, d2, d3 = 2, 3, 4
-    T = op(randomTensor(ComplexF64, (d1, d2, d3)))
+    T = dev(randomTensor(ComplexF64, (d1, d2, d3)))
 
     rT = real(T)
     iT = imag(T)
@@ -137,13 +138,13 @@ using Test
     end
   end
 
-  @testset "Custom inds types" for op in ops
+  @testset "Custom inds types" begin
     struct MyInd
       dim::Int
     end
     NDTensors.dim(i::MyInd) = i.dim
 
-    T = op(Tensor((MyInd(2), MyInd(3), MyInd(4))))
+    T = dev(Tensor((MyInd(2), MyInd(3), MyInd(4))))
     @test store(T) isa Dense
     @test eltype(T) == Float64
     @test norm(T) == 0
@@ -154,7 +155,7 @@ using Test
     @test T[2, 1, 2] == 1.21
     @test norm(T) == 1.21
 
-    T = op(randomTensor(ComplexF64, (MyInd(4), MyInd(3))))
+    T = dev(randomTensor(ComplexF64, (MyInd(4), MyInd(3))))
     @test store(T) isa Dense
     @test eltype(T) == ComplexF64
     @test norm(T) > 0
@@ -172,7 +173,7 @@ using Test
     @test inds(T2) == (MyInd(4), MyInd(3))
   end
 
-  @testset "generic contraction" for op in ops
+  @testset "generic contraction" begin
     # correctness of _gemm!
     for alpha in [0.0, 1.0, 2.0]
       for beta in [0.0, 1.0, 2.0]
@@ -193,30 +194,30 @@ using Test
     end
   end
 
-  @testset "Contraction with size 1 block and NaN" for op in ops
+  @testset "Contraction with size 1 block and NaN" begin
     @testset "No permutation" begin
-      R = op(Tensor(ComplexF64, (2, 2, 1)))
+      R = dev(Tensor(ComplexF64, (2, 2, 1)))
       fill!(R, NaN)
       @test any(isnan, R)
-      T1 = op(randomTensor((2, 2, 1)))
-      T2 = op(randomTensor(ComplexF64, (1, 1)))
+      T1 = dev(randomTensor((2, 2, 1)))
+      T2 = dev(randomTensor(ComplexF64, (1, 1)))
       NDTensors.contract!(R, (1, 2, 3), T1, (1, 2, -1), T2, (-1, 1))
       @test !any(isnan, R)
       @test convert(Array, R) ≈ convert(Array, T1) * T2[1]
     end
 
     @testset "Permutation" begin
-      R = op(Tensor(ComplexF64, (2, 2, 1)))
+      R = dev(Tensor(ComplexF64, (2, 2, 1)))
       fill!(R, NaN)
       @test any(isnan, R)
-      T1 = op(randomTensor((2, 2, 1)))
-      T2 = op(randomTensor(ComplexF64, (1, 1)))
+      T1 = dev(randomTensor((2, 2, 1)))
+      T2 = dev(randomTensor(ComplexF64, (1, 1)))
       NDTensors.contract!(R, (2, 1, 3), T1, (1, 2, -1), T2, (-1, 1))
       @test !any(isnan, R)
       @test convert(Array, R) ≈ permutedims(convert(Array, T1), (2, 1, 3)) * T2[1]
     end
   end
-
+end
   # Only CPU backend testing
   @testset "change backends" begin
     a, b, c = [randn(5, 5) for i in 1:3]

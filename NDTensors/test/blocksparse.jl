@@ -4,14 +4,14 @@ using Test
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
-  @testset "Test for different backend storage" for op in ops
+  @testset "Test for different backend storage" for dev in devices
     # Indices
     indsA = ([2, 3], [4, 5])
 
     # Locations of non-zero blocks
     locs = [(1, 2), (2, 1)]
 
-    A = op(BlockSparseTensor(locs, indsA...))
+    A = dev(BlockSparseTensor(locs, indsA...))
     randn!(A)
 
     @test blockdims(A, (1, 2)) == (2, 5)
@@ -64,7 +64,7 @@ using Test
       @test A12[I] == A[I + CartesianIndex(0, 4)]
     end
 
-    B = op(BlockSparseTensor(undef, locs, indsA))
+    B = dev(BlockSparseTensor(undef, locs, indsA))
     randn!(B)
 
     C = A + B
@@ -84,19 +84,19 @@ using Test
       @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
     end
 
-    A = op(BlockSparseTensor(ComplexF64, locs, indsA))
+    A = dev(BlockSparseTensor(ComplexF64, locs, indsA))
     randn!(A)
     @test conj(data(store(A))) == data(store(conj(A)))
     @test typeof(conj(A)) <: BlockSparseTensor
 
     @testset "Random constructor" begin
-      T = op(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
       @test eltype(T) == Float64
       @test norm(T) ≉ 0
 
-      Tc = op(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(Tc) == 2
       @test nnz(Tc) == 8
       @test eltype(Tc) == ComplexF64
@@ -104,7 +104,7 @@ using Test
     end
 
     @testset "Complex Valued Operations" begin
-      T = op(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      T = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       rT = real(T)
       @test eltype(rT) == Float64
       @test nnzblocks(rT) == nnzblocks(T)
@@ -124,11 +124,11 @@ using Test
 
       # Locations of non-zero blocks
       locsA = [(1, 1), (1, 2), (2, 2)]
-      A = op(BlockSparseTensor(locsA, inds...))
+      A = dev(BlockSparseTensor(locsA, inds...))
       randn!(A)
 
       locsB = [(1, 2), (2, 1)]
-      B = op(BlockSparseTensor(locsB, inds...))
+      B = dev(BlockSparseTensor(locsB, inds...))
       randn!(B)
 
       R = A + B
@@ -145,14 +145,14 @@ using Test
 
       # Locations of non-zero blocks
       locsA = [(1, 2), (2, 1)]
-      A = op(BlockSparseTensor(locsA, indsA...))
+      A = dev(BlockSparseTensor(locsA, indsA...))
       randn!(A)
 
       perm = (2, 1)
 
       locsB = [(2, 1)]
       indsB = NDTensors.permute(indsA, perm)
-      B = op(BlockSparseTensor(locsB, indsB...))
+      B = dev(BlockSparseTensor(locsB, indsB...))
       randn!(B)
 
       R = permutedims!!(B, A, perm)
@@ -166,12 +166,12 @@ using Test
     @testset "Contract" begin
       indsA = ([2, 3], [4, 5])
       locsA = [(1, 1), (2, 2), (2, 1), (1, 2)]
-      A = op(BlockSparseTensor(locsA, indsA...))
+      A = dev(BlockSparseTensor(locsA, indsA...))
       randn!(A)
 
       indsB = ([4, 5], [3, 2])
       locsB = [(1, 2), (2, 1), (1, 1)]
-      B = op(BlockSparseTensor(locsB, indsB...))
+      B = dev(BlockSparseTensor(locsB, indsB...))
       randn!(B)
 
       R = contract(A, (1, -1), B, (-1, 2))
@@ -188,7 +188,7 @@ using Test
     @testset "reshape" begin
       indsA = ([2, 3], [4, 5])
       locsA = [(2, 1), (1, 2)]
-      A = op(BlockSparseTensor(locsA, indsA...))
+      A = dev(BlockSparseTensor(locsA, indsA...))
       randn!(A)
 
       indsB = ([8, 12, 10, 15],)
@@ -206,7 +206,7 @@ using Test
     @testset "permute_combine" begin
       indsA = ([2, 3], [4, 5], [6, 7, 8])
       locsA = [(2, 1, 1), (1, 2, 1), (2, 2, 3)]
-      A = op(BlockSparseTensor(locsA, indsA...))
+      A = dev(BlockSparseTensor(locsA, indsA...))
       randn!(A)
 
       B = NDTensors.permute_combine(A, 3, (2, 1))
