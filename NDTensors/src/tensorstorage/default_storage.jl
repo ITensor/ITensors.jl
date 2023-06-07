@@ -17,9 +17,9 @@ is_blocked(::Type{<:Int}) = false
 is_blocked(::Type{<:Vector{Int}}) = true
 
 ## TODO use multiple dispace to make this pick between dense and blocksparse
-@traitfn function default_storagetype(
+function default_storagetype(
   datatype::Type{<:AbstractArray}, inds::IndsT
-) where {IndsT; !is_blocked{IndsT}}
+) where {IndsT}
   datatype = set_parameter_if_unspecified(datatype)
   return Dense{eltype(datatype),datatype}
 end
