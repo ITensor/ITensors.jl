@@ -29,10 +29,8 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   end
 end
 
-@traitdef is_blocked{TensorT}
-@traitimpl is_blocked{TensorT} <- is_blocked(TensorT)
 function is_blocked(Tensor::Tensor)
-  return is_blocked_inds(inds(Tensor))
+  return is_blocked(inds(Tensor))
 end
 
 ## Tensor constructors

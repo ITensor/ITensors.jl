@@ -4,34 +4,29 @@ default_datatype(eltype::Type=default_eltype()) = Vector{eltype}
 default_eltype() = Float64
 
 ## This is a system to determine if inds are blocked or unblocked used for default_storagetype
-@traitdef is_blocked_inds{indsT}
-@traitimpl is_blocked_inds{indsT} <- is_blocked_inds(indsT)
-function is_blocked_inds(indsT::Type{<:Tuple})
-  return all(map(i -> is_blocked_ind(fieldtype(indsT, i)), length(indsT.parameters)))
+@traitdef is_blocked{T}
+@traitimpl is_blocked{T} <- is_blocked(T)
+function is_blocked(indsT::Type{<:Tuple})
+  return any(map(i -> is_blocked(fieldtype(indsT, i)), length(indsT.parameters)))
 end
-function is_blocked_inds(inds::Tuple)
-  return is_blocked_inds(typeof(inds))
+function is_blocked(inds::Tuple)
+  return is_blocked(typeof(inds))
 end
 
-@traitdef is_blocked_ind{IndT}
-@traitimpl is_blocked_ind{IndT} <- is_blocked_ind(IndT)
-function is_blocked_ind(ind)
-  return is_blocked_ind(typeof(ind))
-end
-is_blocked_ind(::Type{<:Int}) = false
-is_blocked_ind(::Type{<:Vector{Int}}) = true
+is_blocked(::Type{<:Int}) = false
+is_blocked(::Type{<:Vector{Int}}) = true
 
 ## TODO use multiple dispace to make this pick between dense and blocksparse
 @traitfn function default_storagetype(
   datatype::Type{<:AbstractArray}, inds::IndsT
-) where {IndsT; !is_blocked_inds{IndsT}}
+) where {IndsT; !is_blocked{IndsT}}
   datatype = set_parameter_if_unspecified(datatype)
   return Dense{eltype(datatype),datatype}
 end
 
 @traitfn function default_storagetype(
   datatype::Type{<:AbstractArray}, inds::IndsT
-) where {IndsT <: Tuple; is_blocked_inds{IndsT}}
+) where {IndsT <: Tuple; is_blocked{IndsT}}
   datatype = set_parameter_if_unspecified(datatype)
   return BlockSparse{eltype(datatype),datatype,1}
 end
