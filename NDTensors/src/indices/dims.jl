@@ -9,18 +9,17 @@ dims(inds::Tuple) = ntuple(i -> dim(@inbounds inds[i]), Val(length(inds)))
 
 # Generic dim function
 dim(inds::Tuple) = prod(dims(inds))
+@traitfn dim(inds::IndsT) where {IndsT; is_blocked{IndsT}} = prod(sum(inds))
 
 dims(::Tuple{}) = ()
 
 dim(::Tuple{}) = 1
 
-dense(ds::Dims) = ds
-
-dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
-
 dim(ds::Dims) = prod(ds)
 
 dim(ds::Dims, i::Int) = dims(ds)[i]
+
+@traitfn dim(ds::IndsT, i::Int) where {IndsT; is_blocked{IndsT}} = dims(ds)[i]
 
 mindim(inds::Tuple) = minimum(dims(inds))
 
@@ -95,3 +94,12 @@ dim(T::Tensor, i::Int) = dim(inds(T), i)
 maxdim(T::Tensor) = maxdim(inds(T))
 mindim(T::Tensor) = mindim(inds(T))
 diaglength(T::Tensor) = mindim(T)
+
+
+# Convert indices to dense indices
+# Potentially this should be an adapt function
+dense(ds::Dims) = ds
+
+dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
+
+@traitfn dense(ds::IndsT) where {IndsT; is_blocked{IndsT}} = dims(ds)

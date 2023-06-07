@@ -22,25 +22,25 @@ similartype(::Type{<:BlockDims}, ::Type{Val{N}}) where {N} = BlockDims{N}
 
 Base.copy(ds::BlockDims) = ds
 
-"""
-dims(::BlockDims)
+# """
+# dims(::BlockDims)
 
-Return the total extents of the dense space
-the block dimensions live in.
-"""
-function dims(ds::BlockDims{N}) where {N}
-  return ntuple(i -> dim(ds, i), Val(N))
-end
+# Return the total extents of the dense space
+# the block dimensions live in.
+# """
+# function dims(ds::BlockDims{N}) where {N}
+#   return ntuple(i -> dim(ds, i), Val(N))
+# end
 
-"""
-dim(::BlockDims)
+# """
+# dim(::BlockDims)
 
-Return the total extent of the dense space
-the block dimensions live in.
-"""
-function dim(ds::BlockDims{N}) where {N}
-  return prod(dims(ds))
-end
+# Return the total extent of the dense space
+# the block dimensions live in.
+# """
+# function dim(ds::BlockDims{N}) where {N}
+#   return prod(dims(ds))
+# end
 
 """
     nblocks(::BlockDim)
