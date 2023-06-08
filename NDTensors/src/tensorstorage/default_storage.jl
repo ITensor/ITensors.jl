@@ -19,7 +19,7 @@ is_blocked(::Type{<:Vector{ElT}}) where {ElT} = true
 ## TODO use multiple dispace to make this pick between dense and blocksparse
 function default_storagetype(
   datatype::Type{<:AbstractArray}, inds::IndsT
-) where {IndsT}
+) where {IndsT <: Tuple}
   datatype = set_parameter_if_unspecified(datatype)
   return Dense{eltype(datatype),datatype}
 end
