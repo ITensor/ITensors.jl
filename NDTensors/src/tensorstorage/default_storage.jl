@@ -5,9 +5,13 @@ default_eltype() = Float64
 
 ## This is a system to determine if inds are blocked or unblocked used for default_storagetype
 @traitdef is_blocked{T}
-@traitimpl is_blocked{T} <- is_blocked(T)
+@traitimpl is_blocked{T} < -is_blocked(T)
 function is_blocked(indsT::Type{<:Tuple})
-  return any(map(i -> is_blocked(fieldtype(indsT, i)), length(indsT.parameters)))
+  return if length(indsT.parameters) == 0
+    false
+  else
+    any(map(i -> is_blocked(fieldtype(indsT, i)), length(indsT.parameters)))
+  end
 end
 function is_blocked(inds::Tuple)
   return is_blocked(typeof(inds))
@@ -17,9 +21,9 @@ is_blocked(::Type{<:Int}) = false
 is_blocked(::Type{<:Vector{ElT}}) where {ElT} = true
 
 ## TODO use multiple dispace to make this pick between dense and blocksparse
-function default_storagetype(
+@traitfn function default_storagetype(
   datatype::Type{<:AbstractArray}, inds::IndsT
-) where {IndsT <: Tuple}
+) where {IndsT; !is_blocked{IndsT}}
   datatype = set_parameter_if_unspecified(datatype)
   return Dense{eltype(datatype),datatype}
 end
