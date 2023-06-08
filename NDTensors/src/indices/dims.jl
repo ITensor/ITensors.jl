@@ -98,7 +98,6 @@ maxdim(T::Tensor) = maxdim(inds(T))
 mindim(T::Tensor) = mindim(inds(T))
 diaglength(T::Tensor) = mindim(T)
 
-
 # Convert indices to dense indices
 # Potentially this should be an adapt function
 dense(ds::Dims) = ds
