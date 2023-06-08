@@ -142,6 +142,7 @@ using Test
         dim::Int
       end
       NDTensors.dim(i::MyInd) = i.dim
+      NDTensors.is_blocked(::Type{<:MyInd}) = false
 
       T = dev(Tensor((MyInd(2), MyInd(3), MyInd(4))))
       @test store(T) isa Dense
