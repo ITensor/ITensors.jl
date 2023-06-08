@@ -3,7 +3,7 @@ using NDTensors
 using Test
 
 @testset "Dense Tensors" begin
-  for dev in devices
+  for dev in devs
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor((3, 4)))

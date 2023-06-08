@@ -1,7 +1,7 @@
 using NDTensors
 using Test
 
-@testset "EmptyStorage" for dev in devices
+@testset "EmptyStorage" for dev in devs
   T = dev(Tensor(EmptyStorage(NDTensors.EmptyNumber), (2, 2)))
   @test size(T) == (2, 2)
   @test eltype(T) == NDTensors.EmptyNumber
