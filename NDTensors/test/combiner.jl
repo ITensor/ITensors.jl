@@ -5,15 +5,15 @@ using Test
 # Testing generic block indices
 using ITensors: QN, Index
 
-@testset "CombinerTensor basic functionality" for op in ops
+@testset "CombinerTensor basic functionality" for dev in devices
   @testset "Dense * Combiner" begin
     d = 2
     input_tensor_inds = (d, d, d)
     combiner_tensor_inds = (d^2, d, d)
     output_tensor_inds = (d, d^2)
 
-    input_tensor = op(tensor(Dense(randn(input_tensor_inds)), input_tensor_inds))
-    combiner_tensor = op(tensor(Combiner([1], [1]), combiner_tensor_inds))
+    input_tensor = dev(tensor(Dense(randn(input_tensor_inds)), input_tensor_inds))
+    combiner_tensor = dev(tensor(Combiner([1], [1]), combiner_tensor_inds))
 
     output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
     @test output_tensor isa DenseTensor
@@ -28,8 +28,8 @@ using ITensors: QN, Index
 
     # Catch invalid combining
     input_tensor_inds = (d,)
-    input_tensor = op(tensor(Dense(randn(input_tensor_inds)), input_tensor_inds))
-    combiner_tensor = op(tensor(Combiner([1], [1]), combiner_tensor_inds))
+    input_tensor = dev(tensor(Dense(randn(input_tensor_inds)), input_tensor_inds))
+    combiner_tensor = dev(tensor(Combiner([1], [1]), combiner_tensor_inds))
     @test_throws Any contract(input_tensor, (-1,), combiner_tensor, (1, -1, -2))
   end
 
@@ -44,7 +44,7 @@ using ITensors: QN, Index
     combiner_tensor_inds = (c, j, k)
     output_tensor_inds = (c, i)
 
-    input_tensor = op(
+    input_tensor = dev(
       tensor(
         BlockSparse(randn(dim(input_tensor_inds)), BlockOffsets{3}([Block(1, 1, 1)], [0])),
         input_tensor_inds,
@@ -67,7 +67,7 @@ using ITensors: QN, Index
 
     # Catch invalid combining
     invalid_input_tensor_inds = (k,)
-    invalid_input_tensor = op(
+    invalid_input_tensor = dev(
       tensor(
         BlockSparse(
           randn(dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])
