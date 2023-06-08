@@ -102,3 +102,23 @@ alias julia_itensors="julia --sysimage ~/.julia/sysimages/sys_itensors.so -e \"u
 ```
 
 where of course you can use the command name you like when defining the alias. Now running commands like `julia_itensors code.jl` or `julia_itensors` to start an interactive session will have the ITensor system image pre-loaded and you will notice significantly faster startup times. The arguments `-e \"using ITensors\" -i` make it so that running `julia_itensors` also loads the ITensor library as soon as Julia starts up, so that you don't have to type `using ITensors` every time.
+
+## Using a Compiled Sysimage in Jupyter or VS Code
+
+If you have compiled a sysimage for ITensor as shown above, you can use it in Jupyter by running the following code:
+```
+using IJulia
+installkernel("julia_ITensors","--sysimage=~/.julia/sysimages/sys_itensors.so")
+```
+in the Julia REPL (Julia console).
+
+
+To load the ITensor sysimage in VS Code, you can add 
+```
+"--sysimage ~/.julia/sysimages/sys_itensors.so"
+```
+as an argument under the `julia.additionalArgs` setting in your Settings.json file.
+
+For more information on the above, see the following [Julia Discourse post](https://discourse.julialang.org/t/using-an-itensors-sysimage-when-starting-the-julia-repl-in-vs-code/98625/4).
+
+
