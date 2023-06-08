@@ -104,6 +104,14 @@ function Index(dim::Number, tags::Union{AbstractString,TagSet}; plev::Int=0)
   return Index(dim; tags=tags, plev=plev)
 end
 
+function NDTensors.is_blocked(ind::Index)
+  @show typeof(ind)
+  return NDTensors.is_blocked(typeof(space(ind)))
+end
+
+function NDTensors.is_blocked(::Type{Index{SpaceT}}) where {SpaceT}
+  return NDTensors.is_blocked(SpaceT)
+end
 # This is so that when IndexSets are converted
 # to Julia Base Sets, the hashing is done correctly
 #function Base.hash(i::Index, h::UInt)

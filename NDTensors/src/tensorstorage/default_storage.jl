@@ -14,7 +14,7 @@ function is_blocked(inds::Tuple)
 end
 
 is_blocked(::Type{<:Int}) = false
-is_blocked(::Type{<:Vector{Int}}) = true
+is_blocked(::Type{<:Vector{ElT}}) where {ElT} = true
 
 ## TODO use multiple dispace to make this pick between dense and blocksparse
 function default_storagetype(

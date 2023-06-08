@@ -124,7 +124,7 @@ function dag(is::Indices)
 end
 
 # TODO: move to NDTensors
-NDTensors.dim(is::Tuple, pos::Integer) = dim(is[pos])
+#NDTensors.dim(is::Tuple, pos::Integer) = dim(is[pos])
 
 # TODO: this is a weird definition, fix it
 function NDTensors.similartype(

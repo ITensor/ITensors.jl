@@ -1,5 +1,8 @@
 export dense, dims, dim, mindim, diaglength
 
+# For reference Dims is a named tuple defined by Base
+# In this package I try to stick to IndsT and Inds for the name of a 
+# tensor's indices/dimensions/extensts...
 # dim and dims are used in the Tensor interface, overload 
 # base Dims here
 dims(ds::Dims) = ds
@@ -19,7 +22,7 @@ dim(ds::Dims) = prod(ds)
 
 dim(ds::Dims, i::Int) = dims(ds)[i]
 
-@traitfn dim(ds::IndsT, i::Int) where {IndsT; is_blocked{IndsT}} = dims(ds)[i]
+dim(ds, i::Int) = dims(ds)[i]
 
 mindim(inds::Tuple) = minimum(dims(inds))
 
