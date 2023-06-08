@@ -5,7 +5,7 @@ using Test
 # Testing generic block indices
 using ITensors: QN, Index
 
-@testset "CombinerTensor basic functionality" for dev in devices
+@testset "CombinerTensor basic functionality" for dev in devs
   @testset "Dense * Combiner" begin
     d = 2
     input_tensor_inds = (d, d, d)
