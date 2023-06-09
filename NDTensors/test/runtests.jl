@@ -1,6 +1,6 @@
-using Test
+module NDTensorsTests
 using NDTensors
-
+using Test
 devs = Vector{Function}(undef, 0)
 test_args = copy(ARGS)
 
@@ -48,6 +48,7 @@ end
     println("Running $filename")
     include(filename)
   end
+end
 end
 
 nothing
