@@ -9,14 +9,10 @@ if isempty(ARGS) || "base" in ARGS
   )
 end
 if "cuda" in ARGS || "all" in ARGS
-  println(
-    """\nArguments ARGS = $(ARGS) contain `"cuda"`. Running NDTensorCUDA tests."""
-  )
+  println("""\nArguments ARGS = $(ARGS) contain `"cuda"`. Running NDTensorCUDA tests.""")
 end
 if "metal" in ARGS || "all" in ARGS
-  println(
-    """\nArguments ARGS = $(ARGS) contain`"metal"`. Running NDTensorMetal tests."""
-  )
+  println("""\nArguments ARGS = $(ARGS) contain`"metal"`. Running NDTensorMetal tests.""")
 end
 
 @safetestset "NDTensors" begin
@@ -34,6 +30,5 @@ end
     include(filename)
   end
 end
-
 
 nothing
