@@ -1,25 +1,23 @@
-using NDTensors
 using Test
 using SafeTestsets
 
-test_args = copy(ARGS)
-println("Passing arguments ARGS=$(test_args) to test.")
+println("Passing arguments ARGS=$(ARGS) to test.")
 
-if isempty(test_args) || "base" in test_args
+if isempty(ARGS) || "base" in ARGS
   println(
-    """\nArguments ARGS = $(test_args) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
+    """\nArguments ARGS = $(ARGS) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
   )
 end
-if "cuda" in test_args || "all" in test_args
+if "cuda" in ARGS || "all" in ARGS
   using CUDA
   println(
-    """\nArguments ARGS = $(test_args) contain `"cuda"`. Running NDTensorCUDA tests."""
+    """\nArguments ARGS = $(ARGS) contain `"cuda"`. Running NDTensorCUDA tests."""
   )
 end
-if "metal" in test_args || "all" in test_args
+if "metal" in ARGS || "all" in ARGS
   using Metal
   println(
-    """\nArguments ARGS = $(test_args) contain`"metal"`. Running NDTensorMetal tests."""
+    """\nArguments ARGS = $(ARGS) contain`"metal"`. Running NDTensorMetal tests."""
   )
 end
 
