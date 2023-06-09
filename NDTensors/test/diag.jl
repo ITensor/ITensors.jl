@@ -1,6 +1,8 @@
 using NDTensors
 using Test
 @testset "DiagTensor basic functionality" begin
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs
     t = dev(tensor(Diag(rand(ComplexF64, 100)), (100, 100)))
     @test conj(data(store(t))) == data(store(conj(t)))

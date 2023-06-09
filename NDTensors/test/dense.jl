@@ -3,6 +3,8 @@ using NDTensors
 using Test
 
 @testset "Dense Tensors" begin
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin

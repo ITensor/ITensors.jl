@@ -2,6 +2,8 @@ using NDTensors
 using Test
 
 @testset "EmptyStorage test" begin
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs
     T = dev(Tensor(EmptyStorage(NDTensors.EmptyNumber), (2, 2)))
     @test size(T) == (2, 2)

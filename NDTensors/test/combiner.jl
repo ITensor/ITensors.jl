@@ -6,6 +6,8 @@ using Test
 using ITensors: QN, Index
 
 @testset "CombinerTensor basic functionality" begin
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs
     @testset "Dense * Combiner" begin
       d = 2
