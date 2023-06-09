@@ -4,7 +4,7 @@ using Test
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
-  @testset "Test for different backend storage" for dev in devs
+  @testset "test device: $dev" for dev in devs
     # Indices
     indsA = ([2, 3], [4, 5])
 

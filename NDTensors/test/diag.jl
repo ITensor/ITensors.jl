@@ -1,7 +1,7 @@
 using NDTensors
 using Test
-for dev in devs
-  @testset "DiagTensor basic functionality" begin
+@testset "DiagTensor basic functionality" begin
+  @testset "test device: $dev" for dev in devs
     t = dev(tensor(Diag(rand(ComplexF64, 100)), (100, 100)))
     @test conj(data(store(t))) == data(store(conj(t)))
     @test typeof(conj(t)) <: DiagTensor

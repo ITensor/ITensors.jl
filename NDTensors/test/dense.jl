@@ -3,7 +3,7 @@ using NDTensors
 using Test
 
 @testset "Dense Tensors" begin
-  for dev in devs
+  @testset "test device: $dev" for dev in devs
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor((3, 4)))
@@ -217,6 +217,7 @@ using Test
       end
     end
   end
+  @show A
   # Only CPU backend testing
   @testset "change backends" begin
     a, b, c = [randn(5, 5) for i in 1:3]
