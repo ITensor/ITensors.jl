@@ -217,7 +217,7 @@ using Test
       end
     end
   end
-  @show A
+
   # Only CPU backend testing
   @testset "change backends" begin
     a, b, c = [randn(5, 5) for i in 1:3]
