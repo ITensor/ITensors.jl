@@ -58,4 +58,4 @@ NDTensorTBLIS = "TBLIS"
 NDTensorOctavian = "Octavian"
 
 [targets]
-test = ["CUDA", "Metal", "TBLIS", "Octavian", "Zygote"]
+test = ["CUDA", "Metal", "TBLIS", "Octavian"]
