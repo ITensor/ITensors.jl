@@ -103,6 +103,10 @@ function Tensor(data::AbstractArray{<:Any,N}, inds::Tuple) where {N}
   return Tensor(vec(data), inds)
 end
 
+function Tensor(datatype::Type{<:AbstractArray}, inds::Tuple)
+  return Tensor(generic_zeros(datatype, dim(inds)),inds)
+end
+
 ## End Tensor constructors
 
 ## Random Tensor
