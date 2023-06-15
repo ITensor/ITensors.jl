@@ -104,7 +104,7 @@ function Tensor(data::AbstractArray{<:Any,N}, inds::Tuple) where {N}
 end
 
 function Tensor(datatype::Type{<:AbstractArray}, inds::Tuple)
-  return Tensor(generic_zeros(datatype, dim(inds)),inds)
+  return Tensor(generic_zeros(datatype, dim(inds)), inds)
 end
 
 ## End Tensor constructors
