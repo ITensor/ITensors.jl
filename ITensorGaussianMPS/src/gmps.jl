@@ -1,5 +1,5 @@
 import Base: sortperm, size, length, eltype, conj, transpose, copy, *
-import ITensors: alias
+using ITensors: alias
 abstract type AbstractSymmetry end
 struct ConservesNfParity{T} <: AbstractSymmetry
   data::T
