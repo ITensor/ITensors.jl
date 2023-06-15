@@ -1,9 +1,6 @@
 buffertype(datatype::Type{<:CuArray{<:Any,<:Any,B}}) where {B} = B
 function buffertype(datatype::Type{<:CuArray})
-  println(
-    "CuArray definitions require a CUDA.Mem buffer try $(datatype{default_buffertype()})"
-  )
-  throw(TypeError)
+  return error("No buffer type specified in type $(datatype)")
 end
 
 default_buffertype() = CUDA.Mem.DeviceBuffer
