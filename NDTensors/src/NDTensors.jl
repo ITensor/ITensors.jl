@@ -234,7 +234,6 @@ function __init__()
       include("../ext/NDTensorTBLIS/NDTensorTBLIS.jl")
     end
     @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
-      #include("linearalgebra/octavian.jl")
       include("../ext/NDTensorOctavian/NDTensorOctavian.jl")
     end
 
