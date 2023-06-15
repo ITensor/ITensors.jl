@@ -14,11 +14,11 @@ function set_ndims(arraytype::Type{<:CuArray{T,<:Any,<:Any}}, ndims) where {T}
 end
 
 function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
-  return CuArray{eltype(arraytype),ndims,default_buffertype()}
+  return CuArray{eltype(arraytype),ndims, buffertype(arraytype)}
 end
 
 function set_ndims(arraytype::Type{<:CuArray}, ndims)
-  return CuArray{NDTensors.default_eltype(),ndims,default_buffertype()}
+  return CuArray{NDTensors.default_eltype(),ndims,buffertype(arraytype)}
 end
 
 function NDTensors.set_eltype_if_unspecified(
