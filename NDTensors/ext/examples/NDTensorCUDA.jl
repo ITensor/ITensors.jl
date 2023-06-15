@@ -28,44 +28,36 @@ function main()
   @test cpu(C) == A * B
   @test eltype(C) == Float64
 
-  # Create 2 ITensors on CPU
+  # Create 2 ITensors on CPU with different eltypes
   A = ITensor(Float32, dim1)
   B = ITensor(Float64, dim2)
 
   fill!(A, randn())
   fill!(B, randn())
 
-  # Convert the ITEnsors to GPU
+  # Convert the ITensors to GPU
   cA = NDTensors.cu(A)
   cB = NDTensors.cu(B)
 
   #Check that backend of contraction is GPU
-  #typeof(storage(A * B))
-  #typeof(storage(cA * cB))
-  storage(cA)
-  storage(cB)
-  cA * cA
-  cB * cB
-  cA * cB
-  storage(cA * cB)
-  @test A * B == cpu(cA * cB)
+  @test A * A == cpu(cA * cA)
+  @test B * B == cpu(cB * cB)
+  @test A * B == spu(cA * cB)
+  @test B * A == cpu(cB * cA)
 
   dim3 = (l, k)
   dim4 = (i,)
-  C = ITensor(NDTensors.generic_randn(CuVector, dim(dim3)), dim3)
-  D = ITensor(Tensor(CuVector, dim4))
-  fill!(D, randn())
+  cC = ITensor(NDTensors.generic_randn(CuVector, dim(dim3)), dim3)
+  cD = ITensor(Tensor(CuVector, dim4))
+  fill!(cD, randn())
 
   # Create a function of 4 tensors on GPU
-  f(cA, cB, C, D) = (cA * cB * C * D)[]
+  f(A, B, C, D) = (A * B * C * D)[]
 
   #Use Zygote to take the gradient of the four tensors on GPU
-  grad = gradient(f, cA, cB, C, D)
-  #@show grad[1]
-  typeof(storage(grad[1]))
-  typeof(storage(grad[2]))
-  @test NDTensors.cpu(cB * C * D) ≈ NDTensors.cpu(grad[1])
-  @test (cB * C * D) ≈ grad[1]
+  grad = gradient(f, cA, cB, cC, cD)
+  @test NDTensors.cpu(cB * cC * cD) ≈ NDTensors.cpu(grad[1])
+  @test (cB * cC * cD) ≈ grad[1]
   # Create a tuple of indices
   decomp = (
     dim(NDTensors.ind(grad[1], 1)),
@@ -80,7 +72,8 @@ function main()
   U, S, V = svd(cuTensor_data)
 
   # These things can take up lots of memory, look at memory usage here
-  cuTensor_data = nothing
+  cuTensor_data = U = S = V = nothing
+  GC.gc()
   CUDA.memory_status()
 
   # Get rid of the gradients and clean the CUDA memory
@@ -90,17 +83,14 @@ function main()
   # Its possible to compute QR of GPU tensor
   cq = ITensors.qr(cA, (i,), (j, l))
   q = ITensors.qr(A, (i,), (j, l))
-  #@show cq[1]
-  #@show cq[2]
   A ≈ cpu(cq[1]) * cpu(cq[2])
 
-  ## This doesn't yet work baceuse making things like onehot create vectors instead of 
+  ## This doesn't yet work because making things like onehot create vectors instead of 
   ## CuVectors...
   #ITensors.svd(A, (i,), (j, l))
 
   s = ITensors.siteinds("S=1/2", 8)
   m = randomMPS(s; linkdims=4)
-  #@which NDTensors.cu(m)
   cm = NDTensors.cu(m)
 
   typeof(storage(m[1]))
@@ -114,14 +104,10 @@ function main()
   cm = NDTensors.cu(orthogonalize(cm, 1))
   H = NDTensors.cu(orthogonalize(H, 1))
 
-  #@show storage(cm[1])
-  #@show storage(H[1])
-
-  return inner(cm', H, cm)
-
-  ## TODO create option to turn cuda tests on to allow the use of NDTensor.cu
+  @test inner(cm', H, cm) == inner(m', H, m)
 end
-### TO run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
+
+### To run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
 if false # false so we don't have an infinite loop
   using Pkg
   Pkg.add("CUDA")
