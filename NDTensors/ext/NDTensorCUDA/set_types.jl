@@ -6,15 +6,11 @@ end
 default_buffertype() = CUDA.Mem.DeviceBuffer
 
 function NDTensors.set_eltype(arraytype::Type{<:CuArray}, eltype::Type)
-  return CuArray{eltype,NDTensors.ndims(arraytype)}
-end
-
-function NDTensors.set_ndims(arraytype::Type{<:CuArray{T,<:Any,<:Any}}, ndims) where {T}
-  return CuArray{eltype(arraytype),ndims,buffertype(arraytype)}
+  return CuArray{eltype,NDTensors.ndims(arraytype), buffertype(arraytype)}
 end
 
 function NDTensors.set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
-  return CuArray{eltype(arraytype),ndims}
+  return CuArray{eltype(arraytype),ndims,buffertype(arraytype)}
 end
 
 function NDTensors.set_ndims(arraytype::Type{<:CuArray}, ndims)
