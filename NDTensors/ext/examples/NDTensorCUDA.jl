@@ -18,12 +18,8 @@ function main()
   dim2 = (j, k)
 
   # Create  2 ITensors with CUDA backends (These will be made simpiler by randomITensor(CuVector) soon)
-  A = ITensor(
-    NDTensors.generic_randn(CuVector{Float64,CUDA.Mem.UnifiedBuffer}, dim(dim1)), dim1
-  )
-  B = ITensor(
-    NDTensors.generic_randn(CuVector{Float64,CUDA.Mem.UnifiedBuffer}, dim(dim2)), dim2
-  )
+  A = ITensor(NDTensors.generic_randn(CuVector, dim(dim1)), dim1)
+  B = ITensor(NDTensors.generic_randn(CuVector, dim(dim2)), dim2)
   # Contract the two tensors
   cpu = NDTensors.cpu
   C = A * B
