@@ -42,7 +42,7 @@ function main()
   #Check that backend of contraction is GPU
   @test A * A == cpu(cA * cA)
   @test B * B == cpu(cB * cB)
-  @test A * B == spu(cA * cB)
+  @test A * B == cpu(cA * cB)
   @test B * A == cpu(cB * cA)
 
   dim3 = (l, k)
@@ -85,7 +85,8 @@ function main()
   q = ITensors.qr(A, (i,), (j, l))
   A ≈ cpu(cq[1]) * cpu(cq[2])
 
-  ## This doesn't yet work because making things like onehot create vectors instead of 
+  ## SVD does not yet work with CUDA backend, see above on
+  ## Converting ITensors to vectors and calling CUDA svd function
   ## CuVectors...
   #ITensors.svd(A, (i,), (j, l))
 
@@ -93,18 +94,20 @@ function main()
   m = randomMPS(s; linkdims=4)
   cm = NDTensors.cu(m)
 
-  typeof(storage(m[1]))
-  typeof(storage(cm[1]))
+  @test inner(cm', cm) == inner(m', m)
 
-  inner(cm', cm)
+  H = randomMPO(s)
+  cH = NDTensors.cu(H)
+  @test inner(cm', cH, cm) == inner(m', H, m)
 
-  H = NDTensors.cu(randomMPO(s))
-  inner(cm', H, cm)
-
+  m = orthogonalize(m, 1)
   cm = NDTensors.cu(orthogonalize(cm, 1))
-  H = NDTensors.cu(orthogonalize(H, 1))
+  @test inner(m', m) ≈ inner(cm', cm)
 
-  @test inner(cm', H, cm) == inner(m', H, m)
+  H = orthogonalize(H, 1)
+  cH = NDTensors.cu(cH)
+
+  @test inner(cm', cH, cm) ≈ inner(m', H, m)
 end
 
 ### To run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
@@ -116,3 +119,5 @@ if false # false so we don't have an infinite loop
 end
 
 main()
+
+
