@@ -131,7 +131,7 @@ where `"A"` must be an operator associated with the physical site type, or site 
 the sites of the MPS `psi`. For example, the operator name could be 
 `"Sz"` for spin sites or `"Ntot"` for electron sites.
 (For more information about defining such operators yourself,
-see the section on [Extending an Existing Local Hilbert Space](@ref).)
+see the section on [Extending op Function Definitions](@ref custom_op).)
 
 As a concrete example, consider computing the expectation value of ``S^z_j`` on
 every site of an MPS representing a system of N spins of size ``S=1/2``. In the
@@ -162,7 +162,7 @@ A key example could be the Hamiltonian defining a quantum system.
 Given an MPO `W` and an MPS `psi`, you can compute ``\langle\psi|W|\psi\rangle``
 by using the function `inner` as follows:
 ```julia
-ex_W = inner(psi,W,psi)
+ex_W = inner(psi',W,psi)
 ```
 which will return a scalar that may be either real or complex, depending on the properties of
 `psi` and `W`.
@@ -188,7 +188,7 @@ where `"A"` and `"B"` must be an operator names associated with the physical sit
 or site tags, of the sites of the MPS `psi`. For example, these strings could be 
 `"Sz"`, `"S+"`, or `"S-"` for spin sites, or `"Cdagup"` and `"Cup"` for electron sites.
 (For more information about defining such operators yourself,
-see the section on [Extending an Existing Local Hilbert Space](@ref).)
+see the section on [Extending op Function Definitions](@ref custom_op).)
 
 As a concrete example, say we have an MPS `psi` for a system of spins and 
 want to compute the correlator ``\langle\psi|S^z_i S^z_j|\psi\rangle``.

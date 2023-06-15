@@ -1,5 +1,4 @@
-
-# Advanced ITensor Usage Guide
+# [Advanced ITensor Usage Guide](@id advanced_usage_guide)
 
 ## Installing and updating ITensors.jl
 

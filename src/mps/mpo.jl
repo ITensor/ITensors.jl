@@ -92,6 +92,12 @@ end
 
 MPO(sites::Vector{<:Index}, ops) = MPO(Float64, sites, ops)
 
+function MPO(sites::Vector{<:Index}, os::OpSum)
+  return error(
+    "To construct an MPO from an OpSum `opsum` and a set of indices `sites`, you must use MPO(opsum, sites)",
+  )
+end
+
 """
     MPO([::Type{ElT} = Float64, ]sites, op::String)
 
@@ -354,12 +360,9 @@ function deprecate_make_inds_match!(
   return ydag, A, x
 end
 
-"""
-    dot(y::MPS, A::MPO, x::MPS)
-
-Same as [`inner`](@ref).
-"""
-function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
+function _log_or_not_dot(
+  y::MPS, A::MPO, x::MPS, loginner::Bool; make_inds_match::Bool=true, kwargs...
+)::Number
   N = length(A)
   check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
@@ -367,10 +370,46 @@ function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Num
   ydag, A, x = deprecate_make_inds_match!(dot, ydag, A, x; make_inds_match)
   check_hascommoninds(siteinds, A, y)
   O = ydag[1] * A[1] * x[1]
+  if loginner
+    normO = norm(O)
+    log_inner_tot = log(normO)
+    O ./= normO
+  end
   for j in 2:N
     O = O * ydag[j] * A[j] * x[j]
+    if loginner
+      normO = norm(O)
+      log_inner_tot += log(normO)
+      O ./= normO
+    end
   end
-  return O[]
+  if loginner
+    if !isreal(O[]) || real(O[]) < 0
+      log_inner_tot += log(complex(O[]))
+    end
+    return log_inner_tot
+  else
+    return O[]
+  end
+end
+
+"""
+    dot(y::MPS, A::MPO, x::MPS)
+
+Same as [`inner`](@ref).
+"""
+function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
+  return _log_or_not_dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
+end
+
+"""
+    logdot(B::MPO, y::MPS, A::MPO, x::MPS)
+    Compute the logarithm of the inner product `⟨y|A|x⟩` efficiently and exactly.
+    This is useful for larger MPS/MPO, where in the limit of large numbers of sites the inner product can diverge or approach zero.
+    Same as [`loginner`](@ref).
+"""
+function logdot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
+  return _log_or_not_dot(y, A, x, true; make_inds_match=make_inds_match, kwargs...)
 end
 
 """
@@ -382,7 +421,7 @@ MPOs. In general it is more efficient and accurate than `inner(y, apply(A, x))`.
 This is helpful for computing the expectation value of an operator `A`, which would be:
 
 ```julia
-inner(x, A, x)
+inner(x', A, x)
 ```
 
 assuming `x` is normalized.
@@ -392,7 +431,7 @@ If you want to compute `⟨By|Ax⟩` you can use `inner(B::MPO, y::MPS, A::MPO, 
 This is helpful for computing the variance of an operator `A`, which would be:
 
 ```julia
-inner(A, x, A, x) - inner(x, A, x) ^ 2
+inner(A, x, A, x) - inner(x', A, x) ^ 2
 ```
 
 assuming `x` is normalized.
@@ -406,6 +445,12 @@ inner(y::MPS, A::MPO, x::MPS; kwargs...) = dot(y, A, x; kwargs...)
 function inner(y::MPS, Ax::Apply{Tuple{MPO,MPS}})
   return inner(y', Ax.args[1], Ax.args[2])
 end
+
+"""
+    loginner(y::MPS, A::MPO, x::MPS)
+    Same as [`logdot`](@ref).
+"""
+loginner(y::MPS, A::MPO, x::MPS; kwargs...) = logdot(y, A, x; kwargs...)
 
 """
     dot(B::MPO, y::MPS, A::MPO, x::MPS)
