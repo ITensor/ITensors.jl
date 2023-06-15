@@ -36,13 +36,13 @@ function similartype(datatype::Type{<:CuArray}, eltype::Type)
   return CuArray{eltype,ndims(datatype)}
 end
 
-function similartype(datatype::Type{<:CuArray{<:Any,<:Any,<:Any}}, eltype::Type)
+function similartype(datatype::Type{<:CuArray{<:Any,<:Any,B}}, eltype::Type) where {B}
   return CuArray{eltype,ndims(datatype),buffertype(datatype)}
 end
 
 function set_buffertype_if_unspecified(
-  arraytype::Type{<:CuArray{<:Any,<:Any,<:Any}}, ::Type=default_buffertype()
-)
+  arraytype::Type{<:CuArray{<:Any,<:Any,B}}, ::Type=default_buffertype()
+) where {B}
   return arraytype
 end
 
