@@ -140,7 +140,9 @@ expand_to_ladder_operators(o::String) = expand_to_ladder_operators(OpName(o))
 expand_to_ladder_operators(opname::OpName) = opname # By default does nothing
 expand_to_ladder_operators(::OpName"N") = ["Cdag", "C"]
 expand_to_ladder_operators(::OpName"Nup") = ["Cdagup", "Cup"]
+expand_to_ladder_operators(::OpName"n↑") = ["Cdagup", "Cup"]
 expand_to_ladder_operators(::OpName"Ndn") = ["Cdagdn", "Cdn"]
+expand_to_ladder_operators(::OpName"n↓") = ["Cdagdn", "Cdn"]
 
 #interlaced_hamiltonian(h::AbstractMatrix) = h
 #blocked_hamiltonian(h::AbstractMatrix) = Hermitian(reverse_interleave(Matrix(h)))

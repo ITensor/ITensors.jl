@@ -226,4 +226,14 @@ end
     @test h_hop[1, 1] == 2
     @test h_hop[2, 2] == 3
   end
+  @testset "Spin $o" for o in ("↑", "↓")
+    os = OpSum()
+    os += -1.0, "c†$o", 1, "c$o", 2
+    os += -1.0, "c†$o", 2, "c$o", 1
+    os += 2, "n$o", 1
+    os += 3, "n$o", 2
+    h_hop = ITensorGaussianMPS.hopping_hamiltonian(os)
+    @test h_hop[1, 1] == 2
+    @test h_hop[2, 2] == 3
+  end
 end
