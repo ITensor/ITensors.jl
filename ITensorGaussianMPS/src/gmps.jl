@@ -1,4 +1,5 @@
 import Base: sortperm, size, length, eltype, conj, transpose, copy, *
+import ITensors: alias
 abstract type AbstractSymmetry end
 struct ConservesNfParity{T} <: AbstractSymmetry
   data::T
@@ -140,9 +141,9 @@ expand_to_ladder_operators(o::String) = expand_to_ladder_operators(OpName(o))
 expand_to_ladder_operators(opname::OpName) = opname # By default does nothing
 expand_to_ladder_operators(::OpName"N") = ["Cdag", "C"]
 expand_to_ladder_operators(::OpName"Nup") = ["Cdagup", "Cup"]
-expand_to_ladder_operators(::OpName"n↑") = ["Cdagup", "Cup"]
 expand_to_ladder_operators(::OpName"Ndn") = ["Cdagdn", "Cdn"]
-expand_to_ladder_operators(::OpName"n↓") = ["Cdagdn", "Cdn"]
+expand_to_ladder_operators(opname::OpName"n↑") = expand_to_ladder_operators(alias(opname))
+expand_to_ladder_operators(opname::OpName"n↓") = expand_to_ladder_operators(alias(opname))
 
 #interlaced_hamiltonian(h::AbstractMatrix) = h
 #blocked_hamiltonian(h::AbstractMatrix) = Hermitian(reverse_interleave(Matrix(h)))
