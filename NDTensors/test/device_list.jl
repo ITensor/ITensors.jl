@@ -9,7 +9,9 @@ function devices_list(test_args)
     if CUDA.functional()
       push!(devs, NDTensors.cu)
     else
-      println("Warning: CUDA.jl is not functional on this architecture and tests will be skipped.")
+      println(
+        "Warning: CUDA.jl is not functional on this architecture and tests will be skipped."
+      )
     end
   end
 
