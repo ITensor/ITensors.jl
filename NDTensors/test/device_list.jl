@@ -8,7 +8,6 @@ function devices_list(test_args)
     CUDA.allowscalar()
     if CUDA.functional()
       push!(devs, NDTensors.cu)
-      #include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
     end
   end
 

@@ -29,6 +29,9 @@ end
     println("Running $filename")
     include(filename)
   end
+  if "cuda" in ARGS || "all" in ARGS
+    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
+  end
 end
 
 nothing
