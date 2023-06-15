@@ -148,7 +148,7 @@ function quadrant(term)
   elseif is_creation_operator(term[1]) && is_creation_operator(term[2])
     q = (2, 1)
   else
-      error("Unknown quadratic hopping term: $term")
+    error("Unknown quadratic hopping term: $term")
   end
   return q
 end
