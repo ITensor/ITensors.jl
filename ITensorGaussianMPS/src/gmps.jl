@@ -87,6 +87,12 @@ function LinearAlgebra.rmul!(A::AbstractMatrix, R::Circuit)
   return A
 end
 
+function Base.:*(A::AbstractMatrix, B::Adjoint{<:Any,<:Circuit})
+  AB = copy(A)
+  rmul!(AB, B)
+  return AB
+end
+
 function replace!(f, G::Circuit)
   for i in eachindex(G.rotations)
     G.rotations[i] = f(G.rotations[i])
