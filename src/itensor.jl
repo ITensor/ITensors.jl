@@ -345,7 +345,7 @@ function ITensor(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
     ),
   )
-  data = Array{eltype}(as, A)
+  data = NDTensors.similartype(A, eltype)(A)
   return itensor(Dense(data), inds)
 end
 
@@ -673,9 +673,8 @@ copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 #
 
 # Helper functions for different view behaviors
-function Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N}
-  return NDTensors.similartype(A, ElT)(A)
-end
+Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = Array{ElT,N}(A)
+
 function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
   return convert(AbstractArray{ElT,N}, A)
 end
