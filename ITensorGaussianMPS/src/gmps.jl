@@ -147,6 +147,8 @@ function quadrant(term)
     q = (1, 2)
   elseif is_creation_operator(term[1]) && is_creation_operator(term[2])
     q = (2, 1)
+  else
+    error("Unknown quadratic hopping term: $term")
   end
   return q
 end
@@ -168,8 +170,8 @@ function quadratic_operator(os::OpSum)
     #@show term.coef
     coef = isreal(coefficient(term)) ? real(coefficient(term)) : coefficient(term)
     coefs[n] = coef
-    quads[n] = quadrant(term)
     length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
+    quads[n] = quadrant(term)
     sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
     nsites = max(nsites, maximum(sites[n]))
   end
