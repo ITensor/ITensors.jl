@@ -1,40 +1,21 @@
 using Test
-using NDTensors
+using SafeTestsets
 
-devs = Vector{Function}(undef, 0)
-test_args = copy(ARGS)
+println("Passing arguments ARGS=$(ARGS) to test.")
 
-println("Passing arguments ARGS=$(test_args) to test.")
-if isempty(test_args) || "base" in test_args
+if isempty(ARGS) || "base" in ARGS
   println(
-    """\nArguments ARGS = $(test_args) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
+    """\nArguments ARGS = $(ARGS) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
   )
-  push!(devs, NDTensors.cpu)
+end
+if "cuda" in ARGS || "all" in ARGS
+  println("""\nArguments ARGS = $(ARGS) contain `"cuda"`. Running NDTensorCUDA tests.""")
+end
+if "metal" in ARGS || "all" in ARGS
+  println("""\nArguments ARGS = $(ARGS) contain`"metal"`. Running NDTensorMetal tests.""")
 end
 
-if "cuda" in test_args || "all" in test_args
-  println(
-    """\nArguments ARGS = $(test_args) contain `"cuda"`. Running NDTensorCUDA tests."""
-  )
-  using CUDA
-  CUDA.allowscalar()
-  if CUDA.functional()
-    push!(devs, NDTensors.cu)
-    #include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
-  end
-end
-
-if "metal" in test_args || "all" in test_args
-  println(
-    """\nArguments ARGS = $(test_args) contain`"metal"`. Running NDTensorMetal tests."""
-  )
-  using Metal
-  push!(devs, NDTensors.mtl)
-  Metal.allowscalar()
-  include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
-end
-
-@testset "NDTensors" begin
+@safetestset "NDTensors" begin
   @testset "$filename" for filename in [
     "SetParameters.jl",
     "linearalgebra.jl",
@@ -47,6 +28,9 @@ end
   ]
     println("Running $filename")
     include(filename)
+  end
+  if "cuda" in ARGS || "all" in ARGS
+    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
   end
 end
 

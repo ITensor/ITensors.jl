@@ -1,7 +1,15 @@
 using NDTensors
 using Test
-for dev in devs
-  @testset "DiagTensor basic functionality" begin
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
+@testset "DiagTensor basic functionality" begin
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
+  @testset "test device: $dev" for dev in devs
     t = dev(tensor(Diag(rand(ComplexF64, 100)), (100, 100)))
     @test conj(data(store(t))) == data(store(conj(t)))
     @test typeof(conj(t)) <: DiagTensor

@@ -34,17 +34,16 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - name: Install Julia dependencies
-        shell:julia {0}
+        shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          Pkg.activate(".")
+          pkg"dev ."
           pkg"dev ./NDTensors"
       - name: Run the tests
-        shell: julia {0}
+        shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          Pkg.activate(".")
-          Pkg.test(; coverage=true, test_args=["base"])
+          Pkg.test("ITensors"; coverage=true, test_args=["base"])
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -1,9 +1,6 @@
-buffertype(datatype::Type{<:CuArray{<:Any,<:Any,B}}) where {B} = B
+buffertype(::Type{<:CuArray{<:Any,<:Any,B}}) where {B} = B
 function buffertype(datatype::Type{<:CuArray})
-  println(
-    "CuArray definitions require a CUDA.Mem buffer try $(datatype{default_buffertype()})"
-  )
-  throw(TypeError)
+  return error("No buffer type specified in type $(datatype)")
 end
 
 default_buffertype() = CUDA.Mem.DeviceBuffer
@@ -12,23 +9,45 @@ function set_eltype(arraytype::Type{<:CuArray}, eltype::Type)
   return CuArray{eltype,NDTensors.ndims(arraytype),buffertype(arraytype)}
 end
 
-function set_ndims(arraytype::Type{<:CuArray{T,<:Any,<:Any}}, ndims) where {T}
+function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
   return CuArray{eltype(arraytype),ndims,buffertype(arraytype)}
 end
 
-function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
-  return CuArray{eltype(arraytype),ndims,default_buffertype()}
-end
-
 function set_ndims(arraytype::Type{<:CuArray}, ndims)
-  return CuArray{NDTensors.default_eltype(),ndims,default_buffertype()}
+  return CuArray{NDTensors.default_eltype(),ndims,buffertype(arraytype)}
 end
 
-function NDTensors.set_eltype_if_unspecified(
-  arraytype::Type{CuVector{T}}, eltype::Type
+function set_eltype_if_unspecified(
+  arraytype::Type{<:CuArray{T}}, ::Type=NDTensors.default_eltype()
 ) where {T}
   return arraytype
 end
-function NDTensors.set_eltype_if_unspecified(arraytype::Type{CuVector}, eltype::Type)
-  return CuVector{eltype}
+function set_eltype_if_unspecified(
+  arraytype::Type{<:CuArray}, eltype::Type=NDTensors.default_eltype()
+)
+  return similartype(arraytype, eltype)
+end
+
+function similartype(data::CuArray, eltype::Type)
+  return similartype(typeof(data), eltype)
+end
+
+function similartype(datatype::Type{<:CuArray}, eltype::Type)
+  return CuArray{eltype,ndims(datatype)}
+end
+
+function similartype(datatype::Type{<:CuArray{<:Any,<:Any,B}}, eltype::Type) where {B}
+  return CuArray{eltype,ndims(datatype),buffertype(datatype)}
+end
+
+function set_buffertype_if_unspecified(
+  arraytype::Type{<:CuArray{<:Any,<:Any,B}}, ::Type=default_buffertype()
+) where {B}
+  return arraytype
+end
+
+function set_buffertype_if_unspecified(
+  arraytype::Type{<:CuArray{<:Any,<:Any}}, buf::Type=default_buffertype()
+)
+  return CuArray{eltype(arraytype),ndims(arraytype),buf}
 end

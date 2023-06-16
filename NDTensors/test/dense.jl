@@ -2,8 +2,17 @@ using NDTensors
 
 using Test
 
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
+
 @testset "Dense Tensors" begin
-  for dev in devs
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
+  @testset "test device: $dev" for dev in devs
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor((3, 4)))
@@ -142,7 +151,6 @@ using Test
         dim::Int
       end
       NDTensors.dim(i::MyInd) = i.dim
-      NDTensors.is_blocked(::Type{<:MyInd}) = false
 
       T = dev(Tensor((MyInd(2), MyInd(3), MyInd(4))))
       @test store(T) isa Dense

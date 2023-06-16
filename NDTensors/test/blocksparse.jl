@@ -1,10 +1,18 @@
 using NDTensors
 using LinearAlgebra
 using Test
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
-  @testset "Test for different backend storage" for dev in devs
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
+  @testset "test device: $dev" for dev in devs
     # Indices
     indsA = ([2, 3], [4, 5])
 
