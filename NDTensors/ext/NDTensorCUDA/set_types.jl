@@ -9,7 +9,7 @@ function set_eltype(arraytype::Type{<:CuArray}, eltype::Type)
   return CuArray{eltype,NDTensors.ndims(arraytype),buffertype(arraytype)}
 end
 
-function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where{T}
+function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
   return CuArray{eltype(arraytype),ndims,buffertype(arraytype)}
 end
 
