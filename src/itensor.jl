@@ -667,6 +667,7 @@ randomITensor() = randomITensor(Random.default_rng())
 randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
+zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 
 #
 # Construct from Array

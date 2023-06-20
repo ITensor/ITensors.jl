@@ -3,5 +3,8 @@ function set_eltype(arraytype::Type{<:TensorStorage}, eltype::Type)
 end
 
 function set_ndims(arraytype::Type{<:TensorStorage}, ndims)
-  return set_datatype(arraytype, set_ndims(datatype(arraytype), ndims))
+  # TODO: Change to this once `TensorStorage` types support wrapping
+  # non-AbstractVector types.
+  # return set_datatype(arraytype, set_ndims(datatype(arraytype), ndims))
+  return arraytype
 end

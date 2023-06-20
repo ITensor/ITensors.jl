@@ -448,6 +448,13 @@ end
     @test all(ITensors.data(A) .== 1.0)
   end
 
+  @testset "zero" begin
+    i = Index(2)
+    A = randomITensor(i)
+    B = zero(A)
+    @test false * A ≈ B
+  end
+
   @testset "copyto!" begin
     i = Index(2, "i")
     j = Index(2, "j")
