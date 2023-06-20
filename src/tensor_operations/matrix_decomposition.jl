@@ -390,6 +390,8 @@ remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr) = (Q * dag(vαl), R * d
 remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, vαr) = (Q, R * dag(vαr))
 remove_trivial_index(Q::ITensor, R::ITensor, vαl, ::Nothing) = (Q * dag(vαl), R)
 remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, ::Nothing) = (Q, R)
+remove_trivial_index(R::ITensor, vαr) = R * dag(vαr)
+remove_trivial_index(R::ITensor, ::Nothing) = R
 
 #
 #  Force users to knowingly ask for zero indices using qr(A,()) syntax
@@ -422,8 +424,13 @@ lq(A::ITensor, Linds...; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs.
 # Core function where both left and right indices are supplied as tuples or vectors
 # Handle default tags and dispatch to generic qx/xq functions.
 #
-function qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", kwargs...)
-  return qx(qr, A, Linds, Rinds; tags, kwargs...)
+function qr(
+  A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", pivot=false, kwargs...
+)
+  if VERSION >= v"1.7" && typeof(pivot) == RowNorm
+    @warn "Please use ColumnNorm() instead of RowNorm() for pivoted qr decomposition."
+  end
+  return qx(qr, A, Linds, Rinds; tags, pivot=pivot, kwargs...)
 end
 function ql(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,ql", kwargs...)
   return qx(ql, A, Linds, Rinds; tags, kwargs...)
@@ -431,13 +438,20 @@ end
 function rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs...)
   return xq(ql, A, Linds, Rinds; tags, kwargs...)
 end
-function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs...)
-  return xq(qr, A, Linds, Rinds; tags, kwargs...)
+function lq(
+  A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", pivot=false, kwargs...
+)
+  if VERSION >= v"1.7" && typeof(pivot) == ColumnNorm
+    @warn "Please use RowNorm() instead of ColumnNorm() for pivoted lq decomposition."
+  end
+  return xq(qr, A, Linds, Rinds; tags, pivot=pivot, kwargs...)
 end
 #
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
 #
-function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
+function qx(
+  qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, return_Rp=false, kwargs...
+)
   # Strip out any extra indices that are not in A.
   # Unit test test/base/test_itensor.jl line 1469 will fail without this.
   Linds = commoninds(A, Linds)
@@ -458,7 +472,8 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   #
   AC = permute(AC, cL, cR; allow_alias=true)
 
-  QT, XT = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  QXp = qx(tensor(AC); return_Rp, kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  QT, XT = QXp[1], QXp[2]
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
@@ -472,17 +487,27 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   q = commonind(Q, X)
   Q = settags(Q, tags, q)
   X = settags(X, tags, q)
-  q = settags(q, tags)
 
-  return Q, X, q
+  # repeat all operations of Xp if requested by user.
+  if return_Rp && length(QXp) == 3 # GPU code does not support new features yet, so we check length as well.
+    Xp = itensor(QXp[3]) * dag(CR)
+    Xp = remove_trivial_index(Xp, vαr)
+    Xp = settags(Xp, tags, q)
+  else
+    Xp = nothing
+  end
+
+  q = settags(q, tags) #fix tags of q last.
+
+  return Q, X, q, Xp
 end
 
 #
 #  Generic function implementing both rq and lq decomposition. Implemented using qr/ql 
 #  with swapping the left and right indices.  The X tensor = R or L. 
 #
-function xq(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
-  Q, X, q = qx(A, Rinds, Linds; kwargs...)
+function xq(qxf::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
+  Q, X, q, perm = qx(qxf, A, Rinds, Linds; tags=tags, kwargs...)
   #
   # fix up the tag name for the index between Q and L.
   #  
@@ -490,7 +515,7 @@ function xq(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   X = settags(X, tags, q)
   q = settags(q, tags)
 
-  return X, Q, q
+  return X, Q, q, perm
 end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))

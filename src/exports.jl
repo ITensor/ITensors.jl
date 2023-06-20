@@ -393,3 +393,7 @@ export
   hasqns,
   nblocks,
   qn
+
+if VERSION >= v"1.7"
+  export RowNorm
+end

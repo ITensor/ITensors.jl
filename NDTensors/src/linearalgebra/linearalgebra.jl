@@ -366,39 +366,180 @@ function LinearAlgebra.eigen(
   V = complex(tensor(Dense(vec(VM)), Vinds))
   return D, V, spec
 end
+#
+#  Trim out n rows of R based on norm(R_nn)<cutoff, where R_nn is bottom n rows of R. 
+#  Also trim the corresponding columns of Q. 
+#
+function trim_rows(
+  Q::AbstractMatrix, R::AbstractMatrix, atol::Float64, rtol::Float64; verbose=false
+)
+  nr = size(R, 1)
+  @assert size(Q, 2) == nr #Sanity check.
+  #
+  #  Find the largest n such than norm(R_nn)<=cutoff, where Rnn if the bottom right block with rows
+  #  from n:nr.  n=last_row_to_keep+1
+  #
+  last_row_to_keep = nr
+  do_atol, do_rtol = atol >= 0.0, rtol >= 0.0
+  # for r in nr:-1:1
+  #   Rnn=norm(R[r:nr, :])
+  #   R11=norm(R[1:r-1, :])
+  #   if (do_atol && Rnn > atol) || (do_rtol && Rnn/R11 > rtol)
+  #     last_row_to_keep = r
+  #     break
+  #   end
+  # end
+  #
+  #  Could also do the same test but only looking at the diagonals
+  #
+  dR = diag(R)
+  for r in nr:-1:1
+    Rnn = norm(dR[r:nr])
+    R11 = norm(dR[1:(r - 1)])
+    if (do_atol && Rnn > atol) || (do_rtol && Rnn / R11 > rtol)
+      last_row_to_keep = r
+      break
+    end
+  end
 
-function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
-  qxf = positive ? qr_positive : qr
-  return qx(qxf, T; kwargs...)
-end
-function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
-  qxf = positive ? ql_positive : ql
-  return qx(qxf, T; kwargs...)
+  num_zero_rows = nr - last_row_to_keep
+  if num_zero_rows == 0
+    verbose &&
+      println("Rank Reveal removing $num_zero_rows rows with atol=$atol, rtol=$rtol")
+    return Q, R
+  end
+  #
+  # Useful output for trouble shooting.
+  #
+  if verbose
+    println("Rank Reveal removing $num_zero_rows rows with atol=$atol, rtol=$rtol")
+  end
+
+  return Q[:, 1:last_row_to_keep], R[1:last_row_to_keep, :]
 end
 
+if VERSION >= v"1.7"
+  struct RowNorm end #for row pivoting lq
+end
+
+qr(T::DenseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
+ql(T::DenseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
+
+# LinearAlgebra qr takes types like Val(true) of ColumnNorm for control of pivoting.
+# We some helper functions to deal with all these types changing between julia versions.
+#
+pivot_to_Bool(pivot::Bool)::Bool = pivot
+pivot_to_Bool(::Val{false})::Bool = false
+pivot_to_Bool(::Val{true})::Bool = true
+if VERSION < v"1.7"
+  call_pivot(bpivot::Bool, ::Function) = Val(bpivot)
+end
+if VERSION >= v"1.7"
+  pivot_to_Bool(pivot::NoPivot)::Bool = false
+  pivot_to_Bool(pivot::ColumnNorm)::Bool = true
+  pivot_to_Bool(pivot::RowNorm)::Bool = true
+  function call_pivot(bpivot::Bool, qx::Function)
+    if qx == qr
+      return bpivot ? ColumnNorm() : NoPivot() # LinearAlgebra
+    else
+      return Val(bpivot) # MatrixFactorizations
+    end
+  end
+end
+
+matrix(Q::LinearAlgebra.QRCompactWYQ) = Matrix(Q)
+function matrix(Q::MatrixFactorizations.QLPackedQ)
+  n, m = size(Q.factors)
+  if n <= m
+    return Matrix(Q)
+  else
+    return Q * Matrix(LinearAlgebra.I, m, m)
+  end
+end
 #
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
-  QM, XM = qx(matrix(T))
-  # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
-  # It gets converted to matrix below.
-  # Make the new indices to go onto Q and R
-  q, r = inds(T)
-  q = dim(q) < dim(r) ? sim(q) : sim(r)
-  IndsT = indstype(T) #get the index type
+function qx(
+  qx::Function,
+  T::DenseTensor{<:Any,2};
+  positive=false,
+  pivot=call_pivot(false, qx),
+  atol=-1.0, #absolute tolerance for rank reduction
+  rtol=-1.0, #relative tolerance for rank reduction
+  block_rtol=-1.0, #This is supposed to be for block sparse, but we reluctantly accept it here.
+  return_Rp=false,
+  verbose=false,
+  kwargs...,
+)
+  bpivot = pivot_to_Bool(pivot) #We need a simple bool for making decisions below.
+
+  if rtol < 0.0 && block_rtol >= 0.0
+    rtol = block_rtol
+  end
+  do_rank_reduction = (atol >= 0.0) || (rtol >= 0.0)
+  if do_rank_reduction && qx == ql
+    @warn "User requested rq/ql decomposition with atol=$atol, rtol=$rtol." *
+      "  Rank reduction requires column/row pivoting which is not supported for rq/ql decomposition in lapack/ITensors"
+    do_rank_reduction = false
+  end
+  if bpivot && qx == ql
+    @warn "User requested rq/ql decomposition with row/column pivoting." *
+      "  Pivoting is not supported for rq/ql decomposition in lapack/ITensors"
+    bpivot = false
+  end
+  if do_rank_reduction #if do_rank_reduction==false then don't change bpivot.
+    bpivot = true
+  end
+  if !bpivot && return_Rp
+    @warn "User requested return of Rp matrix with no pivoting." *
+      "  Please eneable QR/LQ with pivoting to return the Rp matrix."
+    return_Rp = false
+  end
+
+  pivot = call_pivot(bpivot, qx) #Convert the bool to whatever type the qx function expects.
+  if bpivot
+    QM, XM, p = qx(matrix(T), pivot) #with colun pivoting
+    QM, XM = trim_rows(Matrix(QM), XM, atol, rtol; verbose=verbose)
+  else
+    QM, XM = qx(matrix(T), pivot) #no column pivoting
+    QM = matrix(QM)
+    p = nothing
+  end
+  #
+  #  Gauge fix diagonal of X into positive definite form. 
+  #
+  positive && qx_positive!(qx, QM, XM)
+  #
+  #  undo the permutation on R, so the T=Q*R again.
+  #
+  if bpivot
+    if return_Rp
+      XMp = XM # If requested save the permuted columns version of X
+    end
+    XM = XM[:, invperm(p)] # un-permute the columns of X
+  end
+  #
+  # Make the new indices to go onto Q and X
+  #
+  IndsT = indstype(T) #get the indices type
+  @assert IndsT.parameters[1] == IndsT.parameters[2] #they better be the same!
+  IndexT = IndsT.parameters[1] #establish the single index type.
+  q = IndexT(size(XM)[1]) #create the Q--X link index.
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
-  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
+  Q = tensor(Dense(vec(QM)), Qinds)
   X = tensor(Dense(vec(XM)), Xinds)
-  return Q, X
+  if return_Rp
+    Xp = tensor(Dense(vec(XMp)), Xinds)
+  else
+    Xp = nothing
+  end
+
+  return Q, X, Xp
 end
 
-#
-# Just flip signs between Q and R to get all the diagonals of R >=0.
-# For rectangular M the indexing for "diagonal" is non-trivial.
-#
+# Required by svd_recursive 
 """
     qr_positive(M::AbstractMatrix)
 
@@ -423,74 +564,23 @@ function qr_positive(M::AbstractMatrix)
   return (Q, R)
 end
 
-"""
-    ql_positive(M::AbstractMatrix)
-
-Compute the QL decomposition of a matrix M
-such that the diagonal elements of L are
-non-negative. Such a QL decomposition of a
-matrix is unique. Returns a tuple (Q,L).
-"""
-function ql_positive(M::AbstractMatrix)
-  sparseQ, L = ql(M)
-  Q = convert(Matrix, sparseQ)
-  nr, nc = size(L)
-  dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
-  for c in 1:(nc - dc)
-    if L[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
-      sign_Lc = sign(L[c, c + dc])
-      if c <= nr && !isone(sign_Lc)
-        L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
-        Q[:, c] *= conj(sign_Lc)
+#
+#  Semi generic function for gauge fixing the diagonal of X into positive definite form.
+#  becuase the diagonal is difficult to locate for rectangular X (it moves between R and L)
+#  we use qx==ql to know if X is lower or upper.
+#
+function qx_positive!(qx::Function, Q::AbstractMatrix, X::AbstractMatrix)
+  nr, nc = size(X)
+  dc = (nc > nr && qx == ql) ? nc - nr : 0 #diag is shifted over by dc if nc>nr
+  for c in 1:Base.min(nr, nc)
+    if X[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Xc = sign(X[c, c + dc])
+      if !isone(sign_Xc)
+        X[c, :] *= sign_Xc
+        Q[:, c] *= conj(sign_Xc)
       end
     end
   end
-  return (Q, L)
-end
-
-#
-#  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
-#  before letting lapack overwirte it. 
-#
-function ql(A::AbstractMatrix; kwargs...)
-  Base.require_one_based_indexing(A)
-  T = eltype(A)
-  AA = similar(A, LinearAlgebra._qreltype(T), size(A))
-  copyto!(AA, A)
-  return ql!(AA; kwargs...)
-end
-#
-# This is where the low level call to lapack actually occurs.  Most of the work is
-# about unpacking Q and L from the A matrix.
-#
-function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
-  tau = Base.similar(A, min(size(A)...))
-  x = LAPACK.geqlf!(A, tau)
-  #save L from the lower portion of A, before orgql! mangles it!
-  nr, nc = size(A)
-  mn = min(nr, nc)
-  L = similar(A, (mn, nc))
-  for r in 1:mn
-    for c in 1:(r + nc - mn)
-      L[r, c] = A[r + nr - mn, c]
-    end
-    for c in (r + 1 + nc - mn):nc
-      L[r, c] = 0.0
-    end
-  end
-  # Now we need shift the orth vectors from the right side of Q over the left side, before
-  if (mn < nc)
-    for r in 1:nr
-      for c in 1:mn
-        A[r, c] = A[r, c + nc - mn]
-      end
-    end
-    for r in 1:nr
-      A = A[:, 1:mn] #whack the extra columns in A.
-    end
-  end
-  LAPACK.orgql!(A, tau)
-  return A, L
 end
 
 # TODO: support alg keyword argument to choose the svd algorithm

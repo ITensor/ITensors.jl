@@ -304,7 +304,9 @@ qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #  This code thanks to Niklas Tausendpfund 
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
+function qx(
+  qx::Function, T::BlockSparseTensor{<:Any,2}; block_rtol=-1.0, return_Rp=false, kwargs...
+)
   ElT = eltype(T)
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
@@ -312,20 +314,24 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
 
   Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
   Xs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+  if return_Rp
+    Xps = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+  end
 
   for (jj, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
-    QXb = qx(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+    QXb = qx(blockT; rtol=block_rtol, return_Rp, kwargs...) #call dense qr at src/linearalgebra.jl 387
 
     if (isnothing(QXb))
       return nothing
     end
 
-    Q, X = QXb
-    Qs[jj] = Q
-    Xs[jj] = X
+    Qs[jj] = QXb[1]
+    Xs[jj] = QXb[2]
+    if return_Rp
+      Xps[jj] = QXb[3]
+    end
   end
-
   #
   # Make the new index connecting Q and R  
   #
@@ -352,13 +358,17 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
 
   Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
   X = BlockSparseTensor(ElT, undef, nzblocksX, indsX)
+  Xp = return_Rp ? BlockSparseTensor(ElT, undef, nzblocksX, indsX) : nothing
 
   for n in 1:nnzblocksT
     blockview(Q, nzblocksQ[n]) .= Qs[n]
     blockview(X, nzblocksX[n]) .= Xs[n]
+    if return_Rp
+      blockview(Xp, nzblocksX[n]) .= Xps[n]
+    end
   end
 
-  return Q, X
+  return Q, X, Xp
 end
 
 function exp(

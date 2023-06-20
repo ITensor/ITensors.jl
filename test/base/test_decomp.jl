@@ -1,4 +1,6 @@
-using ITensors, LinearAlgebra, Test
+using ITensors, LinearAlgebra, Test, Random
+
+Random.seed!(314159)
 
 #
 #  Decide if rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
@@ -66,6 +68,43 @@ function is_upper(A::ITensor, r::Index)::Bool
   end
 end
 is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
+
+#
+#  Makes all columns lineary depenedent but scaled differently.
+#
+function rank_fix(A::ITensor, Linds...)
+  Lis = commoninds(A, (Linds...))
+  Ris = uniqueinds(A, Lis)
+  #
+  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
+  #
+  CL, CR = combiner(Lis...), combiner(Ris...)
+  cL, cR = combinedind(CL), combinedind(CR)
+  AC = A * CR * CL
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
+  end
+  At = NDTensors.tensor(AC)
+  nc = dim(At, 2)
+  @assert nc >= 2
+  if hasqns(At)
+    # In this case we make each nz block have rank=1
+    expected_rank = nnzblocks(At)
+    for b in nzblocks(At)
+      bv = ITensors.blockview(At, b)
+      nr, nc = dims(bv)
+      for c in 2:nc
+        bv[:, c] = bv[:, 1] * 1.05^c
+      end
+    end
+  else
+    for c in 2:nc
+      At[:, c] = At[:, 1] * 1.05^c
+    end
+    expected_rank = 1
+  end
+  return itensor(At) * dag(CL) * dag(CR), expected_rank
+end
 
 function diag_upper(l::Index, A::ITensor)
   At = NDTensors.tensor(A * combiner(noncommoninds(A, l)...))
@@ -330,23 +369,28 @@ end
     A = randomITensor(l, s, s', r)
     Ainds = inds(A)
 
-    Q, R, q = qr(A, Ainds[1:ninds]; positive=true)
+    Q, R, q, p = qr(A, Ainds[1:ninds]; positive=true)
     @test min(diag_upper(q, R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    Q, L, q = ql(A, Ainds[1:ninds]; positive=true)
+    @test isnothing(p)
+    Q, L, q, p = ql(A, Ainds[1:ninds]; positive=true)
     @test min(diag_lower(q, L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test isnothing(p)
 
-    R, Q, q = rq(A, Ainds[1:ninds]; positive=true)
+    R, Q, q, p = rq(A, Ainds[1:ninds]; positive=true)
     @test min(diag_lower(q, R)...) > 0.0 #transpose R is lower
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    L, Q, q = lq(A, Ainds[1:ninds]; positive=true)
+    @test isnothing(p)
+
+    L, Q, q, p = lq(A, Ainds[1:ninds]; positive=true)
     @test min(diag_upper(q, L)...) > 0.0 #transpose L is upper
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test isnothing(p)
   end
 
   @testset "QR/QL block sparse with positive R" begin
@@ -354,12 +398,226 @@ end
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, dag(s'), r)
-    Q, R, q = qr(A, l, s, dag(s'); positive=true)
+    Q, R, q, p = qr(A, l, s, dag(s'); positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
-    Q, L, q = ql(A, l, s, dag(s'); positive=true)
+    @test isnothing(p)
+
+    Q, L, q, p = ql(A, l, s, dag(s'); positive=true)
     @test min(diag(L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
+    @test isnothing(p)
+  end
+
+  @testset "Dense rank revealing QR/LQ decomp interface options" begin
+    l = Index(5, "l")
+    s = Index(2, "s")
+    r = Index(5, "r")
+    A = randomITensor(Float64, l, s, s', r)
+    qrinds = inds(A)[1:2]
+    rinds = noncommoninds(A, qrinds)
+    A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
+
+    Q, R = qr(A, l, s) # no pivoting
+    Q, R, iq = qr(A, qrinds) # no pivoting
+    @test dim(iq) == dim(qrinds)
+    Q, R, iq, Rp = qr(A, qrinds) # no pivoting
+    @test isnothing(Rp)
+    @test dim(iq) == dim(qrinds)
+
+    #  Q, R, iq, p = qx(A,qrinds; pivot=Val(false)) not supported
+    Q, R, iq, Rp = qr(A, qrinds; pivot=false) # no pivoting
+    @test isnothing(Rp)
+    @test dim(iq) == dim(qrinds)
+
+    Q, R, iq, Rp = qr(A, qrinds; pivot=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test isnothing(Rp)
+    @test dim(iq) == dim(qrinds)
+
+    Q, R, iq, Rp = qr(A, qrinds; pivot=true, return_Rp=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == dim(qrinds)
+
+    Q, R, iq, Rp = qr(A, qrinds; atol=1e-14, return_Rp=true) # absolute tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, Rp = qr(A, qrinds; rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, Rp = qr(A, qrinds; block_rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+
+    #  LQ versions
+
+    L, Q = lq(A, l, s) # no pivoting
+    L, Q, iq = lq(A, qrinds) # no pivoting
+    @test dim(iq) == dim(qrinds)
+    L, Q, iq, Lp = lq(A, qrinds) # no pivoting
+    @test isnothing(Lp)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; pivot=false) # no pivoting
+    @test isnothing(Lp)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; pivot=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test isnothing(Lp)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; pivot=true, return_Rp=true) # pivoting but no rank reduction, sets `pivot=ColumnNorm()` internally
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
+    @test dim(iq) == dim(qrinds)
+
+    L, Q, iq, Lp = lq(A, qrinds; atol=1e-14, return_Rp=true) # absolute tolerance for rank reduction
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
+    @test dim(iq) == expected_rank
+
+    L, Q, iq, Lp = lq(A, qrinds; rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
+    @test dim(iq) == expected_rank
+
+    L, Q, iq, Lp = lq(A, qrinds; block_rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Lp)
+    @test dims(Lp) == dims(L)
+    @test dim(iq) == expected_rank
+  end
+
+  if VERSION >= v"1.7"
+    @testset "Dense rank revealing QR/LQ decomp interface options, julia VERSION>=1.7" begin
+      l = Index(5, "l")
+      s = Index(2, "s")
+      r = Index(5, "r")
+      A = randomITensor(Float64, l, s, s', r)
+      qrinds = inds(A)[1:2]
+      rinds = noncommoninds(A, qrinds)
+      A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
+
+      Q, R, iq, Rp = qr(A, qrinds; pivot=NoPivot()) # no pivoting
+      @test isnothing(Rp)
+      @test dim(iq) == dim(qrinds)
+
+      L, Q, iq, Lp = lq(A, qrinds; pivot=NoPivot()) # no pivoting
+      @test isnothing(Lp)
+      @test dim(iq) == dim(qrinds)
+
+      Q, R, iq, Rp = qr(A, qrinds; pivot=ColumnNorm()) # column pivoting, no rank reduction
+      @test isnothing(Rp)
+      @test dim(iq) == dim(qrinds)
+
+      Q, R, iq, Rp = qr(A, qrinds; pivot=ColumnNorm(), return_Rp=true) # column pivoting, no rank reduction
+      @test !isnothing(Rp)
+      @test dims(Rp) == dims(R)
+      @test dim(iq) == dim(qrinds)
+
+      L, Q, iq, Lp = lq(A, qrinds; pivot=RowNorm(), return_Rp=true) # row pivoting, no rank reduction
+      @test !isnothing(Lp)
+      @test dims(Lp) == dims(L)
+      @test dim(iq) == dim(qrinds)
+
+      @test_logs (
+        :warn, "Please use ColumnNorm() instead of RowNorm() for pivoted qr decomposition."
+      ) Q, R, iq, Rp = qr(A, qrinds; pivot=RowNorm(), return_Rp=true) # column pivoting, no rank reduction
+      @test !isnothing(Rp)
+      @test dims(Rp) == dims(R)
+      @test dim(iq) == dim(qrinds)
+
+      @test_logs (
+        :warn, "Please use RowNorm() instead of ColumnNorm() for pivoted lq decomposition."
+      ) L, Q, iq, Lp = lq(A, qrinds; pivot=ColumnNorm(), return_Rp=true) # row pivoting, no rank reduction
+      @test !isnothing(Lp)
+      @test dims(Lp) == dims(L)
+      @test dim(iq) == dim(qrinds)
+    end
+  end
+
+  @testset "Blocksparse rank revealing QR/LQ decomp interface options" begin
+    space = [QN("Sz", 0) => 4, QN("Sz", -2) => 4, QN("Sz", 2) => 4]
+    site_space = [QN("Sz", -1) => 1, QN("Sz", 1) => 1]
+    l = Index(space, "l")
+    s = Index(site_space, "s")
+    r = Index(space, "r")
+    A = randomITensor(Float64, l, s, s', r)
+    qrinds = inds(A)[1:2]
+    rinds = noncommoninds(A, qrinds)
+    A, expected_rank = rank_fix(A, qrinds) #make all columns linear dependent on column 1, so rank==1.
+
+    Q, R, iq, Rp = qr(A, qrinds; atol=1e-14) # absolute tolerance for rank reduction
+    @test isnothing(Rp)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, Rp = qr(A, qrinds; atol=1e-14, return_Rp=true) # absolute tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, Rp = qr(A, qrinds; block_rtol=1e-15, return_Rp=true) # relative tolerance for rank reduction
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+
+    Q, R, iq, Rp = qr(A, qrinds; block_rtol=1e-15, rtol=1000.0, return_Rp=true) # rtol ignored.
+    @test !isnothing(Rp)
+    @test dims(Rp) == dims(R)
+    @test dim(iq) == expected_rank
+  end
+
+  @testset "Rank revealing QR/LQ decomp on MPO dense $elt tensor" for ninds in [1, 2, 3],
+    elt in [Float64, ComplexF64]
+
+    l = Index(5, "l")
+    s = Index(2, "s")
+    r = Index(5, "r")
+    A = randomITensor(elt, l, s, s', r)
+
+    Ainds = inds(A)
+    A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
+    Q, R, q, Rp = qr(A, Ainds[1:ninds]; atol=1e-12)
+    @test dim(q) == expected_rank #check that we found rank==1
+    @test A ≈ Q * R atol = 1e-13
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test isnothing(Rp)
+
+    L, Q, q, Rp = lq(A, Ainds[1:ninds]; atol=1e-12)
+    @test dim(q) == expected_rank #check that we found rank==1
+    @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test isnothing(Rp)
+  end
+
+  @testset "Rank revealing QR/LQ decomp on MPO block-sparse  $elt tensor" for ninds in
+                                                                              [1, 2, 3],
+    elt in [Float64]
+
+    space = [QN("Sz", 0) => 4, QN("Sz", -2) => 4, QN("Sz", 2) => 4]
+    site_space = [QN("Sz", -1) => 1, QN("Sz", 1) => 1]
+    l = Index(space, "l")
+    s = Index(site_space, "s")
+    r = Index(space, "r")
+    A = randomITensor(elt, l, s, s', r)
+
+    Ainds = inds(A)
+    A, expected_rank = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
+    Q, R, q, Rp = qr(A, Ainds[1:ninds]; block_rtol=1e-12)
+    @test dim(q) == expected_rank #check that we found teh correct rank
+    @test A ≈ Q * R atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+    @test isnothing(Rp)
+
+    L, Q, q, Rp = lq(A, Ainds[1:ninds]; block_rtol=1e-12)
+    @test dim(q) == expected_rank #check that we found rank==1
+    @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+    @test isnothing(Rp)
   end
 
   @testset "factorize with QR" begin
