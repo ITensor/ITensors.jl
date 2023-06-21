@@ -71,9 +71,9 @@ Tuple(is::IndexSet) = _Tuple(is)
 NTuple{N}(is::IndexSet) where {N} = _NTuple(Val(N), is)
 
 """
-    not(inds::Union{IndexSet, Tuple{Vararg{<:Index}}})
+    not(inds::Union{IndexSet, Tuple{Vararg{Index}}})
     not(inds::Index...)
-    !(inds::Union{IndexSet, Tuple{Vararg{<:Index}}})
+    !(inds::Union{IndexSet, Tuple{Vararg{Index}}})
     !(inds::Index...)
 
 Represents the set of indices not in the specified

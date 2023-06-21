@@ -280,16 +280,16 @@ end
 # B .+= A
 #
 
-function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{<:ITensor}}})
+function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}})
   return (r, t) -> bc.f(r, t)
 end
 
-function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{<:ITensor}}})
+function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}})
   return (r, t) -> bc.f(r, t)
 end
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{<:ITensor}}}
+  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}}
 )
   if T === bc.args[1]
     A = bc.args[2]
@@ -307,7 +307,7 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{<:ITensor}}}
+  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}}
 )
   if T === bc.args[1]
     A = bc.args[2]
@@ -380,7 +380,7 @@ end
 
 function Base.copyto!(
   T::ITensor,
-  bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{<:Broadcasted}}},
+  bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}},
 )
   bc_α = bc.args[1]
   bc_β = bc.args[2]
@@ -417,7 +417,7 @@ end
 function Base.copyto!(
   T::ITensor,
   bc::Broadcasted{
-    ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{<:Union{<:ITensor,<:Number}}}
+    ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{Union{<:ITensor,<:Number}}}
   },
 )
   α = find_type(Number, bc.args)
@@ -496,7 +496,7 @@ end
 #
 
 function Base.copyto!(
-  R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{<:Broadcasted}}}
+  R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}}
 )
   bc1 = bc.args[1]
   bc2 = bc.args[2]
