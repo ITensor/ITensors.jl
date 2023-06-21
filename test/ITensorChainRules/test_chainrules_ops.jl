@@ -58,6 +58,7 @@ using Zygote: ZygoteRuleConfig, gradient
       rtol=1.0e-7,
       atol=1.0e-7,
     )
+    return nothing
   end
 
   @static if VERSION > v"1.8"
