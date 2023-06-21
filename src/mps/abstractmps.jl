@@ -1448,6 +1448,8 @@ function +(::Algorithm"directsum", ψ⃗::MPST...) where {MPST<:AbstractMPS}
 
 
   # Output tensor
+
+  #Make sure that the output tensor is the same type as the input one
   if typeof(first(ψ⃗)) == MPO
     ϕ = MPO(n)
   else
