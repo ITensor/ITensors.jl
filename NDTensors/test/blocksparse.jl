@@ -88,6 +88,18 @@ using Test
   @test conj(data(store(A))) == data(store(conj(A)))
   @test typeof(conj(A)) <: BlockSparseTensor
 
+  @testset "similartype regression test" begin
+    # Regression test for issue seen in:
+    # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
+    # Previously, `similartype` wasn't using information about the dimensions
+    # properly and was returning a `BlockSparse` storage of the dimensions
+    # of the input tensor.
+    T = BlockSparseTensor([(1, 1)], ([2], [2]))
+    @test NDTensors.ndims(
+      NDTensors.storagetype(NDTensors.similartype(typeof(T), ([2], [2], [2])))
+    ) == 3
+  end
+
   @testset "Random constructor" begin
     T = randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2]))
     @test nnzblocks(T) == 2

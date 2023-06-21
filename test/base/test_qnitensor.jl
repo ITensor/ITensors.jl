@@ -98,6 +98,20 @@ Random.seed!(1234)
     @test_throws ErrorException ITensor(A, i', dag(i); tol=1e-8)
   end
 
+  @testset "similartype regression test" begin
+    # Regression test for issue seen in:
+    # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
+    # Previously, `similartype` wasn't using information about the dimensions
+    # properly and was returning a `BlockSparse` storage of the dimensions
+    # of the input tensor.
+    i = Index([QN() => 2])
+    A = ITensor(i, i')
+    B = ITensor(i'')
+    C = A * B
+    @test NDTensors.ndims(NDTensors.storagetype(C)) == 3
+    @test C + ITensor(i, i', i'') == ITensor(i, i', i'')
+  end
+
   @testset "Construct from Array regression test" begin
     i = Index([QN(0) => 2, QN(1) => 2])
     T = itensor([0, 0, 1, 2], i)
