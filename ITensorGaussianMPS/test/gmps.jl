@@ -191,3 +191,49 @@ end
     @show "Completed test for: ", Delta, t
   end
 end
+
+@testset "Bad Terms" begin
+  @testset "Bad single" begin
+    os = OpSum()
+    os += -1.0, "Nupdn", 1
+    @test_throws Any h_hop = ITensorGaussianMPS.hopping_hamilontian(os)
+  end
+  @testset "Bad quadratic" begin
+    os = OpSum()
+    os += -1.0, "Ntot", 1, "Ntot", 2
+    @test_throws Any h_hop = ITensorGaussianMPS.hopping_hamilontian(os)
+  end
+end
+
+@testset "Rewrite Hamiltonians" begin
+  @testset "Spinless" begin
+    os = OpSum()
+    os += -1.0, "Cdag", 1, "C", 2
+    os += -1.0, "Cdag", 2, "C", 1
+    os += 2, "N", 1
+    os += 3, "N", 2
+    h_hop = ITensorGaussianMPS.hopping_hamiltonian(os)
+    @test h_hop[1, 1] == 2
+    @test h_hop[2, 2] == 3
+  end
+  @testset "Spin $o" for o in ("up", "dn")
+    os = OpSum()
+    os += -1.0, "Cdag$o", 1, "C$o", 2
+    os += -1.0, "Cdag$o", 2, "C$o", 1
+    os += 2, "N$o", 1
+    os += 3, "N$o", 2
+    h_hop = ITensorGaussianMPS.hopping_hamiltonian(os)
+    @test h_hop[1, 1] == 2
+    @test h_hop[2, 2] == 3
+  end
+  @testset "Spin $o" for o in ("↑", "↓")
+    os = OpSum()
+    os += -1.0, "c†$o", 1, "c$o", 2
+    os += -1.0, "c†$o", 2, "c$o", 1
+    os += 2, "n$o", 1
+    os += 3, "n$o", 2
+    h_hop = ITensorGaussianMPS.hopping_hamiltonian(os)
+    @test h_hop[1, 1] == 2
+    @test h_hop[2, 2] == 3
+  end
+end
