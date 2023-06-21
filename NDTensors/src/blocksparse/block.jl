@@ -20,7 +20,7 @@ end
 # Constructors
 #
 
-Block{N}(t::Tuple{Vararg{<:Any,N}}) where {N} = Block{N}(UInt.(t))
+Block{N}(t::Tuple{Vararg{Any,N}}) where {N} = Block{N}(UInt.(t))
 
 Block{N}(I::CartesianIndex{N}) where {N} = Block{N}(I.I)
 
@@ -38,7 +38,7 @@ Block(v::SVector{N}) where {N} = Block{N}(v)
 
 Block(t::NTuple{N,UInt}) where {N} = Block{N}(t)
 
-Block(t::Tuple{Vararg{<:Any,N}}) where {N} = Block{N}(t)
+Block(t::Tuple{Vararg{Any,N}}) where {N} = Block{N}(t)
 
 Block(::Tuple{}) = Block{0}(())
 
