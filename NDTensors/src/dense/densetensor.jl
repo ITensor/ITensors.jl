@@ -261,7 +261,7 @@ First T is permuted as `permutedims(3,2,1)`, then reshaped such
 that the original indices 3 and 2 are combined.
 """
 function permute_reshape(
-  T::DenseTensor{ElT,NT,IndsT}, pos::Vararg{<:Any,N}
+  T::DenseTensor{ElT,NT,IndsT}, pos::Vararg{Any,N}
 ) where {ElT,NT,IndsT,N}
   perm = flatten(pos...)
 

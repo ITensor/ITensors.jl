@@ -45,6 +45,14 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       CArray = transpose(array(Ai)) * array(Bi)
       @test CArray ≈ scalar(C)
     end
+    @testset "Test Matrix{ITensor} * Matrix{ITensor}" begin
+      M1 = [Aij Aij; Aij Aij]
+      M2 = [Ajk Ajk; Ajk Ajk]
+      M12 = M1 * M2
+      for x in 1:2, y in 1:2
+        @test M12[x, y] ≈ 2 * Aij * Ajk
+      end
+    end
     @testset "Test contract ITensors (Vector*Vectorᵀ -> Matrix)" begin
       C = Ai * Aj
       for ii in 1:dim(i), jj in 1:dim(j)

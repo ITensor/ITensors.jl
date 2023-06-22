@@ -42,7 +42,7 @@ end
 
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
-  ψ = ITensorGaussianMPS.slater_determinant_to_mera(s, Φ; blocksize=4)
+  ψ = ITensorGaussianMPS.slater_determinant_to_mera(s, Φ; maxblocksize=4)
 
   os = OpSum()
   for i in 1:N, j in 1:N
@@ -99,7 +99,7 @@ end
 
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
-  ψ = ITensorGaussianMPS.slater_determinant_to_mera(s, Φ; blocksize=4)
+  ψ = ITensorGaussianMPS.slater_determinant_to_mera(s, Φ; maxblocksize=4)
 
   os = OpSum()
   for i in 1:N, j in 1:N

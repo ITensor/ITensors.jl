@@ -41,7 +41,7 @@ _, u = eigen(h)
 
 # Create an mps for the free fermion ground state
 s = siteinds("Fermion", N; conserve_qns = true)
-ψ0 = slater_determinant_to_mps(s, Φ; blocksize = 4)
+ψ0 = slater_determinant_to_mps(s, Φ; maxblocksize = 4)
 
 # Make an interacting Hamiltonian
 U = 1.0

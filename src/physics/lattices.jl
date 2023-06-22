@@ -86,7 +86,7 @@ function square_lattice(Nx::Int, Ny::Int; kwargs...)::Lattice
         latt[b += 1] = LatticeBond(n, n + 1, x, y, x, y + 1)
       end
       if yperiodic && y == 1
-        latt[b += 1] = LatticeBond(n, n + Ny - 1, x, y, x, y + Ny)
+        latt[b += 1] = LatticeBond(n, n + Ny - 1, x, y, x, y + Ny - 1)
       end
     end
   end
