@@ -762,7 +762,7 @@ end
   end
 
   @testset "Other MPO contract algorithms" begin
-    # Regression test - ensure that output of "naive" algorithm is an 
+    # Regression test - ensure that output of "naive" algorithm is an
     # MPO not an MPS
     N = 8
     s = siteinds(2, N)
@@ -811,6 +811,45 @@ end
     L = MPO(K)
     result = sample(mt, L)
     @test result ≈ [1, 2, 1, 1, 2, 2]
+  end
+
+  @testset "MPO+MPO sum (directsum)" begin
+    N = 3
+    conserve_qns = true
+    s = siteinds("S=1/2", N; conserve_qns=conserve_qns)
+
+    ops = n -> isodd(n) ? "Sz" : "Id"
+    H₁ = MPO(s, ops)
+    H₂ = MPO(s, ops)
+
+    H = +(H₁, H₂; alg="directsum")
+    H_ref = +(H₁, H₂; alg="densitymatrix")
+
+    @test typeof(H) == typeof(H₁)
+    @test H_ref ≈ H
+    @test inner(H, H) ≈ inner_add(H₁, H₂)
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
+
+    α₁ = 2.2
+    α₂ = 3.4 + 1.2im
+
+    H = +(α₁ * H₁, H₂; alg="directsum")
+
+    @test typeof(H) == typeof(H₁)
+    @test inner(H, H) ≈ inner_add((α₁, H₁), H₂)
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
+
+    H = +(H₁, - H₂; alg="directsum")
+
+    @test typeof(H) == typeof(H₁)
+    @test inner(H, H) ≈ inner_add(H₁, (-1, H₂))
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
+
+    H = +(α₁ * H₁, - α₂ * H₂; alg="directsum")
+
+    @test typeof(H) == typeof(H₁)
+    @test inner(H, H) ≈ inner_add((α₁, H₁), (-α₂, H₂))
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
   end
 end
 
