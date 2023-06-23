@@ -64,14 +64,14 @@ mps = randomMPS(s, linkdims=2)
 # $$|\mathrm{GHZ}\rangle = \sum_{s_1 \dots s_4} A^{s_1}A^{s_2}A^{s_3}A^{s_4}|s_1 s_2 s_3 s_4 \rangle $$
 #
 # We can write the first site tensor $A^{s_1}$ as follows:
-# $$A^{s_1=0} = |0\rangle_1 = \begin{pmatrix} 1 & 0 \end{pmatrix} \quad\text{and}\quad A^{s_1=1} = |1\rangle_1 = \begin{pmatrix} 0 & 1 \end{pmatrix}.$$
+# $$A^{s_1=0} = \begin{pmatrix} 1 & 0 \end{pmatrix} \quad\text{and}\quad A^{s_1=1} = \begin{pmatrix} 0 & 1 \end{pmatrix}.$$
 # Here $A^{s_1=0}$ and $A^{s_1=1}$ are the slices of the first site tensor $A^{s_1}$ for when the physical site index $s_1$ is either 0 or 1:
 # <div style="margin-left:auto; margin-right:auto; width:300px;">
 # <img src="attachment:3d4ab42c-347d-4b40-a7e8-9b5d121f1388.png" width="300">
 # </div>
 #
 # Analogously we rewrite the last site tensor $A^{s_4}$ as follows:
-# $$A^{s_4=0} = |0\rangle_4 = \begin{pmatrix} 1 \\ 0 \end{pmatrix} \quad\text{and}\quad A^{s_4=1} = |1\rangle_4 = \begin{pmatrix} 0 \\ 1 \end{pmatrix}.$$
+# $$A^{s_4=0} = \begin{pmatrix} 1 \\ 0 \end{pmatrix} \quad\text{and}\quad A^{s_4=1} = \begin{pmatrix} 0 \\ 1 \end{pmatrix}.$$
 #
 # For sites $s_2$ and $s_3$ the slices have the shape as given in wikipedia:
 # $$A^{s_i=0} = \begin{pmatrix} 1 & 0\\ 0 & 0 \end{pmatrix} \quad \text{and} \quad A^{s_i=1} = \begin{pmatrix} 0 & 0\\ 0 & 1 \end{pmatrix}, \quad \text{for}\quad i=2,3$$
