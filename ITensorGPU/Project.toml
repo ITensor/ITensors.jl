@@ -1,7 +1,7 @@
 name = "ITensorGPU"
 uuid = "d89171c1-af8f-46b3-badf-d2a472317c15"
 authors = ["Katharine Hyatt", "Matthew Fishman <mfishman@flatironinstitute.org>"]
-version = "0.1.4"
+version = "0.1.5"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -29,7 +29,7 @@ ITensors = "0.3.27"
 NDTensors = "0.1.50"
 SimpleTraits = "0.9.4"
 StaticArrays = "1.2.13"
-Strided = "1.1.2"
+Strided = "1.1.2, 2"
 TimerOutputs = "0.5.13"
 cuTENSOR = "1.0.1"
 julia = "1.6"

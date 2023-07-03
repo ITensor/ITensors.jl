@@ -62,5 +62,8 @@ end
 
 function similartype(tensortype::Type{<:Tensor}, dims::Tuple)
   tensortype_new_inds = set_indstype(tensortype, dims)
-  return set_storagetype(tensortype_new_inds, similartype(storagetype(tensortype_new_inds)))
+  # Need to pass `dims` in case that information is needed to make a storage type,
+  # for example `BlockSparse` needs the number of dimensions.
+  storagetype_new_inds = similartype(storagetype(tensortype_new_inds), dims)
+  return set_storagetype(tensortype_new_inds, storagetype_new_inds)
 end

@@ -125,99 +125,31 @@ end
       @test eltype(cT) == ComplexF64
       @test nnzblocks(cT) == nnzblocks(T)
     end
+  @testset "similartype regression test" begin
+    # Regression test for issue seen in:
+    # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
+    # Previously, `similartype` wasn't using information about the dimensions
+    # properly and was returning a `BlockSparse` storage of the dimensions
+    # of the input tensor.
+    T = dev(BlockSparseTensor([(1, 1)], ([2], [2])))
+    @test NDTensors.ndims(
+      NDTensors.storagetype(NDTensors.similartype(typeof(T), ([2], [2], [2])))
+    ) == 3
+  end
 
-    @testset "Add with different blocks" begin
-      # Indices
-      inds = ([2, 3], [4, 5])
+  @testset "Random constructor" begin
+    T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
+    @test nnzblocks(T) == 2
+    @test nnz(T) == 8
+    @test eltype(T) == Float64
+    @test norm(T) ≉ 0
 
-      # Locations of non-zero blocks
-      locsA = [(1, 1), (1, 2), (2, 2)]
-      A = dev(BlockSparseTensor(locsA, inds...))
-      randn!(A)
-
-      locsB = [(1, 2), (2, 1)]
-      B = dev(BlockSparseTensor(locsB, inds...))
-      randn!(B)
-
-      R = A + B
-
-      @test nnz(R) == dim(R)
-      for I in eachindex(R)
-        @test R[I] == A[I] + B[I]
-      end
-    end
-
-    @testset "permutedims!! with different blocks" begin
-      # Indices
-      indsA = ([2, 3], [4, 5])
-
-      # Locations of non-zero blocks
-      locsA = [(1, 2), (2, 1)]
-      A = dev(BlockSparseTensor(locsA, indsA...))
-      randn!(A)
-
-      perm = (2, 1)
-
-      locsB = [(2, 1)]
-      indsB = NDTensors.permute(indsA, perm)
-      B = dev(BlockSparseTensor(locsB, indsB...))
-      randn!(B)
-
-      R = permutedims!!(B, A, perm)
-
-      @test nnz(R) == nnz(A)
-      for I in eachindex(A)
-        @test R[NDTensors.permute(I, perm)] == A[I]
-      end
-    end
-
-    @testset "Contract" begin
-      indsA = ([2, 3], [4, 5])
-      locsA = [(1, 1), (2, 2), (2, 1), (1, 2)]
-      A = dev(BlockSparseTensor(locsA, indsA...))
-      randn!(A)
-
-      indsB = ([4, 5], [3, 2])
-      locsB = [(1, 2), (2, 1), (1, 1)]
-      B = dev(BlockSparseTensor(locsB, indsB...))
-      randn!(B)
-
-      R = contract(A, (1, -1), B, (-1, 2))
-
-      DA = dense(A)
-      DB = dense(B)
-      DR = contract(DA, (1, -1), DB, (-1, 2))
-
-      for I in eachindex(R)
-        @test R[I] ≈ DR[I]
-      end
-    end
-
-    @testset "reshape" begin
-      indsA = ([2, 3], [4, 5])
-      locsA = [(2, 1), (1, 2)]
-      A = dev(BlockSparseTensor(locsA, indsA...))
-      randn!(A)
-
-      indsB = ([8, 12, 10, 15],)
-      B = reshape(A, indsB)
-
-      @test nnzblocks(A) == nnzblocks(B)
-      @test nnz(A) == nnz(B)
-      for (bA, bB) in zip(eachnzblock(A), eachnzblock(B))
-        blockA = blockview(A, bA)
-        blockB = blockview(B, bB)
-        @test reshape(blockA, size(blockB)) == blockB
-      end
-    end
-
-    @testset "permute_combine" begin
-      indsA = ([2, 3], [4, 5], [6, 7, 8])
-      locsA = [(2, 1, 1), (1, 2, 1), (2, 2, 3)]
-      A = dev(BlockSparseTensor(locsA, indsA...))
-      randn!(A)
-
-      B = NDTensors.permute_combine(A, 3, (2, 1))
+    Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+    @test nnzblocks(Tc) == 2
+    @test nnz(Tc) == 8
+    @test eltype(Tc) == ComplexF64
+    @test norm(Tc) ≉ 0
+  end
 
       @test nnzblocks(A) == nnzblocks(B)
       @test nnz(A) == nnz(B)

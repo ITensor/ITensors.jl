@@ -1,4 +1,5 @@
 import Base: sortperm, size, length, eltype, conj, transpose, copy, *
+using ITensors: alias
 abstract type AbstractSymmetry end
 struct ConservesNfParity{T} <: AbstractSymmetry
   data::T
@@ -86,6 +87,12 @@ function LinearAlgebra.rmul!(A::AbstractMatrix, R::Circuit)
   return A
 end
 
+function Base.:*(A::AbstractMatrix, B::Adjoint{<:Any,<:Circuit})
+  AB = copy(A)
+  rmul!(AB, B)
+  return AB
+end
+
 function replace!(f, G::Circuit)
   for i in eachindex(G.rotations)
     G.rotations[i] = f(G.rotations[i])
@@ -135,6 +142,15 @@ is_annihilation_operator(::OpName"c") = true
 is_annihilation_operator(::OpName"c↑") = true
 is_annihilation_operator(::OpName"c↓") = true
 
+expand_to_ladder_operators(o::Op) = expand_to_ladder_operators(ITensors.name(o))
+expand_to_ladder_operators(o::String) = expand_to_ladder_operators(OpName(o))
+expand_to_ladder_operators(opname::OpName) = opname # By default does nothing
+expand_to_ladder_operators(::OpName"N") = ["Cdag", "C"]
+expand_to_ladder_operators(::OpName"Nup") = ["Cdagup", "Cup"]
+expand_to_ladder_operators(::OpName"Ndn") = ["Cdagdn", "Cdn"]
+expand_to_ladder_operators(opname::OpName"n↑") = expand_to_ladder_operators(alias(opname))
+expand_to_ladder_operators(opname::OpName"n↓") = expand_to_ladder_operators(alias(opname))
+
 #interlaced_hamiltonian(h::AbstractMatrix) = h
 #blocked_hamiltonian(h::AbstractMatrix) = Hermitian(reverse_interleave(Matrix(h)))
 
@@ -151,6 +167,12 @@ function quadrant(term)
     error("Unknown quadratic hopping term: $term")
   end
   return q
+end
+
+function single_to_quadratic(term)
+  site = ITensors.site(term[1])
+  new_ops = expand_to_ladder_operators(term[1])
+  return coefficient(term) * Op(new_ops[1], site) * Op(new_ops[2], site)
 end
 
 function quadratic_operator(os::OpSum)
@@ -170,6 +192,7 @@ function quadratic_operator(os::OpSum)
     #@show term.coef
     coef = isreal(coefficient(term)) ? real(coefficient(term)) : coefficient(term)
     coefs[n] = coef
+    term = (length(term) == 1) ? single_to_quadratic(term) : term
     length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
     quads[n] = quadrant(term)
     sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
