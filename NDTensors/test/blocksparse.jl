@@ -12,6 +12,7 @@ end
   C = nothing
   include("device_list.jl")
   devs = devices_list(copy(ARGS))
+  
   @testset "test device: $dev" for dev in devs
     # Indices
     indsA = ([2, 3], [4, 5])
@@ -125,32 +126,39 @@ end
       @test eltype(cT) == ComplexF64
       @test nnzblocks(cT) == nnzblocks(T)
     end
-  @testset "similartype regression test" begin
-    # Regression test for issue seen in:
-    # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
-    # Previously, `similartype` wasn't using information about the dimensions
-    # properly and was returning a `BlockSparse` storage of the dimensions
-    # of the input tensor.
-    T = dev(BlockSparseTensor([(1, 1)], ([2], [2])))
-    @test NDTensors.ndims(
-      NDTensors.storagetype(NDTensors.similartype(typeof(T), ([2], [2], [2])))
-    ) == 3
-  end
+    @testset "similartype regression test" begin
+      # Regression test for issue seen in:
+      # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
+      # Previously, `similartype` wasn't using information about the dimensions
+      # properly and was returning a `BlockSparse` storage of the dimensions
+      # of the input tensor.
+      T = dev(BlockSparseTensor([(1, 1)], ([2], [2])))
+      @test NDTensors.ndims(
+        NDTensors.storagetype(NDTensors.similartype(typeof(T), ([2], [2], [2])))
+      ) == 3
+    end
 
-  @testset "Random constructor" begin
-    T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
-    @test nnzblocks(T) == 2
-    @test nnz(T) == 8
-    @test eltype(T) == Float64
-    @test norm(T) ≉ 0
+    @testset "Random constructor" begin
+      T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      @test nnzblocks(T) == 2
+      @test nnz(T) == 8
+      @test eltype(T) == Float64
+      @test norm(T) ≉ 0
 
-    Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
-    @test nnzblocks(Tc) == 2
-    @test nnz(Tc) == 8
-    @test eltype(Tc) == ComplexF64
-    @test norm(Tc) ≉ 0
-  end
+      Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      @test nnzblocks(Tc) == 2
+      @test nnz(Tc) == 8
+      @test eltype(Tc) == ComplexF64
+      @test norm(Tc) ≉ 0
+    end
 
+    @testset "permute_combine" begin
+      indsA = ([2, 3], [4, 5], [6, 7, 8])
+      locsA = [(2, 1, 1), (1, 2, 1), (2, 2, 3)]
+      A = dev(BlockSparseTensor(locsA, indsA...))
+      randn!(A)
+
+      B = NDTensors.permute_combine(A, 3, (2, 1))
       @test nnzblocks(A) == nnzblocks(B)
       @test nnz(A) == nnz(B)
 
