@@ -12,7 +12,7 @@ end
   C = nothing
   include("device_list.jl")
   devs = devices_list(copy(ARGS))
-  
+
   @testset "test device: $dev" for dev in devs
     # Indices
     indsA = ([2, 3], [4, 5])
