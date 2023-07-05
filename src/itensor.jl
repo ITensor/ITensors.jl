@@ -345,7 +345,7 @@ function ITensor(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
     ),
   )
-  data = NDTensors.similartype(A, eltype)(A)
+  data = Array{eltype}(as, A)
   return itensor(Dense(data), inds)
 end
 
