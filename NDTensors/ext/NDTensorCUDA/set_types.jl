@@ -33,11 +33,11 @@ function similartype(data::CuArray, eltype::Type)
 end
 
 function similartype(datatype::Type{<:CuArray}, eltype::Type)
-  return CuArray{eltype,ndims(datatype)}
+  return CuArray{eltype,NDTensors.ndims(datatype)}
 end
 
 function similartype(datatype::Type{<:CuArray{<:Any,<:Any,B}}, eltype::Type) where {B}
-  return CuArray{eltype,ndims(datatype),buffertype(datatype)}
+  return CuArray{eltype,NDTensors.ndims(datatype),buffertype(datatype)}
 end
 
 function set_buffertype_if_unspecified(
@@ -49,5 +49,5 @@ end
 function set_buffertype_if_unspecified(
   arraytype::Type{<:CuArray{<:Any,<:Any}}, buf::Type=default_buffertype()
 )
-  return CuArray{eltype(arraytype),ndims(arraytype),buf}
+  return CuArray{eltype(arraytype),NDTensors.ndims(arraytype),buf}
 end
