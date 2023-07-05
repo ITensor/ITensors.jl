@@ -113,12 +113,4 @@ function main()
   @test inner(cm', cH, cm) ≈ inner(m', H, m)
 end
 
-### To run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
-if false # false so we don't have an infinite loop
-  using Pkg
-  Pkg.add("CUDA")
-  using CUDA
-  Pkg.test("NDTensors"; test_args=["cuda"])
-end
-
 main()
