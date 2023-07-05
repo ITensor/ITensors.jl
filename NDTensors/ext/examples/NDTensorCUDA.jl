@@ -50,6 +50,7 @@ function main()
   cC = ITensor(
     NDTensors.generic_randn(CuVector{Float64,CUDA.Mem.DeviceBuffer}, dim(dim3)), dim3
   )
+  cC = NDTensors.cu(ITensor(NDTensors.generic_randn(Vector{Float64}, dim(dim3)), dim3))
   cD = ITensor(Tensor(CuVector, dim4))
   fill!(cD, randn())
 
