@@ -27,7 +27,10 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(;path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!("v11.8"); Pkg.test("ITensorGPU");'
+              julia -e 'using Pkg; Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!("v11.8"); Pkg.activate("./ITensorGPU"); Pkg.develop(path="."); Pkg.add(name="NDTensors", version="0.1"); Pkg.instantiate(); Pkg.test();' 
+              '''
+            sh '''
+              julia --project=NDTensors -e 'using Pkg; Pkg.develop(path=".");Pkg.test(; test_args=["cuda"])'
             '''
           }
         }
@@ -51,7 +54,10 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(;path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.add("CUDA"); using CUDA; CUDA.set_runtime_version!("v11.8"); Pkg.test("ITensorGPU");'
+            julia --project=ITensorGPU -e 'using Pkg; Pkg.develop(path="."); Pkg.add(name="NDTensors", version="0.1"); Pkg.instantiate(); using CUDA; CUDA.set_runtime_version!("v11.8"); Pkg.test();'
+            '''
+            sh '''
+              julia --project=NDTensors -e 'using Pkg; Pkg.develop(path=".");Pkg.test(; test_args=["cuda"])'
             '''
           }
         }

@@ -1,31 +1,39 @@
 using NDTensors
 using Test
-
-@testset "DiagTensor basic functionality" begin
-  t = tensor(Diag(rand(ComplexF64, 100)), (100, 100))
-  @test conj(data(store(t))) == data(store(conj(t)))
-  @test typeof(conj(t)) <: DiagTensor
-
-  d = rand(Float32, 10)
-  D = Diag{ComplexF64}(d)
-  @test eltype(D) == ComplexF64
-  @test Array(dense(D)) == convert.(ComplexF64, d)
-  simD = similar(D)
-  @test length(simD) == length(D)
-  @test eltype(simD) == eltype(D)
-  D = Diag(1.0)
-  @test eltype(D) == Float64
-  @test complex(D) == Diag(one(ComplexF64))
-  @test similar(D) == Diag(0.0)
-
-  d = 3
-  vr = rand(d)
-  D = tensor(Diag(vr), (d, d))
-  @test Array(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
-  @test matrix(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
-  @test permutedims(D, (2, 1)) == D
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
 end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
+@testset "DiagTensor basic functionality" begin
+  include("device_list.jl")
+  devs = devices_list(copy(ARGS))
+  @testset "test device: $dev" for dev in devs
+    t = dev(tensor(Diag(rand(ComplexF64, 100)), (100, 100)))
+    @test conj(data(store(t))) == data(store(conj(t)))
+    @test typeof(conj(t)) <: DiagTensor
 
+    d = rand(Float32, 10)
+    D = dev(Diag{ComplexF64}(d))
+    @test eltype(D) == ComplexF64
+    @test dev(Array(dense(D))) == convert.(ComplexF64, d)
+    simD = similar(D)
+    @test length(simD) == length(D)
+    @test eltype(simD) == eltype(D)
+    D = dev(Diag(1.0))
+    @test eltype(D) == Float64
+    @test complex(D) == Diag(one(ComplexF64))
+    @test similar(D) == Diag(0.0)
+
+    d = 3
+    vr = rand(d)
+    D = dev(tensor(Diag(vr), (d, d)))
+    @test Array(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
+    @test matrix(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
+    @test permutedims(D, (2, 1)) == D
+  end
+end
 @testset "DiagTensor contractions" begin
   t = tensor(Diag([1.0, 1.0, 1.0]), (3, 3))
   A = randomTensor(Dense, (3, 3))

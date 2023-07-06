@@ -1,0 +1,9 @@
+In this file I will layout how to construct a new backend NDTensor datatype storage system and what is required of the datatype.
+
+One should start by constructing a folder designated `NDTensor___` where ___ is replaced with the name of the datatype. In this folder one creates an `NDTensor___.jl` file. This is the only file which should link `NDTensors` to your new datatype.  In this file, one can import all necessary packages for your datatype. These packages should NOT be added to the `Project.toml`.
+
+The most necessary portion is the `set_type.jl` file. In this file, one must define `set_eltype` and `set_ndims`. These functions allow our adapt system properly interperet the datatype and construct new tensors with that datatype.  Be sure to (import and) define these functions as `NDTensors.set_eltype` and `NDTensors.set_ndims`.
+
+In general, I have found that Adapt functions (like `cu` or `mtl`) do work properly with ITensors and NDTensors. However, we have decided to construct our own versions of these functions because the ones constructed by `CUDA.jl` and `Metal.jl` do not preserve the element type of `Numbers` and convert all numbers, bar `Float16`, to `Float32`.  It is possible define ones own adapt functions by utilizing the `adapt_structure` function defined in `NDTensors`.  
+
+To perform linear algebra operations, like matrix-matrix multiplication or orthogonalization procedures, `NDTensors` depends on reliable definitions of functions like `mul!` and `svd`, etc. For your datatype to utilize these operations, these generic functions must be defined and linked to a proper definition of BLAS/LAPACK.

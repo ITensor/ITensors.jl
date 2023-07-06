@@ -1,13 +1,9 @@
-using .Octavian
-
-export backend_octavian
-
-function backend_octavian()
-  return gemm_backend[] = :Octavian
+function NDTensors.backend_octavian()
+  return NDTensors.gemm_backend[] = :Octavian
 end
 
 function _gemm!(
-  ::GemmBackend{:Octavian},
+  ::NDTensors.GemmBackend{:Octavian},
   tA,
   tB,
   alpha,

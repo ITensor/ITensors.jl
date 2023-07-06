@@ -11,7 +11,6 @@ using LinearAlgebra
 using StaticArrays
 using Functors
 using HDF5
-using Requires
 using SimpleTraits
 using SplitApplyCombine
 using Strided
@@ -204,8 +203,12 @@ $(enable_threaded_blocksparse_docstring(@__MODULE__))
 disable_threaded_blocksparse() = _disable_threaded_blocksparse()
 
 #####################################
-# Optional TBLIS contraction backend
+# Optional backends
 #
+
+if !isdefined(Base, :get_extension)
+  using Requires
+end
 
 const _using_tblis = Ref(false)
 
@@ -221,13 +224,29 @@ function disable_tblis()
   return nothing
 end
 
+function backend_octavian()
+  throw(UndefVarError)
+end
+
 function __init__()
-  @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
-    enable_tblis()
-    include("tensoralgebra/tblis.jl")
-  end
-  @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
-    include("linearalgebra/octavian.jl")
+  @static if !isdefined(Base, :get_extension)
+    @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
+      enable_tblis()
+      include("../ext/NDTensorTBLIS/NDTensorTBLIS.jl")
+    end
+    @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
+      include("../ext/NDTensorOctavian/NDTensorOctavian.jl")
+    end
+
+    @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+      if CUDA.functional()
+        include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
+      end
+    end
+
+    @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
+      include("../ext/NDTensorMetal/NDTensorMetal.jl")
+    end
   end
 end
 
