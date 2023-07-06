@@ -50,6 +50,3 @@ NDTensorCUDA = "CUDA"
 NDTensorMetal = "Metal"
 NDTensorTBLIS = "TBLIS"
 NDTensorOctavian = "Octavian"
-
-[targets]
-test = ["CUDA", "Metal", "TBLIS", "Octavian"]
