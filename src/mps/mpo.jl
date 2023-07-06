@@ -675,7 +675,7 @@ contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
 
 #@doc (@doc contract(::MPO, ::MPS)) *(::MPO, ::MPS)
 
-function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
+function contract(::Algorithm"densitymatrix", A::AbstractMPS, ψ::AbstractMPS; kwargs...)
   n = length(A)
   n != length(ψ) &&
     throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(ψ))) do not match"))
@@ -703,6 +703,11 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   sim!(linkinds, ψ_c)
   sim!(siteinds, commoninds, A_c, ψ_c)
 
+  # In case ψ has a dangling bond on each site
+  all_linkinds = vcat(linkinds(A), linkinds(A_c), linkinds(ψ), linkinds(ψ_c))
+  dangling_inds_ψ = [uniqueinds(ψ[i], A[i], all_linkinds) for i in 1:n]
+  sim_dangling_inds_ψ = [sim.(dangling_inds_ψ[i]) for i in 1:n]
+
   # A version helpful for making the density matrix
   simA_c = sim(siteinds, uniqueinds, A_c, ψ_c)
 
@@ -714,18 +719,27 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
     E[j] = E[j - 1] * ψ[j] * A[j] * A_c[j] * ψ_c[j]
   end
   R = ψ[n] * A[n]
-  simR_c = ψ_c[n] * simA_c[n]
+  simR_c = replaceinds(ψ_c[n], dangling_inds_ψ[n], sim_dangling_inds_ψ[n]) * simA_c[n]
   ρ = E[n - 1] * R * simR_c
   l = linkind(ψ, n - 1)
   ts = isnothing(l) ? "" : tags(l)
-  Lis = siteinds(uniqueinds, A, ψ, n)
-  Ris = siteinds(uniqueinds, simA_c, ψ_c, n)
+  function _siteinds(Ai_, ψi_)
+    return vcat(uniqueinds(Ai_, ψi_, all_linkinds), uniqueinds(ψi_, Ai_, all_linkinds))
+  end
+  Lis = _siteinds(A[n], ψ[n])
+  Ris = _siteinds(
+    simA_c[n], replaceinds(ψ_c[n], dangling_inds_ψ[n], sim_dangling_inds_ψ[n])
+  )
   F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, kwargs...)
   D, U, Ut = F.D, F.V, F.Vt
   l_renorm, r_renorm = F.l, F.r
   ψ_out[n] = Ut
   R = R * dag(Ut) * ψ[n - 1] * A[n - 1]
-  simR_c = simR_c * U * ψ_c[n - 1] * simA_c[n - 1]
+  simR_c =
+    simR_c *
+    U *
+    replaceinds(ψ_c[n - 1], dangling_inds_ψ[n - 1], sim_dangling_inds_ψ[n - 1]) *
+    simA_c[n - 1]
   for j in reverse(2:(n - 1))
     # Determine smallest maxdim to use
     cip = commoninds(ψ[j], E[j - 1])
@@ -733,8 +747,10 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
     prod_dims = dim(cip) * dim(ciA)
     maxdim = min(prod_dims, requested_maxdim)
 
-    s = siteinds(uniqueinds, A, ψ, j)
-    s̃ = siteinds(uniqueinds, simA_c, ψ_c, j)
+    s = _siteinds(A[j], ψ[j])
+    s̃ = _siteinds(
+      simA_c[j], replaceinds(ψ_c[j], dangling_inds_ψ[j], sim_dangling_inds_ψ[j])
+    )
     ρ = E[j - 1] * R * simR_c
     l = linkind(ψ, j - 1)
     ts = isnothing(l) ? "" : tags(l)
@@ -745,7 +761,11 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
     l_renorm, r_renorm = F.l, F.r
     ψ_out[j] = Ut
     R = R * dag(Ut) * ψ[j - 1] * A[j - 1]
-    simR_c = simR_c * U * ψ_c[j - 1] * simA_c[j - 1]
+    simR_c =
+      simR_c *
+      U *
+      replaceinds(ψ_c[j - 1], dangling_inds_ψ[j - 1], sim_dangling_inds_ψ[j - 1]) *
+      simA_c[j - 1]
   end
   if normalize
     R ./= norm(R)
