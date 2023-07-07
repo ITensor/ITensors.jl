@@ -20,6 +20,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Strided = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
+FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 
 [compat]
 Adapt = "3.5"
