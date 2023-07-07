@@ -1,4 +1,4 @@
-if VERSION ≤ v"1.8" && "@v#.#" ∉ LOAD_PATH
+if VERSION < v"1.8" && "@v#.#" ∉ LOAD_PATH
   push!(LOAD_PATH, "@v#.#")
 end
 
