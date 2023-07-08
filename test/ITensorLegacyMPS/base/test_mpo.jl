@@ -839,13 +839,13 @@ end
     @test inner(H, H) ≈ inner_add((α₁, H₁), H₂)
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
 
-    H = +(H₁, - H₂; alg="directsum")
+    H = +(H₁, -H₂; alg="directsum")
 
     @test typeof(H) == typeof(H₁)
     @test inner(H, H) ≈ inner_add(H₁, (-1, H₂))
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
 
-    H = +(α₁ * H₁, - α₂ * H₂; alg="directsum")
+    H = +(α₁ * H₁, -α₂ * H₂; alg="directsum")
 
     @test typeof(H) == typeof(H₁)
     @test inner(H, H) ≈ inner_add((α₁, H₁), (-α₂, H₂))
