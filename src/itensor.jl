@@ -675,6 +675,7 @@ zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 
 # Helper functions for different view behaviors
 Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = Array{ElT,N}(A)
+
 function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
   return convert(AbstractArray{ElT,N}, A)
 end

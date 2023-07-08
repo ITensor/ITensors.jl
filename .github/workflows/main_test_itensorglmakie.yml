@@ -43,7 +43,7 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          pkg"dev ./NDTensors . ./ITensorVisualizationBase ./ITensorMakie ./ITensorGLMakie"
+          pkg"dev NDTensors . ./ITensorVisualizationBase ./ITensorMakie ./ITensorGLMakie"
       - name: Run the tests
         run: |
           DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGLMakie")'
