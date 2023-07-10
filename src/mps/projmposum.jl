@@ -19,7 +19,7 @@ function set_nsite!(A::AbstractSum, nsite)
 end
 
 function length(A::AbstractSum)
-  @assert allequal(length.(terms(P)))
+  @assert allequal(length.(terms(A)))
   return length(first(terms(A)))
 end
 
@@ -63,7 +63,7 @@ then the size is `(d,d)` where
 `d = dim(a)*dim(s1)*dim(s1)*dim(b)`
 """
 function size(A::AbstractSum)
-  @assert allequal(size.(terms(P)))
+  @assert allequal(size.(terms(A)))
   return size(first(terms(A)))
 end
 
