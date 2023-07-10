@@ -390,7 +390,8 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   IndsT = indstype(T) #get the index type
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
-  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
+  QM = convert(typeof(XM), QM)
+  Q = tensor(Dense(vec(QM)), Qinds) #Q was strided
   X = tensor(Dense(vec(XM)), Xinds)
   return Q, X
 end
