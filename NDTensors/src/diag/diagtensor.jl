@@ -43,6 +43,9 @@ function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
   return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
+# Compute the norm of Uniform diagonal tensor
+norm(S::UniformDiagTensor) = sqrt(mindim(S) * data(S))
+
 """
 getdiagindex(T::DiagTensor,i::Int)
 
