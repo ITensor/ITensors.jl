@@ -569,11 +569,19 @@ function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
   A[val.(ivs)...] = one(eltype(datatype))
   return A
 end
-onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(NDTensors.default_datatype(eltype), ivs...)
-onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(NDTensors.default_datatype(eltype), ivs...)
-setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(NDTensors.default_datatype(eltype), ivs...)
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}})
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
 
-onehot(ivs::Pair{<:Index}...) = onehot(NDTensors.default_datatype(NDTensors.default_eltype()), ivs...)
+function onehot(ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(NDTensors.default_eltype()), ivs...)
+end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
