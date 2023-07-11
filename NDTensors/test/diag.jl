@@ -26,6 +26,8 @@ end
     @test complex(D) == Diag(one(ComplexF64))
     @test similar(D) == Diag(0.0)
 
+    D = Tensor(Diag(1), (2, 2))
+    @test norm(D) == √2
     d = 3
     vr = rand(d)
     D = dev(tensor(Diag(vr), (d, d)))
