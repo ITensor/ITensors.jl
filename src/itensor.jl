@@ -565,10 +565,11 @@ B = onehot(i=>1,j=>3)
 ```
 """
 function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
-  A = ITensor(Dense(datatype, 1), ind.(ivs)...)
+  A = ITensor(eltype(datatype), ind.(ivs)...)
   A[val.(ivs)...] = one(eltype(datatype))
-  return A
+  return Adapt.adapt(datatype, A)
 end
+
 function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
   return onehot(NDTensors.default_datatype(eltype), ivs...)
 end
