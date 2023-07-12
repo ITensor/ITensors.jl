@@ -1,6 +1,6 @@
 export truncate!
 
-function truncate!(P::Vector{ElT}; kwargs...)::Tuple{ElT,ElT} where {ElT}
+function truncate!(P::AbstractVector{ElT}; kwargs...)::Tuple{ElT,ElT} where {ElT}
   cutoff::Union{Nothing,ElT} = get(kwargs, :cutoff, zero(ElT))
   if isnothing(cutoff)
     cutoff = typemin(ElT)
