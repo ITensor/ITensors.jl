@@ -58,7 +58,7 @@ end
       @test eltype(Asim) == Float64
       @test length(Asim) == 10
 
-      B = Tensor(undef, (3, 4))
+      B = dev(Tensor(undef, (3, 4)))
       randn!(B)
 
       C = A + B
@@ -73,7 +73,7 @@ end
         @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
       end
 
-      t = Tensor(ComplexF64, (100, 100))
+      t = dev(Tensor(ComplexF64, (100, 100)))
       randn!(t)
       @test conj(data(store(t))) == data(store(conj(t)))
       @test typeof(conj(t)) <: DenseTensor
@@ -81,39 +81,39 @@ end
       @test Dense(ComplexF64) == Dense{ComplexF64}()
       @test Dense(ComplexF64) == complex(Dense(Float64))
 
-      D = Tensor(ComplexF64, (100, 100))
+      D = dev(Tensor(ComplexF64, (100, 100)))
       @test eltype(D) == ComplexF64
       @test ndims(D) == 2
       @test dim(D) == 100^2
 
-      E = Tensor(ComplexF64, undef, (100, 100))
+      E = dev(Tensor(ComplexF64, undef, (100, 100)))
       @test eltype(E) == ComplexF64
       @test ndims(E) == 2
       @test dim(E) == 100^2
 
-      F = Tensor((100, 100))
+      F = dev(Tensor((100, 100)))
       @test eltype(F) == Float64
       @test ndims(F) == 2
       @test dim(F) == 100^2
 
-      G = Tensor(undef, (100, 100))
+      G = dev(Tensor(undef, (100, 100)))
       @test eltype(G) == Float64
       @test ndims(G) == 2
       @test dim(G) == 100^2
 
-      H = Tensor(ComplexF64, undef, (100, 100))
+      H = dev(Tensor(ComplexF64, undef, (100, 100)))
       @test eltype(H) == ComplexF64
       @test ndims(H) == 2
       @test dim(H) == 100^2
 
       I_arr = rand(10, 10, 10)
-      I = Tensor(I_arr, (10, 10, 10))
+      I = dev(Tensor(I_arr, (10, 10, 10)))
       @test eltype(I) == Float64
       @test dim(I) == 1000
       @test Array(I) == I_arr
 
-      J = Tensor((2, 2))
-      K = Tensor((2, 2))
+      J = dev(Tensor((2, 2)))
+      K = dev(Tensor((2, 2)))
       @test Array(J * K) ≈ Array(J) * Array(K)
     end
 
