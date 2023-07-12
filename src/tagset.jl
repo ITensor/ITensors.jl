@@ -86,8 +86,7 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
         nchar = 0
       end
     elseif current_char != ' ' # TagSet constructor ignores whitespace
-      nchar == length(current_tag) &&
-        error("Currently, tags can only have up to $(length(current_tag)) characters")
+      nchar == length(current_tag) && continue
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end
@@ -95,6 +94,9 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Store the final tag
   if nchar != 0
     ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
+  end
+  if ntags > N
+    ntags = N
   end
   return GenericTagSet{T,N}(TagSetStorage(ts), ntags)
 end

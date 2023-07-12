@@ -79,9 +79,13 @@ using ITensors, Test
   end
 
   @testset "Tag too long" begin
-    @test_throws ErrorException TagSet("ijklmnopqabcdefgh")
-    @test_throws ErrorException TagSet("abcd,ijklmnopqabcdefgh")
-    @test_throws ErrorException TagSet("ijklmnopqabcdefgh,abcd")
+    @test TagSet("ijklmnopqabcdefgh") == TagSet("ijklmnopqabcdefg")
+    @test TagSet("abcd,ijklmnopqabcdefgh") == TagSet("abcd,ijklmnopqabcdefg")
+    @test TagSet("ijklmnopqabcdefgh,abcd") == TagSet("abcd,ijklmnopqabcdefg")
+  end
+
+  @testset "Too many tags" begin
+    @test TagSet("a,b,c,d,e,f") == TagSet("a,b,c,d")
   end
 
   @testset "Integer Tags" begin
