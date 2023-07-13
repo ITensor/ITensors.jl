@@ -70,7 +70,9 @@ function reset!(v::MTagStorage, nchar::Int)
 end
 
 function strict_tags_error(str, N, nchar)
-  return error("You are trying to make a TagSet from the String \"$(str)\". This has more than the maximum number of allowed tags ($N), or has a tag that is longer than the longest allowed tag ($nchar). Either specify fewer or shorter tags, or use `ITensors.set_strict_tags(false)` to disable this error.")
+  return error(
+    "You are trying to make a TagSet from the String \"$(str)\". This has more than the maximum number of allowed tags ($N), or has a tag that is longer than the longest allowed tag ($nchar). Either specify fewer or shorter tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags or tag characters will be ignored."
+  )
 end
 
 function GenericTagSet{T,N}(str::AbstractString) where {T,N}
