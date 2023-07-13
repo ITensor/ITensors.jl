@@ -245,3 +245,17 @@ function disable_auto_fermion()
   _using_auto_fermion[] = false
   return nothing
 end
+
+#
+# Turn the strict tags checking on and off
+#
+
+const _using_strict_tags = Ref(false)
+
+using_strict_tags() = _using_strict_tags[]
+
+function set_strict_tags!(enable::Bool)
+  previous = using_strict_tags()
+  _using_strict_tags[] = enable
+  return previous
+end

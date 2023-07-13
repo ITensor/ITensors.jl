@@ -79,13 +79,23 @@ using ITensors, Test
   end
 
   @testset "Tag too long" begin
+    @test !ITensors.using_strict_tags()
     @test TagSet("ijklmnopqabcdefgh") == TagSet("ijklmnopqabcdefg")
     @test TagSet("abcd,ijklmnopqabcdefgh") == TagSet("abcd,ijklmnopqabcdefg")
     @test TagSet("ijklmnopqabcdefgh,abcd") == TagSet("abcd,ijklmnopqabcdefg")
+    ITensors.set_strict_tags!(true)
+    @test ITensors.using_strict_tags()
+    @test_throws ErrorException TagSet("ijklmnopqabcdefgh")
+    ITensors.set_strict_tags!(false)
   end
 
   @testset "Too many tags" begin
+    @test !ITensors.using_strict_tags()
     @test TagSet("a,b,c,d,e,f") == TagSet("a,b,c,d")
+    ITensors.set_strict_tags!(true)
+    @test ITensors.using_strict_tags()
+    @test_throws ErrorException TagSet("a,b,c,d,e,f")
+    ITensors.set_strict_tags!(false)
   end
 
   @testset "Integer Tags" begin

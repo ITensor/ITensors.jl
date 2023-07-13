@@ -69,6 +69,10 @@ function reset!(v::MTagStorage, nchar::Int)
   end
 end
 
+function strict_tags_error(str, N, nchar)
+  return error("You are trying to make a TagSet from the String \"$(str)\". This has more than the maximum number of allowed tags ($N), or has a tag that is longer than the longest allowed tag ($nchar). Either specify fewer or shorter tags, or use `ITensors.set_strict_tags(false)` to disable this error.")
+end
+
 function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Mutable fixed-size vector as temporary Tag storage
   # TODO: refactor the Val here.
@@ -80,13 +84,23 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   for current_char in str
     if current_char == ','
       if nchar != 0
-        ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
+        if ntags < N
+          ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
+        elseif using_strict_tags()
+          strict_tags_error(str, N, length(current_tag))
+        end # else do nothing
         # Reset the current tag
         reset!(current_tag, nchar)
         nchar = 0
       end
     elseif current_char != ' ' # TagSet constructor ignores whitespace
-      nchar == length(current_tag) && continue
+      if nchar ≥ length(current_tag)
+        if using_strict_tags()
+          strict_tags_error(str, N, length(current_tag))
+        else
+          continue
+        end
+      end
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end
@@ -96,7 +110,11 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
     ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
   end
   if ntags > N
-    ntags = N
+    if using_strict_tags()
+      strict_tags_error(str, N, length(current_tag))
+    else
+      ntags = N
+    end
   end
   return GenericTagSet{T,N}(TagSetStorage(ts), ntags)
 end
