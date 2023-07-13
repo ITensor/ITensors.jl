@@ -92,9 +92,13 @@ using ITensors, Test
   @testset "Too many tags" begin
     @test !ITensors.using_strict_tags()
     @test TagSet("a,b,c,d,e,f") == TagSet("a,b,c,d")
+    @test addtags(TagSet("a,b,c,d"), "e") == TagSet("a,b,c,d")
+    @test replacetags(TagSet("a,b,c,d"), "d", "e,f") == TagSet("a,b,c,e")
     ITensors.set_strict_tags!(true)
     @test ITensors.using_strict_tags()
     @test_throws ErrorException TagSet("a,b,c,d,e,f")
+    @test_throws ErrorException addtags(TagSet("a,b,c,d"), "e")
+    @test_throws ErrorException replacetags(TagSet("a,b,c,d"), "d", "e,f")
     ITensors.set_strict_tags!(false)
   end
 
@@ -133,7 +137,10 @@ using ITensors, Test
     @test hastags(ts, "Green")
     @test hastags(ts, "Yellow")
 
+    @test addtags(ts, "Orange") == ts
+    ITensors.set_strict_tags!(true)
     @test_throws ErrorException addtags(ts, "Orange")
+    ITensors.set_strict_tags!(false)
   end
 end
 
