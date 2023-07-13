@@ -57,6 +57,7 @@ using Adapt
 using BitIntegers
 using ChainRulesCore
 using Compat
+using DocStringExtensions
 using Functors
 using HDF5
 using IsApprox
