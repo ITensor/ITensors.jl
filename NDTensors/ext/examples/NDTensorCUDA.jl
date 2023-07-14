@@ -25,7 +25,7 @@ function main()
   C = A * B
   A = cpu(A)
   B = cpu(B)
-  @test cpu(C) == A * B
+  @test cpu(C) ≈ A * B
   @test eltype(C) == Float64
 
   # Create 2 ITensors on CPU with different eltypes
@@ -40,10 +40,10 @@ function main()
   cB = NDTensors.cu(B)
 
   #Check that backend of contraction is GPU
-  @test A * A == cpu(cA * cA)
-  @test B * B == cpu(cB * cB)
-  @test A * B == cpu(cA * cB)
-  @test B * A == cpu(cB * cA)
+  @test A * A ≈ cpu(cA * cA)
+  @test B * B ≈ cpu(cB * cB)
+  @test A * B ≈ cpu(cA * cB)
+  @test B * A ≈ cpu(cB * cA)
 
   dim3 = (l, k)
   dim4 = (i,)
@@ -97,7 +97,7 @@ function main()
   m = randomMPS(s; linkdims=4)
   cm = NDTensors.cu(m)
 
-  @test inner(cm', cm) == inner(m', m)
+  @test inner(cm', cm) ≈ inner(m', m)
 
   H = randomMPO(s)
   cH = NDTensors.cu(H)
