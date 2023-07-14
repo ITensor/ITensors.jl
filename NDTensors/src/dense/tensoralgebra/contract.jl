@@ -331,7 +331,6 @@ function _contract!(
   A = array(AT)
   B = array(BT)
 
-  @show typeof(A)
   return _contract!(C, A, B, props, α, β)
 end
 
