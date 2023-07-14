@@ -101,7 +101,7 @@ function main()
 
   H = randomMPO(s)
   cH = NDTensors.cu(H)
-  @test inner(cm', cH, cm) == inner(m', H, m)
+  @test inner(cm', cH, cm) ≈ inner(m', H, m)
 
   m = orthogonalize(m, 1)
   cm = NDTensors.cu(orthogonalize(cm, 1))
