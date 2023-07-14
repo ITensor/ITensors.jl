@@ -327,21 +327,35 @@ function _contract!(
   α::Number=one(El),
   β::Number=zero(El),
 ) where {El,NC,NA,NB}
-  # TODO: directly use Tensor instead of Array
+  C = array(CT)
+  A = array(AT)
+  B = array(BT)
 
+  @show typeof(A)
+  return _contract!(C, A, B, props, α, β)
+end
+
+function _contract!(
+  CT::AbstractArray{El,NC},
+  AT::AbstractArray{El,NA},
+  BT::AbstractArray{El,NB},
+  props::ContractionProperties,
+  α::Number=one(El),
+  β::Number=zero(El),
+) where {El,NC,NA,NB}
   tA = 'N'
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
     #@timeit_debug timer "_contract!: permutedims A" begin
     @strided Ap = permutedims(AT, pA)
     #end # @timeit
-    AM = transpose(ReshapedArray(Ap, (props.dmid, props.dleft), ()))
+    AM = transpose(reshape(Ap, (props.dmid, props.dleft)))
   else
     #A doesn't have to be permuted
     if Atrans(props)
-      AM = transpose(ReshapedArray(AT, (props.dmid, props.dleft), ()))
+      AM = transpose(reshape(AT, (props.dmid, props.dleft)))
     else
-      AM = ReshapedArray(AT, (props.dleft, props.dmid), ())
+      AM = reshape(AT, (props.dleft, props.dmid))
     end
   end
 
@@ -351,12 +365,12 @@ function _contract!(
     #@timeit_debug timer "_contract!: permutedims B" begin
     @strided Bp = permutedims(BT, pB)
     #end # @timeit
-    BM = ReshapedArray(Bp, (props.dmid, props.dright), ())
+    BM = reshape(Bp, (props.dmid, props.dright))
   else
     if Btrans(props)
-      BM = transpose(ReshapedArray(BT, (props.dright, props.dmid), ()))
+      BM = transpose(reshape(BT, (props.dright, props.dmid)))
     else
-      BM = ReshapedArray(BT, (props.dmid, props.dright), ())
+      BM = reshape(BT, (props.dmid, props.dright))
     end
   end
 
@@ -364,12 +378,12 @@ function _contract!(
   if props.permuteC
     # Need to copy here since we will be permuting
     # into C later
-    CM = ReshapedArray(copy(CT), (props.dleft, props.dright), ())
+    CM = reshape(copy(CT), (props.dleft, props.dright))
   else
     if Ctrans(props)
-      CM = transpose(ReshapedArray(CT, (props.dright, props.dleft), ()))
+      CM = transpose(reshape(CT, (props.dright, props.dleft)))
     else
-      CM = ReshapedArray(CT, (props.dleft, props.dright), ())
+      CM = reshape(CT, (props.dleft, props.dright))
     end
   end
 
@@ -379,7 +393,7 @@ function _contract!(
 
   if props.permuteC
     pC = NTuple{NC,Int}(props.PC)
-    Cr = ReshapedArray(CM.parent, props.newCrange, ())
+    Cr = reshape(CM.parent, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin
     @strided CT .= permutedims(Cr, pC)
