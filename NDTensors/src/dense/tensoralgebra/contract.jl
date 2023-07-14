@@ -392,7 +392,7 @@ function _contract!(
 
   if props.permuteC
     pC = NTuple{NC,Int}(props.PC)
-    Cr = reshape(CM.parent, props.newCrange)
+    Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin
     @strided CT .= permutedims(Cr, pC)
