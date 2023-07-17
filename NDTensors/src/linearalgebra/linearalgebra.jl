@@ -289,7 +289,7 @@ function random_unitary(rng::AbstractRNG, DataT::Type{<:AbstractArray}, n::Int, 
 end
 
 function random_unitary(rng::AbstractRNG, ::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
-  return random_unitary(rng, Matrix{ElT}, n, m)
+  return random_unitary(rng, set_ndims(default_datatype(ElT), 2), n, m)
 end
 
 random_unitary(n::Int, m::Int) = random_unitary(ComplexF64, n, m)
