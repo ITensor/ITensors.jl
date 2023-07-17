@@ -270,7 +270,7 @@ function random_unitary(::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
   return random_unitary(Random.default_rng(), ElT, n, m)
 end
 
-function random_unitary(rng::AbstractRNG, DataT::Type{AbstractArray}, n::Int, m::Int) 
+function random_unitary(rng::AbstractRNG, DataT::Type{<:AbstractArray}, n::Int, m::Int) 
   ElT = eltype(DataT)
   if n < m
     return DataT(random_unitary(rng, ElT, m, n)')
@@ -289,7 +289,7 @@ function random_unitary(rng::AbstractRNG, DataT::Type{AbstractArray}, n::Int, m:
 end
 
 function random_unitary(rng::AbstractRNG, ::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
-  return random_unitary(rng, default_datatype(ElT), n, m)
+  return random_unitary(rng, Matrix{ElT}, n, m)
 end
 
 random_unitary(n::Int, m::Int) = random_unitary(ComplexF64, n, m)
