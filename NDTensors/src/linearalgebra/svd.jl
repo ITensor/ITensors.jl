@@ -1,5 +1,5 @@
 
-function checkSVDDone(S::Vector, thresh::Float64)
+function checkSVDDone(S::AbstractArray, thresh::Float64)
   N = length(S)
   (N <= 1 || thresh < 0.0) && return (true, 1)
   S1t = S[1] * thresh
@@ -25,7 +25,7 @@ function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=
 
   #rho = BLAS.gemm('N','T',-1.0,M,M) #negative to sort eigenvalues greatest to smallest
   rho = -M * M' #negative to sort eigenvalues in decreasing order
-  D, U = eigen(Hermitian(rho), 1:size(rho, 1))
+  D, U = eigen(Hermitian(rho))
 
   Nd = length(D)
 
