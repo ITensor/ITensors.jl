@@ -270,7 +270,7 @@ function random_unitary(::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
   return random_unitary(Random.default_rng(), ElT, n, m)
 end
 
-function random_unitary(rng::AbstractRNG, DataT::Type{<:AbstractArray}, n::Int, m::Int) 
+function random_unitary(rng::AbstractRNG, DataT::Type{<:AbstractArray}, n::Int, m::Int)
   ElT = eltype(DataT)
   if n < m
     return DataT(random_unitary(rng, ElT, m, n)')
