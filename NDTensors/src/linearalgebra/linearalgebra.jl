@@ -81,7 +81,9 @@ function lapack_svd_error_message(alg)
          "   To get an `svd` of a matrix `A`, an eigendecomposition of\n" *
          "   ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of\n" *
          "   ``A^{\\dagger} U`` is used to compute `V`. This is performed\n" *
-         "   recursively to compute small singular values.\n\n" *
+         "   recursively to compute small singular values.\n" *
+         " - `\"QRAlgorithm\"` is a CUDA.jl implemented SVD algorithm using QR.\n" *
+         " - `\"JacobiAlgorithm\"` is a CUDA.jl implemented SVD algorithm.\n\n" *
          "Returning `nothing`. For an output `F = svd(A, ...)` you can check if\n" *
          "`isnothing(F)` in your code and try a different algorithm.\n\n" *
          "To suppress this message in the future, you can wrap the `svd` call in the\n" *
@@ -146,6 +148,8 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
     end
   elseif alg == "recursive"
     MUSV = svd_recursive(matrix(T))
+  elseif alg == "QRAlgorithm" || alg == "JacobiAlgorithm"
+    MUSV = svd_catch_error(matrix(T); alg=alg)
   else
     error(
       "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",
