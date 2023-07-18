@@ -443,7 +443,7 @@ matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
   sparseQ, L = ql(M)
-  Q = convert(typeof(M), sparseQ)
+  Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
   for c in 1:(nc - dc)
