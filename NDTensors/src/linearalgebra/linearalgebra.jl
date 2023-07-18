@@ -415,7 +415,7 @@ matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
   sparseQ, R = qr(M)
-  Q = convert(typeof(M), sparseQ)
+  Q = convert(typeof(R), sparseQ)
   nc = size(Q, 2)
   for c in 1:nc
     if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.

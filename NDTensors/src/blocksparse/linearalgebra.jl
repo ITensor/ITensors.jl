@@ -314,7 +314,7 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
   Xs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
 
   for (jj, b) in enumerate(eachnzblock(T))
-    blockT = copy(blockview(T, b))
+    blockT = blockview(T, b)
     QXb = qx(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
 
     if (isnothing(QXb))
