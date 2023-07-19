@@ -129,9 +129,7 @@ using ITensors.NDTensors:
   single_precision,
   timer
 
-using ITensors.NDTensors.SetParameters:
-  get_parameters,
-  set_unspecified_parameters
+using ITensors.NDTensors.SetParameters: get_parameters, set_unspecified_parameters
 
 import ITensors.NDTensors:
   # Modules

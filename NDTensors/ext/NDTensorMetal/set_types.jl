@@ -38,3 +38,8 @@ default_parameter(::Type{<:MtlArray}, ::Position{2}) = 1
 default_parameter(::Type{<:MtlArray}, ::Position{3}) = Metal.DefaultStorageMode
 
 nparameters(::Type{<:MtlArray}) = Val(3)
+
+# Metal-specific type parameter setting
+function set_storagemode(arraytype::Type{<:MtlArray}, storagemode)
+  return set_parameter(arraytype, Position(3), storagemode)
+end
