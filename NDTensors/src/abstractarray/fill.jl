@@ -1,15 +1,15 @@
-function generic_randn(DataT::Type{<:AbstractArray}, dim::Integer=0)
-  DataT = set_eltype_if_unspecified(DataT)
-  data = similar(DataT, dim)
-  ElT = eltype(DataT)
+function generic_randn(arraytype::Type{<:AbstractArray}, dim::Integer=0)
+  arraytype_specified = set_unspecified_parameters(arraytype, DefaultParameters())
+  data = similar(arraytype_specified, dim)
+  ElT = eltype(data)
   for i in 1:length(data)
     data[i] = randn(ElT)
   end
   return data
 end
 
-function generic_zeros(DataT::Type{<:AbstractArray}, dim::Integer=0)
-  DataT = set_eltype_if_unspecified(DataT)
-  ElT = eltype(DataT)
-  return fill!(similar(DataT, dim), zero(ElT))
+function generic_zeros(arraytype::Type{<:AbstractArray}, dim::Integer=0)
+  arraytype_specified = set_unspecified_parameters(arraytype, DefaultParameters())
+  ElT = eltype(arraytype_specified)
+  return fill!(similar(arraytype_specified, dim), zero(ElT))
 end

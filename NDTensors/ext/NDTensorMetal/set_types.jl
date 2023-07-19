@@ -1,20 +1,28 @@
-function set_eltype(arraytype::Type{<:MtlArray}, eltype::Type)
-  return MtlArray{eltype,NDTensors.ndims(arraytype)}
-end
+# `SetParameters.jl` overloads.
+get_parameter(::Type{<:MtlArray{P1}}, ::Position{1}) where {P1} = P1
+get_parameter(::Type{<:MtlArray{<:Any,P2}}, ::Position{2}) where {P2} = P2
+get_parameter(::Type{<:MtlArray{<:Any,<:Any,P3}}, ::Position{3}) where {P3} = P3
 
-function set_ndims(arraytype::Type{<:MtlArray{T}}, ndims) where {T}
-  return MtlArray{T,ndims}
-end
+# Set parameter 1
+set_parameter(::Type{<:MtlArray}, ::Position{1}, P1) = MtlArray{P1}
+set_parameter(::Type{<:MtlArray{<:Any,P2}}, ::Position{1}, P1) where {P2} = MtlArray{P1,P2}
+set_parameter(::Type{<:MtlArray{<:Any,<:Any,P3}}, ::Position{1}, P1) where {P3} = MtlArray{P1,<:Any,P3}
+set_parameter(::Type{<:MtlArray{<:Any,P2,P3}}, ::Position{1}, P1) where {P2,P3} = MtlArray{P1,P2,P3}
 
-function set_ndims(::Type{<:MtlArray}, ndims)
-  return MtlArray{eltype(arraytype),ndims}
-end
+# Set parameter 2
+set_parameter(::Type{<:MtlArray}, ::Position{2}, P2) = MtlArray{<:Any,P2}
+set_parameter(::Type{<:MtlArray{P1}}, ::Position{2}, P2) where {P1} = MtlArray{P1,P2}
+set_parameter(::Type{<:MtlArray{<:Any,<:Any,P3}}, ::Position{2}, P2) where {P3} = MtlArray{<:Any,P2,P3}
+set_parameter(::Type{<:MtlArray{P1,<:Any,P3}}, ::Position{2}, P2) where {P1,P3} = MtlArray{P1,P2,P3}
 
-function NDTensors.set_eltype_if_unspecified(
-  arraytype::Type{MtlArray{T}}, eltype::Type
-) where {T}
-  return arraytype
-end
-function NDTensors.set_eltype_if_unspecified(arraytype::Type{MtlArray}, eltype::Type)
-  return MtlVector{eltype}
-end
+# Set parameter 3
+set_parameter(::Type{<:MtlArray}, ::Position{3}, P3) = MtlArray{<:Any,<:Any,P3}
+set_parameter(::Type{<:MtlArray{P1}}, ::Position{3}, P3) where {P1} = MtlArray{P1,<:Any,P3}
+set_parameter(::Type{<:MtlArray{<:Any,P2}}, ::Position{3}, P3) where {P2} = MtlArray{<:Any,P2,P3}
+set_parameter(::Type{<:MtlArray{P1,P2}}, ::Position{3}, P3) where {P1,P2} = MtlArray{P1,P2,P3}
+
+default_parameter(::Type{<:MtlArray}, ::Position{1}) = Float64
+default_parameter(::Type{<:MtlArray}, ::Position{2}) = 1
+default_parameter(::Type{<:MtlArray}, ::Position{3}) = Metal.DefaultStorageMode
+
+nparameters(::Type{<:MtlArray}) = Val(3)

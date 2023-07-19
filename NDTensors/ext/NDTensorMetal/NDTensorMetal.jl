@@ -1,6 +1,7 @@
 module NDTensorMetal
 
 using NDTensors
+using NDTensors.SetParameters
 using Functors
 using Adapt
 

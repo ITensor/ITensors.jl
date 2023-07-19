@@ -125,8 +125,13 @@ using ITensors.NDTensors:
   eachdiagblock,
   fill!!,
   randn!!,
+  set_eltype,
   single_precision,
   timer
+
+using ITensors.NDTensors.SetParameters:
+  get_parameters,
+  set_unspecified_parameters
 
 import ITensors.NDTensors:
   # Modules

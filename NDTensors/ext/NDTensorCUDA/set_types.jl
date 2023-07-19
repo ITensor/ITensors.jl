@@ -1,53 +1,28 @@
-buffertype(::Type{<:CuArray{<:Any,<:Any,B}}) where {B} = B
-function buffertype(datatype::Type{<:CuArray})
-  return error("No buffer type specified in type $(datatype)")
-end
+# `SetParameters.jl` overloads.
+get_parameter(::Type{<:CuArray{P1}}, ::Position{1}) where {P1} = P1
+get_parameter(::Type{<:CuArray{<:Any,P2}}, ::Position{2}) where {P2} = P2
+get_parameter(::Type{<:CuArray{<:Any,<:Any,P3}}, ::Position{3}) where {P3} = P3
 
-default_buffertype() = CUDA.Mem.DeviceBuffer
+# Set parameter 1
+set_parameter(::Type{<:CuArray}, ::Position{1}, P1) = CuArray{P1}
+set_parameter(::Type{<:CuArray{<:Any,P2}}, ::Position{1}, P1) where {P2} = CuArray{P1,P2}
+set_parameter(::Type{<:CuArray{<:Any,<:Any,P3}}, ::Position{1}, P1) where {P3} = CuArray{P1,<:Any,P3}
+set_parameter(::Type{<:CuArray{<:Any,P2,P3}}, ::Position{1}, P1) where {P2,P3} = CuArray{P1,P2,P3}
 
-function set_eltype(arraytype::Type{<:CuArray}, eltype::Type)
-  return CuArray{eltype,NDTensors.ndims(arraytype),buffertype(arraytype)}
-end
+# Set parameter 2
+set_parameter(::Type{<:CuArray}, ::Position{2}, P2) = CuArray{<:Any,P2}
+set_parameter(::Type{<:CuArray{P1}}, ::Position{2}, P2) where {P1} = CuArray{P1,P2}
+set_parameter(::Type{<:CuArray{<:Any,<:Any,P3}}, ::Position{2}, P2) where {P3} = CuArray{<:Any,P2,P3}
+set_parameter(::Type{<:CuArray{P1,<:Any,P3}}, ::Position{2}, P2) where {P1,P3} = CuArray{P1,P2,P3}
 
-function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
-  return CuArray{T,ndims,buffertype(arraytype)}
-end
+# Set parameter 3
+set_parameter(::Type{<:CuArray}, ::Position{3}, P3) = CuArray{<:Any,<:Any,P3}
+set_parameter(::Type{<:CuArray{P1}}, ::Position{3}, P3) where {P1} = CuArray{P1,<:Any,P3}
+set_parameter(::Type{<:CuArray{<:Any,P2}}, ::Position{3}, P3) where {P2} = CuArray{<:Any,P2,P3}
+set_parameter(::Type{<:CuArray{P1,P2}}, ::Position{3}, P3) where {P1,P2} = CuArray{P1,P2,P3}
 
-function set_ndims(arraytype::Type{<:CuArray}, ndims)
-  return CuArray{eltype(arraytype),ndims,buffertype(arraytype)}
-end
+default_parameter(::Type{<:CuArray}, ::Position{1}) = Float64
+default_parameter(::Type{<:CuArray}, ::Position{2}) = 1
+default_parameter(::Type{<:CuArray}, ::Position{3}) = Metal.DefaultStorageMode
 
-function set_eltype_if_unspecified(
-  arraytype::Type{<:CuArray{T}}, ::Type=NDTensors.default_eltype()
-) where {T}
-  return arraytype
-end
-function set_eltype_if_unspecified(
-  arraytype::Type{<:CuArray}, eltype::Type=NDTensors.default_eltype()
-)
-  return similartype(arraytype, eltype)
-end
-
-function similartype(data::CuArray, eltype::Type)
-  return similartype(typeof(data), eltype)
-end
-
-function similartype(datatype::Type{<:CuArray}, eltype::Type)
-  return CuArray{eltype,NDTensors.ndims(datatype)}
-end
-
-function similartype(datatype::Type{<:CuArray{<:Any,<:Any,B}}, eltype::Type) where {B}
-  return CuArray{eltype,NDTensors.ndims(datatype),buffertype(datatype)}
-end
-
-function set_buffertype_if_unspecified(
-  arraytype::Type{<:CuArray{<:Any,<:Any,B}}, ::Type=default_buffertype()
-) where {B}
-  return arraytype
-end
-
-function set_buffertype_if_unspecified(
-  arraytype::Type{<:CuArray{<:Any,<:Any}}, buf::Type=default_buffertype()
-)
-  return CuArray{eltype(arraytype),NDTensors.ndims(arraytype),buf}
-end
+nparameters(::Type{<:CuArray}) = Val(3)
