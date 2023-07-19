@@ -375,9 +375,17 @@ function _contract!(
 
   # TODO: this logic may be wrong
   if props.permuteC
-    # Need to copy here since we will be permuting
-    # into C later
-    CM = reshape(copy(CT), (props.dleft, props.dright))
+    # if we are computing C = α * A B + β * C
+    # we need to make sure C is permuted to the same 
+    # ordering as A B
+    if β ≠ 0
+      pC = NTuple{NB,Int}(props.PC)
+      CM = reshape(permutedims(CT, pC), (props.dleft, props.dright))
+    else
+      # Need to copy here since we will be permuting
+      # into C later  
+      CM = reshape(copy(CT), (props.dleft, props.dright))
+    end
   else
     if Ctrans(props)
       CM = transpose(reshape(CT, (props.dright, props.dleft)))
