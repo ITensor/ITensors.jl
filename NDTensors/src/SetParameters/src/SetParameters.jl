@@ -16,6 +16,7 @@ export DefaultParameter,
   Position,
   default_parameter,
   get_parameter,
+  get_parameters,
   nparameters,
   set_parameters,
   set_unspecified_parameters
