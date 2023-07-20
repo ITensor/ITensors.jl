@@ -1,6 +1,7 @@
 module NDTensorMetal
 
 using NDTensors
+using NDTensors.SetParameters
 using Functors
 using Adapt
 
@@ -11,7 +12,6 @@ else
 end
 
 include("imports.jl")
-
 include("adapt.jl")
 include("set_types.jl")
 end

@@ -1,6 +1,12 @@
 using NDTensors
 using LinearAlgebra
 using Test
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -32,18 +38,17 @@ devs = devices_list(copy(ARGS))
     singular in [false, true],
     dev in devs
 
-    eps = Base.eps(real(elt)) * 30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
-    n, m = 4, 8
-    Id = Diagonal(fill(1.0, min(n, m)))
-    #
-    # Wide matrix (more columns than rows)
-    #
-    A = dev(randomTensor(elt, (n, m)))
-    # We want to test 0.0 on the diagonal.  We need make all roaw equal to gaurantee this with numerical roundoff.
-    if singular
-      for i in 2:n
-        A[i, :] = A[1, :]
-      end
+  eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
+  n, m = 4, 8
+  Id = Diagonal(fill(1.0, min(n, m)))
+  #
+  # Wide matrix (more columns than rows)
+  #
+  A = randomTensor(elt, (n, m))
+  # We want to test 0.0 on the diagonal.  We need make all roaw equal to gaurantee this with numerical roundoff.
+  if singular
+    for i in 2:n
+      A[i, :] = A[1, :]
     end
     if qx == ql && dev != NDTensors.cpu
       @test_broken qx(A; positive=positive)

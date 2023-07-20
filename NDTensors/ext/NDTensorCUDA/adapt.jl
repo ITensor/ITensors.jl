@@ -4,7 +4,7 @@
 ## default_buffertype. Also `adapt(CuVector{<:Any, <:Any, Buffertype})` fails to work properly
 struct NDTensorCuArrayAdaptor{B} end
 ## TODO make this work for unified. This works but overwrites CUDA's adapt_storage. This fails for emptystorage...
-@inline function NDTensors.cu(xs; unified::Bool=false)
+function cu(xs; unified::Bool=false)
   return fmap(
     x -> adapt(NDTensorCuArrayAdaptor{unified ? Mem.UnifiedBuffer : Mem.DeviceBuffer}(), x),
     xs,
