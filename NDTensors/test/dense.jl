@@ -58,7 +58,7 @@ end
       @test eltype(Asim) == elt
       @test length(Asim) == 10
 
-      B = Tensor(undef, (3, 4))
+      B = dev(Tensor(undef, (3, 4)))
       randn!(B)
 
       C = A + B
@@ -112,8 +112,8 @@ end
       @test dim(I) == 1000
       @test Array(I) == I_arr
 
-      J = Tensor((2, 2))
-      K = Tensor((2, 2))
+      J = dev(Tensor((2, 2)))
+      K = dev(Tensor((2, 2)))
       @test Array(J * K) ≈ Array(J) * Array(K)
     end
 

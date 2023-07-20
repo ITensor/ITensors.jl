@@ -145,7 +145,7 @@ function _contract_scalar_noperm!(
       fill!(Rᵈ, 0)
     else
       # Rᵈ .= α .* T₂ᵈ
-      BLAS.axpby!(α, Tᵈ, β, Rᵈ)
+      LinearAlgebra.axpby!(α, Tᵈ, β, Rᵈ)
     end
   elseif isone(β)
     if iszero(α)
@@ -153,15 +153,15 @@ function _contract_scalar_noperm!(
       # Rᵈ .= Rᵈ
     else
       # Rᵈ .= α .* Tᵈ .+ Rᵈ
-      BLAS.axpy!(α, Tᵈ, Rᵈ)
+      LinearAlgebra.axpy!(α, Tᵈ, Rᵈ)
     end
   else
     if iszero(α)
       # Rᵈ .= β .* Rᵈ
-      BLAS.scal!(length(Rᵈ), β, Rᵈ, 1)
+      LinearAlgebra.scal!(length(Rᵈ), β, Rᵈ, 1)
     else
       # Rᵈ .= α .* Tᵈ .+ β .* Rᵈ
-      BLAS.axpby!(α, Tᵈ, β, Rᵈ)
+      LinearAlgebra.axpby!(α, Tᵈ, β, Rᵈ)
     end
   end
   return R
@@ -187,7 +187,7 @@ function _contract_scalar_perm!(
   else
     if iszero(α)
       # Rᵃ .= β .* Rᵃ
-      BLAS.scal!(length(Rᵃ), β, Rᵃ, 1)
+      LinearAlgebra.scal!(length(Rᵃ), β, Rᵃ, 1)
     else
       Rᵃ .= α .* permutedims(Tᵃ, perm) .+ β .* Rᵃ
     end

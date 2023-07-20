@@ -1,3 +1,10 @@
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
+
 function devices_list(test_args)
   devs = Vector{Function}(undef, 0)
   if isempty(test_args) || "base" in test_args

@@ -1,11 +1,6 @@
 using NDTensors
 using Test
-if "cuda" in ARGS || "all" in ARGS
-  using CUDA
-end
-if "metal" in ARGS || "all" in ARGS
-  using Metal
-end
+
 @testset "DiagTensor basic functionality" begin
   include("device_list.jl")
   devs = devices_list(copy(ARGS))

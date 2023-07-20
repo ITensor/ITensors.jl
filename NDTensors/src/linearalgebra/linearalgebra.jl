@@ -81,7 +81,9 @@ function lapack_svd_error_message(alg)
          "   To get an `svd` of a matrix `A`, an eigendecomposition of\n" *
          "   ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of\n" *
          "   ``A^{\\dagger} U`` is used to compute `V`. This is performed\n" *
-         "   recursively to compute small singular values.\n\n" *
+         "   recursively to compute small singular values.\n" *
+         " - `\"QRAlgorithm\"` is a CUDA.jl implemented SVD algorithm using QR.\n" *
+         " - `\"JacobiAlgorithm\"` is a CUDA.jl implemented SVD algorithm.\n\n" *
          "Returning `nothing`. For an output `F = svd(A, ...)` you can check if\n" *
          "`isnothing(F)` in your code and try a different algorithm.\n\n" *
          "To suppress this message in the future, you can wrap the `svd` call in the\n" *
@@ -146,6 +148,8 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
     end
   elseif alg == "recursive"
     MUSV = svd_recursive(matrix(T))
+  elseif alg == "QRAlgorithm" || alg == "JacobiAlgorithm"
+    MUSV = svd_catch_error(matrix(T); alg=alg)
   else
     error(
       "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",
@@ -270,12 +274,13 @@ function random_unitary(::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
   return random_unitary(Random.default_rng(), ElT, n, m)
 end
 
-function random_unitary(rng::AbstractRNG, ::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
+function random_unitary(rng::AbstractRNG, DataT::Type{<:AbstractArray}, n::Int, m::Int)
+  ElT = eltype(DataT)
   if n < m
-    return Matrix(random_unitary(rng, ElT, m, n)')
+    return DataT(random_unitary(rng, ElT, m, n)')
   end
   F = qr(randn(rng, ElT, n, m))
-  Q = Matrix(F.Q)
+  Q = DataT(F.Q)
   # The upper triangle of F.factors 
   # are the elements of R.
   # Multiply cols of Q by the signs
@@ -285,6 +290,10 @@ function random_unitary(rng::AbstractRNG, ::Type{ElT}, n::Int, m::Int) where {El
     Q[:, c] .*= sign(F.factors[c, c])
   end
   return Q
+end
+
+function random_unitary(rng::AbstractRNG, ::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
+  return random_unitary(rng, set_ndims(default_datatype(ElT), 2), n, m)
 end
 
 random_unitary(n::Int, m::Int) = random_unitary(ComplexF64, n, m)
@@ -390,7 +399,8 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   IndsT = indstype(T) #get the index type
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
-  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
+  QM = convert(typeof(XM), QM)
+  Q = tensor(Dense(vec(QM)), Qinds) #Q was strided
   X = tensor(Dense(vec(XM)), Xinds)
   return Q, X
 end
@@ -409,7 +419,7 @@ matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
   sparseQ, R = qr(M)
-  Q = convert(Matrix, sparseQ)
+  Q = convert(typeof(R), sparseQ)
   nc = size(Q, 2)
   for c in 1:nc
     if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
@@ -433,7 +443,7 @@ matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
   sparseQ, L = ql(M)
-  Q = convert(Matrix, sparseQ)
+  Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
   for c in 1:(nc - dc)
