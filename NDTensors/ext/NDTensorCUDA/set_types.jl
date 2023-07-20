@@ -33,6 +33,6 @@ set_parameter(::Type{<:CuArray{P1,P2}}, ::Position{3}, P3) where {P1,P2} = CuArr
 
 default_parameter(::Type{<:CuArray}, ::Position{1}) = Float64
 default_parameter(::Type{<:CuArray}, ::Position{2}) = 1
-default_parameter(::Type{<:CuArray}, ::Position{3}) = Metal.DefaultStorageMode
+default_parameter(::Type{<:CuArray}, ::Position{3}) = Mem.DeviceBuffer
 
 nparameters(::Type{<:CuArray}) = Val(3)
