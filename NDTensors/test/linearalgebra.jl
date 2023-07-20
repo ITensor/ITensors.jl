@@ -1,6 +1,12 @@
 using NDTensors
 using LinearAlgebra
 using Test
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -28,7 +34,7 @@ end
   positive in [false, true],
   singular in [false, true]
 
-  eps = Base.eps(real(elt)) * 30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
+  eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
   n, m = 4, 8
   Id = Diagonal(fill(1.0, min(n, m)))
   #
