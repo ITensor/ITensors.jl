@@ -334,18 +334,18 @@ function _contract!(
   return _contract!(C, A, B, props, α, β)
 end
 
-function _contract!(C::ReshapedArray{El}, 
+function _contract!(
+  C::ReshapedArray{El},
   A::ReshapedArray{El},
   B::ReshapedArray{El},
   props::ContractionProperties,
   α::Number=one(El),
-  β::Number=zero(El)) where {El}
+  β::Number=zero(El),
+) where {El}
   Cp = copy(C)
   _contract!(Cp, copy(A), copy(B), props, α, β)
   Cp = reshape(Cp, (length(C)))
-  for i in 1:length(C)
-    C.parent[i] = Cp[i]
-  end
+  return copy!(C, Cp)
 end
 
 function _contract!(
