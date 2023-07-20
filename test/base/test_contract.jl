@@ -245,8 +245,8 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       A = randomITensor(T, (j, i))
       B = randomITensor(T, (j, k, l, α))
       C = ITensor(zero(T), (i, k, α, l))
-      contract!(C, A, B, 1.0, 0.0)
-      contract!(C, A, B, 1.0, 1.0)
+      ITensors.contract!(C, A, B, 1.0, 0.0)
+      ITensors.contract!(C, A, B, 1.0, 1.0)
       D = A * B
       D .+= A * B
       @test C ≈ D
