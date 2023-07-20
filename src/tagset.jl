@@ -69,6 +69,24 @@ function reset!(v::MTagStorage, nchar::Int)
   end
 end
 
+function strict_tags_error(str, maxlength, nchar)
+  return error(
+    "You are trying to make a TagSet from the String \"$(str)\". This has more than the maximum number of allowed tags ($maxlength), or has a tag that is longer than the longest allowed tag ($nchar). Either specify fewer or shorter tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags or tag characters will be ignored.",
+  )
+end
+
+function strict_tags_add_error(ts, tsadd, maxlength)
+  return error(
+    "You are trying to add the TagSet $tsadd to the TagSet $ts. The result would have more than the maximum number of allowed tags ($maxlength). Either specify fewer tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags will be ignored.",
+  )
+end
+
+function strict_tags_replace_error(ts, tsremove, tsadd, maxlength)
+  return error(
+    "You are trying to replace the TagSet $tsremove with the TagSet $tsadd in the TagSet $ts. The result would have more than the maximum number of allowed tags ($maxlength). Either specify fewer tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags will be ignored.",
+  )
+end
+
 function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Mutable fixed-size vector as temporary Tag storage
   # TODO: refactor the Val here.
@@ -80,21 +98,41 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   for current_char in str
     if current_char == ','
       if nchar != 0
-        ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
+        if ntags < N
+          ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
+        elseif using_strict_tags()
+          strict_tags_error(str, N, length(current_tag))
+        end # else do nothing
         # Reset the current tag
         reset!(current_tag, nchar)
         nchar = 0
       end
     elseif current_char != ' ' # TagSet constructor ignores whitespace
-      nchar == length(current_tag) &&
-        error("Currently, tags can only have up to $(length(current_tag)) characters")
+      if nchar ≥ length(current_tag)
+        if using_strict_tags()
+          strict_tags_error(str, N, length(current_tag))
+        else
+          continue
+        end
+      end
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end
   end
   # Store the final tag
   if nchar != 0
-    ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
+    if ntags < N
+      ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
+    elseif using_strict_tags()
+      strict_tags_error(str, N, length(current_tag))
+    end # else do nothing
+  end
+  if ntags > N
+    if using_strict_tags()
+      strict_tags_error(str, N, length(current_tag))
+    else
+      ntags = N
+    end
   end
   return GenericTagSet{T,N}(TagSetStorage(ts), ntags)
 end
@@ -174,12 +212,18 @@ function addtags(ts::TagSet, tagsadd)
     if hastags(ts, tsadd)
       return ts
     end
-    throw(ErrorException("Cannot add tag: TagSet already maximum size"))
+    if using_strict_tags()
+      strict_tags_add_error(ts, tsadd, maxlength(ts))
+    end
   end
   res_ts = MVector(data(ts))
   ntags = length(ts)
   for n in 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
+    if ntags < maxlength(ts)
+      @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
+    elseif using_strict_tags()
+      strict_tags_add_error(ts, tsadd, maxlength(ts))
+    end
   end
   return TagSet(TagSetStorage(res_ts), ntags)
 end
@@ -220,7 +264,11 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
     @inbounds ntags = _removetag!(res_ts, ntags, data(tsremove)[n])
   end
   for n in 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
+    if ntags < maxlength(ts)
+      @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
+    elseif using_strict_tags()
+      strict_tags_replace_error(ts, tsremove, tsadd, maxlength(ts))
+    end
   end
   return TagSet(TagSetStorage(res_ts), ntags)
 end

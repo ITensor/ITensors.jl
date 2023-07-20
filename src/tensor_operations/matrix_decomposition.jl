@@ -122,13 +122,13 @@ function svd(A::ITensor, Linds...; kwargs...)
   Ris_original = Ris
   if isempty(Lis_original)
     α = trivial_index(Ris)
-    vLα = onehot(eltype(A), α => 1)
+    vLα = onehot(datatype(A), α => 1)
     A *= vLα
     Lis = [α]
   end
   if isempty(Ris_original)
     α = trivial_index(Lis)
-    vRα = onehot(eltype(A), α => 1)
+    vRα = onehot(datatype(A), α => 1)
     A *= vRα
     Ris = [α]
   end
@@ -370,7 +370,7 @@ end
 #
 function add_trivial_index(A::ITensor, Ainds)
   α = trivial_index(Ainds) #If Ainds[1] has no QNs makes Index(1), otherwise Index(QN()=>1)
-  vα = onehot(eltype(A), α => 1)
+  vα = onehot(datatype(A), α => 1)
   A *= vα
   return A, vα, [α]
 end

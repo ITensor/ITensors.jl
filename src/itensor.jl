@@ -345,7 +345,7 @@ function ITensor(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
     ),
   )
-  data = Array{eltype}(as, A)
+  data = set_eltype(typeof(A), eltype)(as, A)
   return itensor(Dense(data), inds)
 end
 
@@ -564,15 +564,25 @@ B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
-  A = ITensor(eltype, ind.(ivs)...)
-  A[val.(ivs)...] = one(eltype)
-  return A
+function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
+  A = ITensor(eltype(datatype), ind.(ivs)...)
+  A[val.(ivs)...] = one(eltype(datatype))
+  return Adapt.adapt(datatype, A)
 end
-onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
-setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
 
-onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}})
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+
+function onehot(ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(NDTensors.default_eltype()), ivs...)
+end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
@@ -674,21 +684,13 @@ zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 #
 
 # Helper functions for different view behaviors
-Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = Array{ElT,N}(A)
-
-function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
-  return convert(AbstractArray{ElT,N}, A)
-end
-function Array{ElT}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {ElT,N,ElTA}
-  return Array{ElT,N}(as, A)
+# TODO: Move to NDTensors.jl
+function (arraytype::Type{<:AbstractArray})(::NeverAlias, A::AbstractArray)
+  return set_unspecified_parameters(arraytype, get_parameters(A))(A)
 end
 
-# TODO: Change to:
-# (Array{ElT, N} where {ElT})([...]) = [...]
-# once support for `VERSION < v"1.6"` is dropped.
-# Previous to Julia v1.6 `where` syntax couldn't be used in a function name
-function Array{<:Any,N}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {N,ElTA}
-  return Array{ElTA,N}(as, A)
+function (arraytype::Type{<:AbstractArray})(::AllowAlias, A::AbstractArray)
+  return convert(set_unspecified_parameters(arraytype, get_parameters(A)), A)
 end
 
 """
