@@ -1,6 +1,12 @@
 using NDTensors
 using LinearAlgebra
 using Test
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
 
 @testset "random_orthog" begin
   n, m = 10, 4

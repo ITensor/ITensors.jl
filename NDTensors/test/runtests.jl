@@ -10,9 +10,11 @@ if isempty(ARGS) || "base" in ARGS
 end
 if "cuda" in ARGS || "all" in ARGS
   println("""\nArguments ARGS = $(ARGS) contain `"cuda"`. Running NDTensorCUDA tests.""")
+  using CUDA
 end
 if "metal" in ARGS || "all" in ARGS
   println("""\nArguments ARGS = $(ARGS) contain`"metal"`. Running NDTensorMetal tests.""")
+  using Metal
 end
 
 @safetestset "NDTensors" begin
