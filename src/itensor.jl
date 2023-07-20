@@ -564,15 +564,25 @@ B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
-  A = ITensor(eltype, ind.(ivs)...)
-  A[val.(ivs)...] = one(eltype)
-  return A
+function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
+  A = ITensor(eltype(datatype), ind.(ivs)...)
+  A[val.(ivs)...] = one(eltype(datatype))
+  return Adapt.adapt(datatype, A)
 end
-onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
-setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
 
-onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}})
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+
+function onehot(ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(NDTensors.default_eltype()), ivs...)
+end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
