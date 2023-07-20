@@ -38,17 +38,18 @@ devs = devices_list(copy(ARGS))
     singular in [false, true],
     dev in devs
 
-  eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
-  n, m = 4, 8
-  Id = Diagonal(fill(1.0, min(n, m)))
-  #
-  # Wide matrix (more columns than rows)
-  #
-  A = randomTensor(elt, (n, m))
-  # We want to test 0.0 on the diagonal.  We need make all roaw equal to gaurantee this with numerical roundoff.
-  if singular
-    for i in 2:n
-      A[i, :] = A[1, :]
+    eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
+    n, m = 4, 8
+    Id = Diagonal(fill(1.0, min(n, m)))
+    #
+    # Wide matrix (more columns than rows)
+    #
+    A = dev(randomTensor(elt, (n, m)))
+    # We want to test 0.0 on the diagonal.  We need to make all rows equal to gaurantee this with numerical roundoff.
+    if singular
+      for i in 2:n
+        A[i, :] = A[1, :]
+      end
     end
     if qx == ql && dev != NDTensors.cpu
       @test_broken qx(A; positive=positive)
