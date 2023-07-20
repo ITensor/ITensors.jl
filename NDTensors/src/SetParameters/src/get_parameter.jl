@@ -19,9 +19,10 @@ Get the first type parameter of the object `object`.
 """
 get_parameter(object) = get_parameter(typeof(object))
 
-# TODO: Define `get_parameters`?
-# function get_parameters(type::Type)
-#   return ntuple(nparameters(type)) do position
-#     get_parameter(type, Position(position))
-#   end
-# end
+function get_parameters(type::Type)
+  return ntuple(nparameters(type)) do position
+    get_parameter(type, Position(position))
+  end
+end
+
+get_parameters(object) = get_parameters(typeof(object))

@@ -2,6 +2,12 @@ using Test
 using NDTensors.SetParameters
 
 @testset "Test NDTensors.SetParameters" begin
+  @testset "Get parameters" begin
+    @test @inferred(get_parameters(Array{Float32,3})) == (Float32, 3)
+    @test @inferred(get_parameter(Array{Float32,3}, Position(1))) == Float32
+    @test @inferred(get_parameter(Array{Float32,3}, Position(2))) == 3
+  end
+
   @testset "Set parameter at position" begin
     @test @inferred(set_parameters(Array{Float32,3}, Float16)) == Array{Float16,3}
     @test @inferred(set_parameters(Array{Float32,3}, Position(1), Float16)) ==
