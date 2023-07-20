@@ -242,9 +242,9 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       end
     end
     @testset "Test contract in-place ITensors (4-Tensor*Matrix -> 4-Tensor)" begin
-      A = randomITensor(T, (j,i))
-      B = randomITensor(T, (j,k,l,α))
-      C = ITensor(zero(T), (i,k,α,l))
+      A = randomITensor(T, (j, i))
+      B = randomITensor(T, (j, k, l, α))
+      C = ITensor(zero(T), (i, k, α, l))
       contract!(C, A, B, 1.0, 0.0)
       contract!(C, A, B, 1.0, 1.0)
       D = A * B
