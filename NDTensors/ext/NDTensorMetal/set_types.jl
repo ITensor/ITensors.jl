@@ -33,7 +33,7 @@ function set_parameter(::Type{<:MtlArray{P1,P2}}, ::Position{3}, P3) where {P1,P
   return MtlArray{P1,P2,P3}
 end
 
-default_parameter(::Type{<:MtlArray}, ::Position{1}) = Float64
+default_parameter(::Type{<:MtlArray}, ::Position{1}) = Float32
 default_parameter(::Type{<:MtlArray}, ::Position{2}) = 1
 default_parameter(::Type{<:MtlArray}, ::Position{3}) = Metal.DefaultStorageMode
 
