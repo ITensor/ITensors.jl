@@ -249,7 +249,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       contract!(C, A, B, 1.0, 1.0)
       D = A * B
       D .+= A * B
-      C == D
+      @test C ≈ D
     end
   end # End contraction testset
 end
