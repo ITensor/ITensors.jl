@@ -224,9 +224,7 @@ function disable_tblis()
   return nothing
 end
 
-function backend_octavian()
-  throw(UndefVarError)
-end
+function backend_octavian end
 
 function __init__()
   @static if !isdefined(Base, :get_extension)
