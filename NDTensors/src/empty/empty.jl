@@ -11,9 +11,9 @@ struct EmptyOrder end
 struct EmptyStorage{ElT,DataT<:Zeros} <: TensorStorage{ElT}
   data::DataT
 
-  function EmptyStorage{ElT, DataT}(data::DataT) where {ElT, DataT<:Zeros}
+  function EmptyStorage{ElT,DataT}(data::DataT) where {ElT,DataT<:Zeros}
     @assert ElT == eltype(DataT)
-    return new{ElT, DataT}(data)
+    return new{ElT,DataT}(data)
   end
 end
 
