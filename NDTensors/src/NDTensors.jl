@@ -11,6 +11,7 @@ using LinearAlgebra
 using StaticArrays
 using Functors
 using HDF5
+using FillArrays
 using SimpleTraits
 using SplitApplyCombine
 using Strided
@@ -101,6 +102,7 @@ include("blocksparse/linearalgebra.jl")
 #####################################
 # Empty
 #
+include("empty/emptynumber.jl")
 include("empty/empty.jl")
 include("empty/EmptyTensor.jl")
 include("empty/tensoralgebra/contract.jl")
