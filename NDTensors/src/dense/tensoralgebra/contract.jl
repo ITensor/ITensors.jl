@@ -379,7 +379,7 @@ function _contract!(
     # we need to make sure C is permuted to the same 
     # ordering as A B
     if β ≠ 0
-      pC = NTuple{NB,Int}(props.PC)
+      pC = NTuple{NC,Int}(props.PC)
       CM = reshape(permutedims(CT, pC), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
