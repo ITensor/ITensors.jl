@@ -314,6 +314,16 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
+  # <fermions>
+  if using_auto_fermion()
+    if !all(i->dir(i)==Out,Lis)
+      error("With auto_fermion enabled, left inds in eigen must have Out arrows")
+    end
+    if !all(i->dir(i)==In,Ris)
+      error("With auto_fermion enabled, right inds in eigen must have Out arrows")
+    end
+  end
+
   CL = combiner(Lis...; dir=Out, tags="CMB,left")
   CR = combiner(dag(Ris)...; dir=Out, tags="CMB,right")
 
