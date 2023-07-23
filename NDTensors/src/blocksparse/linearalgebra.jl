@@ -165,13 +165,32 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
       Vb = copy(Vb)
     end
 
-    blockview(U, blockU) .= Ub
+    # <fermions>
+    sU = right_arrow_sign(uind,blockU[2])
+
+    if sU == -1
+      blockview(U, blockU) .= -Ub
+    else
+      blockview(U, blockU) .= Ub
+    end
+
     blockviewS = blockview(S, blockS)
     for i in 1:diaglength(Sb)
       setdiagindex!(blockviewS, getdiagindex(Sb, i), i)
     end
 
-    blockview(V, blockV) .= Vb
+    #<fermions>
+    sV = left_arrow_sign(vind,blockV[2])
+    # This sign (sVP) accounts for the fact that
+    # V is transposed, i.e. the index connecting to S
+    # is the second index:
+    sVP = block_parity(vind,blockV[2])==1 ? -1 : +1
+
+    if (sV*sVP) == -1
+      blockview(V, blockV) .= -Vb
+    else
+      blockview(V, blockV) .= Vb
+    end
   end
 
   return U, S, V, Spectrum(d, truncerr)

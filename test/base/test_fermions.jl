@@ -1,4 +1,5 @@
 using ITensors, Test
+import ITensors: Out,In
 
 @testset "Fermions" begin
   ITensors.enable_auto_fermion()
@@ -504,6 +505,84 @@ using ITensors, Test
     end
   end # Fermionic SVD tests
 
+  @testset "Fermionic SVD Arrow Cases" begin
+    s = siteinds("Fermion",3; conserve_qns=true)
+
+    function id(i)
+      if dir(i)==Out
+        I = ITensor(i,dag(i)')
+      else
+        I = ITensor(dag(i)',i)
+      end
+      for n=1:dim(i)
+        I[n,n] = 1.0
+      end
+      return I
+    end
+
+    # Arrows: Out, Out
+    let
+      T = ITensor(s[1], s[2])
+      T[1, 2] = 1.0
+      T[2, 1] = 1.0
+      U,S,V,spec,u,v = svd(T,s[1])
+      @test norm(T-U*S*V) ≈ 0
+      UU = dag(U)*prime(U,u)
+      @test norm(UU-id(u)) ≈ 0
+      VV = dag(V)*prime(V,v)
+      @test norm(VV-id(v)) ≈ 0
+    end
+
+    # Arrows: In, Out
+    let
+      T = ITensor(dag(s[1]), s[2])
+      T[2, 2] = 1.0
+      U,S,V,spec,u,v = svd(T,s[1])
+      @test norm(T-U*S*V) ≈ 0
+      UU = dag(U)*prime(U,u)
+      @test norm(UU-id(u)) ≈ 0
+      VV = dag(V)*prime(V,v)
+      @test norm(VV-id(v)) ≈ 0
+    end
+
+    # Arrows: Out, In
+    let
+      T = ITensor(s[1], dag(s[2]))
+      T[2, 2] = 1.0
+      U,S,V,spec,u,v = svd(T,s[1])
+      @test norm(T-U*S*V) ≈ 0
+      UU = dag(U)*prime(U,u)
+      @test norm(UU-id(u)) ≈ 0
+      VV = dag(V)*prime(V,v)
+      @test norm(VV-id(v)) ≈ 0
+    end
+
+    # Arrows: In, In
+    let
+      T = ITensor(dag(s[1]), dag(s[2]))
+      T[1, 2] = 1.0
+      U,S,V,spec,u,v = svd(T,s[1])
+      @test norm(T-U*S*V) ≈ 0
+      UU = dag(U)*prime(U,u)
+      @test norm(UU-id(u)) ≈ 0
+      VV = dag(V)*prime(V,v)
+      @test norm(VV-id(v)) ≈ 0
+    end
+
+    # Arrows: Mixed, In
+    let
+      T = ITensor(dag(s[1]), s[2], dag(s[3]))
+      T[1, 1, 1] = 1.0
+      T[2, 2, 1] = 1.0
+      U,S,V,spec,u,v = svd(T,[dag(s[1]),s[2]])
+      @test norm(T-U*S*V) < 1E-14
+      UU = dag(U)*prime(U,u)
+      @test_broken norm(UU-id(u)) ≈ 0
+      VV = dag(V)*prime(V,v)
+      @test norm(VV-id(v)) ≈ 0
+    end
+  end
+
   @testset "Fermion Contraction with Combined Indices" begin
     N = 10
     s = siteinds("Fermion", N; conserve_qns=true)
@@ -657,6 +736,15 @@ using ITensors, Test
       U, S, V = svd(T, dag(l22), dag(l23), s1)
 
       @test norm(T - U * S * V) < 1E-10
+    end
+
+    @testset "AutoMPO Regression Test" begin
+      N = 3
+      s = siteinds("Fermion", N; conserve_qns=true)
+
+      a = AutoMPO()
+      a += "Cdag", 1, "C", 3
+      @test_nowarn H = MPO(a, s)
     end
   end # Regression Tests
 
