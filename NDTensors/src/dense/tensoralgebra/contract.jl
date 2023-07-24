@@ -344,9 +344,8 @@ function _contract!(
 ) where {El,NC,NA,NB}
   tA = 'N'
   if props.permuteA
-    pA = NTuple{NA,Int}(props.PA)
     #@timeit_debug timer "_contract!: permutedims A" begin
-    @strided Ap = permutedims(AT, pA)
+    @strided Ap = permutedims(AT, props.PA)
     #end # @timeit
     AM = transpose(reshape(Ap, (props.dmid, props.dleft)))
   else
@@ -360,9 +359,8 @@ function _contract!(
 
   tB = 'N'
   if props.permuteB
-    pB = NTuple{NB,Int}(props.PB)
     #@timeit_debug timer "_contract!: permutedims B" begin
-    @strided Bp = permutedims(BT, pB)
+    @strided Bp = permutedims(BT, props.PB)
     #end # @timeit
     BM = reshape(Bp, (props.dmid, props.dright))
   else
@@ -379,9 +377,7 @@ function _contract!(
     # we need to make sure C is permuted to the same 
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
-      pC = NTuple{NC,Int}(props.PC)
-
-      CM = reshape(permutedims(CT, invperm(pC)), (props.dleft, props.dright))
+      CM = reshape(permutedims(CT, invperm(props.PC)), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
       # into C later  
@@ -403,7 +399,7 @@ function _contract!(
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin
-    @strided CT .= permutedims(Cr, pC)
+    @strided CT .= permutedims(Cr, props.PC)
     #end # @timeit
   end
 
