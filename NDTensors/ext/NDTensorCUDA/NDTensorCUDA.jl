@@ -5,6 +5,7 @@ using NDTensors.SetParameters
 using Adapt
 using Functors
 using LinearAlgebra: BlasFloat
+using FillArrays
 
 if isdefined(Base, :get_extension)
   using CUDA
