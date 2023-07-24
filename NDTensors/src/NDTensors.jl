@@ -100,15 +100,6 @@ include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
 
 #####################################
-# Empty
-#
-include("empty/emptynumber.jl")
-include("empty/empty.jl")
-include("empty/EmptyTensor.jl")
-include("empty/tensoralgebra/contract.jl")
-include("empty/adapt.jl")
-
-#####################################
 # Deprecations
 #
 include("deprecated.jl")
