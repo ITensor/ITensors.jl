@@ -22,7 +22,7 @@ end
 function Adapt.adapt_storage(adaptor::NDTensorCuArrayAdaptor, xs::Zeros)
   ElT = eltype(xs)
   BufT = buffertype(adaptor)
-  return CuArray{ElT, 1, BufT}(xs)
+  return CuArray{ElT,1,BufT}(xs)
 end
 
 # function NDTensors.adapt_storagetype(
