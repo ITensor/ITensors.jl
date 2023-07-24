@@ -345,7 +345,7 @@ function ITensor(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
     ),
   )
-  data = Array{eltype}(as, A)
+  data = set_eltype(typeof(A), eltype)(as, A)
   return itensor(Dense(data), inds)
 end
 
@@ -564,15 +564,25 @@ B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
-  A = ITensor(eltype, ind.(ivs)...)
-  A[val.(ivs)...] = one(eltype)
-  return A
+function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
+  A = ITensor(eltype(datatype), ind.(ivs)...)
+  A[val.(ivs)...] = one(eltype(datatype))
+  return Adapt.adapt(datatype, A)
 end
-onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
-setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
 
-onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}})
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+function setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(eltype), ivs...)
+end
+
+function onehot(ivs::Pair{<:Index}...)
+  return onehot(NDTensors.default_datatype(NDTensors.default_eltype()), ivs...)
+end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
@@ -667,28 +677,20 @@ randomITensor() = randomITensor(Random.default_rng())
 randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
+zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 
 #
 # Construct from Array
 #
 
 # Helper functions for different view behaviors
-function Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N}
-  return NDTensors.similartype(A, ElT)(A)
-end
-function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
-  return convert(AbstractArray{ElT,N}, A)
-end
-function Array{ElT}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {ElT,N,ElTA}
-  return Array{ElT,N}(as, A)
+# TODO: Move to NDTensors.jl
+function (arraytype::Type{<:AbstractArray})(::NeverAlias, A::AbstractArray)
+  return set_unspecified_parameters(arraytype, get_parameters(A))(A)
 end
 
-# TODO: Change to:
-# (Array{ElT, N} where {ElT})([...]) = [...]
-# once support for `VERSION < v"1.6"` is dropped.
-# Previous to Julia v1.6 `where` syntax couldn't be used in a function name
-function Array{<:Any,N}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {N,ElTA}
-  return Array{ElTA,N}(as, A)
+function (arraytype::Type{<:AbstractArray})(::AllowAlias, A::AbstractArray)
+  return convert(set_unspecified_parameters(arraytype, get_parameters(A)), A)
 end
 
 """
@@ -1114,7 +1116,7 @@ end
 # CartesianIndices
 @propagate_inbounds getindex(T::ITensor, I::CartesianIndex)::Any = T[Tuple(I)...]
 
-@propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
+@propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
   fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
@@ -1135,7 +1137,7 @@ A = ITensor(2.0, i, i')
 A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 ```
 """
-@propagate_inbounds (getindex(T::ITensor, ivs::Vararg{<:Any,N})::Any) where {N} =
+@propagate_inbounds (getindex(T::ITensor, ivs::Vararg{Any,N})::Any) where {N} =
   _getindex(tensor(T), ivs...)
 
 @propagate_inbounds function getindex(T::ITensor)::Any
@@ -1235,7 +1237,7 @@ end
 end
 
 @propagate_inbounds @inline function _setindex!!(
-  T::Tensor, x::Number, ivs::Vararg{<:Any,N}
+  T::Tensor, x::Number, ivs::Vararg{Any,N}
 ) where {N}
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
@@ -1247,7 +1249,7 @@ end
 end
 
 @propagate_inbounds @inline function setindex!(
-  T::ITensor, x::Number, I::Vararg{<:Any,N}
+  T::ITensor, x::Number, I::Vararg{Any,N}
 ) where {N}
   return settensor!(T, _setindex!!(tensor(T), x, I...))
 end
@@ -1337,7 +1339,7 @@ itensor2inds(A::ITensor)::Any = inds(A)
 itensor2inds(A::Tensor) = inds(A)
 itensor2inds(i::Index) = (i,)
 itensor2inds(A) = A
-function map_itensor2inds(A::Tuple{Vararg{<:Any,N}}) where {N}
+function map_itensor2inds(A::Tuple{Vararg{Any,N}}) where {N}
   return ntuple(i -> itensor2inds(A[i]), Val(N))
 end
 
@@ -1378,7 +1380,7 @@ hassameinds(A, B) = issetequal(itensor2inds(A), itensor2inds(B))
 
 # Apply the Index set function and then filter the results
 function filter_inds_set_function(
-  ffilter::Function, fset::Function, A::Vararg{<:Any,N}
+  ffilter::Function, fset::Function, A::Vararg{Any,N}
 ) where {N}
   return filter(ffilter, fset(map_itensor2inds(A)...))
 end

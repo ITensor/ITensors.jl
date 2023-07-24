@@ -177,6 +177,15 @@ end
   return similartype(parenttype(arraytype), dims)
 end
 
+# This is for uniform `Diag` storage which uses
+# a Number as the data type.
+# TODO: Delete this when we change to using a
+# `FillArray` instead. This is a stand-in
+# to make things work with the current design.
+function similartype(numbertype::Type{<:Number})
+  return numbertype
+end
+
 # Instances
 function similartype(array::AbstractArray, eltype::Type, dims...)
   return similartype(typeof(array), eltype, dims...)

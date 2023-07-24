@@ -1446,7 +1446,7 @@ function +(::Algorithm"directsum", ψ⃗::MPST...) where {MPST<:AbstractMPS}
   @assert all(ψᵢ -> length(first(ψ⃗)) == length(ψᵢ), ψ⃗)
 
   # Output tensor
-  ϕ = MPS(n)
+  ϕ = MPST(n)
 
   # Direct sum first tensor
   j = 1

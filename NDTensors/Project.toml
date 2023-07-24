@@ -1,7 +1,7 @@
 name = "NDTensors"
 uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>"]
-version = "0.2.0"
+version = "0.2.4"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -33,7 +33,7 @@ Requires = "1.1"
 SimpleTraits = "0.9.4"
 SplitApplyCombine = "1.2.2"
 StaticArrays = "0.12, 1.0"
-Strided = "0.3, 1"
+Strided = "0.3, 1, 2"
 TimerOutputs = "0.5.5"
 TupleTools = "1.2.0"
 julia = "1.6"
@@ -44,18 +44,8 @@ Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
 Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4"
 
-[extras]
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
-TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
-Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4"
-
-
 [extensions]
 NDTensorCUDA = "CUDA"
 NDTensorMetal = "Metal"
 NDTensorTBLIS = "TBLIS"
 NDTensorOctavian = "Octavian"
-
-[targets]
-test = ["CUDA", "Metal", "TBLIS", "Octavian"]

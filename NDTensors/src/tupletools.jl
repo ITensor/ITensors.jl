@@ -21,9 +21,9 @@ ValLength(::NTuple{N}) where {N} = Val(N)
 # is not type stable and therefore not efficient.
 ValLength(v::Vector) = Val(length(v))
 
-ValLength(::Tuple{Vararg{<:Any,N}}) where {N} = Val(N)
+ValLength(::Tuple{Vararg{Any,N}}) where {N} = Val(N)
 
-ValLength(::Type{<:Tuple{Vararg{<:Any,N}}}) where {N} = Val{N}
+ValLength(::Type{<:Tuple{Vararg{Any,N}}}) where {N} = Val{N}
 
 ValLength(::CartesianIndex{N}) where {N} = Val(N)
 ValLength(::Type{CartesianIndex{N}}) where {N} = Val{N}

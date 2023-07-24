@@ -25,7 +25,7 @@ function main()
   C = A * B
   A = cpu(A)
   B = cpu(B)
-  @test cpu(C) == A * B
+  @test cpu(C) ≈ A * B
   @test eltype(C) == Float64
 
   # Create 2 ITensors on CPU with different eltypes
@@ -40,16 +40,17 @@ function main()
   cB = NDTensors.cu(B)
 
   #Check that backend of contraction is GPU
-  @test A * A == cpu(cA * cA)
-  @test B * B == cpu(cB * cB)
-  @test A * B == cpu(cA * cB)
-  @test B * A == cpu(cB * cA)
+  @test A * A ≈ cpu(cA * cA)
+  @test B * B ≈ cpu(cB * cB)
+  @test A * B ≈ cpu(cA * cB)
+  @test B * A ≈ cpu(cB * cA)
 
   dim3 = (l, k)
   dim4 = (i,)
   cC = ITensor(
     NDTensors.generic_randn(CuVector{Float64,CUDA.Mem.DeviceBuffer}, dim(dim3)), dim3
   )
+  cC = NDTensors.cu(ITensor(NDTensors.generic_randn(Vector{Float64}, dim(dim3)), dim3))
   cD = ITensor(Tensor(CuVector, dim4))
   fill!(cD, randn())
 
@@ -96,11 +97,11 @@ function main()
   m = randomMPS(s; linkdims=4)
   cm = NDTensors.cu(m)
 
-  @test inner(cm', cm) == inner(m', m)
+  @test inner(cm', cm) ≈ inner(m', m)
 
   H = randomMPO(s)
   cH = NDTensors.cu(H)
-  @test inner(cm', cH, cm) == inner(m', H, m)
+  @test inner(cm', cH, cm) ≈ inner(m', H, m)
 
   m = orthogonalize(m, 1)
   cm = NDTensors.cu(orthogonalize(cm, 1))
@@ -110,14 +111,6 @@ function main()
   cH = NDTensors.cu(cH)
 
   @test inner(cm', cH, cm) ≈ inner(m', H, m)
-end
-
-### To run the NDTensorCUDA tests in the NDTensors test suite. use the following commands in the NDTensors directory.
-if false # false so we don't have an infinite loop
-  using Pkg
-  Pkg.add("CUDA")
-  using CUDA
-  Pkg.test("NDTensors"; test_args=["cuda"])
 end
 
 main()

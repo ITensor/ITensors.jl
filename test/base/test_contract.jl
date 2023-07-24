@@ -45,6 +45,14 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       CArray = transpose(array(Ai)) * array(Bi)
       @test CArray ≈ scalar(C)
     end
+    @testset "Test Matrix{ITensor} * Matrix{ITensor}" begin
+      M1 = [Aij Aij; Aij Aij]
+      M2 = [Ajk Ajk; Ajk Ajk]
+      M12 = M1 * M2
+      for x in 1:2, y in 1:2
+        @test M12[x, y] ≈ 2 * Aij * Ajk
+      end
+    end
     @testset "Test contract ITensors (Vector*Vectorᵀ -> Matrix)" begin
       C = Ai * Aj
       for ii in 1:dim(i), jj in 1:dim(j)
@@ -232,6 +240,16 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
         )
         @test CArray ≈ array(permute(C, α, i, j))
       end
+    end
+    @testset "Test contract in-place ITensors (4-Tensor*Matrix -> 4-Tensor)" begin
+      A = randomITensor(T, (j, i))
+      B = randomITensor(T, (j, k, l, α))
+      C = ITensor(zero(T), (i, k, α, l))
+      ITensors.contract!(C, A, B, 1.0, 0.0)
+      ITensors.contract!(C, A, B, 1.0, 1.0)
+      D = A * B
+      D .+= A * B
+      @test C ≈ D
     end
   end # End contraction testset
 end

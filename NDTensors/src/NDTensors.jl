@@ -45,6 +45,7 @@ include("abstractarray/fill.jl")
 include("array/set_types.jl")
 include("tupletools.jl")
 include("tensorstorage/tensorstorage.jl")
+include("tensorstorage/set_types.jl")
 include("tensorstorage/default_storage.jl")
 include("indices/inds.jl")
 include("tensorstorage/similar.jl")
@@ -226,9 +227,7 @@ function disable_tblis()
   return nothing
 end
 
-function backend_octavian()
-  throw(UndefVarError)
-end
+function backend_octavian end
 
 function __init__()
   @static if !isdefined(Base, :get_extension)

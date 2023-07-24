@@ -90,7 +90,7 @@ Assumes the blocks are allong the diagonal.
 """
 function diagblockoffsets(
   blocks::Vector{BlockT}, inds
-) where {BlockT<:Union{Block{N},Tuple{Vararg{<:Any,N}}}} where {N}
+) where {BlockT<:Union{Block{N},Tuple{Vararg{Any,N}}}} where {N}
   blockoffsets = BlockOffsets{N}()
   nnzdiag = 0
   for (i, block) in enumerate(blocks)
