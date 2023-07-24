@@ -377,10 +377,16 @@ function _contract!(
   if props.permuteC
     # if we are computing C = α * A B + β * C
     # we need to make sure C is permuted to the same 
-    # ordering as A B
+    # ordering as A B which is the inverse of props.PC
     if β ≠ 0
       pC = NTuple{NC,Int}(props.PC)
-      CM = reshape(permutedims(CT, pC), (props.dleft, props.dright))
+      pC_inv = Vector{Int}(undef, NC)
+      for i in 1:length(pC)
+        pC_inv[pC[i]] = i
+      end
+      pC_inv = NTuple{NC, Int}(pC_inv)
+
+      CM = reshape(permutedims(CT, pC_inv), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
       # into C later  
