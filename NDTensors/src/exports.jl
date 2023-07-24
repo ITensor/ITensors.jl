@@ -59,11 +59,6 @@ export
   Diag,
   DiagTensor,
 
-  # empty.jl
-  EmptyStorage,
-  EmptyTensor,
-  EmptyBlockSparseTensor,
-
   # tensorstorage.jl
   data,
   TensorStorage,
