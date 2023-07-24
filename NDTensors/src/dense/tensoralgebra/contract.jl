@@ -384,7 +384,7 @@ function _contract!(
       for i in 1:length(pC)
         pC_inv[pC[i]] = i
       end
-      pC_inv = NTuple{NC, Int}(pC_inv)
+      pC_inv = NTuple{NC,Int}(pC_inv)
 
       CM = reshape(permutedims(CT, pC_inv), (props.dleft, props.dright))
     else
