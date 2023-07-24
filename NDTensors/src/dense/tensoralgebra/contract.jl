@@ -380,13 +380,8 @@ function _contract!(
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
       pC = NTuple{NC,Int}(props.PC)
-      pC_inv = Vector{Int}(undef, NC)
-      for i in 1:length(pC)
-        pC_inv[pC[i]] = i
-      end
-      pC_inv = NTuple{NC,Int}(pC_inv)
 
-      CM = reshape(permutedims(CT, pC_inv), (props.dleft, props.dright))
+      CM = reshape(permutedims(CT, invperm(pC)), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
       # into C later  
@@ -405,7 +400,6 @@ function _contract!(
   mul!(CM, AM, BM, El(α), El(β))
 
   if props.permuteC
-    pC = NTuple{NC,Int}(props.PC)
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin
