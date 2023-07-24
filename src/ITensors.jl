@@ -72,6 +72,7 @@ using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
 using Zeros
+using FillArrays
 
 #####################################
 # General utility functions

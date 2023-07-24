@@ -174,20 +174,20 @@ B = ITensor(ComplexF64,k,j)
 ```
 """
 function ITensor(eltype::Type{<:Number}, is::Indices)
-  return itensor(EmptyStorage(eltype), is)
+  return itensor(NDTensors.default_storagetype(eltype, is)(undef, is), is)
 end
 
 ITensor(eltype::Type{<:Number}, is...) = ITensor(eltype, indices(is...))
 
-ITensor(is...) = ITensor(EmptyNumber, is...)
+ITensor(is...) = ITensor(NDTensors.default_eltype(), is...)
 
 # To fix ambiguity with QN Index version
 # TODO: define as `emptyITensor(ElT)`
-ITensor(eltype::Type{<:Number}=EmptyNumber) = ITensor(eltype, ())
+ITensor(eltype::Type{<:Number}=NDTensors.default_eltype()) = ITensor(eltype, ())
 
 # TODO: define as `emptyITensor(ElT)`
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  return ITensor(EmptyStorage(ElT), inds)
+  return ITensor(NDTensors.default_storagetype(ElT, inds)(inds), inds)
 end
 
 """
@@ -277,18 +277,18 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.EmptyNumber`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
 """
 function emptyITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
-  return itensor(EmptyTensor(ElT, is))
+  return itensor(NDTensors.default_storagetype(ElT, is))
 end
 
 function emptyITensor(::Type{ElT}, is...) where {ElT<:Number}
   return emptyITensor(ElT, indices(is...))
 end
 
-emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
+emptyITensor(is::Indices) = emptyITensor(NDTensors.default_eltype(), is)
 
-emptyITensor(is...) = emptyITensor(EmptyNumber, indices(is...))
+emptyITensor(is...) = emptyITensor(NDTensors.default_eltype(), indices(is...))
 
-function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
+function emptyITensor(::Type{ElT}=NDTensors.default_eltype()) where {ElT<:Number}
   return itensor(EmptyTensor(ElT, ()))
 end
 
@@ -842,7 +842,7 @@ size(T::ITensor) = dims(T)
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
-_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A)
 
 """
     dir(A::ITensor, i::Index)
@@ -1296,10 +1296,6 @@ function setindex!(T::ITensor, x::Number, I1::String, Is::String...)
   T[_vals(T, I1, Is...)...] = x
   return T
 end
-
-#function setindex!(::ITensor{Any}, ::Number, ivs...)
-#  error("Cannot set the element of an emptyITensor(). Must define indices to set elements")
-#end
 
 #########################
 # End ITensor Accessor Functions
@@ -1812,6 +1808,7 @@ end
 
 -(A::ITensor) = itensor(-tensor(A))
 
+#TODO reconfigure _isemptyscalar
 function _add(A::Tensor, B::Tensor)
   if _isemptyscalar(A) && ndims(B) > 0
     return itensor(B)
