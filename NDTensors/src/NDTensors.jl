@@ -4,6 +4,7 @@ using Adapt
 using Base.Threads
 using Compat
 using Dictionaries
+using FillArrays
 using FLoops
 using Folds
 using Random
@@ -99,12 +100,9 @@ include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
 
 #####################################
-# Empty
+# Zeros
 #
-include("empty/empty.jl")
-include("empty/EmptyTensor.jl")
-include("empty/tensoralgebra/contract.jl")
-include("empty/adapt.jl")
+include("zeros/zeros.jl")
 
 #####################################
 # Deprecations
