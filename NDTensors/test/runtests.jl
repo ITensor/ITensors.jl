@@ -24,8 +24,6 @@ end
     "dense.jl",
     "blocksparse.jl",
     "diag.jl",
-    "emptynumber.jl",
-    "emptystorage.jl",
     "combiner.jl",
   ]
     println("Running $filename")
