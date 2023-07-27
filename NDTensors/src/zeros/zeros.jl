@@ -29,3 +29,14 @@ Base.getindex(a::Zeros, i) = Base.getindex(a.z, i)
 Base.sum(z::Zeros) = sum(z.z)
 LinearAlgebra.norm(z::Zeros) = norm(z.z)
 setindex!(A::NDTensors.Zeros, v, I) = setindex!(A.z, v, I)
+
+NDTensors.set_parameter(::Type{<:Zeros}, ::Position{1}, P1) = Zeros{P1}
+NDTensors.set_parameter(::Type{<:Zeros{<:Any,P2}}, ::Position{1}, P1) where {P2} = Zeros{P1,P2}
+function NDTensors.set_parameter(::Type{<:Zeros{<:Any,P2,P3}}, ::Position{1}, P1) where {P2,P3<:AbstractArray}
+  P = NDTensors.set_parameter(P3, Position(1), P1)
+  return Zeros{P1,P2,P}
+end
+NDTensors.set_parameter(::Type{<:Zeros}, ::Position{2}, P2) = Zeros{<:Any,P2}
+NDTensors.set_parameter(::Type{<:Zeros{P1}}, ::Position{2}, P2) where {P1} = Zeros{P1,P2}
+NDTensors.set_parameter(::Type{<:Zeros{P1,<:Any,P3}}, ::Position{2}, P2) where {P1,P3<:AbstractArray} = Zeros{P1,P2,set_parameter(P3, Position(1), P1)}
+NDTensors.set_parameter(::Type{<:Zeros{P1,P2}}, ::Position{3}, P3) where {P1,P2} = Zeros{P1,P2,set_parameter(P3, Position(1), P1)}

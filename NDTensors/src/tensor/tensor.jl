@@ -107,6 +107,10 @@ function Tensor(datatype::Type{<:AbstractArray}, inds::Tuple)
   return Tensor(generic_zeros(datatype, dim(inds)), inds)
 end
 
+function Tensor()
+  return Tensor(Zeros{default_eltype(), 1, default_datatype(default_eltype())}(()), ())
+end
+
 ## End Tensor constructors
 
 ## Random Tensor

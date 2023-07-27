@@ -173,17 +173,18 @@ A = ITensor(i,j)
 B = ITensor(ComplexF64,k,j)
 ```
 """
-function ITensor(eltype::Type{<:Number}, is::Indices)
-  return itensor(EmptyStorage(eltype), is)
+function ITensor(ElT::Type{<:Number}, is::Indices)
+  z = Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(is)
+  return itensor(ElT, z, is)
 end
 
-ITensor(eltype::Type{<:Number}, is...) = ITensor(eltype, indices(is...))
+ITensor(ElT::Type{<:Number}, is...) = ITensor(ElT, indices(is...))
 
-ITensor(is...) = ITensor(EmptyNumber, is...)
+ITensor(is...) = ITensor(NDTensors.default_eltype(), is...)
 
 # To fix ambiguity with QN Index version
 # TODO: define as `emptyITensor(ElT)`
-ITensor(eltype::Type{<:Number}=EmptyNumber) = ITensor(eltype, ())
+ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
 
 # TODO: define as `emptyITensor(ElT)`
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
@@ -271,25 +272,25 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 
 # TODO: Deprecated!
 """
-    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
-    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds::Index...)
+    emptyITensor([::Type{ElT} = NDTensors.default_eltype(), ]inds)
+    emptyITensor([::Type{ElT} = NDTensors.default_eltype(), ]inds::Index...)
 
-Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.EmptyNumber`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
+Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.default_eltype()`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
 """
 function emptyITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
-  return itensor(EmptyTensor(ElT, is))
+  return itensor(NDTensors.Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(is), is)
 end
 
 function emptyITensor(::Type{ElT}, is...) where {ElT<:Number}
   return emptyITensor(ElT, indices(is...))
 end
 
-emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
+emptyITensor(is::Indices) = emptyITensor(NDTensors.default_eltype(), is)
 
-emptyITensor(is...) = emptyITensor(EmptyNumber, indices(is...))
+emptyITensor(is...) = emptyITensor(NDTensors.default_eltype(), indices(is...))
 
-function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
-  return itensor(EmptyTensor(ElT, ()))
+function emptyITensor(::Type{ElT}=NDTensors.default_eltype()) where {ElT<:Number}
+  return itensor(NDTensors.Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(()), ())
 end
 
 """
@@ -392,7 +393,7 @@ end
 function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
   return ITensor(NeverAlias(), eltype, A; kwargs...)
 end
-function ITensor(A::AbstractArray{<:Number}; kwargs...)
+function ITensor(A::AbstractArray{ElT}; kwargs...) where {ElT}
   return ITensor(NeverAlias(), eltype(A), A; kwargs...)
 end
 
@@ -842,7 +843,7 @@ size(T::ITensor) = dims(T)
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
-_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) 
 
 """
     dir(A::ITensor, i::Index)
