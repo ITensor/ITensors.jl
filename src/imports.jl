@@ -114,7 +114,6 @@ import LinearAlgebra:
 using ITensors.NDTensors:
   Algorithm,
   @Algorithm_str,
-  EmptyNumber,
   _Tuple,
   _NTuple,
   blas_get_num_threads,
