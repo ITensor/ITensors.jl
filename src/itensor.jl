@@ -174,7 +174,7 @@ B = ITensor(ComplexF64,k,j)
 ```
 """
 function ITensor(ElT::Type{<:Number}, is::Indices)
-  z = Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(is)
+  z = Zeros{ElT,1,NDTensors.default_datatype(ElT)}(is)
   return itensor(ElT, z, is)
 end
 
@@ -278,7 +278,7 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.default_eltype()`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
 """
 function emptyITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
-  return itensor(NDTensors.Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(is), is)
+  return itensor(NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(is), is)
 end
 
 function emptyITensor(::Type{ElT}, is...) where {ElT<:Number}
@@ -290,7 +290,7 @@ emptyITensor(is::Indices) = emptyITensor(NDTensors.default_eltype(), is)
 emptyITensor(is...) = emptyITensor(NDTensors.default_eltype(), indices(is...))
 
 function emptyITensor(::Type{ElT}=NDTensors.default_eltype()) where {ElT<:Number}
-  return itensor(NDTensors.Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(()), ())
+  return itensor(NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(()), ())
 end
 
 """
@@ -843,7 +843,7 @@ size(T::ITensor) = dims(T)
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
-_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) 
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A)
 
 """
     dir(A::ITensor, i::Index)
