@@ -45,8 +45,8 @@ NDTensors.set_parameter(::Type{<:Zeros{P1}}, ::Position{2}, P2) where {P1} = Zer
 function NDTensors.set_parameter(
   ::Type{<:Zeros{P1,<:Any,P3}}, ::Position{2}, P2
 ) where {P1,P3<:AbstractArray}
-  return Zeros{P1,P2,set_parameter(P3, Position(1), P1)}
+  return Zeros{P1,P2,NDTensors.set_parameter(P3, Position(1), P1)}
 end
 function NDTensors.set_parameter(::Type{<:Zeros{P1,P2}}, ::Position{3}, P3) where {P1,P2}
-  return Zeros{P1,P2,set_parameter(P3, Position(1), P1)}
+  return Zeros{P1,P2,NDTensors.set_parameter(P3, Position(1), P1)}
 end
