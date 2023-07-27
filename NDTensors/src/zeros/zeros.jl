@@ -25,13 +25,10 @@ getindex(zero::Zeros) = getindex(zero.z)
 array(zero::Zeros) = datatype(zero)(zero.z)
 Array(zero::Zeros) = array(zero)
 dims(z::Zeros) = z.is
+copy(z::Zeros) = Zeros{eltype(z), 1, datatype(z)}(dims(z))
 
 Base.convert(x::Type{T}, z::NDTensors.Zeros) where {T<:Array} = Base.convert(x, z.z)
-function Base.convert(z::Type{<:NDTensors.Zeros}, a::AbstractArray)
-  ElT = promote(eltype(z), eltype(a))
-  @assert ndims(z) == ndims(a) == 1
-  return Zeros{ElT, 1, similartype(a, ElT)}(dims(z))
-end
+
 Base.getindex(a::Zeros, i) = Base.getindex(a.z, i)
 Base.sum(z::Zeros) = sum(z.z)
 LinearAlgebra.norm(z::Zeros) = norm(z.z)
