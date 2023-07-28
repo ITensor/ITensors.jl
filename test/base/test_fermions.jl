@@ -730,6 +730,26 @@ import ITensors: Out,In
       VV = dag(V)*prime(V,v)
       @test norm(VV-id(v)) ≈ 0
     end
+
+    # Arrows: Mixed, In
+    # Try to fix
+    let
+      T = ITensor(dag(s[1]), s[2], dag(s[3]))
+      T[1, 1, 1] = 1.0
+      T[2, 2, 1] = 1.0
+      F = ITensor(s[1]',s[1])
+      for (j,k)=zip(1:2,reverse(1:2))
+        F[j,k] = 1.0
+      end
+      T *= F
+      U,S,V,spec,u,v = svd(T,[s[1]',s[2]])
+      U *= dag(F)
+      @test norm(T-U*S*V) < 1E-14
+      UU = dag(U)*prime(U,u)
+      @test_broken norm(UU-id(u)) ≈ 0
+      VV = dag(V)*prime(V,v)
+      @test norm(VV-id(v)) ≈ 0
+    end
   end
 
   @testset "Fermion Contraction with Combined Indices" begin
