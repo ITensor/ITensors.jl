@@ -1141,6 +1141,22 @@ end
     @test all(linkdims(H) .<= 2)
     @test_broken all(linkdims(H) .== 1)
   end
+
+  @testset "Regression test (Issue 1150): Zero blocks operator" begin
+    N = 4
+    sites = siteinds("Fermion", N; conserve_qns=true)
+    os = OpSum()
+    os += (1.111, "Cdag", 3, "Cdag", 4, "C", 2, "C", 1)
+    os += (2.222, "Cdag", 4, "Cdag", 1, "C", 3, "C", 2)
+    os += (3.333, "Cdag", 1, "Cdag", 4, "C", 4, "C", 1)
+    os += (4.444, "Cdag", 2, "Cdag", 3, "C", 1, "C", 4)
+    # The following operator has C on site 2 twice, resulting
+    # in a local operator with no blocks (exactly zero),
+    # causing a certain logical step in working out the column qn
+    # to fail:
+    os += (5.555, "Cdag", 4, "Cdag", 4, "C", 2, "C", 2)
+    @test_nowarn H = MPO(os, sites)
+  end
 end
 
 nothing
