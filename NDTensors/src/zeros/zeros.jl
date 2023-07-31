@@ -33,3 +33,6 @@ Base.getindex(a::Zeros, i) = Base.getindex(a.z, i)
 Base.sum(z::Zeros) = sum(z.z)
 LinearAlgebra.norm(z::Zeros) = norm(z.z)
 setindex!(A::NDTensors.Zeros, v, I) = setindex!(A.z, v, I)
+
+Base.iszero(t::Tensor) = iszero(storage(t))
+Base.iszero(st::TensorStorage) = data(st) isa Zeros

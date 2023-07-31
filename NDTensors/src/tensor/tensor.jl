@@ -188,7 +188,7 @@ setstorage(T, nstore) = tensor(nstore, inds(T))
 
 setinds(T, ninds) = tensor(storage(T), ninds)
 
-isemptystorage(t::Tensor) = datatype(t) isa NDTensors.Zeros
+iszerodata(t::Tensor) = data(t) isa NDTensors.Zeros
 
 #
 # Generic Tensor functions
