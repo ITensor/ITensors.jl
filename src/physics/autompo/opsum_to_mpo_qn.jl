@@ -197,6 +197,7 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
       for (q_op, M) in block
         op_prod = q_op[2]
         Op = computeSiteProd(sites, Prod(op_prod))
+        (nnzblocks(Op) == 0) && continue
 
         rq = q_op[1]
         sq = flux(Op)
