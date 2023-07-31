@@ -129,8 +129,13 @@ include("indexset.jl")
 #####################################
 # ITensor
 #
-include("itensor.jl")
-include("oneitensor.jl")
+include("itensor/itensor.jl")
+include("itensor/indexops.jl")
+include("itensor/oneitensor.jl")
+include("itensor/emptyitensor.jl")
+include("itensor/diagitensor.jl")
+include("itensor/randomitensor.jl")
+include("itensor/specialitensors.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
