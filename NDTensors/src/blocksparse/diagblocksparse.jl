@@ -343,7 +343,9 @@ function similar(
 end
 
 # NDTensors.similar
-function similar(storagetype::Type{<:DiagBlockSparse}, blockoffsets::BlockOffsets, dims::Tuple)
+function similar(
+  storagetype::Type{<:DiagBlockSparse}, blockoffsets::BlockOffsets, dims::Tuple
+)
   # TODO: Improve this with FillArrays.jl
   # data = similar(datatype(storagetype), nnz(blockoffsets, dims))
   data = zero(datatype(storagetype))

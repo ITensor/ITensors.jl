@@ -112,7 +112,7 @@ using ITensors, Test
     @test x[1, 1] == c
     @test dag(x)[1, 1] == conj(c)
     @test (x * dag(x))[] == 2 * abs2(c)
-    @test (x * dag(x))[] ≈ norm(x) ^ 2
+    @test (x * dag(x))[] ≈ norm(x)^2
   end
 
   @testset "Regression test for printing a QN Diag ITensor" begin
