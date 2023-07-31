@@ -6,6 +6,7 @@ function set_eltype(storagetype::Type{<:NonuniformDiag}, eltype::Type{<:Abstract
   return Diag{eltype,similartype(storagetype, eltype)}
 end
 
+# TODO: Remove this once uniform diagonal tensors use FillArrays for the data.
 function set_datatype(storagetype::Type{<:UniformDiag}, datatype::Type)
   return Diag{datatype,datatype}
 end
