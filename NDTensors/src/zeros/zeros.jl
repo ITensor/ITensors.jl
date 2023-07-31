@@ -25,7 +25,7 @@ getindex(zero::Zeros) = getindex(zero.z)
 array(zero::Zeros) = datatype(zero)(zero.z)
 Array(zero::Zeros) = array(zero)
 dims(z::Zeros) = z.is
-copy(z::Zeros) = Zeros{eltype(z), 1, datatype(z)}(dims(z))
+copy(z::Zeros) = Zeros{eltype(z),1,datatype(z)}(dims(z))
 
 Base.convert(x::Type{T}, z::NDTensors.Zeros) where {T<:Array} = Base.convert(x, z.z)
 
@@ -33,4 +33,3 @@ Base.getindex(a::Zeros, i) = Base.getindex(a.z, i)
 Base.sum(z::Zeros) = sum(z.z)
 LinearAlgebra.norm(z::Zeros) = norm(z.z)
 setindex!(A::NDTensors.Zeros, v, I) = setindex!(A.z, v, I)
-

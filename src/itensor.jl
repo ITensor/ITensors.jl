@@ -188,7 +188,7 @@ ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
 
 # TODO: define as `emptyITensor(ElT)`
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  z = NDTensors.Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(inds)
+  z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(inds)
   store = NDTensors.default_storagetype(typeof(z), inds)(z)
   return ITensor(store, inds)
 end
