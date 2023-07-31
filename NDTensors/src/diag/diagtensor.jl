@@ -44,7 +44,8 @@ function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
 end
 
 # Compute the norm of Uniform diagonal tensor
-norm(S::UniformDiagTensor) = sqrt(mindim(S) * data(S))
+# TODO: Improve this with FillArrays.jl
+norm(S::UniformDiagTensor) = sqrt(mindim(S) * abs2(data(S)))
 
 """
 getdiagindex(T::DiagTensor,i::Int)

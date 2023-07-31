@@ -99,6 +99,22 @@ using ITensors, Test
     @test A2[] ≈ 4
   end
 
+  @testset "Regression test for QN delta dag, contract, and norm" begin
+    i = Index([QN("Sz", 0) => 1, QN("Sz", 1) => 1])
+    x = δ(i, dag(i)')
+
+    @test isone(x[1, 1])
+    @test isone(dag(x)[1, 1])
+
+    c = 2 + 3im
+    x *= c
+
+    @test x[1, 1] == c
+    @test dag(x)[1, 1] == conj(c)
+    @test (x * dag(x))[] == 2 * abs2(c)
+    @test (x * dag(x))[] ≈ norm(x)^2
+  end
+
   @testset "Regression test for printing a QN Diag ITensor" begin
     # https://github.com/ITensor/NDTensors.jl/issues/61
     i = Index([QN() => 2])

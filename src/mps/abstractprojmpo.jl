@@ -1,22 +1,6 @@
-
-# Scalar identity ITensor
-struct OneITensor end
-
-(::OneITensor * A::ITensor) = A
-(A::ITensor * ::OneITensor) = A
-
-inds(::OneITensor) = ()
-
 abstract type AbstractProjMPO end
 
 copy(::AbstractProjMPO) = error("Not implemented")
-
-# This is to help with generic promote_type code
-# in eltype(::AbstractProjMPO)
-eltype(::OneITensor) = Bool
-dim(::OneITensor) = 1
-isoneitensor(::OneITensor) = true
-isoneitensor(::ITensor) = false
 
 """
     nsite(P::ProjMPO)

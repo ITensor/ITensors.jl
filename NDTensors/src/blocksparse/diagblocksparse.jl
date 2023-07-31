@@ -39,6 +39,7 @@ function setdata(storagetype::Type{<:DiagBlockSparse}, data::AbstractArray)
   return DiagBlockSparse(data, blockoffsetstype(storagetype)())
 end
 
+# TODO: Move this to a `set_types.jl` file.
 function set_datatype(
   storagetype::Type{<:DiagBlockSparse}, datatype::Type{<:AbstractVector}
 )
@@ -95,6 +96,20 @@ end
 copy(D::DiagBlockSparse) = DiagBlockSparse(copy(data(D)), copy(diagblockoffsets(D)))
 
 setdata(D::DiagBlockSparse, ndata) = DiagBlockSparse(ndata, diagblockoffsets(D))
+
+# TODO: Move this to a `set_types.jl` file.
+# TODO: Remove this once uniform diagonal tensors use FillArrays for the data.
+function set_datatype(storagetype::Type{<:UniformDiagBlockSparse}, datatype::Type)
+  return DiagBlockSparse{datatype,datatype,ndims(storagetype)}
+end
+
+# TODO: Make this more generic. For example, use an
+# `is_composite_mutable` trait, and if `!is_composite_mutable`,
+# automatically forward `NeverAlias` to `AllowAlias` since
+# aliasing doesn't matter for immutable types.
+function conj(::NeverAlias, storage::UniformDiagBlockSparse)
+  return conj(AllowAlias(), storage)
+end
 
 ## convert to complex
 ## TODO: this could be a generic TensorStorage function
@@ -275,7 +290,7 @@ function contraction_output_type(
   TensorT2::Type{<:DiagBlockSparseTensor{<:Number,N2}},
   indsR::Tuple,
 ) where {N1,N2}
-  if ValLength(IndsR) === Val{N1 + N2}
+  if ValLength(indsR) === Val{N1 + N2}
     # Turn into is_outer(inds1,inds2,indsR) function?
     # How does type inference work with arithmatic of compile time values?
     return similartype(dense(promote_type(TensorT1, TensorT2)), indsR)
@@ -291,8 +306,50 @@ function contraction_output(T1::Tensor, T2::DiagBlockSparseTensor, indsR)
   return contraction_output(T2, T1, indsR)
 end
 
-function contraction_output(T1::DiagBlockSparseTensor, T2::DiagBlockSparseTensor, indsR)
-  return zero_contraction_output(T1, T2, indsR)
+# function contraction_output(T1::DiagBlockSparseTensor, T2::DiagBlockSparseTensor, indsR)
+#   return zero_contraction_output(T1, T2, indsR)
+# end
+
+# Determine the contraction output and block contractions
+function contraction_output(
+  tensor1::DiagBlockSparseTensor,
+  labelstensor1,
+  tensor2::DiagBlockSparseTensor,
+  labelstensor2,
+  labelsR,
+)
+  indsR = contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsR)
+  TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
+  blockoffsetsR, contraction_plan = contract_blockoffsets(
+    blockoffsets(tensor1),
+    inds(tensor1),
+    labelstensor1,
+    blockoffsets(tensor2),
+    inds(tensor2),
+    labelstensor2,
+    indsR,
+    labelsR,
+  )
+  R = similar(TensorR, blockoffsetsR, indsR)
+  return R # , contraction_plan
+end
+
+## TODO: Is there a way to make this generic?
+# NDTensors.similar
+function similar(
+  tensortype::Type{<:DiagBlockSparseTensor}, blockoffsets::BlockOffsets, dims::Tuple
+)
+  return Tensor(similar(storagetype(tensortype), blockoffsets, dims), dims)
+end
+
+# NDTensors.similar
+function similar(
+  storagetype::Type{<:DiagBlockSparse}, blockoffsets::BlockOffsets, dims::Tuple
+)
+  # TODO: Improve this with FillArrays.jl
+  # data = similar(datatype(storagetype), nnz(blockoffsets, dims))
+  data = zero(datatype(storagetype))
+  return DiagBlockSparse(data, blockoffsets)
 end
 
 function array(T::DiagBlockSparseTensor{ElT,N}) where {ElT,N}
@@ -319,6 +376,10 @@ end
 
 function setdiag(T::DiagBlockSparseTensor, val, ind::Int)
   return tensor(DiagBlockSparse(val), inds(T))
+end
+
+function setdiag(T::UniformDiagBlockSparseTensor, val, ind::Int)
+  return tensor(DiagBlockSparse(val, blockoffsets(T)), inds(T))
 end
 
 @propagate_inbounds function getindex(
@@ -515,6 +576,9 @@ function _contract!!(
   end
   return R
 end
+
+# TODO: Improve this with FillArrays.jl
+norm(S::UniformDiagBlockSparseTensor) = sqrt(mindim(S) * abs2(data(S)))
 
 function contraction_output(
   T1::TensorT1, labelsT1, T2::TensorT2, labelsT2, labelsR
