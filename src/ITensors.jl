@@ -130,6 +130,7 @@ include("indexset.jl")
 # ITensor
 #
 include("itensor.jl")
+include("oneitensor.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
