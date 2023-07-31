@@ -1028,7 +1028,6 @@ end
 # End ITensor Accessor Functions
 #
 
-
 #########################
 # ITensor Operations
 #
