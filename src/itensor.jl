@@ -174,7 +174,7 @@ B = ITensor(ComplexF64,k,j)
 ```
 """
 function ITensor(ElT::Type{<:Number}, is::Indices)
-  z = Zeros{ElT,1,NDTensors.default_datatype(ElT)}(is)
+  z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(is)
   return itensor(ElT, z, is)
 end
 
@@ -188,7 +188,9 @@ ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
 
 # TODO: define as `emptyITensor(ElT)`
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  return ITensor(EmptyStorage(ElT), inds)
+  z = NDTensors.Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(inds)
+  store = NDTensors.default_storagetype(typeof(z), inds)(z)
+  return ITensor(store, inds)
 end
 
 """
