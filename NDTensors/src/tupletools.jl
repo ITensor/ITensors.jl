@@ -167,12 +167,14 @@ function getindices(t::Tuple, I::NTuple{N,Int}) where {N}
 end
 
 # Taken from TupleTools.jl
-"""
-    sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
+if VERSION < v"1.10.0-DEV.1404"
+  """
+      sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
 
-Sorts the tuple `t`.
-"""
-Base.sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+  Sorts the tuple `t`.
+  """
+  Base.sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+end
 @inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
   t1, t2 = _split(t)
   t1s = _sort(t1, lt, by, rev)
