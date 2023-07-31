@@ -1,4 +1,4 @@
-import NDTensors.SetParameters: nparameters, get_parameter, set_parameter, default_parameter
+import .SetParameters: set_parameter, nparameters, default_parameter
 
 # `SetParameters.jl` overloads.
 get_parameter(::Type{<:Zeros{P1}}, ::Position{1}) where {P1} = P1
