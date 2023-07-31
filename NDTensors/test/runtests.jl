@@ -23,6 +23,7 @@ end
     "linearalgebra.jl",
     "dense.jl",
     "blocksparse.jl",
+    "diagblocksparse.jl",
     "diag.jl",
     "emptynumber.jl",
     "emptystorage.jl",
