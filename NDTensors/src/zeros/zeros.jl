@@ -36,3 +36,11 @@ setindex!(A::NDTensors.Zeros, v, I) = setindex!(A.z, v, I)
 
 Base.iszero(t::Tensor) = iszero(storage(t))
 Base.iszero(st::TensorStorage) = data(st) isa Zeros
+
+function (arraytype::Type{<:Zeros})(::AllowAlias, A::Zeros)
+  return A
+end
+
+function (arraytype::Type{<:Zeros})(::NeverAlias, A::Zeros)
+  return copy(A)
+end
