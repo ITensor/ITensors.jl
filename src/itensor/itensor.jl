@@ -232,33 +232,6 @@ function ITensor(
   return ITensor(as, eltype, A, indices(is...); kwargs...)
 end
 
-function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
-  return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
-end
-
-# For now, it's not well defined to construct an ITensor without indices
-# from a non-zero dimensional Array
-## TODO: I am not changing this function but I am not really sure how it 
-## works properly
-function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
-)
-  if length(A) > 1
-    error(
-      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
-    )
-  end
-  return ITensor(eltype, A[]; kwargs...)
-end
-
-function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
-  return ITensor(NeverAlias(), eltype, A; kwargs...)
-end
-
-function ITensor(A::AbstractArray; kwargs...)
-  return ITensor(NeverAlias(), eltype(A), A; kwargs...)
-end
-
 function ITensor(
   as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
 ) where {ElT<:Number}
@@ -269,6 +242,10 @@ function ITensor(
   as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
 ) where {ElT<:RealOrComplex{Int}}
   return ITensor(as, float(ElT), A, is...; kwargs...)
+end
+
+function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
+  return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
 end
 
 function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
@@ -297,7 +274,7 @@ B = ITensor(ComplexF64,k,j)
 """
 function ITensor(ElT::Type{<:Number}, is::Indices)
   z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(is)
-  return ITensor(AllowAlias(), NDTensors.default_storagetype(typeof(z), is)(z), is)
+  return ITensor(NeverAlias(), ElT, z, is)
 end
 
 ITensor(ElT::Type{<:Number}, is...) = ITensor(ElT, indices(is...))
@@ -308,7 +285,6 @@ ITensor(is...) = ITensor(NDTensors.default_eltype(), is...)
 # TODO: define as `emptyITensor(ElT)`
 ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
 
-# TODO: define as `emptyITensor(ElT)`
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
   z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(inds)
   store = NDTensors.default_storagetype(typeof(z), inds)(z)
