@@ -9,11 +9,9 @@ get_parameter(::Type{<:Zeros{<:Any,<:Any,P3}}, ::Position{3}) where {P3} = P3
 set_parameter(::Type{<:Zeros}, ::Position{1}, P1) = Zeros{P1}
 set_parameter(::Type{<:Zeros{<:Any,P2}}, ::Position{1}, P1) where {P2} = Zeros{P1,P2}
 function set_parameter(::Type{<:Zeros{<:Any,<:Any,P3}}, ::Position{1}, P1) where {P3}
-  @assert eltype(P3) == P1
   return Zeros{P1,<:Any,P3}
 end
 function set_parameter(::Type{<:Zeros{<:Any,P2,P3}}, ::Position{1}, P1) where {P2,P3}
-  @assert eltype(P3) == P1
   return Zeros{P1,P2,P3}
 end
 
