@@ -157,7 +157,7 @@ include("qn/flux.jl")
 include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
-include("qn/qnitensor.jl")
+include("itensor/qnitensor.jl")
 include("nullspace.jl")
 
 #####################################
