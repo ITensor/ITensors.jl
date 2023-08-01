@@ -64,7 +64,6 @@ end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
-
 ### informally defined Scalar ITensors
 
 # For now, it's not well defined to construct an ITensor without indices
