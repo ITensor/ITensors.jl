@@ -69,14 +69,14 @@ setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 # For now, it's not well defined to construct an ITensor without indices
 # from a non-zero dimensional Array.
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
+  as::AliasStyle, ElT::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
 )
   if length(A) > 1
     error(
       "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
     )
   end
-  return ITensor(as, eltype, A[], (); kwargs...)
+  return ITensor(as, ElT, A, Index(1); kwargs...)
 end
 
 function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
