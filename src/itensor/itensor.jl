@@ -76,6 +76,9 @@ NDTensors.Dense{Float64,Array{Float64,1}}
   1.2579101497658178  -1.3559959053693322
 ```
 """
+## TypeDefs
+const RealOrComplex{T} = Union{T,Complex{T}}
+##
 
 ## The categories in this file are
 ## constructors, properties, iterators,
@@ -96,18 +99,42 @@ mutable struct ITensor
   end
 end
 
+"""
+    Tensor(::ITensor)
+
+Create a `Tensor` that stores a copy of the storage and
+indices of the input `ITensor`.
+"""
+Tensor(T::ITensor)::Tensor = Tensor(NeverAlias(), T)
+Tensor(::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
+
+"""
+    tensor(::ITensor)
+
+Convert the `ITensor` to a `Tensor` that shares the same
+storage and indices as the `ITensor`.
+"""
+Tensor(::AllowAlias, A::ITensor) = A.tensor
+
 #########################
 # ITensor constructors
 #
 
+## ITensors constructor hierarchy: 
+## Tensor; TensorStorage; Data/Datatype; Element/Eltype; Indices 
+
 # Version where the indices are not Tuple, so convert to Tuple
-function ITensor(::AllowAlias, T::Tensor)::ITensor
-  return ITensor(AllowAlias(), setinds(T, NTuple{ndims(T)}(inds(T))))
-end
+## This is unreachable code as NDTensors.Tensor is implemented
+# function ITensor(::AllowAlias, T::Tensor)::ITensor
+#   return ITensor(AllowAlias(), setinds(T, NTuple{ndims(T)}(inds(T))))
+# end
 
 ITensor(::NeverAlias, T::Tensor)::ITensor = ITensor(AllowAlias(), copy(T))
 
 ITensor(T::Tensor)::ITensor = ITensor(NeverAlias(), T)
+
+itensor(T::ITensor) = T
+ITensor(T::ITensor) = copy(T)
 
 """
     ITensor(st::TensorStorage, is)
@@ -120,39 +147,133 @@ ITensor(as::AliasStyle, st::TensorStorage, is)::ITensor =
   ITensor(as, Tensor(as, st, Tuple(is)))
 ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 
-ITensor(st::TensorStorage, is)::ITensor = itensor(Tensor(NeverAlias(), st, Tuple(is)))
+ITensor(st::TensorStorage, is)::ITensor = ITensor(NeverAlias(), st, is)
+
 ITensor(is, st::TensorStorage)::ITensor = ITensor(NeverAlias(), st, is)
 
-itensor(T::ITensor) = T
-ITensor(T::ITensor) = copy(T)
-
 """
-    itensor(args...; kwargs...)
+    ITensor([ElT::Type, ]A::Array, inds)
+    ITensor([ElT::Type, ]A::Array, inds::Index...)
 
-Like the `ITensor` constructor, but with attempt to make a view
-of the input data when possible.
+    itensor([ElT::Type, ]A::Array, inds)
+    itensor([ElT::Type, ]A::Array, inds::Index...)
+
+Construct an ITensor from an Array `A` and indices `inds`.
+The ITensor will be a view of the Array data if possible (if
+no conversion to a different element type is necessary).
+
+If specified, the ITensor will have element type `ElT`.
+
+If the element type of `A` is `Int` or `Complex{Int}` and
+the desired element type isn't specified, it will
+be converted to `Float64` or `Complex{Float64}` automatically.
+To keep the element type as an integer, specify it explicitly,
+for example with:
+```julia
+i = Index(2, "i")
+A = [0 1; 1 0]
+T = ITensor(eltype(A), A, i', dag(i))
+```
+
+# Examples
+
+```julia
+i = Index(2,"index_i")
+j = Index(2,"index_j")
+
+M = [1. 2;
+     3 4]
+T = ITensor(M, i, j)
+T[i => 1, j => 1] = 3.3
+M[1, 1] == 3.3
+T[i => 1, j => 1] == 3.3
+```
+
+!!! warning
+    In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
 """
-itensor(args...; kwargs...)::ITensor = ITensor(AllowAlias(), args...; kwargs...)
+function ITensor(
+  as::AliasStyle,
+  eltype::Type{<:Number},
+  A::AbstractArray{<:Number},
+  inds::Indices;
+  kwargs...,
+)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+    ),
+  )
+  data = set_eltype(typeof(A), eltype)(as, A)
+  return ITensor(as, NDTensors.default_storagetype(typeof(data), inds)(data), inds)
+end
 
-ITensor(::AliasStyle, args...; kwargs...)::ITensor =
-  error("ITensor constructor with input arguments of types `$(typeof.(args))` not defined.")
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
+)
+  is = indices(inds)
+  if !isa(is, Indices)
+    error("Indices $inds are not valid for constructing an ITensor.")
+  end
+  return ITensor(as, eltype, A, is; kwargs...)
+end
 
-"""
-    Tensor(::ITensor)
+# Convert `Adjoint` to `Matrix`
+## TODO: This might have issues for different backends since Matrix converts to Base.Matrix only
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+)
+  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+end
 
-Create a `Tensor` that stores a copy of the storage and
-indices of the input `ITensor`.
-"""
-Tensor(T::ITensor)::Tensor = Tensor(NeverAlias(), T)
-Tensor(as::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
+)
+  return ITensor(as, eltype, A, indices(is...); kwargs...)
+end
 
-"""
-    tensor(::ITensor)
+function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
+  return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
+end
 
-Convert the `ITensor` to a `Tensor` that shares the same
-storage and indices as the `ITensor`.
-"""
-Tensor(::AllowAlias, A::ITensor) = A.tensor
+# For now, it's not well defined to construct an ITensor without indices
+# from a non-zero dimensional Array
+## TODO: I am not changing this function but I am not really sure how it 
+## works properly
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
+)
+  if length(A) > 1
+    error(
+      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
+    )
+  end
+  return ITensor(eltype, A[]; kwargs...)
+end
+
+function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
+  return ITensor(NeverAlias(), eltype, A; kwargs...)
+end
+
+function ITensor(A::AbstractArray; kwargs...)
+  return ITensor(NeverAlias(), eltype(A), A; kwargs...)
+end
+
+function ITensor(
+  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
+) where {ElT<:Number}
+  return ITensor(as, ElT, A, indices(is...); kwargs...)
+end
+
+function ITensor(
+  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
+) where {ElT<:RealOrComplex{Int}}
+  return ITensor(as, float(ElT), A, is...; kwargs...)
+end
+
+function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
+  return ITensor(NeverAlias(), A, is...; kwargs...)
+end
 
 """
     ITensor([::Type{ElT} = Float64, ]inds)
@@ -265,129 +386,18 @@ ITensor(eltype::Type{<:Number}, x::Number, is...) = ITensor(eltype, x, indices(i
 
 ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
 
-const RealOrComplex{T} = Union{T,Complex{T}}
-
 ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 
 """
-    ITensor([ElT::Type, ]A::Array, inds)
-    ITensor([ElT::Type, ]A::Array, inds::Index...)
+    itensor(args...; kwargs...)
 
-    itensor([ElT::Type, ]A::Array, inds)
-    itensor([ElT::Type, ]A::Array, inds::Index...)
-
-Construct an ITensor from an Array `A` and indices `inds`.
-The ITensor will be a view of the Array data if possible (if
-no conversion to a different element type is necessary).
-
-If specified, the ITensor will have element type `ElT`.
-
-If the element type of `A` is `Int` or `Complex{Int}` and
-the desired element type isn't specified, it will
-be converted to `Float64` or `Complex{Float64}` automatically.
-To keep the element type as an integer, specify it explicitly,
-for example with:
-```julia
-i = Index(2, "i")
-A = [0 1; 1 0]
-T = ITensor(eltype(A), A, i', dag(i))
-```
-
-# Examples
-
-```julia
-i = Index(2,"index_i")
-j = Index(2,"index_j")
-
-M = [1. 2;
-     3 4]
-T = ITensor(M, i, j)
-T[i => 1, j => 1] = 3.3
-M[1, 1] == 3.3
-T[i => 1, j => 1] == 3.3
-```
-
-!!! warning
-    In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
+Like the `ITensor` constructor, but with attempt to make a view
+of the input data when possible.
 """
-function ITensor(
-  as::AliasStyle,
-  eltype::Type{<:Number},
-  A::AbstractArray{<:Number},
-  inds::Indices;
-  kwargs...,
-)
-  length(A) ≠ dim(inds) && throw(
-    DimensionMismatch(
-      "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
-    ),
-  )
-  data = set_eltype(typeof(A), eltype)(as, A)
-  return itensor(Dense(data), inds)
-end
+itensor(args...; kwargs...)::ITensor = ITensor(AllowAlias(), args...; kwargs...)
 
-function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
-)
-  is = indices(inds)
-  if !isa(is, Indices)
-    error("Indices $inds are not valid for constructing an ITensor.")
-  end
-  return ITensor(as, eltype, A, is; kwargs...)
-end
-
-# Convert `Adjoint` to `Matrix`
-function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
-)
-  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
-end
-
-function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
-)
-  return ITensor(as, eltype, A, indices(is...); kwargs...)
-end
-
-function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
-  return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
-end
-
-# For now, it's not well defined to construct an ITensor without indices
-# from a non-zero dimensional Array
-function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
-)
-  if length(A) > 1
-    error(
-      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
-    )
-  end
-  return ITensor(eltype, A[]; kwargs...)
-end
-
-function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
-  return ITensor(NeverAlias(), eltype, A; kwargs...)
-end
-function ITensor(A::AbstractArray{ElT}; kwargs...) where {ElT}
-  return ITensor(NeverAlias(), eltype(A), A; kwargs...)
-end
-
-function ITensor(
-  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
-) where {ElT<:Number}
-  return ITensor(as, ElT, A, indices(is...); kwargs...)
-end
-
-function ITensor(
-  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
-) where {ElT<:RealOrComplex{Int}}
-  return ITensor(as, float(ElT), A, is...; kwargs...)
-end
-
-function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
-  return ITensor(NeverAlias(), A, is...; kwargs...)
-end
+ITensor(::AliasStyle, args...; kwargs...)::ITensor =
+  error("ITensor constructor with input arguments of types `$(typeof.(args))` not defined.")
 
 """
     dense(T::ITensor)
