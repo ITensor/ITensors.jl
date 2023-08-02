@@ -1,4 +1,4 @@
-module NDTensorMetal
+module NDTensorsMetalExt
 
 using NDTensors
 using NDTensors.SetParameters
