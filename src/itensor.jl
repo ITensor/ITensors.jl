@@ -1412,6 +1412,11 @@ end
 
 Return a Vector with indices that are common between the indices of `A` and `B`
 (the set intersection, similar to `Base.intersect`).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ commoninds
 
 # firstintersect
@@ -1421,6 +1426,11 @@ Return a Vector with indices that are common between the indices of `A` and `B`
 Return the first `Index` common between the indices of `A` and `B`.
 
 See also [`commoninds`](@ref).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ commonind
 
 # symdiff
@@ -1429,6 +1439,11 @@ See also [`commoninds`](@ref).
 
 Return a Vector with indices that are not common between the indices of `A` and
 `B` (the symmetric set difference, similar to `Base.symdiff`).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ noncommoninds
 
 # firstsymdiff
@@ -1438,6 +1453,11 @@ Return a Vector with indices that are not common between the indices of `A` and
 Return the first `Index` not common between the indices of `A` and `B`.
 
 See also [`noncommoninds`](@ref).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ noncommonind
 
 # setdiff
@@ -1446,6 +1466,11 @@ See also [`noncommoninds`](@ref).
 
 Return Vector with indices that are unique to the set of indices of `A` and not
 in `B` (the set difference, similar to `Base.setdiff`).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ uniqueinds
 
 # firstsetdiff
@@ -1455,6 +1480,11 @@ in `B` (the set difference, similar to `Base.setdiff`).
 Return the first `Index` unique to the set of indices of `A` and not in `B`.
 
 See also [`uniqueinds`](@ref).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ uniqueind
 
 # union
@@ -1463,6 +1493,11 @@ See also [`uniqueinds`](@ref).
 
 Return a Vector with indices that are the union of the indices of `A` and `B`
 (the set union, similar to `Base.union`).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ unioninds
 
 # firstunion
@@ -1472,6 +1507,11 @@ Return a Vector with indices that are the union of the indices of `A` and `B`
 Return the first `Index` in the union of the indices of `A` and `B`.
 
 See also [`unioninds`](@ref).
+
+Optional keyword arguments:
+* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+* plev::Int - common prime level that the returned indices must all have
+* inds - Index or collection of indices. Returned indices must come from this set of indices.
 """ unionind
 
 firstind(A...; kwargs...) = getfirst(map_itensor2inds(A)...; kwargs...)
