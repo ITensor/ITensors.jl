@@ -23,7 +23,7 @@ TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 
 [compat]
 Adapt = "3.5"
-Compat = "2.1, 3, 4"
+Compat = "4.9"
 Dictionaries = "0.3.5"
 FLoops = "0.2.1"
 Folds = "0.2.8"
