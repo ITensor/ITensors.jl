@@ -114,6 +114,8 @@ end
 
 insertblock!!(T::EmptyTensor{<:Number,N}, block) where {N} = insertblock(T, block)
 
+blockoffsets(tensor::EmptyTensor) = BlockOffsets{ndims(tensor)}()
+
 # Special case with element type of EmptyNumber: storage takes the type
 # of the input.
 @propagate_inbounds function _setindex(T::EmptyTensor{EmptyNumber}, x, I...)
