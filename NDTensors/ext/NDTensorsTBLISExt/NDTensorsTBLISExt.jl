@@ -1,4 +1,4 @@
-module NDTensorTBLIS
+module NDTensorsTBLISExt
 
 using NDTensors
 using LinearAlgebra
