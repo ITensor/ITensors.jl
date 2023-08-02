@@ -1,4 +1,4 @@
-module NDTensorCUDA
+module NDTensorsCUDAExt
 
 using NDTensors
 using NDTensors.SetParameters

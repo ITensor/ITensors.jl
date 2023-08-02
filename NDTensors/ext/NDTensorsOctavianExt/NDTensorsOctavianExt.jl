@@ -1,4 +1,4 @@
-module NDTensorOctavian
+module NDTensorsOctavianExt
 
 using NDTensors
 
