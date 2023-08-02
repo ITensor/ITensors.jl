@@ -88,4 +88,10 @@ end
   @test_broken A + B
 end
 
+@testset "blockoffsets" for space in (2, [QN(0) => 1, QN(1) => 1])
+  i = Index(space)
+  A = ITensor(i', dag(i))
+  @test blockoffsets(A) == NDTensors.BlockOffsets{2}()
+end
+
 nothing
