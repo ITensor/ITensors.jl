@@ -18,5 +18,16 @@ using Test
     @test eltype(Tc) == Complex{NDTensors.EmptyNumber}
     @test Tc[1, 1] == Complex(NDTensors.EmptyNumber(), NDTensors.EmptyNumber())
     @test Tc[1, 2] == Complex(NDTensors.EmptyNumber(), NDTensors.EmptyNumber())
+
+    T = dev(EmptyTensor(Float64, (2, 2)))
+    @test blockoffsets(T) == BlockOffsets{2}()
+    T = dev(EmptyBlockSparseTensor(Float64, ([1, 1], [1, 1])))
+    @test blockoffsets(T) == BlockOffsets{2}()
+
+    T = dev(EmptyStorage(NDTensors.EmptyNumber))
+    @test zero(T) isa typeof(T)
+
+    T = dev(EmptyTensor(NDTensors.EmptyNumber, (2, 2)))
+    @test zero(T) isa typeof(T)
   end
 end
