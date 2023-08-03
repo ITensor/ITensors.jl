@@ -38,3 +38,7 @@ end
 function ITensor(A::AbstractArray; kwargs...)
   return ITensor(NeverAlias(), eltype(A), A; kwargs...)
 end
+
+function emptyITensor(::Type{ElT}=NDTensors.default_eltype()) where {ElT<:Number}
+  emptyITensor(ElT, Index(0))
+end
