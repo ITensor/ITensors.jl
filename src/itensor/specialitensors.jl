@@ -63,26 +63,3 @@ function onehot(ivs::Pair{<:Index}...)
 end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
-
-### informally defined Scalar ITensors
-
-# For now, it's not well defined to construct an ITensor without indices
-# from a non-zero dimensional Array.
-function ITensor(
-  as::AliasStyle, ElT::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
-)
-  if length(A) > 1
-    error(
-      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
-    )
-  end
-  return ITensor(as, ElT, A, Index(1); kwargs...)
-end
-
-function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
-  return ITensor(NeverAlias(), eltype, A; kwargs...)
-end
-
-function ITensor(A::AbstractArray; kwargs...)
-  return ITensor(NeverAlias(), eltype(A), A; kwargs...)
-end

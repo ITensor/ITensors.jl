@@ -286,7 +286,7 @@ ITensor(is...) = ITensor(NDTensors.default_eltype(), is...)
 ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
 
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  z = NDTensors.Zeros{ElT, 1, NDTensors.default_datatype(ElT)}(inds)
+  z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(inds)
   return ITensor(AllowAlias(), ElT, z)
 end
 
