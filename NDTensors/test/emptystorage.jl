@@ -23,5 +23,11 @@ using Test
     @test blockoffsets(T) == BlockOffsets{2}()
     T = dev(EmptyBlockSparseTensor(Float64, ([1, 1], [1, 1])))
     @test blockoffsets(T) == BlockOffsets{2}()
+
+    T = dev(EmptyStorage(NDTensors.EmptyNumber))
+    @test zero(T) isa typeof(T)
+
+    T = dev(EmptyTensor(NDTensors.EmptyNumber, (2, 2)))
+    @test zero(T) isa typeof(T)
   end
 end

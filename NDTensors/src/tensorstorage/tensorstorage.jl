@@ -1,11 +1,5 @@
 abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
-# Denotes when a storage type has no data
-struct NoData end
-
-size(::NoData) = (0,)
-length(::NoData) = 0
-
 data(S::TensorStorage) = S.data
 
 datatype(::Type{<:TensorStorage}) = error("Not implemented")

@@ -94,4 +94,10 @@ end
   @test blockoffsets(A) == NDTensors.BlockOffsets{2}()
 end
 
+@testset "zero" for space in (2, [QN(0) => 1, QN(1) => 1])
+  i = Index(space)
+  A = ITensor(i', dag(i))
+  @test NDTensors.tensor(zero(A)) isa typeof(NDTensors.tensor(A))
+end
+
 nothing
