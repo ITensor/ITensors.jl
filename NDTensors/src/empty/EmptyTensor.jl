@@ -55,7 +55,7 @@ end
 getindex(T::EmptyTensor, I::Integer...) = zero(eltype(T))
 
 function getindex(T::EmptyTensor{Complex{EmptyNumber}}, I::Integer...)
-  return Complex(NDTensors.EmptyNumber(), NDTensors.EmptyNumber())
+  return Complex(EmptyNumber(), EmptyNumber())
 end
 
 similar(T::EmptyTensor, inds::Tuple) = setinds(T, inds)
@@ -113,6 +113,8 @@ function insertblock(T::EmptyTensor{<:Number,N}, block) where {N}
 end
 
 insertblock!!(T::EmptyTensor{<:Number,N}, block) where {N} = insertblock(T, block)
+
+blockoffsets(tensor::EmptyTensor) = BlockOffsets{ndims(tensor)}()
 
 # Special case with element type of EmptyNumber: storage takes the type
 # of the input.
