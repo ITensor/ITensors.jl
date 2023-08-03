@@ -40,5 +40,5 @@ function ITensor(A::AbstractArray; kwargs...)
 end
 
 function emptyITensor(::Type{ElT}=NDTensors.default_eltype()) where {ElT<:Number}
-  emptyITensor(ElT, Index(0))
+  return emptyITensor(ElT, Index(0))
 end

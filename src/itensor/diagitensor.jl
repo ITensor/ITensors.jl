@@ -31,7 +31,9 @@ function diagITensor(
   return itensor(Diag(data), is)
 end
 
-function diagITensor(as::AliasStyle, ElT::Type{<:Number}, v::AbstractVector{<:Number}, is...)
+function diagITensor(
+  as::AliasStyle, ElT::Type{<:Number}, v::AbstractVector{<:Number}, is...
+)
   return diagITensor(as, ElT, v, indices(is...))
 end
 
