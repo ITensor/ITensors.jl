@@ -252,6 +252,18 @@ function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
   return ITensor(NeverAlias(), A, is...; kwargs...)
 end
 
+function ITensor(datat::Type{<:AbstractArray}, is::Indices; kwargs...)
+  elt = eltype(datat)
+  z = NDTensors.Zeros{elt, 1, datat}(is)
+  ITensor(AllowAlias(), elt, z, is; kwargs...)
+end
+function ITensor(datat::Type{<:AbstractArray}, is...; kwargs...)
+  ITensor(datat, indices(is...);kwargs...)
+end
+function ITensor(datat::Type{<:AbstractArray}; kwargs...)
+  ITensor(datat, Index(0))
+end
+
 """
     ITensor([::Type{ElT} = Float64, ]inds)
     ITensor([::Type{ElT} = Float64, ]inds::Index...)
