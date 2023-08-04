@@ -1,5 +1,5 @@
 using ITensors, Test
-import ITensors: Out,In
+import ITensors: Out, In
 
 @testset "Fermions" begin
   ITensors.enable_auto_fermion()
@@ -655,16 +655,16 @@ import ITensors: Out,In
   end # Fermionic SVD tests
 
   @testset "Fermionic SVD Arrow Cases" begin
-    s = siteinds("Fermion",3; conserve_qns=true)
+    s = siteinds("Fermion", 3; conserve_qns=true)
 
     function id(i)
-      if dir(i)==Out
-        I = ITensor(i,dag(i)')
+      if dir(i) == Out
+        I = ITensor(i, dag(i)')
       else
-        I = ITensor(dag(i)',i)
+        I = ITensor(dag(i)', i)
       end
-      for n=1:dim(i)
-        I[n,n] = 1.0
+      for n in 1:dim(i)
+        I[n, n] = 1.0
       end
       return I
     end
@@ -674,48 +674,48 @@ import ITensors: Out,In
       T = ITensor(s[1], s[2])
       T[1, 2] = 1.0
       T[2, 1] = 1.0
-      U,S,V,spec,u,v = svd(T,s[1])
-      @test norm(T-U*S*V) ≈ 0
-      UU = dag(U)*prime(U,u)
-      @test norm(UU-id(u)) ≈ 0
-      VV = dag(V)*prime(V,v)
-      @test norm(VV-id(v)) ≈ 0
+      U, S, V, spec, u, v = svd(T, s[1])
+      @test norm(T - U * S * V) ≈ 0
+      UU = dag(U) * prime(U, u)
+      @test norm(UU - id(u)) ≈ 0
+      VV = dag(V) * prime(V, v)
+      @test norm(VV - id(v)) ≈ 0
     end
 
     # Arrows: In, Out
     let
       T = ITensor(dag(s[1]), s[2])
       T[2, 2] = 1.0
-      U,S,V,spec,u,v = svd(T,s[1])
-      @test norm(T-U*S*V) ≈ 0
-      UU = dag(U)*prime(U,u)
-      @test norm(UU-id(u)) ≈ 0
-      VV = dag(V)*prime(V,v)
-      @test norm(VV-id(v)) ≈ 0
+      U, S, V, spec, u, v = svd(T, s[1])
+      @test norm(T - U * S * V) ≈ 0
+      UU = dag(U) * prime(U, u)
+      @test norm(UU - id(u)) ≈ 0
+      VV = dag(V) * prime(V, v)
+      @test norm(VV - id(v)) ≈ 0
     end
 
     # Arrows: Out, In
     let
       T = ITensor(s[1], dag(s[2]))
       T[2, 2] = 1.0
-      U,S,V,spec,u,v = svd(T,s[1])
-      @test norm(T-U*S*V) ≈ 0
-      UU = dag(U)*prime(U,u)
-      @test norm(UU-id(u)) ≈ 0
-      VV = dag(V)*prime(V,v)
-      @test norm(VV-id(v)) ≈ 0
+      U, S, V, spec, u, v = svd(T, s[1])
+      @test norm(T - U * S * V) ≈ 0
+      UU = dag(U) * prime(U, u)
+      @test norm(UU - id(u)) ≈ 0
+      VV = dag(V) * prime(V, v)
+      @test norm(VV - id(v)) ≈ 0
     end
 
     # Arrows: In, In
     let
       T = ITensor(dag(s[1]), dag(s[2]))
       T[1, 2] = 1.0
-      U,S,V,spec,u,v = svd(T,s[1])
-      @test norm(T-U*S*V) ≈ 0
-      UU = dag(U)*prime(U,u)
-      @test norm(UU-id(u)) ≈ 0
-      VV = dag(V)*prime(V,v)
-      @test norm(VV-id(v)) ≈ 0
+      U, S, V, spec, u, v = svd(T, s[1])
+      @test norm(T - U * S * V) ≈ 0
+      UU = dag(U) * prime(U, u)
+      @test norm(UU - id(u)) ≈ 0
+      VV = dag(V) * prime(V, v)
+      @test norm(VV - id(v)) ≈ 0
     end
 
     # Arrows: Mixed, In
@@ -723,12 +723,12 @@ import ITensors: Out,In
       T = ITensor(dag(s[1]), s[2], dag(s[3]))
       T[1, 1, 1] = 1.0
       T[2, 2, 1] = 1.0
-      U,S,V,spec,u,v = svd(T,[dag(s[1]),s[2]])
-      @test norm(T-U*S*V) < 1E-14
-      UU = dag(U)*prime(U,u)
-      @test_broken norm(UU-id(u)) ≈ 0
-      VV = dag(V)*prime(V,v)
-      @test norm(VV-id(v)) ≈ 0
+      U, S, V, spec, u, v = svd(T, [dag(s[1]), s[2]])
+      @test norm(T - U * S * V) < 1E-14
+      UU = dag(U) * prime(U, u)
+      @test_broken norm(UU - id(u)) ≈ 0
+      VV = dag(V) * prime(V, v)
+      @test norm(VV - id(v)) ≈ 0
     end
 
     # Arrows: Mixed, In
@@ -737,18 +737,18 @@ import ITensors: Out,In
       T = ITensor(dag(s[1]), s[2], dag(s[3]))
       T[1, 1, 1] = 1.0
       T[2, 2, 1] = 1.0
-      F = ITensor(s[1]',s[1])
-      for (j,k)=zip(1:2,reverse(1:2))
-        F[j,k] = 1.0
+      F = ITensor(s[1]', s[1])
+      for (j, k) in zip(1:2, reverse(1:2))
+        F[j, k] = 1.0
       end
       T *= F
-      U,S,V,spec,u,v = svd(T,[s[1]',s[2]])
+      U, S, V, spec, u, v = svd(T, [s[1]', s[2]])
       U *= dag(F)
-      @test norm(T-U*S*V) < 1E-14
-      UU = dag(U)*prime(U,u)
-      @test_broken norm(UU-id(u)) ≈ 0
-      VV = dag(V)*prime(V,v)
-      @test norm(VV-id(v)) ≈ 0
+      @test norm(T - U * S * V) < 1E-14
+      UU = dag(U) * prime(U, u)
+      @test_broken norm(UU - id(u)) ≈ 0
+      VV = dag(V) * prime(V, v)
+      @test norm(VV - id(v)) ≈ 0
     end
   end
 

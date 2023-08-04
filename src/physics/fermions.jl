@@ -105,21 +105,19 @@ function NDTensors.permfactor(
   return compute_permfactor(perm, qns...; kwargs...)
 end
 
-NDTensors.block_parity(i::QNIndex,block::Integer) = fparity(qn(i,block))
+NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
 
-function NDTensors.right_arrow_sign(i::QNIndex,
-                                    block::Integer)
+function NDTensors.right_arrow_sign(i::QNIndex, block::Integer)
   using_auto_fermion() || return 1
-  if dir(i) == Out && NDTensors.block_parity(i,block)==1
+  if dir(i) == Out && NDTensors.block_parity(i, block) == 1
     return -1
   end
   return 1
 end
 
-function NDTensors.left_arrow_sign(i::QNIndex,
-                                   block::Integer)
+function NDTensors.left_arrow_sign(i::QNIndex, block::Integer)
   using_auto_fermion() || return 1
-  if dir(i) == In && NDTensors.block_parity(i,block)==1
+  if dir(i) == In && NDTensors.block_parity(i, block) == 1
     return -1
   end
   return 1
