@@ -1406,6 +1406,15 @@ for find in (:commonind, :noncommonind, :uniqueind, :unionind)
   end
 end
 
+function index_filter_kwargs_docstring()
+  return """
+  Optional keyword arguments:
+  * tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+  * plev::Int - common prime level that the returned indices must all have
+  * inds - Index or collection of indices. Returned indices must come from this set of indices.
+  """
+end
+
 # intersect
 @doc """
     commoninds(A, B; kwargs...)
@@ -1413,10 +1422,7 @@ end
 Return a Vector with indices that are common between the indices of `A` and `B`
 (the set intersection, similar to `Base.intersect`).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ commoninds
 
 # firstintersect
@@ -1427,10 +1433,7 @@ Return the first `Index` common between the indices of `A` and `B`.
 
 See also [`commoninds`](@ref).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ commonind
 
 # symdiff
@@ -1440,10 +1443,7 @@ Optional keyword arguments:
 Return a Vector with indices that are not common between the indices of `A` and
 `B` (the symmetric set difference, similar to `Base.symdiff`).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ noncommoninds
 
 # firstsymdiff
@@ -1454,10 +1454,7 @@ Return the first `Index` not common between the indices of `A` and `B`.
 
 See also [`noncommoninds`](@ref).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ noncommonind
 
 # setdiff
@@ -1467,10 +1464,7 @@ Optional keyword arguments:
 Return Vector with indices that are unique to the set of indices of `A` and not
 in `B` (the set difference, similar to `Base.setdiff`).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ uniqueinds
 
 # firstsetdiff
@@ -1481,10 +1475,7 @@ Return the first `Index` unique to the set of indices of `A` and not in `B`.
 
 See also [`uniqueinds`](@ref).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ uniqueind
 
 # union
@@ -1494,10 +1485,7 @@ Optional keyword arguments:
 Return a Vector with indices that are the union of the indices of `A` and `B`
 (the set union, similar to `Base.union`).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ unioninds
 
 # firstunion
@@ -1508,10 +1496,7 @@ Return the first `Index` in the union of the indices of `A` and `B`.
 
 See also [`unioninds`](@ref).
 
-Optional keyword arguments:
-* tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-* plev::Int - common prime level that the returned indices must all have
-* inds - Index or collection of indices. Returned indices must come from this set of indices.
+$(index_filter_kwargs_docstring())
 """ unionind
 
 firstind(A...; kwargs...) = getfirst(map_itensor2inds(A)...; kwargs...)
