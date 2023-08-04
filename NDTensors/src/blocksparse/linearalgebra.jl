@@ -166,7 +166,7 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     end
 
     # <fermions>
-    sU = right_arrow_sign(uind,blockU[2])
+    sU = right_arrow_sign(uind, blockU[2])
 
     if sU == -1
       blockview(U, blockU) .= -Ub
@@ -180,13 +180,13 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     end
 
     #<fermions>
-    sV = left_arrow_sign(vind,blockV[2])
+    sV = left_arrow_sign(vind, blockV[2])
     # This sign (sVP) accounts for the fact that
     # V is transposed, i.e. the index connecting to S
     # is the second index:
-    sVP = block_parity(vind,blockV[2])==1 ? -1 : +1
+    sVP = block_parity(vind, blockV[2]) == 1 ? -1 : +1
 
-    if (sV*sVP) == -1
+    if (sV * sVP) == -1
       blockview(V, blockV) .= -Vb
     else
       blockview(V, blockV) .= Vb
