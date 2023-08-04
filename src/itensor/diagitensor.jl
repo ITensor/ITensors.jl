@@ -22,19 +22,19 @@ The version `diagitensor` might output an ITensor whose storage data
 is an alias of the input vector data in order to minimize operations.
 """
 function diagITensor(
-  as::AliasStyle, ElT::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
+  as::AliasStyle, elt::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
 )
   length(v) ≠ mindim(is) && error(
     "Length of vector for diagonal must equal minimum of the dimension of the input indices",
   )
-  data = set_eltype(typeof(v), ElT)(as, v)
+  data = set_eltype(typeof(v), elt)(as, v)
   return itensor(Diag(data), is)
 end
 
 function diagITensor(
-  as::AliasStyle, ElT::Type{<:Number}, v::AbstractVector{<:Number}, is...
+  as::AliasStyle, elt::Type{<:Number}, v::AbstractVector{<:Number}, is...
 )
-  return diagITensor(as, ElT, v, indices(is...))
+  return diagITensor(as, elt, v, indices(is...))
 end
 
 function diagITensor(as::AliasStyle, v::AbstractVector, is...)
@@ -46,8 +46,8 @@ function diagITensor(as::AliasStyle, v::AbstractVector{<:RealOrComplex{Int}}, is
 end
 
 diagITensor(v::AbstractVector{<:Number}, is...) = diagITensor(NeverAlias(), v, is...)
-function diagITensor(ElT::Type{<:Number}, v::AbstractVector{<:Number}, is...)
-  return diagITensor(NeverAlias(), ElT, v, is...)
+function diagITensor(elt::Type{<:Number}, v::AbstractVector{<:Number}, is...)
+  return diagITensor(NeverAlias(), elt, v, is...)
 end
 
 diagitensor(args...; kwargs...) = diagITensor(AllowAlias(), args...; kwargs...)
@@ -55,8 +55,8 @@ diagitensor(args...; kwargs...) = diagITensor(AllowAlias(), args...; kwargs...)
 # XXX TODO: explain conversion from Int
 # XXX TODO: proper conversion
 """
-    diagITensor([ElT::Type, ]x::Number, inds...)
-    diagitensor([ElT::Type, ]x::Number, inds...)
+    diagITensor([elt::Type, ]x::Number, inds...)
+    diagitensor([elt::Type, ]x::Number, inds...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal.
 In general, the diagonal elements will be set to the value `x` and
@@ -67,12 +67,12 @@ In the case when `x isa Union{Int, Complex{Int}}`, by default it will
 be converted to `float(x)`. Note that this behavior is subject to change
 in the future.
 """
-function diagITensor(::AliasStyle, ElT::Type{<:Number}, x::Number, is::Indices)
-  return diagITensor(AllowAlias(), ElT, fill(eltype(x), mindim(is)), is...)
+function diagITensor(::AliasStyle, elt::Type{<:Number}, x::Number, is::Indices)
+  return diagITensor(AllowAlias(), elt, fill(eltype(x), mindim(is)), is...)
 end
 
-function diagITensor(as::AliasStyle, ElT::Type{<:Number}, x::Number, is...)
-  return diagITensor(as, ElT, x, indices(is...))
+function diagITensor(as::AliasStyle, elt::Type{<:Number}, x::Number, is...)
+  return diagITensor(as, elt, x, indices(is...))
 end
 
 function diagITensor(as::AliasStyle, x::Number, is...)
@@ -83,8 +83,8 @@ function diagITensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
   return diagITensor(as, float(typeof(x)), x, is...)
 end
 
-function diagITensor(ElT::Type{<:Number}, x::Number, is...)
-  return diagITensor(NeverAlias(), ElT, x, is...)
+function diagITensor(elt::Type{<:Number}, x::Number, is...)
+  return diagITensor(NeverAlias(), elt, x, is...)
 end
 
 """
@@ -103,7 +103,7 @@ end
 
 diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is...))
 
-diagITensor(is::Indices) = diagITensor(Float64, is)
+diagITensor(is::Indices) = diagITensor(NDTensors.default_eltype(), is)
 diagITensor(is...) = diagITensor(indices(is...))
 
 diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
