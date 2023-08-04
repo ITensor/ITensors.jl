@@ -193,11 +193,7 @@ T[i => 1, j => 1] == 3.3
     In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
 """
 function ITensor(
-  as::AliasStyle,
-  elt::Type{<:Number},
-  A::AbstractArray{<:Number},
-  inds::Indices;
-  kwargs...,
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::Indices; kwargs...
 )
   length(A) ≠ dim(inds) && throw(
     DimensionMismatch(
@@ -254,14 +250,14 @@ end
 
 function ITensor(datat::Type{<:AbstractArray}, is::Indices; kwargs...)
   elt = eltype(datat)
-  z = NDTensors.Zeros{elt, 1, datat}(is)
-  ITensor(AllowAlias(), elt, z, is; kwargs...)
+  z = NDTensors.Zeros{elt,1,datat}(is)
+  return ITensor(AllowAlias(), elt, z, is; kwargs...)
 end
 function ITensor(datat::Type{<:AbstractArray}, is...; kwargs...)
-  ITensor(datat, indices(is...);kwargs...)
+  return ITensor(datat, indices(is...); kwargs...)
 end
 function ITensor(datat::Type{<:AbstractArray}; kwargs...)
-  ITensor(datat, Index(0))
+  return ITensor(datat, Index(0))
 end
 
 """
