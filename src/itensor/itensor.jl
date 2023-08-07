@@ -560,7 +560,7 @@ size(T::ITensor) = dims(T)
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
-_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A)
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && iszerodata(A)
 
 """
     dir(A::ITensor, i::Index)
@@ -598,14 +598,14 @@ nzblocks(T::ITensor) = nzblocks(tensor(T))
 blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 
 """
-    isemptystorage(T::ITensor)
+    iszerodata(T::ITensor)
 
 Returns `true` if the ITensor contains no elements.
 
 An ITensor with `EmptyStorage` storage always returns `true`.
 """
-isemptystorage(T::ITensor) = iszero(tensor(T))
-isempty(T::ITensor) = iszero(T)
+iszerodata(T::ITensor) = is_unallocated_zeros(tensor(T))
+isempty(T::ITensor) = iszerodata(T)
 
 isreal(T::ITensor) = eltype(T) <: Real
 iszero(T::ITensor) = all(iszero, T)
