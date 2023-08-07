@@ -11,8 +11,8 @@ In general, the diagonal elements will be those stored in `v` and
 the ITensor will have element type `eltype(v)`, unless specified explicitly
 by `ElT`. The storage will have `NDTensors.Diag` type.
 
-In the case when `eltype(v) isa Union{Int, Complex{Int}}`, by default it will
-be converted to `float(v)`. Note that this behavior is subject to change
+NOTE: In the case when `eltype(v) isa Union{Int, Complex{Int}}`, and the element type `elt` 
+is not specified explicitly, v will be converted to `float(v)`. Note that this behavior is subject to change
 in the future.
 
 The version `diagITensor` will never output an ITensor whose storage data
