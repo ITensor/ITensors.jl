@@ -1,5 +1,5 @@
 struct Zeros{ElT,N,Axes,Alloc<:AbstractArray} <: AbstractArray{ElT,N}
-  z::FillArrays.Zeros
+  z::FillArrays.Zeros{ElT, N, Axes}
   function NDTensors.Zeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
     @assert eltype(Alloc) == ElT
     z = FillArrays.Zeros{ElT,N}(inds)
