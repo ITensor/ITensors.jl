@@ -8,13 +8,13 @@ struct Zeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray{ElT,N}
 end
 
 function Zeros(alloc::Type{<:AbstractArray}, dims...)
-  @assert ndims(alloc) == length(inds...)
-  return Zeros{eltype(alloc),ndims(alloc),alloc}(Tuple(inds...))
+  @assert ndims(alloc) == length(dims...)
+  return Zeros{eltype(alloc),ndims(alloc),alloc}(Tuple(dims))
 end
 
 function Zeros{ElT}(alloc::Type{<:AbstractArray}, dims...) where {ElT}
   alloc = set_eltype(alloc, ElT)
-  return Zeros(alloc, dims...)
+  return Zeros(alloc, dims)
 end
 
 Base.ndims(::NDTensors.Zeros{ElT,N}) where {ElT,N} = N
