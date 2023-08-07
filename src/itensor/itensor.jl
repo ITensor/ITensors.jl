@@ -281,8 +281,8 @@ B = ITensor(ComplexF64,k,j)
 ```
 """
 function ITensor(ElT::Type{<:Number}, is::Indices)
-  z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(is)
-  return ITensor(NeverAlias(), ElT, z, is)
+  z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(Tuple(dim(is)))
+  return ITensor(AllowAlias(), ElT, z, is)
 end
 
 ITensor(ElT::Type{<:Number}, is...) = ITensor(ElT, indices(is...))
