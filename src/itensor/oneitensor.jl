@@ -22,23 +22,23 @@ deepcontract(ts::Union{ITensor,OneITensor}...) = *(ts...)
 
 # For now, it's not well defined to construct an ITensor without indices
 # from a non-zero dimensional Array.
-function ITensor(as::AliasStyle, ElT::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
+function ITensor(as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
   if length(A) > 1
     error(
       "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
     )
   end
-  return ITensor(as, ElT, A, Index(1); kwargs...)
+  return ITensor(as, elt, A, Index(1); kwargs...)
 end
 
-function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
-  return ITensor(NeverAlias(), eltype, A; kwargs...)
+function ITensor(elt::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
+  return ITensor(NeverAlias(), elt, A; kwargs...)
 end
 
 function ITensor(A::AbstractArray; kwargs...)
   return ITensor(NeverAlias(), eltype(A), A; kwargs...)
 end
 
-function emptyITensor(::Type{ElT}=NDTensors.default_eltype()) where {ElT<:Number}
-  return emptyITensor(ElT, Index(0))
+function emptyITensor(elt::Type{<:Number}=NDTensors.default_eltype())
+  return emptyITensor(elt, Index(0))
 end

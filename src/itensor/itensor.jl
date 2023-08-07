@@ -193,43 +193,39 @@ T[i => 1, j => 1] == 3.3
     In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
 """
 function ITensor(
-  as::AliasStyle,
-  eltype::Type{<:Number},
-  A::AbstractArray{<:Number},
-  inds::Indices;
-  kwargs...,
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::Indices; kwargs...
 )
   length(A) ≠ dim(inds) && throw(
     DimensionMismatch(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
     ),
   )
-  data = set_eltype(typeof(A), eltype)(as, A)
+  data = set_eltype(typeof(A), elt)(as, A)
   return ITensor(as, NDTensors.default_storagetype(typeof(data), inds)(data), inds)
 end
 
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
 )
   is = indices(inds)
   if !isa(is, Indices)
     error("Indices $inds are not valid for constructing an ITensor.")
   end
-  return ITensor(as, eltype, A, is; kwargs...)
+  return ITensor(as, elt, A, is; kwargs...)
 end
 
 # Convert `Adjoint` to `Matrix`
 ## TODO: This might have issues for different backends since Matrix converts to Base.Matrix only
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+  as::AliasStyle, elt::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
 )
-  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+  return ITensor(as, elt, Matrix(A), inds; kwargs...)
 end
 
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
 )
-  return ITensor(as, eltype, A, indices(is...); kwargs...)
+  return ITensor(as, elt, A, indices(is...); kwargs...)
 end
 
 function ITensor(
@@ -244,12 +240,24 @@ function ITensor(
   return ITensor(as, float(ElT), A, is...; kwargs...)
 end
 
-function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
-  return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
+function ITensor(elt::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
+  return ITensor(NeverAlias(), elt, A, is...; kwargs...)
 end
 
 function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
   return ITensor(NeverAlias(), A, is...; kwargs...)
+end
+
+function ITensor(datat::Type{<:AbstractArray}, is::Indices; kwargs...)
+  elt = eltype(datat)
+  z = NDTensors.Zeros{elt,1,datat}(is)
+  return ITensor(AllowAlias(), elt, z, is; kwargs...)
+end
+function ITensor(datat::Type{<:AbstractArray}, is...; kwargs...)
+  return ITensor(datat, indices(is...); kwargs...)
+end
+function ITensor(datat::Type{<:AbstractArray}; kwargs...)
+  return ITensor(datat, Index(0))
 end
 
 """
@@ -348,16 +356,16 @@ Construct an ITensor with all elements set to `x` and indices `inds`.
   !!! warning
       In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
   """
-ITensor(eltype::Type{<:Number}, x::Number, is::Indices) = _ITensor(eltype, x, is)
+ITensor(elt::Type{<:Number}, x::Number, is::Indices) = _ITensor(elt, x, is)
 
 # For disambiguation with QN version
-ITensor(eltype::Type{<:Number}, x::Number, is::Tuple{}) = _ITensor(eltype, x, is)
+ITensor(elt::Type{<:Number}, x::Number, is::Tuple{}) = _ITensor(elt, x, is)
 
-function _ITensor(eltype::Type{<:Number}, x::Number, is::Indices)
-  return ITensor(Dense(convert(eltype, x), dim(is)), is)
+function _ITensor(elt::Type{<:Number}, x::Number, is::Indices)
+  return ITensor(Dense(convert(elt, x), dim(is)), is)
 end
 
-ITensor(eltype::Type{<:Number}, x::Number, is...) = ITensor(eltype, x, indices(is...))
+ITensor(elt::Type{<:Number}, x::Number, is...) = ITensor(elt, x, indices(is...))
 
 ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
 
@@ -721,15 +729,15 @@ function complex!(T::ITensor)
   return T
 end
 
-function convert_eltype(ElType::Type, T::ITensor)
-  if eltype(T) == ElType
+function convert_eltype(elt::Type, T::ITensor)
+  if eltype(T) == elt
     return T
   end
-  return itensor(adapt(ElType, tensor(T)))
+  return itensor(adapt(elt, tensor(T)))
 end
 
-function convert_leaf_eltype(ElType::Type, T::ITensor)
-  return convert_eltype(ElType, T)
+function convert_leaf_eltype(elt::Type, T::ITensor)
+  return convert_eltype(elt, T)
 end
 
 """
@@ -739,8 +747,8 @@ Convert the element type of the lowest level containers
 ("leaves") of a recursive data structure, such as
 an Vector of Vectors.
 """
-function convert_leaf_eltype(ElType::Type, A::Array)
-  return map(x -> convert_leaf_eltype(ElType, x), A)
+function convert_leaf_eltype(elt::Type, A::Array)
+  return map(x -> convert_leaf_eltype(elt, x), A)
 end
 
 """
