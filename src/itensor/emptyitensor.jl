@@ -2,7 +2,6 @@
 # EmptyStorage ITensor constructors
 #
 
-# TODO: Deprecated!
 """
     emptyITensor([::Type{ElT} = NDTensors.default_eltype(), ]inds)
     emptyITensor([::Type{ElT} = NDTensors.default_eltype(), ]inds::Index...)

@@ -32,6 +32,9 @@
 @deprecate setstore(T::ITensor, st) setstorage(T, st) false
 @deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
 
+# itensor/emptyITensor
+@deprecate emptyITensor(args...; kwargs...) ITensor(args...; kwargs...)
+
 # mps/abstractmps.jl
 @deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
 @deprecate store(m::AbstractMPS) data(m)
