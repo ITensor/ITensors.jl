@@ -2,7 +2,7 @@ struct Zeros{ElT,N,Axes,Alloc<:AbstractArray} <: AbstractArray{ElT,N}
   z::FillArrays.Zeros
   function NDTensors.Zeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
     @assert eltype(Alloc) == ElT
-    z = FillArrays.Zeros{ElT, N}(inds)
+    z = FillArrays.Zeros{ElT,N}(inds)
     Axes = axes(z)
     return new{ElT,N,Axes,Alloc}(z)
   end
