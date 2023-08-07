@@ -1,4 +1,4 @@
-struct Zeros{ElT,N,Axes,Alloc<:AbstractArray{ElT, N}} <: AbstractArray{ElT,N}
+struct Zeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray{ElT,N}
   z::FillArrays.Zeros{ElT,N,Axes}
   function NDTensors.Zeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
     z = FillArrays.Zeros{ElT,N}(inds)
@@ -7,9 +7,9 @@ struct Zeros{ElT,N,Axes,Alloc<:AbstractArray{ElT, N}} <: AbstractArray{ElT,N}
   end
 end
 
-function Zeros(alloc::Type{<:AbstractArray}, dims...) 
+function Zeros(alloc::Type{<:AbstractArray}, dims...)
   @assert ndims(alloc) == length(inds...)
-  return Zeros{eltype(alloc), ndims(alloc), alloc}(Tuple(inds...))
+  return Zeros{eltype(alloc),ndims(alloc),alloc}(Tuple(inds...))
 end
 
 function Zeros{ElT}(alloc::Type{<:AbstractArray}, dims...) where {ElT}
