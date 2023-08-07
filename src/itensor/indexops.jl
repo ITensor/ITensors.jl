@@ -99,12 +99,23 @@ for find in (:commonind, :noncommonind, :uniqueind, :unionind)
   end
 end
 
+function index_filter_kwargs_docstring()
+  return """
+  Optional keyword arguments:
+  * tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+  * plev::Int - common prime level that the returned indices must all have
+  * inds - Index or collection of indices. Returned indices must come from this set of indices.
+  """
+end
+
 # intersect
 @doc """
     commoninds(A, B; kwargs...)
 
 Return a Vector with indices that are common between the indices of `A` and `B`
 (the set intersection, similar to `Base.intersect`).
+
+$(index_filter_kwargs_docstring())
 """ commoninds
 
 # firstintersect
@@ -114,6 +125,8 @@ Return a Vector with indices that are common between the indices of `A` and `B`
 Return the first `Index` common between the indices of `A` and `B`.
 
 See also [`commoninds`](@ref).
+
+$(index_filter_kwargs_docstring())
 """ commonind
 
 # symdiff
@@ -122,6 +135,8 @@ See also [`commoninds`](@ref).
 
 Return a Vector with indices that are not common between the indices of `A` and
 `B` (the symmetric set difference, similar to `Base.symdiff`).
+
+$(index_filter_kwargs_docstring())
 """ noncommoninds
 
 # firstsymdiff
@@ -131,6 +146,8 @@ Return a Vector with indices that are not common between the indices of `A` and
 Return the first `Index` not common between the indices of `A` and `B`.
 
 See also [`noncommoninds`](@ref).
+
+$(index_filter_kwargs_docstring())
 """ noncommonind
 
 # setdiff
@@ -139,6 +156,8 @@ See also [`noncommoninds`](@ref).
 
 Return Vector with indices that are unique to the set of indices of `A` and not
 in `B` (the set difference, similar to `Base.setdiff`).
+
+$(index_filter_kwargs_docstring())
 """ uniqueinds
 
 # firstsetdiff
@@ -148,6 +167,8 @@ in `B` (the set difference, similar to `Base.setdiff`).
 Return the first `Index` unique to the set of indices of `A` and not in `B`.
 
 See also [`uniqueinds`](@ref).
+
+$(index_filter_kwargs_docstring())
 """ uniqueind
 
 # union
@@ -156,6 +177,8 @@ See also [`uniqueinds`](@ref).
 
 Return a Vector with indices that are the union of the indices of `A` and `B`
 (the set union, similar to `Base.union`).
+
+$(index_filter_kwargs_docstring())
 """ unioninds
 
 # firstunion
@@ -165,6 +188,8 @@ Return a Vector with indices that are the union of the indices of `A` and `B`
 Return the first `Index` in the union of the indices of `A` and `B`.
 
 See also [`unioninds`](@ref).
+
+$(index_filter_kwargs_docstring())
 """ unionind
 
 firstind(A...; kwargs...) = getfirst(map_itensor2inds(A)...; kwargs...)
