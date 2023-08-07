@@ -20,8 +20,9 @@ end
 Base.ndims(::NDTensors.Zeros{ElT,N}) where {ElT,N} = N
 ndims(::NDTensors.Zeros{ElT,N}) where {ElT,N} = N
 Base.eltype(::Zeros{ElT}) where {ElT} = ElT
-datatype(::NDTensors.Zeros{ElT,N,DataT}) where {ElT,N,DataT} = DataT
-datatype(::Type{<:NDTensors.Zeros{ElT,N,DataT}}) where {ElT,N,DataT} = DataT
+alloctype(::NDTensors.Zeros{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc
+alloctype(::Type{<:NDTensors.Zeros{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc} = Alloc
+Base.axes(::Type{<:NDTensors.Zeros{ElT,N,Axes}}) where {ElT,N,Axes} = Axes
 
 Base.size(zero::Zeros) = Base.size(zero.z)
 
@@ -51,4 +52,14 @@ end
 
 function (arraytype::Type{<:Zeros})(::NeverAlias, A::Zeros)
   return copy(A)
+end
+
+# This function actually allocates the data.
+# NDTensors.similar
+function similar(arraytype::Type{<:Zeros}, dims::Tuple)
+  return Zeros{eltype(arraytype)}(datatype(arraytype), dims)
+end
+
+function similartype(arraytype::Type{<:Zeros})
+  return Zeros{eltype(arraytype), ndims(arraytype), axes(arraytype), datatype(arraytype)}
 end
