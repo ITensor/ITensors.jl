@@ -17,7 +17,9 @@ A = randomITensor(i,j)
 B = randomITensor(ComplexF64,undef,k,j)
 ```
 """
-function randomITensor(rng::AbstractRNG, ::Type{S}, is::Indices; kwargs...) where {S<:Number}
+function randomITensor(
+  rng::AbstractRNG, ::Type{S}, is::Indices; kwargs...
+) where {S<:Number}
   v = randn(rng, S, dim(is))
   return ITensor(AllowAlias(), S, v, is; kwargs...)
 end
@@ -35,6 +37,10 @@ function randomITensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
 end
 
 randomITensor(is::Indices) = randomITensor(Random.default_rng(), is)
-randomITensor(rng::AbstractRNG, is::Indices) = randomITensor(rng, NDTensors.default_eltype(), is)
+function randomITensor(rng::AbstractRNG, is::Indices)
+  return randomITensor(rng, NDTensors.default_eltype(), is)
+end
 randomITensor(is...) = randomITensor(Random.default_rng(), is...)
-randomITensor(rng::AbstractRNG, is...) = randomITensor(rng, NDTensors.default_eltype(), indices(is...))
+function randomITensor(rng::AbstractRNG, is...)
+  return randomITensor(rng, NDTensors.default_eltype(), indices(is...))
+end
