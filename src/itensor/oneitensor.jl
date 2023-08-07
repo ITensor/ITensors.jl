@@ -42,3 +42,39 @@ end
 function emptyITensor(elt::Type{<:Number}=NDTensors.default_eltype())
   return emptyITensor(elt, Index(0))
 end
+
+# To fix ambiguity with QN version
+function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return randomITensor(Random.default_rng(), ElT, Index(0))
+end
+
+# To fix ambiguity with QN version
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return randomITensor(rng, ElT, Index(0))
+end
+
+# To fix ambiguity with QN version
+function randomITensor(is::Tuple{})
+  return randomITensor(Random.default_rng(), Index(0))
+end
+
+# To fix ambiguity with QN version
+function randomITensor(rng::AbstractRNG, is::Tuple{})
+  return randomITensor(rng, NDTensors.default_eltype(), Index(0))
+end
+
+# To fix ambiguity errors with QN version
+function randomITensor(::Type{ElT}) where {ElT<:Number}
+  return randomITensor(Random.default_rng(), ElT, Index(0))
+end
+
+# To fix ambiguity errors with QN version
+function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
+  return randomITensor(rng, ElT, Index(0))
+end
+
+# To fix ambiguity errors with QN version
+randomITensor() = randomITensor(Random.default_rng())
+
+# To fix ambiguity errors with QN version
+randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, Index(0))
