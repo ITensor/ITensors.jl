@@ -1,11 +1,20 @@
-struct Zeros{ElT,N,Axes,Alloc<:AbstractArray} <: AbstractArray{ElT,N}
+struct Zeros{ElT,N,Axes,Alloc<:AbstractArray{ElT, N}} <: AbstractArray{ElT,N}
   z::FillArrays.Zeros{ElT,N,Axes}
   function NDTensors.Zeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
-    @assert eltype(Alloc) == ElT
     z = FillArrays.Zeros{ElT,N}(inds)
-    Axes = axes(z)
+    Axes = typeof(axes(z))
     return new{ElT,N,Axes,Alloc}(z)
   end
+end
+
+function Zeros(alloc::Type{<:AbstractArray}, dims...) 
+  @assert ndims(alloc) == length(inds...)
+  return Zeros{eltype(alloc), ndims(alloc), alloc}(Tuple(inds...))
+end
+
+function Zeros{ElT}(alloc::Type{<:AbstractArray}, dims...) where {ElT}
+  alloc = set_eltype(alloc, ElT)
+  return Zeros(alloc, dims...)
 end
 
 Base.ndims(::NDTensors.Zeros{ElT,N}) where {ElT,N} = N
