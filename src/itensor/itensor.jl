@@ -201,7 +201,7 @@ function ITensor(
     ),
   )
   data = set_eltype(typeof(A), elt)(as, A)
-  return ITensor(as, NDTensors.default_storagetype(typeof(data), inds)(data), inds)
+  return ITensor(as, NDTensors.default_storagetype(elt, inds)(data), inds)
 end
 
 function ITensor(
@@ -287,15 +287,6 @@ end
 ITensor(ElT::Type{<:Number}, is...) = ITensor(ElT, indices(is...))
 
 ITensor(is...) = ITensor(NDTensors.default_eltype(), is...)
-
-# To fix ambiguity with QN Index version
-# TODO: define as `emptyITensor(ElT)`
-ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
-
-function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(inds)
-  return ITensor(AllowAlias(), ElT, z)
-end
 
 """
     ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
