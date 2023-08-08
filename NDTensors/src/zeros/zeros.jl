@@ -57,9 +57,9 @@ end
 # This function actually allocates the data.
 # NDTensors.similar
 function similar(arraytype::Type{<:Zeros}, dims::Tuple)
-  return Zeros{eltype(arraytype)}(datatype(arraytype), dims)
+  return Zeros{eltype(arraytype)}(alloctype(arraytype), dims)
 end
 
 function similartype(arraytype::Type{<:Zeros})
-  return Zeros{eltype(arraytype), ndims(arraytype), axes(arraytype), datatype(arraytype)}
+  return Zeros{eltype(arraytype),ndims(arraytype),axes(arraytype),alloctype(arraytype)}
 end
