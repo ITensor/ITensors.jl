@@ -37,15 +37,19 @@ function set_parameter(::Type{<:Zeros{<:Any,P2}}, ::Position{3}, P3) where {P2}
   return Zeros{P1,P2,P3}
 end
 set_parameter(::Type{<:Zeros{P1,P2}}, ::Position{3}, P3) where {P1,P2} = Zeros{P1,P2,P3}
-set_parameter(::Type{<:Zeros{P1,P2,<:Any,P4}}, ::Position{3}, P3) where {P1,P2,P4} = Zeros{P1,P2,P3,P4}
-
+function set_parameter(::Type{<:Zeros{P1,P2,<:Any,P4}}, ::Position{3}, P3) where {P1,P2,P4}
+  return Zeros{P1,P2,P3,P4}
+end
 
 # Set parameter 3
 set_parameter(::Type{<:Zeros}, ::Position{4}, P4) = Zeros{<:Any,<:Any,<:Any,P4}
 set_parameter(::Type{<:Zeros{P1}}, ::Position{4}, P4) where {P1} = Zeros{P1,<:Any,<:Any}
-set_parameter(::Type{<:Zeros{P1,P2}}, ::Position{4}, P4) where {P1,P2} = Zeros{P1,P2,<:Any,P4}
-set_parameter(::Type{<:Zeros{P1,P2,P3}}, ::Position{4}, P4) where {P1,P2,P3} = Zeros{P1,P2,P3}
-
+function set_parameter(::Type{<:Zeros{P1,P2}}, ::Position{4}, P4) where {P1,P2}
+  return Zeros{P1,P2,<:Any,P4}
+end
+function set_parameter(::Type{<:Zeros{P1,P2,P3}}, ::Position{4}, P4) where {P1,P2,P3}
+  return Zeros{P1,P2,P3}
+end
 
 default_parameter(::Type{<:Zeros}, ::Position{1}) = Float64
 default_parameter(::Type{<:Zeros}, ::Position{2}) = 1

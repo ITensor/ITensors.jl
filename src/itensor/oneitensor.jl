@@ -20,7 +20,9 @@ deepcontract(ts::Union{ITensor,OneITensor}...) = *(ts...)
 
 ### informally defined Scalar ITensors
 
-function ITensor(as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::Tuple{}; kwargs...)
+function ITensor(
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::Tuple{}; kwargs...
+)
   data = set_eltype(typeof(A), elt)(as, A)
   return ITensor(as, NDTensors.default_storagetype(elt, inds)(data), inds)
 end
@@ -62,7 +64,9 @@ function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
 end
 
 # To fix ambiguity with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}; kwargs...) where {ElT<:Number}
+function randomITensor(
+  rng::AbstractRNG, ::Type{ElT}, is::Tuple{}; kwargs...
+) where {ElT<:Number}
   v = randn(rng, ElT, dim(is))
   return ITensor(AllowAlias(), ElT, v, is; kwargs...)
 end

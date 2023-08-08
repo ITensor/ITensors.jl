@@ -61,5 +61,5 @@ function similar(arraytype::Type{<:Zeros}, dims::Tuple)
 end
 
 function similartype(arraytype::Type{<:Zeros})
-  return Zeros{eltype(arraytype), ndims(arraytype), axes(arraytype), datatype(arraytype)}
+  return Zeros{eltype(arraytype),ndims(arraytype),axes(arraytype),datatype(arraytype)}
 end
