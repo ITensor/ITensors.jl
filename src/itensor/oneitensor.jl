@@ -20,6 +20,13 @@ deepcontract(ts::Union{ITensor,OneITensor}...) = *(ts...)
 
 ### informally defined Scalar ITensors
 
+function ITensor(
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::Tuple{}; kwargs...
+)
+  data = set_eltype(typeof(A), elt)(as, A)
+  return ITensor(as, NDTensors.default_storagetype(elt, inds)(data), inds)
+end
+
 # For now, it's not well defined to construct an ITensor without indices
 # from a non-zero dimensional Array.
 function ITensor(as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
@@ -28,7 +35,7 @@ function ITensor(as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}
       "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
     )
   end
-  return ITensor(as, elt, A, Index(1); kwargs...)
+  return ITensor(as, elt, A, (); kwargs...)
 end
 
 function ITensor(elt::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
@@ -39,42 +46,38 @@ function ITensor(A::AbstractArray; kwargs...)
   return ITensor(NeverAlias(), eltype(A), A; kwargs...)
 end
 
-function emptyITensor(elt::Type{<:Number}=NDTensors.default_eltype())
-  return emptyITensor(elt, Index(0))
+function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
+  return ITensor(AllowAlias(), ElT, NDTensors.default_datatype(ElT)(), ())
 end
+
+# To fix ambiguity with QN Index version
+# TODO: define as `emptyITensor(ElT)`
+ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
 
 # To fix ambiguity with QN version
 function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, Index(0))
+  return randomITensor(Random.default_rng(), ElT, is)
 end
 
 # To fix ambiguity with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return randomITensor(rng, ElT, Index(0))
+function randomITensor(
+  rng::AbstractRNG, ::Type{ElT}, is::Tuple{}; kwargs...
+) where {ElT<:Number}
+  v = randn(rng, ElT, dim(is))
+  return ITensor(AllowAlias(), ElT, v, is; kwargs...)
 end
 
 # To fix ambiguity with QN version
 function randomITensor(is::Tuple{})
-  return randomITensor(Random.default_rng(), Index(0))
+  return randomITensor(Random.default_rng(), ())
 end
 
 # To fix ambiguity with QN version
 function randomITensor(rng::AbstractRNG, is::Tuple{})
-  return randomITensor(rng, NDTensors.default_eltype(), Index(0))
+  return randomITensor(rng, NDTensors.default_eltype(), ())
 end
 
 # To fix ambiguity errors with QN version
 function randomITensor(::Type{ElT}) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, Index(0))
+  return randomITensor(Random.default_rng(), ElT, ())
 end
-
-# To fix ambiguity errors with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
-  return randomITensor(rng, ElT, Index(0))
-end
-
-# To fix ambiguity errors with QN version
-randomITensor() = randomITensor(Random.default_rng())
-
-# To fix ambiguity errors with QN version
-randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, Index(0))
