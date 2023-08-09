@@ -54,10 +54,6 @@ end
 # TODO: define as `emptyITensor(ElT)`
 ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
 
-# function emptyITensor(elt::Type{<:Number}=NDTensors.default_eltype())
-#   return emptyITensor(elt, ())
-# end
-
 # To fix ambiguity with QN version
 function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
   return randomITensor(Random.default_rng(), ElT, is)
@@ -85,14 +81,3 @@ end
 function randomITensor(::Type{ElT}) where {ElT<:Number}
   return randomITensor(Random.default_rng(), ElT, ())
 end
-
-# To fix ambiguity errors with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
-  return randomITensor(rng, ElT, ())
-end
-
-# To fix ambiguity errors with QN version
-randomITensor() = randomITensor(Random.default_rng())
-
-# To fix ambiguity errors with QN version
-randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
