@@ -174,9 +174,13 @@ import ITensors: In, Out, Neither
   @testset "directsum" begin
     i = Index(2, "i")
     j = Index(3, "j")
-    ij = ITensors.directsum(i, j; tags="test")
-    @test dim(ij) == 5
+    ij = directsum(i, j; tags="test")
+    @test dim(ij) == dim(i) + dim(j)
     @test hastags(ij, "test")
+    k = Index(4, "k")
+    ijk = directsum(i, j, k; tags="test2")
+    @test dim(ijk) == dim(i) + dim(j) + dim(k)
+    @test hastags(ijk, "test2")
   end
 end
 
