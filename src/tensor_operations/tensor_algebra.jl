@@ -375,6 +375,8 @@ end
 """
     directsum(A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
 
+    directsum(output_inds, A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
+
 Given a list of pairs of ITensors and indices, perform a partial
 direct sum of the tensors over the specified indices. Indices that are
 not specified to be summed must match between the tensors.
@@ -385,6 +387,10 @@ a block diagonal tensor.
 Returns the ITensor representing the partial direct sum as well as the new
 direct summed indices. The tags of the direct summed indices are specified
 by the keyword arguments.
+
+Optionally, pass the new direct summed indices of the output tensor as the
+first argument (either a single Index or a collection), which must be proper
+direct sums of the input indices that are specified to be direct summed.
 
 See Section 2.3 of https://arxiv.org/abs/1405.7786 for a definition of a partial
 direct sum of tensors.
@@ -401,6 +407,10 @@ A1 = randomITensor(x, i1)
 A2 = randomITensor(x, i2)
 S, s = directsum(A1 => i1, A2 => i2)
 dim(s) == dim(i1) + dim(i2)
+
+i1i2 = directsum(i1, i2)
+S = directsum(i1i2, A1 => i1, A2 => i2)
+hasind(S, i1i2)
 
 A3 = randomITensor(x, j1)
 S, s = directsum(A1 => i1, A2 => i2, A3 => j1)
