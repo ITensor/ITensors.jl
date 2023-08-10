@@ -78,6 +78,8 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 """
 ## TypeDefs
 const RealOrComplex{T} = Union{T,Complex{T}}
+NDTensors.default_eltype() = Bool
+default_datatype(elt = NDTensors.default_eltype(), inds::Tuple=()) = NDTensors.Zeros{elt, 1, Vector{elt}}(inds)
 ##
 
 ## The categories in this file are
@@ -201,7 +203,7 @@ function ITensor(
     ),
   )
   data = set_eltype(typeof(A), elt)(as, A)
-  return ITensor(as, NDTensors.default_storagetype(elt, inds)(data), inds)
+  return ITensor(as, NDTensors.default_storagetype(typeof(data), inds)(data), inds)
 end
 
 function ITensor(
@@ -280,7 +282,7 @@ B = ITensor(ComplexF64,k,j)
 ```
 """
 function ITensor(ElT::Type{<:Number}, is::Indices)
-  z = NDTensors.Zeros{ElT,1,NDTensors.default_datatype(ElT)}(Tuple(dim(is)))
+  z = ITensors.default_datatype(ElT, Tuple(dim(is)))
   return ITensor(AllowAlias(), ElT, z, is)
 end
 
