@@ -79,7 +79,9 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 ## TypeDefs
 const RealOrComplex{T} = Union{T,Complex{T}}
 NDTensors.default_eltype() = Bool
-default_datatype(elt = NDTensors.default_eltype(), inds::Tuple=()) = NDTensors.Zeros{elt, 1, Vector{elt}}(inds)
+function default_datatype(elt=NDTensors.default_eltype(), inds::Tuple=())
+  return NDTensors.Zeros{elt,1,Vector{elt}}(inds)
+end
 ##
 
 ## The categories in this file are
