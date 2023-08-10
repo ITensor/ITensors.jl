@@ -309,7 +309,9 @@ function check_directsum_inds(A::ITensor, I, B::ITensor, J)
   end
 end
 
-function _directsum(A::ITensor, I, B::ITensor, J; tags=["sum$i" for i in 1:length(I)])
+function _directsum(
+  IJ::Nothing, A::ITensor, I, B::ITensor, J; tags=default_directsum_tags(A => I)
+)
   N = length(I)
   (N != length(J)) &&
     error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
@@ -321,8 +323,21 @@ function _directsum(A::ITensor, I, B::ITensor, J; tags=["sum$i" for i in 1:lengt
     In = dir(A, In) != dir(In) ? dag(In) : In
     Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
     IJn = directsum(In, Jn; tags=tags[n])
-    D1, D2 = directsum_itensors(In, Jn, IJn)
     IJ[n] = IJn
+  end
+  return _directsum(IJ, A, I, B, J)
+end
+
+function _directsum(IJ, A::ITensor, I, B::ITensor, J; tags=nothing)
+  N = length(I)
+  (N != length(J)) &&
+    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+  check_directsum_inds(A, I, B, J)
+  for n in 1:N
+    In = I[n]
+    Jn = J[n]
+    IJn = IJ[n]
+    D1, D2 = directsum_itensors(In, Jn, IJn)
     A *= D1
     B *= D2
   end
@@ -330,13 +345,23 @@ function _directsum(A::ITensor, I, B::ITensor, J; tags=["sum$i" for i in 1:lengt
   return C => IJ
 end
 
-function _directsum(A::ITensor, i::Index, B::ITensor, j::Index; tags="sum")
-  C, (ij,) = _directsum(A, (i,), B, (j,); tags=[tags])
+to_inds(i::Index) = (i,)
+to_inds(i::Indices) = i
+to_inds(::Nothing) = nothing
+
+function __directsum(
+  ij, A::ITensor, i::Index, B::ITensor, j::Index; tags=default_directsum_tags(A => i)
+)
+  C, (ij,) = _directsum(to_inds(ij), A, to_inds(i), B, to_inds(j); tags=[tags])
   return C => ij
 end
 
-function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
-  return _directsum(A_and_I..., B_and_J...; kwargs...)
+function _directsum(ij::Nothing, A::ITensor, i::Index, B::ITensor, j::Index; kwargs...)
+  return __directsum(ij, A, i, B, j; kwargs...)
+end
+
+function _directsum(ij::Index, A::ITensor, i::Index, B::ITensor, j::Index; kwargs...)
+  return __directsum(ij, A, i, B, j; kwargs...)
 end
 
 function default_directsum_tags(A_and_I::Pair{ITensor})
@@ -396,7 +421,60 @@ function directsum(
   itensor_and_inds...;
   tags=default_directsum_tags(A_and_I),
 )
-  return directsum(directsum(A_and_I, B_and_J; tags), C_and_K, itensor_and_inds...; tags)
+  return directsum(nothing, A_and_I, B_and_J, C_and_K, itensor_and_inds...; tags)
+end
+
+function directsum(
+  output_inds::Nothing,
+  A_and_I::Pair{ITensor},
+  B_and_J::Pair{ITensor},
+  C_and_K::Pair{ITensor},
+  itensor_and_inds...;
+  tags=default_directsum_tags(A_and_I),
+)
+  return directsum(
+    output_inds,
+    directsum(nothing, A_and_I, B_and_J; tags),
+    C_and_K,
+    itensor_and_inds...;
+    tags,
+  )
+end
+
+function directsum(
+  output_inds::Union{Index,Indices},
+  A_and_I::Pair{ITensor},
+  B_and_J::Pair{ITensor},
+  C_and_K::Pair{ITensor},
+  itensor_and_inds...;
+  tags=default_directsum_tags(A_and_I),
+)
+  return directsum(
+    output_inds,
+    directsum(nothing, A_and_I, B_and_J; tags),
+    C_and_K,
+    itensor_and_inds...;
+    tags,
+  )
+end
+
+function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
+  return directsum(nothing, A_and_I, B_and_J; kwargs...)
+end
+
+function directsum(
+  output_inds::Nothing, A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...
+)
+  return _directsum(output_inds, A_and_I..., B_and_J...; kwargs...)
+end
+
+function directsum(
+  output_inds::Union{Index,Indices},
+  A_and_I::Pair{ITensor},
+  B_and_J::Pair{ITensor};
+  kwargs...,
+)
+  return first(_directsum(output_inds, A_and_I..., B_and_J...; kwargs...))
 end
 
 const ⊕ = directsum

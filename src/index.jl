@@ -542,6 +542,7 @@ end
 # Non-qn Index
 # TODO: add ⊕ alias
 directsum(i::Index, j::Index; tags="sum") = Index(dim(i) + dim(j); tags=tags)
+directsum(i::Index, j::Index, k::Index, inds::Index...; tags="sum") = directsum(directsum(i, j; tags), k, inds...; tags)
 
 #
 # QN related functions
