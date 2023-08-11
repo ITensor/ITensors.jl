@@ -9,7 +9,8 @@ function similar(array::Zeros, elt::Type)
 end
 
 function similar(arraytype::Type{<:Zeros}, inds::Tuple)
-  return arraytype(inds)
+  shape = Tuple(dim(NDTensors.to_shape(arraytype, inds)))
+  return arraytype(shape)
 end
 
 function similartype(arraytype::Type{<:Zeros})
@@ -17,5 +18,5 @@ function similartype(arraytype::Type{<:Zeros})
 end
 
 function similartype(arraytype::Type{<:Zeros}, elt::Type)
-  return Zeros{elt,ndims(arraytype),axes(arraytype),set_eltype(alloctype(arraytype), elt)}
+  return Zeros{elt,ndims(arraytype),NDTensors.axes(arraytype),set_eltype(alloctype(arraytype), elt)}
 end
