@@ -59,3 +59,35 @@ end
 function (arraytype::Type{<:Zeros})(::NeverAlias, A::Zeros)
   return copy(A)
 end
+
+function to_shape(::Type{<:Zeros}, dims::Tuple)
+  return NDTensors.to_shape(dims)
+end
+
+function promote_rule(
+  z1::Type{<:Zeros}, z2::Type{<:Zeros}
+)
+  ElT = promote_type(eltype(z1), eltype(z2))
+  @assert ndims(z1) == ndims(z2)
+  Axs = axes(z1)
+  Alloc = promote_type(alloctype(z1), alloctype(z2))
+  set_eltype(Alloc, ElT)
+  return NDTensors.Zeros{ElT, ndims(z1), Axs, Alloc}
+end
+
+function promote_rule(
+  z1::Type{<:Zeros}, z2::Type{<:AbstractArray}
+)
+  ElT = promote_type(eltype(z1), eltype(z2))
+  @assert ndims(z1) == ndims(z2)
+  Axs = axes(z1)
+  Alloc = promote_type(alloctype(z1), z2)
+  set_eltype(Alloc, ElT)
+  return NDTensors.Zeros{ElT, ndims(z1), Axs, Alloc}
+end
+
+function promote_rule(
+  z1::Type{<:AbstractArray}, z2::Type{<:Zeros}
+)
+  return promote_rule(z2, z1)
+end
