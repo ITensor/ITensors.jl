@@ -105,6 +105,7 @@ include("blocksparse/linearalgebra.jl")
 # Zeros
 #
 include("zeros/zeros.jl")
+include("zeros/similar.jl")
 include("zeros/set_types.jl")
 
 #####################################
