@@ -1676,12 +1676,15 @@ end
     @test allhastags(A, "x")
   end
 
-  @testset "directsum" begin
-    x = Index(2, "x")
-    i1 = Index(3, "i1")
-    j1 = Index(4, "j1")
-    i2 = Index(5, "i2")
-    j2 = Index(6, "j2")
+  @testset "directsum" for space in (
+    identity,
+    d -> [QN(0) => d, QN(1) => d],
+  )
+    x = Index(space(2), "x")
+    i1 = Index(space(3), "i1")
+    j1 = Index(space(4), "j1")
+    i2 = Index(space(5), "i2")
+    j2 = Index(space(6), "j2")
 
     A1 = randomITensor(i1, x, j1)
     A2 = randomITensor(x, j2, i2)

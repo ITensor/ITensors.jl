@@ -267,11 +267,11 @@ end
 function directsum_itensors(i::Index, j::Index, ij::Index)
   S1 = zeros(dim(i), dim(ij))
   for ii in 1:dim(i)
-    S1[ii, ii] = 1
+    S1[ii, ii] = true
   end
   S2 = zeros(dim(j), dim(ij))
   for jj in 1:dim(j)
-    S2[jj, dim(i) + jj] = 1
+    S2[jj, dim(i) + jj] = true
   end
   D1 = itensor(S1, dag(i), ij)
   D2 = itensor(S2, dag(j), ij)
@@ -316,6 +316,8 @@ function _directsum(
   (N != length(J)) &&
     error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
   check_directsum_inds(A, I, B, J)
+  I = collect(I)
+  J = collect(J)
   IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
   for n in 1:N
     In = I[n]
@@ -323,6 +325,8 @@ function _directsum(
     In = dir(A, In) != dir(In) ? dag(In) : In
     Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
     IJn = directsum(In, Jn; tags=tags[n])
+    I[n] = In
+    J[n] = Jn
     IJ[n] = IJn
   end
   return _directsum(IJ, A, I, B, J)
