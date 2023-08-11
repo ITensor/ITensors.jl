@@ -42,7 +42,7 @@ function ITensor(elt::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
   return ITensor(NeverAlias(), elt, A; kwargs...)
 end
 
-function ITensor(A::AbstractArray; kwargs...)
+function ITensor(A::AbstractArray{<:Number}; kwargs...)
   return ITensor(NeverAlias(), eltype(A), A; kwargs...)
 end
 
