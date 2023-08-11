@@ -93,6 +93,12 @@ end
 @propagate_inbounds function setindex!(
   T::DenseTensor{<:Number}, x::Number, I::Vararg{Integer}
 )
+  if is_unallocated_zeros(T)
+    ElT = promote_type(eltype(data(T)), typeof(x))
+    d = similartype(alloctype(data(T)), ElT)(undef, dim(to_shape(typeof(data(T)), inds(T))))
+    fill!(d, zero(ElT))
+    T = Tensor(Dense(d), inds(T))
+  end
   Base.@_inline_meta
   setindex!(data(T), x, Base._sub2ind(T, I...))
   return T
