@@ -8,7 +8,7 @@ using ITensors.NDTensors
   i, j, k, l, m = is
   is1 = ([i, j], k, (l, m))
   is2 = [[i, j], k, (l, m)]
-  A = randn(dims(is))
+  A = vec(randn(dims(is)))
   D = randn(minimum(dims(is)))
   x = randn()
   @test hassameinds(ITensor(i), (i,))
@@ -215,14 +215,14 @@ end
 @testset "Test Index collection as Vector of abstract type" begin
   d = 2
   i = Index(d)
-  A = randn(d, d)
+  A = vec(randn(d, d))
   T = itensor(A, Index[i', dag(i)])
   @test storage(T) isa NDTensors.Dense{Float64}
   T = itensor(A, Any[i', dag(i)])
   @test storage(T) isa NDTensors.Dense{Float64}
 
   i = Index([QN() => d])
-  A = randn(d, d)
+  A = vec(randn(d, d))
   T = itensor(A, Index[i', dag(i)])
   @test storage(T) isa NDTensors.BlockSparse{Float64}
   T = itensor(A, Any[i', dag(i)])
