@@ -19,6 +19,9 @@ function contract!!(
   tensor::Tensor,
   tensor_labels,
 )
+  if iszerodata(output_tensor)
+    output_tensor = convert(typeof(tensor), output_tensor)
+  end
   if ndims(combiner_tensor) ≤ 1
     # Empty combiner, acts as multiplying by 1
     output_tensor = permutedims!!(
