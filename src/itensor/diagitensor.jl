@@ -68,7 +68,7 @@ be converted to `float(x)`. Note that this behavior is subject to change
 in the future.
 """
 function diagITensor(::AliasStyle, elt::Type{<:Number}, x::Number, is::Indices)
-  return diagITensor(AllowAlias(), elt, fill(eltype(x), mindim(is)), is...)
+  return diagITensor(AllowAlias(), elt, fill(x, mindim(is)), is)
 end
 
 function diagITensor(as::AliasStyle, elt::Type{<:Number}, x::Number, is...)
@@ -101,7 +101,7 @@ function diagITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
   return diagITensor(NeverAlias(), ElT, 0, is)
 end
 
-diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is...))
+diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is))
 
 diagITensor(is::Indices) = diagITensor(NDTensors.default_eltype(), is)
 diagITensor(is...) = diagITensor(indices(is...))
