@@ -92,9 +92,6 @@ function compute_permfactor(p, iv_or_qn...; range=1:length(iv_or_qn))::Int
   return parity_sign(oddp[1:n])
 end
 
-# Default implementation for non-QN IndexVals
-NDTensors.permfactor(p, ivs...) = 1
-
 function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex},N}; kwargs...) where {N}
   using_auto_fermion() || return 1
   return compute_permfactor(p, ivs...; kwargs...)
@@ -106,6 +103,24 @@ function NDTensors.permfactor(
   using_auto_fermion() || return 1
   qns = ntuple(n -> qn(inds[n], block[n]), N)
   return compute_permfactor(perm, qns...; kwargs...)
+end
+
+NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
+
+function NDTensors.right_arrow_sign(i::QNIndex, block::Integer)
+  using_auto_fermion() || return 1
+  if dir(i) == Out && NDTensors.block_parity(i, block) == 1
+    return -1
+  end
+  return 1
+end
+
+function NDTensors.left_arrow_sign(i::QNIndex, block::Integer)
+  using_auto_fermion() || return 1
+  if dir(i) == In && NDTensors.block_parity(i, block) == 1
+    return -1
+  end
+  return 1
 end
 
 # Version of getperm which is type stable
