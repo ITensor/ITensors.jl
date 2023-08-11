@@ -1685,24 +1685,29 @@ end
 
     A1 = randomITensor(i1, x, j1)
     A2 = randomITensor(x, j2, i2)
-    S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags=["sum_i", "sum_j"])
 
-    @test hassameinds(S, (x, s...))
-    @test hastags(s[1], "sum_i")
-    @test hastags(s[2], "sum_j")
+    # Generate indices automatically
+    S1, s1 = directsum(A1 => (i1, j1), A2 => (i2, j2); tags=["sum_i", "sum_j"])
 
-    for vx in 1:dim(x)
-      proj = dag(onehot(x => vx))
-      A1_vx = A1 * proj
-      A2_vx = A2 * proj
-      S_vx = S * proj
-      for m in 1:dim(s[1]), n in 1:dim(s[2])
-        if m ≤ dim(i1) && n ≤ dim(j1)
-          @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
-        elseif m > dim(i1) && n > dim(j1)
-          @test S_vx[s[1] => m, s[2] => n] == A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
-        else
-          @test S_vx[s[1] => m, s[2] => n] == 0
+    # Provide indices
+    i1i2 = directsum(i1, i2; tags="sum_i")
+    j1j2 = directsum(j1, j2; tags="sum_j")
+    s2 = [i1i2, j1j2]
+    S2 = directsum(s2, A1 => (i1, j1), A2 => (i2, j2))
+    for (S, s) in zip((S1, S2), (s1, s2))
+      for vx in 1:dim(x)
+        proj = dag(onehot(x => vx))
+        A1_vx = A1 * proj
+        A2_vx = A2 * proj
+        S_vx = S * proj
+        for m in 1:dim(s[1]), n in 1:dim(s[2])
+          if m ≤ dim(i1) && n ≤ dim(j1)
+            @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
+          elseif m > dim(i1) && n > dim(j1)
+            @test S_vx[s[1] => m, s[2] => n] == A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
+          else
+            @test S_vx[s[1] => m, s[2] => n] == 0
+          end
         end
       end
     end
