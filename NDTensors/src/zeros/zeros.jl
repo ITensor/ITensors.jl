@@ -59,4 +59,3 @@ end
 function (arraytype::Type{<:Zeros})(::NeverAlias, A::Zeros)
   return copy(A)
 end
-
