@@ -36,7 +36,7 @@ Base.print_array(io::IO, X::Zeros) = Base.print_array(io, X.z)
 data(zero::Zeros) = zero.z
 getindex(zero::Zeros) = getindex(zero.z)
 
-array(zero::Zeros) = datatype(zero)(zero.z)
+array(zero::Zeros) = alloctype(zero)(zero.z)
 Array(zero::Zeros) = array(zero)
 axes(z::NDTensors.Zeros) = axes(z.z)
 dims(z::Zeros) = size(z.z)
