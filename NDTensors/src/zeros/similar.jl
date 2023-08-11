@@ -18,5 +18,7 @@ function similartype(arraytype::Type{<:Zeros})
 end
 
 function similartype(arraytype::Type{<:Zeros}, elt::Type)
-  return Zeros{elt,ndims(arraytype),NDTensors.axes(arraytype),set_eltype(alloctype(arraytype), elt)}
+  return Zeros{
+    elt,ndims(arraytype),NDTensors.axes(arraytype),set_eltype(alloctype(arraytype), elt)
+  }
 end
