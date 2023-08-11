@@ -9,6 +9,11 @@ function default_storagetype(datatype::Type{<:AbstractArray}, inds::Tuple)
   return Dense{eltype(datatype),datatype}
 end
 
+function default_storagetype(datatype::Type{<:AbstractArray}, inds::Vector)
+  datatype = set_parameter_if_unspecified(datatype)
+  return Dense{eltype(datatype), datatype}
+end
+
 function default_storagetype(datatype::Type{<:AbstractArray})
   return default_storagetype(datatype, ())
 end
