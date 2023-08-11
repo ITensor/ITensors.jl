@@ -598,7 +598,7 @@ Returns `true` if the ITensor contains no elements.
 
 An ITensor with `EmptyStorage` storage always returns `true`.
 """
-iszerodata(T::ITensor) = is_unallocated_zeros(tensor(T))
+iszerodata(T::ITensor) = NDTensors.is_unallocated_zeros(tensor(T))
 isempty(T::ITensor) = iszerodata(T)
 
 isreal(T::ITensor) = eltype(T) <: Real
