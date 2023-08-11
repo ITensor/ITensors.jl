@@ -78,8 +78,8 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 """
 ## TypeDefs
 const RealOrComplex{T} = Union{T,Complex{T}}
-NDTensors.default_eltype() = Bool
-function default_datatype(elt=NDTensors.default_eltype(), inds::Tuple=())
+default_eltype() = Bool
+function default_datatype(elt=ITensors.default_eltype(), inds::Tuple=())
   return NDTensors.Zeros{elt,1,Vector{elt}}(inds)
 end
 ##
@@ -290,7 +290,7 @@ end
 
 ITensor(ElT::Type{<:Number}, is...) = ITensor(ElT, indices(is...))
 
-ITensor(is...) = ITensor(NDTensors.default_eltype(), is...)
+ITensor(is...) = ITensor(ITensors.default_eltype(), is...)
 
 """
     ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
@@ -1101,6 +1101,11 @@ function _add(A::Tensor, B::Tensor)
   end
   ndims(A) != ndims(B) &&
     throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
+  if NDTensors.is_unallocated_zeros(A)
+    return itensor(copy(B))
+  elseif NDTensors.is_unallocated_zeros(B)
+    return itensor(copy(A))
+  end
   itA = itensor(A)
   itB = itensor(B)
   itC = copy(itA)
@@ -1117,9 +1122,9 @@ end
 
 # TODO: move the order-0 EmptyStorage ITensor special to NDTensors
 function (A::ITensor - B::ITensor)
-  if _isemptyscalar(A) && ndims(B) > 0
+  if NDTensors.is_unallocated_zeros(storage(A)) && ndims(B) > 0
     return -B
-  elseif _isemptyscalar(B) && ndims(A) > 0
+  elseif NDTensors.is_unallocated_zeros(storage(B)) && ndims(A) > 0
     return A
   end
   ndims(A) != ndims(B) &&
