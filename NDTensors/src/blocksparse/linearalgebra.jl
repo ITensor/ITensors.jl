@@ -184,7 +184,7 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     # This sign (sVP) accounts for the fact that
     # V is transposed, i.e. the index connecting to S
     # is the second index:
-    sVP = block_parity(vind, blockV[2]) == 1 ? -1 : +1
+    sVP = block_parity(vind, blockV[2])
 
     if (sV * sVP) == -1
       blockview(V, blockV) .= -Vb
