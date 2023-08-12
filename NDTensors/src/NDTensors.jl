@@ -206,6 +206,24 @@ $(enable_threaded_blocksparse_docstring(@__MODULE__))
 disable_threaded_blocksparse() = _disable_threaded_blocksparse()
 
 #####################################
+# Optional auto fermion system
+#
+
+const _using_auto_fermion = Ref(false)
+
+using_auto_fermion() = _using_auto_fermion[]
+
+function enable_auto_fermion()
+  _using_auto_fermion[] = true
+  return nothing
+end
+
+function disable_auto_fermion()
+  _using_auto_fermion[] = false
+  return nothing
+end
+
+#####################################
 # Optional backends
 #
 

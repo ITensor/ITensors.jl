@@ -120,14 +120,17 @@ using ITensors.NDTensors:
   blas_get_num_threads,
   cpu,
   cu,
+  disable_auto_fermion,
   double_precision,
   eachblock,
   eachdiagblock,
+  enable_auto_fermion,
   fill!!,
   randn!!,
   set_eltype,
   single_precision,
-  timer
+  timer,
+  using_auto_fermion
 
 using ITensors.NDTensors.SetParameters: get_parameters, set_unspecified_parameters
 
