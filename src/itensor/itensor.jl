@@ -554,7 +554,7 @@ size(T::ITensor) = dims(T)
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
-_isemptyscalar(A::Tensor) = ndims(A) == 0 && iszerodata(A)
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && NDTensors.is_unallocated_zeros(A)
 
 """
     dir(A::ITensor, i::Index)
