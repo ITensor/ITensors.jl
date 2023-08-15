@@ -108,7 +108,6 @@ diagITensor(is...) = diagITensor(indices(is...))
 
 diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
 
-
 #### from qn ITensors
 #
 # DiagBlockSparse ITensor constructors
