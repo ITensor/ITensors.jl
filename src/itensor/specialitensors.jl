@@ -63,3 +63,37 @@ function onehot(ivs::Pair{<:Index}...)
 end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
+
+## from QN ITensors
+
+"""
+    delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
+    delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
+
+Make an ITensor with storage type `NDTensors.DiagBlockSparse` with uniform
+elements `one(ElT)`. The ITensor only has diagonal blocks consistent with the
+specified `flux`.
+
+If the element type is not specified, it defaults to `Float64`. If theflux is
+not specified, it defaults to `QN()`.
+"""
+function delta(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+  is = Tuple(inds)
+  blocks = nzdiagblocks(flux, is)
+  T = DiagBlockSparseTensor(one(ElT), blocks, is)
+  return itensor(T)
+end
+
+function delta(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
+  return delta(ElT, flux, indices(is...))
+end
+
+delta(flux::QN, inds::Indices) = delta(Float64, flux, is)
+
+delta(flux::QN, is...) = delta(Float64, flux, indices(is...))
+
+function delta(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
+  return delta(ElT, QN(), inds)
+end
+
+delta(inds::QNIndices) = delta(Float64, QN(), inds)

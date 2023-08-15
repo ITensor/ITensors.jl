@@ -107,3 +107,59 @@ diagITensor(is::Indices) = diagITensor(NDTensors.default_eltype(), is)
 diagITensor(is...) = diagITensor(indices(is...))
 
 diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
+
+
+#### from qn ITensors
+#
+# DiagBlockSparse ITensor constructors
+#
+
+"""
+    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
+    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
+
+Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements
+`zero(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
+
+If the element type is not specified, it defaults to `Float64`. If theflux
+is not specified, it defaults to `QN()`.
+"""
+function diagITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+  is = Tuple(inds)
+  blocks = nzdiagblocks(flux, is)
+  T = DiagBlockSparseTensor(ElT, blocks, is)
+  return itensor(T)
+end
+
+function diagITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
+  return diagITensor(ElT, flux, indices(is...))
+end
+
+function diagITensor(x::ElT, flux::QN, inds::QNIndices) where {ElT<:Number}
+  is = Tuple(inds)
+  blocks = nzdiagblocks(flux, is)
+  T = DiagBlockSparseTensor(float(ElT), blocks, is)
+  NDTensors.data(T) .= x
+  return itensor(T)
+end
+
+function diagITensor(x::Number, flux::QN, is...)
+  return diagITensor(x, flux, indices(is...))
+end
+
+diagITensor(x::Number, is::QNIndices) = diagITensor(x, QN(), is)
+
+# TODO: generalize to list of Tuple, Vector, and QNIndex
+diagITensor(x::Number, is::QNIndex...) = diagITensor(x, indices(is...))
+
+diagITensor(flux::QN, is::Indices) = diagITensor(Float64, flux, is)
+
+diagITensor(flux::QN, is...) = diagITensor(Float64, flux, indices(is...))
+
+function diagITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
+  return diagITensor(ElT, QN(), inds)
+end
+
+function diagITensor(inds::QNIndices)
+  return diagITensor(Float64, QN(), inds)
+end
