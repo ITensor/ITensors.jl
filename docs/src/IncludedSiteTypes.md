@@ -84,7 +84,7 @@ Single-qubit operators:
 - `"π/8"` (aliases: `"T"`)
 - `"Rx"` (takes argument: θ) Rotation around x axis
 - `"Ry"` (takes argument: θ) Rotation around y axis
-- `"Rz"` (takes argument: ϕ) Rotation around z axis
+- `"Rz"` (takes argument: θ) Rotation around z axis
 - `"Rn"` (takes arguments: θ, ϕ, λ) (aliases: `"Rn̂"`) Rotation about axis n=(θ, ϕ, λ)
 - `"Proj0"` (aliases: `"ProjUp"`, `"projUp"`) Operator $|0\rangle\langle 0|$
 - `"Proj1"` (aliases: `"ProjDn"`, `"projDn"`) Operator $|1\rangle\langle 1|$
@@ -107,7 +107,7 @@ Two-qubit gates:
 - `"CPHASE"` (aliases: `"Cphase"`) Controlled Phase gate
 - `"CRx"` (aliases: `"CRX"`) (takes arguments: θ)
 - `"CRy"` (aliases: `"CRY"`) (takes arguments: θ)
-- `"CRz"` (aliases: `"CRZ"`) (takes arguments: ϕ)
+- `"CRz"` (aliases: `"CRZ"`) (takes arguments: θ)
 - `"CRn"` (aliases: `"CRn̂"`) (takes arguments: θ, ϕ, λ)
 - `"SWAP"` (aliases: `"Swap"`) 
 - `"√SWAP"` (aliases: `"√Swap"`) 
