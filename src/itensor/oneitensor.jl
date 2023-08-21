@@ -23,6 +23,15 @@ deepcontract(ts::Union{ITensor,OneITensor}...) = *(ts...)
 function ITensor(
   as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::Tuple{}; kwargs...
 )
+  data = NDTensors.similartype(set_eltype(typeof(A), elt), dim(inds))(undef, dim(inds))
+  copyto!(data, A)
+
+  return ITensor(as, NDTensors.default_storagetype(elt, inds)(data), inds)
+end
+
+function ITensor(
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractVector{<:Number}, inds::Tuple{}; kwargs...
+)
   data = set_eltype(typeof(A), elt)(as, A)
   return ITensor(as, NDTensors.default_storagetype(elt, inds)(data), inds)
 end
