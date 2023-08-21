@@ -150,14 +150,14 @@ function ITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
   return ITensor(ElT, flux, indices(is...))
 end
 
-ITensor(flux::QN, is...) = ITensor(Float64, flux, is...)
+ITensor(flux::QN, is...) = ITensor(ITensor.default_eltype(), flux, is...)
 
-ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} = emptyITensor(ElT, inds)
+ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} = ITensor(ElT, QN(), inds)
 
-ITensor(inds::QNIndices) = emptyITensor(inds)
+ITensor(inds::QNIndices) = ITensor(ITensors.default_eltype(), inds)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-ITensor(::Type{ElT}, is::QNIndex...) where {ElT<:Number} = emptyITensor(ElT, indices(is...))
+ITensor(::Type{ElT}, is::QNIndex...) where {ElT<:Number} = ITensor(ElT, QN(), indices(is...))
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
 ITensor(is::QNIndex...) = emptyITensor(indices(is...))
@@ -243,11 +243,6 @@ ITensor(x::Number, flux::QN, is...) = ITensor(eltype(x), x, flux, is...)
 ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), flux, is...)
 
 ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, QN(), is)
-
-# Don't need, calls generic non-QN versions
-#ITensor(eltype::Type{<:Number}, x::Number, is::QNIndex...) = ITensor(eltype, x, indices(is...))
-#ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
-#ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), is...)
 
 """
     ITensor([ElT::Type, ]::AbstractArray, inds; tol = 0)
