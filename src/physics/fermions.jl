@@ -77,7 +77,7 @@ odd undergo an odd permutation (odd number of swaps)
 according to p, then return -1. Otherwise return +1.
 """
 function compute_permfactor(p, iv_or_qn...; range=1:length(iv_or_qn))::Int
-  using_auto_fermion() || return 1
+  !using_auto_fermion() && return 1
   N = length(iv_or_qn)
   # XXX: Bug https://github.com/ITensor/ITensors.jl/issues/931
   # oddp = @MVector zeros(Int, N)
@@ -93,14 +93,14 @@ function compute_permfactor(p, iv_or_qn...; range=1:length(iv_or_qn))::Int
 end
 
 function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex},N}; kwargs...) where {N}
-  using_auto_fermion() || return 1
+  !using_auto_fermion() && return 1
   return compute_permfactor(p, ivs...; kwargs...)
 end
 
 function NDTensors.permfactor(
   perm, block::NDTensors.Block{N}, inds::QNIndices; kwargs...
 ) where {N}
-  using_auto_fermion() || return 1
+  !using_auto_fermion() && return 1
   qns = ntuple(n -> qn(inds[n], block[n]), N)
   return compute_permfactor(perm, qns...; kwargs...)
 end
@@ -108,7 +108,7 @@ end
 NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
 
 function NDTensors.right_arrow_sign(i::QNIndex, block::Integer)
-  using_auto_fermion() || return 1
+  !using_auto_fermion() && return 1
   if dir(i) == Out && NDTensors.block_parity(i, block) == 1
     return -1
   end
@@ -116,7 +116,7 @@ function NDTensors.right_arrow_sign(i::QNIndex, block::Integer)
 end
 
 function NDTensors.left_arrow_sign(i::QNIndex, block::Integer)
-  using_auto_fermion() || return 1
+  !using_auto_fermion() && return 1
   if dir(i) == In && NDTensors.block_parity(i, block) == 1
     return -1
   end

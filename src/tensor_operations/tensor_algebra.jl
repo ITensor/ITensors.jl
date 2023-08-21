@@ -267,11 +267,11 @@ end
 function directsum_itensors(i::Index, j::Index, ij::Index)
   S1 = zeros(dim(i), dim(ij))
   for ii in 1:dim(i)
-    S1[ii, ii] = 1
+    S1[ii, ii] = true
   end
   S2 = zeros(dim(j), dim(ij))
   for jj in 1:dim(j)
-    S2[jj, dim(i) + jj] = 1
+    S2[jj, dim(i) + jj] = true
   end
   D1 = itensor(S1, dag(i), ij)
   D2 = itensor(S2, dag(j), ij)
@@ -316,14 +316,13 @@ function _directsum(
   (N != length(J)) &&
     error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
   check_directsum_inds(A, I, B, J)
+  # Fix the Index direction for QN indices
+  # TODO: Define `getfirstind`?
+  I = map(In -> getfirst(==(In), inds(A)), I)
+  J = map(Jn -> getfirst(==(Jn), inds(B)), J)
   IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
   for n in 1:N
-    In = I[n]
-    Jn = J[n]
-    In = dir(A, In) != dir(In) ? dag(In) : In
-    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
-    IJn = directsum(In, Jn; tags=tags[n])
-    IJ[n] = IJn
+    IJ[n] = directsum(I[n], J[n]; tags=tags[n])
   end
   return _directsum(IJ, A, I, B, J)
 end
@@ -333,11 +332,12 @@ function _directsum(IJ, A::ITensor, I, B::ITensor, J; tags=nothing)
   (N != length(J)) &&
     error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
   check_directsum_inds(A, I, B, J)
+  # Fix the Index direction for QN indices
+  # TODO: Define `getfirstind`?
+  I = map(In -> getfirst(==(In), inds(A)), I)
+  J = map(Jn -> getfirst(==(Jn), inds(B)), J)
   for n in 1:N
-    In = I[n]
-    Jn = J[n]
-    IJn = IJ[n]
-    D1, D2 = directsum_itensors(In, Jn, IJn)
+    D1, D2 = directsum_itensors(I[n], J[n], IJ[n])
     A *= D1
     B *= D2
   end

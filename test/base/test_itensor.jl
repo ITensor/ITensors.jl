@@ -1676,24 +1676,31 @@ end
     @test allhastags(A, "x")
   end
 
-  @testset "directsum" begin
-    x = Index(2, "x")
-    i1 = Index(3, "i1")
-    j1 = Index(4, "j1")
-    i2 = Index(5, "i2")
-    j2 = Index(6, "j2")
+  @testset "directsum" for space in (identity, d -> [QN(0) => d, QN(1) => d]),
+    index_op in (identity, dag)
+
+    x = Index(space(2), "x")
+    i1 = Index(space(3), "i1")
+    j1 = Index(space(4), "j1")
+    i2 = Index(space(5), "i2")
+    j2 = Index(space(6), "j2")
 
     A1 = randomITensor(i1, x, j1)
     A2 = randomITensor(x, j2, i2)
 
-    # Generate indices automatically
-    S1, s1 = directsum(A1 => (i1, j1), A2 => (i2, j2); tags=["sum_i", "sum_j"])
+    # Generate indices automatically.
+    # Reverse the arrow directions in the QN case as a
+    # regression test for:
+    # https://github.com/ITensor/ITensors.jl/pull/1178.
+    S1, s1 = directsum(
+      A1 => index_op.((i1, j1)), A2 => index_op.((i2, j2)); tags=["sum_i", "sum_j"]
+    )
 
     # Provide indices
     i1i2 = directsum(i1, i2; tags="sum_i")
     j1j2 = directsum(j1, j2; tags="sum_j")
     s2 = [i1i2, j1j2]
-    S2 = directsum(s2, A1 => (i1, j1), A2 => (i2, j2))
+    S2 = directsum(s2, A1 => index_op.((i1, j1)), A2 => index_op.((i2, j2)))
     for (S, s) in zip((S1, S2), (s1, s2))
       for vx in 1:dim(x)
         proj = dag(onehot(x => vx))
@@ -1712,43 +1719,45 @@ end
       end
     end
 
-    i1, i2, j, k, l = Index.((2, 3, 4, 5, 6), ("i1", "i2", "j", "k", "l"))
+    i1, i2, j, k, l = Index.(space.((2, 3, 4, 5, 6)), ("i1", "i2", "j", "k", "l"))
 
     A = randomITensor(i1, i2, j)
     B = randomITensor(i1, i2, k)
     C = randomITensor(i1, i2, l)
 
-    S, s = directsum(A => j, B => k)
+    S, s = directsum(A => index_op(j), B => index_op(k))
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
 
-    S, s = (A => j) ⊕ (B => k)
+    S, s = (A => index_op(j)) ⊕ (B => index_op(k))
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
 
-    S, s = directsum(A => j, B => k, C => l)
+    S, s = directsum(A => index_op(j), B => index_op(k), C => index_op(l))
     @test dim(s) == dim(j) + dim(k) + dim(l)
     @test hassameinds(S, (i1, i2, s))
 
-    @test_throws ErrorException directsum(A => i2, B => i2)
+    @test_throws ErrorException directsum(A => index_op(i2), B => index_op(i2))
 
-    S, (s,) = directsum(A => (j,), B => (k,))
+    S, (s,) = directsum(A => (index_op(j),), B => (index_op(k),))
     @test s == uniqueind(S, A)
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
 
-    S, ss = directsum(A => (i2, j), B => (i2, k))
+    S, ss = directsum(A => index_op.((i2, j)), B => index_op.((i2, k)))
     @test length(ss) == 2
     @test dim(ss[1]) == dim(i2) + dim(i2)
     @test hassameinds(S, (i1, ss...))
 
-    S, ss = directsum(A => (j,), B => (k,), C => (l,))
+    S, ss = directsum(A => (index_op(j),), B => (index_op(k),), C => (index_op(l),))
     s = only(ss)
     @test s == uniqueind(S, A)
     @test dim(s) == dim(j) + dim(k) + dim(l)
     @test hassameinds(S, (i1, i2, s))
 
-    S, ss = directsum(A => (i2, i1, j), B => (i1, i2, k), C => (i1, i2, l))
+    S, ss = directsum(
+      A => index_op.((i2, i1, j)), B => index_op.((i1, i2, k)), C => index_op.((i1, i2, l))
+    )
     @test length(ss) == 3
     @test dim(ss[1]) == dim(i2) + dim(i1) + dim(i1)
     @test dim(ss[2]) == dim(i1) + dim(i2) + dim(i2)
