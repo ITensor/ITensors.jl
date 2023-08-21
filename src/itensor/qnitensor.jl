@@ -150,7 +150,7 @@ function ITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
   return ITensor(ElT, flux, indices(is...))
 end
 
-ITensor(flux::QN, is...) = ITensor(ITensor.default_eltype(), flux, is...)
+ITensor(flux::QN, is...) = ITensor(ITensors.default_eltype(), flux, indices(is...))
 
 ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} = ITensor(ElT, QN(), inds)
 
