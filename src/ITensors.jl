@@ -127,9 +127,17 @@ include("set_operations.jl")
 include("indexset.jl")
 
 #####################################
+# QNs
+#
+include("qn/qn.jl")
+include("qn/qnindex.jl")
+include("qn/qnindexset.jl")
+
+#####################################
 # ITensor
 #
 include("itensor/itensor.jl")
+include("itensor/qnitensor.jl")
 include("itensor/indexops.jl")
 include("itensor/oneitensor.jl")
 include("itensor/diagitensor.jl")
@@ -144,20 +152,16 @@ include("iterativesolvers.jl")
 include("adapt.jl")
 
 #####################################
+# Flux
+#
+include("qn/flux.jl")
+include("nullspace.jl")
+
+#####################################
 # Experimental ITensor Functions
 #
 include("tensor_operations/itensor_combiner.jl")
 # include("experimental/ops_mpo.jl") #Ops to MPO conversions
-
-#####################################
-# QNs
-#
-include("qn/flux.jl")
-include("qn/qn.jl")
-include("qn/qnindex.jl")
-include("qn/qnindexset.jl")
-include("itensor/qnitensor.jl")
-include("nullspace.jl")
 
 #####################################
 # Ops to ITensor conversions
