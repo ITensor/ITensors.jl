@@ -5,6 +5,13 @@ struct Zeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray{ElT,N}
     Axes = typeof(FillArrays.axes(z))
     return new{ElT,N,Axes,Alloc}(z)
   end
+  function NDTensors.Zeros{ElT,N,Alloc}(::Tuple{}) where {ElT,N,Alloc}
+    @assert N == 1
+    z = FillArrays.Zeros{ElT,N}(1)
+    Axes = typeof(FillArrays.axes(z))
+    return new{ElT,N,Axes,Alloc}(z)
+  end
+
   function NDTensors.Zeros{ElT,N,Axes,Alloc}(inds::Tuple) where {ElT,N,Axes,Alloc}
     @assert Axes == typeof(Base.axes(inds))
     z = FillArrays.Zeros{ElT,N}(inds)
