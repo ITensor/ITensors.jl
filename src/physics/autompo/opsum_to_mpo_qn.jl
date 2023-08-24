@@ -1,11 +1,11 @@
-function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+function qn_svdMPO(
+  ValType::Union{Type{Float64},Type{ComplexF64}}, os::OpSum{C}, sites; kwargs...
+)::MPO where {C}
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, typemax(Int))
   cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
-
-  ValType = determineValType(terms(os))
 
   Vs = [Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
   sparse_MPO = [QNMatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
@@ -251,3 +251,9 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
   return H
 end #qn_svdMPO
+
+function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+  # Function barrier to improve type stability
+  ValType = ITensors.determineValType(ITensors.terms(os))
+  return qn_svdMPO(ValType, os, sites; kwargs...)
+end

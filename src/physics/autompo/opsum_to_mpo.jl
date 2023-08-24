@@ -1,11 +1,11 @@
-function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+function svdMPO(
+  ValType::Union{Type{Float64},Type{ComplexF64}}, os::OpSum{C}, sites; kwargs...
+)::MPO where {C}
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, 10000)
   cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
-
-  ValType = determineValType(terms(os))
 
   Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
   tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
@@ -138,3 +138,9 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
   return H
 end #svdMPO
+
+function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+  # Function barrier to improve type stability
+  ValType = ITensors.determineValType(ITensors.terms(os))
+  return svdMPO(ValType, os, sites; kwargs...)
+end
