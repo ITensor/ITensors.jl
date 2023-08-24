@@ -157,7 +157,9 @@ ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} = ITensor(ElT, QN(), i
 ITensor(inds::QNIndices) = ITensor(ITensors.default_eltype(), inds)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-ITensor(::Type{ElT}, is::QNIndex...) where {ElT<:Number} = ITensor(ElT, QN(), indices(is...))
+function ITensor(::Type{ElT}, is::QNIndex...) where {ElT<:Number}
+  return ITensor(ElT, QN(), indices(is...))
+end
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
 ITensor(is::QNIndex...) = emptyITensor(indices(is...))
