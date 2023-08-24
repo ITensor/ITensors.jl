@@ -117,7 +117,7 @@ function svdMPO(
     end
 
     #
-    # Special handling of starting and 
+    # Special handling of starting and
     # ending identity operators:
     #
     idM = zeros(ValType, dim(ll), dim(rl))
