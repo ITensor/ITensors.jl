@@ -5,12 +5,12 @@
 
 struct EmptyOrder end
 
-function similartype(StoreT::Type{<:TensorStorage{EmptyNumber}}, ElT::Type)
+function similartype(StoreT::Type{<:TensorStorage{UnspecifiedZero}}, ElT::Type)
   return set_eltype(StoreT, ElT)
 end
 
 function similartype(
-  StoreT::Type{<:TensorStorage{EmptyNumber}}, DataT::Type{<:AbstractArray}
+  StoreT::Type{<:TensorStorage{UnspecifiedZero}}, DataT::Type{<:AbstractArray}
 )
   return set_datatype(StoreT, DataT)
 end
@@ -18,7 +18,7 @@ end
 ## TODO fix this similartype to use set eltype for BlockSparse
 function similartype(
   ::Type{StoreT}, ::Type{ElT}
-) where {StoreT<:BlockSparse{EmptyNumber},ElT}
+) where {StoreT<:BlockSparse{UnspecifiedZero},ElT}
   return BlockSparse{ElT,similartype(datatype(StoreT), ElT),ndims(StoreT)}
 end
 
@@ -33,7 +33,7 @@ function EmptyStorage(::Type{ElT}) where {ElT}
   #return emptytype(Dense{ElT,Vector{ElT}})()
 end
 
-# TODO: should this be `EmptyNumber`?
+# TODO: should this be `UnspecifiedZero`?
 EmptyStorage() = EmptyStorage(default_eltype())
 
 storagetype(::Type{EmptyStorage{ElT,StoreT}}) where {ElT,StoreT} = StoreT
@@ -49,7 +49,7 @@ empty(::Type{StoreT}) where {StoreT} = emptytype(StoreT)()
 data(S::EmptyStorage) = NoData()
 
 ## TODO Why is the norm of an empty tensor 0???
-norm(::EmptyStorage{ElT}) where {ElT} = norm(zero(ElT))#EmptyNumber
+norm(::EmptyStorage{ElT}) where {ElT} = norm(zero(ElT))#UnspecifiedZero
 
 similar(S::EmptyStorage) = S
 similar(S::EmptyStorage, ::Type{ElT}) where {ElT} = empty(similartype(fulltype(S), ElT))

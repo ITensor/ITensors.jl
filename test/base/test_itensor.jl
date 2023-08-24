@@ -20,7 +20,7 @@ end
   @testset "ITensor constructors" begin
     @testset "Default" begin
       A = ITensor()
-      @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
+      @test storage(A) isa NDTensors.EmptyStorage{NDTensors.UnspecifiedZero}
     end
 
     @testset "Undef with index" begin
@@ -32,7 +32,7 @@ end
     @testset "Default with indices" begin
       i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = ITensor(i, j)
-      @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
+      @test storage(A) isa NDTensors.EmptyStorage{NDTensors.UnspecifiedZero}
     end
 
     @testset "diag" for ElType in (Float32, Float64, ComplexF32, ComplexF64)

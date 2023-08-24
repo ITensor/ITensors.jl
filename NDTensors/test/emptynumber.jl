@@ -2,13 +2,13 @@ using NDTensors
 using LinearAlgebra
 using Test
 
-const 𝟎 = NDTensors.EmptyNumber()
+const 𝟎 = NDTensors.UnspecifiedZero()
 
-@testset "NDTensors.EmptyNumber" begin
+@testset "NDTensors.UnspecifiedZero" begin
   x = 2.3
 
   @test complex(𝟎) == 𝟎
-  @test complex(NDTensors.EmptyNumber) == Complex{NDTensors.EmptyNumber}
+  @test complex(NDTensors.UnspecifiedZero) == Complex{NDTensors.UnspecifiedZero}
 
   # Basic arithmetic
   @test 𝟎 + 𝟎 == 𝟎

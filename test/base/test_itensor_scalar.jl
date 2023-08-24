@@ -28,7 +28,7 @@ using Test
   @test ITensors.symmetrystyle(A) == ITensors.NonQN()
 
   A = ITensor()
-  @test storage(A) isa ITensors.EmptyStorage{ITensors.EmptyNumber}
+  @test storage(A) isa ITensors.EmptyStorage{ITensors.UnspecifiedZero}
   @test ndims(A) == 0
   @test order(A) == 0
   @test A[] == 0.0
@@ -37,7 +37,7 @@ using Test
   @test ITensors.symmetrystyle(A) == ITensors.NonQN()
 
   A = ITensor()
-  @test storage(A) isa ITensors.EmptyStorage{ITensors.EmptyNumber}
+  @test storage(A) isa ITensors.EmptyStorage{ITensors.UnspecifiedZero}
   A[] = 3.4
   @test storage(A) isa ITensors.Dense{Float64}
   @test ndims(A) == 0
@@ -48,7 +48,7 @@ using Test
   @test ITensors.symmetrystyle(A) == ITensors.NonQN()
 
   A = ITensor()
-  @test storage(A) isa ITensors.EmptyStorage{ITensors.EmptyNumber}
+  @test storage(A) isa ITensors.EmptyStorage{ITensors.UnspecifiedZero}
   A[1] = 4.4
   @test storage(A) isa ITensors.Dense{Float64}
   @test ndims(A) == 0

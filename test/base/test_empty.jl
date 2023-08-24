@@ -26,21 +26,21 @@ using Test
   @testset "ITensor (Empty) convert to complex" begin
     i = Index(2; tags="i")
     E = ITensor(i', dag(i))
-    @test eltype(E) == NDTensors.EmptyNumber
+    @test eltype(E) == NDTensors.UnspecifiedZero
 
     Ec = complex(E)
-    @test eltype(Ec) == Complex{NDTensors.EmptyNumber}
+    @test eltype(Ec) == Complex{NDTensors.UnspecifiedZero}
     Ec[1, 1] = 2.3
     @test eltype(Ec) == ComplexF64
 
     Ec = complex(E)
-    @test eltype(Ec) == Complex{NDTensors.EmptyNumber}
+    @test eltype(Ec) == Complex{NDTensors.UnspecifiedZero}
     Ec[1, 1] = 2.3f0
     @test eltype(Ec) == ComplexF32
 
     E2 = copy(E)
     E2c = complex!(E2)
-    @test eltype(E2c) == Complex{NDTensors.EmptyNumber}
+    @test eltype(E2c) == Complex{NDTensors.UnspecifiedZero}
   end
 
   @testset "ITensor set elements (QN)" begin

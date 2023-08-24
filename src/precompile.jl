@@ -564,10 +564,10 @@ function _precompile_()
     Tuple{
       typeof(_setindex!!),
       EmptyTensor{
-        EmptyNumber,
+        UnspecifiedZero,
         2,
         Tuple{Index{Int64},Index{Int64}},
-        EmptyStorage{EmptyNumber,Dense{EmptyNumber,Vector{EmptyNumber}}},
+        EmptyStorage{UnspecifiedZero,Dense{UnspecifiedZero,Vector{UnspecifiedZero}}},
       },
       Float64,
       Pair{Index{Int64},Int64},
@@ -861,10 +861,10 @@ function _precompile_()
       typeof(_setindex!!),
       NonQN,
       EmptyTensor{
-        EmptyNumber,
+        UnspecifiedZero,
         1,
         Tuple{Index{Int64}},
-        EmptyStorage{EmptyNumber,Dense{EmptyNumber,Vector{EmptyNumber}}},
+        EmptyStorage{UnspecifiedZero,Dense{UnspecifiedZero,Vector{UnspecifiedZero}}},
       },
       Float64,
       Int64,
@@ -1376,10 +1376,10 @@ function _precompile_()
     Tuple{
       typeof(_setindex!!),
       EmptyTensor{
-        EmptyNumber,
+        UnspecifiedZero,
         2,
         Tuple{Index{Vector{Pair{QN,Int64}}},Index{Vector{Pair{QN,Int64}}}},
-        EmptyStorage{EmptyNumber,BlockSparse{EmptyNumber,Vector{EmptyNumber},2}},
+        EmptyStorage{UnspecifiedZero,BlockSparse{UnspecifiedZero,Vector{UnspecifiedZero},2}},
       },
       Float64,
       Pair{Index{Vector{Pair{QN,Int64}}},Int64},
@@ -1657,10 +1657,10 @@ function _precompile_()
       typeof(_setindex!!),
       HasQNs,
       EmptyTensor{
-        EmptyNumber,
+        UnspecifiedZero,
         1,
         Tuple{Index{Vector{Pair{QN,Int64}}}},
-        EmptyStorage{EmptyNumber,BlockSparse{EmptyNumber,Vector{EmptyNumber},1}},
+        EmptyStorage{UnspecifiedZero,BlockSparse{UnspecifiedZero,Vector{UnspecifiedZero},1}},
       },
       Float64,
       Int64,

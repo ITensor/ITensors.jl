@@ -3,4 +3,4 @@ struct NoData end
 
 size(::NoData) = (0,)
 length(::NoData) = 0
-fill!(::NoData, ::EmptyNumber) = NoData()
+#fill!(::NoData, ::EmptyNumber) = NoData()

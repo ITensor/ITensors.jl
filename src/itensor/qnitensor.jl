@@ -107,7 +107,7 @@ Dim 1: (dim=3|id=212|"i")' <Out>
 Dim 2: (dim=3|id=212|"i") <In>
  1: QN(0) => 1
  2: QN(1) => 2
-NDTensors.EmptyStorage{NDTensors.EmptyNumber, NDTensors.BlockSparse{NDTensors.EmptyNumber, Vector{NDTensors.EmptyNumber}, 2}}
+NDTensors.EmptyStorage{NDTensors.UnspecifiedZero, NDTensors.BlockSparse{NDTensors.UnspecifiedZero, Vector{NDTensors.UnspecifiedZero}, 2}}
  3×3
 
 
