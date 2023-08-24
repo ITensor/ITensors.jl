@@ -7,7 +7,7 @@ function svdMPO(
 
   N = length(sites)
 
-  Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
+  Vs = Matrix{ValType}[Matrix{ValType}(undef, 1, 1) for n in 1:N]
   tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
   function crosses_bond(t::Scaled{C,Prod{Op}}, n::Int) where {C}

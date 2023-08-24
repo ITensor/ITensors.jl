@@ -7,7 +7,7 @@ function qn_svdMPO(
 
   N = length(sites)
 
-  Vs = [Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
+  Vs = Dict{QN,Matrix{ValType}}[Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
   sparse_MPO = [QNMatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
   function crosses_bond(t::Scaled{C,Prod{Op}}, n::Int)
