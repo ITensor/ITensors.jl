@@ -1379,7 +1379,9 @@ function _precompile_()
         UnspecifiedZero,
         2,
         Tuple{Index{Vector{Pair{QN,Int64}}},Index{Vector{Pair{QN,Int64}}}},
-        EmptyStorage{UnspecifiedZero,BlockSparse{UnspecifiedZero,Vector{UnspecifiedZero},2}},
+        EmptyStorage{
+          UnspecifiedZero,BlockSparse{UnspecifiedZero,Vector{UnspecifiedZero},2}
+        },
       },
       Float64,
       Pair{Index{Vector{Pair{QN,Int64}}},Int64},
@@ -1660,7 +1662,9 @@ function _precompile_()
         UnspecifiedZero,
         1,
         Tuple{Index{Vector{Pair{QN,Int64}}}},
-        EmptyStorage{UnspecifiedZero,BlockSparse{UnspecifiedZero,Vector{UnspecifiedZero},1}},
+        EmptyStorage{
+          UnspecifiedZero,BlockSparse{UnspecifiedZero,Vector{UnspecifiedZero},1}
+        },
       },
       Float64,
       Int64,
