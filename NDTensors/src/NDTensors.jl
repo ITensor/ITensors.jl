@@ -34,6 +34,11 @@ include("imports.jl")
 include("exports.jl")
 
 #####################################
+# Unspecified Element Types
+#
+include("unspec_eltype/unspecified_zero.jl")
+
+#####################################
 # General functionality
 #
 include("algorithm.jl")
@@ -45,7 +50,6 @@ include("abstractarray/ndims.jl")
 include("abstractarray/fill.jl")
 include("array/set_types.jl")
 include("tupletools.jl")
-include("emptynumber.jl")
 include("nodata.jl")
 include("tensorstorage/tensorstorage.jl")
 include("tensorstorage/set_types.jl")
