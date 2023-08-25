@@ -92,3 +92,7 @@ end
 function promote_rule(z1::Type{<:AbstractArray}, z2::Type{<:Zeros})
   return promote_rule(z2, z1)
 end
+
+## Check datatypes to see if underlying storage is a 
+## NDTensors.Zeros
+is_unallocated_zero(a) = data_isa(a, NDTensors.Zeros)
