@@ -120,7 +120,7 @@ function svd_mpo(
 
       ldim = (A_row == -1) ? 1 : qnblockdim(ll, el.rowqn)
       rdim = (A_col == -1) ? 1 : qnblockdim(rl, el.colqn)
-      zero_mat() = zeros(coefficient_type, ldim, rdim)
+      zero_mat = zeros(coefficient_type, ldim, rdim)
 
       if A_row == -1 && A_col == -1
         # Onsite term
@@ -128,21 +128,21 @@ function svd_mpo(
         M[1, 1] += ct
       elseif A_row == -1
         # Operator beginning a term on site n
-        M = get!(begin_block, (el.rowqn, terms(t)), zero_mat())
+        M = get!(begin_block, (el.rowqn, terms(t)), zero_mat)
         VR = Vs[n + 1][el.colqn]
         for c in 1:size(VR, 2)
           M[1, c] += ct * VR[A_col, c]
         end
       elseif A_col == -1
         # Operator ending a term on site n
-        M = get!(end_block, (el.rowqn, terms(t)), zero_mat())
+        M = get!(end_block, (el.rowqn, terms(t)), zero_mat)
         VL = Vs[n][el.rowqn]
         for r in 1:size(VL, 2)
           M[r, 1] += ct * conj(VL[A_row, r])
         end
       else
         # Operator continuing a term on site n
-        M = get!(cont_block, (el.rowqn, terms(t)), zero_mat())
+        M = get!(cont_block, (el.rowqn, terms(t)), zero_mat)
         VL = Vs[n][el.rowqn]
         VR = Vs[n + 1][el.colqn]
         for r in 1:size(VL, 2), c in 1:size(VR, 2)
@@ -234,7 +234,7 @@ function qnblock(i::Index, q::QN)
   for b in 2:(nblocks(i) - 1)
     flux(i, Block(b)) == q && return b
   end
-  return error("coefficient_typeould not find block of QNIndex with matching QN")
+  return error("Could not find block of QNIndex with matching QN")
 end
 
 function calc_qn(term::Vector{Op}, sites::Vector{<:Index}; op_cache!)
