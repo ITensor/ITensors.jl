@@ -2,7 +2,7 @@
 # Represents a number that can be set to any type.
 #
 
-struct UnspecifiedZero <: Number end
+struct UnspecifiedZero <: Base.AbstractFloat end
 
 zero(::Type{UnspecifiedZero}) = UnspecifiedZero()
 zero(n::UnspecifiedZero) = zero(typeof(n))
