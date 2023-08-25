@@ -301,7 +301,9 @@ function MPO(os::OpSum, sites::Vector{<:Index}; kwargs...)
   return mpo_specified_coefficient_type(narrow_coefficient_type(os), os, sites; kwargs...)
 end
 
-function mpo_specified_coefficient_type(coefficient_type::Type, os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)
+function mpo_specified_coefficient_type(
+  coefficient_type::Type, os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...
+)
   length(terms(os)) == 0 && error("OpSum has no terms")
   os = deepcopy(os)
   os = sorteachterm(os, sites)
