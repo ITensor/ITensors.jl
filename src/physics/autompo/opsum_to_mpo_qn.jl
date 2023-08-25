@@ -5,7 +5,7 @@ function svd_mpo(
   mindim::Integer=1,
   maxdim::Integer=10000,
   cutoff::Real=1e-15,
-  )
+)
   N = length(sites)
 
   Vs = [Dict{QN,Matrix{coefficient_type}}() for n in 1:(N + 1)]
