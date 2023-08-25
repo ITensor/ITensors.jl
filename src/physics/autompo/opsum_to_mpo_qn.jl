@@ -102,17 +102,6 @@ function svd_mpo(
 
   H = MPO(N)
 
-  # Find location where block of Index i
-  # matches QN q, but *not* 1 or dim(i)
-  # which are special ending/starting states
-  function qnblock(i::Index, q::QN)
-    for b in 2:(nblocks(i) - 1)
-      flux(i, Block(b)) == q && return b
-    end
-    return error("coefficient_typeould not find block of QNIndex with matching QN")
-  end
-  qnblockdim(i::Index, q::QN) = blockdim(i, qnblock(i, q))
-
   for n in 1:N
     ll = llinks[n]
     rl = llinks[n + 1]
@@ -226,14 +215,26 @@ function svd_mpo(
   end # for n in 1:N
 
   L = ITensor(llinks[1])
-  L[llinks[1] => end] = 1.0
+  L[llinks[1] => end] = true
   H[1] *= L
 
   R = ITensor(dag(llinks[N + 1]))
-  R[dag(llinks[N + 1]) => 1] = 1.0
+  R[dag(llinks[N + 1]) => 1] = true
   H[N] *= R
 
   return H
+end
+
+qnblockdim(i::Index, q::QN) = blockdim(i, qnblock(i, q))
+
+# Find location where block of Index i
+# matches QN q, but *not* 1 or dim(i)
+# which are special ending/starting states
+function qnblock(i::Index, q::QN)
+  for b in 2:(nblocks(i) - 1)
+    flux(i, Block(b)) == q && return b
+  end
+  return error("coefficient_typeould not find block of QNIndex with matching QN")
 end
 
 function calc_qn(term::Vector{Op}, sites::Vector{<:Index}; op_cache!)

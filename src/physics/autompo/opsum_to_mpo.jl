@@ -118,17 +118,17 @@ function svd_mpo(
     # ending identity operators:
     #
     idM = zeros(coefficient_type, dim(ll), dim(rl))
-    idM[1, 1] = 1.0
-    idM[end, end] = 1.0
+    idM[1, 1] = true
+    idM[end, end] = true
     T = itensor(idM, ll, rl)
     H[n] += T * compute_site_prod(sites, Prod([Op("Id", n)]))
   end
 
   L = ITensor(llinks[1])
-  L[end] = 1.0
+  L[end] = true
 
   R = ITensor(llinks[N + 1])
-  R[1] = 1.0
+  R[1] = true
 
   H[1] *= L
   H[N] *= R
