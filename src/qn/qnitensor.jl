@@ -136,7 +136,7 @@ julia> flux(A)
 QN(-1)
 ```
 """
-function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+function ITensor(::Type{ElT}, flux::QN, inds::QNIndices) where {ElT<:Number}
   is = Tuple(inds)
   blocks = nzblocks(flux, is)
   if length(blocks) == 0
@@ -144,6 +144,10 @@ function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   end
   T = BlockSparseTensor(ElT, blocks, is)
   return itensor(T)
+end
+
+function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+  return itensor(Dense(ElT, dim(inds)), inds)
 end
 
 function ITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
