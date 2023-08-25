@@ -321,7 +321,7 @@ end
 
 # Conversion from other formats
 function MPO(o::Op, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Bool}() + o, s; kwargs...)
+  return MPO(OpSum{Float64}() + o, s; kwargs...)
 end
 
 function MPO(o::Scaled{C,Op}, s::Vector{<:Index}; kwargs...) where {C}
@@ -329,11 +329,11 @@ function MPO(o::Scaled{C,Op}, s::Vector{<:Index}; kwargs...) where {C}
 end
 
 function MPO(o::Sum{Op}, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Bool}() + o, s; kwargs...)
+  return MPO(OpSum{Float64}() + o, s; kwargs...)
 end
 
 function MPO(o::Prod{Op}, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Bool}() + o, s; kwargs...)
+  return MPO(OpSum{Float64}() + o, s; kwargs...)
 end
 
 function MPO(o::Scaled{C,Prod{Op}}, s::Vector{<:Index}; kwargs...) where {C}

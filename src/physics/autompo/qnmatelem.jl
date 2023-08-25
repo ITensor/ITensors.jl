@@ -6,7 +6,7 @@ struct QNMatElem{T}
   val::T
 end
 
-function Base.:(==)(m1::QNMatElem{T}, m2::QNMatElem{T})::Bool where {T}
+function (m1::QNMatElem == m2::QNMatElem)
   return (
     m1.row == m2.row &&
     m1.col == m2.col &&
@@ -16,7 +16,7 @@ function Base.:(==)(m1::QNMatElem{T}, m2::QNMatElem{T})::Bool where {T}
   )
 end
 
-function Base.isless(m1::QNMatElem{T}, m2::QNMatElem{T})::Bool where {T}
+function isless(m1::QNMatElem, m2::QNMatElem)
   if m1.rowqn != m2.rowqn
     return m1.rowqn < m2.rowqn
   elseif m1.colqn != m2.colqn
