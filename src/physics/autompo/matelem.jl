@@ -8,29 +8,27 @@ struct MatElem{T}
   val::T
 end
 
-#function Base.show(io::IO,m::MatElem)
-#  print(io,"($(m.row),$(m.col),$(m.val))")
-#end
+eltype(::Type{<:MatElem{T}}) where {T} = T
+eltype(m::MatElem) = eltype(typeof(m))
 
-function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
-  nr = 0
-  nc = 0
+function to_matrix(els::Vector{<:MatElem})
+  nr, nc = 0, 0
   for el in els
     nr = max(nr, el.row)
     nc = max(nc, el.col)
   end
-  M = zeros(T, nr, nc)
+  M = zeros(eltype(eltype(els)), nr, nc)
   for el in els
     M[el.row, el.col] = el.val
   end
   return M
 end
 
-function Base.:(==)(m1::MatElem{T}, m2::MatElem{T})::Bool where {T}
+function (m1::MatElem == m2::MatElem)
   return (m1.row == m2.row && m1.col == m2.col && m1.val == m2.val)
 end
 
-function Base.isless(m1::MatElem{T}, m2::MatElem{T})::Bool where {T}
+function isless(m1::MatElem, m2::MatElem)
   if m1.row != m2.row
     return m1.row < m2.row
   elseif m1.col != m2.col

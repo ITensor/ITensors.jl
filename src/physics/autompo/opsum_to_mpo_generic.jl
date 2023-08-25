@@ -59,7 +59,7 @@ function add!(os::OpSum, o::Scaled{C,Prod{Op}}) where {C}
 end
 add!(os::OpSum, o::Op) = add!(os, Prod{Op}() * o)
 add!(os::OpSum, o::Scaled{C,Op}) where {C} = add!(os, Prod{Op}() * o)
-add!(os::OpSum, o::Prod{Op}) = add!(os, one(Float64) * o)
+add!(os::OpSum, o::Prod{Op}) = add!(os, true * o)
 add!(os::OpSum, o::Tuple) = add!(os, Ops.op_term(o))
 add!(os::OpSum, a1::String, args...) = add!(os, (a1, args...))
 add!(os::OpSum, a1::Number, args...) = add!(os, (a1, args...))
@@ -110,7 +110,7 @@ isempty(op_qn::Pair{Vector{Op},QN}) = isempty(op_qn.first)
 
 # the key type is Prod{Op} for the dense case
 # and is Pair{Prod{Op},QN} for the QN conserving case
-function posInLink!(linkmap::Dict{K,Int}, k::K)::Int where {K}
+function pos_in_link!(linkmap::Dict{K,Int}, k::K)::Int where {K}
   isempty(k) && return -1
   pos = get(linkmap, k, -1)
   if pos == -1
@@ -120,19 +120,27 @@ function posInLink!(linkmap::Dict{K,Int}, k::K)::Int where {K}
   return pos
 end
 
-# TODO: Define as `C`. Rename `coefficient_type`.
-function determineValType(terms::Vector{Scaled{C,Prod{Op}}}) where {C}
-  for t in terms
-    (!isreal(coefficient(t))) && return ComplexF64
+coefficient_type(opsum::Sum{<:Scaled}) = coefficient_type(eltype(terms(opsum)))
+coefficient_type(opsum::Type{<:Scaled{C}}) where {C} = C
+
+narrow_coefficient_type(os::OpSum) = narrow_coefficient_type(coefficient_type(os), os)
+narrow_coefficient_type(coefficient_type::Type{<:Real}, os::OpSum) = coefficient_type
+function narrow_coefficient_type(coefficient_type::Type{<:Complex}, os::OpSum)
+  if all(term -> isreal(coefficient(term)), terms(os))
+    return real(coefficient_type)
   end
-  return Float64
+  return coefficient_type
 end
 
-function computeSiteProd(sites, ops::Prod{Op})::ITensor
+function crosses_bond(t::Scaled{<:Any,Prod{Op}}, n::Int)
+  return (only(site(t[1])) <= n <= only(site(t[end])))
+end
+
+function compute_site_prod(sites, ops::Prod{Op})::ITensor
   i = only(site(ops[1]))
   T = op(sites[i], which_op(ops[1]); params(ops[1])...)
   for j in 2:length(ops)
-    (only(site(ops[j])) != i) && error("Mismatch of site number in computeSiteProd")
+    (only(site(ops[j])) != i) && error("Mismatch of site number in compute_site_prod")
     opj = op(sites[i], which_op(ops[j]); params(ops[j])...)
     T = product(T, opj)
   end
@@ -289,17 +297,16 @@ H = MPO(Float32,os,sites)
 H = MPO(os,sites; splitblocks=false)
 ```
 """
-function MPO(os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)::MPO
-  length(terms(os)) == 0 && error("OpSum has no terms")
+function MPO(os::OpSum, sites::Vector{<:Index}; kwargs...)
+  return mpo_specified_coefficient_type(narrow_coefficient_type(os), os, sites; kwargs...)
+end
 
+function mpo_specified_coefficient_type(coefficient_type::Type, os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)
+  length(terms(os)) == 0 && error("OpSum has no terms")
   os = deepcopy(os)
   os = sorteachterm(os, sites)
   os = sortmergeterms(os)
-
-  if hasqns(sites[1])
-    return qn_svdMPO(os, sites; kwargs...)
-  end
-  M = svdMPO(os, sites; kwargs...)
+  M = svd_mpo(coefficient_type, os, sites; kwargs...)
   if splitblocks
     M = ITensors.splitblocks(linkinds, M)
   end
@@ -312,7 +319,7 @@ end
 
 # Conversion from other formats
 function MPO(o::Op, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Float64}() + o, s; kwargs...)
+  return MPO(OpSum{Bool}() + o, s; kwargs...)
 end
 
 function MPO(o::Scaled{C,Op}, s::Vector{<:Index}; kwargs...) where {C}
@@ -320,11 +327,11 @@ function MPO(o::Scaled{C,Op}, s::Vector{<:Index}; kwargs...) where {C}
 end
 
 function MPO(o::Sum{Op}, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Float64}() + o, s; kwargs...)
+  return MPO(OpSum{Bool}() + o, s; kwargs...)
 end
 
 function MPO(o::Prod{Op}, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Float64}() + o, s; kwargs...)
+  return MPO(OpSum{Bool}() + o, s; kwargs...)
 end
 
 function MPO(o::Scaled{C,Prod{Op}}, s::Vector{<:Index}; kwargs...) where {C}

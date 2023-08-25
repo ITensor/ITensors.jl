@@ -1,23 +1,20 @@
-function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
-  mindim::Int = get(kwargs, :mindim, 1)
-  maxdim::Int = get(kwargs, :maxdim, 10000)
-  cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
-
+function svd_mpo(
+  coefficient_type::Type,
+  os::OpSum,
+  sites::Vector{<:Index};
+  mindim::Integer=1,
+  maxdim::Integer=10000,
+  cutoff::Real=1e-15,
+  )
   N = length(sites)
 
-  ValType = determineValType(terms(os))
-
-  Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
-  tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
-
-  function crosses_bond(t::Scaled{C,Prod{Op}}, n::Int) where {C}
-    return (only(site(t[1])) <= n <= only(site(t[end])))
-  end
+  Vs = [Matrix{coefficient_type}(undef, 1, 1) for n in 1:N]
+  temp_mpo = [MatElem{Scaled{coefficient_type,Prod{Op}}}[] for n in 1:N]
 
   rightmaps = fill(Dict{Vector{Op},Int}(), N)
 
   for n in 1:N
-    leftbond_coefs = MatElem{ValType}[]
+    leftbond_coefs = MatElem{coefficient_type}[]
 
     leftmap = Dict{Vector{Op},Int}()
     for term in os
@@ -30,17 +27,17 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
       bond_row = -1
       bond_col = -1
       if !isempty(left)
-        bond_row = posInLink!(leftmap, left)
-        bond_col = posInLink!(rightmaps[n - 1], vcat(onsite, right))
-        bond_coef = convert(ValType, coefficient(term))
+        bond_row = pos_in_link!(leftmap, left)
+        bond_col = pos_in_link!(rightmaps[n - 1], vcat(onsite, right))
+        bond_coef = convert(coefficient_type, coefficient(term))
         push!(leftbond_coefs, MatElem(bond_row, bond_col, bond_coef))
       end
 
       A_row = bond_col
-      A_col = posInLink!(rightmaps[n], right)
-      site_coef = one(C)
+      A_col = pos_in_link!(rightmaps[n], right)
+      site_coef = one(coefficient_type)
       if A_row == -1
-        site_coef = coefficient(term)
+        site_coef = convert(coefficient_type, coefficient(term))
       end
       if isempty(onsite)
         if !using_auto_fermion() && isfermionic(right, sites)
@@ -50,17 +47,17 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
         end
       end
       el = MatElem(A_row, A_col, site_coef * Prod(onsite))
-      push!(tempMPO[n], el)
+      push!(temp_mpo[n], el)
     end
-    remove_dups!(tempMPO[n])
+    remove_dups!(temp_mpo[n])
     if n > 1 && !isempty(leftbond_coefs)
-      M = toMatrix(leftbond_coefs)
+      M = to_matrix(leftbond_coefs)
       U, S, V = svd(M)
       P = S .^ 2
       truncate!(P; maxdim=maxdim, cutoff=cutoff, mindim=mindim)
       tdim = length(P)
       nc = size(M, 2)
-      Vs[n - 1] = Matrix{ValType}(V[1:nc, 1:tdim])
+      Vs[n - 1] = Matrix{coefficient_type}(V[1:nc, 1:tdim])
     end
   end
 
@@ -70,7 +67,7 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
   H = MPO(sites)
 
   for n in 1:N
-    VL = Matrix{ValType}(undef, 1, 1)
+    VL = Matrix{coefficient_type}(undef, 1, 1)
     if n > 1
       VL = Vs[n - 1]
     end
@@ -84,15 +81,15 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
     H[n] = ITensor()
 
-    for el in tempMPO[n]
+    for el in temp_mpo[n]
       A_row = el.row
       A_col = el.col
       t = el.val
       (abs(coefficient(t)) > eps()) || continue
 
-      M = zeros(ValType, dim(ll), dim(rl))
+      M = zeros(coefficient_type, dim(ll), dim(rl))
 
-      ct = convert(ValType, coefficient(t))
+      ct = convert(coefficient_type, coefficient(t))
       if A_row == -1 && A_col == -1 #onsite term
         M[end, 1] += ct
       elseif A_row == -1 #term starting on site n
@@ -113,18 +110,18 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
       end
 
       T = itensor(M, ll, rl)
-      H[n] += T * computeSiteProd(sites, argument(t))
+      H[n] += T * compute_site_prod(sites, argument(t))
     end
 
     #
     # Special handling of starting and 
     # ending identity operators:
     #
-    idM = zeros(ValType, dim(ll), dim(rl))
+    idM = zeros(coefficient_type, dim(ll), dim(rl))
     idM[1, 1] = 1.0
     idM[end, end] = 1.0
     T = itensor(idM, ll, rl)
-    H[n] += T * computeSiteProd(sites, Prod([Op("Id", n)]))
+    H[n] += T * compute_site_prod(sites, Prod([Op("Id", n)]))
   end
 
   L = ITensor(llinks[1])
@@ -137,4 +134,4 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
   H[N] *= R
 
   return H
-end #svdMPO
+end
