@@ -11,6 +11,8 @@ zero(n::UnspecifiedZero) = zero(typeof(n))
 # UnspecifiedZero() + 2.3 == 2.3
 convert(::Type{T}, x::UnspecifiedZero) where {T<:Number} = T(zero(T))
 
+convert(::Type{Complex{UnspecifiedZero}}, x::UnspecifiedZero) = complex(x)
+
 # TODO: Should this be implemented?
 #Complex(x::Real, ::UnspecifiedZero) = x
 
