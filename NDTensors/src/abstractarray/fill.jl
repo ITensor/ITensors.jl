@@ -10,6 +10,7 @@ function generic_randn(arraytype::Type{<:AbstractArray}, dim::Integer=0)
   return data
 end
 
+## TODO: Should generic Zeros by default construct an NDTensors.Zeros with an alloc type of `NDTensors.default_datatype()` ?
 function generic_zeros(arraytype::Type{<:AbstractArray}, dim::Integer=0)
   arraytype_specified = set_unspecified_parameters(
     leaf_parenttype(arraytype), DefaultParameters()

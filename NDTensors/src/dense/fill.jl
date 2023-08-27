@@ -31,6 +31,10 @@ function generic_zeros(
 end
 
 function generic_zeros(StoreT::Type{<:Dense{ElT}}, dim::Integer=0) where {ElT}
+  ## TODO see if this works
+  #  DataT = default_storagetype(ElT)
+  #N = ndims(DataT)
+  #return generic_zeros(NDTensors.Zeros{ElT,N,DataT}, dim)
   return generic_zeros(default_storagetype(ElT), dim)
 end
 
