@@ -615,7 +615,7 @@ An ITensor with `EmptyStorage` storage always returns `true`.
 """
 NDTensors.data_isa(T::ITensor, datatype::Type) = NDTensors.data_isa(tensor(T), datatype)
 iszerodata(T::ITensor) = NDTensors.is_unallocated_zeros(tensor(T))
-isempty(T::ITensor) = iszerodata(T)
+isempty(T::ITensor) = NDTensors.is_unallocated_zeros(T)
 
 isreal(T::ITensor) = eltype(T) <: Real
 iszero(T::ITensor) = all(iszero, T)

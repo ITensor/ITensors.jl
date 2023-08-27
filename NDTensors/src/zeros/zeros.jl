@@ -56,9 +56,6 @@ Base.sum(z::Zeros) = sum(z.z)
 LinearAlgebra.norm(z::Zeros) = norm(z.z)
 setindex!(A::NDTensors.Zeros, v, I) = setindex!(A.z, v, I)
 
-is_unallocated_zeros(t::Tensor) = is_unallocated_zeros(storage(t))
-is_unallocated_zeros(st::TensorStorage) = data(st) isa Zeros
-
 function (arraytype::Type{<:Zeros})(::AllowAlias, A::Zeros)
   return A
 end
@@ -95,4 +92,6 @@ end
 
 ## Check datatypes to see if underlying storage is a 
 ## NDTensors.Zeros
-is_unallocated_zero(a) = data_isa(a, NDTensors.Zeros)
+is_unallocated_zeros(a) = data_isa(a, NDTensors.Zeros)
+
+#funcion allocate(z::Zeros) = 

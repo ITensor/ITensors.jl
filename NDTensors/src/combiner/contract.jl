@@ -19,7 +19,7 @@ function contract!!(
   tensor::Tensor,
   tensor_labels,
 )
-  if iszerodata(output_tensor)
+  if is_unallocated_zeros(output_tensor)
     output_tensor = convert(typeof(tensor), output_tensor)
   end
   if ndims(combiner_tensor) ≤ 1
