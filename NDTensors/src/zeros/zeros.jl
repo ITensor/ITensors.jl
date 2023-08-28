@@ -46,10 +46,18 @@ getindex(zero::Zeros) = getindex(zero.z)
 array(zero::Zeros) = alloctype(zero)(zero.z)
 Array(zero::Zeros) = array(zero)
 axes(z::NDTensors.Zeros) = axes(z.z)
-dims(z::Zeros) = size(z.z)
+dims(z::Zeros) = Tuple(size(z.z))
+dim(z::Zeros) = size(z.z)
 copy(z::Zeros) = Zeros{eltype(z),1,alloctype(z)}(dims(z))
 
 Base.convert(x::Type{T}, z::NDTensors.Zeros) where {T<:Array} = Base.convert(x, z.z)
+
+function complex(z::Zeros) 
+  ElT = complex(eltype(z))
+  N = ndims(z)
+  AllocT = similartype(alloctype(z), ElT)
+  return NDTensors.Zeros{ElT, N, AllocT}(dims(z))
+end
 
 Base.getindex(a::Zeros, i) = Base.getindex(a.z, i)
 Base.sum(z::Zeros) = sum(z.z)
@@ -97,20 +105,24 @@ is_unallocated_zeros(a) = data_isa(a, NDTensors.Zeros)
 function allocate(T::Tensor) 
   if !is_unallocated_zeros(T)
     return T
-  else
+  end
     type = similartype(T)
     alloc_data = allocate(data(T))
     is = inds(T)
     @show typeof(alloc_data)
     return type(allocate(data(T)), inds(T))
-  end
 end
 
-function allocate(T::Tensor, x::Number)
+function allocate(T::Tensor, elt::Type)
   if !is_unallocated_zeros(T)
-    return fill!(T, x)
+    return T
   end
-  
+   ## allocate the tensor if is_unallocated_zeros
+  ElT = promote_type(eltype(data(T)), elt)
+  @show ElT
+  d = similartype(alloctype(data(T)), ElT)(undef, dim(to_shape(typeof(data(T)), inds(T))))
+  fill!(d, 0)
+  return Tensor(d, inds(T))
 end
 
 allocate(d::AbstractArray) = d
