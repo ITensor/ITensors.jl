@@ -125,9 +125,9 @@ function _contract!!(
     )
   else
     # Special case when ther are unallocated zeros return nothing do no work.
-  if is_unallocated_zeros(tensor1) || is_unallocated_zeros(tensor2)
-    return output_tensor
-  end
+    if is_unallocated_zeros(tensor1) || is_unallocated_zeros(tensor2)
+      return output_tensor
+    end
     contract!(
       output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
     )
