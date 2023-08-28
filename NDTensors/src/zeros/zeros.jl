@@ -52,11 +52,11 @@ copy(z::Zeros) = Zeros{eltype(z),1,alloctype(z)}(dims(z))
 
 Base.convert(x::Type{T}, z::NDTensors.Zeros) where {T<:Array} = Base.convert(x, z.z)
 
-function complex(z::Zeros) 
+function complex(z::Zeros)
   ElT = complex(eltype(z))
   N = ndims(z)
   AllocT = similartype(alloctype(z), ElT)
-  return NDTensors.Zeros{ElT, N, AllocT}(dims(z))
+  return NDTensors.Zeros{ElT,N,AllocT}(dims(z))
 end
 
 Base.getindex(a::Zeros, i) = Base.getindex(a.z, i)
@@ -102,22 +102,22 @@ end
 ## NDTensors.Zeros
 is_unallocated_zeros(a) = data_isa(a, NDTensors.Zeros)
 
-function allocate(T::Tensor) 
+function allocate(T::Tensor)
   if !is_unallocated_zeros(T)
     return T
   end
-    type = similartype(T)
-    alloc_data = allocate(data(T))
-    is = inds(T)
-    @show typeof(alloc_data)
-    return type(allocate(data(T)), inds(T))
+  type = similartype(T)
+  alloc_data = allocate(data(T))
+  is = inds(T)
+  @show typeof(alloc_data)
+  return type(allocate(data(T)), inds(T))
 end
 
 function allocate(T::Tensor, elt::Type)
   if !is_unallocated_zeros(T)
     return T
   end
-   ## allocate the tensor if is_unallocated_zeros
+  ## allocate the tensor if is_unallocated_zeros
   ElT = promote_type(eltype(data(T)), elt)
   @show ElT
   d = similartype(alloctype(data(T)), ElT)(undef, dim(to_shape(typeof(data(T)), inds(T))))

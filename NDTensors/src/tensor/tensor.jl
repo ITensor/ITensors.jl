@@ -354,8 +354,8 @@ end
 #
 
 @propagate_inbounds @inline function setindex!!(T::Tensor, x, I...)
-   T = allocate(T, typeof(x))
-   setindex!(T, x, I...)
+  T = allocate(T, typeof(x))
+  return setindex!(T, x, I...)
 end
 
 insertblock!!(T::Tensor, block) = insertblock!(T, block)
