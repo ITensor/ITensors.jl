@@ -119,7 +119,6 @@ function allocate(T::Tensor, elt::Type)
   end
   ## allocate the tensor if is_unallocated_zeros
   ElT = promote_type(eltype(data(T)), elt)
-  @show ElT
   d = similartype(alloctype(data(T)), ElT)(undef, dim(to_shape(typeof(data(T)), inds(T))))
   fill!(d, 0)
   return Tensor(d, inds(T))
