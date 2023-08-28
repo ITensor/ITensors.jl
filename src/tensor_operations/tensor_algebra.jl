@@ -276,7 +276,9 @@ function directsum_projectors!(D1::Tensor, D2::Tensor)
 end
 
 # Helper tensors for performing a partial direct sum
-function directsum_projectors(elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index)
+function directsum_projectors(
+  elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index
+)
   D1 = ITensor(elt1, QN(), dag(i), ij)
   D2 = ITensor(elt2, QN(), dag(j), ij)
   directsum_projectors!(tensor(D1), tensor(D2))
