@@ -353,7 +353,10 @@ end
 # Some generic getindex and setindex! functionality
 #
 
-@propagate_inbounds @inline setindex!!(T::Tensor, x, I...) = setindex!(T, x, I...)
+@propagate_inbounds @inline function setindex!!(T::Tensor, x, I...)
+   T = allocate(T, typeof(x))
+   setindex!(T, x, I...)
+end
 
 insertblock!!(T::Tensor, block) = insertblock!(T, block)
 
