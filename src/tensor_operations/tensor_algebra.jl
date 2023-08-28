@@ -263,23 +263,23 @@ end
 
 ⊙(A::ITensor, B::ITensor) = hadamard_product(A, B)
 
-function directsum_tensors!(D1::Tensor, D2::Tensor)
+function directsum_projectors!(D1::Tensor, D2::Tensor)
   d1 = size(D1, 1)
   for ii in 1:d1
-    D1[ii, ii] = true
+    D1[ii, ii] = one(eltype(D1))
   end
   d2 = size(D2, 1)
   for jj in 1:d2
-    D2[jj, d1 + jj] = true
+    D2[jj, d1 + jj] = one(eltype(D1))
   end
   return D1, D2
 end
 
 # Helper tensors for performing a partial direct sum
-function directsum_itensors(elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index)
+function directsum_projectors(elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index)
   D1 = ITensor(elt1, QN(), dag(i), ij)
   D2 = ITensor(elt2, QN(), dag(j), ij)
-  directsum_tensors!(tensor(D1), tensor(D2))
+  directsum_projectors!(tensor(D1), tensor(D2))
   return D1, D2
 end
 
@@ -342,7 +342,7 @@ function _directsum(IJ, A::ITensor, I, B::ITensor, J; tags=nothing)
   I = map(In -> getfirst(==(In), inds(A)), I)
   J = map(Jn -> getfirst(==(Jn), inds(B)), J)
   for n in 1:N
-    D1, D2 = directsum_itensors(eltype(A), eltype(B), I[n], J[n], IJ[n])
+    D1, D2 = directsum_projectors(eltype(A), eltype(B), I[n], J[n], IJ[n])
     A *= adapt(datatype(A), D1)
     B *= adapt(datatype(B), D2)
   end

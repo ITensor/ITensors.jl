@@ -289,20 +289,27 @@ Block: (2, 2)
 ```
 """
 function ITensor(
-  ::AliasStyle, ::Type{ElT}, A::AbstractArray{<:Number}, inds::QNIndices; tol=0
-) where {ElT<:Number}
+  ::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::QNIndices; tol=0.0
+)
   is = Tuple(inds)
   length(A) ≠ dim(inds) && throw(
     DimensionMismatch(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of the indices ($(dim(is)))",
     ),
   )
-  T = emptyITensor(ElT, is)
+  blocks = Block{length(is)}[]
+  T = BlockSparseTensor(elt, blocks, inds)
   A = reshape(A, dims(is)...)
-  for vs in eachindex(T)
-    Avs = A[vs]
-    if abs(Avs) > tol
-      T[vs] = A[vs]
+  _copyto_dropzeros!(T, A; tol)
+  return itensor(T)
+  return T
+end
+
+function _copyto_dropzeros!(T::Tensor, A::AbstractArray; tol)
+  for i in eachindex(T)
+    Aᵢ = A[i]
+    if abs(Aᵢ) > tol
+      T[i] = Aᵢ
     end
   end
   return T
