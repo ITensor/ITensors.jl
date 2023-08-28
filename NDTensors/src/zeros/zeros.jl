@@ -94,4 +94,27 @@ end
 ## NDTensors.Zeros
 is_unallocated_zeros(a) = data_isa(a, NDTensors.Zeros)
 
-#funcion allocate(z::Zeros) = 
+function allocate(T::Tensor) 
+  if !is_unallocated_zeros(T)
+    return T
+  else
+    type = similartype(T)
+    alloc_data = allocate(data(T))
+    is = inds(T)
+    @show typeof(alloc_data)
+    return type(allocate(data(T)), inds(T))
+  end
+end
+
+function allocate(T::Tensor, x::Number)
+  if !is_unallocated_zeros(T)
+    return fill!(T, x)
+  end
+  
+end
+
+allocate(d::AbstractArray) = d
+
+function allocate(z::Zeros)
+  return alloctype(z)(undef, dims(z))
+end
