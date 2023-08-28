@@ -5,7 +5,9 @@
 struct UnspecifiedZero <: Base.AbstractFloat end
 
 Base.Complex{UnspecifiedZero}() = complex(UnspecifiedZero())
-Base.Complex{UnspecifiedZero}(z::Real) = (iszero(z) ? complex(UnspecifiedZero()) : throw(ErrorException))
+function Base.Complex{UnspecifiedZero}(z::Real)
+  return (iszero(z) ? complex(UnspecifiedZero()) : throw(ErrorException))
+end
 
 zero(::Type{UnspecifiedZero}) = UnspecifiedZero()
 zero(n::UnspecifiedZero) = zero(typeof(n))
