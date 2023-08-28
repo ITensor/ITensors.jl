@@ -4,6 +4,8 @@
 
 struct UnspecifiedZero <: Base.AbstractFloat end
 
+Base.Complex{UnspecifiedZero}() = complex(UnspecifiedZero())
+Base.Complex{UnspecifiedZero}(z::Real) = (z == zero(eltype(z)) ? complex(UnspecifiedZero()) : throw(ErrorException) )
 zero(::Type{UnspecifiedZero}) = UnspecifiedZero()
 zero(n::UnspecifiedZero) = zero(typeof(n))
 
@@ -33,5 +35,6 @@ AbstractFloat(::UnspecifiedZero) = zero(AbstractFloat)
 
 Base.promote_type(::Type{<:UnspecifiedZero}, ElT::Type) = ElT
 Base.promote_type(ElT::Type, ::Type{<:UnspecifiedZero}) = ElT
-
 Base.promote_type(::Type{<:UnspecifiedZero}, ::Type{<:UnspecifiedZero}) = UnspecifiedZero
+Base.promote_type(::Type{<:Complex{<:UnspecifiedZero}}, ElT::Type) = Complex{ElT}
+Base.promote_type(ElT::Type, ::Type{<:Complex{<:UnspecifiedZero}}) = Complex{ElT}
