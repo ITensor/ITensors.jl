@@ -33,7 +33,7 @@ function ITensor(
   as::AliasStyle, elt::Type{<:Number}, A::AbstractVector{<:Number}, inds::Tuple{}; kwargs...
 )
   data = set_eltype(typeof(A), elt)(as, A)
-  return ITensor(as, NDTensors.default_storagetype(elt, inds)(data), inds)
+  return ITensor(as, Dense(data), inds)
 end
 
 # For now, it's not well defined to construct an ITensor without indices
@@ -56,7 +56,7 @@ function ITensor(A::AbstractArray{<:Number}; kwargs...)
 end
 
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  return ITensor(AllowAlias(), ElT, NDTensors.default_datatype(ElT)(), ())
+  return ITensor(AllowAlias(), ElT, ITensors.default_datatype(ElT)(()), ())
 end
 
 # To fix ambiguity with QN Index version
