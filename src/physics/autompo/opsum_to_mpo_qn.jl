@@ -254,6 +254,6 @@ end #qn_svdMPO
 
 function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
   # Function barrier to improve type stability
-  ValType = ITensors.determineValType(ITensors.terms(os))
+  ValType = determineValType(terms(os))
   return qn_svdMPO(ValType, os, sites; kwargs...)
 end
