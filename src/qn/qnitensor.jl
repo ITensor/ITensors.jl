@@ -263,6 +263,11 @@ from the zero values of the array.
 Optionally, you can set a tolerance such that elements
 less than or equal to the tolerance are dropped.
 
+!!! warning "Checking proper flux"
+    Note that for efficiency, by default this function will not check
+    that the flux of the QN blocks are consistent with each other. You can
+    enable checking the flux with `ITensors.enable_debug_checks()`.
+
 # Examples
 
 ```julia
@@ -301,8 +306,8 @@ function ITensor(
   T = BlockSparseTensor(elt, blocks, inds)
   A = reshape(A, dims(is)...)
   _copyto_dropzeros!(T, A; tol)
+  @debug_check checkflux(T)
   return itensor(T)
-  return T
 end
 
 function _copyto_dropzeros!(T::Tensor, A::AbstractArray; tol)
