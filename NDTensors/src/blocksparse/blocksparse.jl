@@ -41,7 +41,6 @@ end
 function BlockSparse(
   eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
-
   return BlockSparse(default_datatype(eltype), blockoffsets, dim; vargs...)
 end
 
