@@ -41,7 +41,8 @@ end
 function BlockSparse(
   eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
-  return BlockSparse(Vector{eltype}, blockoffsets, dim; vargs...)
+
+  return BlockSparse(default_datatype(eltype), blockoffsets, dim; vargs...)
 end
 
 function BlockSparse(x::Number, blockoffsets::BlockOffsets, dim::Integer; vargs...)
@@ -51,7 +52,7 @@ end
 function BlockSparse(
   ::Type{ElT}, ::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...
 ) where {ElT<:Number}
-  return BlockSparse(Vector{ElT}(undef, dim), blockoffsets; vargs...)
+  return BlockSparse(default_datatype(ElT)(undef, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(blockoffsets::BlockOffsets, dim::Integer; vargs...)

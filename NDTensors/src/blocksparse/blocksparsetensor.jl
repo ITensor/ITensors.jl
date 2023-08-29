@@ -42,7 +42,7 @@ function BlockSparseTensor(
 end
 
 function BlockSparseTensor(eltype::Type{<:Number}, blockoffsets::BlockOffsets, inds)
-  return BlockSparseTensor(Vector{eltype}, blockoffsets, inds)
+  return BlockSparseTensor(default_datatype(eltype), blockoffsets, inds)
 end
 
 function BlockSparseTensor(blockoffsets::BlockOffsets, inds)
@@ -61,7 +61,7 @@ function BlockSparseTensor(datatype::Type{<:AbstractArray}, inds)
 end
 
 function BlockSparseTensor(eltype::Type{<:Number}, inds)
-  return BlockSparseTensor(Vector{eltype}, inds)
+  return BlockSparseTensor(default_datatype(eltype), inds)
 end
 
 """
