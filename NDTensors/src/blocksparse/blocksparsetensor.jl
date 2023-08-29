@@ -79,6 +79,14 @@ end
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
+function BlockSparseTensor(
+  datat::Type{<:AbstractArray}, blocks::Vector{BlockT}, inds
+) where {BlockT<:Union{Block,NTuple}}
+  boffs, nnz = blockoffsets(blocks, inds)
+  storage = BlockSparse(datat, boffs, nnz)
+  return tensor(storage, inds)
+end
+
 function BlockSparseTensor(blocks::Vector{BlockT}, inds) where {BlockT<:Union{Block,NTuple}}
   return BlockSparseTensor(Float64, blocks, inds)
 end
