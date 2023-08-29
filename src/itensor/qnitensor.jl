@@ -3,7 +3,7 @@
   ::HasQNs, T::Tensor, x::Number, I::Integer...
 )
   fluxT = flux(T)
-  if !isnothing(fluxT) && fluxT != flux(T, I...)
+  if !NDTensors.is_unallocated_zeros(T) && fluxT != flux(T, I...)
     error(
       "In `setindex!`, the element $I of ITensor: \n$(T)\n you are trying to set is in a block with flux $(flux(T, I...)), which is different from the flux $fluxT of the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.",
     )
@@ -142,7 +142,8 @@ function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   if length(blocks) == 0
     error("ITensor with flux=$flux resulted in no allowed blocks")
   end
-  T = BlockSparseTensor(ElT, blocks, is)
+
+  T = BlockSparseTensor(ITensors.default_datatype(ElT), blocks, is)
   return itensor(T)
 end
 
@@ -162,7 +163,7 @@ function ITensor(::Type{ElT}, is::QNIndex...) where {ElT<:Number}
 end
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-ITensor(is::QNIndex...) = emptyITensor(indices(is...))
+ITensor(is::QNIndex...) = ITensor(ITensors.default_eltype(), indices(is))
 
 """
     ITensor([::Type{ElT} = Float64,] ::UndefInitializer, flux::QN, inds)
