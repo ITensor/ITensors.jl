@@ -344,6 +344,7 @@ function _directsum(IJ, A::ITensor, I, B::ITensor, J; tags=nothing)
   I = map(In -> getfirst(==(In), inds(A)), I)
   J = map(Jn -> getfirst(==(Jn), inds(B)), J)
   for n in 1:N
+    # TODO: Pass the entire `datatype` instead of just the `eltype`.
     D1, D2 = directsum_projectors(eltype(A), eltype(B), I[n], J[n], IJ[n])
     A *= adapt(datatype(A), D1)
     B *= adapt(datatype(B), D2)

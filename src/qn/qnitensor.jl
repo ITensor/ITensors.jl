@@ -146,6 +146,8 @@ function ITensor(::Type{ElT}, flux::QN, inds::QNIndices) where {ElT<:Number}
   return itensor(T)
 end
 
+# This helps with making code more generic between block sparse
+# and dense.
 function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   return itensor(Dense(ElT, dim(inds)), inds)
 end
