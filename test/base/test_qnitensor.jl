@@ -96,6 +96,7 @@ Random.seed!(1234)
       2e-9 1e-10 4e-10
     ]
     @test_throws ErrorException ITensor(A, i', dag(i); tol=1e-8)
+    @test ITensor(A, i', dag(i); tol=1e-8, checkflux=false) isa ITensor
   end
 
   @testset "similartype regression test" begin

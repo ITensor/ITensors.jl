@@ -188,7 +188,9 @@ end
 # Turn debug checks on and off
 #
 
-using_debug_checks() = false
+const _using_debug_checks = Ref{Bool}(false)
+
+using_debug_checks() = _using_debug_checks[]
 
 macro debug_check(ex)
   quote
@@ -199,15 +201,13 @@ macro debug_check(ex)
 end
 
 function enable_debug_checks()
-  if !getfield(@__MODULE__, :using_debug_checks)()
-    Core.eval(@__MODULE__, :(using_debug_checks() = true))
-  end
+  _using_debug_checks[] = true
+  return nothing
 end
 
 function disable_debug_checks()
-  if getfield(@__MODULE__, :using_debug_checks)()
-    Core.eval(@__MODULE__, :(using_debug_checks() = false))
-  end
+  _using_debug_checks[] = false
+  return nothing
 end
 
 #

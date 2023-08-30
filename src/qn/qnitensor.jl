@@ -136,7 +136,7 @@ julia> flux(A)
 QN(-1)
 ```
 """
-function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+function ITensor(::Type{ElT}, flux::QN, inds::QNIndices) where {ElT<:Number}
   is = Tuple(inds)
   blocks = nzblocks(flux, is)
   if length(blocks) == 0
@@ -144,6 +144,12 @@ function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   end
   T = BlockSparseTensor(ElT, blocks, is)
   return itensor(T)
+end
+
+# This helps with making code more generic between block sparse
+# and dense.
+function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+  return itensor(Dense(ElT, dim(inds)), inds)
 end
 
 function ITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
@@ -250,7 +256,7 @@ ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, Q
 #ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), is...)
 
 """
-    ITensor([ElT::Type, ]::AbstractArray, inds; tol = 0)
+    ITensor([ElT::Type, ]::AbstractArray, inds; tol=0.0, checkflux=true)
 
 Create a block sparse ITensor from the input Array, and collection
 of QN indices. Zeros are dropped and nonzero blocks are determined
@@ -258,6 +264,10 @@ from the zero values of the array.
 
 Optionally, you can set a tolerance such that elements
 less than or equal to the tolerance are dropped.
+
+By default, this will check that the flux of the nonzero blocks
+are consistent with each other. You can disable this check by
+setting `checkflux=false`.
 
 # Examples
 
@@ -285,20 +295,34 @@ Block: (2, 2)
 ```
 """
 function ITensor(
-  ::AliasStyle, ::Type{ElT}, A::AbstractArray{<:Number}, inds::QNIndices; tol=0
-) where {ElT<:Number}
+  ::AliasStyle,
+  elt::Type{<:Number},
+  A::AbstractArray{<:Number},
+  inds::QNIndices;
+  tol=0.0,
+  checkflux=true,
+)
   is = Tuple(inds)
   length(A) ≠ dim(inds) && throw(
     DimensionMismatch(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of the indices ($(dim(is)))",
     ),
   )
-  T = emptyITensor(ElT, is)
+  blocks = Block{length(is)}[]
+  T = BlockSparseTensor(elt, blocks, inds)
   A = reshape(A, dims(is)...)
-  for vs in eachindex(T)
-    Avs = A[vs]
-    if abs(Avs) > tol
-      T[vs] = A[vs]
+  _copyto_dropzeros!(T, A; tol)
+  if checkflux
+    ITensors.checkflux(T)
+  end
+  return itensor(T)
+end
+
+function _copyto_dropzeros!(T::Tensor, A::AbstractArray; tol)
+  for i in eachindex(T)
+    Aᵢ = A[i]
+    if abs(Aᵢ) > tol
+      T[i] = Aᵢ
     end
   end
   return T
