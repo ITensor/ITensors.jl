@@ -1,5 +1,5 @@
 function qn_svdMPO(
-  ValType::Union{Type{Float64},Type{ComplexF64}}, os::OpSum{C}, sites; kwargs...
+  ValType::ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...
 )::MPO where {C}
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, typemax(Int))
