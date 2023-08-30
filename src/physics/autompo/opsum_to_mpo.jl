@@ -1,5 +1,5 @@
 function svdMPO(
-  ValType::ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...
+  ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...
 )::MPO where {C}
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, 10000)
