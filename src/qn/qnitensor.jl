@@ -254,7 +254,7 @@ ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, Q
 #ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), is...)
 
 """
-    ITensor([ElT::Type, ]::AbstractArray, inds; tol = 0)
+    ITensor([ElT::Type, ]::AbstractArray, inds; tol=0.0, checkflux=true)
 
 Create a block sparse ITensor from the input Array, and collection
 of QN indices. Zeros are dropped and nonzero blocks are determined
@@ -263,10 +263,9 @@ from the zero values of the array.
 Optionally, you can set a tolerance such that elements
 less than or equal to the tolerance are dropped.
 
-!!! warning "Checking proper flux"
-    Note that for efficiency, by default this function will not check
-    that the flux of the QN blocks are consistent with each other. You can
-    enable checking the flux with `ITensors.enable_debug_checks()`.
+By default, this will check that the flux of the nonzero blocks
+are consistent with each other. You can disable this check by
+setting `checkflux=false`.
 
 # Examples
 
@@ -294,7 +293,12 @@ Block: (2, 2)
 ```
 """
 function ITensor(
-  ::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, inds::QNIndices; tol=0.0
+  ::AliasStyle,
+  elt::Type{<:Number},
+  A::AbstractArray{<:Number},
+  inds::QNIndices;
+  tol=0.0,
+  checkflux=true,
 )
   is = Tuple(inds)
   length(A) ≠ dim(inds) && throw(
@@ -306,7 +310,9 @@ function ITensor(
   T = BlockSparseTensor(elt, blocks, inds)
   A = reshape(A, dims(is)...)
   _copyto_dropzeros!(T, A; tol)
-  @debug_check checkflux(T)
+  if checkflux
+    ITensors.checkflux(T)
+  end
   return itensor(T)
 end
 
