@@ -7,6 +7,8 @@ function svdMPO(ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...)::MPO wh
 
   N = length(sites)
 
+  # Specifying the element type with `Matrix{ValType}[...]` improves type inference and therefore efficiency.
+  # See https://github.com/ITensor/ITensors.jl/pull/1183.
   Vs = Matrix{ValType}[Matrix{ValType}(undef, 1, 1) for n in 1:N]
   tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
