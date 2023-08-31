@@ -1,106 +1,106 @@
-struct Zeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray{ElT,N}
+struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray{ElT,N}
   z::FillArrays.Zeros{ElT,N,Axes}
-  function NDTensors.Zeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
+  function NDTensors.UnallocatedZeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
     z = FillArrays.Zeros{ElT,N}(inds)
     Axes = typeof(FillArrays.axes(z))
     return new{ElT,N,Axes,Alloc}(z)
   end
-  function NDTensors.Zeros{ElT,N,Alloc}(::Tuple{}) where {ElT,N,Alloc}
+  function NDTensors.UnallocatedZeros{ElT,N,Alloc}(::Tuple{}) where {ElT,N,Alloc}
     @assert N == 1
     z = FillArrays.Zeros{ElT,N}(1)
     Axes = typeof(FillArrays.axes(z))
     return new{ElT,N,Axes,Alloc}(z)
   end
 
-  function NDTensors.Zeros{ElT,N,Axes,Alloc}(inds::Tuple) where {ElT,N,Axes,Alloc}
+  function NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}(inds::Tuple) where {ElT,N,Axes,Alloc}
     @assert Axes == typeof(Base.axes(inds))
     z = FillArrays.Zeros{ElT,N}(inds)
     return new{ElT,N,Axes,Alloc}(z)
   end
 end
 
-function Zeros(alloc::Type{<:AbstractArray}, inds...)
+function UnallocatedZeros(alloc::Type{<:AbstractArray}, inds...)
   @assert ndims(alloc) == length(inds...)
-  return Zeros{eltype(alloc),ndims(alloc),alloc}(Tuple(inds))
+  return UnallocatedZeros{eltype(alloc),ndims(alloc),alloc}(Tuple(inds))
 end
 
-function Zeros{ElT}(alloc::Type{<:AbstractArray}, inds...) where {ElT}
+function UnallocatedZeros{ElT}(alloc::Type{<:AbstractArray}, inds...) where {ElT}
   alloc = set_eltype(alloc, ElT)
-  return Zeros(alloc, inds)
+  return UnallocatedZeros(alloc, inds)
 end
 
-Base.ndims(::NDTensors.Zeros{ElT,N}) where {ElT,N} = N
-ndims(::NDTensors.Zeros{ElT,N}) where {ElT,N} = N
-Base.eltype(::Zeros{ElT}) where {ElT} = ElT
-alloctype(::NDTensors.Zeros{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc
-alloctype(::Type{<:NDTensors.Zeros{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc} = Alloc
-axes(::Type{<:NDTensors.Zeros{ElT,N,Axes}}) where {ElT,N,Axes} = Axes
+Base.ndims(::NDTensors.UnallocatedZeros{ElT,N}) where {ElT,N} = N
+ndims(::NDTensors.UnallocatedZeros{ElT,N}) where {ElT,N} = N
+Base.eltype(::UnallocatedZeros{ElT}) where {ElT} = ElT
+alloctype(::NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc
+alloctype(::Type{<:NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc} = Alloc
+axes(::Type{<:NDTensors.UnallocatedZeros{ElT,N,Axes}}) where {ElT,N,Axes} = Axes
 
-Base.size(zero::Zeros) = Base.size(zero.z)
+Base.size(zero::UnallocatedZeros) = Base.size(zero.z)
 
-Base.print_array(io::IO, X::Zeros) = Base.print_array(io, X.z)
+Base.print_array(io::IO, X::UnallocatedZeros) = Base.print_array(io, X.z)
 
-data(zero::Zeros) = zero.z
-getindex(zero::Zeros) = getindex(zero.z)
+data(zero::UnallocatedZeros) = zero.z
+getindex(zero::UnallocatedZeros) = getindex(zero.z)
 
-array(zero::Zeros) = alloctype(zero)(zero.z)
-Array(zero::Zeros) = array(zero)
-axes(z::NDTensors.Zeros) = axes(z.z)
-dims(z::Zeros) = Tuple(size(z.z))
-dim(z::Zeros) = size(z.z)
-copy(z::Zeros) = Zeros{eltype(z),1,alloctype(z)}(dims(z))
+array(zero::UnallocatedZeros) = alloctype(zero)(zero.z)
+Array(zero::UnallocatedZeros) = array(zero)
+axes(z::NDTensors.UnallocatedZeros) = axes(z.z)
+dims(z::UnallocatedZeros) = Tuple(size(z.z))
+dim(z::UnallocatedZeros) = size(z.z)
+copy(z::UnallocatedZeros) = UnallocatedZeros{eltype(z),1,alloctype(z)}(dims(z))
 
-Base.convert(x::Type{T}, z::NDTensors.Zeros) where {T<:Array} = Base.convert(x, z.z)
+Base.convert(x::Type{T}, z::NDTensors.UnallocatedZeros) where {T<:Array} = Base.convert(x, z.z)
 
-function complex(z::Zeros)
+function complex(z::UnallocatedZeros)
   ElT = complex(eltype(z))
   N = ndims(z)
   AllocT = similartype(alloctype(z), ElT)
-  return NDTensors.Zeros{ElT,N,AllocT}(dims(z))
+  return NDTensors.UnallocatedZeros{ElT,N,AllocT}(dims(z))
 end
 
-Base.getindex(a::Zeros, i) = Base.getindex(a.z, i)
-Base.sum(z::Zeros) = sum(z.z)
-LinearAlgebra.norm(z::Zeros) = norm(z.z)
-setindex!(A::NDTensors.Zeros, v, I) = setindex!(A.z, v, I)
+Base.getindex(a::UnallocatedZeros, i) = Base.getindex(a.z, i)
+Base.sum(z::UnallocatedZeros) = sum(z.z)
+LinearAlgebra.norm(z::UnallocatedZeros) = norm(z.z)
+setindex!(A::NDTensors.UnallocatedZeros, v, I) = setindex!(A.z, v, I)
 
-function (arraytype::Type{<:Zeros})(::AllowAlias, A::Zeros)
+function (arraytype::Type{<:UnallocatedZeros})(::AllowAlias, A::UnallocatedZeros)
   return A
 end
 
-function (arraytype::Type{<:Zeros})(::NeverAlias, A::Zeros)
+function (arraytype::Type{<:UnallocatedZeros})(::NeverAlias, A::UnallocatedZeros)
   return copy(A)
 end
 
-function to_shape(::Type{<:Zeros}, dims::Tuple)
+function to_shape(::Type{<:UnallocatedZeros}, dims::Tuple)
   return NDTensors.to_shape(dims)
 end
 
-function promote_rule(z1::Type{<:Zeros}, z2::Type{<:Zeros})
+function promote_rule(z1::Type{<:UnallocatedZeros}, z2::Type{<:UnallocatedZeros})
   ElT = promote_type(eltype(z1), eltype(z2))
   @assert ndims(z1) == ndims(z2)
   Axs = axes(z1)
   Alloc = promote_type(alloctype(z1), alloctype(z2))
   set_eltype(Alloc, ElT)
-  return NDTensors.Zeros{ElT,ndims(z1),Axs,Alloc}
+  return NDTensors.UnallocatedZeros{ElT,ndims(z1),Axs,Alloc}
 end
 
-function promote_rule(z1::Type{<:Zeros}, z2::Type{<:AbstractArray})
+function promote_rule(z1::Type{<:UnallocatedZeros}, z2::Type{<:AbstractArray})
   ElT = promote_type(eltype(z1), eltype(z2))
   @assert ndims(z1) == ndims(z2)
   Axs = axes(z1)
   Alloc = promote_type(alloctype(z1), z2)
   set_eltype(Alloc, ElT)
-  return NDTensors.Zeros{ElT,ndims(z1),Axs,Alloc}
+  return NDTensors.UnallocatedZeros{ElT,ndims(z1),Axs,Alloc}
 end
 
-function promote_rule(z1::Type{<:AbstractArray}, z2::Type{<:Zeros})
+function promote_rule(z1::Type{<:AbstractArray}, z2::Type{<:UnallocatedZeros})
   return promote_rule(z2, z1)
 end
 
 ## Check datatypes to see if underlying storage is a 
-## NDTensors.Zeros
-is_unallocated_zeros(a) = data_isa(a, NDTensors.Zeros)
+## NDTensors.UnallocatedZeros
+is_unallocated_zeros(a) = data_isa(a, NDTensors.UnallocatedZeros)
 
 function allocate(T::Tensor)
   if !is_unallocated_zeros(T)
@@ -126,6 +126,6 @@ end
 
 allocate(d::AbstractArray) = d
 
-function allocate(z::Zeros)
+function allocate(z::UnallocatedZeros)
   return alloctype(z)(undef, dims(z))
 end
