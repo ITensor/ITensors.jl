@@ -7,6 +7,8 @@ function qn_svdMPO(ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...)::MPO
 
   N = length(sites)
 
+  # Specifying the element type with `Dict{QN,Matrix{ValType}}[...]` improves type inference and therefore efficiency.
+  # See https://github.com/ITensor/ITensors.jl/pull/1183.
   Vs = Dict{QN,Matrix{ValType}}[Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
   sparse_MPO = [QNMatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
