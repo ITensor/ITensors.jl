@@ -19,9 +19,7 @@ function contract!!(
   tensor::Tensor,
   tensor_labels,
 )
-  if is_unallocated_zeros(output_tensor)
-    output_tensor = convert(typeof(tensor), output_tensor)
-  end
+  output_tensor = allocate(output_tensor, eltype(tensor))
   if ndims(combiner_tensor) ≤ 1
     # Empty combiner, acts as multiplying by 1
     output_tensor = permutedims!!(
