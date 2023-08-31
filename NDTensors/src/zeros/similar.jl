@@ -14,7 +14,9 @@ function similar(arraytype::Type{<:UnallocatedZeros}, inds::Tuple)
 end
 
 function similartype(arraytype::Type{<:UnallocatedZeros})
-  return UnallocatedZeros{eltype(arraytype),ndims(arraytype),axes(arraytype),alloctype(arraytype)}
+  return UnallocatedZeros{
+    eltype(arraytype),ndims(arraytype),axes(arraytype),alloctype(arraytype)
+  }
 end
 
 function similartype(arraytype::Type{<:UnallocatedZeros}, elt::Type)

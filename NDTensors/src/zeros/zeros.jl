@@ -12,7 +12,9 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray
     return new{ElT,N,Axes,Alloc}(z)
   end
 
-  function NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}(inds::Tuple) where {ElT,N,Axes,Alloc}
+  function NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}(
+    inds::Tuple
+  ) where {ElT,N,Axes,Alloc}
     @assert Axes == typeof(Base.axes(inds))
     z = FillArrays.Zeros{ElT,N}(inds)
     return new{ElT,N,Axes,Alloc}(z)
@@ -33,7 +35,11 @@ Base.ndims(::NDTensors.UnallocatedZeros{ElT,N}) where {ElT,N} = N
 ndims(::NDTensors.UnallocatedZeros{ElT,N}) where {ElT,N} = N
 Base.eltype(::UnallocatedZeros{ElT}) where {ElT} = ElT
 alloctype(::NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc
-alloctype(::Type{<:NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc} = Alloc
+function alloctype(
+  ::Type{<:NDTensors.UnallocatedZeros{ElT,N,Axes,Alloc}}
+) where {ElT,N,Axes,Alloc}
+  return Alloc
+end
 axes(::Type{<:NDTensors.UnallocatedZeros{ElT,N,Axes}}) where {ElT,N,Axes} = Axes
 
 Base.size(zero::UnallocatedZeros) = Base.size(zero.z)
@@ -50,7 +56,9 @@ dims(z::UnallocatedZeros) = Tuple(size(z.z))
 dim(z::UnallocatedZeros) = size(z.z)
 copy(z::UnallocatedZeros) = UnallocatedZeros{eltype(z),1,alloctype(z)}(dims(z))
 
-Base.convert(x::Type{T}, z::NDTensors.UnallocatedZeros) where {T<:Array} = Base.convert(x, z.z)
+function Base.convert(x::Type{T}, z::NDTensors.UnallocatedZeros) where {T<:Array}
+  return Base.convert(x, z.z)
+end
 
 function complex(z::UnallocatedZeros)
   ElT = complex(eltype(z))
