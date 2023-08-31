@@ -611,14 +611,11 @@ nzblocks(T::ITensor) = nzblocks(tensor(T))
 blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 
 """
-    iszerodata(T::ITensor)
+    isempty(T::ITensor)
 
 Returns `true` if the ITensor contains no elements.
-
-An ITensor with `EmptyStorage` storage always returns `true`.
 """
 NDTensors.data_isa(T::ITensor, datatype::Type) = NDTensors.data_isa(tensor(T), datatype)
-iszerodata(T::ITensor) = NDTensors.is_unallocated_zeros(tensor(T))
 isempty(T::ITensor) = NDTensors.is_unallocated_zeros(T)
 
 isreal(T::ITensor) = eltype(T) <: Real
