@@ -240,9 +240,9 @@ Random.randn!(rng::AbstractRNG, T::Tensor) = (randn!(rng, storage(T)); T)
 LinearAlgebra.rmul!(T::Tensor, α::Number) = (rmul!(storage(T), α); T)
 scale!(T::Tensor, α::Number) = rmul!(storage(T), α)
 
-function fill!!(T::Tensor, α::Number) 
-   T = allocate(T)
-   return fill!(T, eltype(T)(α))
+function fill!!(T::Tensor, α::Number)
+  T = allocate(T)
+  return fill!(T, eltype(T)(α))
 end
 fill!(T::Tensor, α::Number) = (fill!(storage(T), α); T)
 

@@ -114,7 +114,10 @@ function allocate(T::Tensor)
   if !is_unallocated_zeros(T)
     return T
   end
-  return tensor(set_datatype(typeof(NDTensors.storage(T)), alloctype(data(T)))(allocate(data(T))), inds(T))
+  return tensor(
+    set_datatype(typeof(NDTensors.storage(T)), alloctype(data(T)))(allocate(data(T))),
+    inds(T),
+  )
   #@show convert(type, out_data)
   #return type(allocate(data(T)), inds(T))
 end
