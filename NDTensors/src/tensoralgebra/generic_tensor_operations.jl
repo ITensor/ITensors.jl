@@ -128,6 +128,8 @@ function _contract!!(
     if is_unallocated_zeros(tensor1) || is_unallocated_zeros(tensor2)
       return output_tensor
     end
+
+    output_tensor = allocate(output_tensor, promote_type(eltype(tensor1), eltype(tensor2)))
     contract!(
       output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
     )
