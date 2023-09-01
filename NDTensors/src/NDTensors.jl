@@ -110,7 +110,7 @@ include("blocksparse/linearalgebra.jl")
 # Zeros
 #
 include("abstractarray/data_isa.jl")
-include("zeros/zeros.jl")
+include("zeros/unallocated_zeros.jl")
 include("zeros/similar.jl")
 include("zeros/set_types.jl")
 
