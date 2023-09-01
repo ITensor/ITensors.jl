@@ -101,7 +101,7 @@ function diagITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
   return diagITensor(NeverAlias(), ElT, 0, is)
 end
 
-diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is))
+diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is...))
 
 diagITensor(is::Indices) = diagITensor(NDTensors.default_eltype(), is)
 diagITensor(is...) = diagITensor(indices(is...))
