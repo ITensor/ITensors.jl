@@ -119,6 +119,7 @@ swapinds(::ITensor, ::Any...)
 dag(T::ITensor; kwargs...)
 exp(::ITensor, ::Any, ::Any)
 nullspace(::ITensor, ::Any...)
+tr(::ITensor; kwargs...)
 ```
 
 ## Decompositions
