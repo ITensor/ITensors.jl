@@ -14,16 +14,12 @@ function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
 end
 
 """
-    tr(T::ITensor, kwargs...)
+    tr(T::ITensor; kwargs...)
 
 Trace an ITensor over pairs of indices determined by
 the optional prime levels and tags passed as keyword arguments. 
 Indices that are not in pairs are not traced over, corresponding 
 to a "batched" trace.
-
-Optional keyword arguments:
-* `plev::Pair{Int,Int}=(0=>1)` - specify which Index prime levels are to be paired for taking the trace. The default is prime levels 0 and 1.
-* `tags::Pair=(ts""=>ts"")` - specify which Index tags to pair for taking the trace
 """
 function tr(T::ITensor; kwargs...)
   return _tr(T; kwargs...)

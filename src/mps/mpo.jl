@@ -532,13 +532,9 @@ function logdot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
 end
 
 """
-    tr(M::MPO, kwargs...)
+    tr(M::MPO; kwargs...)
 
 Compute the trace of the MPO `M`.
-
-Optional keyword arguments:
-* `plev::Pair{Int,Int}=(0=>1)` - specify which Index prime levels are to be paired for taking the trace. The default is prime levels 0 and 1.
-* `tags::Pair=(ts""=>ts"")` - specify which Index tags to pair for taking the trace
 """
 function tr(M::MPO; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   N = length(M)
