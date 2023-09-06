@@ -21,6 +21,7 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray
   end
 end
 
+UnallocatedZeros{ElT, N, Axes, Alloc}() where {ElT, N, Axes, Alloc<:AbstractArray{ElT, N}} = UnallocatedZeros{ElT, N, Axes, Alloc}[]
 function UnallocatedZeros(alloc::Type{<:AbstractArray}, inds...)
   @assert ndims(alloc) == length(inds...)
   return UnallocatedZeros{eltype(alloc),ndims(alloc),alloc}(Tuple(inds))
