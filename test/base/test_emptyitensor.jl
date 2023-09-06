@@ -51,7 +51,7 @@ end
   ## the indices will be equivalent to `j, i` We 
   ## can permute but thats extra work.
   C = A + B
-  @test inds(C) == (j,i)
+  @test inds(C) == (j, i)
   @test C ≈ B
 
   C = B + A
