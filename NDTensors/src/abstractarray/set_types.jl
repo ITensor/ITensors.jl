@@ -57,15 +57,15 @@ end
 function specify_parameters(
   arraytype::Type{<:AbstractArray{ElT,N}}, eltype::Type=default_eltype(), ndims::Integer=1
 ) where {ElT,N}
-  return specify_eltype(arraytype, eltype)
+  return arraytype
 end
 function specify_parameters(
   arraytype::Type{<:AbstractArray{ElT}}, eltype::Type=default_eltype(), ndims::Integer=1
 ) where {ElT}
-  return specify_eltype(set_ndims(arraytype, ndims), eltype)
+  return set_ndims(arraytype, ndims)
 end
 function specify_parameters(
   arraytype::Type{<:AbstractArray}, eltype::Type=default_eltype(), ndims::Integer=1
 )
-  return specify_eltype(set_ndims(arraytype, ndims), eltype)
+  return set_eltype(set_ndims(arraytype, ndims), eltype)
 end
