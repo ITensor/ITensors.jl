@@ -2,6 +2,7 @@
 # BlockSparse storage
 #
 
+## BlockSparse constructors
 struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
   blockoffsets::BlockOffsets{N}  # Block number-offset pairs
@@ -12,30 +13,17 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
-# TODO: Implement as `fieldtype(storagetype, :data)`.
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
-# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
-# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
-blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
-
-function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
-  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
-end
-
-function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
-  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
-end
-
-# TODO: Write as `(::Type{<:BlockSparse})()`.
-BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
-
 function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
   return BlockSparse(
     fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
   )
+end
+
+function BlockSparse(datatype::Type{<:NDTensors.UnallocatedZeros},
+  blockoffsets::BlockOffsets, dim::Integer; vargs...)
+  return BlockSparse(datatype((dim,)), blockoffsets; vargs...)
 end
 
 function BlockSparse(
@@ -54,13 +42,35 @@ function BlockSparse(
   return BlockSparse(default_datatype(ElT)(undef, dim), blockoffsets; vargs...)
 end
 
+function BlockSparse(::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...)
+  return BlockSparse(Float64, undef, blockoffsets, dim; vargs...)
+end
+
 function BlockSparse(blockoffsets::BlockOffsets, dim::Integer; vargs...)
   return BlockSparse(Float64, blockoffsets, dim; vargs...)
 end
 
-function BlockSparse(::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(Float64, undef, blockoffsets, dim; vargs...)
+# TODO: Write as `(::Type{<:BlockSparse})()`.
+BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
+
+## End BlockSparse constructors
+
+## Blocksparse fieldtypes
+# TODO: Implement as `fieldtype(storagetype, :data)`.
+datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
+# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
+ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
+blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
+
+function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
+  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
 end
+
+function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
+  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
+end
+## end blocksparse fieldtypes
 
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
