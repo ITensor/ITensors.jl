@@ -37,14 +37,14 @@ function set_indstype(arraytype::Type{<:AbstractArray}, dims::Tuple)
   return set_ndims(arraytype, length(dims))
 end
 
-function set_eltype_if_unspecified(
+function specify_eltype(
   arraytype::Type{<:AbstractArray{T}}, eltype::Type=default_eltype()
 ) where {T}
   return arraytype
 end
 
 #TODO transition to set_eltype when working for wrapped types
-function set_eltype_if_unspecified(
+function specify_eltype(
   arraytype::Type{<:AbstractArray}, eltype::Type=default_eltype()
 )
   return similartype(arraytype, eltype)
