@@ -60,8 +60,17 @@ include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
 include("adapt.jl")
+include("abstractarray/data_isa.jl")
 include("tensoralgebra/generic_tensor_operations.jl")
 include("tensoralgebra/contraction_logic.jl")
+
+#####################################
+# Zeros
+#
+include("zeros/unallocated_zeros.jl")
+include("zeros/similar.jl")
+include("zeros/set_types.jl")
+include("zeros/allocate.jl")
 
 #####################################
 # DenseTensor and DiagTensor
@@ -105,14 +114,6 @@ include("blocksparse/diagblocksparse.jl")
 include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
-
-#####################################
-# Zeros
-#
-include("abstractarray/data_isa.jl")
-include("zeros/unallocated_zeros.jl")
-include("zeros/similar.jl")
-include("zeros/set_types.jl")
 
 #####################################
 # Deprecations
