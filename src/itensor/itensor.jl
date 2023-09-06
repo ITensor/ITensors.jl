@@ -309,7 +309,7 @@ end
 
 ITensor(ElT::Type{<:Number}, is...) = ITensor(ElT, indices(is...))
 
-ITensor(is...) = ITensor(ITensors.default_eltype(), is...)
+ITensor(i::Index, is...) = ITensor(ITensors.default_eltype(), i, is...)
 
 """
     ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
