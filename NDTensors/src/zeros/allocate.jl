@@ -1,28 +1,36 @@
-function allocate(T::Tensor)
-  if !is_unallocated_zeros(T)
-    return T
-  end
-  return tensor(
-    set_datatype(typeof(NDTensors.storage(T)), alloctype(data(T)))(allocate(data(T))),
-    inds(T),
-  )
-  #@show convert(type, out_data)
-  #return type(allocate(data(T)), inds(T))
-end
-
-function allocate(T::Tensor, elt::Type)
+function allocate(T::Tensor, elt::Type=default_eltype())
   if !is_unallocated_zeros(T)
     return T
   end
   ## allocate the tensor if is_unallocated_zeros
-  ElT = promote_type(eltype(data(T)), elt)
-  d = similartype(alloctype(data(T)), ElT)(undef, dim(to_shape(typeof(data(T)), inds(T))))
-  fill!(d, 0)
-  return Tensor(d, inds(T))
+  store = allocate(storage(T), elt)
+  return Tensor(NDTensors.AllowAlias(), store, inds(T))
 end
 
-allocate(d::AbstractArray) = d
+function allocate(storage::TensorStorage, elt::Type=default_eltype())
+  if !is_unallocated_zeros(storage)
+    return storage
+  end
+  alloc = allocate(data(storage), elt)
 
-function allocate(z::UnallocatedZeros)
-  return alloctype(z)(undef, dims(z))
+  #d = adapt(storage, typeof(alloc))(alloc)
+  return set_datatype(typeof(storage), typeof(alloc))(alloc)
+end
+
+function allocate(storage::BlockSparse, elt::Type=default_eltype())
+  if !is_unallocated_zeros(storage)
+    return storage
+  end
+  alloc = allocate(data(storage), elt)
+
+  #d = adapt(storage, typeof(alloc))(alloc)
+
+  return set_datatype(typeof(storage), typeof(alloc))(alloc, blockoffsets(storage))
+end
+
+allocate(d::AbstractArray, elt::Type=default_eltype()) = d
+
+function allocate(z::UnallocatedZeros, elt::Type=default_eltype())
+  alloc = specify_eltype(alloctype(z), elt)(undef, dims(z))
+  return fill!(alloc, elt(0))
 end
