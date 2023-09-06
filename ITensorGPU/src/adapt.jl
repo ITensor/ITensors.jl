@@ -16,6 +16,10 @@ function NDTensors.specify_eltype(arraytype::Type{CuVector}, eltype::Type)
   return CuVector{eltype}
 end
 
+function NDTensors.specify_eltype(arraytype::Type{CuVector{NDTensors.UnspecifiedZero}}, eltype::Type)
+  return CuVector{eltype}
+end
+
 # Overload `CUDA.cu` for convenience
 const ITensorType = Union{
   TensorStorage,Tensor,ITensor,Array{ITensor},Array{<:Array{ITensor}},MPS,MPO

@@ -50,6 +50,13 @@ function specify_eltype(
   return similartype(arraytype, eltype)
 end
 
+function specify_eltype(
+  arraytype::Type{<:AbstractArray{UnspecifiedZero}},
+  eltype::Type=default_eltype()
+)
+ return similartype(arraytype, eltype)
+end
+
 function set_parameter_if_unspecified(
   arraytype::Type{<:AbstractArray{ElT,N}}, eltype::Type=default_eltype(), ndims::Integer=1
 ) where {ElT,N}
