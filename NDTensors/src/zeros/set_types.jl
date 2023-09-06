@@ -10,11 +10,12 @@ function get_parameter(
   return P4
 end
 
-# Set parameter 2
+# Set parameter 1
 function set_parameter(
   ::Type{<:UnallocatedZeros{<:Any,P2,P3,P4}}, ::Position{1}, P1
 ) where {P2,P3,P4}
-  return UnallocatedZeros{P1,P2,P3,P4}
+  alloc = similartype(P4, P1)
+  return UnallocatedZeros{P1,P2,P3,alloc}
 end
 
 # Set parameter 2
