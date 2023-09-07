@@ -78,13 +78,13 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 """
 ## TypeDefs
 const RealOrComplex{T} = Union{T,Complex{T}}
-default_eltype() = NDTensors.UnspecifiedZero
+default_eltype() = UnspecifiedZero
 function default_datatype(elt, inds::Tuple)
   ElT = isnothing(elt) ? elt : NDTensors.default_eltype()
-  return NDTensors.UnallocatedZeros{elt,1,Vector{elt}}(inds)
+  return UnallocatedZeros{elt,1,Vector{elt}}(inds)
 end
 function default_datatype(elt=ITensors.default_eltype())
-  return NDTensors.UnallocatedZeros{elt,1,Vector{elt}}
+  return UnallocatedZeros{elt,1,Vector{elt}}
 end
 ##
 
