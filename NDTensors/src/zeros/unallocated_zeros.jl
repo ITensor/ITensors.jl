@@ -1,4 +1,4 @@
-struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractArray{ElT,N}
+struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: FillArrays.AbstractFill{ElT,N,Axes}
   z::FillArrays.Zeros{ElT,N,Axes}
   function UnallocatedZeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
     z = FillArrays.Zeros{ElT,N}(inds)
@@ -70,7 +70,6 @@ function complex(z::UnallocatedZeros)
   return UnallocatedZeros{ElT,N,AllocT}(dims(z))
 end
 
-Base.getindex(a::UnallocatedZeros, i) = Base.getindex(a.z, i)
 Base.sum(z::UnallocatedZeros) = sum(z.z)
 LinearAlgebra.norm(z::UnallocatedZeros) = norm(z.z)
 setindex!(A::UnallocatedZeros, v, I) = setindex!(A.z, v, I)
@@ -112,3 +111,5 @@ end
 ## Check datatypes to see if underlying storage is a 
 ## UnallocatedZeros
 is_unallocated_zeros(a) = data_isa(a, UnallocatedZeros)
+
+FillArrays.getindex_value(Z::UnallocatedZeros) = FillArrays.getindex_value(Z.z)
