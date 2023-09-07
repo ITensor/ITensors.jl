@@ -26,6 +26,6 @@ end
 
 specify_eltype(tensor::Tensor, eltype) = adapt(eltype, tensor)
 
-specify_eltype(tensor::Tensor{UnspecifiedZero}, eltype)= adapt(eltype, tensor)
+specify_eltype(tensor::Tensor{UnspecifiedZero}, eltype) = adapt(eltype, tensor)
 
 specify_eltype(tensor::Tensor{ElT}, eltype) where {ElT} = tensor

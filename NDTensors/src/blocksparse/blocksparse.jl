@@ -176,7 +176,6 @@ function blockview(T::BlockSparse, block)
   return Dense(dataTslice)
 end
 
-
 # XXX this is not well defined with new Dictionary design
 #function (D1::BlockSparse + D2::BlockSparse)
 #  # This could be of order nnzblocks, avoid?

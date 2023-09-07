@@ -1,4 +1,5 @@
-struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: FillArrays.AbstractFill{ElT,N,Axes}
+struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
+       FillArrays.AbstractFill{ElT,N,Axes}
   z::FillArrays.Zeros{ElT,N,Axes}
   function UnallocatedZeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
     z = FillArrays.Zeros{ElT,N}(inds)
@@ -12,9 +13,7 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: FillArrays.Ab
     return new{ElT,N,Axes,Alloc}(z)
   end
 
-  function UnallocatedZeros{ElT,N,Axes,Alloc}(
-    inds::Tuple
-  ) where {ElT,N,Axes,Alloc}
+  function UnallocatedZeros{ElT,N,Axes,Alloc}(inds::Tuple) where {ElT,N,Axes,Alloc}
     @assert Axes == typeof(Base.axes(inds))
     z = FillArrays.Zeros{ElT,N}(inds)
     return new{ElT,N,Axes,Alloc}(z)
@@ -38,9 +37,7 @@ Base.ndims(::UnallocatedZeros{ElT,N}) where {ElT,N} = N
 ndims(::UnallocatedZeros{ElT,N}) where {ElT,N} = N
 Base.eltype(::UnallocatedZeros{ElT}) where {ElT} = ElT
 alloctype(::UnallocatedZeros{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc
-function alloctype(
-  ::Type{<:UnallocatedZeros{ElT,N,Axes,Alloc}}
-) where {ElT,N,Axes,Alloc}
+function alloctype(::Type{<:UnallocatedZeros{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc}
   return Alloc
 end
 axes(::Type{<:UnallocatedZeros{ElT,N,Axes}}) where {ElT,N,Axes} = Axes
