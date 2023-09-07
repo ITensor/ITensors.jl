@@ -129,6 +129,8 @@ using ITensors.NDTensors:
   set_eltype,
   single_precision,
   timer,
+  UnspecifiedZero,
+  UnallocatedZeros,
   using_auto_fermion
 
 using ITensors.NDTensors.SetParameters: get_parameters, set_unspecified_parameters
