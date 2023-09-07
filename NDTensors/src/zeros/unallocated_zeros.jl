@@ -110,3 +110,14 @@ end
 is_unallocated_zeros(a) = data_isa(a, UnallocatedZeros)
 
 FillArrays.getindex_value(Z::UnallocatedZeros) = FillArrays.getindex_value(Z.z)
+
+function generic_zeros(::Type{UnallocatedZeros}, dim::Integer)
+  elt = default_eltype()
+  datat = default_datatype(elt)
+  N = ndims(datat)
+  return UnallocatedZeros{elt, N, datat}(Tuple(dim))
+end
+
+function generic_zeros(::Type{UnallocatedZeros{ElT, N, DataT}}, dim::Integer) where {ElT, N, DataT}
+  UnallocatedZeros{ElT, N, DataT}(dim)
+end
