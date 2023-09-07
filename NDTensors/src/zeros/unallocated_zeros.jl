@@ -121,5 +121,5 @@ end
 function generic_zeros(
   ::Type{UnallocatedZeros{ElT,N,DataT}}, dim::Integer
 ) where {ElT,N,DataT}
-  return UnallocatedZeros{ElT,N,DataT}(dim)
+  return UnallocatedZeros{ElT,N,DataT}(Tuple(dim))
 end
