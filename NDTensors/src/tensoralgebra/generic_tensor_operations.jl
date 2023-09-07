@@ -129,7 +129,7 @@ function _contract!!(
       return output_tensor
     end
 
-    output_tensor = allocate(output_tensor, promote_type(eltype(tensor1), eltype(tensor2)))
+    output_tensor = specify_eltype(allocate(output_tensor), promote_type(typeof(tensor1), typeof(tensor2)))
     contract!(
       output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
     )

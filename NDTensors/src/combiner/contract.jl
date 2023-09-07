@@ -19,7 +19,7 @@ function contract!!(
   tensor::Tensor,
   tensor_labels,
 )
-  output_tensor = allocate(output_tensor, eltype(tensor))
+  output_tensor = specify_eltype(allocate(output_tensor), typeof(tensor))
   if ndims(combiner_tensor) ≤ 1
     # Empty combiner, acts as multiplying by 1
     output_tensor = permutedims!!(
