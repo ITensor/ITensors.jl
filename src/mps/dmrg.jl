@@ -90,6 +90,13 @@ the form `w|M1><M1| + w|M2><M2| + ...` where `Ms=[M1, M2, ...]` and
 `w` is the "weight" parameter, which can be adjusted through the
 optional `weight` keyword argument.
 
+!!! note
+    `dmrg` will report the energy of the operator
+    `H + w|M1><M1| + w|M2><M2| + ...`, not the operator `H`.
+    If you want the expectation value of the MPS eigenstate
+    with respect to just `H`, you can compute it yourself with
+    an observer or after DMRG is run with `inner(psi', H, psi)`.
+
 The MPS `psi0` is used to initialize the MPS to be optimized.
 
 The number of sweeps of thd DMRG algorithm is controlled by

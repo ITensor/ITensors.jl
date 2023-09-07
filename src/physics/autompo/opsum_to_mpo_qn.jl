@@ -1,13 +1,15 @@
-function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+# `ValType::Type{<:Number}` is used instead of `ValType::Type` for efficiency, possibly due to increased method specialization.
+# See https://github.com/ITensor/ITensors.jl/pull/1183.
+function qn_svdMPO(ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...)::MPO where {C}
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, typemax(Int))
   cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
 
-  ValType = determineValType(terms(os))
-
-  Vs = [Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
+  # Specifying the element type with `Dict{QN,Matrix{ValType}}[...]` improves type inference and therefore efficiency.
+  # See https://github.com/ITensor/ITensors.jl/pull/1183.
+  Vs = Dict{QN,Matrix{ValType}}[Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
   sparse_MPO = [QNMatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
   function crosses_bond(t::Scaled{C,Prod{Op}}, n::Int)
@@ -251,3 +253,9 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
   return H
 end #qn_svdMPO
+
+function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+  # Function barrier to improve type stability
+  ValType = determineValType(terms(os))
+  return qn_svdMPO(ValType, os, sites; kwargs...)
+end

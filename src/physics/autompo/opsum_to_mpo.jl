@@ -1,13 +1,15 @@
-function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+# `ValType::Type{<:Number}` is used instead of `ValType::Type` for efficiency, possibly due to increased method specialization.
+# See https://github.com/ITensor/ITensors.jl/pull/1183.
+function svdMPO(ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...)::MPO where {C}
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, 10000)
   cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
 
-  ValType = determineValType(terms(os))
-
-  Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
+  # Specifying the element type with `Matrix{ValType}[...]` improves type inference and therefore efficiency.
+  # See https://github.com/ITensor/ITensors.jl/pull/1183.
+  Vs = Matrix{ValType}[Matrix{ValType}(undef, 1, 1) for n in 1:N]
   tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
   function crosses_bond(t::Scaled{C,Prod{Op}}, n::Int) where {C}
@@ -117,7 +119,7 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
     end
 
     #
-    # Special handling of starting and 
+    # Special handling of starting and
     # ending identity operators:
     #
     idM = zeros(ValType, dim(ll), dim(rl))
@@ -138,3 +140,9 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
   return H
 end #svdMPO
+
+function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+  # Function barrier to improve type stability
+  ValType = determineValType(terms(os))
+  return svdMPO(ValType, os, sites; kwargs...)
+end
