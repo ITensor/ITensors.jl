@@ -30,7 +30,6 @@ end
 function BlockSparse(
   eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
-  ## TODO should this use UnallocatedZeros? 
   return BlockSparse(default_datatype(eltype), blockoffsets, dim; vargs...)
 end
 
@@ -49,10 +48,7 @@ function BlockSparse(::UndefInitializer, blockoffsets::BlockOffsets, dim::Intege
 end
 
 function BlockSparse(blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  elt = default_eltype()
-  datat = default_datatype(elt)
-  N = ndims(datat)
-  return BlockSparse(UnallocatedZeros{elt,N,datat}, blockoffsets, dim; vargs...)
+  return BlockSparse(default_datatype(default_eltype()), blockoffsets, dim; vargs...)
 end
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
