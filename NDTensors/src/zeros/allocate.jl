@@ -1,3 +1,4 @@
+alloctype(a::AbstractArray) = a
 function allocate(T::Tensor)
   return adapt(alloctype(data(T)), T)
 end
