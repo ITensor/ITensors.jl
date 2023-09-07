@@ -23,3 +23,7 @@ end
 function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
   return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
 end
+
+specify_eltype(tensor::Tensor, eltype) = adapt(eltype, tensor)
+
+specify_eltype(tensor::Tensor{ElT}, eltype) where{ElT} = tensor
