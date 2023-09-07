@@ -1,25 +1,13 @@
-function allocate(T::Tensor, elt::Type=default_eltype())
-  if !is_unallocated_zeros(T)
-    return T
-  end
-  ## allocate the tensor if is_unallocated_zeros
-  store = allocate(storage(T), elt)
-  return Tensor(NDTensors.AllowAlias(), store, inds(T))
+function allocate(T::Tensor)
+  return adapt(alloctype(data(T)), T)
 end
 
-function allocate(storage::TensorStorage, elt::Type=default_eltype())
-  if !is_unallocated_zeros(storage)
-    return storage
-  end
-  alloc = allocate(data(storage), elt)
-
-  #d = adapt(storage, typeof(alloc))(alloc)
-  return set_datatype(typeof(storage), typeof(alloc))(alloc)
+function allocate(storage::TensorStorage)
+  return adapt(alloctype(data(storage)), storage)
 end
 
-allocate(d::AbstractArray, elt::Type=default_eltype()) = d
+allocate(d::AbstractArray) = d
 
-function allocate(z::UnallocatedZeros, elt::Type=default_eltype())
-  alloc = specify_eltype(alloctype(z), elt)(undef, dims(z))
-  return fill!(alloc, elt(0))
+function allocate(z::UnallocatedZeros)
+  return alloctype(z)(data(z))
 end
