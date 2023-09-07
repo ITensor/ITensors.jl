@@ -7,18 +7,14 @@ function NDTensors.cu(eltype::Type{<:Number}, x)
 end
 NDTensors.cu(x) = fmap(x -> adapt(CuArray, x), x)
 
-function NDTensors.specify_eltype(arraytype::Type{CuVector{T}}, eltype::Type) where {T}
-  return arraytype
-end
-function NDTensors.specify_eltype(arraytype::Type{CuVector}, eltype::Type)
-  return CuVector{eltype}
-end
-
-function NDTensors.specify_eltype(
-  arraytype::Type{CuVector{NDTensors.UnspecifiedZero}}, eltype::Type
-)
-  return CuVector{eltype}
-end
+function NDTensors.set_eltype_if_unspecified(
+  arraytype::Type{CuVector{T}}, eltype::Type
+  ) where {T}
+    return arraytype
+  end
+  function NDTensors.set_eltype_if_unspecified(arraytype::Type{CuVector}, eltype::Type)
+    return CuVector{eltype}
+  end
 
 # Overload `CUDA.cu` for convenience
 const ITensorType = Union{
