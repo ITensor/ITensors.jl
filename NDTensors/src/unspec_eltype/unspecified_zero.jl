@@ -22,7 +22,7 @@ convert(::Type{Complex{UnspecifiedZero}}, x::UnspecifiedZero) = complex(x)
 #Complex(x::Real, ::UnspecifiedZero) = x
 
 # This is to help define `float(::UnspecifiedZero) = 0.0`.
-# This helps with defining `norm` of `EmptyStorage{UnspecifiedZero}`.
+# This helps with defining `norm` of `UnallocatedZeros{UnspecifiedZero}`.
 AbstractFloat(::UnspecifiedZero) = zero(AbstractFloat)
 
 # Basic arithmetic
