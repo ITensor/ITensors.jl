@@ -16,9 +16,7 @@ end
 function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
-  return BlockSparse(
-    generic_zeros(datatype, dim), blockoffsets; vargs...
-  )
+  return BlockSparse(generic_zeros(datatype, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(

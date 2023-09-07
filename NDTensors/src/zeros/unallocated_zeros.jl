@@ -115,9 +115,11 @@ function generic_zeros(::Type{UnallocatedZeros}, dim::Integer)
   elt = default_eltype()
   datat = default_datatype(elt)
   N = ndims(datat)
-  return UnallocatedZeros{elt, N, datat}(Tuple(dim))
+  return UnallocatedZeros{elt,N,datat}(Tuple(dim))
 end
 
-function generic_zeros(::Type{UnallocatedZeros{ElT, N, DataT}}, dim::Integer) where {ElT, N, DataT}
-  UnallocatedZeros{ElT, N, DataT}(dim)
+function generic_zeros(
+  ::Type{UnallocatedZeros{ElT,N,DataT}}, dim::Integer
+) where {ElT,N,DataT}
+  return UnallocatedZeros{ElT,N,DataT}(dim)
 end
