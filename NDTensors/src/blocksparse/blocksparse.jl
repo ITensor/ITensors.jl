@@ -17,14 +17,8 @@ function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
   return BlockSparse(
-    fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
+    generic_zeros(datatype, dim), blockoffsets; vargs...
   )
-end
-
-function BlockSparse(
-  datatype::Type{<:UnallocatedZeros}, blockoffsets::BlockOffsets, dim::Integer; vargs...
-)
-  return BlockSparse(datatype((dim,)), blockoffsets; vargs...)
 end
 
 function BlockSparse(
