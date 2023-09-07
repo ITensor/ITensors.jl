@@ -180,6 +180,19 @@ function blockview(T::BlockSparse, block)
   return Dense(dataTslice)
 end
 
+
+## Allocate empty data
+## TODO change this to use adapt then it is unecessary
+function allocate(storage::BlockSparse, elt::Type=default_eltype())
+  if !is_unallocated_zeros(storage)
+    return storage
+  end
+  alloc = allocate(data(storage), elt)
+
+  #d = adapt(storage, typeof(alloc))(alloc)
+
+  return set_datatype(typeof(storage), typeof(alloc))(alloc, blockoffsets(storage))
+end
 # XXX this is not well defined with new Dictionary design
 #function (D1::BlockSparse + D2::BlockSparse)
 #  # This could be of order nnzblocks, avoid?

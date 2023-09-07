@@ -17,17 +17,6 @@ function allocate(storage::TensorStorage, elt::Type=default_eltype())
   return set_datatype(typeof(storage), typeof(alloc))(alloc)
 end
 
-function allocate(storage::BlockSparse, elt::Type=default_eltype())
-  if !is_unallocated_zeros(storage)
-    return storage
-  end
-  alloc = allocate(data(storage), elt)
-
-  #d = adapt(storage, typeof(alloc))(alloc)
-
-  return set_datatype(typeof(storage), typeof(alloc))(alloc, blockoffsets(storage))
-end
-
 allocate(d::AbstractArray, elt::Type=default_eltype()) = d
 
 function allocate(z::UnallocatedZeros, elt::Type=default_eltype())
