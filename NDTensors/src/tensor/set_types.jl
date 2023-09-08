@@ -28,4 +28,6 @@ specify_eltype(tensor::Tensor, eltype) = adapt(eltype, tensor)
 
 specify_eltype(tensor::Tensor{UnspecifiedZero}, eltype) = adapt(eltype, tensor)
 
+specify_eltype(tensor::Tensor{Complex{UnspecifiedZero}}, eltype) = adapt(promote_type(Complex{UnspecifiedZero}, eltype), tensor)
+
 specify_eltype(tensor::Tensor{ElT}, eltype) where {ElT} = tensor
