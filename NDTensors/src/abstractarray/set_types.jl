@@ -51,7 +51,7 @@ end
 function specify_eltype(
   arraytype::Type{<:AbstractArray{UnspecifiedZero}}, eltype::Type=default_eltype()
 )
-  return similartype(arraytype, eltype)
+  return set_eltype(arraytype, eltype)
 end
 
 function specify_parameters(
