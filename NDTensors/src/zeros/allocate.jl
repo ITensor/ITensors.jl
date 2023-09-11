@@ -7,7 +7,6 @@ end
 
 function allocate(T::Type{<:Tensor}, inds::Tuple)
   store = set_datatype(storagetype(T), alloctype(datatype(T)))(inds)
-  # store = adapt(alloctype(datatype(T)), storagetype(T)(inds))
   tensor(store, inds)
 end
 
