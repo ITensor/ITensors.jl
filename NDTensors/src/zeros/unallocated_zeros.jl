@@ -126,12 +126,12 @@ end
 
 function generic_zeros(
   ::Type{<:UnallocatedZeros{ElT,N,DataT}}, dim::Integer
-) where {ElT,N,DataT<:AbstractArray{ElT, N}}
+) where {ElT,N,DataT<:AbstractArray{ElT,N}}
   return UnallocatedZeros{ElT,N,DataT}(Tuple(dim))
 end
 
 function generic_zeros(
   ::Type{<:UnallocatedZeros{ElT,N,Axes,DataT}}, dim::Integer
-) where {ElT,N,Axes,DataT<:AbstractArray{ElT, N}}
+) where {ElT,N,Axes,DataT<:AbstractArray{ElT,N}}
   return UnallocatedZeros{ElT,N,DataT}(Tuple(dim))
 end

@@ -12,7 +12,7 @@ end
 
 function allocate(T::Type{<:Tensor}, inds::Tuple)
   store = set_datatype(storagetype(T), alloctype(datatype(T)))(inds)
-  tensor(store, inds)
+  return tensor(store, inds)
 end
 
 function allocate(storage::TensorStorage)
