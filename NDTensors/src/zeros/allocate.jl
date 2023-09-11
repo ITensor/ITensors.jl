@@ -5,8 +5,18 @@ function allocate(T::Tensor)
   return adapt(alloctype(data(T)), T)
 end
 
+function allocate(T::Type{<:Tensor}, inds::Tuple)
+  store = set_datatype(storagetype(T), alloctype(datatype(T)))(inds)
+  # store = adapt(alloctype(datatype(T)), storagetype(T)(inds))
+  tensor(store, inds)
+end
+
 function allocate(storage::TensorStorage)
   return adapt(alloctype(data(storage)), storage)
+end
+
+function allocate(storage::Type{<:TensorStorage}, inds::Tuple)
+  return set_datatype(storage, alloctype(datatype(storage)))(inds)
 end
 
 allocate(d::AbstractArray) = d
