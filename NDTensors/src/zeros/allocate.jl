@@ -6,6 +6,10 @@ function allocate(T::Tensor)
   return adapt(alloctype(data(T)), T)
 end
 
+function allocate(to::Type{<:Tensor}, x::Tensor)
+  return adapt(to, x)
+end
+
 function allocate(T::Type{<:Tensor}, inds::Tuple)
   store = set_datatype(storagetype(T), alloctype(datatype(T)))(inds)
   tensor(store, inds)

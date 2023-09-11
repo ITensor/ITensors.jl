@@ -129,9 +129,7 @@ function _contract!!(
       return output_tensor
     end
 
-    if is_unallocated_zeros(output_tensor)
-    output_tensor = allocate(specify_eltype(typeof(output_tensor), promote_type(typeof(tensor1), typeof(tensor2))), inds(output_tensor))
-    end
+    output_tensor = allocate(specify_eltype(typeof(output_tensor), promote_type(typeof(tensor1), typeof(tensor2))), output_tensor)
     contract!(
       output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
     )

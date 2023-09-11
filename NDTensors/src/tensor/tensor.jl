@@ -241,9 +241,7 @@ LinearAlgebra.rmul!(T::Tensor, α::Number) = (rmul!(storage(T), α); T)
 scale!(T::Tensor, α::Number) = rmul!(storage(T), α)
 
 function fill!!(T::Tensor, α::Number)
-  if is_unallocated_zeros(T)
-  T = allocate(specify_eltype(typeof(T), typeof(α)), inds(T))
-  end
+  T = allocate(specify_eltype(typeof(T), typeof(α)), T)
   return fill!(T, eltype(T)(α))
 end
 fill!(T::Tensor, α::Number) = (fill!(storage(T), α); T)
@@ -360,9 +358,10 @@ end
 #
 
 @propagate_inbounds @inline function setindex!!(T::Tensor, x, I...)
-  if is_unallocated_zeros(T)
-    T = allocate(specify_eltype(typeof(T), typeof(α)), inds(T))
-  end
+  # if is_unallocated_zeros(T)
+  #   T = allocate(specify_eltype(typeof(T), typeof(α)), inds(T))
+  # end
+  T = allocate(specify_eltype(typeof(T), typeof(α)), T)
   return setindex!(T, x, I...)
 end
 
