@@ -1,4 +1,6 @@
 alloctype(a::AbstractArray) = a
+## TODO remove this when change Diag
+alloctype(a::Number) = a
 function allocate(T::Tensor)
   return adapt(alloctype(data(T)), T)
 end
