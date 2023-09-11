@@ -15,7 +15,7 @@ function set_ndims(arraytype::Type{<:Tensor}, ndims)
 end
 
 function set_storagetype(tensortype::Type{<:Tensor}, storagetype)
-  return Tensor{eltype(tensortype),ndims(tensortype),storagetype,indstype(tensortype)}
+  return Tensor{eltype(storagetype),ndims(tensortype),storagetype,indstype(tensortype)}
 end
 
 # TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
@@ -23,11 +23,3 @@ end
 function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
   return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
 end
-
-specify_eltype(tensor::Tensor, eltype) = adapt(eltype, tensor)
-
-specify_eltype(tensor::Tensor{UnspecifiedZero}, eltype) = adapt(eltype, tensor)
-
-specify_eltype(tensor::Tensor{Complex{UnspecifiedZero}}, eltype) = adapt(promote_type(Complex{UnspecifiedZero}, eltype), tensor)
-
-specify_eltype(tensor::Tensor{ElT}, eltype) where {ElT} = tensor
