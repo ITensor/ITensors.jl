@@ -48,10 +48,13 @@ function specify_eltype(arraytype::Type{<:AbstractArray}, eltype::Type=default_e
   return similartype(arraytype, eltype)
 end
 
+const RealOrComplex{T} = Union{T,Complex{T}}
 function specify_eltype(
-  arraytype::Type{<:AbstractArray{UnspecifiedZero}}, eltype::Type=default_eltype()
+  arraytype::Type{<:AbstractArray{<:RealOrComplex{UnspecifiedZero}}}, elt::Type=default_eltype()
 )
-  return set_eltype(arraytype, eltype)
+
+  elt = promote_type(elt, eltype(arraytype))
+  return set_eltype(arraytype, elt)
 end
 
 function specify_parameters(
