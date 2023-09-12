@@ -361,7 +361,7 @@ end
   # if is_unallocated_zeros(T)
   #   T = allocate(specify_eltype(typeof(T), typeof(α)), inds(T))
   # end
-  T = allocate(specify_eltype(typeof(T), typeof(α)), T)
+  T = allocate(specify_eltype(typeof(T), typeof(x)), T)
   return setindex!(T, x, I...)
 end
 
