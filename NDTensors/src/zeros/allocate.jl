@@ -7,7 +7,7 @@ function allocate(T::Tensor)
 end
 
 function allocate(to::Type{<:Tensor}, x::Tensor)
-  return adapt(to, x)
+  return adapt(alloctype(datatype(to)), x)
 end
 
 function allocate(T::Type{<:Tensor}, inds::Tuple)
