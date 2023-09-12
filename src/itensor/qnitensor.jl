@@ -8,6 +8,10 @@
       "In `setindex!`, the element $I of ITensor: \n$(T)\n you are trying to set is in a block with flux $(flux(T, I...)), which is different from the flux $fluxT of the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.",
     )
   end
+  if isnothing(fluxT)
+    @show typeof(T)
+    T = tensor(ITensor(eltype(T), flux(T, I...), inds(T)))
+  end
   return setindex!!(T, x, I...)
 end
 
@@ -159,7 +163,11 @@ end
 
 ITensor(flux::QN, is...) = ITensor(ITensors.default_eltype(), flux, indices(is...))
 
-ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} = ITensor(ElT, QN(), inds)
+function ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} 
+  is = Tuple(inds)
+  T = BlockSparseTensor(ITensors.default_datatype(ElT), Vector{Block{0}}(), is)
+  return itensor(T)
+end
 
 ITensor(inds::QNIndices) = ITensor(ITensors.default_eltype(), inds)
 
