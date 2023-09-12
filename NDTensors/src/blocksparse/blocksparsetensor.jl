@@ -210,6 +210,9 @@ end
 @propagate_inbounds function getindex(
   T::BlockSparseTensor{ElT,N}, i::Vararg{Int,N}
 ) where {ElT,N}
+  if is_unallocated_zeros(T)
+    return zero(ElT)
+  end
   offset, _ = indexoffset(T, i...)
   isnothing(offset) && return zero(ElT)
   return storage(T)[offset]
