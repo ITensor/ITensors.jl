@@ -698,6 +698,7 @@ end
     @test T[i => 2] ≈ 0.0
   end
 
+  ## TODO Failing tests are marked as broken
   @testset "add, subtract, and axpy" begin
     i = Index(2, "i")
     a = [1.0; 2.0]
@@ -802,6 +803,7 @@ end
     @test ITensors.data(mul!(B, A, 2.0)) == 2.0 * vec(transpose(M))
   end
 
+  ## TODO I am not sure what is going on here or what should happen
   @testset "Construct from Array" begin
     i = Index(2, "index_i")
     j = Index(2, "index_j")
@@ -876,6 +878,7 @@ end
       0 0 0
     ]
     M = @view X[1:2, 1:2]
+    ## TODO this is failing in get_parameter function that I didn't write or change
     T = itensor(M, i, j)
     T[i => 1, j => 1] = 3.3
     @test M[1, 1] == 3.3
@@ -1679,6 +1682,7 @@ end
     @test allhastags(A, "x")
   end
 
+  ## TODO trying to set an unallocatedzero without using setindex!!
   @testset "directsum" for space in (identity, d -> [QN(0) => d, QN(1) => d]),
     index_op in (identity, dag)
 
