@@ -9,7 +9,6 @@
     )
   end
   if isnothing(fluxT)
-    @show typeof(T)
     T = tensor(ITensor(eltype(T), flux(T, I...), inds(T)))
   end
   return setindex!!(T, x, I...)
