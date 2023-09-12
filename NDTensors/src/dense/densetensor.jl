@@ -183,6 +183,10 @@ end
 # TODO: Remove this in favor of `map!`
 # applied to `PermutedDimsArray`.
 function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
+  ## TODO if unallocatedzero, permute is trivial, just change inds
+  if is_unallocated_zeros(T)
+    return R
+  end
   Base.checkdims_perm(R, T, perm)
   RR = convert(promote_type(typeof(R), typeof(T)), R)
   permutedims!(RR, T, perm, f)
