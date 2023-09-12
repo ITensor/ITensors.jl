@@ -19,8 +19,9 @@ function similar(tensortype::Type{<:Tensor}, dims::Tuple)
   # TODO: Is there a better constructor pattern for this?
   # Maybe use `setstorage(::Type{<:Tensor}, ...)` and
   # `setinds(::Type{<:Tensor}, ...)`?
+  d = similar(storagetype(tensortype), dims)
   tensortype = similartype(tensortype, dims)
-  tensortype = set_storagetype(tensortype, similar(storagetype(tensortype), dims))
+  tensortype = set_storagetype(tensortype, typeof(d))
   return tensortype(AllowAlias(), d, dims)
 end
 
