@@ -69,7 +69,6 @@ end
 
 Base.sum(z::UnallocatedZeros) = sum(z.z)
 LinearAlgebra.norm(z::UnallocatedZeros) = norm(z.z)
-setindex!(A::UnallocatedZeros, v, I) = setindex!(A.z, v, I)
 
 function (arraytype::Type{<:UnallocatedZeros})(::AllowAlias, A::UnallocatedZeros)
   return A
