@@ -55,7 +55,8 @@ axes(z::UnallocatedZeros) = axes(z.z)
 dims(z::UnallocatedZeros) = Tuple(size(z.z))
 dim(z::UnallocatedZeros) = size(z.z)
 copy(z::UnallocatedZeros) = UnallocatedZeros{eltype(z),1,alloctype(z)}(dims(z))
-
+Base.vec(z::Type{<:UnallocatedZeros}) = z
+Base.vec(z::UnallocatedZeros) = z
 function Base.convert(x::Type{T}, z::UnallocatedZeros) where {T<:Array}
   return Base.convert(x, z.z)
 end
