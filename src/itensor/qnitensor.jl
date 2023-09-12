@@ -162,7 +162,7 @@ end
 
 ITensor(flux::QN, is...) = ITensor(ITensors.default_eltype(), flux, indices(is...))
 
-function ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} 
+function ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
   is = Tuple(inds)
   T = BlockSparseTensor(ITensors.default_datatype(ElT), Vector{Block{0}}(), is)
   return itensor(T)
