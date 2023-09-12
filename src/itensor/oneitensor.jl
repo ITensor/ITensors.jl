@@ -60,7 +60,7 @@ function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
 end
 
 # To fix ambiguity with QN Index version
-ITensor(ElT::Type{<:Number}=NDTensors.default_eltype()) = ITensor(ElT, ())
+ITensor(ElT::Type{<:Number}=ITensors.default_eltype()) = ITensor(ElT, ())
 
 # To fix ambiguity with QN version
 function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
