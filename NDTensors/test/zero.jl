@@ -6,7 +6,7 @@ using FillArrays
 @testset "UnallocatedZeros" for T in [Float64, ComplexF64, UnspecifiedZero]
   T = ComplexF64
   v = Vector
-  N = ndims(v)
+  N = NDTensors.ndims(v)
   z = UnallocatedZeros{T,N,v{T}}(())
   @test length(z) == 1
   @test norm(z) == zero(T)
@@ -37,7 +37,7 @@ using FillArrays
   @test dim(z) == 43 * 20 * 3
   @test eltype(z) == T
   @test NDTensors.alloctype(z) == Array{T,3}
-  @test ndims(z) == 3
+  @test NDTensors.ndims(z) == 3
   @test axes(z) == (Base.OneTo(43), Base.OneTo(20), Base.OneTo(3))
 
   @test typeof(NDTensors.data(z)) ==
