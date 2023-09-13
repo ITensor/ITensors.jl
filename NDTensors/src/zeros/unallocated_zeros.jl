@@ -24,13 +24,16 @@ function UnallocatedZeros{ElT,N,Axes,Alloc}() where {ElT,N,Axes,Alloc<:AbstractA
   return UnallocatedZeros{ElT,N,Axes,Alloc}[]
 end
 function UnallocatedZeros(alloc::Type{<:AbstractArray}, inds...)
-  @assert ndims(alloc) == length(inds...)
+  @assert ndims(alloc) == length(inds)
+  alloc = specify_eltype(alloc)
   return UnallocatedZeros{eltype(alloc),ndims(alloc),alloc}(Tuple(inds))
 end
 
 function UnallocatedZeros{ElT}(alloc::Type{<:AbstractArray}, inds...) where {ElT}
   alloc = set_eltype(alloc, ElT)
-  return UnallocatedZeros(alloc, inds)
+  N = length(Tuple(inds))
+  alloc = set_ndims(alloc, N)
+  return UnallocatedZeros(alloc, inds...)
 end
 
 Base.ndims(::UnallocatedZeros{ElT,N}) where {ElT,N} = N
