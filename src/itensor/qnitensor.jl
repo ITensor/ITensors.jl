@@ -143,7 +143,8 @@ function ITensor(::Type{ElT}, flux::QN, inds::QNIndices) where {ElT<:Number}
   is = Tuple(inds)
   blocks = nzblocks(flux, is)
   if length(blocks) == 0
-    error("ITensor with flux=$flux resulted in no allowed blocks")
+    ITensor(ElT, inds)
+    #error("ITensor with flux=$flux resulted in no allowed blocks")
   end
 
   T = BlockSparseTensor(ITensors.default_datatype(ElT), blocks, is)
