@@ -56,10 +56,12 @@ array(zero::UnallocatedZeros) = alloctype(zero)(zero.z)
 Array(zero::UnallocatedZeros) = array(zero)
 axes(z::UnallocatedZeros) = axes(z.z)
 dims(z::UnallocatedZeros) = Tuple(size(z.z))
-dim(z::UnallocatedZeros) = size(z.z)
-copy(z::UnallocatedZeros) = UnallocatedZeros{eltype(z),1,alloctype(z)}(dims(z))
+dim(z::UnallocatedZeros) = dim(size(z.z))
+copy(z::UnallocatedZeros) = UnallocatedZeros{eltype(z),ndims(z),alloctype(z)}(dims(z))
+
 Base.vec(z::Type{<:UnallocatedZeros}) = z
 Base.vec(z::UnallocatedZeros) = z
+
 function Base.convert(x::Type{T}, z::UnallocatedZeros) where {T<:Array}
   return Base.convert(x, z.z)
 end
