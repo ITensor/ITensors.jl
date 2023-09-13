@@ -8,7 +8,7 @@ function similar(array::UnallocatedZeros, elt::Type)
   return similartype(typeof(array), elt)(dims(array))
 end
 
-function similar(arraytype::Type{<:UnallocatedZeros}, inds::Tuple)
+function similar(arraytype::Type{<:UnallocatedZeros}, inds::Tuple{Vararg{Int64, N}}) where {N}
   shape = Tuple(dim(NDTensors.to_shape(arraytype, inds)))
   return arraytype(shape)
 end
