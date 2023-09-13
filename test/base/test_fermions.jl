@@ -970,7 +970,7 @@ import ITensors: Out, In
       s = siteinds("Fermion", N; conserve_qns=true)
 
       T = ITensor(QN("Nf", 0, -1), dag(s[1]), s[1]')
-      T[2, 2] = 1
+      T[2, 2] = 1.
 
       F = eigen(T; ishermitian=true, cutoff=cutoff)
       D, U, spec = F
