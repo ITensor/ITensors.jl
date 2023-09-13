@@ -1,6 +1,6 @@
 using NDTensors: UnallocatedZeros, allocate, UnspecifiedZero
 using Test
-using FillArrays
+
 ## TODO right now fource allocated zeros to be a 
 @testset "UnallocatedZeros" for T in [Float64, ComplexF64, UnspecifiedZero]
   T = Float64
