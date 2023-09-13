@@ -13,6 +13,11 @@ function similar(arraytype::Type{<:UnallocatedZeros}, inds::Tuple{Vararg{Int64, 
   return arraytype(shape)
 end
 
+function similar(arraytype::Type{<:UnallocatedZeros}, inds::Tuple)
+  shape = Tuple(dim(NDTensors.to_shape(arraytype, inds)))
+  return arraytype(shape)
+end
+
 function similartype(arraytype::Type{<:UnallocatedZeros})
   return UnallocatedZeros{
     eltype(arraytype),ndims(arraytype),axes(arraytype),alloctype(arraytype)
