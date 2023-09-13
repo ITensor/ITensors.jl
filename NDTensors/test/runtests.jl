@@ -30,6 +30,7 @@ end
     "diagblocksparse.jl",
     "diag.jl",
     "combiner.jl",
+    "zero.jl"
   ]
     println("Running $filename")
     include(filename)
