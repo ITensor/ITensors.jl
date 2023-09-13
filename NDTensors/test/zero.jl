@@ -1,9 +1,10 @@
 using NDTensors: UnallocatedZeros, allocate, UnspecifiedZero
 using Test
+using FillArrays
 
 ## TODO right now fource allocated zeros to be a 
 @testset "UnallocatedZeros" for T in [Float64, ComplexF64, UnspecifiedZero]
-  T = Float64
+  T = ComplexF64
   v = Vector
   N = ndims(v)
   z = UnallocatedZeros{T,N,v{T}}(())
@@ -39,9 +40,8 @@ using Test
   @test ndims(z) == 3
   @test axes(z) == (Base.OneTo(43), Base.OneTo(20), Base.OneTo(3))
 
-  @test typeof(data(z)) ==
-    Zeros{Float64,3,Tuple{Base.OneTo{Int64},Base.OneTo{Int64},Base.OneTo{Int64}}}
-  array
+  @test typeof(NDTensors.data(z)) ==
+    Zeros{T,3,Tuple{Base.OneTo{Int64},Base.OneTo{Int64},Base.OneTo{Int64}}}
   @test array(z) == NDTensors.allocate(z)
   zp = copy(z)
   @test zp == z
