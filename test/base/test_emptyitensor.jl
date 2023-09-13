@@ -68,27 +68,27 @@ end
   C = A' * A
 
   @test hassameinds(C, (i'', i))
-  @test storage(C) isa ITensors.EmptyStorage{
-    ITensors.EmptyNumber,<:ITensors.BlockSparse{ITensors.EmptyNumber}
-  }
+  storage(C)
+  @test storage(C) isa BlockSparse{UnspecifiedZero, UnallocatedZeros{UnspecifiedZero, 1, Tuple{Base.OneTo{Int64}}, Vector{UnspecifiedZero}}, 2}
 
   B = randomITensor(dag(i), i')
 
   C = A' * B
 
   @test hassameinds(C, (i'', i))
-  @test storage(C) isa ITensors.EmptyStorage{Float64,<:ITensors.BlockSparse{Float64}}
+  @test storage(C) isa BlockSparse{Float64, UnallocatedZeros{Float64, 1, Tuple{Base.OneTo{Int64}}, Vector{Float64}}, 2}
 
   C = B' * A
 
   @test hassameinds(C, (i'', i))
-  @test storage(C) isa ITensors.EmptyStorage{Float64,<:ITensors.BlockSparse{Float64}}
+  @test storage(C) isa  BlockSparse{Float64, UnallocatedZeros{Float64, 1, Tuple{Base.OneTo{Int64}}, Vector{Float64}}, 2}
 
   C = B + A
   @test inds(C) == inds(B)
   @test C ≈ B
 
-  @test_broken A + B
+  C = A + B
+  @test C ≈ B
 end
 
 @testset "blockoffsets" for space in (2, [QN(0) => 1, QN(1) => 1])
