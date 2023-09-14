@@ -259,7 +259,9 @@ end
 function ITensor(
   as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
 ) where {ElT<:RealOrComplex{Int}}
-  return ITensor(as, float(ElT), A, is...; kwargs...)
+  data = similar(NDTensors.set_eltype(typeof(A), float(ElT)), size(A))
+  copyto!(data, A)
+  return ITensor(as, float(ElT), data, is...; kwargs...)
 end
 
 function ITensor(elt::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
