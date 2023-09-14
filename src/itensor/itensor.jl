@@ -210,9 +210,8 @@ function ITensor(
       "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
     ),
   )
-  data = NDTensors.similartype(set_eltype(typeof(A), elt), dim(inds))(undef, dim(inds))
-  copyto!(data, A)
-  return ITensor(as, NDTensors.default_storagetype(typeof(data), inds)(data), inds)
+  A =reshape(A, dim(inds))
+  return ITensor(as, NDTensors.default_storagetype(typeof(A), inds)(A), inds)
 end
 
 function ITensor(
