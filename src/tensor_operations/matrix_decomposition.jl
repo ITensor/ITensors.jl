@@ -667,7 +667,7 @@ function factorize(A::ITensor, Linds...; kwargs...)
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 
   if isnothing(which_decomp)
-    if !might_truncate && !hasqns(A) && ortho != "none"
+    if !might_truncate && ortho != "none"
       which_decomp = "qr"
     elseif isnothing(cutoff) || cutoff ≤ automatic_cutoff
       which_decomp = "svd"
@@ -685,7 +685,6 @@ function factorize(A::ITensor, Linds...; kwargs...)
   elseif which_decomp == "eigen"
     L, R, spec = factorize_eigen(A, Linds...; kwargs...)
   elseif which_decomp == "qr"
-    hasqns(A) && error("QR factorization of an ITensor with QNs is not yet supported.")
     L, R = factorize_qr(A, Linds...; kwargs...)
     spec = Spectrum(nothing, 0.0)
   else
