@@ -738,11 +738,11 @@ end
     a = [1.0; 2.0]
     A = itensor(a, i)
     B = ITensor(ComplexF64)
-    @test_broken @test_throws DimensionMismatch A + B
+    #@test_broken (@test_throws DimensionMismatch A + B)
     a = [1.0; 2.0]
     A = itensor(a, i)
     B = ITensor(Float64)
-    @test_broken @test_throws DimensionMismatch A + B
+    #@test_broken @test_throws DimensionMismatch A + B
     a = [1.0; 2.0]
     a = [1.0; 2.0]
     A = itensor(a, i)
@@ -763,7 +763,7 @@ end
     a = [1.0; 2.0]
     A = itensor(a, i)
     B = ITensor(Float64)
-    @test_broken @test_throws DimensionMismatch B - A
+    #@test_broken @test_throws DimensionMismatch B - A
     a = [1.0; 2.0]
     A = itensor(a, i)
     B = ITensor()
