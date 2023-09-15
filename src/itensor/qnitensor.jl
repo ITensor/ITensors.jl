@@ -261,6 +261,15 @@ ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), flux, is...)
 
 ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, QN(), is)
 
+function ITensor(
+  as::AliasStyle, A::AbstractArray{ElT}, is::QNIndices; kwargs...
+) where {ElT<:Number}
+  @show is
+  tol = haskey(kwargs, :tol) ? kwargs[:tol] : 0.0
+  checkflux = haskey(kwargs, :checkflux) ? kwargs[:checkflux] : true
+  return ITensor(as, ElT, A, is)
+end
+
 """
     ITensor([ElT::Type, ]::AbstractArray, inds; tol=0.0, checkflux=true)
 
