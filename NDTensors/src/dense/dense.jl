@@ -147,7 +147,7 @@ function HDF5.write(
   attributes(g)["type"] = "Dense{$(eltype(Store))}"
   attributes(g)["version"] = 1
   if eltype(D) != Nothing
-    write(g, "data", D.data)
+    write(g, "data", NDTensors.allocate(D).data)
   end
 end
 
