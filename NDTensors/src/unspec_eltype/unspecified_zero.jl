@@ -36,8 +36,10 @@ AbstractFloat(::UnspecifiedZero) = zero(AbstractFloat)
 (::UnspecifiedZero / ::UnspecifiedZero) = throw(DivideError())
 -(::UnspecifiedZero) = UnspecifiedZero()
 
-Base.promote_type(::Type{<:UnspecifiedZero}, ElT::Type) = ElT
+Base.promote_type(z::Type{<:UnspecifiedZero}, ElT::Type) = promote_type(ElT, z)
 Base.promote_type(ElT::Type, ::Type{<:UnspecifiedZero}) = ElT
 Base.promote_type(::Type{<:UnspecifiedZero}, ::Type{<:UnspecifiedZero}) = UnspecifiedZero
-Base.promote_type(::Type{<:Complex{<:UnspecifiedZero}}, ElT::Type) = Complex{ElT}
-Base.promote_type(ElT::Type, ::Type{<:Complex{<:UnspecifiedZero}}) = Complex{ElT}
+Base.promote_type(z::Type{<:Complex{<:UnspecifiedZero}}, ElT::Type) = promote_type(ElT, z)
+Base.promote_type(ElT::Type{<:Real}, ::Type{<:Complex{<:UnspecifiedZero}}) = Complex{ElT}
+Base.promote_type(z::Type{<:Complex{<:UnspecifiedZero}}, ElT::Type{<:Complex}) = promote_type(ElT, z)
+Base.promote_type(ElT::Type{<:Complex}, ::Type{<:Complex{<:UnspecifiedZero}}) = ElT
