@@ -3,13 +3,18 @@
   ::HasQNs, T::Tensor, x::Number, I::Integer...
 )
   fluxT = flux(T)
+  setting_flux = isnothing(fluxT)
   if !NDTensors.is_unallocated_zeros(T) && fluxT != flux(T, I...)
     error(
       "In `setindex!`, the element $I of ITensor: \n$(T)\n you are trying to set is in a block with flux $(flux(T, I...)), which is different from the flux $fluxT of the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.",
     )
   end
-  if isnothing(fluxT)
+
+  if setting_flux && NDTensors.is_unallocated_zeros(T)
     T = tensor(ITensor(eltype(T), flux(T, I...), inds(T)))
+    T = setindex!!(T, x, I...)
+    T = NDTensors.dropzeros(T; tol = zero(eltype(T)))
+    return T
   end
   return setindex!!(T, x, I...)
 end
@@ -364,15 +369,19 @@ end
 
 function dropzeros(T::ITensor; tol=0)
   # XXX: replace with empty(T)
-  T̃ = emptyITensor(eltype(T), inds(T))
+  T̃ = ITensor(eltype(T), inds(T))
   for b in eachnzblock(T)
     Tb = T[b]
+    @show norm(Tb)
+    @show typeof(Tb)
+    @show dim(Tb)
     if norm(Tb) > tol
-      T̃[b] = Tb
+      #T̃[b] = Tb
     end
   end
   return T̃
 end
+
 
 function δ_split(i1::Index, i2::Index)
   d = emptyITensor(i1, i2)
