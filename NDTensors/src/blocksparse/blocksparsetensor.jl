@@ -860,6 +860,27 @@ function permute_combine(
   return R
 end
 
+function dropzeros(T::Tensor; tol=0)
+  v = Base.similar(NDTensors.data(T), 0)
+  bloc = Vector{Block{ndims(T)}}(undef, 0)
+  off = Vector{Int64}(undef, 0)
+  length = Int64(0)
+  for b in eachnzblock(T)
+    Tb = NDTensors.data(T[b])
+    if norm(Tb) > tol
+      for i in Tb
+        push!(v, i)
+      end
+      #push!(offsets, BlockOffset(b, length))
+      push!(bloc, b)
+      push!(off, length)
+      length += dim(size(Tb))
+    end
+  end
+  @show Dictionary(bloc, off)
+  @show Tensor(BlockSparse(v, Dictionary(bloc, off)), inds(T))
+end
+
 #
 # Print block sparse tensors
 #
