@@ -40,5 +40,4 @@ Base.promote_type(z::Type{<:UnspecifiedZero}, ElT::Type) = Base.promote_type(ElT
 
 Base.promote_type(ElT::Type, ::Type{<:UnspecifiedZero}) = ElT
 Base.promote_type(::Type{<:UnspecifiedZero}, ::Type{<:UnspecifiedZero}) = UnspecifiedZero
-Base.promote_type(ElT::Type, ::Type{<:Complex{<:UnspecifiedZero}}) = Complex{ElT}
-Base.promote_type(ElT::Type{<:Complex}, ::Type{<:Complex{<:UnspecifiedZero}}) = ElT
+Base.promote_type(ElT::Type, ::Type{<:Complex{<:UnspecifiedZero}}) = Complex{real(ElT)}
