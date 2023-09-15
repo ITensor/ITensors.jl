@@ -13,7 +13,7 @@
   if setting_flux && NDTensors.is_unallocated_zeros(T)
     T = tensor(ITensor(eltype(T), flux(T, I...), inds(T)))
     T = setindex!!(T, x, I...)
-    T = NDTensors.dropzeros(T; tol = zero(eltype(T)))
+    T = NDTensors.dropzeros(T; tol=zero(eltype(T)))
     return T
   end
   return setindex!!(T, x, I...)
@@ -267,7 +267,12 @@ ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), flux, is...)
 ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, QN(), is)
 
 function ITensor(
-  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, is::QNIndex, i...; kwargs...
+  as::AliasStyle,
+  elt::Type{<:Number},
+  A::AbstractArray{<:Number},
+  is::QNIndex,
+  i...;
+  kwargs...,
 )
   tol = haskey(kwargs, :tol) ? kwargs[:tol] : 0.0
   checkflux = haskey(kwargs, :checkflux) ? kwargs[:checkflux] : true
@@ -337,15 +342,16 @@ function QNITensor(
   return itensor(T)
 end
 
-ITensor(
+function ITensor(
   as::AliasStyle,
   elt::Type{<:Number},
   A::AbstractArray{<:Number},
   inds::Indices{<:QNIndex};
   tol=0.0,
   checkflux=true,
-) = ITensors.QNITensor(as, elt, A, inds; tol = tol, checkflux = checkflux)
-
+)
+  return ITensors.QNITensor(as, elt, A, inds; tol=tol, checkflux=checkflux)
+end
 
 function _copyto_dropzeros!(T::Tensor, A::AbstractArray; tol)
   for i in eachindex(T)
@@ -381,7 +387,6 @@ function dropzeros(T::ITensor; tol=0)
   end
   return T̃
 end
-
 
 function δ_split(i1::Index, i2::Index)
   d = emptyITensor(i1, i2)
