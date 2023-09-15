@@ -20,6 +20,10 @@ function allocate(storage::TensorStorage)
   return adapt(alloctype(data(storage)), storage)
 end
 
+function allocate(to::Type{<:TensorStorage}, x::TensorStorage)
+  return adapt(alloctype(datatype(to)), x)
+end
+
 function allocate(storage::Type{<:TensorStorage}, inds::Tuple)
   return set_datatype(storage, alloctype(datatype(storage)))(inds)
 end
