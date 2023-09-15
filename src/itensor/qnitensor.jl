@@ -262,12 +262,11 @@ ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), flux, is...)
 ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, QN(), is)
 
 function ITensor(
-  as::AliasStyle, A::AbstractArray{ElT}, is::QNIndices; kwargs...
-) where {ElT<:Number}
-  @show is
+  as::AliasStyle, elt::Type{<:Number}, A::AbstractArray{<:Number}, is::QNIndex, i...; kwargs...
+)
   tol = haskey(kwargs, :tol) ? kwargs[:tol] : 0.0
   checkflux = haskey(kwargs, :checkflux) ? kwargs[:checkflux] : true
-  return ITensor(as, ElT, A, is)
+  return QNITensor(as, elt, A, indices(is, i...))
 end
 
 """
@@ -309,11 +308,11 @@ Block: (2, 2)
  0.0  4.0
 ```
 """
-function ITensor(
+function QNITensor(
   ::AliasStyle,
   elt::Type{<:Number},
   A::AbstractArray{<:Number},
-  inds::QNIndices;
+  inds::Indices{<:QNIndex};
   tol=0.0,
   checkflux=true,
 )
@@ -332,6 +331,16 @@ function ITensor(
   end
   return itensor(T)
 end
+
+ITensor(
+  as::AliasStyle,
+  elt::Type{<:Number},
+  A::AbstractArray{<:Number},
+  inds::Indices{<:QNIndex};
+  tol=0.0,
+  checkflux=true,
+) = ITensors.QNITensor(as, elt, A, inds; tol = tol, checkflux = checkflux)
+
 
 function _copyto_dropzeros!(T::Tensor, A::AbstractArray; tol)
   for i in eachindex(T)
