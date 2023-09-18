@@ -365,7 +365,10 @@ end
   return setindex!(T, x, I...)
 end
 
-insertblock!!(T::Tensor, block) = insertblock!(T, block)
+function insertblock!!(T::Tensor, block)
+  T = allocate(T)
+  insertblock!(T, block)
+end
 
 """
 getdiagindex
