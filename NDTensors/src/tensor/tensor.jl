@@ -367,7 +367,7 @@ end
 
 function insertblock!!(T::Tensor, block)
   T = allocate(T)
-  insertblock!(T, block)
+  return insertblock!(T, block)
 end
 
 """
