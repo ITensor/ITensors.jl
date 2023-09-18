@@ -1501,7 +1501,7 @@ Random.seed!(1234)
         QN("Nf", 1, -1) => 2, QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 2; tags="Link,u"
       )
 
-      A = emptyITensor(ElT, l, s, dag(r))
+      A = ITensor(ElT, l, s, dag(r))
 
       insertblock!(A, Block(2, 1, 2))
       insertblock!(A, Block(1, 2, 2))
@@ -1533,7 +1533,7 @@ Random.seed!(1234)
         QN("Sz", 2) => 4,
         QN("Sz", 4) => 1,
       )
-      A = emptyITensor(ElT, s, s')
+      A = ITensor(ElT, s, s')
       insertblock!(A, Block(5, 2))
       insertblock!(A, Block(4, 3))
       insertblock!(A, Block(3, 4))
@@ -1551,7 +1551,7 @@ Random.seed!(1234)
         QN("Sz", 2) => 4,
         QN("Sz", 4) => 1,
       )
-      A = emptyITensor(ElT, s, s')
+      A = ITensor(ElT, s, s')
       insertblock!(A, Block(5, 1))
       insertblock!(A, Block(4, 2))
       insertblock!(A, Block(3, 3))
