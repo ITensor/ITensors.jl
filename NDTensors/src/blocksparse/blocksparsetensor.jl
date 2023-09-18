@@ -877,8 +877,7 @@ function dropzeros(T::Tensor; tol=0)
       length += dim(size(Tb))
     end
   end
-  @show Dictionary(bloc, off)
-  @show Tensor(BlockSparse(v, Dictionary(bloc, off)), inds(T))
+  return Tensor(BlockSparse(v, Dictionary(bloc, off)), inds(T))
 end
 
 #
