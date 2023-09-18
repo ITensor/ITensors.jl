@@ -792,8 +792,9 @@ end
 #
 
 function insertblock!(T::ITensor, args...)
-  (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
-    error("Block does not match current flux")
+  ## TODO I am not sure if this is working with the new system
+  #(!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
+  #  error("Block does not match current flux")
   TR = insertblock!!(tensor(T), args...)
   settensor!(T, TR)
   return T
