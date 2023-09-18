@@ -204,8 +204,10 @@ Random.seed!(1234)
     i = Index(QN(0) => 2, QN(1) => 3; tags="i")
     j = Index(QN(1) => 2, QN(2) => 1; tags="j")
     A = ITensor(i, j)
-    @test storage(A) isa NDTensors.EmptyStorage
-    @test_throws ErrorException ITensor(QN(0), i, j)
+    @test storage(A) isa BlockSparse{NDTensors.UnspecifiedZero}
+    @test data(A) isa NDTensors.UnallocatedZeros
+    ## TODO this test is broken because it is now possible to make an empty blocksparse ITensor
+    #@test_broken @test_throws ErrorException ITensor(QN(0), i, j)
   end
 
   @testset "ITensor iteration" begin
