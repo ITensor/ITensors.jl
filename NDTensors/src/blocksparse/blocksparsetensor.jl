@@ -236,6 +236,10 @@ end
 function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
   newdim = blockdim(T, newblock)
   newoffset = nnz(T)
+  if newblock ∈ eachnzblock(T)
+    return offset(T, newblock)
+  end
+  
   insert!(blockoffsets(T), newblock, newoffset)
   # Insert new block into data
   # TODO: Make GPU-friendly
