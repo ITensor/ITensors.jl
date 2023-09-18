@@ -265,12 +265,10 @@ end
 
 function directsum_projectors!(D1::Tensor, D2::Tensor)
   d1 = size(D1, 1)
-  D1 = NDTensors.allocate(D1)
   for ii in 1:d1
     D1[ii, ii] = one(eltype(D1))
   end
   d2 = size(D2, 1)
-  D2 = NDTensors.allocate(D2)
   for jj in 1:d2
     D2[jj, d1 + jj] = one(eltype(D1))
   end
@@ -281,8 +279,8 @@ end
 function directsum_projectors(
   elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index
 )
-  D1 = ITensor(elt1, QN(), dag(i), ij)
-  D2 = ITensor(elt2, QN(), dag(j), ij)
+  D1 = ITensor(zero(elt1), dag(i), ij)
+  D2 = ITensor(zero(elt2), dag(j), ij)
   directsum_projectors!(tensor(D1), tensor(D2))
   return D1, D2
 end
