@@ -803,7 +803,6 @@ end
     @test ITensors.data(mul!(B, A, 2.0)) == 2.0 * vec(transpose(M))
   end
 
-  ## TODO I am not sure what is going on here or what should happen
   @testset "Construct from Array" begin
     i = Index(2, "index_i")
     j = Index(2, "index_j")
