@@ -33,7 +33,7 @@ function MPO(::Type{ElT}, sites::Vector{<:Index}) where {ElT<:Number}
   if N == 0
     return MPO()
   elseif N == 1
-    v[1] = emptyITensor(ElT, dag(sites[1]), sites[1]')
+    v[1] = ITensor(ElT, dag(sites[1]), sites[1]')
     return MPO(v)
   end
   space_ii = all(hasqns, sites) ? [QN() => 1] : 1
@@ -41,11 +41,11 @@ function MPO(::Type{ElT}, sites::Vector{<:Index}) where {ElT<:Number}
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = emptyITensor(ElT, dag(s), s', l[ii])
+      v[ii] = ITensor(ElT, dag(s), s', l[ii])
     elseif ii == N
-      v[ii] = emptyITensor(ElT, dag(l[ii - 1]), dag(s), s')
+      v[ii] = ITensor(ElT, dag(l[ii - 1]), dag(s), s')
     else
-      v[ii] = emptyITensor(ElT, dag(l[ii - 1]), dag(s), s', l[ii])
+      v[ii] = ITensor(ElT, dag(l[ii - 1]), dag(s), s', l[ii])
     end
   end
   return MPO(v)
