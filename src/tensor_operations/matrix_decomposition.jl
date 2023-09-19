@@ -535,7 +535,8 @@ end
 # Generic function implementing a square root decomposition of a diagonal, order 2 tensor with inds u, v
 #
 function sqrt_decomp(D::ITensor, u::Index, v::Index)
-  (storagetype(D) <: Diag || storagetype(D) <: DiagBlockSparse) || error("Must be a diagonal matrix ITensor.")
+  (storagetype(D) <: Diag || storagetype(D) <: DiagBlockSparse) ||
+    error("Must be a diagonal matrix ITensor.")
   sqrtDL = diagITensor(u, dag(u)')
   sqrtDR = diagITensor(v, dag(v)')
   map_diag!(sqrt ∘ abs, sqrtDL, D)
