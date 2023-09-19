@@ -374,7 +374,7 @@ function combiner(inds::QNIndices; kwargs...)
 end
 
 function dropzeros(T::ITensor; tol=0)
-  t = NDTensors.dropzeros(tensor(T); tol = tol)
+  t = NDTensors.dropzeros(tensor(T); tol=tol)
   return itensor(t)
 end
 
