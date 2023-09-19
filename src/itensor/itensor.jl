@@ -223,7 +223,7 @@ function ITensor(
     ),
   )
   data = set_eltype(typeof(A), elt)(as, A)
-  return ITensor(as, NDTensors.default_storagetype(typeof(data), inds)(data), inds)
+  return hasqns(inds) ? ITensors.QNITensor(as, elt, data, inds) : ITensor(as, NDTensors.default_storagetype(typeof(data), inds)(data), inds)
 end
 
 function ITensor(
@@ -253,7 +253,9 @@ end
 function ITensor(
   as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
 ) where {ElT<:Number}
-  return ITensor(as, ElT, A, indices(is...); kwargs...)
+  inds = indices(is...)
+  @show inds
+  return hasqns(inds) ? ITensors.QNITensor(as, ElT, A, indices(is...)) : ITensor(as, ElT, A, inds; kwargs...)
 end
 
 function ITensor(
