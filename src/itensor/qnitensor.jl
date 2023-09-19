@@ -374,16 +374,6 @@ function combiner(inds::QNIndices; kwargs...)
 end
 
 function dropzeros(T::ITensor; tol=0)
-  # XXX: replace with empty(T)
-  # T̃ = ITensor(zero(eltype(T)), inds(T))
-  # @show data(T̃)
-  # for b in eachnzblock(T)
-  #   Tb = T[b]
-  #   if norm(Tb) > tol
-  #     T̃[b] = Tb
-  #   end
-  # end
-  # return T̃
   t = NDTensors.dropzeros(tensor(T); tol = tol)
   return itensor(t)
 end
