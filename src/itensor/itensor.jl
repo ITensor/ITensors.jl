@@ -254,7 +254,6 @@ function ITensor(
   as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
 ) where {ElT<:Number}
   inds = indices(is...)
-  @show inds
   return hasqns(inds) ? ITensors.QNITensor(as, ElT, A, indices(is...)) : ITensor(as, ElT, A, inds; kwargs...)
 end
 
