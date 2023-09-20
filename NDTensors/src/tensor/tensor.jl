@@ -235,8 +235,8 @@ conj(T::Tensor) = conj(AllowAlias(), T)
 randn!!(T::Tensor) = randn!!(Random.default_rng(), T)
 function randn!!(rng::AbstractRNG, T::Tensor)
   ## TODO for functions like this we should really call generic_randn
-   T = allocate(T)
-   (randn!(rng, T); T)
+  T = allocate(T)
+  return (randn!(rng, T); T)
 end
 
 Random.randn!(T::Tensor) = randn!(Random.default_rng(), T)
