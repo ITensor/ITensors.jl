@@ -259,7 +259,7 @@ function ITensor(
 ) where {ElT<:Number}
   inds = indices(is...)
   return if hasqns(inds)
-    ITensors.QNITensor(as, ElT, A, indices(is...))
+    ITensors.QNITensor(as, ElT, A, indices(is...); kwargs...)
   else
     ITensor(as, ElT, A, inds; kwargs...)
   end
