@@ -11,14 +11,14 @@ Base.iterate(m::InfTN, args...) = iterate(m.data, args...)
 Base.getindex(m::InfTN, args...) = getindex(m.data, args...)
 Base.setindex!(m::InfTN, args...) = setindex!(m.data, args...)
 
-function infmps(N; χ⃗, d)
+function infmps(N; χ⃗, d, elt=Float64)
   n⃗ = 1:N
   e⃗ = [n => mod1(n + 1, N) for n in 1:N]
   linkindex(χ⃗, e) = Index(χ⃗[e], "l=$(e[1])↔$(e[2])")
   l⃗ = Dict([e .=> linkindex(χ⃗, e) for e in e⃗])
   s⃗ = [Index(d, "s=$n") for n in n⃗]
   neigbhors(n, N) = [mod1(n - 1, N) => n, n => mod1(n + 1, N)]
-  return InfTN([ITensor(getindex.(Ref(l⃗), neigbhors(n, N))..., s⃗[n]) for n in n⃗])
+  return InfTN([ITensor(elt, getindex.(Ref(l⃗), neigbhors(n, N))..., s⃗[n]) for n in n⃗])
 end
 
 ITensors.dag(tn::InfTN) = InfTN(dag.(tn.data))
