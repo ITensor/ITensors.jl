@@ -31,5 +31,9 @@ function Adapt.adapt_storage(arraytype::Type{<:CuArray}, xs::NDTensors.Unallocat
   )
   elt = get_parameter(arraytype_specified_3, Position(1))
   N = get_parameter(arraytype_specified_3, Position(2))
-  return NDTensors.UnallocatedZeros{elt, N, CUDA.CuArray{elt, N, default_parameter(CuArray, Position(3))}}(size(xs))
+  return NDTensors.UnallocatedZeros{
+    elt,N,CUDA.CuArray{elt,N,default_parameter(CuArray, Position(3))}
+  }(
+    size(xs)
+  )
 end

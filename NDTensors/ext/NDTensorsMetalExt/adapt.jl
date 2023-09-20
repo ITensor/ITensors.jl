@@ -30,6 +30,10 @@ function Adapt.adapt_storage(arraytype::Type{<:MtlArray}, xs::NDTensors.Unalloca
   )
   elt = get_parameter(arraytype_specified_3, Position(1))
   N = get_parameter(arraytype_specified_3, Position(2))
-  
-  return NDTensors.UnallocatedZeros{elt, N, Metal.MtlArray{elt, N, default_parameter(MtlArray, Position(3))}}(size(xs))
+
+  return NDTensors.UnallocatedZeros{
+    elt,N,Metal.MtlArray{elt,N,default_parameter(MtlArray, Position(3))}
+  }(
+    size(xs)
+  )
 end
