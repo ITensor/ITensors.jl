@@ -297,6 +297,7 @@ hasid(i::IDType) = x -> hasid(x, i)
 #
 
 hasqns(::Integer) = false
+hasqns(::Vector{<:Integer}) = false
 
 """
     hasqns(::Index)
