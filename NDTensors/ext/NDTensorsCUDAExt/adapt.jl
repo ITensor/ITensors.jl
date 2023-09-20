@@ -19,18 +19,16 @@ function Adapt.adapt_storage(adaptor::NDTensorCuArrayAdaptor, xs::AbstractArray)
   return isbits(xs) ? xs : CuArray{ElT,1,BufT}(xs)
 end
 
-function Adapt.adapt_storage(arraytype::Type{<:CuArray}, xs::NDTensors.UnallocatedZeros)
+function Adapt.adapt_storage(adaptor::NDTensorCuArrayAdaptor, xs::NDTensors.UnallocatedZeros)
   arraytype_specified_1 = set_unspecified_parameters(
-    arraytype, Position(1), get_parameter(xs, Position(1))
+    CuArray, Position(1), get_parameter(xs, Position(1))
   )
   arraytype_specified_2 = set_unspecified_parameters(
     arraytype_specified_1, Position(2), get_parameter(xs, Position(2))
   )
-  arraytype_specified_3 = set_unspecified_parameters(
-    arraytype_specified_2, Position(3), get_parameter(xs, Position(3))
-  )
-  elt = get_parameter(arraytype_specified_3, Position(1))
-  N = get_parameter(arraytype_specified_3, Position(2))
+  
+  elt = get_parameter(arraytype_specified_2, Position(1))
+  N = get_parameter(arraytype_specified_2, Position(2))
   return NDTensors.UnallocatedZeros{
     elt,N,CUDA.CuArray{elt,N,default_parameter(CuArray, Position(3))}
   }(
