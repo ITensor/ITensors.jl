@@ -233,7 +233,12 @@ conj(as::AliasStyle, T::Tensor) = setstorage(T, conj(as, storage(T)))
 conj(T::Tensor) = conj(AllowAlias(), T)
 
 randn!!(T::Tensor) = randn!!(Random.default_rng(), T)
-randn!!(rng::AbstractRNG, T::Tensor) = (randn!(rng, T); T)
+function randn!!(rng::AbstractRNG, T::Tensor)
+  ## TODO for functions like this we should really call generic_randn
+   T = allocate(T)
+   (randn!(rng, T); T)
+end
+
 Random.randn!(T::Tensor) = randn!(Random.default_rng(), T)
 Random.randn!(rng::AbstractRNG, T::Tensor) = (randn!(rng, storage(T)); T)
 
