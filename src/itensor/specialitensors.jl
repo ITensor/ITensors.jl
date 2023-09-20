@@ -45,6 +45,7 @@ B = onehot(i=>1,j=>3)
 function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
   A = ITensor(eltype(datatype), ind.(ivs)...)
   A[val.(ivs)...] = one(eltype(datatype))
+  A = hasqns(A) ? dropzeros(A) : A
   return Adapt.adapt(datatype, A)
 end
 
