@@ -546,7 +546,7 @@ function sqrt_decomp(D::ITensor, u::Index, v::Index)
   return sqrtDL, prime(δᵤᵥ), sqrtDR
 end
 
-function factorize_svd(A::ITensor, Linds...; kwargs...)
+function factorize_svd(A::ITensor, Linds...; (singular_values!)=nothing, kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
   USV = svd(A, Linds...; kwargs..., alg=alg)
@@ -567,7 +567,14 @@ function factorize_svd(A::ITensor, Linds...; kwargs...)
     $ortho not supported. Supported options are left, right, or none.")
   end
 
+  !isnothing(singular_values!) && singular_values![] = S
+
   return L, R, spec
+
+end
+
+function factorize(A::ITensor, Linds...; (singular_values!)=nothing, kwargs...)
+  factorize_svd(A, Linds...; (singular_values!), kwargs...)
 end
 
 function factorize_eigen(A::ITensor, Linds...; kwargs...)
