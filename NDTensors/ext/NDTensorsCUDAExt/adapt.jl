@@ -16,7 +16,7 @@ buffertype(::NDTensorCuArrayAdaptor{B}) where {B} = B
 function Adapt.adapt_storage(adaptor::NDTensorCuArrayAdaptor, xs::AbstractArray)
   ElT = eltype(xs)
   BufT = buffertype(adaptor)
-  return isbits(xs) ? xs : CuArray{ElT,1,BufT}(xs)
+  return isbits(xs) ? xs : adapt(CuArray{ElT, 1, BufT},xs)
 end
 
 function NDTensors.adapt_storagetype(
