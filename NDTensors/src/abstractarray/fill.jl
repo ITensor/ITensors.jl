@@ -1,9 +1,11 @@
-function generic_randn(arraytype::Type{<:AbstractArray}, dim::Integer=0; rng = Random.default_rng())
+function generic_randn(
+  arraytype::Type{<:AbstractArray}, dim::Integer=0; rng=Random.default_rng()
+)
   arraytype_specified = set_unspecified_parameters(
     leaf_parenttype(arraytype), DefaultParameters()
   )
   data = similar(arraytype_specified, dim)
-  NDTensors.randn!(rng, data)
+  return NDTensors.randn!(rng, data)
 end
 
 function generic_zeros(arraytype::Type{<:AbstractArray}, dim::Integer=0)
