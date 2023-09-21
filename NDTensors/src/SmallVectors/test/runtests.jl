@@ -2,7 +2,7 @@ using NDTensors.SmallVectors
 using StaticArrays
 using Test
 
-@testset "SmallVectors" begin
+function test_smallvectors()
   x = SmallVector{10}([1, 3, 5])
   mx = MSmallVector(x)
 
@@ -108,3 +108,5 @@ using Test
   @test @inferred(vcat(x, args...)) == ans
   @test @allocated(vcat(x, args...)) == 0
 end
+
+@testset "SmallVectors" test_smallvectors()
