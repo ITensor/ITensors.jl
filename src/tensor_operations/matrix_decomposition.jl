@@ -14,8 +14,6 @@ struct TruncSVD
   v::Index
 end
 
-using NDTensors: tensor, Tensor, diaglength, getdiagindex, setdiagindex!
-
 # iteration for destructuring into components `U,S,V,spec,u,v = S`
 iterate(S::TruncSVD) = (S.U, Val(:S))
 iterate(S::TruncSVD, ::Val{:S}) = (S.S, Val(:V))
