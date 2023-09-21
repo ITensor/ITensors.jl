@@ -5,7 +5,7 @@ function generic_randn(
     leaf_parenttype(arraytype), DefaultParameters()
   )
   data = similar(arraytype_specified, dim)
-  return NDTensors.randn!(rng, data)
+  return randn!(rng, data)
 end
 
 function generic_zeros(arraytype::Type{<:AbstractArray}, dim::Integer=0)
