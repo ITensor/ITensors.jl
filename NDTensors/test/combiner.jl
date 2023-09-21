@@ -29,12 +29,12 @@ end
       @test output_tensor isa DenseTensor
       @test dims(output_tensor) == output_tensor_inds
       for i in 1:length(input_tensor)
-        @test NDTensors.cpu(input_tensor)[i] == NDTensors.cpu(output_tensor)[i]
+        @test input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining
       new_input_tensor = contract(output_tensor, (1, -1), combiner_tensor, (-1, 2, 3))
-      @test NDTensors.cpu(new_input_tensor) == NDTensors.cpu(input_tensor)
+      @test new_input_tensor == input_tensor
 
       # Catch invalid combining
       input_tensor_inds = (d,)
