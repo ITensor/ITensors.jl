@@ -12,8 +12,12 @@ end
 @inline setlength(vec::SmallVector, length) = SmallVector(vec.buffer, length)
 
 # Constructors
-SmallVector{S}(buffer::AbstractVector, len::Int) where {S} = SmallVector{S,eltype(buffer)}(buffer, len)
-SmallVector(buffer::AbstractVector, len::Int) = SmallVector{length(buffer),eltype(buffer)}(buffer, len)
+function SmallVector{S}(buffer::AbstractVector, len::Int) where {S}
+  return SmallVector{S,eltype(buffer)}(buffer, len)
+end
+function SmallVector(buffer::AbstractVector, len::Int)
+  return SmallVector{length(buffer),eltype(buffer)}(buffer, len)
+end
 
 """
 `SmallVector` constructor, uses `SVector` as buffer storage.

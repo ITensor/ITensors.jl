@@ -7,8 +7,12 @@ mutable struct MSmallVector{S,T} <: AbstractSmallVector{T}
 end
 
 # Constructors
-MSmallVector{S}(buffer::AbstractVector, len::Int) where {S} = MSmallVector{S,eltype(buffer)}(buffer, len)
-MSmallVector(buffer::AbstractVector, len::Int) = MSmallVector{length(buffer),eltype(buffer)}(buffer, len)
+function MSmallVector{S}(buffer::AbstractVector, len::Int) where {S}
+  return MSmallVector{S,eltype(buffer)}(buffer, len)
+end
+function MSmallVector(buffer::AbstractVector, len::Int)
+  return MSmallVector{length(buffer),eltype(buffer)}(buffer, len)
+end
 
 """
 `MSmallVector` constructor, uses `MVector` as a buffer.
@@ -59,7 +63,8 @@ end
 
 @inline function Base.resize!(vec::MSmallVector, len::Integer)
   len < 0 && throw(ArgumentError("New length must be ≥ 0."))
-  len > maxlength(vec) && throw(ArgumentError("New length $len must be ≤ the maximum length $(maxlength(vec))."))
+  len > maxlength(vec) &&
+    throw(ArgumentError("New length $len must be ≤ the maximum length $(maxlength(vec))."))
   vec.length = len
   return vec
 end

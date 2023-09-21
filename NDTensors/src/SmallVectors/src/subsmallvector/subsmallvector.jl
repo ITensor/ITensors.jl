@@ -22,8 +22,12 @@ Base.parent(vec::SubMSmallVector) = vec.parent
 # buffer interface
 buffer(vec::AbstractSubSmallVector) = buffer(parent(vec))
 
-smallview(vec::SmallVector, start::Integer, stop::Integer) = SubSmallVector(vec, start, stop)
-smallview(vec::MSmallVector, start::Integer, stop::Integer) = SubMSmallVector(vec, start, stop)
+function smallview(vec::SmallVector, start::Integer, stop::Integer)
+  return SubSmallVector(vec, start, stop)
+end
+function smallview(vec::MSmallVector, start::Integer, stop::Integer)
+  return SubMSmallVector(vec, start, stop)
+end
 
 function smallview(vec::SubSmallVector, start::Integer, stop::Integer)
   return SubSmallVector(parent(vec), vec.start + start - 1, vec.start + stop - 1)
@@ -33,8 +37,12 @@ function smallview(vec::SubMSmallVector, start::Integer, stop::Integer)
 end
 
 # Constructors
-SubSmallVector(vec::AbstractVector, start::Integer, stop::Integer) = SubSmallVector{eltype(vec),typeof(vec)}(vec, start, stop)
-SubMSmallVector(vec::AbstractVector, start::Integer, stop::Integer) = SubMSmallVector{eltype(vec),typeof(vec)}(vec, start, stop)
+function SubSmallVector(vec::AbstractVector, start::Integer, stop::Integer)
+  return SubSmallVector{eltype(vec),typeof(vec)}(vec, start, stop)
+end
+function SubMSmallVector(vec::AbstractVector, start::Integer, stop::Integer)
+  return SubMSmallVector{eltype(vec),typeof(vec)}(vec, start, stop)
+end
 
 # Accessors
 Base.size(vec::AbstractSubSmallVector) = (vec.stop - vec.start + 1,)
@@ -43,7 +51,9 @@ Base.@propagate_inbounds function Base.getindex(vec::AbstractSubSmallVector, ind
   return parent(vec)[index + vec.start - 1]
 end
 
-Base.@propagate_inbounds function Base.setindex!(vec::AbstractSubSmallVector, item, index::Integer)
+Base.@propagate_inbounds function Base.setindex!(
+  vec::AbstractSubSmallVector, item, index::Integer
+)
   buffer(vec)[index + vec.start - 1] = item
   return vec
 end
@@ -58,7 +68,8 @@ end
 
 @inline function Base.resize!(vec::SubMSmallVector, len::Integer)
   len < 0 && throw(ArgumentError("New length must be ≥ 0."))
-  len > maxlength(vec) - vec.start + 1 && throw(ArgumentError("New length $len must be ≤ the maximum length $(maxlength(vec))."))
+  len > maxlength(vec) - vec.start + 1 &&
+    throw(ArgumentError("New length $len must be ≤ the maximum length $(maxlength(vec))."))
   vec.stop = vec.start + len - 1
   return vec
 end

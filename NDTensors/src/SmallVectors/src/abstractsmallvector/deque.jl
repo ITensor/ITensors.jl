@@ -82,14 +82,16 @@ end
 @inline function Base.reverse!(vec::AbstractSmallVector)
   start, stop = firstindex(vec), lastindex(vec)
   r = stop
-  @inbounds for i in start:Base.midpoint(start, stop-1)
+  @inbounds for i in start:Base.midpoint(start, stop - 1)
     vec[i], vec[r] = vec[r], vec[i]
     r -= 1
   end
   return vec
 end
 
-@inline function Base.reverse!(vec::AbstractSmallVector, start::Integer, stop::Integer=lastindex(v))
+@inline function Base.reverse!(
+  vec::AbstractSmallVector, start::Integer, stop::Integer=lastindex(v)
+)
   reverse!(smallview(vec, start, stop))
   return vec
 end
@@ -137,7 +139,9 @@ end
 # https://github.com/JuliaLang/julia/blob/bed2cd540a11544ed4be381d471bbf590f0b745e/base/sort.jl#L722-L736
 # https://en.wikipedia.org/wiki/Insertion_sort#:~:text=Insertion%20sort%20is%20a%20simple,%2C%20heapsort%2C%20or%20merge%20sort.
 # Alternatively could use `TupleTools.jl` or `StaticArrays.jl` for out-of-place sorting.
-@inline function Base.sort!(vec::AbstractSmallVector; lt=isless, by=identity, rev::Bool=false)
+@inline function Base.sort!(
+  vec::AbstractSmallVector; lt=isless, by=identity, rev::Bool=false
+)
   lo, hi = firstindex(vec), lastindex(vec)
   lo_plus_1 = (lo + 1)
   @inbounds for i in lo_plus_1:hi
@@ -205,7 +209,9 @@ function mergesorted(vec::AbstractSmallVector, item; kwargs...)
   return convert(similar_type(vec), mvec)
 end
 
-@inline function mergesortedunique!(vec::AbstractSmallVector, item::AbstractVector; kwargs...)
+@inline function mergesortedunique!(
+  vec::AbstractSmallVector, item::AbstractVector; kwargs...
+)
   for x in item
     insertsortedunique!(vec, x; kwargs...)
   end
@@ -220,7 +226,9 @@ function mergesortedunique(vec::AbstractSmallVector, item; kwargs...)
   return vec
 end
 
-Base.@propagate_inbounds function Base.copyto!(vec::AbstractSmallVector, item::AbstractVector)
+Base.@propagate_inbounds function Base.copyto!(
+  vec::AbstractSmallVector, item::AbstractVector
+)
   for i in eachindex(item)
     vec[i] = item[i]
   end
