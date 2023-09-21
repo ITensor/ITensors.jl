@@ -13,5 +13,5 @@ function generic_zeros(arraytype::Type{<:AbstractArray}, dim::Integer=0)
     leaf_parenttype(arraytype), DefaultParameters()
   )
   ElT = eltype(arraytype_specified)
-  return fill!(similar(arraytype_specified, dim), zero(ElT))
+  return arraytype_specified(zeros(ElT, dim))
 end
