@@ -19,6 +19,8 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("SmallVectors/src/SmallVectors.jl")
+using .SmallVectors
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
