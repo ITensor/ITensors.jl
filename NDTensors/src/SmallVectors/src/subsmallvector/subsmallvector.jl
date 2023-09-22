@@ -10,7 +10,7 @@ struct SubSmallVector{T,P} <: AbstractSubSmallVector{T}
 end
 
 mutable struct SubMSmallVector{T,P<:AbstractVector{T}} <: AbstractSubSmallVector{T}
-  const parent::P
+  parent::P
   start::Int
   stop::Int
 end

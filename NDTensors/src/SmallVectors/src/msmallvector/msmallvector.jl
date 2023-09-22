@@ -1,8 +1,10 @@
 """
 MSmallVector
+
+TODO: Make `buffer` field `const` (new in Julia 1.8)
 """
 mutable struct MSmallVector{S,T} <: AbstractSmallVector{T}
-  const buffer::MVector{S,T}
+  buffer::MVector{S,T}
   length::Int
 end
 
