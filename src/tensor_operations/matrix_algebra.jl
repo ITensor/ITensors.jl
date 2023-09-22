@@ -95,7 +95,7 @@ map_diag(f::Function, it::ITensor) = map_diag!(f, copy(it), it)
 
 function map_diag!(f::Function, t_destination::Tensor, t_source::Tensor)
   for i in 1:diaglength(t_destination)
-    setdiagindex!(t_destination, f(getdiagindex(t_source, i)), i)
+    NDTensors.setdiagindex!(t_destination, f(NDTensors.getdiagindex(t_source, i)), i)
   end
   return t_destination
 end

@@ -565,14 +565,9 @@ function factorize_svd(A::ITensor, Linds...; (singular_values!)=nothing, kwargs.
     $ortho not supported. Supported options are left, right, or none.")
   end
 
-  !isnothing(singular_values!) && singular_values![] = S
+  !isnothing(singular_values!) && (singular_values![] = S)
 
   return L, R, spec
-
-end
-
-function factorize(A::ITensor, Linds...; (singular_values!)=nothing, kwargs...)
-  factorize_svd(A, Linds...; (singular_values!), kwargs...)
 end
 
 function factorize_eigen(A::ITensor, Linds...; kwargs...)
