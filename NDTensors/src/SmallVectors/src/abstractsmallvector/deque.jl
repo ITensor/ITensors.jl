@@ -1,9 +1,10 @@
-# TODO: Set operations
-# union, ∪, union!
-# intersect, ∩, intersect!
-# setdiff, setdiff!
-# symdiff, symdiff!
-# unique, unique!
+# TODO: add
+# splice[!]
+# union[!] (∪)
+# intersect[!] (∩)
+# setdiff[!]
+# symdiff[!]
+# unique[!]
 
 Base.resize!(vec::AbstractSmallVector, len) = throw(NotImplemented())
 
@@ -280,9 +281,4 @@ function Base.vcat(vec1::AbstractSmallVector, vec2::AbstractVector)
   mvec1 = Base.copymutable(vec1)
   append!(mvec1, vec2)
   return convert(similar_type(vec1), mvec1)
-end
-
-# TODO: inline when defined.
-function Base.splice!(a::AbstractSmallVector, args...)
-  return throw(NotImplemented())
 end

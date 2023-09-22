@@ -1,6 +1,27 @@
 using NDTensors.SmallVectors
-using StaticArrays
 using Test
+
+using NDTensors.SmallVectors:
+  setindex,
+  resize,
+  push,
+  pushfirst,
+  pop,
+  popfirst,
+  append,
+  prepend,
+  insert,
+  deleteat,
+  circshift,
+  insertsorted,
+  insertsorted!,
+  insertsortedunique,
+  insertsortedunique!,
+  mergesorted,
+  mergesorted!,
+  mergesortedunique,
+  mergesortedunique!
+
 
 function test_smallvectors()
   x = SmallVector{10}([1, 3, 5])
@@ -32,9 +53,8 @@ function test_smallvectors()
     f!, f, ans, args, f!_impl_broken, f!_noalloc_broken, f_impl_broken, f_noalloc_broken
   ) in [
     (:push!, :push, [1, 3, 5, item], (item,), no_broken...),
-    (:append!, :(SmallVectors.append), [1, 3, 5, item], ([item],), no_broken...),
-    (:prepend!, :(SmallVectors.prepend), [item, 1, 3, 5], ([item],), no_broken...),
-    # (:splice!, :(SmallVectors.splice), [1, item, 3], (2, [item],), true, true, true, true), # Not implemented
+    (:append!, :append, [1, 3, 5, item], ([item],), no_broken...),
+    (:prepend!, :prepend, [item, 1, 3, 5], ([item],), no_broken...),
     (:pushfirst!, :pushfirst, [item, 1, 3, 5], (item,), no_broken...),
     (:setindex!, :setindex, [1, item, 5], (item, 2), no_broken...),
     (:pop!, :pop, [1, 3], (), no_broken...),
@@ -44,43 +64,43 @@ function test_smallvectors()
     (:circshift!, :circshift, [5, 1, 3], (1,), no_broken...),
     (:sort!, :sort, [1, 3, 5], (), no_broken...),
     (
-      :(SmallVectors.insertsorted!),
-      :(SmallVectors.insertsorted),
+      :insertsorted!,
+      :insertsorted,
       [1, 2, 3, 5],
       (2,),
       no_broken...,
     ),
     (
-      :(SmallVectors.insertsorted!),
-      :(SmallVectors.insertsorted),
+      :insertsorted!,
+      :insertsorted,
       [1, 3, 3, 5],
       (3,),
       no_broken...,
     ),
     (
-      :(SmallVectors.insertsortedunique!),
-      :(SmallVectors.insertsortedunique),
+      :insertsortedunique!,
+      :insertsortedunique,
       [1, 2, 3, 5],
       (2,),
       no_broken...,
     ),
     (
-      :(SmallVectors.insertsortedunique!),
-      :(SmallVectors.insertsortedunique),
+      :insertsortedunique!,
+      :insertsortedunique,
       [1, 3, 5],
       (3,),
       no_broken...,
     ),
     (
-      :(SmallVectors.mergesorted!),
-      :(SmallVectors.mergesorted),
+      :mergesorted!,
+      :mergesorted,
       [1, 2, 3, 3, 5],
       ([2, 3],),
       no_broken...,
     ),
     (
-      :(SmallVectors.mergesortedunique!),
-      :(SmallVectors.mergesortedunique),
+      :mergesortedunique!,
+      :mergesortedunique,
       [1, 2, 3, 5],
       ([2, 3],),
       no_broken...,
