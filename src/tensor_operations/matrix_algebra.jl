@@ -100,12 +100,3 @@ function map_diag!(f::Function, t_destination::Tensor, t_source::Tensor)
   return t_destination
 end
 map_diag(f::Function, t::Tensor) = map_diag!(f, copy(t), t)
-
-# Convenience functions
-sqrt_diag(it::ITensor) = map_diag(sqrt, it)
-inv_diag(it::ITensor) = map_diag(inv, it)
-invsqrt_diag(it::ITensor) = map_diag(inv ∘ sqrt, it)
-pinv_diag(it::ITensor) = map_diag(pinv, it)
-pinvsqrt_diag(it::ITensor) = map_diag(pinv ∘ sqrt, it)
-sqrtabs_diag(it::ITensor) = map_diag(sqrt ∘ abs, it)
-inv_sqrtabs_diag(it::ITensor) = map_diag(inv ∘ sqrt ∘ abs, it)

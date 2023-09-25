@@ -106,7 +106,13 @@ Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
 
 See also: [`factorize`](@ref), [`eigen`](@ref)
 """
-function svd(A::ITensor, Linds...; leftdir=nothing, rightdir=nothing, kwargs...)
+function svd(
+  A::ITensor,
+  Linds...;
+  leftdir::Union{Nothing,ITensors.Arrow}=nothing,
+  rightdir::Union{Nothing,ITensors.Arrow}=nothing,
+  kwargs...,
+)
   utags::TagSet = get(kwargs, :lefttags, get(kwargs, :utags, "Link,u"))
   vtags::TagSet = get(kwargs, :righttags, get(kwargs, :vtags, "Link,v"))
 
@@ -559,7 +565,7 @@ function factorize_svd(A::ITensor, Linds...; (singular_values!)=nothing, kwargs.
   elseif ortho == "none"
     sqrtDL, δᵤᵥ, sqrtDR = sqrt_decomp(S, u, v)
     sqrtDR = denseblocks(sqrtDR) * denseblocks(δᵤᵥ)
-    L, R = noprime(U * sqrtDL), noprime(V * sqrtDR)
+    L, R = U * sqrtDL, V * sqrtDR
   else
     error("In factorize using svd decomposition, ortho keyword
     $ortho not supported. Supported options are left, right, or none.")
