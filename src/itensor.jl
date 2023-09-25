@@ -1963,8 +1963,9 @@ map(f, x::ITensor) = itensor(map(f, tensor(x)))
 w .+= a .* v
 ```
 """
-axpy!(a::Number, v::ITensor, w::ITensor) = (w .+= a .* v)
-
+function  axpy!(a::Number, v::ITensor, w::ITensor)
+  itensor(data(w) .+= a .* data(v), inds(w))
+end
 """
 axpby!(a,v,b,w)
 
@@ -1982,11 +1983,11 @@ Scale the ITensor A by x in-place. May also be written `rmul!`.
 A .*= x
 ```
 """
-scale!(T::ITensor, α::Number) = (T .*= α)
+scale!(T::ITensor, α::Number) = itensor(data(T) .*= α, inds(T))
 
-rmul!(T::ITensor, α::Number) = (T .*= α)
+rmul!(T::ITensor, α::Number) = itensor(data(T) .*= α, inds(T))
 
-lmul!(T::ITensor, α::Number) = (T .= α .* T)
+lmul!(T::ITensor, α::Number) = itensor(data(T) .= α .* data(T), inds(T))
 
 """
     mul!(A::ITensor, x::Number, B::ITensor)
@@ -1994,10 +1995,9 @@ lmul!(T::ITensor, α::Number) = (T .= α .* T)
 Scalar multiplication of ITensor B with x, and store the result in A.
 Like `A .= x .* B`.
 """
-mul!(R::ITensor, α::Number, T::ITensor) = (R .= α .* T)
+mul!(R::ITensor, α::Number, T::ITensor) = itensor(data(R) .= α * data(T), inds(T))
 
-mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
-
+mul!(R::ITensor, T::ITensor, α::Number) = itensor(data(R) .= data(T) * α, inds(T))
 #########################
 # End ITensor Operations
 #
