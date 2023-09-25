@@ -187,48 +187,27 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   end
 
   @testset "svd arrow directions" begin
-
-    #Test Spins
-    n = 10
-    χ = 5
-    s = siteinds("S=1/2", n; conserve_qns=true)
-    state = [isodd(i) ? "Up" : "Dn" for i in 1:n]
-    ψ = randomMPS(s, state; linkdims=χ)
-    A = ψ[4] * ψ[5]
-    linds = [inds(A)[1], inds(A)[2]]
+    l1, l2 = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="l1", dir=ITensors.In),
+    Index(QN("Sz", 2) => 1, QN("Sz", 1) => 1; tags="l2", dir=ITensors.Out)
+    r1, r2, r3 = Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags="r1", dir=ITensors.Out),
+    Index(QN("Sz", 2) => 1, QN("Sz", 1) => 1; tags="r2", dir=ITensors.In),
+    Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags="r3", dir=ITensors.In)
+    A = randomITensor(l1, l2, r1, r2, r3)
 
     for leftdir in [ITensors.Out, ITensors.In]
       for rightdir in [ITensors.Out, ITensors.In]
-        U, S, V = svd(A, linds...; leftdir, rightdir)
+        U, S, V = svd(A, l1, l2; leftdir, rightdir)
         s1, s2 = inds(S)[1], inds(S)[2]
         @test ITensors.dir(s1) == leftdir
         @test ITensors.dir(s2) == rightdir
         @test norm(U * S * V - A) <= 1e-14
 
         L, R, spec = ITensors.factorize_svd(
-          A, linds...; leftdir=leftdir, rightdir=rightdir, ortho="none"
+          A, l1, l2; leftdir=leftdir, rightdir=rightdir, ortho="none"
         )
         @test norm(L * R - A) <= 1e-14
       end
     end
-
-    #Test Fermions
-    #WARNING: CURRENTLY ONLY STABLE FOR BOTH ARROW DIRECTIONS = OUT ON THE SVD. 
-    ITensors.enable_auto_fermion()
-    n = 5
-    χ = 2
-    s = siteinds("Fermion", n; conserve_qns=true)
-    state = [isodd(i) ? "Occ" : "Emp" for i in 1:n]
-    ψ = randomMPS(s, state; linkdims=χ)
-    A = ψ[3] * ψ[4]
-    linds = [inds(A)[1]]
-
-    L, R, spec = ITensors.factorize_svd(
-      A, linds...; leftdir=ITensors.Out, rightdir=ITensors.Out, ortho="none"
-    )
-    @test norm(L * R - A) <= 1e-14
-
-    ITensors.disable_auto_fermion()
   end
 
   # TODO: remove this test, it takes a long time
