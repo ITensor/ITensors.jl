@@ -1963,8 +1963,8 @@ map(f, x::ITensor) = itensor(map(f, tensor(x)))
 w .+= a .* v
 ```
 """
-function  axpy!(a::Number, v::ITensor, w::ITensor)
-  itensor(data(w) .+= a .* data(v), inds(w))
+function axpy!(a::Number, v::ITensor, w::ITensor)
+  return itensor(data(w) .+= a .* data(v), inds(w))
 end
 """
 axpby!(a,v,b,w)
