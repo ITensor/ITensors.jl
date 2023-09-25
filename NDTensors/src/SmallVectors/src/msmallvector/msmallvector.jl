@@ -24,15 +24,13 @@ MSmallVector{10}(SA[1, 2, 3])
 ```
 """
 function MSmallVector{S,T}(vec::AbstractVector) where {S,T}
-  buffer = zeros(MVector{S,T})
+  buffer = MVector{S,T}(undef)
   copyto!(buffer, vec)
   return MSmallVector(buffer, length(vec))
 end
 
 # Derive the buffer length.
 MSmallVector(vec::AbstractSmallVector) = MSmallVector{length(buffer(vec))}(vec)
-
-Base.convert(::Type{T}, a::AbstractArray) where {T<:MSmallVector} = a isa T ? a : T(a)::T
 
 function MSmallVector{S}(vec::AbstractVector) where {S}
   return MSmallVector{S,eltype(vec)}(vec)

@@ -27,8 +27,7 @@ SmallVector{10}(SA[1, 2, 3])
 ```
 """
 function SmallVector{S,T}(vec::AbstractVector) where {S,T}
-  mvec = MSmallVector{S,T}(vec)
-  return SmallVector{S,T}(buffer(mvec), length(mvec))
+  return SmallVector{S,T}(MSmallVector{S,T}(vec))
 end
 # Special optimization codepath for `MSmallVector`
 # to avoid a copy.
@@ -48,7 +47,9 @@ end
 # Derive the buffer length.
 SmallVector(vec::AbstractSmallVector) = SmallVector{length(buffer(vec))}(vec)
 
-Base.convert(::Type{T}, a::AbstractArray) where {T<:SmallVector} = a isa T ? a : T(a)::T
+# Empty constructor
+(smallvector_type::Type{SmallVector{S,T}} where {S,T})() = smallvector_type(undef, 0)
+SmallVector{S,T}(::UndefInitializer, length::Integer) where {S,T} = SmallVector{S,T}(SVector{S,T}(MVector{S,T}(undef)), length)
 
 # Buffer interface
 buffer(vec::SmallVector) = vec.buffer
