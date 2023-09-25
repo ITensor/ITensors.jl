@@ -23,4 +23,6 @@ function Base.setindex!(vec::AbstractSmallVector, item, index::Integer)
 end
 Base.IndexStyle(::Type{<:AbstractSmallVector}) = IndexLinear()
 
-Base.convert(::Type{T}, a::AbstractArray) where {T<:AbstractSmallVector} = a isa T ? a : T(a)::T
+function Base.convert(::Type{T}, a::AbstractArray) where {T<:AbstractSmallVector}
+  return a isa T ? a : T(a)::T
+end

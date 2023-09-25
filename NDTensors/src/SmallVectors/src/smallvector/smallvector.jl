@@ -49,7 +49,9 @@ SmallVector(vec::AbstractSmallVector) = SmallVector{length(buffer(vec))}(vec)
 
 # Empty constructor
 (smallvector_type::Type{SmallVector{S,T}} where {S,T})() = smallvector_type(undef, 0)
-SmallVector{S,T}(::UndefInitializer, length::Integer) where {S,T} = SmallVector{S,T}(SVector{S,T}(MVector{S,T}(undef)), length)
+function SmallVector{S,T}(::UndefInitializer, length::Integer) where {S,T}
+  return SmallVector{S,T}(SVector{S,T}(MVector{S,T}(undef)), length)
+end
 
 # Buffer interface
 buffer(vec::SmallVector) = vec.buffer

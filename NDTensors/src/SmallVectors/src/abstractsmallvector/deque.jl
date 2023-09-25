@@ -88,7 +88,7 @@ end
 # This implementation of `midpoint` is performance-optimized but safe
 # only if `lo <= hi`.
 # TODO: Replace with `Base.midpoint`.
-midpoint(lo::T, hi::T) where T<:Integer = lo + ((hi - lo) >>> 0x01)
+midpoint(lo::T, hi::T) where {T<:Integer} = lo + ((hi - lo) >>> 0x01)
 midpoint(lo::Integer, hi::Integer) = midpoint(promote(lo, hi)...)
 
 @inline function Base.reverse!(vec::AbstractSmallVector)
