@@ -19,6 +19,8 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("BlockSparseArrays/src/BlockSparseArrays.jl")
+using .BlockSparseArrays
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
