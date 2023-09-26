@@ -278,7 +278,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         end
 
         energy = vals[1]
-        phi::ITensor = vecs[1]
+        phi::ITensor = itensor(storagetype(phi)(convert(typeof(data(phi)),data(vecs[1]))), inds(phi))
 
         ortho = ha == 1 ? "left" : "right"
 

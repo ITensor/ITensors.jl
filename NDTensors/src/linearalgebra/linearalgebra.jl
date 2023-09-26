@@ -400,6 +400,7 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
   QM = convert(typeof(XM), QM)
+  QM = convert(typeof(XM), QM)
   Q = tensor(Dense(vec(QM)), Qinds) #Q was strided
   X = tensor(Dense(vec(XM)), Xinds)
   return Q, X
