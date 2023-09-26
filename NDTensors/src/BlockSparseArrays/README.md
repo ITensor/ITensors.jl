@@ -37,6 +37,17 @@ block_data = Dictionary([CartesianIndex(nz_block.n) for nz_block in nz_blocks], 
 block_storage = SparseArray{valtype(block_data),length(i_axes)}(block_data, blocklength.(i_axes))
 
 B = BlockSparseArray(block_storage, i_axes)
+
+# Access a block
+B[Block(1, 1)]
+
+# Access a non-zero block, returns a zero matrix
+B[Block(1, 2)]
+
+# Set a zero block
+B[Block(1, 2)] = randn(2, 3)
+
+# Matrix multiplication (not optimized for sparsity yet)
 B * B
 ```
 
