@@ -6,6 +6,7 @@ using Compat
 using Dictionaries
 using FLoops
 using Folds
+using InlineStrings
 using Random
 using LinearAlgebra
 using StaticArrays
@@ -19,6 +20,10 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("SortedSets/src/SortedSets.jl")
+using .SortedSets
+include("TagSets/src/TagSets.jl")
+using .TagSets
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
