@@ -573,7 +573,8 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
     # (Lis..., prime(Lis)...)
     delta_A2 = replaceinds(delta_A2, Lis, dag(simLis))
     noprime!(delta_A2)
-    A2 += delta_A2
+    itensor(data(A2) .+= data(delta_A2), inds(A2))
+    #A2 += delta_A2
   end
   F = eigen(A2, Lis, simLis; ishermitian=true, kwargs...)
   D, _, spec = F
