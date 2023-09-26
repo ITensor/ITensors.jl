@@ -11,6 +11,7 @@ using LinearAlgebra
 using StaticArrays
 using Functors
 using HDF5
+using InlineStrings
 using SimpleTraits
 using SplitApplyCombine
 using Strided
@@ -21,6 +22,10 @@ include("SetParameters/src/SetParameters.jl")
 using .SetParameters
 include("SmallVectors/src/SmallVectors.jl")
 using .SmallVectors
+include("SortedSets/src/SortedSets.jl")
+using .SortedSets
+include("TagSets/src/TagSets.jl")
+using .TagSets
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
