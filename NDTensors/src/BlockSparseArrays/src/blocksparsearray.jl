@@ -1,14 +1,18 @@
 using BlockArrays: block
 
 # Also add a version with contiguous underlying data.
-struct BlockSparseArray{T,N,R<:SparseArray{<:AbstractArray{T,N},N},BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T,N}
+struct BlockSparseArray{
+  T,N,R<:SparseArray{<:AbstractArray{T,N},N},BS<:NTuple{N,AbstractUnitRange{Int}}
+} <: AbstractBlockArray{T,N}
   blocks::R
   axes::BS
 end
 
 Base.axes(block_arr::BlockSparseArray) = block_arr.axes
 
-Base.copy(block_arr::BlockSparseArray) = BlockSparseArray(deepcopy(block_arr.blocks), copy.(block_arr.axes))
+function Base.copy(block_arr::BlockSparseArray)
+  return BlockSparseArray(deepcopy(block_arr.blocks), copy.(block_arr.axes))
+end
 
 function BlockArrays.viewblock(block_arr::BlockSparseArray, block)
   blks = block.n
@@ -29,7 +33,9 @@ function Base.getindex(block_arr::BlockSparseArray{T,N}, bi::BlockIndex{N}) wher
   return v
 end
 
-function Base.setindex!(block_arr::BlockSparseArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
+function Base.setindex!(
+  block_arr::BlockSparseArray{T,N}, v, i::Vararg{Integer,N}
+) where {T,N}
   @boundscheck checkbounds(block_arr, i...)
   block_indices = findblockindex.(axes(block_arr), i)
   block = map(block_index -> Block(block_index.I), block_indices)
@@ -40,16 +46,28 @@ function Base.setindex!(block_arr::BlockSparseArray{T, N}, v, i::Vararg{Integer,
   return block_arr
 end
 
-function BlockArrays._check_setblock!(block_arr::BlockSparseArray{T, N}, v, block::NTuple{N, Integer}) where {T,N}
-    for i in 1:N
-        bsz = length(axes(block_arr, i)[Block(block[i])])
-        if size(v, i) != bsz
-            throw(DimensionMismatch(string("tried to assign $(size(v)) array to ", length.(getindex.(axes(block_arr), block)), " block")))
-        end
+function BlockArrays._check_setblock!(
+  block_arr::BlockSparseArray{T,N}, v, block::NTuple{N,Integer}
+) where {T,N}
+  for i in 1:N
+    bsz = length(axes(block_arr, i)[Block(block[i])])
+    if size(v, i) != bsz
+      throw(
+        DimensionMismatch(
+          string(
+            "tried to assign $(size(v)) array to ",
+            length.(getindex.(axes(block_arr), block)),
+            " block",
+          ),
+        ),
+      )
     end
+  end
 end
 
-function Base.setindex!(block_arr::BlockSparseArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N}
+function Base.setindex!(
+  block_arr::BlockSparseArray{T,N}, v, block::Vararg{Block{1},N}
+) where {T,N}
   blks = Int.(block)
   @boundscheck blockcheckbounds(block_arr, blks...)
   @boundscheck BlockArrays._check_setblock!(block_arr, v, blks)
@@ -61,7 +79,7 @@ function Base.setindex!(block_arr::BlockSparseArray{T, N}, v, block::Vararg{Bloc
   return block_arr
 end
 
-function Base.getindex(block_arr::BlockSparseArray{T, N}, i::Vararg{Integer, N}) where {T,N}
+function Base.getindex(block_arr::BlockSparseArray{T,N}, i::Vararg{Integer,N}) where {T,N}
   @boundscheck checkbounds(block_arr, i...)
   v = block_arr[findblockindex.(axes(block_arr), i)...]
   return v

@@ -23,8 +23,9 @@ end
 # `getindex` but uses a default if the value is
 # structurally zero.
 function get_nonzero(a::SparseArray{T,N}, I::CartesianIndex{N}, zero) where {T,N}
-    @boundscheck checkbounds(a, I)
-    return get(a.data, I, zero)
+  @boundscheck checkbounds(a, I)
+  return get(a.data, I, zero)
 end
-get_nonzero(a::SparseArray{T,N}, I::NTuple{N,Int}, zero) where {T,N} =
-                                        get_nonzero(a, CartesianIndex(I), zero)
+function get_nonzero(a::SparseArray{T,N}, I::NTuple{N,Int}, zero) where {T,N}
+  return get_nonzero(a, CartesianIndex(I), zero)
+end
