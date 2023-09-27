@@ -4,7 +4,7 @@ using NDTensors
 using NDTensors.SetParameters
 using Adapt
 using Functors
-using LinearAlgebra: BlasFloat
+using LinearAlgebra
 
 if isdefined(Base, :get_extension)
   using CUDA
