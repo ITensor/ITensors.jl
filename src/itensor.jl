@@ -1892,6 +1892,7 @@ diag(T::ITensor) = diag(tensor(T))
 
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
+## TODO this operation does not work with GPU
 dot(A::ITensor, B::ITensor) = (dag(A) * B)[]
 
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
@@ -1963,8 +1964,11 @@ map(f, x::ITensor) = itensor(map(f, tensor(x)))
 w .+= a .* v
 ```
 """
-axpy!(a::Number, v::ITensor, w::ITensor) = (w .+= a .* v)
-
+function axpy!(a::Number, v::ITensor, w::ITensor)
+  #(w .+= a .* v)
+  w .+= a .* v
+  #axpy!(a, tensor(v), tensor(w))
+end
 """
 axpby!(a,v,b,w)
 
