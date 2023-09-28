@@ -110,6 +110,13 @@ include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
 
 #####################################
+# Array Tensor (experimental)
+# TODO: Move to `Experimental` module.
+#
+include("arraytensor/arraytensor.jl")
+include("arraytensor/array.jl")
+
+#####################################
 # Deprecations
 #
 include("deprecated.jl")
