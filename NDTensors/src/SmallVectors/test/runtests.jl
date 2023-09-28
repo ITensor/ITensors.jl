@@ -47,8 +47,7 @@ function test_smallvectors()
     @test @inferred(length(SmallVectors.buffer(x))) == 10
     @test @allocated(length(SmallVectors.buffer(x))) == 0
 
-    # More allocation are present in older Julia versions
-    nalloc_limit = VERSION < v"1.9" ? 128 : 0
+    nalloc_limit = 128
 
     item = 115
     no_broken = (false, false, false, false)
