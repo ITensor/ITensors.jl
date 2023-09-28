@@ -243,7 +243,8 @@ function permutedims!(
   end
   RA = array(R)
   TA = array(T)
-  @strided RA .= f.(RA, permutedims(TA, perm))
+  #@strided 
+  RA .= f.(RA, permutedims(TA, perm))
   return R
 end
 

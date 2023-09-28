@@ -233,9 +233,11 @@ function _contract_scalar_maybe_perm!(
   β=zero(ElR),
 ) where {ElR,NR}
   if nnz(T₁) == 1
-    _contract_scalar_maybe_perm!(R, labelsR, T₂, labelsT₂, α * T₁[1], β)
+    γ = α * NDTensors.cpu(T₁)[1]
+    _contract_scalar_maybe_perm!(R, labelsR, T₂, labelsT₂, γ, β)
   elseif nnz(T₂) == 1
-    _contract_scalar_maybe_perm!(R, labelsR, T₁, labelsT₁, α * T₂[1], β)
+    γ = α * NDTensors.cpu(T₂)[1]
+    _contract_scalar_maybe_perm!(R, labelsR, T₁, labelsT₁, γ, β)
   else
     error("In _contract_scalar_perm!, one tensor must be a scalar")
   end
@@ -345,7 +347,8 @@ function _contract!(
   tA = 'N'
   if props.permuteA
     #@timeit_debug timer "_contract!: permutedims A" begin
-    @strided Ap = permutedims(AT, props.PA)
+    #@strided 
+    Ap = permutedims(AT, props.PA)
     #end # @timeit
     AM = transpose(reshape(Ap, (props.dmid, props.dleft)))
   else
@@ -360,7 +363,8 @@ function _contract!(
   tB = 'N'
   if props.permuteB
     #@timeit_debug timer "_contract!: permutedims B" begin
-    @strided Bp = permutedims(BT, props.PB)
+    #@strided 
+    Bp = permutedims(BT, props.PB)
     #end # @timeit
     BM = reshape(Bp, (props.dmid, props.dright))
   else
@@ -399,7 +403,8 @@ function _contract!(
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin
-    @strided CT .= permutedims(Cr, props.PC)
+    #@strided 
+    CT .= permutedims(Cr, props.PC)
     #end # @timeit
   end
 
