@@ -82,7 +82,7 @@ function LinearAlgebra.svd(tens::MatrixStorageTensor)
   α = sim(min_ij) # similar_ind(i, space(S))
   β = sim(min_ij) # similar_ind(i, space(S))
   Utensor = tensor(U, (i, α))
-  # TODO: Remove conversion to `Matrix` to make more general.
+  # TODO: Remove conversion to `Diagonal` to make more general, or make a generic `Diagonal` concept that works for `BlockSparseArray`.
   # Used for now to avoid introducing wrapper types.
   Stensor = tensor(Diagonal(S), (α, β))
   Vtensor = tensor(V, (β, j))
