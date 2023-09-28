@@ -47,35 +47,67 @@ function test_smallvectors()
     @test @inferred(length(SmallVectors.buffer(x))) == 10
     @test @allocated(length(SmallVectors.buffer(x))) == 0
 
+    # More allocation are present in older Julia versions
+    nalloc_limit = VERSION < v"1.9" ? 128 : 0
+
     item = 115
     no_broken = (false, false, false, false)
     for (
-      f!, f, ans, args, f!_impl_broken, f!_noalloc_broken, f_impl_broken, f_noalloc_broken
+      f!,
+      f,
+      ans,
+      args,
+      nalloc,
+      f!_impl_broken,
+      f!_noalloc_broken,
+      f_impl_broken,
+      f_noalloc_broken,
     ) in [
-      (:push!, :push, [1, 3, 5, item], (item,), no_broken...),
-      (:append!, :append, [1, 3, 5, item], ([item],), no_broken...),
-      (:prepend!, :prepend, [item, 1, 3, 5], ([item],), no_broken...),
-      (:pushfirst!, :pushfirst, [item, 1, 3, 5], (item,), no_broken...),
-      (:setindex!, :setindex, [1, item, 5], (item, 2), no_broken...),
-      (:pop!, :pop, [1, 3], (), no_broken...),
-      (:popfirst!, :popfirst, [3, 5], (), no_broken...),
-      (:insert!, :insert, [1, item, 3, 5], (2, item), no_broken...),
-      (:deleteat!, :deleteat, [1, 5], (2,), no_broken...),
-      (:circshift!, :circshift, [5, 1, 3], (1,), no_broken...),
-      (:sort!, :sort, [1, 3, 5], (), no_broken...),
-      (:insertsorted!, :insertsorted, [1, 2, 3, 5], (2,), no_broken...),
-      (:insertsorted!, :insertsorted, [1, 3, 3, 5], (3,), no_broken...),
-      (:insertsortedunique!, :insertsortedunique, [1, 2, 3, 5], (2,), no_broken...),
-      (:insertsortedunique!, :insertsortedunique, [1, 3, 5], (3,), no_broken...),
-      (:mergesorted!, :mergesorted, [1, 2, 3, 3, 5], ([2, 3],), no_broken...),
-      (:mergesortedunique!, :mergesortedunique, [1, 2, 3, 5], ([2, 3],), no_broken...),
+      (:push!, :push, [1, 3, 5, item], (item,), nalloc_limit, no_broken...),
+      (:append!, :append, [1, 3, 5, item], ([item],), nalloc_limit, no_broken...),
+      (:prepend!, :prepend, [item, 1, 3, 5], ([item],), nalloc_limit, no_broken...),
+      (:pushfirst!, :pushfirst, [item, 1, 3, 5], (item,), nalloc_limit, no_broken...),
+      (:setindex!, :setindex, [1, item, 5], (item, 2), nalloc_limit, no_broken...),
+      (:pop!, :pop, [1, 3], (), nalloc_limit, no_broken...),
+      (:popfirst!, :popfirst, [3, 5], (), nalloc_limit, no_broken...),
+      (:insert!, :insert, [1, item, 3, 5], (2, item), nalloc_limit, no_broken...),
+      (:deleteat!, :deleteat, [1, 5], (2,), nalloc_limit, no_broken...),
+      (:circshift!, :circshift, [5, 1, 3], (1,), nalloc_limit, no_broken...),
+      (:sort!, :sort, [1, 3, 5], (), nalloc_limit, no_broken...),
+      (:insertsorted!, :insertsorted, [1, 2, 3, 5], (2,), nalloc_limit, no_broken...),
+      (:insertsorted!, :insertsorted, [1, 3, 3, 5], (3,), nalloc_limit, no_broken...),
+      (
+        :insertsortedunique!,
+        :insertsortedunique,
+        [1, 2, 3, 5],
+        (2,),
+        nalloc_limit,
+        no_broken...,
+      ),
+      (
+        :insertsortedunique!,
+        :insertsortedunique,
+        [1, 3, 5],
+        (3,),
+        nalloc_limit,
+        no_broken...,
+      ),
+      (:mergesorted!, :mergesorted, [1, 2, 3, 3, 5], ([2, 3],), nalloc_limit, no_broken...),
+      (
+        :mergesortedunique!,
+        :mergesortedunique,
+        [1, 2, 3, 5],
+        ([2, 3],),
+        nalloc_limit,
+        no_broken...,
+      ),
     ]
       mx_tmp = copy(mx)
       @eval begin
         @test @inferred($f!(copy($mx), $args...)) == $ans broken = $f!_impl_broken
-        @test @allocated($f!($mx_tmp, $args...)) == 0 broken = $f!_noalloc_broken
+        @test @allocated($f!($mx_tmp, $args...)) ≤ $nalloc broken = $f!_noalloc_broken
         @test @inferred($f($x, $args...)) == $ans broken = $f_impl_broken
-        @test @allocated($f($x, $args...)) == 0 broken = $f_noalloc_broken
+        @test @allocated($f($x, $args...)) ≤ $nalloc broken = $f_noalloc_broken
       end
     end
 
@@ -86,11 +118,11 @@ function test_smallvectors()
     @test @inferred(sort!(copy(mx); kwargs...)) == ans
     @test @allocated(sort!(mx_tmp; kwargs...)) == 0
     @test @inferred(sort(x; kwargs...)) == ans
-    @test @allocated(sort(x; kwargs...)) == 0
+    @test @allocated(sort(x; kwargs...)) ≤ nalloc_limit
 
     ans, args = [1, 3, 5, item], ([item],)
     @test @inferred(vcat(x, args...)) == ans
-    @test @allocated(vcat(x, args...)) == 0
+    @test @allocated(vcat(x, args...)) ≤ nalloc_limit
   end
 end
 
