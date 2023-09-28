@@ -63,7 +63,7 @@ The Tensor holds a copy of the storage data.
 
 The indices `inds` will be converted to a `Tuple`.
 """
-function Tensor(as::AliasStyle, storage, inds::Tuple)
+function Tensor(as::AliasStyle, storage::TensorStorage, inds::Tuple)
   return Tensor{eltype(storage),length(inds),typeof(storage),typeof(inds)}(
     as, storage, inds
   )
@@ -78,7 +78,7 @@ function Tensor(as::AliasStyle, storage, inds)
 end
 
 tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
-Tensor(storage, inds::Tuple) = Tensor(NeverAlias(), storage, inds)
+Tensor(storage::TensorStorage, inds::Tuple) = Tensor(NeverAlias(), storage, inds)
 
 function Tensor(eltype::Type, inds::Tuple)
   return Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
