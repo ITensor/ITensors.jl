@@ -1,11 +1,11 @@
 # Combiner
-promote_rule(::Type{<:Combiner}, arraytype::Type{<:MatrixOrArrayLike}) = arraytype
+promote_rule(::Type{<:Combiner}, arraytype::Type{<:MatrixOrArrayStorage}) = arraytype
 
 # Generic AbstractArray code
 function contract(
-  array1::MatrixOrArrayLike,
+  array1::MatrixOrArrayStorage,
   labels1,
-  array2::MatrixOrArrayLike,
+  array2::MatrixOrArrayStorage,
   labels2,
   labelsR=contract_labels(labels1, labels2),
 )
@@ -14,21 +14,23 @@ function contract(
   return output_array
 end
 
-function contraction_output(array1::MatrixOrArrayLike, array2::MatrixOrArrayLike, indsR)
+function contraction_output(
+  array1::MatrixOrArrayStorage, array2::MatrixOrArrayStorage, indsR
+)
   arraytypeR = contraction_output_type(typeof(array1), typeof(array2), indsR)
   return NDTensors.similar(arraytypeR, indsR)
 end
 
 function contraction_output_type(
-  arraytype1::Type{<:MatrixOrArrayLike}, arraytype2::Type{<:MatrixOrArrayLike}, inds
+  arraytype1::Type{<:MatrixOrArrayStorage}, arraytype2::Type{<:MatrixOrArrayStorage}, inds
 )
   return similartype(promote_type(arraytype1, arraytype2), inds)
 end
 
 function contraction_output(
-  array1::MatrixOrArrayLike,
+  array1::MatrixOrArrayStorage,
   labelsarray1,
-  array2::MatrixOrArrayLike,
+  array2::MatrixOrArrayStorage,
   labelsarray2,
   labelsoutput_array,
 )
@@ -42,11 +44,11 @@ end
 
 # Required interface for specific AbstractArray types
 function contract!(
-  arrayR::MatrixOrArrayLike,
+  arrayR::MatrixOrArrayStorage,
   labelsR,
-  array1::MatrixOrArrayLike,
+  array1::MatrixOrArrayStorage,
   labels1,
-  array2::MatrixOrArrayLike,
+  array2::MatrixOrArrayStorage,
   labels2,
 )
   props = ContractionProperties(labels1, labels2, labelsR)
@@ -57,7 +59,7 @@ function contract!(
 end
 
 function permutedims!(
-  output_array::MatrixOrArrayLike, array::MatrixOrArrayLike, perm, f::Function
+  output_array::MatrixOrArrayStorage, array::MatrixOrArrayStorage, perm, f::Function
 )
   @strided output_array .= f.(output_array, permutedims(array, perm))
   return output_array
