@@ -42,12 +42,4 @@ using NDTensors: storage, storagetype
 
   D12 = contract(D1, (1, -1), D2, (-1, 2))
   @test D12 ≈ Array(T12)
-
-  ## IT1 = itensor(T1)
-  ## IT2 = itensor(T2)
-  ## IR = IT1 * IT2
-  ## IX = IT1 + IT1
-
-  ## IU, IS, IV = svd(IT1, i)
-  ## @test IU * IS * IV ≈ IT1
 end
