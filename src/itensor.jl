@@ -1893,8 +1893,12 @@ diag(T::ITensor) = diag(tensor(T))
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
 ## TODO this operation does not work with GPU
-dot(A::ITensor, B::ITensor) = (dag(A) * B)[]
+dot(A::ITensor, B::ITensor) = _dot(dag(A), B)#(dag(A) * B)[]
 
+function _dot(A::ITensor, B::ITensor)
+  B = permute(B, inds(A))
+  dot(tensor(A), tensor(B))
+end
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
 
