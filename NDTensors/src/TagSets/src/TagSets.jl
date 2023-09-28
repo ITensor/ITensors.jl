@@ -111,3 +111,4 @@ function replacetags(tags::TagSet, rem, add)
   end
   return union(remtags, add)
 end
+end
