@@ -104,10 +104,34 @@ function test_smallvectors()
     ]
       mx_tmp = copy(mx)
       @eval begin
-        @test @inferred($f!(copy($mx), $args...)) == $ans broken = $f!_impl_broken
-        @test @allocated($f!($mx_tmp, $args...)) ≤ $nalloc broken = $f!_noalloc_broken
-        @test @inferred($f($x, $args...)) == $ans broken = $f_impl_broken
-        @test @allocated($f($x, $args...)) ≤ $nalloc broken = $f_noalloc_broken
+        if VERSION < v"1.7"
+          # broken kwarg wasn't added to @test yet
+          if $f!_impl_broken
+            @test_broken @inferred($f!(copy($mx), $args...)) == $ans
+          else
+            @test @inferred($f!(copy($mx), $args...)) == $ans
+          end
+          if $f!_noalloc_broken
+            @test_broken @allocated($f!($mx_tmp, $args...)) ≤ $nalloc
+          else
+            @test @allocated($f!($mx_tmp, $args...)) ≤ $nalloc
+          end
+          if $f_impl_broken
+            @test_broken @inferred($f($x, $args...)) == $ans
+          else
+            @test @inferred($f($x, $args...)) == $ans
+          end
+          if $f_noalloc_broken
+            @test_broken @allocated($f($x, $args...)) ≤ $nalloc
+          else
+            @test @allocated($f($x, $args...)) ≤ $nalloc
+          end
+        else
+          @test @inferred($f!(copy($mx), $args...)) == $ans broken = $f!_impl_broken
+          @test @allocated($f!($mx_tmp, $args...)) ≤ $nalloc broken = $f!_noalloc_broken
+          @test @inferred($f($x, $args...)) == $ans broken = $f_impl_broken
+          @test @allocated($f($x, $args...)) ≤ $nalloc broken = $f_noalloc_broken
+        end
       end
     end
 
