@@ -28,6 +28,7 @@ end
     "emptynumber.jl",
     "emptystorage.jl",
     "combiner.jl",
+    "arraytensor/arraytensor.jl",
   ]
     println("Running $filename")
     include(filename)
