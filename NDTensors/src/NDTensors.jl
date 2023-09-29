@@ -20,6 +20,8 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("SmallVectors/src/SmallVectors.jl")
+using .SmallVectors
 include("SortedSets/src/SortedSets.jl")
 using .SortedSets
 include("TagSets/src/TagSets.jl")
@@ -113,6 +115,13 @@ include("empty/empty.jl")
 include("empty/EmptyTensor.jl")
 include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
+
+#####################################
+# Array Tensor (experimental)
+# TODO: Move to `Experimental` module.
+#
+include("arraytensor/arraytensor.jl")
+include("arraytensor/array.jl")
 
 #####################################
 # Deprecations
