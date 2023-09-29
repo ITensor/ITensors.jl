@@ -19,6 +19,7 @@ import Dictionaries:
   randtoken
 
 export SortedSet
+
 # TODO:
 # Make an `AbstractSortedIndices`? Is that needed?
 # Define specialized implementations for:
@@ -64,7 +65,7 @@ struct SortedIndices{I,Inds<:AbstractArray{I},SortKwargs<:NamedTuple} <: Abstrac
   end
 end
 
-const SortSet{I,Inds,SortKwargs} = SortedIndices{I,Inds,SortKwargs}
+const SortedSet = SortedIndices
 
 @propagate_inbounds SortedIndices() = SortedIndices{Any}([])
 @propagate_inbounds SortedIndices{I}() where {I} = SortedIndices{I,Vector{I}}(I[])

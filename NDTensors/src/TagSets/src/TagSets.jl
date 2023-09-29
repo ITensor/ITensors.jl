@@ -16,10 +16,7 @@ using Dictionaries
 
 using Base: @propagate_inbounds
 
-## using NDTensors.SmallVectors
-## using InlineStrings
-
-## using NDTensors.SmallVectors: AbstractSmallVector, buffer
+export TagSet, addtags, removetags, replacetags
 
 # A sorted collection of unique tags of type `T`.
 # Add `skipchars` (see `skipmissing`) and `delim` for delimiter?
