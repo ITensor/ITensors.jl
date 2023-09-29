@@ -1969,9 +1969,7 @@ w .+= a .* v
 ```
 """
 function axpy!(a::Number, v::ITensor, w::ITensor)
-  #(w .+= a .* v)
   w .+= a .* v
-  #axpy!(a, tensor(v), tensor(w))
 end
 """
 axpby!(a,v,b,w)
