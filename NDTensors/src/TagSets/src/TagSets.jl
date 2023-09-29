@@ -65,7 +65,8 @@ end
 @inline function Dictionaries.gettoken(inds::TagSet, i)
   return gettoken(parent(inds), i)
 end
-@propagate_inbounds Dictionaries.gettokenvalue(inds::TagSet, x) = gettokenvalue(parent(inds), x)
+@propagate_inbounds Dictionaries.gettokenvalue(inds::TagSet, x) =
+  gettokenvalue(parent(inds), x)
 
 Dictionaries.isinsertable(tags::TagSet) = true # Need an array trait here...
 

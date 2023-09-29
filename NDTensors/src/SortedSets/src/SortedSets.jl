@@ -119,7 +119,9 @@ Base.parent(inds::SortedIndices) = getfield(inds, :inds)
   return iterate(parent(i), state...)
 end
 
-Base.in(i::I, inds::SortedIndices{I}) where {I} = insorted(i, parent(inds); inds.sort_kwargs...)
+function Base.in(i::I, inds::SortedIndices{I}) where {I}
+  return insorted(i, parent(inds); inds.sort_kwargs...)
+end
 Base.IteratorSize(::SortedIndices) = Base.HasLength()
 Base.length(inds::SortedIndices) = length(parent(inds))
 

@@ -12,7 +12,4 @@ using NDTensors.SortedSets
   @test intersect(s1, s2) == SortedSet([3])
   @test insert!(copy(s1), 4) == SortedSet([1, 3, 4, 5])
   @test delete!(copy(s1), 3) == SortedSet([1, 5])
-
-  # TagSet interface
-  @test addtags()
 end
