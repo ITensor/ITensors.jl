@@ -1,24 +1,31 @@
 module SortedSets
 using Dictionaries
+using ..SmallVectors
 
 using Base: @propagate_inbounds
 using Base.Order: Ordering, Forward
 using Random
 
-import Dictionaries:
-  istokenizable,
-  tokentype,
-  iteratetoken,
-  iteratetoken_reverse,
-  gettoken,
-  gettokenvalue,
-  isinsertable,
-  gettoken!,
-  empty_type,
-  deletetoken!,
-  randtoken
+## import Dictionaries:
+##   istokenizable,
+##   tokentype,
+##   iteratetoken,
+##   iteratetoken_reverse,
+##   gettoken,
+##   gettokenvalue,
+##   isinsertable,
+##   gettoken!,
+##   empty_type,
+##   deletetoken!,
+##   randtoken
 
-export SortedSet
+export AbstractWrappedIndices, SortedSet
+
+## include("DictionariesExt.jl")
+include("DictionariesExt/insert.jl")
+include("DictionariesExt/isinsertable.jl")
+include("abstractwrappedset.jl")
+include("SmallVectorsDictionariesExt/interface.jl")
 
 # TODO:
 # Make an `AbstractSortedIndices`? Is that needed?
@@ -42,7 +49,7 @@ elements. Lookup uses that they are sorted.
 SortedIndices can be faster than ArrayIndices which use naive search that may be optimal for
 small collections. Larger collections are better handled by containers like `Indices`.
 """
-struct SortedIndices{I,Inds<:AbstractArray{I},SortKwargs<:NamedTuple} <: AbstractIndices{I}
+struct SortedIndices{I,Inds<:AbstractArray{I},SortKwargs<:NamedTuple} <: AbstractSet{I}
   inds::Inds
   sort_kwargs::SortKwargs
   @inline function SortedIndices{I,Inds}(
@@ -67,16 +74,24 @@ end
 
 const SortedSet = SortedIndices
 
-@propagate_inbounds SortedIndices() = SortedIndices{Any}([])
-@propagate_inbounds SortedIndices{I}() where {I} = SortedIndices{I,Vector{I}}(I[])
-@propagate_inbounds SortedIndices{I,Inds}() where {I,Inds} = SortedIndices{I}(Inds())
+# Traits
+@inline SmallVectors.InsertStyle(::Type{<:SortedIndices{I,Inds}}) where {I,Inds} = InsertStyle(Inds)
+@inline SmallVectors.thaw(i::SortedIndices) = SortedIndices(thaw(i.inds); checksorted=false, checkunique=false, i.sort_kwargs...)
+@inline SmallVectors.freeze(i::SortedIndices) = SortedIndices(freeze(i.inds); checksorted=false, checkunique=false, i.sort_kwargs...)
 
-@propagate_inbounds SortedIndices(iter) = SortedIndices(collect(iter))
-@propagate_inbounds SortedIndices{I}(iter) where {I} = SortedIndices{I}(collect(I, iter))
+@propagate_inbounds SortedIndices(; kwargs...) = SortedIndices{Any}([]; kwargs...)
+@propagate_inbounds SortedIndices{I}(; kwargs...) where {I} = SortedIndices{I,Vector{I}}(I[]; kwargs...)
+@propagate_inbounds SortedIndices{I,Inds}(; kwargs...) where {I,Inds} = SortedIndices{I}(Inds(); kwargs...)
 
-@propagate_inbounds SortedIndices(a::AbstractArray{I}) where {I} = SortedIndices{I}(a)
-@propagate_inbounds SortedIndices{I}(a::AbstractArray{I}) where {I} =
-  SortedIndices{I,typeof(a)}(a)
+@propagate_inbounds SortedIndices(iter; kwargs...) = SortedIndices(collect(iter); kwargs...)
+@propagate_inbounds SortedIndices{I}(iter; kwargs...) where {I} = SortedIndices{I}(collect(I, iter); kwargs...)
+
+@propagate_inbounds SortedIndices(a::AbstractArray{I}; kwargs...) where {I} = SortedIndices{I}(a; kwargs...)
+@propagate_inbounds SortedIndices{I}(a::AbstractArray{I}; kwargs...) where {I} =
+  SortedIndices{I,typeof(a)}(a; kwargs...)
+
+@propagate_inbounds SortedIndices{I,Inds}(a::AbstractArray; kwargs...) where {I,Inds<:AbstractArray{I}} =
+  SortedIndices{I,Inds}(Inds(a); kwargs...)
 
 function Base.convert(::Type{AbstractIndices{I}}, inds::SortedIndices) where {I}
   return convert(SortedIndices{I}, inds)
@@ -112,23 +127,23 @@ function Base.convert(
   return @inbounds SortedIndices{I,Inds}(a)
 end
 
-Base.parent(inds::SortedIndices) = getfield(inds, :inds)
+@inline Base.parent(inds::SortedIndices) = getfield(inds, :inds)
 
 # Basic interface
 @propagate_inbounds function Base.iterate(i::SortedIndices{I}, state...) where {I}
   return iterate(parent(i), state...)
 end
 
-function Base.in(i::I, inds::SortedIndices{I}) where {I}
+@inline function Base.in(i::I, inds::SortedIndices{I}) where {I}
   return insorted(i, parent(inds); inds.sort_kwargs...)
 end
-Base.IteratorSize(::SortedIndices) = Base.HasLength()
-Base.length(inds::SortedIndices) = length(parent(inds))
+@inline Base.IteratorSize(::SortedIndices) = Base.HasLength()
+@inline Base.length(inds::SortedIndices) = length(parent(inds))
 
-istokenizable(i::SortedIndices) = true
-tokentype(::SortedIndices) = Int
-@inline iteratetoken(inds::SortedIndices, s...) = iterate(LinearIndices(parent(inds)), s...)
-@inline function iteratetoken_reverse(inds::SortedIndices)
+@inline Dictionaries.istokenizable(i::SortedIndices) = true
+@inline Dictionaries.tokentype(::SortedIndices) = Int
+@inline Dictionaries.iteratetoken(inds::SortedIndices, s...) = iterate(LinearIndices(parent(inds)), s...)
+@inline function Dictionaries.iteratetoken_reverse(inds::SortedIndices)
   li = LinearIndices(parent(inds))
   if isempty(li)
     return nothing
@@ -137,7 +152,7 @@ tokentype(::SortedIndices) = Int
     return (t, t)
   end
 end
-@inline function iteratetoken_reverse(inds::SortedIndices, t)
+@inline function Dictionaries.iteratetoken_reverse(inds::SortedIndices, t)
   li = LinearIndices(parent(inds))
   t -= 1
   if t < first(li)
@@ -147,22 +162,22 @@ end
   end
 end
 
-@inline function gettoken(inds::SortedIndices, i)
+@inline function Dictionaries.gettoken(inds::SortedIndices, i)
   a = parent(inds)
   r = searchsorted(a, i; inds.sort_kwargs...)
   @assert 0 ≤ length(r) ≤ 1 # If > 1, means the elements are not unique
   length(r) == 0 && return (false, 0)
   return (true, convert(Int, only(r)))
 end
-@propagate_inbounds gettokenvalue(inds::SortedIndices, x::Int) = parent(inds)[x]
+@propagate_inbounds Dictionaries.gettokenvalue(inds::SortedIndices, x::Int) = parent(inds)[x]
 
-isinsertable(i::SortedIndices) = true # Need an array trait here...
+@inline Dictionaries.isinsertable(i::SortedIndices) =  isinsertable(parent(inds))
 
 ## # For `SmallVector`
 ## # TODO: Make this more general, based on a trait?
 ## isinsertable(i::SortedIndices{<:Any,<:SmallVector}) = false
 
-@inline function gettoken!(inds::SortedIndices{I}, i::I, values=()) where {I}
+@inline function Dictionaries.gettoken!(inds::SortedIndices{I}, i::I, values=()) where {I}
   a = parent(inds)
   r = searchsorted(a, i; inds.sort_kwargs...)
   @assert 0 ≤ length(r) ≤ 1 # If > 1, means the elements are not unique
@@ -174,44 +189,108 @@ isinsertable(i::SortedIndices) = true # Need an array trait here...
   return (true, convert(Int, only(r)))
 end
 
-@inline function deletetoken!(inds::SortedIndices, x::Int, values=())
+@inline function Dictionaries.deletetoken!(inds::SortedIndices, x::Int, values=())
   deleteat!(parent(inds), x)
   foreach(v -> deleteat!(v, x), values)
   return inds
 end
 
-function Base.empty!(inds::SortedIndices, values=())
+@inline function Base.empty!(inds::SortedIndices, values=())
   empty!(parent(inds))
   foreach(empty!, values)
   return inds
 end
 
 # TODO: Make into `MSmallVector`?
-empty_type(::Type{<:SortedIndices}, ::Type{I}) where {I} = SortedIndices{I,Vector{I}}
+# More generally, make a `thaw(::AbstractArray)` function to return
+# a mutable version of an AbstractArray.
+@inline Dictionaries.empty_type(::Type{SortedIndices{I,D}}, ::Type{I}) where {I,D} = SortedIndices{I,empty_type(D, I)}
 
-function Base.copy(inds::SortedIndices, ::Type{I}) where {I}
+@inline function Base.copy(inds::SortedIndices, ::Type{I}) where {I}
   if I === eltype(inds)
-    # TODO: Disable checking unique and sorted.
-    SortedIndices{I}(copy(parent(inds)))
+    SortedIndices{I}(copy(parent(inds)); checkunique=false, checksorted=false)
   else
-    # TODO: Disable checking unique and sorted.
-    SortedIndices{I}(convert(AbstractArray{I}, parent(inds)))
+    SortedIndices{I}(convert(AbstractArray{I}, parent(inds)); checkunique=false, checksorted=false)
   end
 end
 
 # TODO: Can this take advantage of sorting?
-function Base.filter!(pred, inds::SortedIndices)
+@inline function Base.filter!(pred, inds::SortedIndices)
   filter!(pred, parent(inds))
   return inds
 end
 
-function randtoken(rng::Random.AbstractRNG, inds::SortedIndices)
+function Dictionaries.randtoken(rng::Random.AbstractRNG, inds::SortedIndices)
   return rand(rng, keys(parent(inds)))
 end
 
-function Base.sort!(inds::SortedIndices; kwargs...)
-  # TODO: No-op, should be sorted already.
-  sort!(inds.inds; kwargs...)
+@inline function Base.sort!(inds::SortedIndices; lt=isless, by=identity, rev::Bool=false, order::Ordering=Forward)
+  # No-op, should be sorted already.
   return inds
 end
+
+# Custom faster operations (not required for interface)
+@inline function Base.union!(vec::SortedIndices, items)
+  for item in items
+    insert!(vec, item)
+  end
+  return vec
+end
+
+function Base.union(vec::SortedIndices, items)
+  return union(InsertStyle(vec), vec, items)
+  error("Not implemented")
+  r = searchsorted(vec, item; kwargs...)
+  if length(r) == 0
+    vec = insert(vec, first(r), item)
+  end
+  return vec
+end
+
+## # TODO: Use `insert` from `SmallVectors`.
+## # TODO: Make a generic version for `AbstractVector`.
+## @inline function insert(vec::AbstractSmallVector, index::Integer, item)
+##   mvec = thaw(vec)
+##   insert!(mvec, index, item)
+##   return freeze(mvec)
+## end
+
+## # TODO: Use `insertsortedunique`, `mergesortedunique`
+## # from `SmallVectors`.
+## @inline function mergesortedunique(vec::AbstractSmallVector, itr; kwargs...)
+##   for item in itr
+##     # TODO: Write a faster `searchsortedunique`?
+##     r = searchsorted(vec, item; kwargs...)
+##     if length(r) == 0
+##       vec = insert(vec, first(r), item)
+##     end
+##   end
+##   return vec
+## end
+
+# TODO: Use `insertsortedunique`, `mergesortedunique`
+# from `SmallVectors`.
+@inline function Base.union(::FastCopy, i::SortedIndices, itr)
+  inds = SmallVectors.mergesortedunique(parent(i), itr; i.sort_kwargs...)
+  return SortedIndices(inds; checksorted=false, checkunique=false, i.sort_kwargs...)
+end
+
+## function Base.union!(s1::SortedIndices, itr)
+##   # Optimized to handle repeated values in `itr` - e.g. if `itr` is already sorted
+##   x = iterate(itr)
+##   if x === nothing
+##       return s1
+##   end
+##   (i, s) = x
+##   set!(s1, i)
+##   i_old = i
+##   while x !== nothing
+##       (i, s) = x
+##       !isequal(i, i_old) && set!(s1, i)
+##       i_old = i
+##       x = iterate(itr, s)
+##   end
+##   return s1
+## end
+
 end
