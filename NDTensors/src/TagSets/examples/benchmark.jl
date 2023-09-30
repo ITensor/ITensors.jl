@@ -9,7 +9,7 @@ using PProf
 
 function main()
   T = String31
-  V = SmallVector{20,T}
+  V = SmallVector{4,T}
   # V = Vector{T}
   S = SortedSet{T,V}
   # const TS = TagSet{T,S}
@@ -30,5 +30,5 @@ function main()
   @profile foreach(_ -> union(ts1, ts2), 1:10_000_000)
 
   # Export pprof profile and open interactive profiling web interface.
-  pprof()
+  return pprof()
 end

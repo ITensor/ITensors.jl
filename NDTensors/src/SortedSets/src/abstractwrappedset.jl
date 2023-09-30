@@ -5,7 +5,9 @@ abstract type AbstractWrappedIndices{T,D} <: AbstractIndices{T} end
 
 # Required interface
 Base.parent(inds::AbstractWrappedIndices) = error("Not implemented")
-Dictionaries.empty_type(::Type{AbstractWrappedIndices{I}}, ::Type{I}) where {I} = error("Not implemented")
+function Dictionaries.empty_type(::Type{AbstractWrappedIndices{I}}, ::Type{I}) where {I}
+  return error("Not implemented")
+end
 SmallVectors.thaw(::AbstractWrappedIndices) = error("Not implemented")
 SmallVectors.freeze(::AbstractWrappedIndices) = error("Not implemented")
 rewrap(::AbstractWrappedIndices, data) = error("Not implemented")
@@ -23,9 +25,11 @@ end
 @inline Base.IteratorSize(inds::AbstractWrappedIndices) = Base.IteratorSize(parent(inds))
 @inline Base.length(inds::AbstractWrappedIndices) = length(parent(inds))
 
-@inline Dictionaries.istokenizable(inds::AbstractWrappedIndices) = istokenizable(parent(inds))
+@inline Dictionaries.istokenizable(inds::AbstractWrappedIndices) =
+  istokenizable(parent(inds))
 @inline Dictionaries.tokentype(inds::AbstractWrappedIndices) = tokentype(parent(inds))
-@inline Dictionaries.iteratetoken(inds::AbstractWrappedIndices, s...) = iterate(parent(inds), s...)
+@inline Dictionaries.iteratetoken(inds::AbstractWrappedIndices, s...) =
+  iterate(parent(inds), s...)
 @inline function Dictionaries.iteratetoken_reverse(inds::AbstractWrappedIndices)
   return iteratetoken_reverse(parent(inds))
 end
@@ -42,7 +46,9 @@ end
 @inline Dictionaries.isinsertable(inds::AbstractWrappedIndices) = isinsertable(parent(inds))
 
 # Specify `I` to fix ambiguity error.
-@inline function Dictionaries.gettoken!(inds::AbstractWrappedIndices{I}, i::I, values=()) where {I}
+@inline function Dictionaries.gettoken!(
+  inds::AbstractWrappedIndices{I}, i::I, values=()
+) where {I}
   return gettoken!(parent(inds), i, values)
 end
 
@@ -76,14 +82,30 @@ Base.insert!(inds::AbstractWrappedIndices, tag) = insert!(parent(inds), tag)
 SmallVectors.delete(inds::AbstractWrappedIndices, tag) = delete(parent(inds), tag)
 Base.delete!(inds::AbstractWrappedIndices, tag) = delete!(parent(inds), tag)
 
-Base.union(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices) = rewrap(inds1, union(parent(inds1), parent(inds2)))
-Base.union(inds1::AbstractWrappedIndices, inds2) = rewrap(inds1, union(parent(inds1), inds2))
+function Base.union(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
+  return rewrap(inds1, union(parent(inds1), parent(inds2)))
+end
+function Base.union(inds1::AbstractWrappedIndices, inds2)
+  return rewrap(inds1, union(parent(inds1), inds2))
+end
 
-Base.intersect(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices) = rewrap(inds1, intersect(parent(inds1), parent(inds2)))
-Base.intersect(inds1::AbstractWrappedIndices, inds2) = rewrap(inds1, intersect(parent(inds1), inds2))
+function Base.intersect(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
+  return rewrap(inds1, intersect(parent(inds1), parent(inds2)))
+end
+function Base.intersect(inds1::AbstractWrappedIndices, inds2)
+  return rewrap(inds1, intersect(parent(inds1), inds2))
+end
 
-Base.setdiff(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices) = rewrap(inds1, setdiff(parent(inds1), parent(inds2)))
-Base.setdiff(inds1::AbstractWrappedIndices, inds2) = rewrap(inds1, setdiff(parent(inds1), inds2))
+function Base.setdiff(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
+  return rewrap(inds1, setdiff(parent(inds1), parent(inds2)))
+end
+function Base.setdiff(inds1::AbstractWrappedIndices, inds2)
+  return rewrap(inds1, setdiff(parent(inds1), inds2))
+end
 
-Base.symdiff(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices) = rewrap(inds1, symdiff(parent(inds1), parent(inds2)))
-Base.symdiff(inds1::AbstractWrappedIndices, inds2) = rewrap(inds1, symdiff(parent(inds1), inds2))
+function Base.symdiff(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
+  return rewrap(inds1, symdiff(parent(inds1), parent(inds2)))
+end
+function Base.symdiff(inds1::AbstractWrappedIndices, inds2)
+  return rewrap(inds1, symdiff(parent(inds1), inds2))
+end
