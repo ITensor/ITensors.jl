@@ -223,7 +223,7 @@ function Base.copyto!(
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
   #map!((t, a) -> bc.f(α, a), T, T, A)
-  map!((t,a) -> /(α,a), T, T, A)
+  map!((t, a) -> /(α, a), T, T, A)
   return T
 end
 

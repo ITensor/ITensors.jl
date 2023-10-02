@@ -1,4 +1,4 @@
 function ITensors.sweepup(::Type{<:CuArray})
-    GC.gc()
-    CUDA.reclaim()
+  GC.gc()
+  return CUDA.reclaim()
 end

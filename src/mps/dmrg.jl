@@ -279,7 +279,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
         energy = vals[1]
         phi::ITensor = itensor(convert(typeof(tensor(phi)), tensor(vecs[1])))
-        
+
         ortho = ha == 1 ? "left" : "right"
 
         drho = nothing
@@ -365,7 +365,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 end
 
 function sweepup(::Type{<:AbstractArray})
-  GC.gc()
+  return GC.gc()
 end
 
 function _dmrg_sweeps(;

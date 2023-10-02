@@ -1897,7 +1897,7 @@ dot(A::ITensor, B::ITensor) = _dot(dag(A), B)#(dag(A) * B)[]
 
 function _dot(A::ITensor, B::ITensor)
   B = permute(B, inds(A))
-  dot(tensor(A), tensor(B))
+  return dot(tensor(A), tensor(B))
 end
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
@@ -1969,7 +1969,7 @@ w .+= a .* v
 ```
 """
 function axpy!(a::Number, v::ITensor, w::ITensor)
-  w .+= a .* v
+  return w .+= a .* v
 end
 """
 axpby!(a,v,b,w)
