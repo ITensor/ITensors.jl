@@ -219,13 +219,13 @@ function LinearAlgebra.eigen(
 
   matrixT = matrix(T)
   ## TODO this doesn't work for GPU
-  if any(!isfinite, matrixT)
-    throw(
-      ArgumentError(
-        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
-      ),
-    )
-  end
+  # if any(!isfinite, matrixT)
+  #   throw(
+  #     ArgumentError(
+  #       "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+  #     ),
+  #   )
+  # end
 
   DM, VM = eigen(matrixT)
 
