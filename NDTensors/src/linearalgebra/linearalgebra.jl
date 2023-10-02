@@ -235,9 +235,11 @@ function LinearAlgebra.eigen(
   VM = VM[:, p]
 
   if truncate
+    cpu_dm = NDTensors.cpu(DM)
     truncerr, _ = truncate!(
-      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      cpu_dm; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
+    DM = adapt(typeof(DM), cpu_dm)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]
