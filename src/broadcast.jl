@@ -378,6 +378,7 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
+## TODO this code doesn't actually get called
 function Base.copyto!(
   T::ITensor,
   bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}},
@@ -414,6 +415,7 @@ end
 # For A .+= α
 #
 
+## TODO this code fails because of scalar indexing 
 function Base.copyto!(
   T::ITensor,
   bc::Broadcasted{
@@ -495,6 +497,7 @@ end
 # For B .= f.(B) + g.(A)
 #
 
+## TODO this code isn't called properly
 function Base.copyto!(
   R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}}
 )
