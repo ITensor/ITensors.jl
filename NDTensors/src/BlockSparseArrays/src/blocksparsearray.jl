@@ -2,10 +2,33 @@ using BlockArrays: block
 
 # Also add a version with contiguous underlying data.
 struct BlockSparseArray{
-  T,N,R<:SparseArray{<:AbstractArray{T,N},N},BS<:NTuple{N,AbstractUnitRange{Int}}
+  T,N,Blocks<:SparseArray{<:AbstractArray{T,N},N},Axes<:NTuple{N,AbstractUnitRange{Int}}
 } <: AbstractBlockArray{T,N}
-  blocks::R
-  axes::BS
+  blocks::Blocks
+  axes::Axes
+end
+
+# The size of a block
+function block_size(axes::Tuple, block::Block)
+  return length.(getindex.(axes, Block.(block.n)))
+end
+
+struct BlockZero{Axes}
+  axes::Axes
+end
+
+(f::BlockZero)(T::Type, I::CartesianIndex) = fill!(T(undef, block_size(f.axes, Block(Tuple(I)))), false)
+
+function BlockSparseArray(blocks::AbstractVector{<:Block}, blockdata::AbstractVector, axes::Tuple)
+  return BlockSparseArray(Dictionary(blocks, blockdata), axes)
+end
+
+function BlockSparseArray(blockdata::Dictionary{<:Block}, axes::Tuple)
+  blocks = keys(blockdata)
+  cartesianblocks = map(block -> CartesianIndex(block.n), blocks)
+  cartesiandata = Dictionary(cartesianblocks, blockdata)
+  block_storage = SparseArray(cartesiandata, blocklength.(axes), BlockZero(axes))
+  return BlockSparseArray(block_storage, axes)
 end
 
 Base.axes(block_arr::BlockSparseArray) = block_arr.axes
@@ -17,11 +40,11 @@ end
 function BlockArrays.viewblock(block_arr::BlockSparseArray, block)
   blks = block.n
   @boundscheck blockcheckbounds(block_arr, blks...)
-  block_size = length.(getindex.(axes(block_arr), Block.(blks)))
+  ## block_size = length.(getindex.(axes(block_arr), Block.(blks)))
   # TODO: Make this `Zeros`?
-  zero = zeros(eltype(block_arr), block_size)
-  # return block_arr.blocks[blks...] # Fails because zero isn't defined
-  return get_nonzero(block_arr.blocks, blks, zero)
+  ## zero = zeros(eltype(block_arr), block_size)
+  return block_arr.blocks[blks...] # Fails because zero isn't defined
+  ## return get_nonzero(block_arr.blocks, blks, zero)
 end
 
 function Base.getindex(block_arr::BlockSparseArray{T,N}, bi::BlockIndex{N}) where {T,N}
