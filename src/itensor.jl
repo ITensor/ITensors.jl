@@ -82,7 +82,7 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 ## Accessor Functions, Index Functions and Operations
 mutable struct ITensor
   tensor::Tensor
-  function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:TensorStorage,<:Tuple})
+  function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:Any,<:Tuple})
     @debug_check begin
       is = inds(T)
       if !allunique(is)
@@ -761,7 +761,7 @@ end
 
 Return a view of the TensorStorage of the ITensor.
 """
-storage(T::ITensor)::TensorStorage = storage(tensor(T))
+storage(T::ITensor) = storage(tensor(T))
 
 storagetype(x::ITensor) = storagetype(tensor(x))
 
