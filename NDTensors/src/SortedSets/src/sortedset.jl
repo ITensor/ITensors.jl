@@ -15,7 +15,8 @@ struct SortedIndices{I,Inds<:AbstractArray{I},Order<:Ordering} <: AbstractSet{I}
   ) where {I,Inds<:AbstractArray{I},Order<:Ordering} = new{I,Inds,Order}(inds, order)
 end
 
-function SortedIndices{I,Inds}(
+# Inner constructor
+function SortedIndices{I,Inds,Order}(
   a::Inds, order::Order; issorted=issorted, allunique=allunique
 ) where {I,Inds<:AbstractArray{I},Order<:Ordering}
   if !issorted(a, order)
@@ -27,7 +28,21 @@ function SortedIndices{I,Inds}(
   return _SortedIndices(a, order)
 end
 
-function SortedIndices(
+@inline function SortedIndices{I,Inds,Order}(
+  a::AbstractArray, order::Ordering; issorted=issorted, allunique=allunique
+) where {I,Inds<:AbstractArray{I},Order<:Ordering}
+  return SortedIndices{I,Inds,Order}(
+    convert(Inds, a), convert(Order, order); issorted, allunique
+  )
+end
+
+@inline function SortedIndices{I,Inds}(
+  a::AbstractArray, order::Order; issorted=issorted, allunique=allunique
+) where {I,Inds<:AbstractArray{I},Order<:Ordering}
+  return SortedIndices{I,Inds,Order}(a, order; issorted, allunique)
+end
+
+@inline function SortedIndices(
   a::Inds, order::Ordering; issorted=issorted, allunique=allunique
 ) where {I,Inds<:AbstractArray{I}}
   return SortedIndices{I,Inds}(a, order; issorted, allunique)
@@ -182,8 +197,15 @@ end
 # TODO: Make into `MSmallVector`?
 # More generally, make a `thaw(::AbstractArray)` function to return
 # a mutable version of an AbstractArray.
-@inline Dictionaries.empty_type(::Type{SortedIndices{I,D}}, ::Type{I}) where {I,D} =
-  SortedIndices{I,empty_type(D, I)}
+@inline Dictionaries.empty_type(
+  ::Type{SortedIndices{I,D,Order}}, ::Type{I}
+) where {I,D,Order} = SortedIndices{I,Dictionaries.empty_type(D, I),Order}
+
+@inline Dictionaries.empty_type(::Type{<:AbstractVector}, ::Type{I}) where {I} = Vector{I}
+
+function Base.empty(inds::SortedIndices{I,D}, ::Type{I}) where {I,D}
+  return Dictionaries.empty_type(typeof(inds), I)(D(), inds.order)
+end
 
 @inline function Base.copy(inds::SortedIndices, ::Type{I}) where {I}
   if I === eltype(inds)
