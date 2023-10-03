@@ -119,6 +119,7 @@ include("empty/adapt.jl")
 #
 include("arraytensor/arraytensor.jl")
 include("arraytensor/array.jl")
+include("arraytensor/blocksparsearray.jl")
 
 #####################################
 # Deprecations

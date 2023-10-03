@@ -19,16 +19,20 @@ end
 
 (f::BlockZero)(T::Type, I::CartesianIndex) = fill!(T(undef, block_size(f.axes, Block(Tuple(I)))), false)
 
-function BlockSparseArray(blocks::AbstractVector{<:Block}, blockdata::AbstractVector, axes::Tuple)
+function BlockSparseArray(blocks::AbstractVector{<:Block{N}}, blockdata::AbstractVector, axes::NTuple{N}) where {N}
   return BlockSparseArray(Dictionary(blocks, blockdata), axes)
 end
 
-function BlockSparseArray(blockdata::Dictionary{<:Block}, axes::Tuple)
+function BlockSparseArray(blockdata::Dictionary{<:Block{N}}, axes::NTuple{N,AbstractUnitRange{Int}}) where {N}
   blocks = keys(blockdata)
   cartesianblocks = map(block -> CartesianIndex(block.n), blocks)
   cartesiandata = Dictionary(cartesianblocks, blockdata)
   block_storage = SparseArray(cartesiandata, blocklength.(axes), BlockZero(axes))
   return BlockSparseArray(block_storage, axes)
+end
+
+function BlockSparseArray(blockdata::Dictionary{<:Block{N}}, blockinds::NTuple{N,AbstractVector}) where {N}
+  return BlockSparseArray(blockdata, blockedrange.(blockinds))
 end
 
 Base.axes(block_arr::BlockSparseArray) = block_arr.axes
