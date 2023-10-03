@@ -134,7 +134,6 @@ find_type(::Type{T}, ::Tuple{}) where {T} = nothing
 #
 
 function Base.copyto!(T::ITensor, bc::Broadcasted)
-  @show typeof(bc)
   return error(
     "The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.",
   )
@@ -171,7 +170,7 @@ function Base.copyto!(
 )
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
-  map!((t, a) -> bc.f(a, α), T, T, A)
+  map!((t, a) -> a / α, T, T, A)
   return T
 end
 
@@ -223,7 +222,8 @@ function Base.copyto!(
 )
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
-  map!((t, a) -> bc.f(α, a), T, T, A)
+  #map!((t, a) -> bc.f(α, a), T, T, A)
+  map!((t, a) -> /(α, a), T, T, A)
   return T
 end
 
@@ -242,6 +242,7 @@ end
 # For B .= A .^ 2
 #
 
+## TODO this fails on GPU to compile
 function Base.copyto!(
   R::ITensor, bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(Base.literal_pow)}
 )
@@ -281,11 +282,11 @@ end
 #
 
 function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}})
-  return (r, t) -> bc.f(r, t)
+  return (r, t) -> +(r, t)
 end
 
 function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}})
-  return (r, t) -> bc.f(r, t)
+  return (r, t) -> -(r, t)
 end
 
 function Base.copyto!(
@@ -352,7 +353,7 @@ function Base.copyto!(
     powf = find_type(Base.RefValue{<:Function}, bc_bc.args)
 
     if !isnothing(α) && !isnothing(A)
-      map!((r, t) -> bc.f(r, bc_bc.f(t, α)), T, T, A)
+      map!((r, t) -> +(r, *(t, α)), T, T, A)
     elseif !isnothing(γ) && !isnothing(A) && !isnothing(powf)
       map!((r, t) -> bc.f(r, bc_bc.f(powf[], t, γ[])), T, T, A)
     else
@@ -378,6 +379,7 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
+## TODO this code doesn't actually get called
 function Base.copyto!(
   T::ITensor,
   bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}},
@@ -414,6 +416,7 @@ end
 # For A .+= α
 #
 
+## TODO this code fails because of scalar indexing 
 function Base.copyto!(
   T::ITensor,
   bc::Broadcasted{
@@ -495,6 +498,7 @@ end
 # For B .= f.(B) + g.(A)
 #
 
+## TODO this code isn't called properly
 function Base.copyto!(
   R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}}
 )

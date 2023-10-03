@@ -218,13 +218,14 @@ function LinearAlgebra.eigen(
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
   matrixT = matrix(T)
-  if any(!isfinite, matrixT)
-    throw(
-      ArgumentError(
-        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
-      ),
-    )
-  end
+  ## TODO this doesn't work for GPU
+  # if any(!isfinite, matrixT)
+  #   throw(
+  #     ArgumentError(
+  #       "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+  #     ),
+  #   )
+  # end
 
   DM, VM = eigen(matrixT)
 
@@ -234,9 +235,11 @@ function LinearAlgebra.eigen(
   VM = VM[:, p]
 
   if truncate
+    cpu_dm = NDTensors.cpu(DM)
     truncerr, _ = truncate!(
-      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      cpu_dm; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
+    DM = adapt(typeof(DM), cpu_dm)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]

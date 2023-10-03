@@ -189,3 +189,7 @@ end
 function outer end
 
 const ⊗ = outer
+
+function LinearAlgebra.dot(A::Tensor, B::Tensor)
+  return LinearAlgebra.dot(data(A), data(B))
+end

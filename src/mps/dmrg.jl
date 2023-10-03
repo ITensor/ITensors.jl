@@ -278,7 +278,8 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         end
 
         energy = vals[1]
-        phi::ITensor = itensor(storagetype(phi)(convert(typeof(data(phi)),data(vecs[1]))), inds(phi))
+#        phi::ITensor = itensor(storagetype(phi)(convert(typeof(data(phi)),data(vecs[1]))), inds(phi))
+        phi::ITensor = itensor(convert(typeof(tensor(phi)), tensor(vecs[1])))
 
         ortho = ha == 1 ? "left" : "right"
 
@@ -346,6 +347,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         )
       end
     end
+    sweepup(typeof(data(psi[1])))
     if outputlevel >= 1
       @printf(
         "After sweep %d energy=%s  maxlinkdim=%d maxerr=%.2E time=%.3f\n",
@@ -361,6 +363,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
     isdone && break
   end
   return (energy, psi)
+end
+
+function sweepup(::Type{<:AbstractArray})
+  return GC.gc()
 end
 
 function _dmrg_sweeps(;
