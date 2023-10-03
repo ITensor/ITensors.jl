@@ -1,7 +1,12 @@
 # Used for dispatch to distinguish from Tensors wrapping TensorStorage.
 # Remove once TensorStorage is removed.
 const ArrayStorage{T,N} = Union{
-  Array{T,N},ReshapedArray{T,N},SubArray{T,N},PermutedDimsArray{T,N},StridedView{T,N},BlockSparseArray{T,N}
+  Array{T,N},
+  ReshapedArray{T,N},
+  SubArray{T,N},
+  PermutedDimsArray{T,N},
+  StridedView{T,N},
+  BlockSparseArray{T,N},
 }
 const MatrixStorage{T} = Union{
   ArrayStorage{T,2},

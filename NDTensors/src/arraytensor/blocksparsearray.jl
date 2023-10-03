@@ -1,7 +1,5 @@
 # TODO: Implement.
-function contraction_output(
-  tensor1::BlockSparseArray, tensor2::BlockSparseArray, indsR
-)
+function contraction_output(tensor1::BlockSparseArray, tensor2::BlockSparseArray, indsR)
   return error("Not implemented")
 end
 
