@@ -40,11 +40,11 @@ storagetype(::Type{EmptyStorage{ElT,StoreT}}) where {ElT,StoreT} = StoreT
 storagetype(::EmptyStorage{ElT,StoreT}) where {ElT,StoreT} = StoreT
 
 # Get the EmptyStorage version of the TensorStorage
-function emptytype(::Type{StoreT}) where {StoreT}
-  return EmptyStorage{eltype(StoreT),StoreT}
+function emptytype(storagetype::Type{<:TensorStorage})
+  return EmptyStorage{eltype(storagetype),storagetype}
 end
 
-empty(::Type{StoreT}) where {StoreT} = emptytype(StoreT)()
+empty(storagetype::Type{<:TensorStorage}) = emptytype(storagetype)()
 
 data(S::EmptyStorage) = NoData()
 

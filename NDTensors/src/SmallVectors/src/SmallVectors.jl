@@ -2,7 +2,27 @@ module SmallVectors
 using StaticArrays
 
 export AbstractSmallVector,
-  SmallVector, MSmallVector, SubSmallVector, FastCopy, InsertStyle, insert, delete
+  SmallVector,
+  MSmallVector,
+  SubSmallVector,
+  FastCopy,
+  InsertStyle,
+  IsInsertable,
+  NotInsertable,
+  insert,
+  delete,
+  thaw,
+  freeze,
+  maxlength,
+  unionsortedunique,
+  unionsortedunique!,
+  setdiffsortedunique,
+  setdiffsortedunique!,
+  intersectsortedunique,
+  intersectsortedunique!,
+  symdiffsortedunique,
+  symdiffsortedunique!,
+  thaw_type
 
 struct NotImplemented <: Exception
   msg::String
@@ -11,6 +31,7 @@ NotImplemented() = NotImplemented("Not implemented.")
 
 include("BaseExt/insertstyle.jl")
 include("BaseExt/thawfreeze.jl")
+include("BaseExt/sortedunique.jl")
 include("abstractarray/insert.jl")
 include("abstractsmallvector/abstractsmallvector.jl")
 include("abstractsmallvector/deque.jl")

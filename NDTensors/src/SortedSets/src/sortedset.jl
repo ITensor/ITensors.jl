@@ -7,27 +7,43 @@ elements. Lookup uses that they are sorted.
 SortedIndices can be faster than ArrayIndices which use naive search that may be optimal for
 small collections. Larger collections are better handled by containers like `Indices`.
 """
-struct SortedIndices{I,Inds<:AbstractArray{I},SortKwargs<:NamedTuple} <: AbstractSet{I}
+struct SortedIndices{I,Inds<:AbstractArray{I},Order<:Ordering} <: AbstractSet{I}
   inds::Inds
-  sort_kwargs::SortKwargs
-  @inline function SortedIndices{I,Inds}(
-    a::Inds;
-    lt=isless,
-    by=identity,
-    rev::Bool=false,
-    order::Ordering=Forward,
-    checksorted::Bool=true,
-    checkunique::Bool=true,
-  ) where {I,Inds<:AbstractArray{I}}
-    if checkunique
-      @assert allunique(Iterators.map(by, a))
-    end
-    if checksorted
-      @assert issorted(a; lt, by, rev, order)
-    end
-    sort_kwargs = (; lt, by, rev, order)
-    return new{I,Inds,typeof(sort_kwargs)}(a, sort_kwargs)
+  order::Order
+  global @inline _SortedIndices(
+    inds::Inds, order::Order
+  ) where {I,Inds<:AbstractArray{I},Order<:Ordering} = new{I,Inds,Order}(inds, order)
+end
+
+function SortedIndices{I,Inds}(
+  a::Inds, order::Order; issorted=issorted, allunique=allunique
+) where {I,Inds<:AbstractArray{I},Order<:Ordering}
+  if !issorted(a, order)
+    a = sort(a, order)
   end
+  if !alluniquesorted(a, order)
+    a = uniquesorted(a, order)
+  end
+  return _SortedIndices(a, order)
+end
+
+function SortedIndices(
+  a::Inds, order::Ordering; issorted=issorted, allunique=allunique
+) where {I,Inds<:AbstractArray{I}}
+  return SortedIndices{I,Inds}(a, order; issorted, allunique)
+end
+
+@inline function SortedIndices{I,Inds}(
+  a::Inds;
+  lt=isless,
+  by=identity,
+  rev::Bool=false,
+  order::Ordering=Forward,
+  issorted=issorted,
+  allunique=allunique,
+) where {I,Inds<:AbstractArray{I}}
+  order = ord(lt, by, rev, order)
+  return SortedIndices{I,Inds}(a, order; issorted, allunique)
 end
 
 const SortedSet = SortedIndices
@@ -35,10 +51,8 @@ const SortedSet = SortedIndices
 # Traits
 @inline SmallVectors.InsertStyle(::Type{<:SortedIndices{I,Inds}}) where {I,Inds} =
   InsertStyle(Inds)
-@inline SmallVectors.thaw(i::SortedIndices) =
-  SortedIndices(thaw(i.inds); checksorted=false, checkunique=false, i.sort_kwargs...)
-@inline SmallVectors.freeze(i::SortedIndices) =
-  SortedIndices(freeze(i.inds); checksorted=false, checkunique=false, i.sort_kwargs...)
+@inline SmallVectors.thaw(i::SortedIndices) = SortedIndices(thaw(i.inds), i.order)
+@inline SmallVectors.freeze(i::SortedIndices) = SortedIndices(freeze(i.inds), i.order)
 
 @propagate_inbounds SortedIndices(; kwargs...) = SortedIndices{Any}([]; kwargs...)
 @propagate_inbounds SortedIndices{I}(; kwargs...) where {I} =
@@ -101,7 +115,7 @@ end
 end
 
 @inline function Base.in(i::I, inds::SortedIndices{I}) where {I}
-  return insorted(i, parent(inds); inds.sort_kwargs...)
+  return _insorted(i, parent(inds), inds.order)
 end
 @inline Base.IteratorSize(::SortedIndices) = Base.HasLength()
 @inline Base.length(inds::SortedIndices) = length(parent(inds))
@@ -131,7 +145,7 @@ end
 
 @inline function Dictionaries.gettoken(inds::SortedIndices, i)
   a = parent(inds)
-  r = searchsorted(a, i; inds.sort_kwargs...)
+  r = searchsorted(a, i, inds.order)
   @assert 0 ≤ length(r) ≤ 1 # If > 1, means the elements are not unique
   length(r) == 0 && return (false, 0)
   return (true, convert(Int, only(r)))
@@ -143,7 +157,7 @@ end
 
 @inline function Dictionaries.gettoken!(inds::SortedIndices{I}, i::I, values=()) where {I}
   a = parent(inds)
-  r = searchsorted(a, i; inds.sort_kwargs...)
+  r = searchsorted(a, i, inds.order)
   @assert 0 ≤ length(r) ≤ 1 # If > 1, means the elements are not unique
   if length(r) == 0
     insert!(a, first(r), i)
@@ -173,10 +187,15 @@ end
 
 @inline function Base.copy(inds::SortedIndices, ::Type{I}) where {I}
   if I === eltype(inds)
-    SortedIndices{I}(copy(parent(inds)); checkunique=false, checksorted=false)
+    SortedIndices(
+      copy(parent(inds)), inds.order; issorted=Returns(true), allunique=Returns(true)
+    )
   else
-    SortedIndices{I}(
-      convert(AbstractArray{I}, parent(inds)); checkunique=false, checksorted=false
+    SortedIndices(
+      convert(AbstractArray{I}, parent(inds)),
+      inds.order;
+      issorted=Returns(true),
+      allunique=Returns(true),
     )
   end
 end
@@ -195,30 +214,52 @@ end
   inds::SortedIndices; lt=isless, by=identity, rev::Bool=false, order::Ordering=Forward
 )
   # No-op, should be sorted already.
+  # TODO: Check `ord(lt, by, rev, order) == inds.ord`.
   return inds
 end
 
 # Custom faster operations (not required for interface)
-@inline function Base.union!(vec::SortedIndices, items)
-  for item in items
-    insert!(vec, item)
+function Base.union!(inds::SortedIndices, items::SortedIndices)
+  if inds.order ≠ items.order
+    # Reorder if the orderings are different.
+    items = SortedIndices(parent(inds), inds.order)
   end
-  return vec
+  unionsortedunique!(parent(inds), parent(items), inds.order)
+  return inds
 end
 
-function Base.union(vec::SortedIndices, items)
-  return union(InsertStyle(vec), vec, items)
-  error("Not implemented")
-  r = searchsorted(vec, item; kwargs...)
-  if length(r) == 0
-    vec = insert(vec, first(r), item)
+function Base.union(inds::SortedIndices, items::SortedIndices)
+  if inds.order ≠ items.order
+    # Reorder if the orderings are different.
+    items = SortedIndices(parent(inds), inds.order)
   end
-  return vec
+  out = unionsortedunique(parent(inds), parent(items), inds.order)
+  return SortedIndices(out, inds.order; issorted=Returns(true), allunique=Returns(true))
 end
 
-# TODO: Use `insertsortedunique`, `mergesortedunique`
-# from `SmallVectors`.
-function Base.union(::FastCopy, i::SortedIndices, itr)
-  inds = SmallVectors.mergesortedunique(parent(i), itr; i.sort_kwargs...)
-  return SortedIndices(inds; checksorted=false, checkunique=false, i.sort_kwargs...)
+function Base.union(inds::SortedIndices, items)
+  return union(inds, SortedIndices(items, inds.order))
+end
+
+function Base.intersect(inds::SortedIndices, items::SortedIndices)
+  # TODO: Make an `intersectsortedunique`.
+  return intersect(NotInsertable(), inds, items)
+end
+
+function Base.setdiff(inds::SortedIndices, items)
+  return setdiff(inds, SortedIndices(items, inds.order))
+end
+
+function Base.setdiff(inds::SortedIndices, items::SortedIndices)
+  # TODO: Make an `setdiffsortedunique`.
+  return setdiff(NotInsertable(), inds, items)
+end
+
+function Base.symdiff(inds::SortedIndices, items)
+  return symdiff(inds, SortedIndices(items, inds.order))
+end
+
+function Base.symdiff(inds::SortedIndices, items::SortedIndices)
+  # TODO: Make an `symdiffsortedunique`.
+  return symdiff(NotInsertable(), inds, items)
 end
