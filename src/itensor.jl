@@ -1893,12 +1893,8 @@ diag(T::ITensor) = diag(tensor(T))
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
 ## TODO this operation does not work with GPU
-dot(A::ITensor, B::ITensor) = _dot(dag(A), B)
+dot(A::ITensor, B::ITensor) = (dag(A) * B)[]
 
-function _dot(A::ITensor, B::ITensor)
-  B = permute(B, inds(A))
-  return dot(tensor(A), tensor(B))
-end
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
 
@@ -1986,11 +1982,11 @@ Scale the ITensor A by x in-place. May also be written `rmul!`.
 A .*= x
 ```
 """
-scale!(T::ITensor, α::Number) = itensor(data(T) .*= α, inds(T))
+scale!(T::ITensor, α::Number) = (T .*= α)
 
-rmul!(T::ITensor, α::Number) = itensor(data(T) .*= α, inds(T))
+rmul!(T::ITensor, α::Number) = (T .*= α)
 
-lmul!(T::ITensor, α::Number) = itensor(data(T) .= α .* data(T), inds(T))
+lmul!(T::ITensor, α::Number) = (T .= α .* T)
 
 """
     mul!(A::ITensor, x::Number, B::ITensor)
@@ -1998,9 +1994,9 @@ lmul!(T::ITensor, α::Number) = itensor(data(T) .= α .* data(T), inds(T))
 Scalar multiplication of ITensor B with x, and store the result in A.
 Like `A .= x .* B`.
 """
-mul!(R::ITensor, α::Number, T::ITensor) = itensor(data(R) .= α * data(T), inds(T))
+mul!(R::ITensor, α::Number, T::ITensor) = (R .= α .* T)
 
-mul!(R::ITensor, T::ITensor, α::Number) = itensor(data(R) .= data(T) * α, inds(T))
+mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
 #########################
 # End ITensor Operations
 #
