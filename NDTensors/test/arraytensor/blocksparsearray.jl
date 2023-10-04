@@ -1,19 +1,21 @@
 using NDTensors
 using NDTensors.BlockSparseArrays
-using BlockArrays
+using BlockArrays: BlockArrays
 using LinearAlgebra
 using Test
-
-using BlockArrays: Block
 
 using NDTensors: storage, storagetype
 
 @testset "Tensor wrapping BlockSparseArray" begin
   is1 = ([1, 1], [1, 2])
-  D1 = BlockSparseArray([Block(1, 1), Block(2, 2)], [randn(1, 1), randn(1, 2)], is1)
+  D1 = BlockSparseArray(
+    [BlockArrays.Block(1, 1), BlockArrays.Block(2, 2)], [randn(1, 1), randn(1, 2)], is1
+  )
 
   is2 = ([1, 2], [2, 2])
-  D2 = BlockSparseArray([Block(1, 1), Block(2, 2)], [randn(1, 2), randn(2, 2)], is2)
+  D2 = BlockSparseArray(
+    [BlockArrays.Block(1, 1), BlockArrays.Block(2, 2)], [randn(1, 2), randn(2, 2)], is2
+  )
 
   T1 = tensor(D1, is1)
   T2 = tensor(D2, is2)
