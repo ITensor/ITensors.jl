@@ -19,6 +19,7 @@ end
 
 @safetestset "NDTensors" begin
   @testset "$filename" for filename in [
+    "BlockSparseArrays.jl",
     "SetParameters.jl",
     "SmallVectors.jl",
     "SortedSets.jl",
