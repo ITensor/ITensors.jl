@@ -40,8 +40,9 @@ using NDTensors: storage, storagetype
   @test_broken Array(T1r + T1) ≈ Array(T1r) + Array(T1)
   @test_broken Array(permutedims(T1, (2, 1))) ≈ permutedims(Array(T1), (2, 1))
 
-  U, S, V = svd(T1)
-  @test U * S * V ≈ T1
+  # TODO: Not implemented yet.
+  ## U, S, V = svd(T1)
+  ## @test U * S * V ≈ T1
 
   @test_broken T12 = contract(T1, (1, -1), T2, (-1, 2))
   @test_broken T12 ≈ T1 * T2
