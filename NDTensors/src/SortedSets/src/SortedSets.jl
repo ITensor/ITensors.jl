@@ -1,11 +1,11 @@
 module SortedSets
+using Compat
 using Dictionaries
+using Random
 using ..SmallVectors
 
 using Base: @propagate_inbounds
 using Base.Order: Ordering, Forward, ord, lt
-
-using Random
 
 export AbstractWrappedIndices, SortedSet, SmallSet, MSmallSet
 
