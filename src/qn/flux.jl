@@ -39,7 +39,7 @@ function checkflux(T::Tensor, flux_to_check)
     fluxTb = flux(T, b)
     if fluxTb != flux_to_check
       error(
-        "Block $b has flux $fluxTb that is inconsistent with the desired flux $flux_check"
+        "Block $b has flux $fluxTb that is inconsistent with the desired flux $flux_to_check",
       )
     end
   end
