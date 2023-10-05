@@ -34,20 +34,20 @@ function flux(T::Tensor)
   return flux(T, block1)
 end
 
-function checkflux(T::Tensor, flux_check)
+function checkflux(T::Tensor, flux_to_check)
   for b in nzblocks(T)
     fluxTb = flux(T, b)
-    if fluxTb != flux_check
+    if fluxTb != flux_to_check
       error(
         "Block $b has flux $fluxTb that is inconsistent with the desired flux $flux_check"
       )
     end
   end
-  return nothing
 end
 
 function checkflux(T::Tensor)
-  b1 = first(nzblocks(T))
-  fluxTb1 = flux(T, b1)
+  nzb = nzblocks(T)
+  isempty(nzb) && return nothing
+  fluxTb1 = flux(T, first(nzb))
   return checkflux(T, fluxTb1)
 end
