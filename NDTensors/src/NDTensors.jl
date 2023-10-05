@@ -6,6 +6,7 @@ using Compat
 using Dictionaries
 using FLoops
 using Folds
+using InlineStrings
 using Random
 using LinearAlgebra
 using StaticArrays
@@ -19,8 +20,14 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("BlockSparseArrays/src/BlockSparseArrays.jl")
+using .BlockSparseArrays
 include("SmallVectors/src/SmallVectors.jl")
 using .SmallVectors
+include("SortedSets/src/SortedSets.jl")
+using .SortedSets
+include("TagSets/src/TagSets.jl")
+using .TagSets
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
@@ -117,6 +124,7 @@ include("empty/adapt.jl")
 #
 include("arraytensor/arraytensor.jl")
 include("arraytensor/array.jl")
+include("arraytensor/blocksparsearray.jl")
 
 #####################################
 # Deprecations

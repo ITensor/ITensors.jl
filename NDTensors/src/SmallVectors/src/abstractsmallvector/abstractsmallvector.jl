@@ -10,6 +10,12 @@ similar_type(vec::AbstractSmallVector) = typeof(vec)
 
 # Required buffer interface
 maxlength(vec::AbstractSmallVector) = length(buffer(vec))
+maxlength(vectype::Type{<:AbstractSmallVector}) = error("Not implemented")
+
+function thaw_type(vectype::Type{<:AbstractSmallVector}, ::Type{T}) where {T}
+  return MSmallVector{maxlength(vectype),T}
+end
+thaw_type(vectype::Type{<:AbstractSmallVector{T}}) where {T} = thaw_type(vectype, T)
 
 # Required AbstractArray interface
 Base.size(vec::AbstractSmallVector) = throw(NotImplemented())

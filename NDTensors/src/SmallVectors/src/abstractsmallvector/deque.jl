@@ -140,8 +140,20 @@ end
   return vec
 end
 
+@inline function Base.deleteat!(
+  vec::AbstractSmallVector, indices::AbstractUnitRange{<:Integer}
+)
+  f = first(indices)
+  n = length(indices)
+  circshift!(smallview(vec, f, lastindex(vec)), -n)
+  resize!(vec, length(vec) - n)
+  return vec
+end
+
 # Don't @inline, makes it slower.
-function StaticArrays.deleteat(vec::AbstractSmallVector, index::Integer)
+function StaticArrays.deleteat(
+  vec::AbstractSmallVector, index::Union{Integer,AbstractUnitRange{<:Integer}}
+)
   mvec = Base.copymutable(vec)
   deleteat!(mvec, index)
   return convert(similar_type(vec), mvec)
