@@ -16,6 +16,11 @@ function MSmallVector(buffer::AbstractVector, len::Int)
   return MSmallVector{length(buffer),eltype(buffer)}(buffer, len)
 end
 
+maxlength(::Type{<:MSmallVector{S}}) where {S} = S
+
+# Empty constructor
+(msmallvector_type::Type{MSmallVector{S,T}} where {S,T})() = msmallvector_type(undef, 0)
+
 """
 `MSmallVector` constructor, uses `MVector` as a buffer.
 ```julia

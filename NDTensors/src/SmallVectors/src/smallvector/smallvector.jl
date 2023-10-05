@@ -11,6 +11,8 @@ end
 @inline setbuffer(vec::SmallVector, buffer) = SmallVector(buffer, vec.length)
 @inline setlength(vec::SmallVector, length) = SmallVector(vec.buffer, length)
 
+maxlength(::Type{<:SmallVector{S}}) where {S} = S
+
 # Constructors
 function SmallVector{S}(buffer::AbstractVector, len::Int) where {S}
   return SmallVector{S,eltype(buffer)}(buffer, len)
@@ -27,7 +29,16 @@ SmallVector{10}(SA[1, 2, 3])
 ```
 """
 function SmallVector{S,T}(vec::AbstractVector) where {S,T}
-  return SmallVector{S,T}(MSmallVector{S,T}(vec))
+  # TODO: This is a bit slower, but simpler. Check if this
+  # gets faster in newer Julia versions.
+  # return SmallVector{S,T}(MSmallVector{S,T}(vec))
+  length(vec) > S && error("Data is too long for `SmallVector`.")
+  msvec = MVector{S,T}(undef)
+  @inbounds for i in eachindex(vec)
+    msvec[i] = vec[i]
+  end
+  svec = SVector(msvec)
+  return SmallVector{S,T}(svec, length(vec))
 end
 # Special optimization codepath for `MSmallVector`
 # to avoid a copy.
