@@ -314,5 +314,5 @@ end
 function Base.vcat(vec1::AbstractSmallVector, vec2::AbstractVector)
   mvec1 = thaw(vec1)
   append!(mvec1, vec2)
-  return convert(similar_type(vec), mvec1)
+  return convert(similar_type(vec1), mvec1)
 end
