@@ -1,138 +1,171 @@
 """
     SortedSet(iter)
 
-Construct an `SortedSet <: AbstractIndices` from an arbitrary Julia iterable with unique
+Construct an `SortedSet <: AbstractSet` from an arbitrary Julia iterable with unique
 elements. Lookup uses that they are sorted.
 
 SortedSet can be faster than ArrayIndices which use naive search that may be optimal for
 small collections. Larger collections are better handled by containers like `Indices`.
 """
-struct SortedSet{I,Inds<:AbstractArray{I},Order<:Ordering} <: AbstractSet{I}
-  inds::Inds
+struct SortedSet{T,Data<:AbstractArray{T},Order<:Ordering} <: AbstractSet{T}
+  data::Data
   order::Order
   global @inline _SortedSet(
-    inds::Inds, order::Order
-  ) where {I,Inds<:AbstractArray{I},Order<:Ordering} = new{I,Inds,Order}(inds, order)
+    data::Data, order::Order
+  ) where {T,Data<:AbstractArray{T},Order<:Ordering} = new{T,Data,Order}(data, order)
 end
+
+@inline Base.parent(set::SortedSet) = getfield(set, :data)
+@inline order(set::SortedSet) = getfield(set, :order)
 
 # Dictionaries.jl interface
 const SortedIndices = SortedSet
 
 # Inner constructor.
-# Assumes it is already sorted.
-function SortedSet{I,Inds,Order}(
-  a::Inds, order::Order
-) where {I,Inds<:AbstractArray{I},Order<:Ordering}
+# Sorts and makes unique as needed.
+function SortedSet{T,Data,Order}(
+  a::Data, order::Order
+) where {T,Data<:AbstractArray{T},Order<:Ordering}
+  if !issorted(a, order)
+    a = SmallVectors.sort(a, order)
+  end
+  if !alluniquesorted(a, order)
+    a = uniquesorted(a, order)
+  end
   return _SortedSet(a, order)
 end
 
-@inline function SortedSet{I,Inds,Order}(
+@inline function SortedSet{T,Data,Order}(
   a::AbstractArray, order::Ordering
-) where {I,Inds<:AbstractArray{I},Order<:Ordering}
-  return SortedSet{I,Inds,Order}(convert(Inds, a), convert(Order, order))
+) where {T,Data<:AbstractArray{T},Order<:Ordering}
+  return SortedSet{T,Data,Order}(convert(Data, a), convert(Order, order))
 end
 
-@inline function SortedSet{I,Inds}(
+@inline function SortedSet{T,Data}(
   a::AbstractArray, order::Order
-) where {I,Inds<:AbstractArray{I},Order<:Ordering}
-  return SortedSet{I,Inds,Order}(a, order)
+) where {T,Data<:AbstractArray{T},Order<:Ordering}
+  return SortedSet{T,Data,Order}(a, order)
 end
 
-@inline function SortedSet(a::Inds, order::Ordering) where {I,Inds<:AbstractArray{I}}
-  return SortedSet{I,Inds}(a, order)
+@inline function SortedSet(a::Data, order::Ordering) where {T,Data<:AbstractArray{T}}
+  return SortedSet{T,Data}(a, order)
 end
 
-@inline function SortedSet{I,Inds}(
-  a::Inds; lt=isless, by=identity, rev::Bool=false, issorted=issorted, allunique=allunique
-) where {I,Inds<:AbstractArray{I}}
-  if !issorted(a; lt, by, rev)
-    a = sort(a; lt, by, rev)
-  end
-  if !alluniquesorted(a; lt, by, rev)
-    a = uniquesorted(a, order)
-  end
-  new_order = ord(lt, by, rev)
-  return SortedSet{I,Inds}(a, new_order)
+# Accept other inputs like `Tuple`.
+@inline function SortedSet(itr, order::Ordering)
+  return SortedSet(collect(itr), order)
+end
+
+@inline function SortedSet{T,Data}(
+  a::Data; lt=isless, by=identity, rev::Bool=false
+) where {T,Data<:AbstractArray{T}}
+  return SortedSet{T,Data}(a, ord(lt, by, rev))
 end
 
 # Traits
-@inline SmallVectors.InsertStyle(::Type{<:SortedSet{I,Inds}}) where {I,Inds} =
-  InsertStyle(Inds)
-@inline SmallVectors.thaw(i::SortedSet) = SortedSet(thaw(i.inds), i.order)
-@inline SmallVectors.freeze(i::SortedSet) = SortedSet(freeze(i.inds), i.order)
+@inline SmallVectors.InsertStyle(::Type{<:SortedSet{T,Data}}) where {T,Data} =
+  InsertStyle(Data)
+@inline SmallVectors.thaw(set::SortedSet) = SortedSet(thaw(parent(set)), order(set))
+@inline SmallVectors.freeze(set::SortedSet) = SortedSet(freeze(parent(set)), order(set))
 
 @propagate_inbounds SortedSet(; kwargs...) = SortedSet{Any}([]; kwargs...)
-@propagate_inbounds SortedSet{I}(; kwargs...) where {I} =
-  SortedSet{I,Vector{I}}(I[]; kwargs...)
-@propagate_inbounds SortedSet{I,Inds}(; kwargs...) where {I,Inds} =
-  SortedSet{I}(Inds(); kwargs...)
+@propagate_inbounds SortedSet{T}(; kwargs...) where {T} =
+  SortedSet{T,Vector{T}}(T[]; kwargs...)
+@propagate_inbounds SortedSet{T,Data}(; kwargs...) where {T,Data} =
+  SortedSet{T}(Data(); kwargs...)
 
 @propagate_inbounds SortedSet(iter; kwargs...) = SortedSet(collect(iter); kwargs...)
-@propagate_inbounds SortedSet{I}(iter; kwargs...) where {I} =
-  SortedSet{I}(collect(I, iter); kwargs...)
+@propagate_inbounds SortedSet{T}(iter; kwargs...) where {T} =
+  SortedSet{T}(collect(T, iter); kwargs...)
 
-@propagate_inbounds SortedSet(a::AbstractArray{I}; kwargs...) where {I} =
-  SortedSet{I}(a; kwargs...)
-@propagate_inbounds SortedSet{I}(a::AbstractArray{I}; kwargs...) where {I} =
-  SortedSet{I,typeof(a)}(a; kwargs...)
+@propagate_inbounds SortedSet(a::AbstractArray{T}; kwargs...) where {T} =
+  SortedSet{T}(a; kwargs...)
+@propagate_inbounds SortedSet{T}(a::AbstractArray{T}; kwargs...) where {T} =
+  SortedSet{T,typeof(a)}(a; kwargs...)
 
-@propagate_inbounds SortedSet{I,Inds}(
+@propagate_inbounds SortedSet{T,Data}(
   a::AbstractArray; kwargs...
-) where {I,Inds<:AbstractArray{I}} = SortedSet{I,Inds}(Inds(a); kwargs...)
+) where {T,Data<:AbstractArray{T}} = SortedSet{T,Data}(Data(a); kwargs...)
 
-function Base.convert(::Type{AbstractIndices{I}}, inds::SortedSet) where {I}
-  return convert(SortedSet{I}, inds)
+function Base.convert(::Type{AbstractIndices{T}}, set::SortedSet) where {T}
+  return convert(SortedSet{T}, set)
 end
-function Base.convert(::Type{SortedSet}, inds::AbstractIndices{I}) where {I}
-  return convert(SortedSet{I}, inds)
+function Base.convert(::Type{SortedSet}, set::AbstractIndices{T}) where {T}
+  return convert(SortedSet{T}, set)
 end
-function Base.convert(::Type{SortedSet{I}}, inds::AbstractIndices) where {I}
-  return convert(SortedSet{I,Vector{I}}, inds)
-end
-function Base.convert(
-  ::Type{SortedSet{I,Inds}}, inds::AbstractIndices
-) where {I,Inds<:AbstractArray{I}}
-  a = convert(Inds, collect(I, inds))
-  return @inbounds SortedSet{I,typeof(a)}(a)
-end
-
-Base.convert(::Type{SortedSet{I}}, inds::SortedSet{I}) where {I} = inds
-function Base.convert(
-  ::Type{SortedSet{I}}, inds::SortedSet{<:Any,Inds}
-) where {I,Inds<:AbstractArray{I}}
-  return convert(SortedSet{I,Inds}, inds)
+function Base.convert(::Type{SortedSet{T}}, set::AbstractIndices) where {T}
+  return convert(SortedSet{T,Vector{T}}, set)
 end
 function Base.convert(
-  ::Type{SortedSet{I,Inds}}, inds::SortedSet{I,Inds}
-) where {I,Inds<:AbstractArray{I}}
-  return inds
-end
-function Base.convert(
-  ::Type{SortedSet{I,Inds}}, inds::SortedSet
-) where {I,Inds<:AbstractArray{I}}
-  a = convert(Inds, parent(inds))
-  return @inbounds SortedSet{I,Inds}(a)
+  ::Type{SortedSet{T,Data}}, set::AbstractIndices
+) where {T,Data<:AbstractArray{T}}
+  a = convert(Data, collect(T, set))
+  return @inbounds SortedSet{T,typeof(a)}(a)
 end
 
-@inline Base.parent(inds::SortedSet) = getfield(inds, :inds)
+Base.convert(::Type{SortedSet{T}}, set::SortedSet{T}) where {T} = set
+function Base.convert(
+  ::Type{SortedSet{T}}, set::SortedSet{<:Any,Data}
+) where {T,Data<:AbstractArray{T}}
+  return convert(SortedSet{T,Data}, set)
+end
+function Base.convert(
+  ::Type{SortedSet{T,Data}}, set::SortedSet{T,Data}
+) where {T,Data<:AbstractArray{T}}
+  return set
+end
+function Base.convert(
+  ::Type{SortedSet{T,Data}}, set::SortedSet
+) where {T,Data<:AbstractArray{T}}
+  a = convert(Data, parent(set))
+  return @inbounds SortedSet{T,Data}(a)
+end
 
 # Basic interface
-@propagate_inbounds function Base.iterate(i::SortedSet{I}, state...) where {I}
-  return iterate(parent(i), state...)
+@propagate_inbounds function Base.iterate(set::SortedSet{T}, state...) where {T}
+  return iterate(parent(set), state...)
 end
 
-@inline function Base.in(i::I, inds::SortedSet{I}) where {I}
-  return _insorted(i, parent(inds), inds.order)
+@inline function Base.in(i::T, set::SortedSet{T}) where {T}
+  return _insorted(i, parent(set), order(set))
 end
 @inline Base.IteratorSize(::SortedSet) = Base.HasLength()
-@inline Base.length(inds::SortedSet) = length(parent(inds))
+@inline Base.length(set::SortedSet) = length(parent(set))
 
-@inline Dictionaries.istokenizable(i::SortedSet) = true
+function Base.:(==)(set1::SortedSet, set2::SortedSet)
+  if length(set1) ≠ length(set2)
+    return false
+  end
+  for (j1, j2) in zip(set1, set2)
+    if j1 ≠ j2
+      return false
+    end
+  end
+  return true
+end
+
+function Base.issetequal(set1::SortedSet, set2::SortedSet)
+  if length(set1) ≠ length(set2)
+    return false
+  end
+  if order(set1) ≠ order(set2)
+    # TODO: Make sure this actually sorts!
+    set2 = SortedSet(parent(set2), order(set1))
+  end
+  for (j1, j2) in zip(set1, set2)
+    if lt(order(set1), j1, j2) || lt(order(set1), j2, j1)
+      return false
+    end
+  end
+  return true
+end
+
+@inline Dictionaries.istokenizable(::SortedSet) = true
 @inline Dictionaries.tokentype(::SortedSet) = Int
-@inline Dictionaries.iteratetoken(inds::SortedSet, s...) =
-  iterate(LinearIndices(parent(inds)), s...)
-@inline function Dictionaries.iteratetoken_reverse(inds::SortedSet)
-  li = LinearIndices(parent(inds))
+@inline Dictionaries.iteratetoken(set::SortedSet, s...) =
+  iterate(LinearIndices(parent(set)), s...)
+@inline function Dictionaries.iteratetoken_reverse(set::SortedSet)
+  li = LinearIndices(parent(set))
   if isempty(li)
     return nothing
   else
@@ -140,8 +173,8 @@ end
     return (t, t)
   end
 end
-@inline function Dictionaries.iteratetoken_reverse(inds::SortedSet, t)
-  li = LinearIndices(parent(inds))
+@inline function Dictionaries.iteratetoken_reverse(set::SortedSet, t)
+  li = LinearIndices(parent(set))
   t -= 1
   if t < first(li)
     return nothing
@@ -150,20 +183,20 @@ end
   end
 end
 
-@inline function Dictionaries.gettoken(inds::SortedSet, i)
-  a = parent(inds)
-  r = searchsorted(a, i, inds.order)
+@inline function Dictionaries.gettoken(set::SortedSet, i)
+  a = parent(set)
+  r = searchsorted(a, i, order(set))
   @assert 0 ≤ length(r) ≤ 1 # If > 1, means the elements are not unique
   length(r) == 0 && return (false, 0)
   return (true, convert(Int, only(r)))
 end
-@propagate_inbounds Dictionaries.gettokenvalue(inds::SortedSet, x::Int) = parent(inds)[x]
+@propagate_inbounds Dictionaries.gettokenvalue(set::SortedSet, x::Int) = parent(set)[x]
 
-@inline Dictionaries.isinsertable(i::SortedSet) = isinsertable(parent(inds))
+@inline Dictionaries.isinsertable(set::SortedSet) = isinsertable(parent(set))
 
-@inline function Dictionaries.gettoken!(inds::SortedSet{I}, i::I, values=()) where {I}
-  a = parent(inds)
-  r = searchsorted(a, i, inds.order)
+@inline function Dictionaries.gettoken!(set::SortedSet{T}, i::T, values=()) where {T}
+  a = parent(set)
+  r = searchsorted(a, i, order(set))
   @assert 0 ≤ length(r) ≤ 1 # If > 1, means the elements are not unique
   if length(r) == 0
     insert!(a, first(r), i)
@@ -173,96 +206,96 @@ end
   return (true, convert(Int, only(r)))
 end
 
-@inline function Dictionaries.deletetoken!(inds::SortedSet, x::Int, values=())
-  deleteat!(parent(inds), x)
+@inline function Dictionaries.deletetoken!(set::SortedSet, x::Int, values=())
+  deleteat!(parent(set), x)
   foreach(v -> deleteat!(v, x), values)
-  return inds
+  return set
 end
 
-@inline function Base.empty!(inds::SortedSet, values=())
-  empty!(parent(inds))
+@inline function Base.empty!(set::SortedSet, values=())
+  empty!(parent(set))
   foreach(empty!, values)
-  return inds
+  return set
 end
 
 # TODO: Make into `MSmallVector`?
 # More generally, make a `thaw(::AbstractArray)` function to return
 # a mutable version of an AbstractArray.
-@inline Dictionaries.empty_type(::Type{SortedSet{I,D,Order}}, ::Type{I}) where {I,D,Order} =
-  SortedSet{I,Dictionaries.empty_type(D, I),Order}
+@inline Dictionaries.empty_type(::Type{SortedSet{T,D,Order}}, ::Type{T}) where {T,D,Order} =
+  SortedSet{T,Dictionaries.empty_type(D, T),Order}
 
-@inline Dictionaries.empty_type(::Type{<:AbstractVector}, ::Type{I}) where {I} = Vector{I}
+@inline Dictionaries.empty_type(::Type{<:AbstractVector}, ::Type{T}) where {T} = Vector{T}
 
-function Base.empty(inds::SortedSet{I,D}, ::Type{I}) where {I,D}
-  return Dictionaries.empty_type(typeof(inds), I)(D(), inds.order)
+function Base.empty(set::SortedSet{T,D}, ::Type{T}) where {T,D}
+  return Dictionaries.empty_type(typeof(set), T)(D(), order(set))
 end
 
-@inline function Base.copy(inds::SortedSet, ::Type{I}) where {I}
-  if I === eltype(inds)
-    SortedSet(copy(parent(inds)), inds.order)
+@inline function Base.copy(set::SortedSet, ::Type{T}) where {T}
+  if T === eltype(set)
+    SortedSet(copy(parent(set)), order(set))
   else
-    SortedSet(convert(AbstractArray{I}, parent(inds)), inds.order)
+    SortedSet(convert(AbstractArray{T}, parent(set)), order(set))
   end
 end
 
 # TODO: Can this take advantage of sorting?
-@inline function Base.filter!(pred, inds::SortedSet)
-  filter!(pred, parent(inds))
-  return inds
+@inline function Base.filter!(pred, set::SortedSet)
+  filter!(pred, parent(set))
+  return set
 end
 
-function Dictionaries.randtoken(rng::Random.AbstractRNG, inds::SortedSet)
-  return rand(rng, keys(parent(inds)))
+function Dictionaries.randtoken(rng::Random.AbstractRNG, set::SortedSet)
+  return rand(rng, keys(parent(set)))
 end
 
-@inline function Base.sort!(inds::SortedSet; lt=isless, by=identity, rev::Bool=false)
+@inline function Base.sort!(set::SortedSet; lt=isless, by=identity, rev::Bool=false)
+  @assert Base.Sort.ord(lt, by, rev) == order(set)
   # No-op, should be sorted already.
-  # TODO: Check `ord(lt, by, rev, order) == inds.ord`.
-  return inds
+  return set
 end
 
 # Custom faster operations (not required for interface)
-function Base.union!(inds::SortedSet, items::SortedSet)
-  if inds.order ≠ items.order
+function Base.union!(set::SortedSet, items::SortedSet)
+  if order(set) ≠ order(items)
     # Reorder if the orderings are different.
-    items = SortedSet(parent(inds), inds.order)
+    items = SortedSet(parent(set), order(set))
   end
-  unionsortedunique!(parent(inds), parent(items), inds.order)
-  return inds
+  unionsortedunique!(parent(set), parent(items), order(set))
+  return set
 end
 
-function Base.union(inds::SortedSet, items::SortedSet)
-  if inds.order ≠ items.order
-    # Reorder if the orderings are different.
-    items = SortedSet(parent(inds), inds.order)
+function Base.union(set::SortedSet, items::SortedSet)
+  if order(set) ≠ order(items)
+    # TODO: Reorder if the orderings are different.
+    items = SortedSet(parent(set), order(set))
   end
-  out = unionsortedunique(parent(inds), parent(items), inds.order)
-  return SortedSet(out, inds.order)
+  out = unionsortedunique(parent(set), parent(items), order(set))
+  return SortedSet(out, order(set))
 end
 
-function Base.union(inds::SortedSet, items)
-  return union(inds, SortedSet(items, inds.order))
+function Base.union(set::SortedSet, items)
+  return union(set, SortedSet(items, order(set)))
 end
 
-function Base.intersect(inds::SortedSet, items::SortedSet)
+function Base.intersect(set::SortedSet, items::SortedSet)
   # TODO: Make an `intersectsortedunique`.
-  return intersect(NotInsertable(), inds, items)
+  return intersect(NotInsertable(), set, items)
 end
 
-function Base.setdiff(inds::SortedSet, items)
-  return setdiff(inds, SortedSet(items, inds.order))
+function Base.setdiff(set::SortedSet, items)
+  return setdiff(set, SortedSet(items, order(set)))
 end
 
-function Base.setdiff(inds::SortedSet, items::SortedSet)
+function Base.setdiff(set::SortedSet, items::SortedSet)
   # TODO: Make an `setdiffsortedunique`.
-  return setdiff(NotInsertable(), inds, items)
+  return setdiff(NotInsertable(), set, items)
 end
 
-function Base.symdiff(inds::SortedSet, items)
-  return symdiff(inds, SortedSet(items, inds.order))
+function Base.symdiff(set::SortedSet, items)
+  return symdiff(set, SortedSet(items, order(set)))
 end
 
-function Base.symdiff(inds::SortedSet, items::SortedSet)
+function Base.symdiff(set::SortedSet, items::SortedSet)
   # TODO: Make an `symdiffsortedunique`.
-  return symdiff(NotInsertable(), inds, items)
+  return symdiff(NotInsertable(), set, items)
 end

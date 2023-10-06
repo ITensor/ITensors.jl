@@ -5,10 +5,11 @@ using ..SortedSets
 
 using Base: @propagate_inbounds
 
-export TagSet, SmallTagSet, addtags, removetags, replacetags, commontags, noncommontags
+export TagSet,
+  SmallTagSet, MSmallTagSet, addtags, removetags, replacetags, commontags, noncommontags
 
 # A sorted collection of unique tags of type `T`.
-struct TagSet{T,D<:AbstractIndices{T}} <: AbstractWrappedIndices{T,D}
+struct TagSet{T,D<:AbstractIndices{T}} <: AbstractWrappedSet{T,D}
   data::D
 end
 
@@ -37,38 +38,50 @@ end
   return TagSet{T,D}(split(str, delim))
 end
 
-const SmallTagSet{S,T} = TagSet{T,SmallSet{S,T}}
-@propagate_inbounds SmallTagSet{S}(; kwargs...) where {S} = SmallTagSet{S}([]; kwargs...)
-@propagate_inbounds SmallTagSet{S}(iter; kwargs...) where {S} =
-  SmallTagSet{S}(collect(iter); kwargs...)
-@propagate_inbounds SmallTagSet{S}(a::AbstractArray{I}; kwargs...) where {S,I} =
-  SmallTagSet{S,I}(a; kwargs...)
-# Specialized `SmallSet{S,T} = SortedSet{T,SmallVector{S,T}}` constructor
-function SmallTagSet{S,T}(str::AbstractString; delim=default_delim()) where {S,T}
-  # TODO: Optimize for `SmallSet`.
-  return SmallTagSet{S,T}(split(str, delim))
+for (SetTyp, TagSetTyp) in ((:SmallSet, :SmallTagSet), (:MSmallSet, :MSmallTagSet))
+  @eval begin
+    const $TagSetTyp{S,T,Order} = TagSet{T,$SetTyp{S,T,Order}}
+    @propagate_inbounds function $TagSetTyp{S,I}(a::AbstractArray; kwargs...) where {S,I}
+      return TagSet($SetTyp{S,I}(a; kwargs...))
+    end
+    @propagate_inbounds $TagSetTyp{S}(; kwargs...) where {S} = $TagSetTyp{S}([]; kwargs...)
+    @propagate_inbounds $TagSetTyp{S}(iter; kwargs...) where {S} =
+      $TagSetTyp{S}(collect(iter); kwargs...)
+    @propagate_inbounds $TagSetTyp{S}(a::AbstractArray{I}; kwargs...) where {S,I} =
+      $TagSetTyp{S,I}(a; kwargs...)
+    # Strings get split by a deliminator.
+    function $TagSetTyp{S}(str::T; kwargs...) where {S,T<:AbstractString}
+      return $TagSetTyp{S,T}(str, kwargs...)
+    end
+    # Strings get split by a deliminator.
+    function $TagSetTyp{S,T}(
+      str::AbstractString; delim=default_delim(), kwargs...
+    ) where {S,T}
+      # TODO: Optimize for `SmallSet`.
+      return $TagSetTyp{S,T}(split(str, delim); kwargs...)
+    end
+  end
 end
 
 # Field accessors
-Base.parent(tags::TagSet) = getfield(tags, :data)
+Base.parent(set::TagSet) = getfield(set, :data)
 
 # AbstractWrappedSet interface.
 # Specialized version when they are the same data type is faster.
-@inline SortedSets.rewrap(vec::TagSet{T,D}, data::D) where {T,D<:AbstractIndices{T}} =
+@inline SortedSets.rewrap(::TagSet{T,D}, data::D) where {T,D<:AbstractIndices{T}} =
   TagSet{T,D}(data)
-@inline SortedSets.rewrap(vec::TagSet{T,D}, data) where {T,D<:AbstractIndices{T}} =
-  TagSet{T,D}(data)
+@inline SortedSets.rewrap(::TagSet, data) = TagSet(data)
 
 # TagSet interface
-addtags(tags::TagSet, items) = union(tags, items)
-removetags(tags::TagSet, items) = setdiff(tags, items)
-commontags(tags::TagSet, items) = intersect(tags, items)
-noncommontags(tags::TagSet, items) = symdiff(tags, items)
-function replacetags(tags::TagSet, rem, add)
-  remtags = setdiff(tags, rem)
-  if length(tags) ≠ length(remtags) + length(rem)
+addtags(set::TagSet, items) = union(set, items)
+removetags(set::TagSet, items) = setdiff(set, items)
+commontags(set::TagSet, items) = intersect(set, items)
+noncommontags(set::TagSet, items) = symdiff(set, items)
+function replacetags(set::TagSet, rem, add)
+  remtags = setdiff(set, rem)
+  if length(set) ≠ length(remtags) + length(rem)
     # Not all are removed, no replacement
-    return tags
+    return set
   end
   return union(remtags, add)
 end

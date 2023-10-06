@@ -39,16 +39,16 @@ function uniquesorted(vec; lt=isless, by=identity, rev::Bool=false, order::Order
 end
 
 function uniquesorted(vec::AbstractVector, order::Ordering)
-  vec = copy(vec)
-  i = firstindex(vec)
-  stopi = lastindex(vec)
+  mvec = thaw(vec)
+  i = firstindex(mvec)
+  stopi = lastindex(mvec)
   while i < stopi
-    if !lt(order, @inbounds(vec[i]), @inbounds(vec[i + 1]))
-      deleteat!(vec, i)
+    if !lt(order, @inbounds(mvec[i]), @inbounds(mvec[i + 1]))
+      deleteat!(mvec, i)
       stopi -= 1
     else
       i += 1
     end
   end
-  return vec
+  return freeze(mvec)
 end

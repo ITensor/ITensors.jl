@@ -7,7 +7,7 @@ using ..SmallVectors
 using Base: @propagate_inbounds
 using Base.Order: Ordering, Forward, ord, lt
 
-export AbstractWrappedIndices, SortedSet, SmallSet, MSmallSet
+export AbstractWrappedSet, SortedSet, SmallSet, MSmallSet
 
 include("BaseExt/sorted.jl")
 include("DictionariesExt/insert.jl")

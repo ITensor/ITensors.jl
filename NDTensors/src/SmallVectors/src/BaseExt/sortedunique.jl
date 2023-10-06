@@ -30,6 +30,7 @@ function unionsortedunique!(itr1, itr2, order::Ordering)
       for j in length(itr1):-1:(i1 + 1)
         itr1[j] = itr1[j - 1]
       end
+      # Replace with the item from the second list
       itr1[i1] = item2
       i1 += 1
       i2 += 1
@@ -62,7 +63,7 @@ end
 # Union two unique sorted collections into an
 # output buffer, returning a unique sorted collection.
 function unionsortedunique(itr1, itr2, order::Ordering)
-  out = thaw_type(itr1)(undef, length(itr1))
+  out = thaw_type(itr1)()
   i1 = firstindex(itr1)
   i2 = firstindex(itr2)
   iout = firstindex(out)
@@ -82,18 +83,16 @@ function unionsortedunique(itr1, itr2, order::Ordering)
       iout += 1
       i2 += 1
     else # They are equal
-      out[iout] = item1
+      out[iout] = item2
       iout += 1
       i1 += 1
       i2 += 1
     end
   end
-  # In case `out` was too long to begin with.
-  ## resize!(out, iout - 1)
   # TODO: Use `insertat!`?
   r1 = i1:stop1
   resize!(out, length(out) + length(r1))
-  @inbounds for j1 in r1
+  @inbounds for j1 in i1:stop1
     out[iout] = itr1[j1]
     iout += 1
   end
