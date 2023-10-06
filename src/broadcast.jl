@@ -183,9 +183,9 @@ function Base.copyto!(
 )
   T1, T2 = bc.args
   if R === T1
-    map!((t1, t2) -> bc.f(t1, t2), R, T1, T2)
+    map!((t1, t2) -> /(t1, t2), R, T1, T2)
   elseif R === T2
-    map!((t1, t2) -> bc.f(t2, t1), R, T2, T1)
+    map!((t1, t2) -> /(t2, t1), R, T2, T1)
   else
     error("When dividing two ITensors in-place, one must be the same as the output ITensor")
   end
@@ -222,7 +222,6 @@ function Base.copyto!(
 )
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
-  #map!((t, a) -> bc.f(α, a), T, T, A)
   map!((t, a) -> /(α, a), T, T, A)
   return T
 end
@@ -242,7 +241,6 @@ end
 # For B .= A .^ 2
 #
 
-## TODO this fails on GPU to compile
 function Base.copyto!(
   R::ITensor, bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(Base.literal_pow)}
 )
@@ -250,7 +248,7 @@ function Base.copyto!(
   powf = find_type(Base.RefValue{<:Function}, bc.args).x
   @assert !isnothing(powf)
   T = find_type(ITensor, bc.args)
-  map!((r, t) -> bc.f(^, t, α), R, R, T)
+  map!((r, t) -> Base.literal_pow(^, t, α), R, R, T)
   return R
 end
 
@@ -277,17 +275,30 @@ function Base.copyto!(
   return T
 end
 
-#
-# B .+= A
-#
 
-function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}})
+function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(+)}) where {N}
   return +
 end
 
-function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}})
+function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(-)}) where {N}
   return -
 end
+
+function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(^)}) where {N}
+  return ^
+end
+
+function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(*)}) where {N}
+  return *
+end
+
+function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(Base.literal_pow)}) where {N}
+  return Base.literal_pow
+end
+
+#
+# B .+= A
+#
 
 function Base.copyto!(
   T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}}
@@ -344,6 +355,8 @@ function Base.copyto!(
 )
   C = find_type(ITensor, bc.args)
   bc_bc = find_type(Broadcasted, bc.args)
+
+  bc = Broadcasted{ITensorStyle}(bc.f, (bc.args[1],), axes(bc))
   if T === C
     A = find_type(ITensor, bc_bc.args)
     α = find_type(Number, bc_bc.args)
@@ -351,11 +364,14 @@ function Base.copyto!(
     # Check if it is the case .^(::Int)
     γ = find_type(Base.RefValue{<:Val}, bc_bc.args)
     powf = find_type(Base.RefValue{<:Function}, bc_bc.args)
+    ## Putting fmap in the map call still doesn't actually grab the function and causes GPU to fail so just realize the function slightly earlier here
+    f1 = fmap(bc)
+    f2 = fmap(bc_bc)
 
     if !isnothing(α) && !isnothing(A)
-      map!((r, t) -> +(r, *(t, α)), T, T, A)
+      map!((r, t) -> f1(r, f2(t, α)), T, T, A)
     elseif !isnothing(γ) && !isnothing(A) && !isnothing(powf)
-      map!((r, t) -> bc.f(r, bc_bc.f(powf[], t, γ[])), T, T, A)
+      map!((r, t) -> f1(r, f2(powf[], t, γ[])), T, T, A)
     else
       # In-place contraction:
       # C .+= α .* A .* B
@@ -498,7 +514,7 @@ end
 # For B .= f.(B) + g.(A)
 #
 
-## TODO this code isn't called properly
+## TODO check to see if this code is being called as expected
 function Base.copyto!(
   R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}}
 )
