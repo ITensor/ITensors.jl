@@ -92,7 +92,7 @@ function unionsortedunique(itr1, itr2, order::Ordering)
   # TODO: Use `insertat!`?
   r1 = i1:stop1
   resize!(out, length(out) + length(r1))
-  @inbounds for j1 in i1:stop1
+  @inbounds for j1 in r1
     out[iout] = itr1[j1]
     iout += 1
   end
