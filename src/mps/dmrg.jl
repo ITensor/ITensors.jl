@@ -278,6 +278,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         end
 
         energy = vals[1]
+        ## Right now this convert problem is prevelent in an eigen solver implemented in KrylovKit
         phi::ITensor = itensor(convert(typeof(tensor(phi)), tensor(vecs[1])))
 
         ortho = ha == 1 ? "left" : "right"
