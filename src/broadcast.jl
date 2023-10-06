@@ -275,24 +275,33 @@ function Base.copyto!(
   return T
 end
 
-
-function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(+)}) where {N}
+function fmap(
+  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(+)}
+) where {N}
   return +
 end
 
-function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(-)}) where {N}
+function fmap(
+  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(-)}
+) where {N}
   return -
 end
 
-function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(^)}) where {N}
+function fmap(
+  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(^)}
+) where {N}
   return ^
 end
 
-function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(*)}) where {N}
+function fmap(
+  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(*)}
+) where {N}
   return *
 end
 
-function fmap(bc::Broadcasted{<:Union{ITensorStyle, ITensorOpScalarStyle},N,typeof(Base.literal_pow)}) where {N}
+function fmap(
+  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(Base.literal_pow)}
+) where {N}
   return Base.literal_pow
 end
 
