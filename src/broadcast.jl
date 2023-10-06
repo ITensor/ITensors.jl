@@ -170,7 +170,8 @@ function Base.copyto!(
 )
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
-  map!((t, a) -> a / α, T, T, A)
+  f = bc.f
+  map!((t, a) -> f(a, α), T, T, A)
   return T
 end
 
@@ -182,10 +183,13 @@ function Base.copyto!(
   R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(/),<:Tuple{<:ITensor,<:ITensor}}
 )
   T1, T2 = bc.args
+  f = bc.f
   if R === T1
-    map!((t1, t2) -> /(t1, t2), R, T1, T2)
+    #map!((t1, t2) -> f(t1, t2), R, T1, T2)
+    map!(f,R, T1, T2)
   elseif R === T2
-    map!((t1, t2) -> /(t2, t1), R, T2, T1)
+    #map!((t1, t2) -> f(t2, t1), R, T2, T1)
+    map!(f, R, T2, T1)
   else
     error("When dividing two ITensors in-place, one must be the same as the output ITensor")
   end
@@ -222,7 +226,8 @@ function Base.copyto!(
 )
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
-  map!((t, a) -> /(α, a), T, T, A)
+  f = bc.f
+  map!((t, a) -> f(α, a), T, T, A)
   return T
 end
 
@@ -248,7 +253,8 @@ function Base.copyto!(
   powf = find_type(Base.RefValue{<:Function}, bc.args).x
   @assert !isnothing(powf)
   T = find_type(ITensor, bc.args)
-  map!((r, t) -> Base.literal_pow(^, t, α), R, R, T)
+  f = bc.f
+  map!((r, t) -> f(^, t, α), R, R, T)
   return R
 end
 
@@ -275,34 +281,13 @@ function Base.copyto!(
   return T
 end
 
-function fmap(
-  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(+)}
-) where {N}
-  return +
+function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}})
+  return (r, t) -> bc.f(r, t)
 end
 
-function fmap(
-  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(-)}
-) where {N}
-  return -
-end
 
-function fmap(
-  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(^)}
-) where {N}
-  return ^
-end
-
-function fmap(
-  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(*)}
-) where {N}
-  return *
-end
-
-function fmap(
-  bc::Broadcasted{<:Union{ITensorStyle,ITensorOpScalarStyle},N,typeof(Base.literal_pow)}
-) where {N}
-  return Base.literal_pow
+function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}})
+  return (r, t) -> bc.f(r, t)
 end
 
 #
@@ -374,8 +359,8 @@ function Base.copyto!(
     γ = find_type(Base.RefValue{<:Val}, bc_bc.args)
     powf = find_type(Base.RefValue{<:Function}, bc_bc.args)
     ## Putting fmap in the map call still doesn't actually grab the function and causes GPU to fail so just realize the function slightly earlier here
-    f1 = fmap(bc)
-    f2 = fmap(bc_bc)
+    f1 = bc.f
+    f2 = bc_bc.f
 
     if !isnothing(α) && !isnothing(A)
       map!((r, t) -> f1(r, f2(t, α)), T, T, A)
@@ -391,7 +376,7 @@ function Base.copyto!(
       else
         A, B = bc_bc_bc.args
       end
-      mul!(T, A, B, β, bc.f(1))
+      mul!(T, A, B, β, f1(1))
     end
   else
     error("When adding two ITensors in-place, one must be the same as the output ITensor")
@@ -511,8 +496,9 @@ function Base.copyto!(
 )
   R̃ = find_type(ITensor, bc.args)
   bc2 = find_type(Broadcasted, bc.args)
+  f = bc2.f
   if R === R̃
-    map!((r, t) -> r + bc2.f(t), R, R, bc2.args[1])
+    map!((r, t) -> r + f(t), R, R, bc2.args[1])
   else
     error("In C .= B .+ f.(A), C and B must be the same ITensor")
   end

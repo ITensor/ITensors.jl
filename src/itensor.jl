@@ -1965,6 +1965,7 @@ w .+= a .* v
 ```
 """
 axpy!(a::Number, v::ITensor, w::ITensor) = (w .+= a .* v)
+
 """
 axpby!(a,v,b,w)
 
@@ -1997,6 +1998,7 @@ Like `A .= x .* B`.
 mul!(R::ITensor, α::Number, T::ITensor) = (R .= α .* T)
 
 mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
+
 #########################
 # End ITensor Operations
 #
