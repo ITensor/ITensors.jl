@@ -97,6 +97,10 @@ Random.seed!(1234)
     ]
     @test_throws ErrorException ITensor(A, i', dag(i); tol=1e-8)
     @test ITensor(A, i', dag(i); tol=1e-8, checkflux=false) isa ITensor
+
+    # Construct from zero matrix. Flux check should still pass
+    # (Regression test for issue #1209)
+    @test ITensor(zeros(3, 3), i', dag(i)) isa ITensor
   end
 
   @testset "similartype regression test" begin
