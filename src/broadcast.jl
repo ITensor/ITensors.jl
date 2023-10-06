@@ -185,11 +185,12 @@ function Base.copyto!(
   T1, T2 = bc.args
   f = bc.f
   if R === T1
-    #map!((t1, t2) -> f(t1, t2), R, T1, T2)
-    map!(f, R, T1, T2)
+    map!((t1, t2) -> f(t1, t2), R, T1, T2)
+    ## I tried this and it is numberically wrong
+    #map!(f, R, T1, T2)
   elseif R === T2
-    #map!((t1, t2) -> f(t2, t1), R, T2, T1)
-    map!(f, R, T2, T1)
+    map!((t1, t2) -> f(t2, t1), R, T2, T1)
+    #map!(f, R, T2, T1)
   else
     error("When dividing two ITensors in-place, one must be the same as the output ITensor")
   end
