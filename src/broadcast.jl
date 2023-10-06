@@ -350,7 +350,6 @@ function Base.copyto!(
   C = find_type(ITensor, bc.args)
   bc_bc = find_type(Broadcasted, bc.args)
 
-  bc = Broadcasted{ITensorStyle}(bc.f, (bc.args[1],), axes(bc))
   if T === C
     A = find_type(ITensor, bc_bc.args)
     α = find_type(Number, bc_bc.args)
