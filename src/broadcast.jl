@@ -186,7 +186,7 @@ function Base.copyto!(
   f = bc.f
   if R === T1
     #map!((t1, t2) -> f(t1, t2), R, T1, T2)
-    map!(f,R, T1, T2)
+    map!(f, R, T1, T2)
   elseif R === T2
     #map!((t1, t2) -> f(t2, t1), R, T2, T1)
     map!(f, R, T2, T1)
@@ -284,7 +284,6 @@ end
 function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}})
   return (r, t) -> bc.f(r, t)
 end
-
 
 function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}})
   return (r, t) -> bc.f(r, t)
