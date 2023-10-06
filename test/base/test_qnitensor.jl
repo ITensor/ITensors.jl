@@ -128,12 +128,14 @@ Random.seed!(1234)
     @test T[2] == 0
     @test T[3] == 1
     @test T[4] == 2
+    # Test fluxes of specific elements:
     @test flux(T, 1) == QN(0)
     @test flux(T, 2) == QN(0)
     @test flux(T, 3) == QN(1)
     @test flux(T, 4) == QN(1)
     @test_throws BoundsError flux(T, 5)
     @test_throws BoundsError flux(T, 0)
+    # Test fluxes of specific Blocks
     @test flux(T, Block(1)) == QN(0)
     @test flux(T, Block(2)) == QN(1)
     @test_throws BoundsError flux(T, Block(0))
@@ -552,6 +554,7 @@ Random.seed!(1234)
     @testset "Combine set direction" begin
       i1 = Index([QN(0) => 2, QN(1) => 3], "i1")
       A = randomITensor(i1', dag(i1))
+      # Test that checkflux does not throw an error:
       @test isnothing(ITensors.checkflux(A))
       C = combiner(dag(i1); dir=ITensors.Out)
       c = combinedind(C)
@@ -559,11 +562,13 @@ Random.seed!(1234)
       AC = A * C
       @test nnz(AC) == nnz(A)
       @test nnzblocks(AC) == nnzblocks(A)
+      # Test that checkflux does not throw an error:
       @test isnothing(ITensors.checkflux(AC))
       Ap = AC * dag(C)
       @test nnz(Ap) == nnz(A)
       @test nnzblocks(Ap) == nnzblocks(A)
       @test hassameinds(Ap, A)
+      # Test that checkflux does not throw an error:
       @test isnothing(ITensors.checkflux(AC))
       @test A ≈ Ap
     end
