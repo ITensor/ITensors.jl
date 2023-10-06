@@ -15,7 +15,9 @@ function sort!(
   if VERSION < v"1.8.4"
     Base.sort!(v, alg, order)
   else
-    Base.Sort._sort!(v, Base.Sort.maybe_apply_initial_optimizations(alg), order, (; scratch))
+    Base.Sort._sort!(
+      v, Base.Sort.maybe_apply_initial_optimizations(alg), order, (; scratch)
+    )
   end
   return v
 end
