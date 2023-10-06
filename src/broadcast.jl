@@ -170,6 +170,9 @@ function Base.copyto!(
 )
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
+  ## GPU compilers can have a problem when map is 
+  ## Given bc.f. map seems to make a closure with a 
+  ## relatively complicated signature
   f = bc.f
   map!((t, a) -> f(a, α), T, T, A)
   return T
