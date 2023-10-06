@@ -283,11 +283,11 @@ function Base.copyto!(
 end
 
 function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}})
-  return (r, t) -> bc.f(r, t)
+  return +
 end
 
 function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}})
-  return (r, t) -> bc.f(r, t)
+  return -
 end
 
 #
