@@ -17,7 +17,9 @@ struct BlockZero{Axes}
   axes::Axes
 end
 
-function (f::BlockZero)(arraytype::Type{<:AbstractArray{T,N}}, I::CartesianIndex{N}) where {T,N}
+function (f::BlockZero)(
+  arraytype::Type{<:AbstractArray{T,N}}, I::CartesianIndex{N}
+) where {T,N}
   return fill!(arraytype(undef, block_size(f.axes, Block(Tuple(I)))), false)
 end
 
