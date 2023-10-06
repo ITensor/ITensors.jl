@@ -424,7 +424,6 @@ matrix is unique. Returns a tuple (Q,R).
 function qr_positive(M::AbstractMatrix)
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
-  Q = convert(typeof(R), sparseQ)
   nc = size(Q, 2)
   ## TODO issue here for GPU because tying to access indices
   for c in 1:nc
@@ -449,7 +448,6 @@ matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
   sparseQ, L = ql(M)
-  Q = convert(typeof(L), sparseQ)
   Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
