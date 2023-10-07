@@ -31,6 +31,7 @@ NotImplemented() = NotImplemented("Not implemented.")
 
 include("BaseExt/insertstyle.jl")
 include("BaseExt/thawfreeze.jl")
+include("BaseExt/sort.jl")
 include("BaseExt/sortedunique.jl")
 include("abstractarray/insert.jl")
 include("abstractsmallvector/abstractsmallvector.jl")
