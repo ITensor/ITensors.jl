@@ -1149,7 +1149,7 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
       ),
     )
   end
-  return NDTensors.cpu(tensor(T))[]
+  return tensor(T)[]
 end
 
 function _vals(is::Indices, I::String...)

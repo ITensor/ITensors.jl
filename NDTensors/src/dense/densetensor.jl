@@ -80,6 +80,10 @@ end
 # Single index
 #
 
+@propagate_inbounds function getindex(T::DenseTensor{<:Number})
+  return (iscu(T) ? NDTensors.cpu(data(T))[] : data(T)[])
+end
+
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::Integer...)
   Base.@_inline_meta
   return getindex(data(T), Base._sub2ind(T, I...))
