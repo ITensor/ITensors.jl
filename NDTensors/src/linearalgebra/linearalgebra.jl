@@ -423,8 +423,8 @@ matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
   if iscu(M)
-    throw(
-      "Currently qr positive methods do not work for CuArrays because they require scalar operations. Please convert to CPU Array or use generic qr",
+    println(
+      "WARNING!!: Currently qr positive methods are not efficient for CuArrays because they require scalar operations. Please convert to CPU Array or use generic qr",
     )
   end
   sparseQ, R = qr(M)
@@ -453,8 +453,8 @@ matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
   if iscu(M)
-    throw(
-      "Currently ql positive methods do not work for CuArrays because they require scalar operations. Please convert to CPU Array or use generic ql",
+    println(
+      "WARNING!! Currently the ql positive methods are not efficient for CuArrays because they require scalar operations. Please convert to CPU Array or use generic ql",
     )
   end
   sparseQ, L = ql(M)
