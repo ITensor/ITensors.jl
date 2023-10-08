@@ -12,7 +12,7 @@ function sort!(
   alg::Base.Sort.Algorithm=Base.Sort.defalg(v),
   scratch::Union{Vector{T},Nothing}=nothing,
 ) where {T}
-  if VERSION < v"1.8.4"
+  if VERSION < v"1.9"
     Base.sort!(v, alg, order)
   else
     Base.Sort._sort!(
