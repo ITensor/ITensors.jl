@@ -1143,7 +1143,7 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 ## Allowing one to get the first ITensor element if its an order 0 tensor or an order 1 tensor with a dimension of 1. Also convert GPU back to CPU
 @propagate_inbounds function getindex(T::ITensor)::Any
   if order(T) != 0 && dim(T) != 1
-    ITensors.throw(
+    throw(
       DimensionMismatch(
         "In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."
       ),
