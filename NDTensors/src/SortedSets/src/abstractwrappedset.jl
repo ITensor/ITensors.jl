@@ -1,111 +1,117 @@
-# AbstractWrappedIndices: a wrapper around an `AbstractIndices`
+# AbstractWrappedSet: a wrapper around an `AbstractIndices`
 # with methods automatically forwarded via `parent`
 # and rewrapped via `rewrap`.
-abstract type AbstractWrappedIndices{T,D} <: AbstractIndices{T} end
+abstract type AbstractWrappedSet{T,D} <: AbstractIndices{T} end
 
 # Required interface
-Base.parent(inds::AbstractWrappedIndices) = error("Not implemented")
-function Dictionaries.empty_type(::Type{AbstractWrappedIndices{I}}, ::Type{I}) where {I}
+Base.parent(set::AbstractWrappedSet) = error("Not implemented")
+function Dictionaries.empty_type(::Type{AbstractWrappedSet{I}}, ::Type{I}) where {I}
   return error("Not implemented")
 end
-SmallVectors.thaw(::AbstractWrappedIndices) = error("Not implemented")
-SmallVectors.freeze(::AbstractWrappedIndices) = error("Not implemented")
-rewrap(::AbstractWrappedIndices, data) = error("Not implemented")
+rewrap(::AbstractWrappedSet, data) = error("Not implemented")
+
+SmallVectors.thaw(set::AbstractWrappedSet) = rewrap(set, thaw(parent(set)))
+SmallVectors.freeze(set::AbstractWrappedSet) = rewrap(set, freeze(parent(set)))
 
 # Traits
-SmallVectors.InsertStyle(::Type{<:AbstractWrappedIndices{T,D}}) where {T,D} = InsertStyle(D)
+SmallVectors.InsertStyle(::Type{<:AbstractWrappedSet{T,D}}) where {T,D} = InsertStyle(D)
 
-# AbstractIndices interface
-@propagate_inbounds function Base.iterate(inds::AbstractWrappedIndices, state...)
-  return iterate(parent(inds), state...)
+# AbstractSet interface
+@propagate_inbounds function Base.iterate(set::AbstractWrappedSet, state...)
+  return iterate(parent(set), state...)
 end
 
 # `I` is needed to avoid ambiguity error.
-@inline Base.in(tag::I, inds::AbstractWrappedIndices{I}) where {I} = in(tag, parent(inds))
-@inline Base.IteratorSize(inds::AbstractWrappedIndices) = Base.IteratorSize(parent(inds))
-@inline Base.length(inds::AbstractWrappedIndices) = length(parent(inds))
+@inline Base.in(item::I, set::AbstractWrappedSet{I}) where {I} = in(item, parent(set))
+@inline Base.IteratorSize(set::AbstractWrappedSet) = Base.IteratorSize(parent(set))
+@inline Base.length(set::AbstractWrappedSet) = length(parent(set))
 
-@inline Dictionaries.istokenizable(inds::AbstractWrappedIndices) =
-  istokenizable(parent(inds))
-@inline Dictionaries.tokentype(inds::AbstractWrappedIndices) = tokentype(parent(inds))
-@inline Dictionaries.iteratetoken(inds::AbstractWrappedIndices, s...) =
-  iterate(parent(inds), s...)
-@inline function Dictionaries.iteratetoken_reverse(inds::AbstractWrappedIndices)
-  return iteratetoken_reverse(parent(inds))
+@inline Dictionaries.istokenizable(set::AbstractWrappedSet) = istokenizable(parent(set))
+@inline Dictionaries.tokentype(set::AbstractWrappedSet) = tokentype(parent(set))
+@inline Dictionaries.iteratetoken(set::AbstractWrappedSet, s...) =
+  iterate(parent(set), s...)
+@inline function Dictionaries.iteratetoken_reverse(set::AbstractWrappedSet)
+  return iteratetoken_reverse(parent(set))
 end
-@inline function Dictionaries.iteratetoken_reverse(inds::AbstractWrappedIndices, t)
-  return iteratetoken_reverse(parent(inds), t)
+@inline function Dictionaries.iteratetoken_reverse(set::AbstractWrappedSet, t)
+  return iteratetoken_reverse(parent(set), t)
 end
 
-@inline function Dictionaries.gettoken(inds::AbstractWrappedIndices, i)
-  return gettoken(parent(inds), i)
+@inline function Dictionaries.gettoken(set::AbstractWrappedSet, i)
+  return gettoken(parent(set), i)
 end
-@propagate_inbounds Dictionaries.gettokenvalue(inds::AbstractWrappedIndices, x) =
-  gettokenvalue(parent(inds), x)
+@propagate_inbounds Dictionaries.gettokenvalue(set::AbstractWrappedSet, x) =
+  gettokenvalue(parent(set), x)
 
-@inline Dictionaries.isinsertable(inds::AbstractWrappedIndices) = isinsertable(parent(inds))
+@inline Dictionaries.isinsertable(set::AbstractWrappedSet) = isinsertable(parent(set))
 
 # Specify `I` to fix ambiguity error.
 @inline function Dictionaries.gettoken!(
-  inds::AbstractWrappedIndices{I}, i::I, values=()
+  set::AbstractWrappedSet{I}, i::I, values=()
 ) where {I}
-  return gettoken!(parent(inds), i, values)
+  return gettoken!(parent(set), i, values)
 end
 
-@inline function Dictionaries.deletetoken!(inds::AbstractWrappedIndices, x, values=())
-  deletetoken!(parent(inds), x, values)
-  return inds
+@inline function Dictionaries.deletetoken!(set::AbstractWrappedSet, x, values=())
+  deletetoken!(parent(set), x, values)
+  return set
 end
 
-@inline function Base.empty!(inds::AbstractWrappedIndices, values=())
-  empty!(parent(inds))
-  return inds
+@inline function Base.empty!(set::AbstractWrappedSet, values=())
+  empty!(parent(set))
+  return set
 end
 
 # Not defined to be part of the `AbstractIndices` interface,
 # but seems to be needed.
-@inline function Base.filter!(pred, inds::AbstractWrappedIndices)
-  filter!(pred, parent(inds))
-  return inds
+@inline function Base.filter!(pred, set::AbstractWrappedSet)
+  filter!(pred, parent(set))
+  return set
 end
 
 # TODO: Maybe require an implementation?
-@inline function Base.copy(inds::AbstractWrappedIndices, eltype::Type)
-  return typeof(inds)(copy(parent(inds), eltype))
+@inline function Base.copy(set::AbstractWrappedSet, eltype::Type)
+  return typeof(set)(copy(parent(set), eltype))
 end
 
 # Not required for AbstractIndices interface but
 # helps with faster code paths
-SmallVectors.insert(inds::AbstractWrappedIndices, tag) = insert(parent(inds), tag)
-Base.insert!(inds::AbstractWrappedIndices, tag) = insert!(parent(inds), tag)
-
-SmallVectors.delete(inds::AbstractWrappedIndices, tag) = delete(parent(inds), tag)
-Base.delete!(inds::AbstractWrappedIndices, tag) = delete!(parent(inds), tag)
-
-function Base.union(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
-  return rewrap(inds1, union(parent(inds1), parent(inds2)))
-end
-function Base.union(inds1::AbstractWrappedIndices, inds2)
-  return rewrap(inds1, union(parent(inds1), inds2))
+SmallVectors.insert(set::AbstractWrappedSet, item) = rewrap(set, insert(parent(set), item))
+function Base.insert!(set::AbstractWrappedSet, item)
+  insert!(parent(set), item)
+  return set
 end
 
-function Base.intersect(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
-  return rewrap(inds1, intersect(parent(inds1), parent(inds2)))
-end
-function Base.intersect(inds1::AbstractWrappedIndices, inds2)
-  return rewrap(inds1, intersect(parent(inds1), inds2))
-end
-
-function Base.setdiff(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
-  return rewrap(inds1, setdiff(parent(inds1), parent(inds2)))
-end
-function Base.setdiff(inds1::AbstractWrappedIndices, inds2)
-  return rewrap(inds1, setdiff(parent(inds1), inds2))
+SmallVectors.delete(set::AbstractWrappedSet, item) = rewrap(set, delete(parent(set), item))
+function Base.delete!(set::AbstractWrappedSet, item)
+  delete!(parent(set), item)
+  return set
 end
 
-function Base.symdiff(inds1::AbstractWrappedIndices, inds2::AbstractWrappedIndices)
-  return rewrap(inds1, symdiff(parent(inds1), parent(inds2)))
+function Base.union(set1::AbstractWrappedSet, set2::AbstractWrappedSet)
+  return rewrap(set1, union(parent(set1), parent(set2)))
 end
-function Base.symdiff(inds1::AbstractWrappedIndices, inds2)
-  return rewrap(inds1, symdiff(parent(inds1), inds2))
+function Base.union(set1::AbstractWrappedSet, set2)
+  return rewrap(set1, union(parent(set1), set2))
+end
+
+function Base.intersect(set1::AbstractWrappedSet, set2::AbstractWrappedSet)
+  return rewrap(set1, intersect(parent(set1), parent(set2)))
+end
+function Base.intersect(set1::AbstractWrappedSet, set2)
+  return rewrap(set1, intersect(parent(set1), set2))
+end
+
+function Base.setdiff(set1::AbstractWrappedSet, set2::AbstractWrappedSet)
+  return rewrap(set1, setdiff(parent(set1), parent(set2)))
+end
+function Base.setdiff(set1::AbstractWrappedSet, set2)
+  return rewrap(set1, setdiff(parent(set1), set2))
+end
+
+function Base.symdiff(set1::AbstractWrappedSet, set2::AbstractWrappedSet)
+  return rewrap(set1, symdiff(parent(set1), parent(set2)))
+end
+function Base.symdiff(set1::AbstractWrappedSet, set2)
+  return rewrap(set1, symdiff(parent(set1), set2))
 end

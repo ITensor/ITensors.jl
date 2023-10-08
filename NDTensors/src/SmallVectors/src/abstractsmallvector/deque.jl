@@ -14,7 +14,7 @@
 Base.resize!(vec::AbstractSmallVector, len) = throw(NotImplemented())
 
 @inline function resize(vec::AbstractSmallVector, len)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   resize!(mvec, len)
   return convert(similar_type(vec), mvec)
 end
@@ -25,14 +25,14 @@ end
 end
 
 @inline function empty(vec::AbstractSmallVector)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   empty!(mvec)
   return convert(similar_type(vec), mvec)
 end
 
 @inline function StaticArrays.setindex(vec::AbstractSmallVector, item, index::Integer)
   @boundscheck checkbounds(vec, index)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   @inbounds mvec[index] = item
   return convert(similar_type(vec), mvec)
 end
@@ -44,7 +44,7 @@ end
 end
 
 @inline function StaticArrays.push(vec::AbstractSmallVector, item)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   push!(mvec, item)
   return convert(similar_type(vec), mvec)
 end
@@ -55,7 +55,7 @@ end
 end
 
 @inline function StaticArrays.pop(vec::AbstractSmallVector)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   pop!(mvec)
   return convert(similar_type(vec), mvec)
 end
@@ -67,7 +67,7 @@ end
 
 # Don't `@inline`, makes it slower.
 function StaticArrays.pushfirst(vec::AbstractSmallVector, item)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   pushfirst!(mvec, item)
   return convert(similar_type(vec), mvec)
 end
@@ -80,7 +80,7 @@ end
 
 # Don't `@inline`, makes it slower.
 function StaticArrays.popfirst(vec::AbstractSmallVector)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   popfirst!(mvec)
   return convert(similar_type(vec), mvec)
 end
@@ -129,7 +129,7 @@ end
 
 # Don't @inline, makes it slower.
 function StaticArrays.insert(vec::AbstractSmallVector, index::Integer, item)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   insert!(mvec, index, item)
   return convert(similar_type(vec), mvec)
 end
@@ -154,7 +154,7 @@ end
 function StaticArrays.deleteat(
   vec::AbstractSmallVector, index::Union{Integer,AbstractUnitRange{<:Integer}}
 )
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   deleteat!(mvec, index)
   return convert(similar_type(vec), mvec)
 end
@@ -163,9 +163,7 @@ end
 # https://github.com/JuliaLang/julia/blob/bed2cd540a11544ed4be381d471bbf590f0b745e/base/sort.jl#L722-L736
 # https://en.wikipedia.org/wiki/Insertion_sort#:~:text=Insertion%20sort%20is%20a%20simple,%2C%20heapsort%2C%20or%20merge%20sort.
 # Alternatively could use `TupleTools.jl` or `StaticArrays.jl` for out-of-place sorting.
-@inline function Base.sort!(
-  vec::AbstractSmallVector; lt=isless, by=identity, rev::Bool=false
-)
+@inline function sort!(vec::AbstractSmallVector, order::Base.Sort.Ordering)
   lo, hi = firstindex(vec), lastindex(vec)
   lo_plus_1 = (lo + 1)
   @inbounds for i in lo_plus_1:hi
@@ -174,7 +172,7 @@ end
     jmax = j
     for _ in jmax:-1:lo_plus_1
       y = vec[j - 1]
-      if !(lt(by(x), by(y)) != rev)
+      if !Base.Sort.lt(order, x, y)
         break
       end
       vec[j] = y
@@ -185,11 +183,24 @@ end
   return vec
 end
 
+@inline function Base.sort!(
+  vec::AbstractSmallVector; lt=isless, by=identity, rev::Bool=false
+)
+  SmallVectors.sort!(vec, Base.Sort.ord(lt, by, rev))
+  return vec
+end
+
 # Don't @inline, makes it slower.
-function Base.sort(vec::AbstractSmallVector; kwargs...)
-  mvec = Base.copymutable(vec)
-  sort!(mvec; kwargs...)
+function sort(vec::AbstractSmallVector, order::Base.Sort.Ordering)
+  mvec = thaw(vec)
+  SmallVectors.sort!(mvec, order)
   return convert(similar_type(vec), mvec)
+end
+
+@inline function Base.sort(
+  vec::AbstractSmallVector; lt=isless, by=identity, rev::Bool=false
+)
+  return SmallVectors.sort(vec, Base.Sort.ord(lt, by, rev))
 end
 
 @inline function insertsorted!(vec::AbstractSmallVector, item; kwargs...)
@@ -198,7 +209,7 @@ end
 end
 
 function insertsorted(vec::AbstractSmallVector, item; kwargs...)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   insertsorted!(mvec, item; kwargs...)
   return convert(similar_type(vec), mvec)
 end
@@ -228,7 +239,7 @@ end
 end
 
 function mergesorted(vec::AbstractSmallVector, item; kwargs...)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   mergesorted!(mvec, item; kwargs...)
   return convert(similar_type(vec), mvec)
 end
@@ -261,7 +272,7 @@ end
 
 # Don't @inline, makes it slower.
 function Base.circshift(vec::AbstractSmallVector, shift::Integer)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   circshift!(mvec, shift)
   return convert(similar_type(vec), mvec)
 end
@@ -277,7 +288,7 @@ end
 # Missing from `StaticArrays.jl`.
 # Don't @inline, makes it slower.
 function append(vec::AbstractSmallVector, item::AbstractVector)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   append!(mvec, item)
   return convert(similar_type(vec), mvec)
 end
@@ -294,14 +305,14 @@ end
 # Missing from `StaticArrays.jl`.
 # Don't @inline, makes it slower.
 function prepend(vec::AbstractSmallVector, item::AbstractVector)
-  mvec = Base.copymutable(vec)
+  mvec = thaw(vec)
   prepend!(mvec, item)
   return convert(similar_type(vec), mvec)
 end
 
 # Don't @inline, makes it slower.
 function Base.vcat(vec1::AbstractSmallVector, vec2::AbstractVector)
-  mvec1 = Base.copymutable(vec1)
+  mvec1 = thaw(vec1)
   append!(mvec1, vec2)
   return convert(similar_type(vec1), mvec1)
 end
