@@ -278,8 +278,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         end
 
         energy = vals[1]
-        ## Right now this convert problem is prevelent in an eigen solver implemented in KrylovKit
+        ## Right now there is a conversion problem in CUDA.jl where `UnifiedMemory` Arrays are being converted 
+        ## into `DeviceMemory`. This conversion line is here temporarily to fix that problem when it arises
         phi::ITensor = itensor(convert(typeof(tensor(phi)), tensor(vecs[1])))
+        #phi::ITensor = vecs[1]
 
         ortho = ha == 1 ? "left" : "right"
 
