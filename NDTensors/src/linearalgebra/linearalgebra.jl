@@ -422,6 +422,9 @@ non-negative. Such a QR decomposition of a
 matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
+  if iscu(M)
+    throw("Currently qr positive methods do not work for CuArrays because they require scalar operations. Please convert to CPU Array or use generic qr")
+  end
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
   nc = size(Q, 2)
@@ -447,6 +450,9 @@ non-negative. Such a QL decomposition of a
 matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
+  if iscu(M)
+    throw("Currently ql positive methods do not work for CuArrays because they require scalar operations. Please convert to CPU Array or use generic ql")
+  end
   sparseQ, L = ql(M)
   Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
