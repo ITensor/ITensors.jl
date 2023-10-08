@@ -233,11 +233,9 @@ function _contract_scalar_maybe_perm!(
   β=zero(ElR),
 ) where {ElR,NR}
   if nnz(T₁) == 1
-    γ = α * NDTensors.cpu(T₁)[1]
-    _contract_scalar_maybe_perm!(R, labelsR, T₂, labelsT₂, γ, β)
+    _contract_scalar_maybe_perm!(R, labelsR, T₂, labelsT₂, α * T₁[], β)
   elseif nnz(T₂) == 1
-    γ = α * NDTensors.cpu(T₂)[1]
-    _contract_scalar_maybe_perm!(R, labelsR, T₁, labelsT₁, γ, β)
+    _contract_scalar_maybe_perm!(R, labelsR, T₁, labelsT₁, α * T₂[], β)
   else
     error("In _contract_scalar_perm!, one tensor must be a scalar")
   end
