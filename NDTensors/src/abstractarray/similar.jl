@@ -56,6 +56,9 @@ function similar(arraytype::Type{<:AbstractArray}, dims::Tuple)
   return similartype(arraytype, shape)(undef, NDTensors.to_shape(arraytype, shape))
 end
 
+# For when there are CUArray specific issues inline
+iscu(A::AbstractArray) = iscu(leaf_parenttype(A))
+iscu(::Type{<:AbstractArray}) = false
 # This function actually allocates the data.
 # Catches conversions of dimensions specified by ranges
 # dimensions specified by integers with `Base.to_shape`.
