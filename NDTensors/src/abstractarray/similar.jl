@@ -57,7 +57,7 @@ function similar(arraytype::Type{<:AbstractArray}, dims::Tuple)
 end
 
 # For when there are CUArray specific issues inline
-iscu(A::AbstractArray) = iscu(typof(A))
+iscu(A::AbstractArray) = iscu(typeof(A))
 iscu(A::Type{<:AbstractArray}) = (leaf_parenttype(A) == A ? false : iscu(leaf_parenttype(A)))
 # This function actually allocates the data.
 # Catches conversions of dimensions specified by ranges
