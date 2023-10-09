@@ -422,10 +422,10 @@ non-negative. Such a QR decomposition of a
 matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
-  if iscu(M)
-    println(
-      "WARNING!!: Currently qr positive methods are not efficient for CuArrays because they require scalar operations. Please convert to CPU Array or use generic qr",
-    )
+  iscuda = iscu(M)
+  if iscuda
+    cutype = typeof(M)
+    M = NDTensors.cpu(M)
   end
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
@@ -440,6 +440,11 @@ function qr_positive(M::AbstractMatrix)
       end
     end
   end
+  if iscuda
+    M = cutype(M)
+    Q = cutype(Q)
+    R = cutype(R)
+  end
   return (Q, R)
 end
 
@@ -452,11 +457,6 @@ non-negative. Such a QL decomposition of a
 matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
-  if iscu(M)
-    println(
-      "WARNING!! Currently the ql positive methods are not efficient for CuArrays because they require scalar operations. Please convert to CPU Array or use generic ql",
-    )
-  end
   sparseQ, L = ql(M)
   Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
@@ -489,6 +489,9 @@ end
 # about unpacking Q and L from the A matrix.
 #
 function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
+  if iscu(A)
+    throw("Error: ql is not implemented in CUDA.jl")
+  end
   tau = Base.similar(A, min(size(A)...))
   x = LAPACK.geqlf!(A, tau)
   #save L from the lower portion of A, before orgql! mangles it!
