@@ -843,7 +843,7 @@ size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
 _isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
-iscu(A::ITensor) = NDTensors.iscu(tensor(A))
+NDTensors.iscu(A::ITensor) = NDTensors.iscu(tensor(A))
 """
     dir(A::ITensor, i::Index)
 
