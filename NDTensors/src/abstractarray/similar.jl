@@ -58,7 +58,7 @@ end
 
 # For when there are CUArray specific issues inline
 iscu(A::AbstractArray) = iscu(leaf_parenttype(A))
-iscu(::Type{<:AbstractArray}) = false
+iscu(A::Type{<:AbstractArray}) = (leaf_parenttype(A) == A ? false : iscu(leaf_parenttype(A)))
 # This function actually allocates the data.
 # Catches conversions of dimensions specified by ranges
 # dimensions specified by integers with `Base.to_shape`.
