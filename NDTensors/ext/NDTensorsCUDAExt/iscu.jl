@@ -1,0 +1,1 @@
+iscu(::Type{<:CuArray}) = true

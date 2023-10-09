@@ -18,8 +18,8 @@ end
 
 include("imports.jl")
 
-iscu(::Type{<:CuArray}) = true
 include("set_types.jl")
+include("iscu.jl")
 include("adapt.jl")
 include("linearalgebra.jl")
 end
