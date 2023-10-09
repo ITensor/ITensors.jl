@@ -281,7 +281,11 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         ## Right now there is a conversion problem in CUDA.jl where `UnifiedMemory` Arrays are being converted 
         ## into `DeviceMemory`. This conversion line is here temporarily to fix that problem when it arises
         ## Adapt is only called when using CUDA backend. CPU will work as implemented previously.
-        phi::ITensor = NDTensors.iscu(tensor(phi)) ? itensor(adapt(typeof(data(phi)), tensor(vecs[1]))) : vecs[1]
+        phi::ITensor = if NDTensors.iscu(tensor(phi))
+          itensor(adapt(typeof(data(phi)), tensor(vecs[1])))
+        else
+          vecs[1]
+        end
         #phi::ITensor = vecs[1]
 
         ortho = ha == 1 ? "left" : "right"
