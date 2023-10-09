@@ -843,7 +843,7 @@ size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
 _isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
-
+iscu(A::ITensor) = NDTensors.iscu(tensor(A))
 """
     dir(A::ITensor, i::Index)
 
@@ -1893,7 +1893,6 @@ diag(T::ITensor) = diag(tensor(T))
 
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
-## TODO this operation does not work with GPU
 dot(A::ITensor, B::ITensor) = NDTensors.cpu(dag(A) * B)[]
 
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
