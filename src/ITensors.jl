@@ -138,6 +138,7 @@ include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
 include("iterativesolvers.jl")
 include("adapt.jl")
+include("set_types.jl")
 
 #####################################
 # Experimental ITensor Functions
