@@ -424,7 +424,7 @@ matrix is unique. Returns a tuple (Q,R).
 function qr_positive(M::AbstractMatrix)
   iscuda = iscu(M)
   if iscuda
-    cutype = typeof(M)
+    cutype = leaf_parenttype(M)
     M = NDTensors.cpu(M)
   end
   sparseQ, R = qr(M)
@@ -441,9 +441,8 @@ function qr_positive(M::AbstractMatrix)
     end
   end
   if iscuda
-    M = cutype(M)
-    Q = cutype(Q)
-    R = cutype(R)
+    Q = adapt(cutype,Q)
+    R = adapt(cutype,R)
   end
   return (Q, R)
 end
@@ -457,6 +456,11 @@ non-negative. Such a QL decomposition of a
 matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
+  iscuda = iscu(M)
+  if iscuda
+    cutype = leaf_parenttype(M)
+    M = NDTensors.cpu(M)
+  end
   sparseQ, L = ql(M)
   Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
@@ -470,6 +474,10 @@ function ql_positive(M::AbstractMatrix)
       end
     end
   end
+  if iscuda
+    Q = adapt(cutype,Q)
+    L = adapt(cutype,L)
+  end
   return (Q, L)
 end
 
@@ -482,7 +490,17 @@ function ql(A::AbstractMatrix; kwargs...)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
   copyto!(AA, A)
-  return ql!(AA; kwargs...)
+  iscuda = iscu(AA)
+  if iscuda
+    cutype = leaf_parenttype(AA)
+    AA = NDTensors.cpu(AA)
+  end
+  Q,L = ql!(AA; kwargs...)
+  if iscuda
+    Q = adapt(cutype,Q)
+    L = adapt(cutype,L)
+  end
+  return (Q,L)
 end
 #
 # This is where the low level call to lapack actually occurs.  Most of the work is
