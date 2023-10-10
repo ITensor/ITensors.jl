@@ -12,6 +12,8 @@ function NDTensors.svd_catch_error(A::CuMatrix; alg="JacobiAlgorithm")
   return USV
 end
 
-function NDTensors.mul!!(::Type{<:CuArray}, CM, ::Type{<:CuArray}, AM, ::Type{<:CuArray}, BM, α, β)
+function NDTensors.mul!!(
+  ::Type{<:CuArray}, CM, ::Type{<:CuArray}, AM, ::Type{<:CuArray}, BM, α, β
+)
   return mul!(CM, AM, BM, α, β)
 end

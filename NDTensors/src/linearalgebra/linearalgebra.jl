@@ -441,8 +441,8 @@ function qr_positive(M::AbstractMatrix)
     end
   end
   if iscuda
-    Q = adapt(cutype,Q)
-    R = adapt(cutype,R)
+    Q = adapt(cutype, Q)
+    R = adapt(cutype, R)
   end
   return (Q, R)
 end
@@ -475,8 +475,8 @@ function ql_positive(M::AbstractMatrix)
     end
   end
   if iscuda
-    Q = adapt(cutype,Q)
-    L = adapt(cutype,L)
+    Q = adapt(cutype, Q)
+    L = adapt(cutype, L)
   end
   return (Q, L)
 end
@@ -495,12 +495,12 @@ function ql(A::AbstractMatrix; kwargs...)
     cutype = leaf_parenttype(AA)
     AA = NDTensors.cpu(AA)
   end
-  Q,L = ql!(AA; kwargs...)
+  Q, L = ql!(AA; kwargs...)
   if iscuda
-    Q = adapt(cutype,Q)
-    L = adapt(cutype,L)
+    Q = adapt(cutype, Q)
+    L = adapt(cutype, L)
   end
-  return (Q,L)
+  return (Q, L)
 end
 #
 # This is where the low level call to lapack actually occurs.  Most of the work is
