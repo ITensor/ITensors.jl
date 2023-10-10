@@ -51,10 +51,6 @@ devs = devices_list(copy(ARGS))
         A[i, :] = A[1, :]
       end
     end
-    if qx == ql && dev != NDTensors.cpu
-      @test_broken qx(A; positive=positive)
-      continue
-    end
     Q, X = qx(A; positive=positive) #X is R or L.
     @test A ≈ Q * X atol = eps
     @test array(Q)' * array(Q) ≈ Id atol = eps
