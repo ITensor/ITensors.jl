@@ -126,6 +126,7 @@ using ITensors.NDTensors:
   eachdiagblock,
   enable_auto_fermion,
   fill!!,
+  leaf_parenttype,
   randn!!,
   set_eltype,
   single_precision,

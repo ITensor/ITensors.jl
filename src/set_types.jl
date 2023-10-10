@@ -1,2 +1,1 @@
-import NDTensors: leaf_parenttype
-NDTensors.leaf_parenttype(T::ITensor) = leaf_parenttype(NDTensors.datatype(T))
+leaf_parenttype(T::ITensor) = leaf_parenttype(tensor(T))
