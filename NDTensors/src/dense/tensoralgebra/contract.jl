@@ -395,7 +395,7 @@ function _contract!(
 
   #tC = similar(CM)
   #_gemm!(tA, tB, El(α), AM, BM, El(β), CM)
-  CM = mul!!(leaf_parenttype(CM), CM, AM, BM, El(α), El(β))
+  CM = mul!!(leaf_parenttype(CM), CM, leaf_parenttype(AM), AM, leaf_parenttype(BM), BM, El(α), El(β))
 
   if props.permuteC
     Cr = reshape(CM, props.newCrange)
@@ -409,6 +409,6 @@ function _contract!(
   return CT
 end
 
-function mul!!(::Type{<:AbstractArray}, CM, AM, BM, α, β)
+function mul!!(::Type{<:AbstractArray}, CM, ::Type{<:AbstractArray}, AM, ::Type{<:AbstractArray}, BM, α, β)
   return @strided mul!(CM, AM, BM, α, β)
 end
