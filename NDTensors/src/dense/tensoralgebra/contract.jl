@@ -378,7 +378,10 @@ function _contract!(
     # we need to make sure C is permuted to the same 
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
-      CM = reshape(permutedims!!(leaf_parenttype(CT), CT, invperm(props.PC)), (props.dleft, props.dright))
+      CM = reshape(
+        permutedims!!(leaf_parenttype(CT), CT, invperm(props.PC)),
+        (props.dleft, props.dright),
+      )
     else
       # Need to copy here since we will be permuting
       # into C later  
