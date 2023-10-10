@@ -199,7 +199,7 @@ function permutedims!(
 ) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
-  @strided RA .= permutedims(TA, perm)
+  RA .= permutedims!!(leaf_parenttype(TA), TA, perm)
   return R
 end
 
@@ -247,8 +247,7 @@ function permutedims!(
   end
   RA = array(R)
   TA = array(T)
-  #@strided 
-  RA .= f.(RA, permutedims(TA, perm))
+  RA .= f.(RA, permutedims!!(leaf_parenttype(TA), TA, perm))
   return R
 end
 

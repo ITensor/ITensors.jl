@@ -175,14 +175,14 @@ function _contract_scalar_perm!(
     if iszero(α)
       fill!(Rᵃ, 0)
     else
-      @strided Rᵃ .= α .* permutedims(Tᵃ, perm)
+      Rᵃ .= α .* permutedims!!(leaf_parenttype(Tᵃ), Tᵃ, perm)
     end
   elseif isone(β)
     if iszero(α)
       # Rᵃ .= Rᵃ
       # No-op
     else
-      @strided Rᵃ .= α .* permutedims(Tᵃ, perm) .+ Rᵃ
+      Rᵃ .= α .* permutedims!!(leaf_parenttype(Tᵃ), Tᵃ, perm) .+ Rᵃ
     end
   else
     if iszero(α)
@@ -343,10 +343,10 @@ function _contract!(
   β::Number=zero(El),
 ) where {El,NC,NA,NB}
   tA = 'N'
+  t = TimerOutput()
   if props.permuteA
     #@timeit_debug timer "_contract!: permutedims A" begin
-    #@strided 
-    Ap = permutedims(AT, props.PA)
+    Ap = permutedims!!(leaf_parenttype(AT), AT, props.PA)
     #end # @timeit
     AM = transpose(reshape(Ap, (props.dmid, props.dleft)))
   else
@@ -361,8 +361,7 @@ function _contract!(
   tB = 'N'
   if props.permuteB
     #@timeit_debug timer "_contract!: permutedims B" begin
-    #@strided 
-    Bp = permutedims(BT, props.PB)
+    Bp = permutedims!!(leaf_parenttype(BT), BT, props.PB)
     #end # @timeit
     BM = reshape(Bp, (props.dmid, props.dright))
   else
@@ -379,7 +378,7 @@ function _contract!(
     # we need to make sure C is permuted to the same 
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
-      CM = reshape(permutedims(CT, invperm(props.PC)), (props.dleft, props.dright))
+      CM = reshape(permutedims!!(leaf_parenttype(CT), CT, invperm(props.PC)), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
       # into C later  
@@ -402,9 +401,8 @@ function _contract!(
   if props.permuteC
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
-    #@timeit_debug timer "_contract!: permutedims C" begin
-    #@strided 
-    CT .= permutedims(Cr, props.PC)
+    #@timeit_debug timer "_contract!: permutedims C" begin 
+    CT .= permutedims!!(leaf_parenttype(Cr), Cr, props.PC)
     #end # @timeit
   end
 
