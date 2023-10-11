@@ -413,14 +413,20 @@ function _contract!(
 end
 
 function mul!!(
-  ::Type{<:AbstractArray},
+  ::Type{<:Array},
   CM,
-  ::Type{<:AbstractArray},
+  ::Type{<:Array},
   AM,
-  ::Type{<:AbstractArray},
+  ::Type{<:Array},
   BM,
   α,
   β,
 )
   return @strided mul!(CM, AM, BM, α, β)
+end
+
+function NDTensors.mul!!(
+  ::Type{<:AbstractArray}, CM, ::Type{<:AbstractArray}, AM, ::Type{<:AbstractArray}, BM, α, β
+)
+  return mul!(CM, AM, BM, α, β)
 end
