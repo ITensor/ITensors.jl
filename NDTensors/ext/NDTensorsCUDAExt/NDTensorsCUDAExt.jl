@@ -21,5 +21,4 @@ include("set_types.jl")
 include("iscu.jl")
 include("adapt.jl")
 include("linearalgebra.jl")
-include("permutedims.jl")
 end
