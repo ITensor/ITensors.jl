@@ -175,14 +175,18 @@ function _contract_scalar_perm!(
     if iszero(α)
       fill!(Rᵃ, 0)
     else
-      Rᵃ = permutedims!!(leaf_parenttype(Rᵃ), Rᵃ, leaf_parenttype(Tᵃ), Tᵃ, perm, (r,t) -> *(α, t))
+      Rᵃ = permutedims!!(
+        leaf_parenttype(Rᵃ), Rᵃ, leaf_parenttype(Tᵃ), Tᵃ, perm, (r, t) -> *(α, t)
+      )
     end
   elseif isone(β)
     if iszero(α)
       # Rᵃ .= Rᵃ
       # No-op
     else
-      Rᵃ = permutedims!!(leaf_parenttype(Rᵃ), Rᵃ, leaf_parenttype(Tᵃ), Tᵃ, perm, (r,t) -> r + α * t)
+      Rᵃ = permutedims!!(
+        leaf_parenttype(Rᵃ), Rᵃ, leaf_parenttype(Tᵃ), Tᵃ, perm, (r, t) -> r + α * t
+      )
     end
   else
     if iszero(α)
@@ -379,8 +383,7 @@ function _contract!(
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
       CM = reshape(
-        permutedims(leaf_parenttype(CT), CT, invperm(props.PC)),
-        (props.dleft, props.dright),
+        permutedims(leaf_parenttype(CT), CT, invperm(props.PC)), (props.dleft, props.dright)
       )
     else
       # Need to copy here since we will be permuting
@@ -412,21 +415,19 @@ function _contract!(
   return CT
 end
 
-function mul!!(
-  ::Type{<:Array},
-  CM,
-  ::Type{<:Array},
-  AM,
-  ::Type{<:Array},
-  BM,
-  α,
-  β,
-)
+function mul!!(::Type{<:Array}, CM, ::Type{<:Array}, AM, ::Type{<:Array}, BM, α, β)
   return @strided mul!(CM, AM, BM, α, β)
 end
 
 function NDTensors.mul!!(
-  ::Type{<:AbstractArray}, CM, ::Type{<:AbstractArray}, AM, ::Type{<:AbstractArray}, BM, α, β
+  ::Type{<:AbstractArray},
+  CM,
+  ::Type{<:AbstractArray},
+  AM,
+  ::Type{<:AbstractArray},
+  BM,
+  α,
+  β,
 )
   return mul!(CM, AM, BM, α, β)
 end

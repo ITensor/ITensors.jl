@@ -20,5 +20,5 @@ function permutedims!(::Type{<:AbstractArray}, Mdest, ::Type{<:AbstractArray}, M
 end
 
 function permutedims!!(::Type{<:AbstractArray}, B, ::Type{<:AbstractArray}, A, perm, f)
-  B .= f.(B, Base.permutedims(A, perm))
+  return B .= f.(B, Base.permutedims(A, perm))
 end
