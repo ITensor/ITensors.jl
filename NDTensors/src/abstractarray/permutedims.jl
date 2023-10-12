@@ -2,6 +2,10 @@ function NDTensors.permutedims(::Type{<:AbstractArray}, M, perm)
   return Base.permutedims(M, perm)
 end
 
+function permutedims!(Mdest::AbstractArray, M::AbstractArray, perm)
+  return permutedims!(leaf_parenttype(Mdest), Mdest, leaf_parenttype(M), M, perm)
+end
+
 function permutedims!(::Type{<:AbstractArray}, Mdest, ::Type{<:AbstractArray}, M, perm)
   return Mdest .= Base.permutedims(M, perm)
 end
