@@ -1,5 +1,5 @@
 function NDTensors.permutedims(M::AbstractArray, perm)
-   permutedims(leaf_parenttype(M), M, perm)
+  return permutedims(leaf_parenttype(M), M, perm)
 end
 
 function NDTensors.permutedims(::Type{<:AbstractArray}, M, perm)
@@ -7,7 +7,7 @@ function NDTensors.permutedims(::Type{<:AbstractArray}, M, perm)
 end
 
 function NDTensors.permutedims!(Mdest::AbstractArray, M::AbstractArray, perm)
-   permutedims!(leaf_parenttype(Mdest), Mdest, leaf_parenttype(M), M, perm)
+  return permutedims!(leaf_parenttype(Mdest), Mdest, leaf_parenttype(M), M, perm)
 end
 
 function permutedims!(::Type{<:AbstractArray}, Mdest, ::Type{<:AbstractArray}, M, perm)
