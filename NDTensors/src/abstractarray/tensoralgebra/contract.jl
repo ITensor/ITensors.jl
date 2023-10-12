@@ -164,8 +164,7 @@ function _contract!(
 
   #tC = similar(CM)
   #_gemm!(tA, tB, El(α), AM, BM, El(β), CM)
-  CM = mul!!(CM, AM, BM, El(α), El(β)
-  )
+  CM = mul!!(CM, AM, BM, El(α), El(β))
 
   if props.permuteC
     Cr = reshape(CM, props.newCrange)
