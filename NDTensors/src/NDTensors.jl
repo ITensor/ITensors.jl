@@ -70,6 +70,7 @@ include("tensor/similar.jl")
 include("adapt.jl")
 include("tensoralgebra/generic_tensor_operations.jl")
 include("tensoralgebra/contraction_logic.jl")
+include("abstractarray/tensoralgebra/contract.jl")
 
 #####################################
 # DenseTensor and DiagTensor

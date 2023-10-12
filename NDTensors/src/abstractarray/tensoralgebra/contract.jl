@@ -1,3 +1,65 @@
+using LinearAlgebra: BlasFloat
+export backend_auto, backend_blas, backend_generic
+
+@eval struct GemmBackend{T}
+  (f::Type{<:GemmBackend})() = $(Expr(:new, :f))
+end
+GemmBackend(s) = GemmBackend{Symbol(s)}()
+macro GemmBackend_str(s)
+  return :(GemmBackend{$(Expr(:quote, Symbol(s)))})
+end
+
+const gemm_backend = Ref(:Auto)
+function backend_auto()
+  return gemm_backend[] = :Auto
+end
+function backend_blas()
+  return gemm_backend[] = :BLAS
+end
+function backend_generic()
+  return gemm_backend[] = :Generic
+end
+
+@inline function auto_select_backend(
+  ::Type{<:StridedVecOrMat{<:BlasFloat}},
+  ::Type{<:StridedVecOrMat{<:BlasFloat}},
+  ::Type{<:StridedVecOrMat{<:BlasFloat}},
+)
+  return GemmBackend(:BLAS)
+end
+
+@inline function auto_select_backend(
+  ::Type{<:AbstractVecOrMat}, ::Type{<:AbstractVecOrMat}, ::Type{<:AbstractVecOrMat}
+)
+  return GemmBackend(:Generic)
+end
+
+function _gemm!(
+  tA, tB, alpha, A::TA, B::TB, beta, C::TC
+) where {TA<:AbstractVecOrMat,TB<:AbstractVecOrMat,TC<:AbstractVecOrMat}
+  if gemm_backend[] == :Auto
+    _gemm!(auto_select_backend(TA, TB, TC), tA, tB, alpha, A, B, beta, C)
+  else
+    _gemm!(GemmBackend(gemm_backend[]), tA, tB, alpha, A, B, beta, C)
+  end
+end
+
+# BLAS matmul
+function _gemm!(
+  ::GemmBackend{:BLAS},
+  tA,
+  tB,
+  alpha,
+  A::AbstractVecOrMat,
+  B::AbstractVecOrMat,
+  beta,
+  C::AbstractVecOrMat,
+)
+  #@timeit_debug timer "BLAS.gemm!" begin
+  return BLAS.gemm!(tA, tB, alpha, A, B, beta, C)
+  #end # @timeit
+end
+
 # generic matmul
 function _gemm!(
   ::GemmBackend{:Generic},
@@ -11,11 +73,6 @@ function _gemm!(
 ) where {AT,BT}
   mul!(C, tA == 'T' ? transpose(A) : A, tB == 'T' ? transpose(B) : B, alpha, beta)
   return C
-end
-
-function contraction_output(tensor1::DenseTensor, tensor2::DenseTensor, indsR)
-  tensortypeR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
-  return NDTensors.similar(tensortypeR, indsR)
 end
 
 # Non-trivial permutation
