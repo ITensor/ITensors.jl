@@ -55,12 +55,12 @@ function permute(T::ITensor, new_inds...; kwargs...)
 end
 
 # TODO: move to NDTensors
-function permutedims(::AllowAlias, T::Tensor, perm)
+function NDTensors.permutedims(::AllowAlias, T::Tensor, perm)
   return NDTensors.is_trivial_permutation(perm) ? T : permutedims(NeverAlias(), T, perm)
 end
 
 # TODO: move to NDTensors, define `permutedims` in terms of `NeverAlias`
-function permutedims(::NeverAlias, T::Tensor, perm)
+function NDTensors.permutedims(::NeverAlias, T::Tensor, perm)
   return permutedims(T, perm)
 end
 

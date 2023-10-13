@@ -1,15 +1,21 @@
-function NDTensors.permutedims(M::AbstractArray, perm)
+## NOTICE!!: Here we are not importing Base.permutedims or Base.permutedims! but
+## are writing our own implementation. This allows us to 
+# NDTensors.permutedims
+function permutedims(M::AbstractArray, perm)
   return permutedims(leaf_parenttype(M), M, perm)
 end
 
-function NDTensors.permutedims(::Type{<:AbstractArray}, M, perm)
+# NDTensors.permutedims
+function permutedims(::Type{<:AbstractArray}, M, perm)
   return Base.permutedims(M, perm)
 end
 
-function NDTensors.permutedims!(Mdest::AbstractArray, M::AbstractArray, perm)
+# NDTensors.permutedims!
+function permutedims!(Mdest::AbstractArray, M::AbstractArray, perm)
   return permutedims!(leaf_parenttype(Mdest), Mdest, leaf_parenttype(M), M, perm)
 end
 
+# NDTensors.permutedims!
 function permutedims!(::Type{<:AbstractArray}, Mdest, ::Type{<:AbstractArray}, M, perm)
   return Mdest .= Base.permutedims(M, perm)
 end
