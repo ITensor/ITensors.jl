@@ -32,7 +32,7 @@ using NDTensors: storage, storagetype
 
   T1r = randn!(similar(T1))
   @test Array(T1r + T1) ≈ Array(T1r) + Array(T1)
-  @test Array(permutedims(T1, (2, 1))) ≈ permutedims(Array(T1), (2, 1))
+  @test Array(NDTensors.permutedims(T1, (2, 1))) ≈ NDTensors.permutedims(Array(T1), (2, 1))
 
   U, S, V = svd(T1)
   @test U * S * V ≈ T1
