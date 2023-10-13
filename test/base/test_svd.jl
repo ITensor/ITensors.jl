@@ -201,12 +201,13 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
         @test ITensors.dir(s1) == leftdir
         @test ITensors.dir(s2) == rightdir
         @test norm(U * S * V - A) <= 1e-14
-
-        L, R, spec = ITensors.factorize_svd(
-          A, l1, l2; leftdir=leftdir, rightdir=rightdir, ortho="none"
-        )
-        @test norm(L * R - A) <= 1e-14
       end
+    end
+
+    for LRinddir in [ITensors.Out, ITensors.In]
+      L, R, spec = ITensors.factorize_svd(A, l1, l2; LRinddir, ortho="none")
+      @test LRinddir == ITensors.dir(commonind(L, R))
+      @test norm(L * R - A) <= 1e-14
     end
   end
 
