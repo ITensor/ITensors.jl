@@ -17,7 +17,7 @@ end
 
 # NDTensors.permutedims!
 function permutedims!(::Type{<:AbstractArray}, Mdest, ::Type{<:AbstractArray}, M, perm)
-  return Mdest .= Base.permutedims(M, perm)
+  return Base.permutedims!(Mdest, M, perm)
 end
 
 function permutedims!!(B::AbstractArray, A::AbstractArray, perm, f)
