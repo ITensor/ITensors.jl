@@ -2,7 +2,7 @@ function mul!!(CM::AbstractArray, AM::AbstractArray, BM::AbstractArray, α, β)
   return mul!!(
     leaf_parenttype(CM), CM, leaf_parenttype(AM), AM, leaf_parenttype(BM), BM, α, β
   )
-  return CM;
+  return CM
 end
 
 function mul!!(

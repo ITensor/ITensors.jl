@@ -222,8 +222,7 @@ end
         T2 = dev(randomTensor(complex(elt), (1, 1)))
         NDTensors.contract!(R, (2, 1, 3), T1, (1, 2, -1), T2, (-1, 1))
         @test !any(isnan, R)
-        @test convert(Array, R) ≈
-          permutedims(convert(Array, T1), (2, 1, 3)) * T2[1]
+        @test convert(Array, R) ≈ permutedims(convert(Array, T1), (2, 1, 3)) * T2[1]
       end
     end
   end
