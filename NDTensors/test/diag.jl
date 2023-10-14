@@ -28,7 +28,7 @@ using Test
     D = dev(tensor(Diag(vr), (d, d)))
     @test Array(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
     @test matrix(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
-    @test NDTensors.permutedims(D, (2, 1)) == D
+    @test permutedims(D, (2, 1)) == D
   end
 end
 @testset "DiagTensor contractions" begin

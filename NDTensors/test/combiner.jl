@@ -67,14 +67,14 @@ end
       output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
       @test output_tensor isa BlockSparseTensor
       @test dims(output_tensor) == dims(output_tensor_inds)
-      output_tensor = NDTensors.permutedims(output_tensor, (2, 1))
+      output_tensor = permutedims(output_tensor, (2, 1))
       for i in 1:length(input_tensor)
         @test input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining. Broken for inds that are not `Index`.
       new_input_tensor = contract(output_tensor, (1, -1), combiner_tensor, (-1, 2, 3))
-      new_input_tensor = NDTensors.permutedims(new_input_tensor, (3, 1, 2))
+      new_input_tensor = permutedims(new_input_tensor, (3, 1, 2))
       @test new_input_tensor == input_tensor
 
       # Catch invalid combining

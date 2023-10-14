@@ -82,7 +82,7 @@ end
       @test C[I] == A[I] + B[I]
     end
 
-    Ap = NDTensors.permutedims(A, (2, 1))
+    Ap = permutedims(A, (2, 1))
 
     @test blockdims(Ap, (1, 2)) == (4, 3)
     @test blockdims(Ap, (2, 1)) == (5, 2)
@@ -162,7 +162,7 @@ end
       @test nnzblocks(A) == nnzblocks(B)
       @test nnz(A) == nnz(B)
 
-      Ap = NDTensors.(A, (3, 2, 1))
+      Ap = NDTensors.permutedims(A, (3, 2, 1))
 
       for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
         blockAp = blockview(Ap, bAp)

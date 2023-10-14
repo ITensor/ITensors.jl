@@ -67,7 +67,7 @@ end
         @test C[I] == A[I] + B[I]
       end
 
-      Ap = NDTensors.permutedims(A, (2, 1))
+      Ap = permutedims(A, (2, 1))
 
       for I in eachindex(A)
         @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
@@ -223,7 +223,7 @@ end
         NDTensors.contract!(R, (2, 1, 3), T1, (1, 2, -1), T2, (-1, 1))
         @test !any(isnan, R)
         @test convert(Array, R) ≈
-          NDTensors.permutedims(convert(Array, T1), (2, 1, 3)) * T2[1]
+          permutedims(convert(Array, T1), (2, 1, 3)) * T2[1]
       end
     end
   end
