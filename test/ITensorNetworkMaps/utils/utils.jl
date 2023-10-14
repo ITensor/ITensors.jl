@@ -33,7 +33,7 @@ function ITensors.prime(::typeof(linkinds), tn::InfTN)
   return tn_p
 end
 
-interleave(x::Vector, y::Vector) = NDTensors.permutedims([x y])[:]
+interleave(x::Vector, y::Vector) = Base.permutedims([x y])[:]
 
 function ITensors.linkind(tn::InfTN, e)
   return commonind(tn[e[1]], tn[e[2]])
