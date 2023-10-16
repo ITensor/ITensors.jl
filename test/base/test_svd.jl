@@ -204,9 +204,9 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
       end
     end
 
-    for LRinddir in [ITensors.Out, ITensors.In]
-      L, R, spec = ITensors.factorize_svd(A, l1, l2; LRinddir, ortho="none")
-      @test LRinddir == ITensors.dir(commonind(L, R))
+    for dir in [ITensors.Out, ITensors.In]
+      L, R, spec = ITensors.factorize_svd(A, l1, l2; dir, ortho="none")
+      @test dir == ITensors.dir(commonind(L, R))
       @test norm(L * R - A) <= 1e-14
     end
   end

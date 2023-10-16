@@ -754,8 +754,8 @@ import ITensors: Out, In
       Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags="r3", dir=ITensors.In)
       A = randomITensor(l1, l2, r1, r2, r3)
 
-      for LRinddir in [ITensors.Out, ITensors.In]
-        L, R, spec = ITensors.factorize_svd(A, l1, l2; LRinddir, ortho="none")
+      for dir in [ITensors.Out, ITensors.In]
+        L, R, spec = ITensors.factorize_svd(A, l1, l2; dir, ortho="none")
         @test norm(L * R - A) <= 1e-14
       end
     end
