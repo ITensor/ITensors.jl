@@ -199,7 +199,7 @@ function permutedims!(
 ) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
-permutedims!(RA, TA, perm)
+  permutedims!(RA, TA, perm)
   return R
 end
 
