@@ -553,8 +553,9 @@ end
 function factorize_svd(A::ITensor, Linds...; (singular_values!)=nothing, kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
-  dir = get(kwargs, :dir, nothing)
-  leftdir, rightdir = dir, dir
+  dir = get(kwargs, :dir, ITensors.In)
+  leftdir, rightdir = -dir, -dir
+
   USV = svd(A, Linds...; leftdir, rightdir, kwargs..., alg=alg)
   if isnothing(USV)
     return nothing
@@ -566,7 +567,7 @@ function factorize_svd(A::ITensor, Linds...; (singular_values!)=nothing, kwargs.
     L, R = U * S, V
   elseif ortho == "none"
     sqrtDL, δᵤᵥ, sqrtDR = sqrt_decomp(S, u, v)
-    sqrtDL = denseblocks(sqrtDL) * denseblocks(δᵤᵥ)
+    sqrtDR = denseblocks(sqrtDR) * denseblocks(δᵤᵥ)
     L, R = U * sqrtDL, V * sqrtDR
   else
     error("In factorize using svd decomposition, ortho keyword
