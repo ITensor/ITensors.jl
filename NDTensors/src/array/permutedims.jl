@@ -1,6 +1,6 @@
 # NDTensors.permutedims
 function permutedims(::Type{<:Array}, M, perm)
-  return @strided Mdest = Base.permutedims(M, perm)
+  return @strided Base.permutedims(M, perm)
 end
 
 # NDTensors.permutedims!
