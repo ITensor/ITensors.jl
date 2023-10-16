@@ -218,7 +218,7 @@ function LinearAlgebra.eigen(
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
   matrixT = matrix(T)
-  ## Here calling parent to ensure that the correct `any` function
+  ## TODO Here I am calling parent to ensure that the correct `any` function
   ## is envoked for non-cpu matrices
   if any(!isfinite, parent(matrixT))
     throw(
