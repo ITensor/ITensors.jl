@@ -114,7 +114,7 @@ function _contract!(
   tA = 'N'
   if props.permuteA
     #@timeit_debug timer "_contract!: permutedims A" begin
-    Ap = permutedims(leaf_parenttype(AT), AT, props.PA)
+    Ap = permutedims(AT, props.PA)
     #end # @timeit
     AM = transpose(reshape(Ap, (props.dmid, props.dleft)))
   else
@@ -129,7 +129,7 @@ function _contract!(
   tB = 'N'
   if props.permuteB
     #@timeit_debug timer "_contract!: permutedims B" begin
-    Bp = permutedims(leaf_parenttype(BT), BT, props.PB)
+    Bp = permutedims(BT, props.PB)
     #end # @timeit
     BM = reshape(Bp, (props.dmid, props.dright))
   else
@@ -147,7 +147,7 @@ function _contract!(
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
       CM = reshape(
-        permutedims(leaf_parenttype(CT), CT, invperm(props.PC)), (props.dleft, props.dright)
+        permutedims(CT, invperm(props.PC)), (props.dleft, props.dright)
       )
     else
       # Need to copy here since we will be permuting
@@ -170,7 +170,7 @@ function _contract!(
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin 
-    CT .= permutedims(leaf_parenttype(Cr), Cr, props.PC)
+    CT .= permutedims(Cr, props.PC)
     #end # @timeit
   end
 
