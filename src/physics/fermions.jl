@@ -107,6 +107,8 @@ end
 
 NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
 
+NDTensors.block_sign(i::QNIndex, block::Integer) = 2 * NDTensors.block_parity(i, block) - 1
+
 function NDTensors.right_arrow_sign(i::QNIndex, block::Integer)
   !using_auto_fermion() && return 1
   if dir(i) == Out && NDTensors.block_parity(i, block) == 1

@@ -186,7 +186,7 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     # is the second index:
     sVP = 1
     if using_auto_fermion()
-      sVP = block_parity(vind, blockV[2]) == 1 ? -1 : +1
+      sVP = -block_sign(vind, blockV[2])
     end
 
     if (sV * sVP) == -1
