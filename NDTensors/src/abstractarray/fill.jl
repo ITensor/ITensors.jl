@@ -1,13 +1,11 @@
-function generic_randn(arraytype::Type{<:AbstractArray}, dim::Integer=0)
+function generic_randn(
+  arraytype::Type{<:AbstractArray}, dim::Integer=0; rng=Random.default_rng()
+)
   arraytype_specified = set_unspecified_parameters(
     leaf_parenttype(arraytype), DefaultParameters()
   )
   data = similar(arraytype_specified, dim)
-  ElT = eltype(data)
-  for i in 1:length(data)
-    data[i] = randn(ElT)
-  end
-  return data
+  return randn!(rng, data)
 end
 
 function generic_zeros(arraytype::Type{<:AbstractArray}, dim::Integer=0)

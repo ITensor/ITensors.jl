@@ -1,11 +1,10 @@
-
 """
 Tensor{StoreT,IndsT}
 
 A plain old tensor (with order independent
 interface and no assumption of labels)
 """
-struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
+struct Tensor{ElT,N,StoreT,IndsT} <: AbstractArray{ElT,N}
   storage::StoreT
   inds::IndsT
 
@@ -21,8 +20,8 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   and tensor(store::TensorStorage, inds) constructors.
   """
   function Tensor{ElT,N,StoreT,IndsT}(
-    ::AllowAlias, storage::TensorStorage, inds::Tuple
-  ) where {ElT,N,StoreT<:TensorStorage,IndsT}
+    ::AllowAlias, storage, inds::Tuple
+  ) where {ElT,N,StoreT,IndsT}
     @assert ElT == eltype(StoreT)
     @assert length(inds) == N
     return new{ElT,N,StoreT,IndsT}(storage, inds)
@@ -74,7 +73,7 @@ end
 # already (like a Vector). In the future this may be lifted
 # to allow for very large tensor orders in which case Tuple
 # operations may become too slow.
-function Tensor(as::AliasStyle, storage::TensorStorage, inds)
+function Tensor(as::AliasStyle, storage, inds)
   return Tensor(as, storage, Tuple(inds))
 end
 

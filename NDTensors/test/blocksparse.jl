@@ -162,7 +162,7 @@ end
       @test nnzblocks(A) == nnzblocks(B)
       @test nnz(A) == nnz(B)
 
-      Ap = permutedims(A, (3, 2, 1))
+      Ap = NDTensors.permutedims(A, (3, 2, 1))
 
       for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
         blockAp = blockview(Ap, bAp)

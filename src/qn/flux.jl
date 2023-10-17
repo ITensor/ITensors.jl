@@ -1,4 +1,3 @@
-flux(T::ITensor, args...) = flux(tensor(T), args...)
 
 """
     flux(T::ITensor)
@@ -7,17 +6,23 @@ Returns the flux of the ITensor.
 
 If the ITensor is empty or it has no QNs, returns `nothing`.
 """
-function flux(T::ITensor)
-  return flux(tensor(T))
-end
+flux(T::ITensor, args...) = flux(tensor(T), args...)
 
-function checkflux(T::ITensor, flux_check)
-  return checkflux(tensor(T), flux_check)
-end
+"""
+    checkflux(T::ITensor)
 
-function checkflux(T::ITensor)
-  return checkflux(tensor(T))
-end
+Check that fluxes of all non-zero blocks of a blocked or symmetric ITensor
+are equal. Throws an error if one or more blocks have a different flux.
+"""
+checkflux(T::ITensor, flux_check) = checkflux(tensor(T), flux_check)
+
+"""
+    checkflux(T::ITensor, flux)
+
+Check that fluxes of all non-zero blocks of a blocked or symmetric Tensor
+equal the value `flux`. Throws an error if one or more blocks does not have this flux.
+"""
+checkflux(T::ITensor) = checkflux(tensor(T))
 
 #
 # Tensor versions
@@ -25,8 +30,29 @@ end
 # is moved there.
 #
 
-flux(T::Tensor, args...) = flux(inds(T), args...)
+"""
+    flux(T::Tensor, block::Block)
 
+Compute the flux of a specific block of a Tensor, 
+regardless of whether this block is present or not in the storage.
+"""
+flux(T::Tensor, block::Block) = flux(inds(T), block)
+
+"""
+    flux(T::Tensor, i::Integer, is::Integer...)
+
+Compute the flux of a specific element of a Tensor, 
+regardless of whether this element is zero or non-zero.
+"""
+flux(T::Tensor, i::Integer, is::Integer...) = flux(inds(T), i, is...)
+
+"""
+    flux(T::Tensor)
+
+Return the flux of a Tensor, based on what non-zero blocks it
+has. If the Tensor is not blocked or has no non-zero blocks,
+this function returns `nothing`. 
+"""
 function flux(T::Tensor)
   (!hasqns(T) || isempty(T)) && return nothing
   @debug_check checkflux(T)
@@ -34,20 +60,21 @@ function flux(T::Tensor)
   return flux(T, block1)
 end
 
-function checkflux(T::Tensor, flux_check)
-  for b in nzblocks(T)
-    fluxTb = flux(T, b)
-    if fluxTb != flux_check
-      error(
-        "Block $b has flux $fluxTb that is inconsistent with the desired flux $flux_check"
-      )
-    end
-  end
-  return nothing
-end
+allfluxequal(T::Tensor, flux_to_check) = all(b -> flux(T, b) == flux_to_check, nzblocks(T))
+allfluxequal(T::Tensor) = allequal(flux(T, b) for b in nzblocks(T))
 
-function checkflux(T::Tensor)
-  b1 = first(nzblocks(T))
-  fluxTb1 = flux(T, b1)
-  return checkflux(T, fluxTb1)
-end
+"""
+    checkflux(T::Tensor)
+
+Check that fluxes of all non-zero blocks of a blocked or symmetric Tensor
+are equal. Throws an error if one or more blocks have a different flux.
+"""
+checkflux(T::Tensor) = allfluxequal(T) ? nothing : error("Fluxes not all equal")
+
+"""
+    checkflux(T::Tensor, flux)
+
+Check that fluxes of all non-zero blocks of a blocked or symmetric Tensor
+equal the value `flux`. Throws an error if one or more blocks does not have this flux.
+"""
+checkflux(T::Tensor, flux) = allfluxequal(T, flux) ? nothing : error("Fluxes not all equal")

@@ -218,7 +218,9 @@ function LinearAlgebra.eigen(
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
   matrixT = matrix(T)
-  if any(!isfinite, matrixT)
+  ## TODO Here I am calling parent to ensure that the correct `any` function
+  ## is envoked for non-cpu matrices
+  if any(!isfinite, parent(matrixT))
     throw(
       ArgumentError(
         "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
@@ -234,9 +236,11 @@ function LinearAlgebra.eigen(
   VM = VM[:, p]
 
   if truncate
+    cpu_dm = NDTensors.cpu(DM)
     truncerr, _ = truncate!(
-      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      cpu_dm; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
+    DM = adapt(typeof(DM), cpu_dm)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]
@@ -400,6 +404,8 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
   QM = convert(typeof(XM), QM)
+  ## Here I convert QM twice because of an issue in CUDA where convert does not take QM to be a UnifiedBuffer array
+  QM = convert(typeof(XM), QM)
   Q = tensor(Dense(vec(QM)), Qinds) #Q was strided
   X = tensor(Dense(vec(XM)), Xinds)
   return Q, X
@@ -418,9 +424,15 @@ non-negative. Such a QR decomposition of a
 matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
+  iscuda = iscu(M)
+  if iscuda
+    cutype = leaf_parenttype(M)
+    M = NDTensors.cpu(M)
+  end
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
   nc = size(Q, 2)
+  ## TODO issue here for GPU because tying to access indices
   for c in 1:nc
     if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
       sign_Rc = sign(R[c, c])
@@ -429,6 +441,10 @@ function qr_positive(M::AbstractMatrix)
         Q[:, c] *= sign_Rc
       end
     end
+  end
+  if iscuda
+    Q = adapt(cutype, Q)
+    R = adapt(cutype, R)
   end
   return (Q, R)
 end
@@ -442,6 +458,11 @@ non-negative. Such a QL decomposition of a
 matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
+  iscuda = iscu(M)
+  if iscuda
+    cutype = leaf_parenttype(M)
+    M = NDTensors.cpu(M)
+  end
   sparseQ, L = ql(M)
   Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
@@ -455,6 +476,10 @@ function ql_positive(M::AbstractMatrix)
       end
     end
   end
+  if iscuda
+    Q = adapt(cutype, Q)
+    L = adapt(cutype, L)
+  end
   return (Q, L)
 end
 
@@ -467,13 +492,26 @@ function ql(A::AbstractMatrix; kwargs...)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
   copyto!(AA, A)
-  return ql!(AA; kwargs...)
+  iscuda = iscu(AA)
+  if iscuda
+    cutype = leaf_parenttype(AA)
+    AA = NDTensors.cpu(AA)
+  end
+  Q, L = ql!(AA; kwargs...)
+  if iscuda
+    Q = adapt(cutype, Q)
+    L = adapt(cutype, L)
+  end
+  return (Q, L)
 end
 #
 # This is where the low level call to lapack actually occurs.  Most of the work is
 # about unpacking Q and L from the A matrix.
 #
 function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
+  if iscu(A)
+    throw("Error: ql is not implemented in CUDA.jl")
+  end
   tau = Base.similar(A, min(size(A)...))
   x = LAPACK.geqlf!(A, tau)
   #save L from the lower portion of A, before orgql! mangles it!

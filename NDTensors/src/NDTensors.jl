@@ -6,6 +6,7 @@ using Compat
 using Dictionaries
 using FLoops
 using Folds
+using InlineStrings
 using Random
 using LinearAlgebra
 using StaticArrays
@@ -19,6 +20,14 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("BlockSparseArrays/src/BlockSparseArrays.jl")
+using .BlockSparseArrays
+include("SmallVectors/src/SmallVectors.jl")
+using .SmallVectors
+include("SortedSets/src/SortedSets.jl")
+using .SortedSets
+include("TagSets/src/TagSets.jl")
+using .TagSets
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
@@ -41,8 +50,12 @@ include("abstractarray/set_types.jl")
 include("abstractarray/to_shape.jl")
 include("abstractarray/similar.jl")
 include("abstractarray/ndims.jl")
+include("abstractarray/permutedims.jl")
 include("abstractarray/fill.jl")
+include("abstractarray/mul.jl")
 include("array/set_types.jl")
+include("array/permutedims.jl")
+include("array/mul.jl")
 include("tupletools.jl")
 include("emptynumber.jl")
 include("nodata.jl")
@@ -54,9 +67,11 @@ include("tensor/tensor.jl")
 include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
+include("tensor/permutedims.jl")
 include("adapt.jl")
 include("tensoralgebra/generic_tensor_operations.jl")
 include("tensoralgebra/contraction_logic.jl")
+include("abstractarray/tensoralgebra/contract.jl")
 
 #####################################
 # DenseTensor and DiagTensor
@@ -108,6 +123,14 @@ include("empty/empty.jl")
 include("empty/EmptyTensor.jl")
 include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
+
+#####################################
+# Array Tensor (experimental)
+# TODO: Move to `Experimental` module.
+#
+include("arraytensor/arraytensor.jl")
+include("arraytensor/array.jl")
+include("arraytensor/blocksparsearray.jl")
 
 #####################################
 # Deprecations
