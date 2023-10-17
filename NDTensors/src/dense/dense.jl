@@ -1,7 +1,6 @@
 #
 # Dense storage
 #
-using LinearAlgebra: BlasFloat
 
 struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
   data::DataT

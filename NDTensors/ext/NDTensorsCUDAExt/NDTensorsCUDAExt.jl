@@ -4,7 +4,7 @@ using NDTensors
 using NDTensors.SetParameters
 using Adapt
 using Functors
-using LinearAlgebra: BlasFloat
+using LinearAlgebra
 
 if isdefined(Base, :get_extension)
   using CUDA
@@ -18,6 +18,7 @@ end
 
 include("imports.jl")
 include("set_types.jl")
+include("iscu.jl")
 include("adapt.jl")
 include("linearalgebra.jl")
 end

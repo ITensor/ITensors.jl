@@ -843,7 +843,7 @@ size(A::ITensor, d::Int) = size(tensor(A), d)
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
 _isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
-
+NDTensors.iscu(A::ITensor) = NDTensors.iscu(tensor(A))
 """
     dir(A::ITensor, i::Index)
 
@@ -1140,8 +1140,9 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 @propagate_inbounds (getindex(T::ITensor, ivs::Vararg{Any,N})::Any) where {N} =
   _getindex(tensor(T), ivs...)
 
+## Allowing one to get the first ITensor element if its an order 0 tensor or an order 1 tensor with a dimension of 1. Also convert GPU back to CPU
 @propagate_inbounds function getindex(T::ITensor)::Any
-  if order(T) != 0
+  if order(T) != 0 && dim(T) != 1
     throw(
       DimensionMismatch(
         "In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."
@@ -1892,7 +1893,7 @@ diag(T::ITensor) = diag(tensor(T))
 
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
-dot(A::ITensor, B::ITensor) = (dag(A) * B)[]
+dot(A::ITensor, B::ITensor) = NDTensors.cpu(dag(A) * B)[]
 
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]

@@ -61,6 +61,8 @@ end
 function permutedims!(
   output_array::MatrixOrArrayStorage, array::MatrixOrArrayStorage, perm, f::Function
 )
-  @strided output_array .= f.(output_array, permutedims(array, perm))
+  output_array = permutedims!!(
+    leaf_parenttype(output_array), output_array, leaf_parenttype(array), array, perm, f
+  )
   return output_array
 end
