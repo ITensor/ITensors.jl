@@ -63,6 +63,7 @@ settings = Dict(
       "HDF5 File Formats" => "HDF5FileFormats.md",
     ],
     "Developer Guide" => "DeveloperGuide.md",
+    "Development Roadmap" => "DevelopmentRoadmap.md",
   ],
   :format => Documenter.HTML(; assets=["assets/favicon.ico"], prettyurls=false),
   :doctest => true,
