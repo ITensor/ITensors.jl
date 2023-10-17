@@ -699,7 +699,7 @@ import ITensors: Out, In
       T = ITensor(s[1], dag(s[2]))
       T[2, 2] = 1.0
       U, S, V, spec, u, v = svd(T, s[1])
-      @test_broken norm(T - U * S * V) ≈ 0
+      @test norm(T - U * S * V) ≈ 0
       UU = dag(U) * prime(U, u)
       @test norm(UU - id(u)) ≈ 0
       VV = dag(V) * prime(V, v)
@@ -711,7 +711,7 @@ import ITensors: Out, In
       T = ITensor(dag(s[1]), dag(s[2]))
       T[1, 2] = 1.0
       U, S, V, spec, u, v = svd(T, s[1])
-      @test_broken norm(T - U * S * V) ≈ 0
+      @test norm(T - U * S * V) ≈ 0
       UU = dag(U) * prime(U, u)
       @test norm(UU - id(u)) ≈ 0
       VV = dag(V) * prime(V, v)
