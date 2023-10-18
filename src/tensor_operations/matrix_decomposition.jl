@@ -630,7 +630,7 @@ Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`
 
 For truncation arguments, see: [`svd`](@ref)
 """
-function factorize(A::ITensor, Linds...; kwargs...)
+function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   tags::TagSet = get(kwargs, :tags, "Link,fact")
   plev::Int = get(kwargs, :plev, 0)
@@ -666,7 +666,10 @@ function factorize(A::ITensor, Linds...; kwargs...)
   Ris = uniqueinds(A, Lis)
   dL, dR = dim(Lis), dim(Ris)
   # maxdim is forced to be at most the max given SVD
-  maxdim = min(get(kwargs, :maxdim, min(dL, dR)), min(dL, dR))
+  if isnothing(maxdim)
+    maxdim = min(dL, dR)
+  end
+  maxdim = min(maxdim, min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 
   if isnothing(which_decomp)
@@ -680,7 +683,7 @@ function factorize(A::ITensor, Linds...; kwargs...)
   end
 
   if which_decomp == "svd"
-    LR = factorize_svd(A, Linds...; kwargs...)
+    LR = factorize_svd(A, Linds...; kwargs..., maxdim=maxdim)
     if isnothing(LR)
       return nothing
     end
