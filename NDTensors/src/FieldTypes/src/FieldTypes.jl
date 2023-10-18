@@ -14,10 +14,6 @@ include("unallocatedarray/unallocatedzeros.jl")
 
 include("unspecifiedarray/unspecifiedarray.jl")
 
-
 export UnallocatedFill,
- UnallocatedZeros,
- UnspecifiedArray,
- UnspecifiedNumber,
- UnspecifiedZero
+  UnallocatedZeros, UnspecifiedArray, UnspecifiedNumber, UnspecifiedZero
 end

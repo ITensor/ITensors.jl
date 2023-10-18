@@ -1,5 +1,4 @@
-struct UnspecifiedZero <: AbstractUnspecifiedNumber
-end
+struct UnspecifiedZero <: AbstractUnspecifiedNumber end
 
 # Base.Complex{UnspecifiedZero}() = complex(UnspecifiedZero())
 # function Base.Complex{UnspecifiedZero}(z::Real)

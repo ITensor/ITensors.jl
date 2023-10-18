@@ -1,2 +1,1 @@
-struct UnallocatedFill{ElT, N, Axes} <: FillArrays.AbstractFill{ElT, N, Axes}
-end
+struct UnallocatedFill{ElT,N,Axes} <: FillArrays.AbstractFill{ElT,N,Axes} end
