@@ -550,10 +550,15 @@ function sqrt_decomp(D::ITensor, u::Index, v::Index)
   return sqrtDL, prime(δᵤᵥ), sqrtDR
 end
 
-function factorize_svd(A::ITensor, Linds...; (singular_values!)=nothing, kwargs...)
-  ortho::String = get(kwargs, :ortho, "left")
-  alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
-  dir = get(kwargs, :dir, ITensors.In)
+function factorize_svd(
+  A::ITensor,
+  Linds...;
+  (singular_values!)=nothing,
+  ortho="left",
+  alg="divide_and_conquer",
+  dir=ITensors.In,
+  kwargs...,
+)
   leftdir, rightdir = -dir, -dir
 
   USV = svd(A, Linds...; leftdir, rightdir, kwargs..., alg=alg)
