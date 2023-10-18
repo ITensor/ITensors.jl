@@ -662,8 +662,9 @@ function factorize(A::ITensor, Linds...; kwargs...)
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
   Lis = indices(Linds...)
-  dL, dR = dim(Lis), dim(indices(setdiff(inds(A), Lis)))
-  maxdim = get(kwargs, :maxdim, min(dL, dR))
+  dL, dR = dim(commoninds(inds(A), Lis)), dim(indices(setdiff(inds(A), Lis)))
+  # maxdim is forced to be at most the max given SVD
+  maxdim = min(get(kwargs, :maxdim, min(dL, dR)), min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 
   if isnothing(which_decomp)
@@ -683,7 +684,7 @@ function factorize(A::ITensor, Linds...; kwargs...)
     end
     L, R, spec = LR
   elseif which_decomp == "eigen"
-    L, R, spec = factorize_eigen(A, Linds...; kwargs...)
+    L, R, spec = factorize_eigen(A, Linds...; kwargs..., maxdim=maxdim)
   elseif which_decomp == "qr"
     L, R = factorize_qr(A, Linds...; kwargs...)
     spec = Spectrum(nothing, 0.0)
