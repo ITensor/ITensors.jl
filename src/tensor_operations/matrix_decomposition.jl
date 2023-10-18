@@ -662,7 +662,9 @@ function factorize(A::ITensor, Linds...; kwargs...)
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
   Lis = indices(Linds...)
-  dL, dR = dim(commoninds(inds(A), Lis)), dim(indices(setdiff(inds(A), Lis)))
+  Lis = commoninds(A, indices(Linds...))
+  Ris = uniqueinds(A, Lis)
+  dL, dR = dim(Lis), dim(Ris)
   # maxdim is forced to be at most the max given SVD
   maxdim = min(get(kwargs, :maxdim, min(dL, dR)), min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
