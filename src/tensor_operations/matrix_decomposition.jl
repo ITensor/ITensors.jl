@@ -652,7 +652,7 @@ Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`
 
 For truncation arguments, see: [`svd`](@ref)
 """
-function factorize(A::ITensor, Linds...; kwargs...)
+function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   tags::TagSet = get(kwargs, :tags, "Link,fact")
   plev::Int = get(kwargs, :plev, 0)
@@ -676,9 +676,14 @@ function factorize(A::ITensor, Linds...; kwargs...)
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
-  Lis = indices(Linds...)
-  dL, dR = dim(Lis), dim(indices(setdiff(inds(A), Lis)))
-  maxdim = get(kwargs, :maxdim, min(dL, dR))
+  Lis = commoninds(A, indices(Linds...))
+  Ris = uniqueinds(A, Lis)
+  dL, dR = dim(Lis), dim(Ris)
+  # maxdim is forced to be at most the max given SVD
+  if isnothing(maxdim)
+    maxdim = min(dL, dR)
+  end
+  maxdim = min(maxdim, min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 
   if isnothing(which_decomp)
@@ -692,13 +697,13 @@ function factorize(A::ITensor, Linds...; kwargs...)
   end
 
   if which_decomp == "svd"
-    LR = factorize_svd(A, Linds...; kwargs...)
+    LR = factorize_svd(A, Linds...; kwargs..., maxdim=maxdim)
     if isnothing(LR)
       return nothing
     end
     L, R, spec = LR
   elseif which_decomp == "eigen"
-    L, R, spec = factorize_eigen(A, Linds...; kwargs...)
+    L, R, spec = factorize_eigen(A, Linds...; kwargs..., maxdim=maxdim)
   elseif which_decomp == "qr"
     L, R = factorize_qr(A, Linds...; kwargs...)
     spec = Spectrum(nothing, 0.0)
