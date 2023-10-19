@@ -555,13 +555,12 @@ function factorize_svd(
   Linds...;
   (singular_values!)=nothing,
   ortho="left",
-  alg="divide_and_conquer",
+  svd_alg="divide_and_conquer",
   dir=ITensors.In,
   kwargs...,
 )
   leftdir, rightdir = -dir, -dir
-
-  USV = svd(A, Linds...; leftdir, rightdir, kwargs..., alg=alg)
+  USV = svd(A, Linds...; leftdir, rightdir, alg=svd_alg, kwargs...)
   if isnothing(USV)
     return nothing
   end
@@ -674,13 +673,6 @@ function factorize(A::ITensor, Linds...; kwargs...)
     end
     which_decomp = "eigen"
   end
-
-  # Deprecated keywords
-  # if haskey(kwargs, :dir)
-  #   error("""dir keyword in factorize has been replace by ortho.
-  #   Note that the default is now `left`, meaning for the results
-  #   L,R = factorize(A), L forms an orthogonal basis.""")
-  # end
 
   if haskey(kwargs, :which_factorization)
     error("""which_factorization keyword in factorize has

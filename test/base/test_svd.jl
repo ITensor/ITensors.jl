@@ -197,9 +197,9 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     for leftdir in [ITensors.Out, ITensors.In]
       for rightdir in [ITensors.Out, ITensors.In]
         U, S, V = svd(A, l1, l2; leftdir, rightdir)
-        s1, s2 = inds(S)[1], inds(S)[2]
-        @test ITensors.dir(s1) == leftdir
-        @test ITensors.dir(s2) == rightdir
+        s1, s2 = inds(S)
+        @test dir(s1) == leftdir
+        @test dir(s2) == rightdir
         @test norm(U * S * V - A) <= 1e-14
       end
     end
