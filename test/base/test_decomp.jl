@@ -465,6 +465,20 @@ end
       @test blockdim(u, b) == blockdim(i, b) || blockdim(u, b) >= min_blockdim
     end
   end
+
+  @testset "factorize with mindim" begin
+    l = Index(8, "l")
+    s1 = Index(2, "s1")
+    s2 = Index(2, "s2")
+    r = Index(2, "r")
+
+    phi = randomITensor(l, s1, s2, r)
+
+    U, B = factorize(phi, (l, s1); ortho="left", mindim=8, which_decomp="eigen")
+
+    @test norm(U * B - phi) < 1E-5
+    @test dim(commonind(U, B)) <= 4
+  end
 end
 
 nothing
