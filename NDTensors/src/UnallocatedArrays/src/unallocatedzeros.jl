@@ -1,5 +1,5 @@
 struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
-       FillArrays.AbstractFill{ElT,N,Axes}
+       FillArrays.AbstractZeros{ElT,N,Axes}
   z::FillArrays.Zeros{ElT,N,Axes}
   function UnallocatedZeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
     z = FillArrays.Zeros{ElT,N}(inds)

@@ -20,8 +20,10 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
-include("FieldTypes/src/FieldTypes.jl")
-using .FieldTypes
+include("UnspecifiedTypes/src/UnspecifiedTypes.jl")
+using .UnspecifiedTypes
+include("UnallocatedArrays/src/UnallocatedArrays.jl")
+using .UnallocatedArrays
 include("BlockSparseArrays/src/BlockSparseArrays.jl")
 using .BlockSparseArrays
 include("SmallVectors/src/SmallVectors.jl")
