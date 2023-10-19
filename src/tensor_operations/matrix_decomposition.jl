@@ -661,7 +661,6 @@ function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
-  Lis = indices(Linds...)
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
   dL, dR = dim(Lis), dim(Ris)
