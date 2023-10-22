@@ -1,9 +1,10 @@
 module NDTensorsMetalExt
 
+using Adapt
+using Functors
+using LinearAlgebra: LinearAlgebra
 using NDTensors
 using NDTensors.SetParameters
-using Functors
-using Adapt
 
 if isdefined(Base, :get_extension)
   using Metal
@@ -14,4 +15,7 @@ end
 include("imports.jl")
 include("adapt.jl")
 include("set_types.jl")
+include("indexing.jl")
+include("linearalgebra.jl")
+include("permutedims.jl")
 end

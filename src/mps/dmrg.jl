@@ -216,7 +216,6 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
   psi = copy(psi0)
   N = length(psi)
-
   if !isortho(psi) || orthocenter(psi) != 1
     psi = orthogonalize!(PH, psi, 1)
   end

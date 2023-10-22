@@ -62,6 +62,12 @@ function DiagBlockSparse(
   return DiagBlockSparse(Vector{ElT}(undef, diaglength), boffs)
 end
 
+function DiagBlockSparse(
+  datatype::Type{<:AbstractArray}, ::UndefInitializer, boffs::BlockOffsets, diaglength::Integer
+)
+  return DiagBlockSparse(datatype(undef, diaglength), boffs)
+end
+
 function DiagBlockSparse(::UndefInitializer, boffs::BlockOffsets, diaglength::Integer)
   return DiagBlockSparse(Float64, undef, boffs, diaglength)
 end

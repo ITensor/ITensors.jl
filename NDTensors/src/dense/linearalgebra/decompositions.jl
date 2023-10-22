@@ -17,7 +17,7 @@ end
 
 # svd of an order-n tensor according to positions Lpos
 # and Rpos
-function LinearAlgebra.svd(
+function svd(
   T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
 ) where {N,IndsT,NL,NR}
   M = permute_reshape(T, Lpos, Rpos)

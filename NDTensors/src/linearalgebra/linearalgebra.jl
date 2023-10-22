@@ -95,7 +95,7 @@ end
 
 svd of an order-2 DenseTensor
 """
-function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
+function svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
   #
@@ -195,7 +195,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   return U, S, V, spec
 end
 
-function LinearAlgebra.eigen(
+function eigen(
   T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}}; kwargs...
 ) where {ElT<:Union{Real,Complex},IndsT}
   # Keyword argument deprecations
@@ -316,7 +316,7 @@ random_orthog(::Type{ElT}, n::Int, m::Int) where {ElT<:Real} = random_unitary(El
 
 random_orthog(n::Int, m::Int) = random_orthog(Float64, n, m)
 
-function LinearAlgebra.eigen(
+function eigen(
   T::DenseTensor{ElT,2,IndsT}; kwargs...
 ) where {ElT<:Union{Real,Complex},IndsT}
   # Keyword argument deprecations

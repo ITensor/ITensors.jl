@@ -20,5 +20,6 @@ include("imports.jl")
 include("set_types.jl")
 include("iscu.jl")
 include("adapt.jl")
+include("indexing.jl")
 include("linearalgebra.jl")
 end
