@@ -219,10 +219,9 @@ function permutedims!(
   return R
 end
 
-function copyto!(R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}) where {N}
-  RA = array(R)
-  TA = array(T)
-  RA .= TA
+# NDTensors.copyto!
+function copyto!(R::DenseTensor, T::DenseTensor)
+  copyto!(array(R), array(T))
   return R
 end
 

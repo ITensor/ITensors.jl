@@ -172,10 +172,9 @@ function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     sU = right_arrow_sign(uind, blockU[2])
 
     if sU == -1
-      blockview(U, blockU) .= -Ub
-    else
-      blockview(U, blockU) .= Ub
+      Ub *= -1
     end
+    copyto!(blockview(U, blockU), Ub)
 
     blockviewS = blockview(S, blockS)
     for i in 1:diaglength(Sb)
@@ -193,12 +192,10 @@ function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     end
 
     if (sV * sVP) == -1
-      blockview(V, blockV) .= -Vb
-    else
-      blockview(V, blockV) .= Vb
+      Vb *= -1
     end
+    copyto!(blockview(V, blockV), Vb)
   end
-
   return U, S, V, Spectrum(d, truncerr)
   #end # @timeit_debug
 end

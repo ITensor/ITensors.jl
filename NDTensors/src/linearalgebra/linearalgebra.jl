@@ -358,7 +358,6 @@ function eigen(
   #DM = DM[p]
   #VM = VM[:,p]
 
-
   if truncate
     DM_cpu = NDTensors.cpu(DM)
     truncerr, _ = truncate!(

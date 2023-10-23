@@ -177,15 +177,15 @@ function BlockSparseTensor(
 end
 
 function zeros(
-  ::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
+  tensor::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
 ) where {ElT,N}
-  return BlockSparseTensor(ElT, blockoffsets, inds)
+  return BlockSparseTensor(datatype(tensor), blockoffsets, inds)
 end
 
 function zeros(
-  ::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
+  tensortype::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
 ) where {ElT,N}
-  return BlockSparseTensor(ElT, blockoffsets, inds)
+  return BlockSparseTensor(datatype(tensortype), blockoffsets, inds)
 end
 
 function zeros(tensortype::Type{<:BlockSparseTensor}, inds)
