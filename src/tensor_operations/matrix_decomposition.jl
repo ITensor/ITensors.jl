@@ -144,7 +144,7 @@ function svd(A::ITensor, Linds...; kwargs...)
     AC = permute(AC, cL, cR)
   end
 
-  USVT = NDTensors.svd(tensor(AC); kwargs...)
+  USVT = svd(tensor(AC); kwargs...)
   if isnothing(USVT)
     return nothing
   end
@@ -337,7 +337,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
 
-  DT, VT, spec = NDTensors.eigen(AT; kwargs...)
+  DT, VT, spec = eigen(AT; kwargs...)
   D, VC = itensor(DT), itensor(VT)
 
   V = VC * dag(CR)
@@ -433,7 +433,7 @@ lq(A::ITensor, Linds...; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs.
 # Handle default tags and dispatch to generic qx/xq functions.
 #
 function qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", kwargs...)
-  return qx(NDTensors.qr, A, Linds, Rinds; tags, kwargs...)
+  return qx(qr, A, Linds, Rinds; tags, kwargs...)
 end
 function ql(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,ql", kwargs...)
   return qx(ql, A, Linds, Rinds; tags, kwargs...)
@@ -442,7 +442,7 @@ function rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs
   return xq(ql, A, Linds, Rinds; tags, kwargs...)
 end
 function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs...)
-  return xq(NDTensors.qr, A, Linds, Rinds; tags, kwargs...)
+  return xq(qr, A, Linds, Rinds; tags, kwargs...)
 end
 #
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
