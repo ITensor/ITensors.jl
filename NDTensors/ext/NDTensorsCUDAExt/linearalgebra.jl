@@ -19,5 +19,5 @@ function NDTensors.truncate!(P::CuArray; kwargs...)
   cpuP = NDTensors.cpu(P)
   value = NDTensors.truncate!(cpuP; kwargs...)
   P = adapt(typeof(P), cpuP)
-  return value;
+  return value
 end
