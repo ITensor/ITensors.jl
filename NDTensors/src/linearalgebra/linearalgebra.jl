@@ -169,9 +169,11 @@ function svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
 
   P = MS .^ 2
   if truncate
+    P_cpu = NDTensors.cpu(P)
     truncerr, _ = truncate!(
-      P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      P_cpu; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
+    P = adapt(typeof(P), P_cpu)
   else
     truncerr = 0.0
   end
@@ -179,7 +181,9 @@ function svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   dS = length(P)
   if dS < length(MS)
     MU = MU[:, 1:dS]
-    resize!(MS, dS)
+    # Fails on some GPU backends like Metal.
+    # resize!(MS, dS)
+    MS = MS[1:dS]
     MV = MV[:, 1:dS]
   end
 
@@ -236,11 +240,11 @@ function eigen(
   VM = VM[:, p]
 
   if truncate
-    cpu_dm = NDTensors.cpu(DM)
+    DM_cpu = NDTensors.cpu(DM)
     truncerr, _ = truncate!(
-      cpu_dm; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      DM_cpu; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
-    DM = adapt(typeof(DM), cpu_dm)
+    DM = adapt(typeof(DM), DM_cpu)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]
@@ -354,10 +358,13 @@ function eigen(
   #DM = DM[p]
   #VM = VM[:,p]
 
+
   if truncate
+    DM_cpu = NDTensors.cpu(DM)
     truncerr, _ = truncate!(
-      DM; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      DM_cpu; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
+    DM = adapt(typeof(DM), DM_cpu)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]
