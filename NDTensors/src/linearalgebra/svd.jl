@@ -1,4 +1,7 @@
 
+## TODO here it looks at the elements of S so convert to CPU when on GPU
+## Could write this as a GPU impl which just converts S to array. S 
+## is not used again so we don't need to convert back to GPU.
 function checkSVDDone(S::AbstractArray, thresh::Float64)
   N = length(S)
   (N <= 1 || thresh < 0.0) && return (true, 1)
