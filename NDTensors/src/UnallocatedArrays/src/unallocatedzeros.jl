@@ -9,7 +9,7 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
     new{ElT,N,ax,Alloc}(z)
   end
 
-  function UnallcoatedZeros{ElT,0,Tuple{},Alloc}(inds::Tuple{}) where{ElT,Alloc}
+  function UnallocatedZeros{ElT,0,Tuple{},Alloc}(inds::Tuple{}) where{ElT,Alloc}
     z = FillArrays.Zeros(inds)
     new{ElT,0,Tuple{},Alloc}(z)
   end
