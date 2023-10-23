@@ -12,7 +12,6 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
     ## A function for NDTensors to launch functions off of
     is_immutable(A::$Typ) = is_immutable(typeof(A))
     is_immutable(::Type{<:$Typ}) = true
-
   end
   ## TODO I don't think this is the correct way to call
   ## functions which are defined in `FillArrays`
@@ -23,7 +22,8 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
   for fun in (:norm,)
     @eval LinearAlgebra.$fun(A::$Typ) = $fun(data(A))
   end
-
 end
 
-copy(F::UnallocatedFill) = UnallocatedFill{eltype(F), ndims(F), axes(F), alloctype(F)}(data(F)[1], size(F))
+function copy(F::UnallocatedFill)
+  return UnallocatedFill{eltype(F),ndims(F),axes(F),alloctype(F)}(data(F)[1], size(F))
+end

@@ -1,6 +1,1 @@
-import FillArrays: 
-  axes,
-  convert,
-  getindex_value,
-  size,
-  sum
+import FillArrays: axes, convert, getindex_value, size, sum
