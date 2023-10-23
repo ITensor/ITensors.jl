@@ -4,7 +4,7 @@ end
 
 # CPU version.
 function truncate!!(::Type{<:Array}, P::AbstractArray; kwargs...)
-  P, truncerr, docut = truncate!(P; kwargs...)
+  truncerr, docut = truncate!(P; kwargs...)
   return P, truncerr, docut
 end
 
@@ -108,5 +108,5 @@ function truncate!(P::AbstractVector{ElT}; cutoff=zero(eltype(P)), kwargs...) wh
   s < 0 && (P .*= s)
   resize!(P, n)
 
-  return P, truncerr, docut
+  return truncerr, docut
 end

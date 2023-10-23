@@ -1,54 +1,6 @@
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.
 
-# Trait indicating if the AbstractArray type is an array wrapper.
-# Assumes that it implements `NDTensors.parenttype`.
-@traitdef IsWrappedArray{ArrayT}
-
-#! format: off
-@traitimpl IsWrappedArray{ArrayT} <- is_wrapped_array(ArrayT)
-#! format: on
-
-is_wrapped_array(arraytype::Type{<:AbstractArray}) = (parenttype(arraytype) ≠ arraytype)
-
-# For working with instances, not used by
-# `SimpleTraits.jl` traits dispatch.
-is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
-
-# By default, the `parentype` of an array type is itself
-parenttype(arraytype::Type{<:AbstractArray}) = arraytype
-
-parenttype(::Type{<:ReshapedArray{<:Any,<:Any,P}}) where {P} = P
-parenttype(::Type{<:Transpose{<:Any,P}}) where {P} = P
-parenttype(::Type{<:Adjoint{<:Any,P}}) where {P} = P
-parenttype(::Type{<:Symmetric{<:Any,P}}) where {P} = P
-parenttype(::Type{<:Hermitian{<:Any,P}}) where {P} = P
-parenttype(::Type{<:UpperTriangular{<:Any,P}}) where {P} = P
-parenttype(::Type{<:LowerTriangular{<:Any,P}}) where {P} = P
-parenttype(::Type{<:UnitUpperTriangular{<:Any,P}}) where {P} = P
-parenttype(::Type{<:UnitLowerTriangular{<:Any,P}}) where {P} = P
-parenttype(::Type{<:Diagonal{<:Any,P}}) where {P} = P
-parenttype(::Type{<:SubArray{<:Any,<:Any,P}}) where {P} = P
-
-# For working with instances, not used by
-# `SimpleTraits.jl` traits dispatch.
-parenttype(array::AbstractArray) = parenttype(typeof(array))
-
-@traitfn function leaf_parenttype(
-  arraytype::Type{ArrayT}
-) where {ArrayT; IsWrappedArray{ArrayT}}
-  return leaf_parenttype(parenttype(arraytype))
-end
-
-@traitfn function leaf_parenttype(
-  arraytype::Type{ArrayT}
-) where {ArrayT; !IsWrappedArray{ArrayT}}
-  return arraytype
-end
-
-# For working with instances.
-leaf_parenttype(array::AbstractArray) = leaf_parenttype(typeof(array))
-
 # This function actually allocates the data.
 # NDTensors.similar
 function similar(arraytype::Type{<:AbstractArray}, dims::Tuple)
@@ -56,11 +8,6 @@ function similar(arraytype::Type{<:AbstractArray}, dims::Tuple)
   return similartype(arraytype, shape)(undef, NDTensors.to_shape(arraytype, shape))
 end
 
-# For when there are CUArray specific issues inline
-iscu(A::AbstractArray) = iscu(typeof(A))
-function iscu(A::Type{<:AbstractArray})
-  return (leaf_parenttype(A) == A ? false : iscu(leaf_parenttype(A)))
-end
 # This function actually allocates the data.
 # Catches conversions of dimensions specified by ranges
 # dimensions specified by integers with `Base.to_shape`.
