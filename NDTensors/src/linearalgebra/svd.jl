@@ -38,9 +38,6 @@ function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=
   V, R = qr_positive(V)
   n = size(R)[1]
   D = diag(R, (n - Nd))
-  # for n in 1:Nd
-  #   D[n] = R[n, n]
-  # end
 
   (done, start) = checkSVDDone(D, thresh)
 
