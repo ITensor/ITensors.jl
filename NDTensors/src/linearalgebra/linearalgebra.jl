@@ -418,6 +418,13 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   return Q, X
 end
 
+# Version of `sign` that returns one
+# if `x == 0`.
+function nonzero_sign(x)
+  iszero(x) && return one(x)
+  return sign(x)
+end
+
 #
 # Just flip signs between Q and R to get all the diagonals of R >=0.
 # For rectangular M the indexing for "diagonal" is non-trivial.
@@ -431,28 +438,12 @@ non-negative. Such a QR decomposition of a
 matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
-  iscuda = iscu(M)
-  if iscuda
-    cutype = leaf_parenttype(M)
-    M = NDTensors.cpu(M)
-  end
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
   nc = size(Q, 2)
-  ## TODO issue here for GPU because tying to access indices
-  for c in 1:nc
-    if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
-      sign_Rc = sign(R[c, c])
-      if !isone(sign_Rc)
-        R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
-        Q[:, c] *= sign_Rc
-      end
-    end
-  end
-  if iscuda
-    Q = adapt(cutype, Q)
-    R = adapt(cutype, R)
-  end
+  signs = nonzero_sign.(diag(R))
+  Q = Q * Diagonal(signs)
+  R = Diagonal(conj.(signs)) * R
   return (Q, R)
 end
 
@@ -465,6 +456,9 @@ non-negative. Such a QL decomposition of a
 matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
+  # TODO: Change to `isgpu`, or better yet rewrite
+  # in terms of broadcasting and linear algebra
+  # like `qr_positive`.
   iscuda = iscu(M)
   if iscuda
     cutype = leaf_parenttype(M)

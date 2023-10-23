@@ -1,5 +1,8 @@
 
 function checkSVDDone(S::AbstractArray, thresh::Float64)
+  # Convert to CPU to avoid slow scalar indexing
+  # on GPU.
+  S = cpu(S)
   N = length(S)
   (N <= 1 || thresh < 0.0) && return (true, 1)
   S1t = S[1] * thresh
@@ -32,9 +35,8 @@ function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=
   V = M' * U
 
   V, R = qr_positive(V)
-  for n in 1:Nd
-    D[n] = R[n, n]
-  end
+  diagR = diag(R)
+  D[1:Nd] = diagR[1:Nd]
 
   (done, start) = checkSVDDone(D, thresh)
 
