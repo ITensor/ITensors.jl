@@ -101,7 +101,16 @@ Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
 setdata(D::Dense, ndata) = Dense(ndata)
 setdata(storagetype::Type{<:Dense}, data) = Dense(data)
 
-copy(D::Dense) = Dense(copy(data(D)))
+## There is an GPU arrays which are ReshapedArray can 
+## fail when trying to copy (fail meaning they call get_index which is slow) so this forces a fix. 
+## TODO make a better implementation
+function copy(D::Dense) 
+  d = data(D)
+  if d isa Base.ReshapedArray
+    return Dense(copy(parent(d)))
+  end
+  Dense(copy(data(D)))
+end
 
 function Base.real(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), real(eltype(T))))
