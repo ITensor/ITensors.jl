@@ -1,8 +1,9 @@
-
 function checkSVDDone(S::AbstractArray, thresh::Float64)
-  # Convert to CPU to avoid slow scalar indexing
-  # on GPU.
-  S = cpu(S)
+  return checkSVDDone(leaf_parenttype(S), S, thresh)
+end
+
+# CPU version.
+function checkSVDDone(::Type{<:Array}, S::AbstractArray, thresh::Float64)
   N = length(S)
   (N <= 1 || thresh < 0.0) && return (true, 1)
   S1t = S[1] * thresh
@@ -15,6 +16,12 @@ function checkSVDDone(S::AbstractArray, thresh::Float64)
     return (true, N)
   end
   return (false, start)
+end
+
+# Convert to CPU to avoid slow scalar indexing
+# on GPU.
+function checkSVDDone(::Type{<:AbstractArray}, S::AbstractArray, thresh::Float64)
+  return checkSVDDone(Array, cpu(S), thresh)
 end
 
 function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=2)

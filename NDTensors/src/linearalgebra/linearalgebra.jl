@@ -169,11 +169,9 @@ function svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
 
   P = MS .^ 2
   if truncate
-    P_cpu = NDTensors.cpu(P)
-    truncerr, _ = truncate!(
-      P_cpu; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+    P, truncerr, _ = truncate!!(
+      P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
-    P = adapt(typeof(P), P_cpu)
   else
     truncerr = 0.0
   end
@@ -240,11 +238,9 @@ function eigen(
   VM = VM[:, p]
 
   if truncate
-    DM_cpu = NDTensors.cpu(DM)
-    truncerr, _ = truncate!(
-      DM_cpu; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+    DM, truncerr, _ = truncate!!(
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
-    DM = adapt(typeof(DM), DM_cpu)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]
@@ -359,11 +355,9 @@ function eigen(
   #VM = VM[:,p]
 
   if truncate
-    DM_cpu = NDTensors.cpu(DM)
-    truncerr, _ = truncate!(
-      DM_cpu; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+    DM, truncerr, _ = truncate!!(
+      DM; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
-    DM = adapt(typeof(DM), DM_cpu)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]

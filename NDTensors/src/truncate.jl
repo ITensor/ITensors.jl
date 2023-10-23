@@ -1,7 +1,25 @@
 export truncate!
 
-function truncate!(P::AbstractVector{ElT}; kwargs...)::Tuple{ElT,ElT} where {ElT}
-  cutoff::Union{Nothing,ElT} = get(kwargs, :cutoff, zero(ElT))
+function truncate!!(P::AbstractArray; kwargs...)
+  return truncate!!(leaf_parenttype(P), P; kwargs...)
+end
+
+# CPU version.
+function truncate!!(::Type{<:Array}, P::AbstractArray; kwargs...)
+  P, truncerr, docut = truncate!(P; kwargs...)
+  return P, truncerr, docut
+end
+
+# GPU fallback version, convert to CPU.
+function truncate!!(::Type{<:AbstractArray}, P::AbstractArray; kwargs...)
+  P_cpu = cpu(P)
+  P_cpu, truncerr, docut = truncate!(P_cpu; kwargs...)
+  P = adapt(leaf_parenttype(P), P_cpu)
+  return P, truncerr, docut
+end
+
+# CPU implementation.
+function truncate!(P::AbstractVector{ElT}; cutoff=zero(eltype(P)), kwargs...) where {ElT}
   if isnothing(cutoff)
     cutoff = typemin(ElT)
   end
@@ -92,5 +110,5 @@ function truncate!(P::AbstractVector{ElT}; kwargs...)::Tuple{ElT,ElT} where {ElT
   s < 0 && (P .*= s)
   resize!(P, n)
 
-  return truncerr, docut
+  return P, truncerr, docut
 end

@@ -76,7 +76,7 @@ function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
 
   dropblocks = Int[]
   if truncate
-    truncerr, docut = truncate!(d; kwargs...)
+    d, truncerr, docut = truncate!!(d; kwargs...)
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(
         Ss[n], docut; min_blockdim, singular_values=true, truncate
@@ -237,7 +237,7 @@ function eigen(
   sort!(d; rev=true, by=abs)
 
   if truncate
-    truncerr, docut = truncate!(d; kwargs...)
+    d, truncerr, docut = truncate!!(d; kwargs...)
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(Ds[n], docut)
       if blockdim == 0
