@@ -1,52 +1,28 @@
+## TODO still working to make this implementation simplified
 struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
        FillArrays.AbstractZeros{ElT,N,Axes}
   z::FillArrays.Zeros{ElT,N,Axes}
-  function UnallocatedZeros{ElT,N,Alloc}(inds::Tuple) where {ElT,N,Alloc}
-    z = FillArrays.Zeros{ElT,N}(inds)
-    Axes = typeof(FillArrays.axes(z))
-    return new{ElT,N,Axes,Alloc}(z)
+
+  function UnallocatedZeros{ElT,N,Axes,Alloc}(inds::Tuple) where{ElT,N,Axes,Alloc}
+    z = FillArrays.Zeros(inds)
+    ax = typeof(FillArrays.axes(z))
+    new{ElT,N,ax,Alloc}(z)
   end
 
-  function UnallocatedZeros{ElT,N,Alloc}(::Tuple{}) where {ElT,N,Alloc}
-    @assert N == 1
-    z = FillArrays.Zeros{ElT,N}(1)
-    Axes = typeof(FillArrays.axes(z))
-    return new{ElT,N,Axes,Alloc}(z)
-  end
-
-  function UnallocatedZeros{ElT,N,Axes,Alloc}(inds::Tuple) where {ElT,N,Axes,Alloc}
-    @assert Axes == typeof(Base.axes(inds))
-    z = FillArrays.Zeros{ElT,N}(inds)
-    return new{ElT,N,Axes,Alloc}(z)
+  function UnallcoatedZeros{ElT,0,Tuple{},Alloc}(inds::Tuple{}) where{ElT,Alloc}
+    z = FillArrays.Zeros(inds)
+    new{ElT,0,Tuple{},Alloc}(z)
   end
 end
 
-function UnallocatedZeros{ElT,N,Axes,Alloc}() where {ElT,N,Axes,Alloc<:AbstractArray{ElT,N}}
-  return UnallocatedZeros{ElT,N,Axes,Alloc}[]
-end
-function UnallocatedZeros(alloc::Type{<:AbstractArray}, inds...)
-  @assert ndims(alloc) == length(inds)
-  alloc = specify_eltype(alloc)
-  return UnallocatedZeros{eltype(alloc),ndims(alloc),alloc}(Tuple(inds))
-end
 
-function UnallocatedZeros{ElT}(alloc::Type{<:AbstractArray}, inds...) where {ElT}
-  alloc = set_eltype(alloc, ElT)
-  N = length(Tuple(inds))
-  alloc = set_ndims(alloc, N)
-  return UnallocatedZeros(alloc, inds...)
-end
-
-Base.ndims(::UnallocatedZeros{ElT,N}) where {ElT,N} = N
-ndims(::UnallocatedZeros{ElT,N}) where {ElT,N} = N
-Base.eltype(::UnallocatedZeros{ElT}) where {ElT} = ElT
 alloctype(::UnallocatedZeros{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc
 function alloctype(::Type{<:UnallocatedZeros{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc}
   return Alloc
 end
-axes(::Type{<:UnallocatedZeros{ElT,N,Axes}}) where {ElT,N,Axes} = Axes
 
-Base.size(zero::UnallocatedZeros) = Base.size(zero.z)
+Base.axes(::Type{<:UnallocatedZeros{ElT,N,Axes}}) where {ElT,N,Axes} = Axes
+Base.size(Z::UnallocatedZeros) = Base.size(Z.z)
 
 Base.print_array(io::IO, X::UnallocatedZeros) = Base.print_array(io, X.z)
 
@@ -60,7 +36,6 @@ dims(z::UnallocatedZeros) = Tuple(size(z.z))
 dim(z::UnallocatedZeros) = dim(size(z.z))
 copy(z::UnallocatedZeros) = UnallocatedZeros{eltype(z),ndims(z),alloctype(z)}(dims(z))
 
-Base.vec(z::Type{<:UnallocatedZeros}) = z
 Base.vec(z::UnallocatedZeros) = z
 
 function Base.convert(x::Type{T}, z::UnallocatedZeros) where {T<:Base.Array}
