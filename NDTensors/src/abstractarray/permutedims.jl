@@ -26,7 +26,9 @@ function permutedims!!(B::AbstractArray, A::AbstractArray, perm)
   return permutedims!!(leaf_parenttype(B), B, leaf_parenttype(A), A, perm)
 end
 
-function permutedims!!(Bleaftype::Type{<:AbstractArray}, B, Aleaftype::Type{<:AbstractArray}, A, perm)
+function permutedims!!(
+  Bleaftype::Type{<:AbstractArray}, B, Aleaftype::Type{<:AbstractArray}, A, perm
+)
   permutedims!(leaf_parenttype(B), B, leaf_parenttype(A), A, perm)
   return B
 end

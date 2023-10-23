@@ -119,7 +119,9 @@ end
   return T
 end
 
-@propagate_inbounds function setindex!(::Type{<:AbstractArray}, T::DenseTensor{<:Number}, x::Number)
+@propagate_inbounds function setindex!(
+  ::Type{<:AbstractArray}, T::DenseTensor{<:Number}, x::Number
+)
   data(T)[] = x
   return T
 end

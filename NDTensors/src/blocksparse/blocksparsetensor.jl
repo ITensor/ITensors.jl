@@ -32,7 +32,10 @@ function BlockSparseTensor(
 end
 
 function BlockSparseTensor(
-  datatype::Type{<:AbstractArray}, ::UndefInitializer, blocks::Vector{<:Union{Block,NTuple}}, inds
+  datatype::Type{<:AbstractArray},
+  ::UndefInitializer,
+  blocks::Vector{<:Union{Block,NTuple}},
+  inds,
 )
   boffs, nnz = blockoffsets(blocks, inds)
   storage = BlockSparse(datatype, undef, boffs, nnz)

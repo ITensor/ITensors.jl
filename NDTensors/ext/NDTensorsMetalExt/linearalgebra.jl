@@ -10,5 +10,7 @@ end
 
 function NDTensors.svd(leaf_parenttype::Type{<:MtlArray}, A::AbstractMatrix)
   U, S, V = NDTensors.svd(NDTensors.cpu(A))
-  return adapt(leaf_parenttype, U), adapt(set_ndims(leaf_parenttype, ndims(S)), S), adapt(leaf_parenttype, V)
+  return adapt(leaf_parenttype, U),
+  adapt(set_ndims(leaf_parenttype, ndims(S)), S),
+  adapt(leaf_parenttype, V)
 end

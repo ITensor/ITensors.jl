@@ -55,7 +55,11 @@ function BlockSparse(
 end
 
 function BlockSparse(
-  datatype::Type{<:AbstractArray}, ::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...
+  datatype::Type{<:AbstractArray},
+  ::UndefInitializer,
+  blockoffsets::BlockOffsets,
+  dim::Integer;
+  vargs...,
 )
   return BlockSparse(datatype(undef, dim), blockoffsets; vargs...)
 end

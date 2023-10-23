@@ -148,7 +148,9 @@ function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   indsS = setindex(indsS, dag(vind), 2)
 
   U = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksU, indsU)
-  S = DiagBlockSparseTensor(set_eltype(leaf_parenttype(T), real(ElT)), undef, nzblocksS, indsS)
+  S = DiagBlockSparseTensor(
+    set_eltype(leaf_parenttype(T), real(ElT)), undef, nzblocksS, indsS
+  )
   V = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
@@ -302,7 +304,9 @@ function eigen(
     nzblocksV[n] = blockV
   end
 
-  D = DiagBlockSparseTensor(set_ndims(set_eltype(leaf_parenttype(T), ElD), 1), undef, nzblocksD, indsD)
+  D = DiagBlockSparseTensor(
+    set_ndims(set_eltype(leaf_parenttype(T), ElD), 1), undef, nzblocksD, indsD
+  )
   V = BlockSparseTensor(set_eltype(leaf_parenttype(T), ElV), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT

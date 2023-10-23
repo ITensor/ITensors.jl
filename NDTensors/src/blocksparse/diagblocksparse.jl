@@ -63,7 +63,10 @@ function DiagBlockSparse(
 end
 
 function DiagBlockSparse(
-  datatype::Type{<:AbstractArray}, ::UndefInitializer, boffs::BlockOffsets, diaglength::Integer
+  datatype::Type{<:AbstractArray},
+  ::UndefInitializer,
+  boffs::BlockOffsets,
+  diaglength::Integer,
 )
   return DiagBlockSparse(datatype(undef, diaglength), boffs)
 end
