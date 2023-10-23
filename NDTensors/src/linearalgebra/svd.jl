@@ -2,10 +2,11 @@
 function checkSVDDone(S::AbstractArray, thresh::Float64)
   N = length(S)
   (N <= 1 || thresh < 0.0) && return (true, 1)
-  S1t = S[1] * thresh
+  Scpu = NDTensors.cpu(S)
+  S1t = Scpu[1] * thresh
   start = 2
   while start <= N
-    (S[start] < S1t) && break
+    (Scpu[start] < S1t) && break
     start += 1
   end
   if start >= N
@@ -32,9 +33,11 @@ function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=
   V = M' * U
 
   V, R = qr_positive(V)
-  for n in 1:Nd
-    D[n] = R[n, n]
-  end
+  n = size(R)[1]
+  D = diag(R, (n - Nd))
+  # for n in 1:Nd
+  #   D[n] = R[n, n]
+  # end
 
   (done, start) = checkSVDDone(D, thresh)
 

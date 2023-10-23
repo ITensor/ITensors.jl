@@ -11,3 +11,10 @@ function NDTensors.svd_catch_error(A::CuMatrix; alg="JacobiAlgorithm")
   end
   return USV
 end
+
+function NDTensors.truncate!(P::CuArray; kwargs...)
+  cpuP = NDTensors.cpu(P)
+  value = NDTensors.truncate!(cpuP; kwargs...)
+  P = adapt(typeof(P), cpuP)
+  return value;
+end
