@@ -106,7 +106,7 @@ Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
 
 See also: [`factorize`](@ref), [`eigen`](@ref)
 """
-function svd(A::ITensor, Linds...; kwargs...)
+function svd(A::ITensor, Linds...; leftdir=nothing, rightdir=nothing, kwargs...)
   utags::TagSet = get(kwargs, :lefttags, get(kwargs, :utags, "Link,u"))
   vtags::TagSet = get(kwargs, :righttags, get(kwargs, :vtags, "Link,v"))
 
@@ -133,11 +133,9 @@ function svd(A::ITensor, Linds...; kwargs...)
     Ris = [α]
   end
 
-  CL = combiner(Lis...)
-  CR = combiner(Ris...)
-
+  CL = combiner(Lis...; dir=leftdir)
+  CR = combiner(Ris...; dir=rightdir)
   AC = A * CR * CL
-
   cL = combinedind(CL)
   cR = combinedind(CR)
   if inds(AC) != (cL, cR)
@@ -531,10 +529,32 @@ function factorize_qr(A::ITensor, Linds...; kwargs...)
   return L, R
 end
 
-function factorize_svd(A::ITensor, Linds...; kwargs...)
-  ortho::String = get(kwargs, :ortho, "left")
-  alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
-  USV = svd(A, Linds...; kwargs..., alg=alg)
+#
+# Generic function implementing a square root decomposition of a diagonal, order 2 tensor with inds u, v
+#
+function sqrt_decomp(D::ITensor, u::Index, v::Index)
+  (storage(D) isa Union{Diag,DiagBlockSparse}) ||
+    error("Must be a diagonal matrix ITensor.")
+  sqrtDL = diagITensor(u, dag(u)')
+  sqrtDR = diagITensor(v, dag(v)')
+  map_diag!(sqrt ∘ abs, sqrtDL, D)
+  map_diag!(sqrt ∘ abs, sqrtDR, D)
+  δᵤᵥ = copy(D)
+  map_diag!(sign, δᵤᵥ, D)
+  return sqrtDL, prime(δᵤᵥ), sqrtDR
+end
+
+function factorize_svd(
+  A::ITensor,
+  Linds...;
+  (singular_values!)=nothing,
+  ortho="left",
+  svd_alg="divide_and_conquer",
+  dir=ITensors.In,
+  kwargs...,
+)
+  leftdir, rightdir = -dir, -dir
+  USV = svd(A, Linds...; leftdir, rightdir, alg=svd_alg, kwargs...)
   if isnothing(USV)
     return nothing
   end
@@ -544,14 +564,16 @@ function factorize_svd(A::ITensor, Linds...; kwargs...)
   elseif ortho == "right"
     L, R = U * S, V
   elseif ortho == "none"
-    sqrtS = S
-    sqrtS .= sqrt.(S)
-    L, R = U * sqrtS, sqrtS * V
-    replaceind!(L, v, u)
+    sqrtDL, δᵤᵥ, sqrtDR = sqrt_decomp(S, u, v)
+    sqrtDR = denseblocks(sqrtDR) * denseblocks(δᵤᵥ)
+    L, R = U * sqrtDL, V * sqrtDR
   else
     error("In factorize using svd decomposition, ortho keyword
     $ortho not supported. Supported options are left, right, or none.")
   end
+
+  !isnothing(singular_values!) && (singular_values![] = S)
+
   return L, R, spec
 end
 
@@ -644,13 +666,6 @@ function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
                "eigen" """)
     end
     which_decomp = "eigen"
-  end
-
-  # Deprecated keywords
-  if haskey(kwargs, :dir)
-    error("""dir keyword in factorize has been replace by ortho.
-    Note that the default is now `left`, meaning for the results
-    L,R = factorize(A), L forms an orthogonal basis.""")
   end
 
   if haskey(kwargs, :which_factorization)

@@ -186,6 +186,31 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test Base.eltype(V) === eltype
   end
 
+  @testset "svd arrow directions" begin
+    l1, l2 = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="l1", dir=ITensors.In),
+    Index(QN("Sz", 2) => 1, QN("Sz", 1) => 1; tags="l2", dir=ITensors.Out)
+    r1, r2, r3 = Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags="r1", dir=ITensors.Out),
+    Index(QN("Sz", 2) => 1, QN("Sz", 1) => 1; tags="r2", dir=ITensors.In),
+    Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags="r3", dir=ITensors.In)
+    A = randomITensor(l1, l2, r1, r2, r3)
+
+    for leftdir in [ITensors.Out, ITensors.In]
+      for rightdir in [ITensors.Out, ITensors.In]
+        U, S, V = svd(A, l1, l2; leftdir, rightdir)
+        s1, s2 = inds(S)
+        @test dir(s1) == leftdir
+        @test dir(s2) == rightdir
+        @test norm(U * S * V - A) <= 1e-14
+      end
+    end
+
+    for dir in [ITensors.Out, ITensors.In]
+      L, R, spec = ITensors.factorize_svd(A, l1, l2; dir, ortho="none")
+      @test dir == ITensors.dir(commonind(L, R))
+      @test norm(L * R - A) <= 1e-14
+    end
+  end
+
   # TODO: remove this test, it takes a long time
   ## @testset "Ill-conditioned matrix" begin
   ##   d = 5000

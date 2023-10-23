@@ -111,7 +111,6 @@ end
     i = Index(2, "i")
     j = Index(2, "j")
     A = randomITensor(i, j)
-    @test_throws ErrorException factorize(A, i; dir="left")
     @test_throws ErrorException factorize(A, i; ortho="fakedir")
   end
 

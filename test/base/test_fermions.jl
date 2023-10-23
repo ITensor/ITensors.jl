@@ -744,6 +744,21 @@ import ITensors: Out, In
       VV = dag(V) * prime(V, v)
       @test norm(VV - id(v)) ≈ 0
     end
+
+    #Factorize SVD Test. Specifying arrows on S.
+    let
+      l1, l2 = Index(QN("Nf", -1) => 1, QN("Nf", 1) => 1; tags="l1", dir=ITensors.In),
+      Index(QN("Nf", 2) => 1, QN("Nf", 1) => 1; tags="l2", dir=ITensors.Out)
+      r1, r2, r3 = Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags="r1", dir=ITensors.Out),
+      Index(QN("Nf", 2) => 1, QN("Nf", 1) => 1; tags="r2", dir=ITensors.In),
+      Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags="r3", dir=ITensors.In)
+      A = randomITensor(l1, l2, r1, r2, r3)
+
+      for dir in [ITensors.Out, ITensors.In]
+        L, R, spec = ITensors.factorize_svd(A, l1, l2; dir, ortho="none")
+        @test norm(L * R - A) <= 1e-14
+      end
+    end
   end
 
   @testset "Fermion Contraction with Combined Indices" begin
