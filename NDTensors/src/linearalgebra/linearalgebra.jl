@@ -1,5 +1,3 @@
-export eigs, entropy, polar, random_orthog, random_unitary, Spectrum, svd, truncerror
-
 #
 # Linear Algebra of order 2 NDTensors
 #
@@ -380,10 +378,13 @@ function eigen(
   return D, V, spec
 end
 
+# NDTensors.qr
 function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? qr_positive : qr
   return qx(qxf, T; kwargs...)
 end
+
+# NDTensors.ql
 function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T; kwargs...)

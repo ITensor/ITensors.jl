@@ -3,14 +3,12 @@ export
   insertblock!!,
   setindex,
   setindex!!,
-
   # blocksparse/blockdims.jl
   BlockDims,
   blockdim,
   blockdims,
   nblocks,
   blockindex,
-
   # blocksparse/blocksparse.jl
   # Types
   Block,
@@ -49,7 +47,6 @@ export
   matrix,
   outer,
   permutedims!!,
-  ql,
   read,
   vector,
   write,
@@ -78,5 +75,15 @@ export
   ind,
   store,
 
+  # truncate.jl
+  truncate!,
+
   # linearalgebra.jl
-  qr
+  eigs,
+  entropy,
+  polar,
+  ql,
+  random_orthog,
+  random_unitary,
+  Spectrum,
+  truncerror

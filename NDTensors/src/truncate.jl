@@ -1,5 +1,3 @@
-export truncate!
-
 function truncate!!(P::AbstractArray; kwargs...)
   return truncate!!(leaf_parenttype(P), P; kwargs...)
 end

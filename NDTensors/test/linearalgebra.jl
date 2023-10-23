@@ -1,6 +1,7 @@
 using NDTensors
 using LinearAlgebra
 using Test
+
 if "cuda" in ARGS || "all" in ARGS
   using CUDA
 end
