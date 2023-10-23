@@ -1,7 +1,3 @@
-# TODO: This is type piracy, delete once https://github.com/JuliaGPU/Adapt.jl/pull/51
-# is merged.
-adapt_structure(to, A::Hermitian) = Hermitian(adapt(to, Base.parent(A)), Symbol(A.uplo))
-
 adapt_structure(to, x::TensorStorage) = setdata(x, adapt(to, data(x)))
 adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 

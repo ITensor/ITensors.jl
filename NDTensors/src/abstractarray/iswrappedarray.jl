@@ -8,18 +8,18 @@
 
 is_wrapped_array(arraytype::Type{<:AbstractArray}) = (parenttype(arraytype) ≠ arraytype)
 
+# TODO: This is only defined because the current design
+# of `Diag` using a `Number` as the data type if it
+# is a uniform diagonal type. Delete this when it is
+# replaced by `DiagonalArray`.
+is_wrapped_array(arraytype::Type{<:Number}) = false
+
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
 is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
 
 # By default, the `parentype` of an array type is itself
 parenttype(arraytype::Type{<:AbstractArray}) = arraytype
-
-# TODO: This is only defined because the current design
-# of `Diag` using a `Number` as the data type if it
-# is a uniform diagonal type. Delete this when it is
-# replaced by `DiagonalArray`.
-parenttype(arraytype::Type{<:Number}) = arraytype
 
 # TODO: Use `SetParameters` here.
 parenttype(::Type{<:ReshapedArray{<:Any,<:Any,P}}) where {P} = P
