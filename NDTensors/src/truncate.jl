@@ -5,7 +5,7 @@ export truncate!!, truncate!
 ## convert back to GPU
 
 function truncate!!(P::AbstractVector; kwargs...)
-  truncate!(leaf_parenttype(P), P; kwargs...)
+  return truncate!(leaf_parenttype(P), P; kwargs...)
 end
 
 function truncate!(::Type{<:Array}, P; kwargs...)
@@ -16,7 +16,7 @@ function truncate!(::Type{<:AbstractArray}, P; kwargs...)
   P_cpu = cpu(P)
   values = truncate!(P_cpu; kwargs...)
   P = adapt(leaf_parenttype(P), P_cpu)
-  return values;
+  return values
 end
 
 function truncate!(P::AbstractVector{ElT}; kwargs...)::Tuple{ElT,ElT} where {ElT}
