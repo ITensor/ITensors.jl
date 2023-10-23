@@ -1,24 +1,27 @@
 ## TODO All constructors not fully implemented but so far it matches the 
 ## constructors found in `FillArrays`. Need to fix io
-struct UnallocatedFill{ElT,N,Axes,Alloc<:AbstractArray} <: FillArrays.AbstractFill{ElT,N,Axes} 
-  f::FillArrays.Fill{ElT, N, Axes}
+struct UnallocatedFill{ElT,N,Axes,Alloc<:AbstractArray} <:
+       FillArrays.AbstractFill{ElT,N,Axes}
+  f::FillArrays.Fill{ElT,N,Axes}
 
-  function UnallocatedFill{ElT,N,Axes,Alloc}(x::ElT,inds::Tuple)where{ElT,N,Axes,Alloc}
+  function UnallocatedFill{ElT,N,Axes,Alloc}(x::ElT, inds::Tuple) where {ElT,N,Axes,Alloc}
     f = FillArrays.Fill(x, inds)
     ax = typeof(FillArrays.axes(f))
-    new{ElT,N,ax,Alloc}(f)
+    return new{ElT,N,ax,Alloc}(f)
   end
 
-  function UnallocatedFill{ElT,0,Tuple{},Alloc}(x::ElT, inds::Tuple{}) where{ElT,Alloc}
-    f = FillArrays.Fill{ElT,0,Tuple{}}(x,inds)
-    new{ElT,0,Tuple{},Alloc}(f)
+  function UnallocatedFill{ElT,0,Tuple{},Alloc}(x::ElT, inds::Tuple{}) where {ElT,Alloc}
+    f = FillArrays.Fill{ElT,0,Tuple{}}(x, inds)
+    return new{ElT,0,Tuple{},Alloc}(f)
   end
 end
 
-function UnallocatedFill{ElT, Alloc}(x::ElT, inds::Tuple) where {ElT<:Number, Alloc<:AbstractArray}
+function UnallocatedFill{ElT,Alloc}(
+  x::ElT, inds::Tuple
+) where {ElT<:Number,Alloc<:AbstractArray}
   N = length(inds)
   Ax = Base.axes(inds)
-  return UnallocatedFill{ElT, N, Ax,Alloc}(x, inds)
+  return UnallocatedFill{ElT,N,Ax,Alloc}(x, inds)
 end
 
 alloctype(::UnallocatedFill{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc

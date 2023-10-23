@@ -3,18 +3,17 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
        FillArrays.AbstractZeros{ElT,N,Axes}
   z::FillArrays.Zeros{ElT,N,Axes}
 
-  function UnallocatedZeros{ElT,N,Axes,Alloc}(inds::Tuple) where{ElT,N,Axes,Alloc}
+  function UnallocatedZeros{ElT,N,Axes,Alloc}(inds::Tuple) where {ElT,N,Axes,Alloc}
     z = FillArrays.Zeros(inds)
     ax = typeof(FillArrays.axes(z))
-    new{ElT,N,ax,Alloc}(z)
+    return new{ElT,N,ax,Alloc}(z)
   end
 
-  function UnallocatedZeros{ElT,0,Tuple{},Alloc}(inds::Tuple{}) where{ElT,Alloc}
+  function UnallocatedZeros{ElT,0,Tuple{},Alloc}(inds::Tuple{}) where {ElT,Alloc}
     z = FillArrays.Zeros(inds)
-    new{ElT,0,Tuple{},Alloc}(z)
+    return new{ElT,0,Tuple{},Alloc}(z)
   end
 end
-
 
 alloctype(::UnallocatedZeros{ElT,N,Axes,Alloc}) where {ElT,N,Axes,Alloc} = Alloc
 function alloctype(::Type{<:UnallocatedZeros{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc}
