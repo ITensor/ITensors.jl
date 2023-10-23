@@ -1,4 +1,23 @@
-export truncate!
+export truncate!!, truncate!
+
+## TODO Here truncate does logical operations of the values in P
+## So its more efficient to just make it a CPU vector and 
+## convert back to GPU
+
+function truncate!!(P::AbstractVector; kwargs...)
+  truncate!(leaf_parenttype(P), P; kwargs...)
+end
+
+function truncate!(::Type{<:Array}, P; kwargs...)
+  return truncate!(P; kwargs...)
+end
+
+function truncate!(::Type{<:AbstractArray}, P; kwargs...)
+  P_cpu = cpu(P)
+  values = truncate!(P_cpu; kwargs...)
+  P = adapt(leaf_parenttype(P), P_cpu)
+  return values;
+end
 
 function truncate!(P::AbstractVector{ElT}; kwargs...)::Tuple{ElT,ElT} where {ElT}
   cutoff::Union{Nothing,ElT} = get(kwargs, :cutoff, zero(ElT))
