@@ -3,12 +3,7 @@
 struct UnallocatedFill{ElT,N,Axes,Alloc<:AbstractArray} <:
        FillArrays.AbstractFill{ElT,N,Axes}
   f::FillArrays.Fill{ElT,N,Axes}
-
-  function UnallocatedFill{ElT,N,Axes,Alloc}(x::ElT, inds::Tuple) where {ElT,N,Axes,Alloc}
-    f = FillArrays.Fill(x, inds)
-    ax = typeof(FillArrays.axes(f))
-    return new{ElT,N,ax,Alloc}(f)
-  end
+  ## TODO use `set_parameters` as constructor to these types
 end
 
-data(F::UnallocatedFill) = F.f
+parent(F::UnallocatedFill) = F.f
