@@ -106,12 +106,31 @@ function dense(::Type{<:Tensor{ElT,N,StoreT,IndsT}}) where {ElT,N,StoreT<:Diag,I
 end
 
 # convert to Dense
-function dense(T::TensorT) where {TensorT<:DiagTensor}
-  R = zeros(dense(TensorT), inds(T))
+function dense(T::DiagTensor)
+  return dense(leaf_parenttype(T), T)
+end
+
+# CPU version
+function dense(::Type{<:Array}, T::DiagTensor)
+  R = zeros(dense(typeof(T)), inds(T))
   for i in 1:diaglength(T)
     setdiagindex!(R, getdiagindex(T, i), i)
   end
   return R
+end
+
+# GPU version
+function dense(::Type{<:AbstractArray}, T::DiagTensor)
+  D_cpu = dense(Array, cpu(T))
+  return adapt(leaf_parenttype(T), D_cpu)
+end
+
+# UniformDiag version
+# TODO: Delete once new DiagonalArray is designed.
+# TODO: This creates a tensor on CPU by default so may cause
+# problems for GPU.
+function dense(::Type{<:Number}, T::DiagTensor)
+  return dense(Tensor(Diag(fill(getdiagindex(T, 1), diaglength(T))), inds(T)))
 end
 
 denseblocks(T::DiagTensor) = dense(T)

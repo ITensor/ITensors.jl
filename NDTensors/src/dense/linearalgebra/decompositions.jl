@@ -1,4 +1,3 @@
-
 Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))
 
 function drop_singletons(::Order{N}, labels, dims) where {N}
@@ -17,7 +16,7 @@ end
 
 # svd of an order-n tensor according to positions Lpos
 # and Rpos
-function LinearAlgebra.svd(
+function svd(
   T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
 ) where {N,IndsT,NL,NR}
   M = permute_reshape(T, Lpos, Rpos)
@@ -40,7 +39,7 @@ end
 
 # qr decomposition of an order-n tensor according to 
 # positions Lpos and Rpos
-function LinearAlgebra.qr(
+function qr(
   T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
 ) where {N,IndsT,NL,NR}
   M = permute_reshape(T, Lpos, Rpos)

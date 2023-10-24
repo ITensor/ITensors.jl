@@ -16,10 +16,29 @@ function BlockSparseTensor(
 end
 
 function BlockSparseTensor(
+  datatype::Type{<:AbstractArray}, ::UndefInitializer, boffs::BlockOffsets, inds
+)
+  nnz_tot = nnz(boffs, inds)
+  storage = BlockSparse(datatype, undef, boffs, nnz_tot)
+  return tensor(storage, inds)
+end
+
+function BlockSparseTensor(
   ::Type{ElT}, ::UndefInitializer, blocks::Vector{BlockT}, inds
 ) where {ElT<:Number,BlockT<:Union{Block,NTuple}}
   boffs, nnz = blockoffsets(blocks, inds)
   storage = BlockSparse(ElT, undef, boffs, nnz)
+  return tensor(storage, inds)
+end
+
+function BlockSparseTensor(
+  datatype::Type{<:AbstractArray},
+  ::UndefInitializer,
+  blocks::Vector{<:Union{Block,NTuple}},
+  inds,
+)
+  boffs, nnz = blockoffsets(blocks, inds)
+  storage = BlockSparse(datatype, undef, boffs, nnz)
   return tensor(storage, inds)
 end
 
@@ -92,6 +111,14 @@ function BlockSparseTensor(
 end
 
 function BlockSparseTensor(
+  datatype::Type{<:AbstractArray}, blocks::Vector{<:Union{Block,NTuple}}, inds
+)
+  boffs, nnz = blockoffsets(blocks, inds)
+  storage = BlockSparse(datatype, boffs, nnz)
+  return tensor(storage, inds)
+end
+
+function BlockSparseTensor(
   x::Number, blocks::Vector{BlockT}, inds
 ) where {BlockT<:Union{Block,NTuple}}
   boffs, nnz = blockoffsets(blocks, inds)
@@ -150,15 +177,15 @@ function BlockSparseTensor(
 end
 
 function zeros(
-  ::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
+  tensor::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
 ) where {ElT,N}
-  return BlockSparseTensor(ElT, blockoffsets, inds)
+  return BlockSparseTensor(datatype(tensor), blockoffsets, inds)
 end
 
 function zeros(
-  ::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
+  tensortype::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
 ) where {ElT,N}
-  return BlockSparseTensor(ElT, blockoffsets, inds)
+  return BlockSparseTensor(datatype(tensortype), blockoffsets, inds)
 end
 
 function zeros(tensortype::Type{<:BlockSparseTensor}, inds)
@@ -426,7 +453,7 @@ function permutedims_combine_output(
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
 
-  return BlockSparseTensor(ElT, blocks_perm_comb, is)
+  return BlockSparseTensor(leaf_parenttype(T), blocks_perm_comb, is)
 end
 
 function permutedims_combine(
@@ -487,8 +514,11 @@ function permutedims_combine(
 
     # XXX Not sure what this was for
     Rb = reshape(Rb, permute(dims(Tb), perm))
+    # TODO: Make this `convert` call more general
+    # for GPUs.
     Tbₐ = convert(Array, Tb)
-    @strided Rb .= permutedims(Tbₐ, perm)
+    ## @strided Rb .= permutedims(Tbₐ, perm)
+    permutedims!(Rb, Tbₐ, perm)
   end
 
   return R
@@ -564,7 +594,7 @@ function uncombine_output(
   blocks_uncomb_perm = perm_blocks(blocks_uncomb, combdim, invperm(blockperm))
   boffs_uncomb_perm, nnz_uncomb_perm = blockoffsets(blocks_uncomb_perm, inds_uncomb_perm)
   T_uncomb_perm = tensor(
-    BlockSparse(ElT, boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
+    BlockSparse(leaf_parenttype(T), boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
   )
   R = reshape(T_uncomb_perm, is)
   return R
@@ -623,14 +653,16 @@ function uncombine(
       #copyto!(Rb,Tb)
 
       if length(Tb) == 1
-        Rb[1] = Tb[1]
+        Rb[] = Tb[]
       else
         # XXX: this used to be:
         # Rbₐᵣ = ReshapedArray(parent(Rbₐ), size(Tb), ())
         # however that doesn't work with subarrays
         Rbₐ = convert(Array, Rb)
-        Rbₐᵣ = ReshapedArray(Rbₐ, size(Tb), ())
-        @strided Rbₐᵣ .= Tb
+        ## Rbₐᵣ = ReshapedArray(Rbₐ, size(Tb), ())
+        Rbₐᵣ = reshape(Rbₐ, size(Tb))
+        ## @strided Rbₐᵣ .= Tb
+        copyto!(Rbₐᵣ, Tb)
       end
     end
   end

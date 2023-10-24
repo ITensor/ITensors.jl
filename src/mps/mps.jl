@@ -547,11 +547,9 @@ function replacebond!(M::MPS, b::Int, phi::ITensor; kwargs...)
     sbp1 = siteind(M, b + 1)
     indsMb = replaceind(indsMb, sb, sbp1)
   end
-
   L, R, spec = factorize(
     phi, indsMb; which_decomp=which_decomp, tags=tags(linkind(M, b)), kwargs...
   )
-
   M[b] = L
   M[b + 1] = R
   if ortho == "left"

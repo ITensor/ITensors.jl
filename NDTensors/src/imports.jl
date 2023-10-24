@@ -17,7 +17,6 @@ import Base:
   convert,
   conj,
   copy,
-  copyto!,
   eachindex,
   eltype,
   empty,
@@ -53,6 +52,6 @@ import Base.Broadcast: Broadcasted, BroadcastStyle
 
 import Adapt: adapt_structure, adapt_storage
 
-import LinearAlgebra: diag, exp, norm, qr
+import LinearAlgebra: diag, exp, norm
 
 import TupleTools: isperm

@@ -81,7 +81,11 @@ end
 #
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number})
-  return (iscu(T) ? NDTensors.cpu(data(T))[] : data(T)[])
+  return getindex(leaf_parenttype(T), T)
+end
+
+@propagate_inbounds function getindex(::Type{<:AbstractArray}, T::DenseTensor{<:Number})
+  return data(T)[]
 end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::Integer...)
@@ -107,6 +111,18 @@ end
 )
   Base.@_inline_meta
   setindex!(T, x, I.I...)
+  return T
+end
+
+@propagate_inbounds function setindex!(T::DenseTensor{<:Number}, x::Number)
+  setindex!(leaf_parenttype(T), T, x)
+  return T
+end
+
+@propagate_inbounds function setindex!(
+  ::Type{<:AbstractArray}, T::DenseTensor{<:Number}, x::Number
+)
+  data(T)[] = x
   return T
 end
 
@@ -203,10 +219,9 @@ function permutedims!(
   return R
 end
 
-function copyto!(R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}) where {N}
-  RA = array(R)
-  TA = array(T)
-  RA .= TA
+# NDTensors.copyto!
+function copyto!(R::DenseTensor, T::DenseTensor)
+  copyto!(array(R), array(T))
   return R
 end
 
@@ -242,7 +257,7 @@ function permutedims!(
   R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm, f::Function
 ) where {N}
   if nnz(R) == 1 && nnz(T) == 1
-    R[1] = f(R[1], T[1])
+    R[] = f(R[], T[])
     return R
   end
   RA = array(R)

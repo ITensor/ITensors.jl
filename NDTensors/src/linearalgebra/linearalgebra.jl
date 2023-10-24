@@ -1,5 +1,3 @@
-export eigs, entropy, polar, random_orthog, random_unitary, Spectrum, svd, truncerror
-
 #
 # Linear Algebra of order 2 NDTensors
 #
@@ -95,7 +93,7 @@ end
 
 svd of an order-2 DenseTensor
 """
-function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
+function svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
   #
@@ -169,7 +167,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
 
   P = MS .^ 2
   if truncate
-    truncerr, _ = truncate!(
+    P, truncerr, _ = truncate!!(
       P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
   else
@@ -179,7 +177,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   dS = length(P)
   if dS < length(MS)
     MU = MU[:, 1:dS]
-    resize!(MS, dS)
+    # Fails on some GPU backends like Metal.
+    # resize!(MS, dS)
+    MS = MS[1:dS]
     MV = MV[:, 1:dS]
   end
 
@@ -195,7 +195,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   return U, S, V, spec
 end
 
-function LinearAlgebra.eigen(
+function eigen(
   T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}}; kwargs...
 ) where {ElT<:Union{Real,Complex},IndsT}
   # Keyword argument deprecations
@@ -236,11 +236,9 @@ function LinearAlgebra.eigen(
   VM = VM[:, p]
 
   if truncate
-    cpu_dm = NDTensors.cpu(DM)
-    truncerr, _ = truncate!(
-      cpu_dm; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+    DM, truncerr, _ = truncate!!(
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
-    DM = adapt(typeof(DM), cpu_dm)
     dD = length(DM)
     if dD < size(VM, 2)
       VM = VM[:, 1:dD]
@@ -316,7 +314,7 @@ random_orthog(::Type{ElT}, n::Int, m::Int) where {ElT<:Real} = random_unitary(El
 
 random_orthog(n::Int, m::Int) = random_orthog(Float64, n, m)
 
-function LinearAlgebra.eigen(
+function eigen(
   T::DenseTensor{ElT,2,IndsT}; kwargs...
 ) where {ElT<:Union{Real,Complex},IndsT}
   # Keyword argument deprecations
@@ -355,7 +353,7 @@ function LinearAlgebra.eigen(
   #VM = VM[:,p]
 
   if truncate
-    truncerr, _ = truncate!(
+    DM, truncerr, _ = truncate!!(
       DM; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
     dD = length(DM)
@@ -380,10 +378,13 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 
+# NDTensors.qr
 function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? qr_positive : qr
   return qx(qxf, T; kwargs...)
 end
+
+# NDTensors.ql
 function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T; kwargs...)
@@ -411,6 +412,13 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   return Q, X
 end
 
+# Version of `sign` that returns one
+# if `x == 0`.
+function nonzero_sign(x)
+  iszero(x) && return one(x)
+  return sign(x)
+end
+
 #
 # Just flip signs between Q and R to get all the diagonals of R >=0.
 # For rectangular M the indexing for "diagonal" is non-trivial.
@@ -424,28 +432,12 @@ non-negative. Such a QR decomposition of a
 matrix is unique. Returns a tuple (Q,R).
 """
 function qr_positive(M::AbstractMatrix)
-  iscuda = iscu(M)
-  if iscuda
-    cutype = leaf_parenttype(M)
-    M = NDTensors.cpu(M)
-  end
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
   nc = size(Q, 2)
-  ## TODO issue here for GPU because tying to access indices
-  for c in 1:nc
-    if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
-      sign_Rc = sign(R[c, c])
-      if !isone(sign_Rc)
-        R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
-        Q[:, c] *= sign_Rc
-      end
-    end
-  end
-  if iscuda
-    Q = adapt(cutype, Q)
-    R = adapt(cutype, R)
-  end
+  signs = nonzero_sign.(diag(R))
+  Q = Q * Diagonal(signs)
+  R = Diagonal(conj.(signs)) * R
   return (Q, R)
 end
 
@@ -458,6 +450,9 @@ non-negative. Such a QL decomposition of a
 matrix is unique. Returns a tuple (Q,L).
 """
 function ql_positive(M::AbstractMatrix)
+  # TODO: Change to `isgpu`, or better yet rewrite
+  # in terms of broadcasting and linear algebra
+  # like `qr_positive`.
   iscuda = iscu(M)
   if iscuda
     cutype = leaf_parenttype(M)

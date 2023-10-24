@@ -32,12 +32,13 @@ per row/column, otherwise it fails.
 This assumption makes it so the result can be
 computed from the dense svds of seperate blocks.
 """
-function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
+function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   alg::String = get(kwargs, :alg, "divide_and_conquer")
   min_blockdim::Int = get(kwargs, :min_blockdim, 0)
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
   #@timeit_debug timer "block sparse svd" begin
+
   Us = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
   Ss = Vector{DiagTensor{real(ElT),2}}(undef, nnzblocks(T))
   Vs = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
@@ -75,7 +76,7 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
 
   dropblocks = Int[]
   if truncate
-    truncerr, docut = truncate!(d; kwargs...)
+    d, truncerr, docut = truncate!!(d; kwargs...)
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(
         Ss[n], docut; min_blockdim, singular_values=true, truncate
@@ -146,9 +147,11 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   indsS = setindex(inds(T), dag(uind), 1)
   indsS = setindex(indsS, dag(vind), 2)
 
-  U = BlockSparseTensor(ElT, undef, nzblocksU, indsU)
-  S = DiagBlockSparseTensor(real(ElT), undef, nzblocksS, indsS)
-  V = BlockSparseTensor(ElT, undef, nzblocksV, indsV)
+  U = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksU, indsU)
+  S = DiagBlockSparseTensor(
+    set_eltype(leaf_parenttype(T), real(ElT)), undef, nzblocksS, indsS
+  )
+  V = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Ub, Sb, Vb = Us[n], Ss[n], Vs[n]
@@ -169,10 +172,9 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     sU = right_arrow_sign(uind, blockU[2])
 
     if sU == -1
-      blockview(U, blockU) .= -Ub
-    else
-      blockview(U, blockU) .= Ub
+      Ub *= -1
     end
+    copyto!(blockview(U, blockU), Ub)
 
     blockviewS = blockview(S, blockS)
     for i in 1:diaglength(Sb)
@@ -190,12 +192,10 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     end
 
     if (sV * sVP) == -1
-      blockview(V, blockV) .= -Vb
-    else
-      blockview(V, blockV) .= Vb
+      Vb *= -1
     end
+    copyto!(blockview(V, blockV), Vb)
   end
-
   return U, S, V, Spectrum(d, truncerr)
   #end # @timeit_debug
 end
@@ -204,7 +204,7 @@ _eigen_eltypes(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}}) where {ElT} = real(El
 
 _eigen_eltypes(T::BlockSparseMatrix{ElT}) where {ElT} = complex(ElT), complex(ElT)
 
-function LinearAlgebra.eigen(
+function eigen(
   T::Union{Hermitian{ElT,<:BlockSparseMatrix{ElT}},BlockSparseMatrix{ElT}}; kwargs...
 ) where {ElT<:Union{Real,Complex}}
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
@@ -237,7 +237,7 @@ function LinearAlgebra.eigen(
   sort!(d; rev=true, by=abs)
 
   if truncate
-    truncerr, docut = truncate!(d; kwargs...)
+    d, truncerr, docut = truncate!!(d; kwargs...)
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(Ds[n], docut)
       if blockdim == 0
@@ -245,7 +245,9 @@ function LinearAlgebra.eigen(
       else
         Dtrunc = tensor(Diag(storage(Ds[n])[1:blockdim]), (blockdim, blockdim))
         Ds[n] = Dtrunc
-        Vs[n] = copy(Vs[n][1:dim(Vs[n], 1), 1:blockdim])
+        new_size = (dim(Vs[n], 1), blockdim)
+        new_data = array(Vs[n])[1:new_size[1], 1:new_size[2]]
+        Vs[n] = tensor(Dense(new_data), new_size)
       end
     end
     deleteat!(Ds, dropblocks)
@@ -299,8 +301,10 @@ function LinearAlgebra.eigen(
     nzblocksV[n] = blockV
   end
 
-  D = DiagBlockSparseTensor(ElD, undef, nzblocksD, indsD)
-  V = BlockSparseTensor(ElV, undef, nzblocksV, indsV)
+  D = DiagBlockSparseTensor(
+    set_ndims(set_eltype(leaf_parenttype(T), ElD), 1), undef, nzblocksD, indsD
+  )
+  V = BlockSparseTensor(set_eltype(leaf_parenttype(T), ElV), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Db, Vb = Ds[n], Vs[n]
@@ -372,14 +376,16 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
     nzblocksX[n] = (UInt(n), blockT[2])
   end
 
-  Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
-  X = BlockSparseTensor(ElT, undef, nzblocksX, indsX)
+  Q = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksQ, indsQ)
+  X = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksX, indsX)
 
   for n in 1:nnzblocksT
     blockview(Q, nzblocksQ[n]) .= Qs[n]
     blockview(X, nzblocksX[n]) .= Xs[n]
   end
 
+  Q = adapt(leaf_parenttype(T), Q)
+  X = adapt(leaf_parenttype(T), X)
   return Q, X
 end
 
