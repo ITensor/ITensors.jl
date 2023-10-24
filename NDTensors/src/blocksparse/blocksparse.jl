@@ -54,6 +54,16 @@ function BlockSparse(
   return BlockSparse(Vector{ElT}(undef, dim), blockoffsets; vargs...)
 end
 
+function BlockSparse(
+  datatype::Type{<:AbstractArray},
+  ::UndefInitializer,
+  blockoffsets::BlockOffsets,
+  dim::Integer;
+  vargs...,
+)
+  return BlockSparse(datatype(undef, dim), blockoffsets; vargs...)
+end
+
 function BlockSparse(blockoffsets::BlockOffsets, dim::Integer; vargs...)
   return BlockSparse(Float64, blockoffsets, dim; vargs...)
 end

@@ -455,12 +455,14 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   # be empty.  A essentially becomes 1D after collection.
   #
   A, vαl, vαr, Linds, Rinds = add_trivial_index(A, Linds, Rinds)
+
   #
   #  Use combiners to render A down to a rank 2 tensor ready for matrix QR/QL routine.
   #
   CL, CR = combiner(Linds...), combiner(Rinds...)
   cL, cR = combinedind(CL), combinedind(CR)
   AC = A * CR * CL
+
   #
   #  Make sure we don't accidentally pass the transpose into the matrix qr/ql routine.
   #
