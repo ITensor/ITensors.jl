@@ -10,7 +10,7 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
 
     getindex(A::$Typ, i...) = getindex(parent(A), i...)
 
-    Array(A::$Typ) =  alloctype(typeof(A))
+    Array(A::$Typ) = alloctype(typeof(A))
 
     Base.copy(A::$Typ) = A
     ## TODO Implement vec
