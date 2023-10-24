@@ -125,6 +125,14 @@ function dense(::Type{<:AbstractArray}, T::DiagTensor)
   return adapt(leaf_parenttype(T), D_cpu)
 end
 
+# UniformDiag version
+# TODO: Delete once new DiagonalArray is designed.
+# TODO: This creates a tensor on CPU by default so may cause
+# problems for GPU.
+function dense(::Type{<:Number}, T::DiagTensor)
+  return dense(Tensor(Diag(fill(getdiagindex(T, 1), diaglength(T))), inds(T)))
+end
+
 denseblocks(T::DiagTensor) = dense(T)
 
 function permutedims!(
