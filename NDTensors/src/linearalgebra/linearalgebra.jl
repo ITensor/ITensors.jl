@@ -231,7 +231,8 @@ function eigen(
   DM, VM = eigen(matrixT)
 
   # Sort by largest to smallest eigenvalues
-  p = sortperm(DM; rev=true, by=abs)
+  # TODO: Replace `cpu` with `leaf_parenttype` dispatch.
+  p = sortperm(cpu(DM); rev=true, by=abs)
   DM = DM[p]
   VM = VM[:, p]
 

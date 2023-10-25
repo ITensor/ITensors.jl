@@ -11,7 +11,7 @@ end
 # GPU fallback version, convert to CPU.
 function truncate!!(::Type{<:AbstractArray}, P::AbstractArray; kwargs...)
   P_cpu = cpu(P)
-  P_cpu, truncerr, docut = truncate!(P_cpu; kwargs...)
+  truncerr, docut = truncate!(P_cpu; kwargs...)
   P = adapt(leaf_parenttype(P), P_cpu)
   return P, truncerr, docut
 end

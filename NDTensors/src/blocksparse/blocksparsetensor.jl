@@ -653,7 +653,10 @@ function uncombine(
       #copyto!(Rb,Tb)
 
       if length(Tb) == 1
-        Rb[] = Tb[]
+        # Call `cpu` to avoid allowscalar error on GPU.
+        # TODO: Replace with `@allowscalar`, requires adding
+        # `GPUArraysCore.jl` as a dependency.
+        Rb[] = cpu(Tb)[]
       else
         # XXX: this used to be:
         # Rbₐᵣ = ReshapedArray(parent(Rbₐ), size(Tb), ())
@@ -712,7 +715,7 @@ function permutedims!!(
   ## copyto!(data(RR), data(R))
 
   if new_nnz > nnz(RR)
-    dataRR = append!(data(RR), zeros(new_nnz - nnz(RR)))
+    dataRR = append!!(data(RR), generic_zeros(leaf_parenttype(R), new_nnz - nnz(RR)))
     RR = Tensor(BlockSparse(dataRR, bofsRR), inds(RR))
   end
 
