@@ -3,4 +3,3 @@
 function NDTensors.append!!(::Type{<:MtlArray}, collection, collections...)
   return vcat(collection, collections...)
 end
-
