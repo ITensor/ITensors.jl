@@ -1,6 +1,9 @@
 # NDTensors.permutedims
 function permutedims(::Type{<:Array}, M, perm)
-  return @strided A = Base.permutedims(M, perm)
+  ## Creating Mperm here to evaluate the permutation and
+  ## avoid returning a Stridedview
+  @strided Mperm = Base.permutedims(M, perm)
+  return Mperm
 end
 
 # NDTensors.permutedims!
