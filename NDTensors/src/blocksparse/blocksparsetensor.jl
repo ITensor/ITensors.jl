@@ -518,7 +518,7 @@ function permutedims_combine(
     # for GPUs.
     Tbₐ = convert(Array, Tb)
     ## @strided Rb .= permutedims(Tbₐ, perm)
-    permutedims!(Rb, Tbₐ, perm)
+    Base.permutedims!(expose(Rb), expose(Tbₐ), perm)
   end
 
   return R

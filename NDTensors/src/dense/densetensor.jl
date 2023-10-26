@@ -205,7 +205,7 @@ end
 function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
   Base.checkdims_perm(R, T, perm)
   RR = convert(promote_type(typeof(R), typeof(T)), R)
-  permutedims!(RR, T, perm, f)
+  Base.permutedims!(expose(RR), expose(T), perm, f)
   return RR
 end
 
@@ -215,7 +215,7 @@ function permutedims!(
 ) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
-  permutedims!(RA, TA, perm)
+  Base.permutedims!(expose(RA), expose(TA), perm)
   return R
 end
 
@@ -231,7 +231,7 @@ function permutedims!(
 ) where {N}
   RA = array(R)
   TA = array(T)
-  RA .= permutedims(expose(TA), perm)
+  RA .= Base.permutedims(expose(TA), perm)
   return R
 end
 

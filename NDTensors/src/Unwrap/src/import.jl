@@ -1,1 +1,1 @@
-import Base: permutedims
+import Base: permutedims, permutedims!
