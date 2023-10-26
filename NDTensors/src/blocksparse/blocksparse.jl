@@ -104,7 +104,7 @@ end
 function copyto!(D1::BlockSparse, D2::BlockSparse)
   blockoffsets(D1) ≠ blockoffsets(D1) &&
     error("Cannot copy between BlockSparse storages with different offsets")
-  copyto!(data(D1), data(D2))
+  Base.copyto!(expose(data(D1)), expose(data(D2)))
   return D1
 end
 

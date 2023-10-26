@@ -205,7 +205,7 @@ end
 function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
   Base.checkdims_perm(R, T, perm)
   RR = convert(promote_type(typeof(R), typeof(T)), R)
-  Base.permutedims!(expose(RR), expose(T), perm, f)
+  permutedims!(RR, T, perm, f)
   return RR
 end
 
@@ -221,7 +221,7 @@ end
 
 # NDTensors.copyto!
 function copyto!(R::DenseTensor, T::DenseTensor)
-  copyto!(array(R), array(T))
+  Base.copyto!(expose(array(R)), expose(array(T)))
   return R
 end
 
@@ -262,7 +262,7 @@ function permutedims!(
   end
   RA = array(R)
   TA = array(T)
-  return permutedims!!(RA, TA, perm, f)
+  return permutedims!!(expose(RA), expose(TA), perm, f)
 end
 
 """

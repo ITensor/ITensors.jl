@@ -181,7 +181,7 @@ function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
 
     blockviewS = blockview(S, blockS)
     # TODO: Replace `data` with `diagview`.
-    copyto!(data(blockviewS), data(Sb))
+    Base.copyto!(expose(data(blockviewS)), expose(data(Sb)))
 
     #<fermions>
     sV = left_arrow_sign(vind, blockV[2])
@@ -315,7 +315,7 @@ function eigen(
     blockD = nzblocksD[n]
     blockviewD = blockview(D, blockD)
     # TODO: Replace `data` with `diagview`.
-    copyto!(data(blockviewD), data(Db))
+    Base.copyto!(expose(data(blockviewD)), expose(data(Db)))
 
     blockV = nzblocksV[n]
     copyto!(blockview(V, blockV), Vb)

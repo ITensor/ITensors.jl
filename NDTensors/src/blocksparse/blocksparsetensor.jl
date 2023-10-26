@@ -665,7 +665,7 @@ function uncombine(
         ## Rbₐᵣ = ReshapedArray(Rbₐ, size(Tb), ())
         Rbₐᵣ = reshape(Rbₐ, size(Tb))
         ## @strided Rbₐᵣ .= Tb
-        copyto!(Rbₐᵣ, Tb)
+        Base.copyto!(expose(Rbₐᵣ), expose(Tb))
       end
     end
   end

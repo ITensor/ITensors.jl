@@ -60,7 +60,7 @@ Base.real(S::TensorStorage) = setdata(S, real(data(S)))
 
 Base.imag(S::TensorStorage) = setdata(S, imag(data(S)))
 
-Base.copyto!(S1::TensorStorage, S2::TensorStorage) = (copyto!(data(S1), data(S2)); S1)
+Base.copyto!(S1::TensorStorage, S2::TensorStorage) = (Base.copyto!(expose(data(S1)), expose(data(S2))); S1)
 
 Random.randn!(S::TensorStorage) = randn!(Random.default_rng(), S)
 Random.randn!(rng::AbstractRNG, S::TensorStorage) = (randn!(rng, data(S)); S)

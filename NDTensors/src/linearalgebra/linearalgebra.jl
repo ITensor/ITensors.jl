@@ -487,7 +487,7 @@ function ql(A::AbstractMatrix; kwargs...)
   Base.require_one_based_indexing(A)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
-  copyto!(AA, A)
+  Base.copyto!(expose(AA), expose(A))
   iscuda = iscu(AA)
   if iscuda
     cutype = leaf_parenttype(AA)
