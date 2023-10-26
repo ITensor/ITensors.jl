@@ -97,12 +97,14 @@ function _contract_scalar_perm!(
       # Rᵃ .= β .* Rᵃ
       LinearAlgebra.scal!(length(Rᵃ), β, Rᵃ, 1)
     else
-      Rᵃ .= α .* permutedims(Tᵃ, perm) .+ β .* Rᵃ
+      Rᵃ .= α .* Base.permutedims(expose(Tᵃ), perm) .+ β .* Rᵃ
     end
   end
   return Rᵃ
 end
 
+## temporarily using Base.permutedims while NDTensors
+## Doesn't have permutedims imported from base
 function _contract!(
   CT::AbstractArray{El,NC},
   AT::AbstractArray{El,NA},
@@ -114,7 +116,7 @@ function _contract!(
   tA = 'N'
   if props.permuteA
     #@timeit_debug timer "_contract!: permutedims A" begin
-    Ap = permutedims(AT, props.PA)
+    Ap = Base.permutedims(expose(AT), props.PA)
     #end # @timeit
     AM = transpose(reshape(Ap, (props.dmid, props.dleft)))
   else
@@ -129,7 +131,7 @@ function _contract!(
   tB = 'N'
   if props.permuteB
     #@timeit_debug timer "_contract!: permutedims B" begin
-    Bp = permutedims(BT, props.PB)
+    Bp = Base.permutedims(expose(BT), props.PB)
     #end # @timeit
     BM = reshape(Bp, (props.dmid, props.dright))
   else
@@ -146,7 +148,7 @@ function _contract!(
     # we need to make sure C is permuted to the same 
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
-      CM = reshape(permutedims(CT, invperm(props.PC)), (props.dleft, props.dright))
+      CM = reshape(Base.permutedims(expose(CT), invperm(props.PC)), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
       # into C later  
@@ -168,7 +170,7 @@ function _contract!(
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin 
-    CT .= permutedims(Cr, props.PC)
+    CT .= Base.permutedims(expose(Cr), props.PC)
     #end # @timeit
   end
 

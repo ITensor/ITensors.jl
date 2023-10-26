@@ -1,5 +1,5 @@
-struct Expose{Unwraped,Object}
+struct Exposed{Unwraped,Object}
   object::Object
 end
 
-expose(object) = Expose{unwrap_type(object),typeof(object)}(object)
+expose(object) = Exposed{unwrap_type(object),typeof(object)}(object)

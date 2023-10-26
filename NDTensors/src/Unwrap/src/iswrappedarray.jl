@@ -22,7 +22,7 @@ is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
 parenttype(arraytype::Type{<:AbstractArray}) = arraytype
 
 # TODO: Use `SetParameters` here.
-parenttype(::Type{<:Base.ReshapedArray{<:Any,<:Any,P}}) where {P} = P
+parenttype(::Type{<:ReshapedArray{<:Any,<:Any,P}}) where {P} = P
 parenttype(::Type{<:Transpose{<:Any,P}}) where {P} = P
 parenttype(::Type{<:Adjoint{<:Any,P}}) where {P} = P
 parenttype(::Type{<:Symmetric{<:Any,P}}) where {P} = P
@@ -39,12 +39,12 @@ parenttype(::Type{<:StridedView{<:Any,<:Any,P}}) where {P} = P
 # `SimpleTraits.jl` traits dispatch.
 parenttype(array::AbstractArray) = parenttype(typeof(array))
 
-## These functions will be used in place of leaf_parenttype but will be 
+## These functions will be used in place of unwrap_type but will be 
 ## call indirectly through the expose function.
 @traitfn function unwrap_type(
   arraytype::Type{ArrayT}
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return leaf_parenttype(parenttype(arraytype))
+  return unwrap_type(parenttype(arraytype))
 end
 
 @traitfn function unwrap_type(

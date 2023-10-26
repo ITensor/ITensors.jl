@@ -2,12 +2,16 @@ module Unwrap
 using SimpleTraits
 using LinearAlgebra
 using Base: ReshapedArray
-using Strided: StridedView
+using Strided.StridedViews
 
 include("iswrappedarray.jl")
 include("expose.jl")
 
-export IsWrappedArray, is_wrapped_array, parenttype, unwrap_type, expose
+include("import.jl")
+## Exposed based functions
+include("functions/permutedims.jl")
+
+export IsWrappedArray, is_wrapped_array, parenttype, unwrap_type, expose, Expose
 
 ## TODO Create functions which take the `Expose` type and launch functions
 ## using that type
