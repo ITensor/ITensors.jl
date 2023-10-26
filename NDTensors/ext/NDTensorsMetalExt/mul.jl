@@ -1,9 +1,9 @@
 # This was calling generic matrix multiplication.
 # TODO: Raise an issue with `Metal.jl`.
 function LinearAlgebra.mul!(
-  CM::Unwrap.Exposed{<:MtlArray,<:Transpose},
-  AM::Unwrap.Exposed{<:MtlArray},
-  BM::Unwrap.Exposed{<:MtlArray},
+  CM::Exposed{<:MtlArray,<:Transpose},
+  AM::Exposed{<:MtlArray},
+  BM::Exposed{<:MtlArray},
   α,
   β,
 )

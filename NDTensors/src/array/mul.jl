@@ -1,7 +1,7 @@
 function LinearAlgebra.mul!(
-  CM::Unwrap.Exposed{<:Array},
-  AM::Unwrap.Exposed{<:Array},
-  BM::Unwrap.Exposed{<:Array},
+  CM::Exposed{<:Array},
+  AM::Exposed{<:Array},
+  BM::Exposed{<:Array},
   α,
   β,
 )
