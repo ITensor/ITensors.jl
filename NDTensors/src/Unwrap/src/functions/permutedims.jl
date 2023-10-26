@@ -3,9 +3,9 @@ function permutedims(E::Exposed, perm)
 end
 
 function permutedims!(Edest::Exposed, Esrc::Exposed, perm)
-    permutedims!(Edest.object, Esrc.object, perm)
+  return permutedims!(Edest.object, Esrc.object, perm)
 end
 
 function permutedims!(Edest::Exposed, Esrc::Exposed, perm, f)
-    Edest.object .= f.(Edest.object, Base.permutedims(Esrc, perm))
+  return Edest.object .= f.(Edest.object, Base.permutedims(Esrc, perm))
 end

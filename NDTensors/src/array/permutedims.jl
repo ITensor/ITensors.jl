@@ -7,11 +7,15 @@ function Base.permutedims(E::Unwrap.Exposed{<:Array}, perm)
   return Mperm
 end
 
-function Base.permutedims!(Edest::Unwrap.Exposed{<:Array}, Esrc::Unwrap.Exposed{<:Array}, perm)
+function Base.permutedims!(
+  Edest::Unwrap.Exposed{<:Array}, Esrc::Unwrap.Exposed{<:Array}, perm
+)
   @strided Edest.object .= Base.permutedims(Esrc, perm)
 end
 
-function Base.permutedims!(Edest::Unwrap.Exposed{<:Array}, Esrc::Unwrap.Exposed{<:Array}, perm, f)
+function Base.permutedims!(
+  Edest::Unwrap.Exposed{<:Array}, Esrc::Unwrap.Exposed{<:Array}, perm, f
+)
   @strided Edest.object .= f.(Edest.object, Base.permutedims(Esrc, perm))
 end
 

@@ -1,6 +1,8 @@
-function Base.permutedims!(Edest::Unwrap.Exposed{<:MtlArray}, Esrc::Unwraped.Exposed{<:MtlArray}, perm)
+function Base.permutedims!(
+  Edest::Unwrap.Exposed{<:MtlArray}, Esrc::Unwraped.Exposed{<:MtlArray}, perm
+)
   Eperm = expose(permutedims(Esrc), perm)
-  copyto!(parent(Edest.object), Eperm.object)
+  return copyto!(parent(Edest.object), Eperm.object)
 end
 
 function NDTensors.permutedims!(
