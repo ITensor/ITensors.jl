@@ -65,14 +65,14 @@ end
 
     R .= A .* B
     @test !any(isnan, R)
-    @test array(R) ≈ NDTensors.permutedims(array(A), (2, 1, 3)) * array(B)[]
+    @test array(R) ≈ Base.permutedims(array(A), (2, 1, 3)) * array(B)[]
 
     R .= NaN
     @test any(isnan, R)
 
     R .= B .* A
     @test !any(isnan, R)
-    @test array(R) ≈ NDTensors.permutedims(array(A), (2, 1, 3)) * array(B)[]
+    @test array(R) ≈ Base.permutedims(array(A), (2, 1, 3)) * array(B)[]
   end
 
   @testset "General contraction, permutation" for ElA in BlasFloats, ElB in BlasFloats
@@ -89,7 +89,7 @@ end
     R .= A .* B
     @test !any(isnan, R)
     @test reshape(array(R), 6, 2) ≈
-      reshape(NDTensors.permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
+      reshape(Base.permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
 
     R .= NaN
     @test any(isnan, R)
@@ -97,6 +97,6 @@ end
     R .= B .* A
     @test !any(isnan, R)
     @test reshape(array(R), 6, 2) ≈
-      reshape(NDTensors.permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
+      reshape(Base.permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
   end
 end
