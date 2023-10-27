@@ -215,7 +215,7 @@ function permutedims!(
 ) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
-  Base.permutedims!(expose(RA), expose(TA), perm)
+  permutedims!(expose(RA), expose(TA), perm)
   return R
 end
 
@@ -231,7 +231,7 @@ function permutedims!(
 ) where {N}
   RA = array(R)
   TA = array(T)
-  RA .= Base.permutedims(expose(TA), perm)
+  RA .= permutedims(expose(TA), perm)
   return R
 end
 

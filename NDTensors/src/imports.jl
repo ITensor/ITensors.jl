@@ -30,6 +30,7 @@ import Base:
   iterate,
   length,
   map,
+  permutedims,
   print,
   promote_rule,
   randn,
