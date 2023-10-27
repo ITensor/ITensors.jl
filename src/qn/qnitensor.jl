@@ -11,6 +11,18 @@
   return setindex!!(T, x, I...)
 end
 
+# TODO: Replace with a simpler and more generic `zeros` constructor
+# when the new `UnallocatedZeros` type lands.
+# This is needed for now since there is some issue with calling
+# `setindex!` on `EmptyTensor`, it's not really worth investigating
+# right now since that type will be removed soon anyway in
+# https://github.com/ITensor/ITensors.jl/pull/1213.
+# This is only used internally inside the implementation of `directsum`
+# right now.
+function zeros_itensor(elt::Type{<:Number}, inds::QNIndex...)
+  return itensor(tensor(BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)},Int}(), 0), inds))
+end
+
 """
     ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
     ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)

@@ -269,6 +269,14 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 # EmptyStorage ITensor constructors
 #
 
+# TODO: Replace with a simpler and more generic `zeros` constructor
+# when the new `UnallocatedZeros` type lands.
+# This is only used internally inside the implementation of `directsum`
+# right now.
+function zeros_itensor(elt::Type{<:Number}, inds::Index...)
+  return ITensor(elt, inds...)
+end
+
 # TODO: Deprecated!
 """
     emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
