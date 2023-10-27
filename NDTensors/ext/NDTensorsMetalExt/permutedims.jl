@@ -1,4 +1,6 @@
-function Base.permutedims!(Edest::Exposed{<:MtlArray, <:Base.ReshapedArray}, Esrc::Exposed{<:MtlArray}, perm)
+function Base.permutedims!(
+  Edest::Exposed{<:MtlArray,<:Base.ReshapedArray}, Esrc::Exposed{<:MtlArray}, perm
+)
   Eperm = expose(permutedims(Esrc, perm))
   return copyto!(parent(Edest.object), Eperm.object)
 end
