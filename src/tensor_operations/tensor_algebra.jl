@@ -279,8 +279,15 @@ end
 function directsum_projectors(
   elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index
 )
-  D1 = ITensor(elt1, QN(), dag(i), ij)
-  D2 = ITensor(elt2, QN(), dag(j), ij)
+  # Ideally we would just use the following but it gives
+  # an error that `setindex!` isn't defined:
+  # D1 = ITensor(elt1, dag(i), ij)
+  # D2 = ITensor(elt1, dag(j), ij)
+  # Or with new notation:
+  # D1 = zeros(elt1, dag(i), ij)
+  # D2 = zeros(elt1, dag(j), ij)
+  D1 = zeros_itensor(elt1, dag(i), ij)
+  D2 = zeros_itensor(elt1, dag(j), ij)
   directsum_projectors!(tensor(D1), tensor(D2))
   return D1, D2
 end
