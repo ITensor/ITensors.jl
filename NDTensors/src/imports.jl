@@ -31,6 +31,7 @@ import Base:
   length,
   map,
   permutedims,
+  permutedims!,
   print,
   promote_rule,
   randn,
