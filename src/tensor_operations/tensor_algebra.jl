@@ -275,12 +275,35 @@ function directsum_projectors!(D1::Tensor, D2::Tensor)
   return D1, D2
 end
 
+# TODO: Replace with a simpler and more generic `zeros` constructor
+# when the new `UnallocatedZeros` type lands.
+function zeros_itensor(elt::Type{<:Number}, inds::Index...)
+  return ITensor(elt, inds...)
+end
+
+# TODO: Replace with a simpler and more generic `zeros` constructor
+# when the new `UnallocatedZeros` type lands.
+# This is needed for now since there is some issue with calling
+# `setindex!` on `EmptyTensor`, it's not really worth investigating
+# right now since that type will be removed soon anyway in
+# https://github.com/ITensor/ITensors.jl/pull/1213.
+function zero_itensor(elt::Type{<:Number}, inds::QNIndex...)
+  return itensor(tensor(BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)},Int}(), 0), inds))
+end
+
 # Helper tensors for performing a partial direct sum
 function directsum_projectors(
   elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index
 )
-  D1 = ITensor(elt1, QN(), dag(i), ij)
-  D2 = ITensor(elt2, QN(), dag(j), ij)
+  # Ideally we would just use the following but it gives
+  # an error that `setindex!` isn't defined:
+  # D1 = ITensor(elt1, dag(i), ij)
+  # D2 = ITensor(elt1, dag(j), ij)
+  # Or with new notation:
+  # D1 = zeros(elt1, dag(i), ij)
+  # D2 = zeros(elt1, dag(j), ij)
+  D1 = zero_itensor(elt1, dag(i), ij)
+  D2 = zero_itensor(elt1, dag(j), ij)
   directsum_projectors!(tensor(D1), tensor(D2))
   return D1, D2
 end
