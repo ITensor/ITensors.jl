@@ -274,7 +274,7 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 # This is only used internally inside the implementation of `directsum`
 # right now.
 function zeros_itensor(elt::Type{<:Number}, inds::Index...)
-  return ITensor(elt, inds...)
+  return ITensor(elt, zero(elt), inds...)
 end
 
 # TODO: Deprecated!
