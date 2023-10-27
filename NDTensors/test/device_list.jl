@@ -23,9 +23,9 @@ function devices_list(test_args)
   end
 
   if "metal" in test_args || "all" in test_args
-    push!(devs, NDTensors.mtl)
+    push!(devs, mtl)
     Metal.allowscalar()
-    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
+    #include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
   end
   return devs
 end
