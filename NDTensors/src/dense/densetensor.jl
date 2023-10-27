@@ -262,7 +262,7 @@ function permutedims!(
   end
   RA = array(R)
   TA = array(T)
-  return permutedims!!(expose(RA), expose(TA), perm, f)
+  return permutedims!!(RA, TA, perm, f)
 end
 
 """
