@@ -20,7 +20,11 @@ end
 # This is only used internally inside the implementation of `directsum`
 # right now.
 function zeros_itensor(elt::Type{<:Number}, inds::QNIndex...)
-  return itensor(tensor(BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)},Int}(), 0), inds))
+  return itensor(
+    tensor(
+      BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)},Int}(), 0), inds
+    ),
+  )
 end
 
 """
