@@ -14,8 +14,6 @@ end
   devs = devices_list(copy(ARGS))
 
   @testset "test device: $dev" for dev in devs
-    ## Metal doesn't support Float64
-    ElT = (dev == mtl ? Float32 : Float64) 
     # Indices
     indsA = ([2, 3], [4, 5])
 
@@ -104,28 +102,28 @@ end
       T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
-      @test eltype(T) == ElT
+      @test eltype(T) == Float64
       @test norm(T) ≉ 0
 
       Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(Tc) == 2
       @test nnz(Tc) == 8
-      @test eltype(Tc) == complex(ElT)
+      @test eltype(Tc) == ComplexF64
       @test norm(Tc) ≉ 0
     end
 
     @testset "Complex Valued Operations" begin
-      T = dev(randomBlockSparseTensor(complex(ElT), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      T = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       rT = real(T)
-      @test eltype(rT) == ElT
+      @test eltype(rT) == Float64
       @test nnzblocks(rT) == nnzblocks(T)
       iT = imag(T)
-      @test eltype(iT) == ElT
+      @test eltype(iT) == Float64
       @test nnzblocks(iT) == nnzblocks(T)
       @test norm(rT)^2 + norm(iT)^2 ≈ norm(T)^2
 
       cT = conj(T)
-      @test eltype(cT) == complex(ElT)
+      @test eltype(cT) == ComplexF64
       @test nnzblocks(cT) == nnzblocks(T)
     end
     @testset "similartype regression test" begin
@@ -144,13 +142,13 @@ end
       T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
-      @test eltype(T) == ElT
+      @test eltype(T) == Float64
       @test norm(T) ≉ 0
 
-      Tc = dev(randomBlockSparseTensor(complex(ElT), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(Tc) == 2
       @test nnz(Tc) == 8
-      @test eltype(Tc) == complex(ElT)
+      @test eltype(Tc) == ComplexF64
       @test norm(Tc) ≉ 0
     end
 
@@ -229,43 +227,39 @@ end
   end
 
   @testset "svd on $dev" for dev in devs
-    ## Since Metal only supports Float32, machine precision is
-    ## a larger number
-    prec = (dev == mtl ? 1e-6 : 1e-14)
     @testset "svd example 1" begin
       A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=prec)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14)
     end
 
     @testset "svd example 2" begin
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=prec)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
     end
 
     @testset "svd example 3" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=prec)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
     end
 
-    prec = (dev == mtl ? 1e-5 : 1e-13)
     @testset "svd example 4" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=prec)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
     end
 
     @testset "svd example 5" begin
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=prec)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
     end
   end
 
