@@ -288,7 +288,11 @@ end
 # right now since that type will be removed soon anyway in
 # https://github.com/ITensor/ITensors.jl/pull/1213.
 function zeros_itensor(elt::Type{<:Number}, inds::QNIndex...)
-  return itensor(tensor(BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)},Int}(), 0), inds))
+  return itensor(
+    tensor(
+      BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)},Int}(), 0), inds
+    ),
+  )
 end
 
 # Helper tensors for performing a partial direct sum
