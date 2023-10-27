@@ -5,3 +5,5 @@ end
 expose(object) = Exposed{unwrap_type(object),typeof(object)}(object)
 
 unexpose(E::Exposed) = E.object
+
+Base.parent(E::Exposed) = parent(unexpose(E))
