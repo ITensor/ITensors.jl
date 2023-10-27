@@ -3,16 +3,18 @@
 function Base.permutedims(E::Exposed{<:Array}, perm)
   ## Creating Mperm here to evaluate the permutation and
   ## avoid returning a Stridedview
-  @strided Mperm = Base.permutedims(E.object, perm)
+  @strided Mperm = Base.permutedims(unexpose(E), perm)
   return Mperm
 end
 
 function Base.permutedims!(Edest::Exposed{<:Array}, Esrc::Exposed{<:Array}, perm)
-  @strided Edest.object .= Base.permutedims(Esrc, perm)
+  @strided unexpose(Edest) .= Base.permutedims(Esrc, perm)
+  return unexpose(Edest)
 end
 
 function Base.permutedims!(Edest::Exposed{<:Array}, Esrc::Exposed{<:Array}, perm, f)
-  @strided Edest.object .= f.(Edest.object, Base.permutedims(Esrc, perm))
+  @strided unexpose(Edest) .= f.(unexpose(Edest), Base.permutedims(Esrc, perm))
+  return unexpose(Edest)
 end
 
 # NDTensors.permutedims!

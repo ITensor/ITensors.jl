@@ -1,6 +1,6 @@
 function LinearAlgebra.mul!(
   CM::Exposed{<:Array}, AM::Exposed{<:Array}, BM::Exposed{<:Array}, α, β
 )
-  @strided mul!(CM.object, AM.object, BM.object, α, β)
-  return CM.object
+  @strided mul!(unexpose(CM), unexpose(AM), unexpose(BM), α, β)
+  return unexpose(CM)
 end

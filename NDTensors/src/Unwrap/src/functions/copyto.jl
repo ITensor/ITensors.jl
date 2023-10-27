@@ -1,4 +1,4 @@
 function copyto!(R::Exposed, T::Exposed)
-  Base.copyto!(R.object, T.object)
-  return R
+  Base.copyto!(unexpose(R), unexpose(T))
+  return unexpose(R)
 end

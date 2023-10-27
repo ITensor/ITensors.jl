@@ -7,5 +7,6 @@ function LinearAlgebra.mul!(
   α,
   β,
 )
-  return mul!(transpose(CM.object), transpose(BM.object), transpose(AM.object), α, β)
+  mul!(transpose(unexpose(CM)), transpose(unexpose(BM)), transpose(unexpose(AM)), α, β)
+  return unexpose(CM)
 end
