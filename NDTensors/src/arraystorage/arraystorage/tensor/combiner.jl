@@ -55,18 +55,24 @@ function contract!!(
     # TODO: Add a `reshape` for `ArrayStorageTensor`.
     ## tensorp = reshape(output_tensor, NDTensors.permute(inds(tensor), perm))
     tensorp_inds = permute(inds(tensor), perm)
-    tensorp = NDTensors.tensor(reshape(storage(output_tensor), dims(tensorp_inds)), tensorp_inds)
+    tensorp = NDTensors.tensor(
+      reshape(storage(output_tensor), dims(tensorp_inds)), tensorp_inds
+    )
     permutedims!(tensorp, tensor, perm)
     # TODO: Add a `reshape` for `ArrayStorageTensor`.
     ## reshape(tensorp, output_tensor_inds)
-    return NDTensors.tensor(reshape(storage(tensorp), dims(output_tensor_inds)), output_tensor_inds)
+    return NDTensors.tensor(
+      reshape(storage(tensorp), dims(output_tensor_inds)), output_tensor_inds
+    )
   else # Uncombining
     cpos1, cpos2 = intersect_positions(combiner_tensor_labels, tensor_labels)
     output_tensor_storage = copy(storage(tensor))
     indsC = deleteat(inds(combiner_tensor), cpos1)
     output_tensor_inds = insertat(inds(tensor), indsC, cpos2)
     # TODO: Add a `reshape` for `ArrayStorageTensor`.
-    return NDTensors.tensor(reshape(output_tensor_storage, dims(output_tensor_inds)), output_tensor_inds)
+    return NDTensors.tensor(
+      reshape(output_tensor_storage, dims(output_tensor_inds)), output_tensor_inds
+    )
   end
   return invalid_combiner_contraction_error(
     tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
