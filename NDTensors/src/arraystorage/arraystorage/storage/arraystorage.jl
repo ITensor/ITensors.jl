@@ -23,3 +23,8 @@ const MatrixStorage{T} = Union{
 }
 
 const MatrixOrArrayStorage{T} = Union{MatrixStorage{T},ArrayStorage{T}}
+
+# TODO: Delete once `Dense` is removed.
+function to_arraystorage(x::DenseTensor)
+  return tensor(reshape(data(x), size(x)), inds(x))
+end

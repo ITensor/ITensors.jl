@@ -125,6 +125,11 @@ ITensor(is, st::TensorStorage)::ITensor = ITensor(NeverAlias(), st, is)
 itensor(T::ITensor) = T
 ITensor(T::ITensor) = copy(T)
 
+# TODO: Delete once `TensorStorage` is removed.
+function NDTensors.to_arraystorage(x::ITensor)
+  return itensor(NDTensors.to_arraystorage(tensor(x)))
+end
+
 """
     itensor(args...; kwargs...)
 

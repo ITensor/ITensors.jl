@@ -131,11 +131,25 @@ include("empty/adapt.jl")
 
 #####################################
 # Array Tensor (experimental)
-# TODO: Move to `Experimental` module.
+# TODO: Move to `Experimental` module?
 #
-include("arraytensor/arraytensor.jl")
-include("arraytensor/array.jl")
-include("arraytensor/blocksparsearray.jl")
+include("arraystorage/arraystorage/storage/arraystorage.jl")
+include("arraystorage/arraystorage/storage/conj.jl")
+include("arraystorage/arraystorage/storage/permutedims.jl")
+include("arraystorage/arraystorage/storage/contract.jl")
+include("arraystorage/arraystorage/storage/combiner.jl")
+
+include("arraystorage/arraystorage/tensor/arraystorage.jl")
+include("arraystorage/arraystorage/tensor/indexing.jl")
+include("arraystorage/arraystorage/tensor/permutedims.jl")
+include("arraystorage/arraystorage/tensor/mul.jl")
+include("arraystorage/arraystorage/tensor/contract.jl")
+include("arraystorage/arraystorage/tensor/qr.jl")
+include("arraystorage/arraystorage/tensor/svd.jl")
+include("arraystorage/arraystorage/tensor/combiner.jl")
+
+# BlockSparseArray storage
+include("arraystorage/blocksparsearray/storage/contract.jl")
 
 #####################################
 # Deprecations

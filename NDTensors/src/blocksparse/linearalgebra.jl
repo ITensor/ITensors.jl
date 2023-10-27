@@ -32,7 +32,7 @@ per row/column, otherwise it fails.
 This assumption makes it so the result can be
 computed from the dense svds of seperate blocks.
 """
-function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
+function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
   alg::String = get(kwargs, :alg, "divide_and_conquer")
   min_blockdim::Int = get(kwargs, :min_blockdim, 0)
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
