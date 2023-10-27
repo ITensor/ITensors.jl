@@ -1,6 +1,3 @@
-# Combiner
-promote_rule(::Type{<:Combiner}, arraytype::Type{<:MatrixOrArrayStorage}) = arraytype
-
 # Generic AbstractArray code
 function contract(
   array1::MatrixOrArrayStorage,
@@ -56,13 +53,4 @@ function contract!(
   # TODO: Change this to just `contract!`, or maybe `contract_ttgt!`?
   _contract!(arrayR, array1, array2, props)
   return arrayR
-end
-
-function permutedims!(
-  output_array::MatrixOrArrayStorage, array::MatrixOrArrayStorage, perm, f::Function
-)
-  output_array = permutedims!!(
-    leaf_parenttype(output_array), output_array, leaf_parenttype(array), array, perm, f
-  )
-  return output_array
 end
