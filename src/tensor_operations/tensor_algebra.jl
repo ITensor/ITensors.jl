@@ -287,7 +287,7 @@ end
 # `setindex!` on `EmptyTensor`, it's not really worth investigating
 # right now since that type will be removed soon anyway in
 # https://github.com/ITensor/ITensors.jl/pull/1213.
-function zero_itensor(elt::Type{<:Number}, inds::QNIndex...)
+function zeros_itensor(elt::Type{<:Number}, inds::QNIndex...)
   return itensor(tensor(BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)},Int}(), 0), inds))
 end
 
@@ -302,8 +302,8 @@ function directsum_projectors(
   # Or with new notation:
   # D1 = zeros(elt1, dag(i), ij)
   # D2 = zeros(elt1, dag(j), ij)
-  D1 = zero_itensor(elt1, dag(i), ij)
-  D2 = zero_itensor(elt1, dag(j), ij)
+  D1 = zeros_itensor(elt1, dag(i), ij)
+  D2 = zeros_itensor(elt1, dag(j), ij)
   directsum_projectors!(tensor(D1), tensor(D2))
   return D1, D2
 end
