@@ -190,8 +190,8 @@ import ITensors.NDTensors:
   # Deprecated
   addblock!,
   store
-
-import ITensors.Ops: Prod, Sum, terms
+  import NDTensors.Unwrap: unwrap_type
+  
 
 import Random: randn!
 
