@@ -556,11 +556,15 @@ function factorize_svd(
   kwargs...,
 )
   leftdir, rightdir = -dir, -dir
+  @show A
   USV = svd(A, Linds...; leftdir, rightdir, alg=svd_alg, kwargs...)
   if isnothing(USV)
     return nothing
   end
   U, S, V, spec, u, v = USV
+  @show U
+  @show S
+  @show V
   if ortho == "left"
     L, R = U, S * V
   elseif ortho == "right"

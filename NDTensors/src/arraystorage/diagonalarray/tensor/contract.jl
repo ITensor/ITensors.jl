@@ -1,30 +1,49 @@
-function promote_rule(storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:Diag})
-  return promote_type(storagetype1, datatype(storagetype2))
+# TODO: Move to a different file.
+parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
+
+# TODO: Move to a different file.
+function promote_rule(storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:DiagonalArray})
+  # TODO: Replace with `unwrap_type` once
+  # https://github.com/ITensor/ITensors.jl/pull/1220
+  # is merged.
+  return promote_type(storagetype1, leaf_parenttype(storagetype2))
 end
 
-function contraction_output_type(
-  tensortype1::Type{<:DiagTensor}, tensortype2::Type{<:ArrayStorageTensor}, indsR
-)
-  return similartype(promote_type(tensortype1, tensortype2), indsR)
+# The output must be initialized as zero since it is sparse, cannot be undefined
+# Overspecifying types to fix ambiguity error.
+function contraction_output(T1::Tensor{T,N,<:DiagonalArray{T,N,<:AbstractVector{T}}}, T2::ArrayStorageTensor, indsR) where {T,N}
+  return zero_contraction_output(T1, T2, indsR)
+end
+contraction_output(T1::ArrayStorageTensor, T2::Tensor{T,N,<:DiagonalArray{T,N,<:AbstractVector{T}}}, indsR) where {T,N} = contraction_output(T2, T1, indsR)
+
+# Overspecifying types to fix ambiguity error.
+function contraction_output(tensor1::Tensor{T1,N1,<:DiagonalArray{T1,N1,<:AbstractVector{T1}}}, tensor2::Tensor{T2,N2,<:DiagonalArray{T2,N2,<:AbstractVector{T2}}}, indsR) where {T1,N1,T2,N2}
+  return zero_contraction_output(tensor1, tensor2, indsR)
 end
 
-function contraction_output_type(
-  tensortype1::Type{<:ArrayStorageTensor}, tensortype2::Type{<:DiagTensor}, indsR
-)
-  return contraction_output_type(tensortype2, tensortype1, indsR)
-end
+## function contraction_output_type(
+##   tensortype1::Type{<:Tensor{<:Any,<:Any,<:DiagonalArray}}, tensortype2::Type{<:ArrayStorageTensor}, indsR
+## )
+##   return similartype(promote_type(tensortype1, tensortype2), indsR)
+## end
+
+## function contraction_output_type(
+##   tensortype1::Type{<:ArrayStorageTensor}, tensortype2::Type{<:DiagTensor}, indsR
+## )
+##   return contraction_output_type(tensortype2, tensortype1, indsR)
+## end
 
 # TODO: Modernize this function, rewrite in terms of `Array` and `DiagonalArray`.
 function contract!(
   C::ArrayStorageTensor{ElC,NC},
   Clabels,
-  A::DiagTensor{ElA,NA},
+  A::Tensor{ElA,NA,<:DiagonalArray{ElA,NA}},
   Alabels,
   B::ArrayStorageTensor{ElB,NB},
   Blabels,
   α::Number=one(ElC),
   β::Number=zero(ElC);
-  convert_to_dense::Bool=true,
+  convert_to_dense::Bool=false,
 ) where {ElA,NA,ElB,NB,ElC,NC}
   #@timeit_debug timer "diag-dense contract!" begin
   if all(i -> i < 0, Blabels)
@@ -37,24 +56,24 @@ function contract!(
       # Assumes C starts set to 0
       c₁ = zero(ElC)
       for i in 1:min_dim
-        c₁ += getdiagindex(A, i) * getdiagindex(B, i)
+        c₁ += DiagonalArrays.getdiagindex(A, i) * DiagonalArrays.getdiagindex(B, i)
       end
-      setdiagindex!(C, α * c₁ + β * getdiagindex(C, 1), 1)
+      DiagonalArrays.setdiagindex!(C, α * c₁ + β * DiagonalArrays.getdiagindex(C, 1), 1)
     else
       # not all indices are summed over, set the diagonals of the result
       # to the product of the diagonals of A and B
       # TODO: should we make this return a Diag storage?
       for i in 1:min_dim
-        setdiagindex!(
-          C, α * getdiagindex(A, i) * getdiagindex(B, i) + β * getdiagindex(C, i), i
+        DiagonalArrays.setdiagindex!(
+          C, α * DiagonalArrays.getdiagindex(A, i) * DiagonalArrays.getdiagindex(B, i) + β * DiagonalArrays.getdiagindex(C, i), i
         )
       end
     end
   else
     # Most general contraction
     if convert_to_dense
-      # TODO: Define a conversion from `DiagonalArray` to `Array`.
-      contract!(C, Clabels, to_arraystorage(dense(A)), Alabels, B, Blabels, α, β)
+      # TODO: Define `densearray(::Tensor)`.
+      contract!(C, Clabels, tensor(DiagonalArrays.densearray(storage(A)), inds(A)), Alabels, B, Blabels, α, β)
     else
       if !isone(α) || !iszero(β)
         error(
@@ -115,10 +134,10 @@ function contract!(
           coffset += ii * custride[i]
         end
         c = zero(ElC)
-        for j in 1:diaglength(A)
+        for j in 1:DiagonalArrays.diaglength(A)
           # With α == 0 && β == 1
           C[cstart + j * c_cstride + coffset] +=
-            getdiagindex(A, j) * B[bstart + j * b_cstride + boffset]
+            DiagonalArrays.getdiagindex(A, j) * B[bstart + j * b_cstride + boffset]
           # XXX: not sure if this is correct
           #C[cstart+j*c_cstride+coffset] += α * getdiagindex(A, j)* B[bstart+j*b_cstride+boffset] + β * C[cstart+j*c_cstride+coffset]
         end
@@ -128,15 +147,16 @@ function contract!(
   #end # @timeit
 end
 
+# Overspecifying types to fix ambiguity error.
 function contract!(
   C::ArrayStorageTensor,
   Clabels,
   A::ArrayStorageTensor,
   Alabels,
-  B::DiagTensor,
+  B::Tensor{TB,NB,<:DiagonalArray{TB,NB}},
   Blabels,
   α::Number=one(eltype(C)),
   β::Number=zero(eltype(C)),
-)
+) where {TB,NB}
   return contract!(C, Clabels, B, Blabels, A, Alabels, α, β)
 end

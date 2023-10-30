@@ -97,7 +97,7 @@ function svd(
   Sinds = indstype((u, v))
   Vinds = indstype((ind(T, 2), v))
   U = tensor(MU, Uinds)
-  S = tensor(Diag(MS), Sinds)
+  S = tensor(DiagonalMatrix(MS), Sinds)
   V = tensor(MV, Vinds)
   return U, S, V, spec
 end

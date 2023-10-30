@@ -68,7 +68,6 @@ function eigen(
   Vinds = indstype((dag(ind(T, 2)), dag(r)))
   Dinds = indstype((l, dag(r)))
   V = tensor(VM, Vinds)
-  # TODO: Replace with `DiagonalArray`.
-  D = tensor(Diag(DM), Dinds)
+  D = tensor(DiagonalMatrix(DM), Dinds)
   return D, V, spec
 end

@@ -6,6 +6,7 @@ const ArrayStorage{T,N} = Union{
   SubArray{T,N},
   PermutedDimsArray{T,N},
   StridedView{T,N},
+  DiagonalArray{T,N},
   BlockSparseArray{T,N},
 }
 
