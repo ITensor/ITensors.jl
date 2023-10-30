@@ -221,7 +221,6 @@ function permutedims!(
   return R
 end
 
-
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function permutedims!(
   R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm::NTuple{N,Int}

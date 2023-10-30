@@ -71,7 +71,13 @@ function _gemm!(
   beta::BT,
   C::AbstractVecOrMat,
 ) where {AT,BT}
-  mul!(expose(C), expose(tA == 'T' ? transpose(A) : A), expose(tB == 'T' ? transpose(B) : B), alpha, beta)
+  mul!(
+    expose(C),
+    expose(tA == 'T' ? transpose(A) : A),
+    expose(tB == 'T' ? transpose(B) : B),
+    alpha,
+    beta,
+  )
   return C
 end
 
