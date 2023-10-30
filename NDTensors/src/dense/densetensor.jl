@@ -178,6 +178,7 @@ function reshape(T::DenseTensor, dims::Int...)
   return tensor(storage(T), tuple(dims...))
 end
 
+## TODO might have to look into these functions more
 # If the storage data are regular Vectors, use Base.copyto!
 function copyto!(
   R::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
@@ -221,7 +222,7 @@ end
 
 # NDTensors.copyto!
 function copyto!(R::DenseTensor, T::DenseTensor)
-  Base.copyto!(expose(array(R)), expose(array(T)))
+  copyto!(expose(array(R)), expose(array(T)))
   return R
 end
 
