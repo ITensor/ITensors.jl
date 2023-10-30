@@ -29,11 +29,11 @@ function diaglength(a::AbstractArray)
 end
 
 function diagstride(A::AbstractArray)
-  s = 1  
-  p = 1  
+  s = 1
+  p = 1
   for i in 1:(ndims(A) - 1)
     p *= size(A, i)
-    s += p 
+    s += p
   end
   return s
 end

@@ -12,7 +12,7 @@ using NDTensors.DiagonalArrays:
   setdiag!,
   diagcopyto!
 
-d = DiagonalArray([1., 2, 3], 3, 4, 5)
+d = DiagonalArray([1.0, 2, 3], 3, 4, 5)
 @show d[1, 1, 1] == 1
 @show d[2, 2, 2] == 2
 @show d[1, 2, 1] == 0

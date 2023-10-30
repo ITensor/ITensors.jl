@@ -8,9 +8,7 @@ include("diagview.jl")
 
 struct DefaultZero end
 
-function (::DefaultZero)(
-  eltype::Type, I::CartesianIndex
-)
+function (::DefaultZero)(eltype::Type, I::CartesianIndex)
   return zero(eltype)
 end
 
@@ -20,11 +18,15 @@ struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractArray{T,N}
   zero::Zero
 end
 
-function DiagonalArray{T,N}(diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()) where {T,N}
+function DiagonalArray{T,N}(
+  diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()
+) where {T,N}
   return DiagonalArray{T,N,typeof(diag),typeof(zero)}(diag, d, zero)
 end
 
-function DiagonalArray{T,N}(diag::AbstractVector, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()) where {T,N}
+function DiagonalArray{T,N}(
+  diag::AbstractVector, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()
+) where {T,N}
   return DiagonalArray{T,N}(T.(diag), d, zero)
 end
 
@@ -32,7 +34,9 @@ function DiagonalArray{T,N}(diag::AbstractVector, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(diag, d)
 end
 
-function DiagonalArray{T}(diag::AbstractVector, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()) where {T,N}
+function DiagonalArray{T}(
+  diag::AbstractVector, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()
+) where {T,N}
   return DiagonalArray{T,N}(diag, d, zero)
 end
 
