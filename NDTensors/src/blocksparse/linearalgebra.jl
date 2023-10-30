@@ -151,9 +151,7 @@ function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   indsS = setindex(indsS, dag(vind), 2)
 
   U = BlockSparseTensor(unwrap_type(T), undef, nzblocksU, indsU)
-  S = DiagBlockSparseTensor(
-    set_eltype(unwrap_type(T), real(ElT)), undef, nzblocksS, indsS
-  )
+  S = DiagBlockSparseTensor(set_eltype(unwrap_type(T), real(ElT)), undef, nzblocksS, indsS)
   V = BlockSparseTensor(unwrap_type(T), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
