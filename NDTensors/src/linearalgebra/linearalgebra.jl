@@ -231,7 +231,7 @@ function eigen(
   DM, VM = eigen(matrixT)
 
   # Sort by largest to smallest eigenvalues
-  # TODO: Replace `cpu` with `leaf_parenttype` dispatch.
+  # TODO: Replace `cpu` with `unwrap_type` dispatch.
   p = sortperm(cpu(DM); rev=true, by=abs)
   DM = DM[p]
   VM = VM[:, p]
@@ -456,7 +456,7 @@ function ql_positive(M::AbstractMatrix)
   # like `qr_positive`.
   iscuda = iscu(M)
   if iscuda
-    cutype = leaf_parenttype(M)
+    cutype = unwrap_type(M)
     M = NDTensors.cpu(M)
   end
   sparseQ, L = ql(M)
@@ -490,7 +490,7 @@ function ql(A::AbstractMatrix; kwargs...)
   Base.copyto!(expose(AA), expose(A))
   iscuda = iscu(AA)
   if iscuda
-    cutype = leaf_parenttype(AA)
+    cutype = unwrap_type(AA)
     AA = NDTensors.cpu(AA)
   end
   Q, L = ql!(AA; kwargs...)

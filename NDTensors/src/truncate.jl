@@ -1,3 +1,4 @@
+## TODO write Exposed version of truncate
 function truncate!!(P::AbstractArray; kwargs...)
   return truncate!!(leaf_parenttype(P), P; kwargs...)
 end
@@ -12,7 +13,7 @@ end
 function truncate!!(::Type{<:AbstractArray}, P::AbstractArray; kwargs...)
   P_cpu = cpu(P)
   truncerr, docut = truncate!(P_cpu; kwargs...)
-  P = adapt(leaf_parenttype(P), P_cpu)
+  P = adapt(unwrap_type(P), P_cpu)
   return P, truncerr, docut
 end
 

@@ -6,7 +6,7 @@ const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 function _truncated_blockdim(
   S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=0
 )
-  # TODO: Replace `cpu` with `leaf_parenttype` dispatch.
+  # TODO: Replace `cpu` with `unwrap_type` dispatch.
   S = cpu(S)
   full_dim = diaglength(S)
   !truncate && return full_dim
@@ -150,11 +150,11 @@ function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   indsS = setindex(inds(T), dag(uind), 1)
   indsS = setindex(indsS, dag(vind), 2)
 
-  U = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksU, indsU)
+  U = BlockSparseTensor(unwrap_type(T), undef, nzblocksU, indsU)
   S = DiagBlockSparseTensor(
-    set_eltype(leaf_parenttype(T), real(ElT)), undef, nzblocksS, indsS
+    set_eltype(unwrap_type(T), real(ElT)), undef, nzblocksS, indsS
   )
-  V = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksV, indsV)
+  V = BlockSparseTensor(unwrap_type(T), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Ub, Sb, Vb = Us[n], Ss[n], Vs[n]
@@ -305,9 +305,9 @@ function eigen(
   end
 
   D = DiagBlockSparseTensor(
-    set_ndims(set_eltype(leaf_parenttype(T), ElD), 1), undef, nzblocksD, indsD
+    set_ndims(set_eltype(unwrap_type(T), ElD), 1), undef, nzblocksD, indsD
   )
-  V = BlockSparseTensor(set_eltype(leaf_parenttype(T), ElV), undef, nzblocksV, indsV)
+  V = BlockSparseTensor(set_eltype(unwrap_type(T), ElV), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Db, Vb = Ds[n], Vs[n]
@@ -378,16 +378,16 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
     nzblocksX[n] = (UInt(n), blockT[2])
   end
 
-  Q = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksQ, indsQ)
-  X = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksX, indsX)
+  Q = BlockSparseTensor(unwrap_type(T), undef, nzblocksQ, indsQ)
+  X = BlockSparseTensor(unwrap_type(T), undef, nzblocksX, indsX)
 
   for n in 1:nnzblocksT
     copyto!(blockview(Q, nzblocksQ[n]), Qs[n])
     copyto!(blockview(X, nzblocksX[n]), Xs[n])
   end
 
-  Q = adapt(leaf_parenttype(T), Q)
-  X = adapt(leaf_parenttype(T), X)
+  Q = adapt(unwrap_type(T), Q)
+  X = adapt(unwrap_type(T), X)
   return Q, X
 end
 
