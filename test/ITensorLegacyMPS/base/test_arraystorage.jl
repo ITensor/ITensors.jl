@@ -1,5 +1,4 @@
 using ITensors
-using NDTensors
 using Test
 
 @testset "Test ArrayStorage DMRG" begin
