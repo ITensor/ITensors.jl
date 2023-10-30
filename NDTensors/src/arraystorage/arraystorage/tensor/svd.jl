@@ -1,47 +1,35 @@
 # TODO: Rewrite this function to be more modern:
-# 1. List keyword arguments in function signature.
-# 2. Output `Spectrum` as a keyword argument that gets overwritten.
-# 3. Dispatch on `alg`.
-# 4. Remove keyword argument deprecations.
-# 5. Make this into two layers, one that handles indices and one that works with `Matrix`.
-# 6. Use `eltype` instead of `where`.
+# 1. Output `Spectrum` as a keyword argument that gets overwritten.
+# 2. Dispatch on `alg`.
+# 3. Make this into two layers, one that handles indices and one that works with `Matrix`.
 """
     svd(T::ArrayStorageTensor{<:Number,2}; kwargs...)
 
 svd of an order-2 DenseTensor
 """
-function svd(T::ArrayStorageTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
-  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
+function svd(
+  T::ArrayStorageTensor;
+  maxdim=nothing,
+  mindim=1,
+  cutoff=nothing,
+  alg="divide_and_conquer", # TODO: Define `default_alg(T)`
+  use_absolute_cutoff=false,
+  use_relative_cutoff=true,
+  # These are getting passed erroneously.
+  # TODO: Make sure they don't get passed down
+  # to here.
+  which_decomp=nothing,
+  tags=nothing,
+  eigen_perturbation=nothing,
+  normalize=nothing,
+)
+  truncate = !isnothing(maxdim) || !isnothing(cutoff)
+  # TODO: Define `default_maxdim(T)`.
+  maxdim = isnothing(maxdim) ? minimum(dims(T)) : maxdim
+  # TODO: Define `default_cutoff(T)`.
+  cutoff = isnothing(cutoff) ? zero(eltype(T)) : cutoff
 
-  #
-  # Keyword argument deprecations
-  #
-  use_absolute_cutoff = false
-  if haskey(kwargs, :absoluteCutoff)
-    @warn "In svd, keyword argument absoluteCutoff is deprecated in favor of use_absolute_cutoff"
-    use_absolute_cutoff = get(kwargs, :absoluteCutoff, use_absolute_cutoff)
-  end
-
-  use_relative_cutoff = true
-  if haskey(kwargs, :doRelCutoff)
-    @warn "In svd, keyword argument doRelCutoff is deprecated in favor of use_relative_cutoff"
-    use_relative_cutoff = get(kwargs, :doRelCutoff, use_relative_cutoff)
-  end
-
-  if haskey(kwargs, :fastsvd) || haskey(kwargs, :fastSVD)
-    error(
-      "In svd, fastsvd/fastSVD keyword arguments are removed in favor of alg, see documentation for more details.",
-    )
-  end
-
-  maxdim::Int = get(kwargs, :maxdim, minimum(dims(T)))
-  mindim::Int = get(kwargs, :mindim, 1)
-  cutoff = get(kwargs, :cutoff, 0.0)
-  use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
-  use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
-  alg::String = get(kwargs, :alg, "divide_and_conquer")
-
-  #@timeit_debug timer "dense svd" begin
+  # TODO: Dispatch on `Algorithm(alg)`.
   if alg == "divide_and_conquer"
     MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.DivideAndConquer())
     if isnothing(MUSV)
@@ -80,12 +68,11 @@ function svd(T::ArrayStorageTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   end
   MU, MS, MV = MUSV
   conj!(MV)
-  #end # @timeit_debug
 
   P = MS .^ 2
   if truncate
     P, truncerr, _ = truncate!!(
-      P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
   else
     truncerr = 0.0
@@ -101,41 +88,16 @@ function svd(T::ArrayStorageTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   end
 
   # Make the new indices to go onto U and V
-  u = eltype(IndsT)(dS)
-  v = eltype(IndsT)(dS)
-  Uinds = IndsT((ind(T, 1), u))
-  Sinds = IndsT((u, v))
-  Vinds = IndsT((ind(T, 2), v))
+  # TODO: Put in a separate function, such as
+  # `rewrap_inds` or something like that.
+  indstype = typeof(inds(T))
+  u = eltype(indstype)(dS)
+  v = eltype(indstype)(dS)
+  Uinds = indstype((ind(T, 1), u))
+  Sinds = indstype((u, v))
+  Vinds = indstype((ind(T, 2), v))
   U = tensor(MU, Uinds)
   S = tensor(Diag(MS), Sinds)
   V = tensor(MV, Vinds)
   return U, S, V, spec
 end
-
-## function svd(
-##   tens::ArrayStorageTensor;
-##   alg,
-##   which_decomp,
-##   tags,
-##   mindim,
-##   cutoff,
-##   eigen_perturbation,
-##   normalize,
-##   maxdim,
-## )
-##   error("Not implemented")
-##   F = svd(storage(tens))
-##   U, S, V = F.U, F.S, F.Vt
-##   i, j = inds(tens)
-##   # TODO: Make this more general with a `similar_ind` function,
-##   # so the dimension can be determined from the length of `S`.
-##   min_ij = dim(i) ≤ dim(j) ? i : j
-##   α = sim(min_ij) # similar_ind(i, space(S))
-##   β = sim(min_ij) # similar_ind(i, space(S))
-##   Utensor = tensor(U, (i, α))
-##   # TODO: Remove conversion to `Diagonal` to make more general, or make a generic `Diagonal` concept that works for `BlockSparseArray`.
-##   # Used for now to avoid introducing wrapper types.
-##   Stensor = tensor(Diagonal(S), (α, β))
-##   Vtensor = tensor(V, (β, j))
-##   return Utensor, Stensor, Vtensor, Spectrum(nothing, 0.0)
-## end

@@ -4,24 +4,26 @@
 # 3. Make this into two layers, one that handles indices and one that works with `AbstractMatrix`.
 function eigen(
   T::Hermitian{<:Any,<:ArrayStorageTensor};
-  use_absolute_cutoff=false,
-  use_relative_cutoff=true,
   maxdim=nothing,
   mindim=1,
   cutoff=nothing,
+  use_absolute_cutoff=false,
+  use_relative_cutoff=true,
   # These are getting passed erroneously.
   # TODO: Make sure they don't get passed down
   # to here.
-  ishermitian=nothing,
   which_decomp=nothing,
   tags=nothing,
   eigen_perturbation=nothing,
-  ortho=nothing,
   normalize=nothing,
+  ishermitian=nothing,
+  ortho=nothing,
   svd_alg=nothing,
 )
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
+  # TODO: Define `default_maxdim(T)`.
   maxdim = isnothing(maxdim) ? minimum(dims(T)) : maxdim
+  # TODO: Define `default_cutoff(T)`.
   cutoff = isnothing(cutoff) ? zero(eltype(T)) : cutoff
 
   matrixT = matrix(T)
