@@ -65,7 +65,6 @@ function BlockArrays.viewblock(block_arr::BlockSparseArray, block)
   # TODO: Make this `Zeros`?
   ## zero = zeros(eltype(block_arr), block_size)
   return block_arr.blocks[blks...] # Fails because zero isn't defined
-  ## return get_nonzero(block_arr.blocks, blks, zero)
 end
 
 function Base.getindex(block_arr::BlockSparseArray{T,N}, bi::BlockIndex{N}) where {T,N}
