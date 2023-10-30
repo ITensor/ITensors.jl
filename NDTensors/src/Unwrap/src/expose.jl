@@ -1,4 +1,4 @@
-struct Exposed{Unwraped,Object}
+struct Exposed{Unwrapped,Object}
   object::Object
 end
 
