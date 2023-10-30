@@ -6,6 +6,8 @@ const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 function _truncated_blockdim(
   S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=0
 )
+  # TODO: Replace `cpu` with `leaf_parenttype` dispatch.
+  S = cpu(S)
   full_dim = diaglength(S)
   !truncate && return full_dim
   min_blockdim = min(min_blockdim, full_dim)
@@ -84,7 +86,8 @@ function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
       if blockdim == 0
         push!(dropblocks, n)
       else
-        Strunc = tensor(Diag(storage(Ss[n])[1:blockdim]), (blockdim, blockdim))
+        # TODO: Replace call to `data` with `diagview`.
+        Strunc = tensor(Diag(data(Ss[n])[1:blockdim]), (blockdim, blockdim))
         Us[n] = Us[n][1:dim(Us[n], 1), 1:blockdim]
         Ss[n] = Strunc
         Vs[n] = Vs[n][1:dim(Vs[n], 1), 1:blockdim]
@@ -177,9 +180,8 @@ function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
     copyto!(blockview(U, blockU), Ub)
 
     blockviewS = blockview(S, blockS)
-    for i in 1:diaglength(Sb)
-      setdiagindex!(blockviewS, getdiagindex(Sb, i), i)
-    end
+    # TODO: Replace `data` with `diagview`.
+    copyto!(data(blockviewS), data(Sb))
 
     #<fermions>
     sV = left_arrow_sign(vind, blockV[2])
@@ -243,7 +245,8 @@ function eigen(
       if blockdim == 0
         push!(dropblocks, n)
       else
-        Dtrunc = tensor(Diag(storage(Ds[n])[1:blockdim]), (blockdim, blockdim))
+        # TODO: Replace call to `data` with `diagview`.
+        Dtrunc = tensor(Diag(data(Ds[n])[1:blockdim]), (blockdim, blockdim))
         Ds[n] = Dtrunc
         new_size = (dim(Vs[n], 1), blockdim)
         new_data = array(Vs[n])[1:new_size[1], 1:new_size[2]]
@@ -311,12 +314,11 @@ function eigen(
 
     blockD = nzblocksD[n]
     blockviewD = blockview(D, blockD)
-    for i in 1:diaglength(Db)
-      setdiagindex!(blockviewD, getdiagindex(Db, i), i)
-    end
+    # TODO: Replace `data` with `diagview`.
+    copyto!(data(blockviewD), data(Db))
 
     blockV = nzblocksV[n]
-    blockview(V, blockV) .= Vb
+    copyto!(blockview(V, blockV), Vb)
   end
 
   return D, V, Spectrum(d, truncerr)
@@ -380,8 +382,8 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
   X = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksX, indsX)
 
   for n in 1:nnzblocksT
-    blockview(Q, nzblocksQ[n]) .= Qs[n]
-    blockview(X, nzblocksX[n]) .= Xs[n]
+    copyto!(blockview(Q, nzblocksQ[n]), Qs[n])
+    copyto!(blockview(X, nzblocksX[n]), Xs[n])
   end
 
   Q = adapt(leaf_parenttype(T), Q)

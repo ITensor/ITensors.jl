@@ -15,11 +15,11 @@ function _contract_scalar!(
   β=zero(ElR),
 ) where {ElR}
   if iszero(β)
-    R[1] = α * T1 * T2
+    R[] = α * T1 * T2
   elseif iszero(α)
-    R[1] = β * R[1]
+    R[] = β * R[]
   else
-    R[1] = α * T1 * T2 + β * R[1]
+    R[] = α * T1 * T2 + β * R[]
   end
   return R
 end
@@ -150,7 +150,7 @@ function _contract_scalar!(
   β=zero(ElR),
 ) where {ElR}
   if nnz(T1) == nnz(T2) == 1
-    _contract_scalar!(R, labelsR, T1[1], labelsT1, T2[1], labelsT2, α, β)
+    _contract_scalar!(R, labelsR, T1[], labelsT1, T2[], labelsT2, α, β)
   else
     _contract_scalar_maybe_perm!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
   end

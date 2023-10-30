@@ -33,6 +33,7 @@ parenttype(::Type{<:UnitUpperTriangular{<:Any,P}}) where {P} = P
 parenttype(::Type{<:UnitLowerTriangular{<:Any,P}}) where {P} = P
 parenttype(::Type{<:Diagonal{<:Any,P}}) where {P} = P
 parenttype(::Type{<:SubArray{<:Any,<:Any,P}}) where {P} = P
+parenttype(::Type{<:StridedView{<:Any,<:Any,P}}) where {P} = P
 
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
