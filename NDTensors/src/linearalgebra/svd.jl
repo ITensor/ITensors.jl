@@ -36,7 +36,7 @@ function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=
 
   #rho = BLAS.gemm('N','T',-1.0,M,M) #negative to sort eigenvalues greatest to smallest
   rho = -M * M' #negative to sort eigenvalues in decreasing order
-  D, U = eigen(Hermitian(rho))
+  D, U = eigen(expose(Hermitian(rho)))
 
   Nd = length(D)
 

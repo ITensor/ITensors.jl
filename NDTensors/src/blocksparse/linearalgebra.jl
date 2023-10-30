@@ -220,14 +220,14 @@ function eigen(
 
   b = first(eachnzblock(T))
   blockT = blockview(T, b)
-  Db, Vb = eigen(blockT)
+  Db, Vb = eigen(expose(blockT))
   Ds = [Db]
   Vs = [Vb]
   append!(d, abs.(data(Db)))
   for (n, b) in enumerate(eachnzblock(T))
     n == 1 && continue
     blockT = blockview(T, b)
-    Db, Vb = eigen(blockT)
+    Db, Vb = eigen(expose(blockT))
     push!(Ds, Db)
     push!(Vs, Vb)
     append!(d, abs.(data(Db)))
@@ -322,7 +322,7 @@ function eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
+Unwrap.ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #
 #  Generic function to implelement blocks sparse qr/ql decomposition.  It calls

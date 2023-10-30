@@ -4,6 +4,7 @@
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
+import .Unwrap: qr_positive, ql, ql_positive
 
 function (
   T1::Tensor{ElT1,2,StoreT1} * T2::Tensor{ElT2,2,StoreT2}
@@ -228,7 +229,7 @@ function eigen(
     )
   end
 
-  DM, VM = eigen(matrixT)
+  DM, VM = eigen(expose(matrixT))
 
   # Sort by largest to smallest eigenvalues
   # TODO: Replace `cpu` with `unwrap_type` dispatch.
@@ -346,7 +347,7 @@ function eigen(
     )
   end
 
-  DM, VM = eigen(matrixT)
+  DM, VM = eigen(expose(matrixT))
 
   # Sort by largest to smallest eigenvalues
   #p = sortperm(DM; rev = true)
@@ -379,13 +380,13 @@ function eigen(
   return D, V, spec
 end
 
-# NDTensors.qr
+# NDTensors.Unwrap.qr
 function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? qr_positive : qr
   return qx(qxf, T; kwargs...)
 end
 
-# NDTensors.ql
+# NDTensors.Unwrap.ql
 function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T; kwargs...)
@@ -396,7 +397,7 @@ end
 #  The X tensor = R or L.
 #
 function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
-  QM, XM = qx(matrix(T))
+  QM, XM = qx(expose(matrix(T)))
   # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
   # It gets converted to matrix below.
   # Make the new indices to go onto Q and R
@@ -423,6 +424,7 @@ end
 #
 # Just flip signs between Q and R to get all the diagonals of R >=0.
 # For rectangular M the indexing for "diagonal" is non-trivial.
+# NDTensors.Unwrap.qr_positive and # NDTensors.Unwrap.ql_positive
 #
 """
     qr_positive(M::AbstractMatrix)
