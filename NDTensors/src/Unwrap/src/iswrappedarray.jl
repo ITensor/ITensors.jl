@@ -55,4 +55,4 @@ end
 
 # For working with instances.
 unwrap_type(array::AbstractArray) = unwrap_type(typeof(array))
-unwrap_type(E::Exposed) = unwrap_type(expose(E))
+unwrap_type(E::Exposed) = unwrap_type(unexpose(E))
