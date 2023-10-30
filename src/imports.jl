@@ -190,8 +190,7 @@ import ITensors.NDTensors:
   # Deprecated
   addblock!,
   store
-  import NDTensors.Unwrap: unwrap_type
-  
+import NDTensors.Unwrap: unwrap_type
 
 import Random: randn!
 
