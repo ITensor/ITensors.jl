@@ -34,7 +34,7 @@ devs = devices_list(copy(ARGS))
                                                                                                        [
       qr, ql
     ],
-    elt in [Float64, ComplexF64, Float32, ComplexF32],
+    elt in (dev == NDTensors.mtl ? [Float32, ComplexF32] : [Float64, ComplexF64, Float32, ComplexF32]),
     positive in [false, true],
     singular in [false, true],
     dev in devs
