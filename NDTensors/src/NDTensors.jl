@@ -20,6 +20,8 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("DiagonalArrays/src/DiagonalArrays.jl")
+using .DiagonalArrays
 include("BlockSparseArrays/src/BlockSparseArrays.jl")
 using .BlockSparseArrays
 include("SmallVectors/src/SmallVectors.jl")
