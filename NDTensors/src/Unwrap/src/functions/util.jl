@@ -1,5 +1,5 @@
 Base.parent(E::Exposed) = parent(unexpose(E))
 
-Base.transpose(E::Expose) = transpose(unexpose(E))
+Base.transpose(E::Exposed) = transpose(unexpose(E))
 
-NDTensors.cpu(E::Expose) = NDTensors.cpu(unexpose(E))
+cpu(E::Exposed) = cpu(unexpose(E))
