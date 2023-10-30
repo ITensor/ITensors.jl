@@ -141,6 +141,7 @@ include("arraystorage/arraystorage/storage/contract.jl")
 include("arraystorage/arraystorage/storage/combiner.jl")
 
 include("arraystorage/arraystorage/tensor/arraystorage.jl")
+include("arraystorage/arraystorage/tensor/zeros.jl")
 include("arraystorage/arraystorage/tensor/indexing.jl")
 include("arraystorage/arraystorage/tensor/permutedims.jl")
 include("arraystorage/arraystorage/tensor/mul.jl")
@@ -148,6 +149,9 @@ include("arraystorage/arraystorage/tensor/contract.jl")
 include("arraystorage/arraystorage/tensor/qr.jl")
 include("arraystorage/arraystorage/tensor/svd.jl")
 include("arraystorage/arraystorage/tensor/combiner.jl")
+
+# DiagonalArray storage
+include("arraystorage/diagonalarray/tensor/contract.jl")
 
 # BlockSparseArray storage
 include("arraystorage/blocksparsearray/storage/contract.jl")

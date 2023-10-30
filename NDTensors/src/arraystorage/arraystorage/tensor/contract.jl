@@ -6,14 +6,17 @@ function contraction_output(
   return NDTensors.similar(tensortypeR, indsR)
 end
 
+# TODO: Define `default_α` and `default_β`.
 function contract!(
-  tensorR::MatrixOrArrayStorageTensor,
-  labelsR,
+  tensor_dest::MatrixOrArrayStorageTensor,
+  labels_dest,
   tensor1::MatrixOrArrayStorageTensor,
   labels1,
   tensor2::MatrixOrArrayStorageTensor,
   labels2,
+  α=one(eltype(tensor_dest)),
+  β=zero(eltype(tensor_dest));
 )
-  contract!(storage(tensorR), labelsR, storage(tensor1), labels1, storage(tensor2), labels2)
-  return tensorR
+  contract!(storage(tensor_dest), labels_dest, storage(tensor1), labels1, storage(tensor2), labels2, α, β)
+  return tensor_dest
 end
