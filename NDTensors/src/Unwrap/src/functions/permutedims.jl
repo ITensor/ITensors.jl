@@ -1,6 +1,5 @@
 function permutedims(E::Exposed, perm)
-  Aperm = permutedims(unexpose(E), perm)
-  return Aperm
+  return permutedims(unexpose(E), perm)
 end
 
 function permutedims!(Edest::Exposed, Esrc::Exposed, perm)
