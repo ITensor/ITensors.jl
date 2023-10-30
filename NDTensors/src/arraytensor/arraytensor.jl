@@ -81,7 +81,7 @@ function Base.adjoint(tens::MatrixStorageTensor)
   return tensor(adjoint(storage(tens)), reverse(inds(tens)))
 end
 
-function LinearAlgebra.mul!(
+function mul!(
   C::MatrixStorageTensor, A::MatrixStorageTensor, B::MatrixStorageTensor
 )
   mul!(storage(C), storage(A), storage(B))
