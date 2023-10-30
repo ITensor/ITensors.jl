@@ -34,7 +34,7 @@ per row/column, otherwise it fails.
 This assumption makes it so the result can be
 computed from the dense svds of seperate blocks.
 """
-function svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
+function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
   alg::String = get(kwargs, :alg, "divide_and_conquer")
   min_blockdim::Int = get(kwargs, :min_blockdim, 0)
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
@@ -207,7 +207,8 @@ _eigen_eltypes(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}}) where {ElT} = real(El
 _eigen_eltypes(T::BlockSparseMatrix{ElT}) where {ElT} = complex(ElT), complex(ElT)
 
 function eigen(
-  T::Union{Hermitian{ElT,<:BlockSparseMatrix{ElT}},BlockSparseMatrix{ElT}}; kwargs...
+  T::Union{Hermitian{ElT,<:Tensor{ElT,2,<:BlockSparse}},Tensor{ElT,2,<:BlockSparse}};
+  kwargs...,
 ) where {ElT<:Union{Real,Complex}}
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 

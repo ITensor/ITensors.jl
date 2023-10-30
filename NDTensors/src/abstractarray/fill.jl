@@ -8,10 +8,10 @@ function generic_randn(
   return randn!(rng, data)
 end
 
-function generic_zeros(arraytype::Type{<:AbstractArray}, dim::Integer=0)
+function generic_zeros(arraytype::Type{<:AbstractArray}, dims...)
   arraytype_specified = set_unspecified_parameters(
     leaf_parenttype(arraytype), DefaultParameters()
   )
   ElT = eltype(arraytype_specified)
-  return fill!(similar(arraytype_specified, dim), zero(ElT))
+  return fill!(similar(arraytype_specified, dims...), zero(ElT))
 end
