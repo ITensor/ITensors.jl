@@ -159,7 +159,6 @@ import ITensors.NDTensors:
   inds,
   insertblock!,
   insert_diag_blocks!,
-  leaf_parenttype,
   matrix,
   maxdim,
   mindim,
@@ -190,7 +189,10 @@ import ITensors.NDTensors:
   # Deprecated
   addblock!,
   store
-import NDTensors.Unwrap: unwrap_type
+
+using NDTensors.Unwrap: unwrap_type
+  
+import ITensors.Ops: Prod, Sum, terms
 
 import Random: randn!
 
