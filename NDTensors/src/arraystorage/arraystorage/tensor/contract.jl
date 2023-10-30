@@ -17,6 +17,15 @@ function contract!(
   α=one(eltype(tensor_dest)),
   β=zero(eltype(tensor_dest));
 )
-  contract!(storage(tensor_dest), labels_dest, storage(tensor1), labels1, storage(tensor2), labels2, α, β)
+  contract!(
+    storage(tensor_dest),
+    labels_dest,
+    storage(tensor1),
+    labels1,
+    storage(tensor2),
+    labels2,
+    α,
+    β,
+  )
   return tensor_dest
 end

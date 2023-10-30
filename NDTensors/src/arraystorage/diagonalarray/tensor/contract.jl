@@ -1,6 +1,4 @@
-function promote_rule(
-  storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:Diag}
-)
+function promote_rule(storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:Diag})
   return promote_type(storagetype1, datatype(storagetype2))
 end
 
