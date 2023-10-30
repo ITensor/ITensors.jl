@@ -1,5 +1,6 @@
 module DiagonalArrays
 
+using Compat # allequal
 using LinearAlgebra
 
 export DiagonalArray
