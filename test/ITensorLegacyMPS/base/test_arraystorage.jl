@@ -22,5 +22,3 @@ using Test
   e2, ψ2 = dmrg(H, ψ; dmrg_kwargs...)
   @test e1 ≈ e2
 end
-
-
