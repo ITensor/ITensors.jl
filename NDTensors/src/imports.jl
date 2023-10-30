@@ -17,6 +17,7 @@ import Base:
   convert,
   conj,
   copy,
+  copyto!,
   eachindex,
   eltype,
   empty,

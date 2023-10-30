@@ -80,6 +80,7 @@ end
 # Single index
 #
 
+## TODO replace this with Exposed 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number})
   return getindex(leaf_parenttype(T), T)
 end
@@ -220,11 +221,6 @@ function permutedims!(
   return R
 end
 
-# NDTensors.copyto!
-function copyto!(R::DenseTensor, T::DenseTensor)
-  copyto!(expose(array(R)), expose(array(T)))
-  return R
-end
 
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function permutedims!(
