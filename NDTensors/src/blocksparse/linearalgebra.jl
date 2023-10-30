@@ -207,7 +207,7 @@ _eigen_eltypes(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}}) where {ElT} = real(El
 _eigen_eltypes(T::BlockSparseMatrix{ElT}) where {ElT} = complex(ElT), complex(ElT)
 
 function eigen(
-  T::Union{Hermitian{ElT,<:BlockSparseMatrix{ElT}},BlockSparseMatrix{ElT}}; kwargs...
+  T::Union{Hermitian{ElT,<:Tensor{ElT,2,<:BlockSparse}},Tensor{ElT,2,<:BlockSparse}}; kwargs...
 ) where {ElT<:Union{Real,Complex}}
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 

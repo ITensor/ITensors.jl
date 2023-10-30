@@ -145,6 +145,7 @@ include("arraystorage/arraystorage/tensor/permutedims.jl")
 include("arraystorage/arraystorage/tensor/mul.jl")
 include("arraystorage/arraystorage/tensor/contract.jl")
 include("arraystorage/arraystorage/tensor/qr.jl")
+include("arraystorage/arraystorage/tensor/eigen.jl")
 include("arraystorage/arraystorage/tensor/svd.jl")
 
 # DiagonalArray storage

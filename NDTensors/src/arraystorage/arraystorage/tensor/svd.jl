@@ -1,12 +1,12 @@
 # TODO: Rewrite this function to be more modern:
 # 1. List keyword arguments in function signature.
-# 2. Remove `Dense` and `Diag`.
-# 3. Output `Spectrum` as a keyword argument that gets overwritten.
-# 4. Dispatch on `alg`.
-# 5. Remove keyword argument deprecations.
-# 6. Make this into two layers, one that handles indices and one that works with `Matrix`.
+# 2. Output `Spectrum` as a keyword argument that gets overwritten.
+# 3. Dispatch on `alg`.
+# 4. Remove keyword argument deprecations.
+# 5. Make this into two layers, one that handles indices and one that works with `Matrix`.
+# 6. Use `eltype` instead of `where`.
 """
-    svd(T::DenseTensor{<:Number,2}; kwargs...)
+    svd(T::ArrayStorageTensor{<:Number,2}; kwargs...)
 
 svd of an order-2 DenseTensor
 """
