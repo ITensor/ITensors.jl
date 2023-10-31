@@ -25,7 +25,7 @@ function truncate!(
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
 )
-  mindim = replace_nothing(maxdim, default_mindim(P))
+  mindim = replace_nothing(mindim, default_mindim(P))
   maxdim = replace_nothing(maxdim, length(P))
   cutoff = replace_nothing(cutoff, typemin(eltype(P)))
   use_absolute_cutoff = replace_nothing(use_absolute_cutoff, default_use_absolute_cutoff(P))
@@ -98,6 +98,5 @@ function truncate!(
 
   s < 0 && (P .*= s)
   resize!(P, n)
-
   return truncerr, docut
 end

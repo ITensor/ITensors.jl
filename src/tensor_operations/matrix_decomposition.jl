@@ -585,9 +585,9 @@ function factorize_svd(
   Linds...;
   (singular_values!)=nothing,
   ortho="left",
-  alg=NDTensors.default_svd_alg(A),
+  alg=nothing,
   dir=nothing,
-  mindim=NDTensors.default_mindim(A),
+  mindim=nothing,
   maxdim=nothing,
   cutoff=nothing,
   tags=nothing,
@@ -765,7 +765,6 @@ function factorize(
       which_decomp = "eigen"
     end
   end
-
   if which_decomp == "svd"
     LR = factorize_svd(
       A, Linds...; mindim, maxdim, cutoff, tags, ortho, alg=svd_alg, dir, singular_values!
