@@ -7,12 +7,12 @@ function setindex!(E::Exposed{<:CuArray}, x::Number)
   return unexpose(E)
 end
 
-function Base.getindex(E::Exposed{<:CuArray, <:Adjoint}, I...)
+function Base.getindex(E::Exposed{<:CuArray,<:Adjoint}, I...)
   Ep = parent(E)
   return Base.getindex(Ep, I...)
 end
 
-function Base.copy(E::Exposed{<:CuArray, <:Base.ReshapedArray})
+function Base.copy(E::Exposed{<:CuArray,<:Base.ReshapedArray})
   Ep = parent(E)
   return Base.copy(Ep)
 end
