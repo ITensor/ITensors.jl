@@ -20,6 +20,8 @@ using TupleTools
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("DiagonalArrays/src/DiagonalArrays.jl")
+using .DiagonalArrays
 include("BlockSparseArrays/src/BlockSparseArrays.jl")
 using .BlockSparseArrays
 include("SmallVectors/src/SmallVectors.jl")
@@ -130,11 +132,32 @@ include("empty/adapt.jl")
 
 #####################################
 # Array Tensor (experimental)
-# TODO: Move to `Experimental` module.
 #
-include("arraytensor/arraytensor.jl")
-include("arraytensor/array.jl")
-include("arraytensor/blocksparsearray.jl")
+include("arraystorage/arraystorage/storage/arraystorage.jl")
+include("arraystorage/arraystorage/storage/conj.jl")
+include("arraystorage/arraystorage/storage/permutedims.jl")
+include("arraystorage/arraystorage/storage/contract.jl")
+
+include("arraystorage/arraystorage/tensor/arraystorage.jl")
+include("arraystorage/arraystorage/tensor/zeros.jl")
+include("arraystorage/arraystorage/tensor/indexing.jl")
+include("arraystorage/arraystorage/tensor/permutedims.jl")
+include("arraystorage/arraystorage/tensor/mul.jl")
+include("arraystorage/arraystorage/tensor/contract.jl")
+include("arraystorage/arraystorage/tensor/qr.jl")
+include("arraystorage/arraystorage/tensor/eigen.jl")
+include("arraystorage/arraystorage/tensor/svd.jl")
+
+# DiagonalArray storage
+include("arraystorage/diagonalarray/tensor/contract.jl")
+
+# BlockSparseArray storage
+include("arraystorage/blocksparsearray/storage/contract.jl")
+
+# Combiner storage
+include("arraystorage/combiner/storage/contract.jl")
+
+include("arraystorage/combiner/tensor/contract.jl")
 
 #####################################
 # Deprecations

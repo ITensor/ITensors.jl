@@ -1,6 +1,7 @@
+# TODO: Define a constructor with a default `zero`.
 struct SparseArray{T,N,Zero} <: AbstractArray{T,N}
   data::Dictionary{CartesianIndex{N},T}
-  dims::NTuple{N,Int64}
+  dims::NTuple{N,Int}
   zero::Zero
 end
 
@@ -20,13 +21,3 @@ end
 function Base.getindex(a::SparseArray{T,N}, I::Vararg{Int,N}) where {T,N}
   return getindex(a, CartesianIndex(I))
 end
-
-## # `getindex` but uses a default if the value is
-## # structurally zero.
-## function get_nonzero(a::SparseArray{T,N}, I::CartesianIndex{N}, zero) where {T,N}
-##   @boundscheck checkbounds(a, I)
-##   return get(a.data, I, zero)
-## end
-## function get_nonzero(a::SparseArray{T,N}, I::NTuple{N,Int}, zero) where {T,N}
-##   return get_nonzero(a, CartesianIndex(I), zero)
-## end
