@@ -39,7 +39,10 @@ devs = devices_list(copy(ARGS))
     singular in [false, true],
     dev in devs
 
-    if dev == NDTensors.mtl && (elt == Float64 || elt == ComplexF64) continue;
+    ## Skip Float64 on Metal
+    if dev == NDTensors.mtl && (elt == Float64 || elt == ComplexF64) 
+      continue;
+    end
     eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
     n, m = 4, 8
     Id = Diagonal(fill(1.0, min(n, m)))
