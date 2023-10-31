@@ -87,7 +87,7 @@ end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::Integer...)
   Base.@_inline_meta
-  return getindex(data(T), Base._sub2ind(T, I...))
+  return getindex(expose(data(T)), Base._sub2ind(T, I...))
 end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::CartesianIndex)

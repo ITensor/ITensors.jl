@@ -101,7 +101,9 @@ Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
 setdata(D::Dense, ndata) = Dense(ndata)
 setdata(storagetype::Type{<:Dense}, data) = Dense(data)
 
-copy(D::Dense) = Dense(copy(data(D)))
+function copy(D::Dense) 
+  Dense(copy(expose(data(D))))
+end
 
 function Base.real(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), real(eltype(T))))

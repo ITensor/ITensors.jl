@@ -181,7 +181,7 @@ function svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
     # Fails on some GPU backends like Metal.
     # resize!(MS, dS)
     MS = MS[1:dS]
-    MV = MV[:, 1:dS]
+    MV = expose(MV)[:, 1:dS]
   end
 
   # Make the new indices to go onto U and V
