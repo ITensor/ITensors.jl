@@ -215,9 +215,14 @@ _eigen_eltypes(T::BlockSparseMatrix{ElT}) where {ElT} = complex(ElT), complex(El
 
 function eigen(
   T::Union{Hermitian{ElT,<:Tensor{ElT,2,<:BlockSparse}},Tensor{ElT,2,<:BlockSparse}};
-  kwargs...,
+  min_blockdim=nothing,
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
 ) where {ElT<:Union{Real,Complex}}
-  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
+  truncate = !isnothing(maxdim) || !isnothing(cutoff)
 
   ElD, ElV = _eigen_eltypes(T)
 
@@ -247,9 +252,9 @@ function eigen(
   sort!(d; rev=true, by=abs)
 
   if truncate
-    d, truncerr, docut = truncate!!(d; kwargs...)
+    d, truncerr, docut = truncate!!(d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff)
     for n in 1:nnzblocks(T)
-      blockdim = _truncated_blockdim(Ds[n], docut)
+      blockdim = _truncated_blockdim(Ds[n], docut; min_blockdim, singular_values=false, truncate)
       if blockdim == 0
         push!(dropblocks, n)
       else
@@ -340,7 +345,7 @@ qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #  This code thanks to Niklas Tausendpfund 
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
+function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; positive=nothing)
   ElT = eltype(T)
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
@@ -351,7 +356,7 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
 
   for (jj, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
-    QXb = qx(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+    QXb = qx(blockT; positive)
 
     if (isnothing(QXb))
       return nothing

@@ -121,15 +121,15 @@ function svd(
   use_relative_cutoff=nothing,
   min_blockdim=nothing,
   # Deprecated
-  utags=nothing,
-  vtags=nothing,
+  utags=lefttags,
+  vtags=righttags,
 )
   lefttags = NDTensors.replace_nothing(lefttags, ts"Link,u")
   righttags = NDTensors.replace_nothing(righttags, ts"Link,v")
 
   # Deprecated
-  utags = lefttags
-  vtags = righttags
+  utags = NDTensors.replace_nothing(utags, ts"Link,u")
+  vtags = NDTensors.replace_nothing(vtags, ts"Link,v")
 
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
