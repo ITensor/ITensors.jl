@@ -2,11 +2,7 @@
 #
 # A Julia `DiagonalArray` type.
 
-using NDTensors.DiagonalArrays:
-  DiagonalArray,
-  DiagIndex,
-  DiagIndices,
-  densearray
+using NDTensors.DiagonalArrays: DiagonalArray, DiagIndex, DiagIndices, densearray
 
 d = DiagonalArray([1.0, 2, 3], 3, 4, 5)
 @show d[1, 1, 1] == 1

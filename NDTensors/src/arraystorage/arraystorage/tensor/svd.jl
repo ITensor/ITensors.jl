@@ -1,10 +1,3 @@
-default_maxdim(a) = minimum(size(a))
-default_mindim(a) = true
-default_cutoff(a) = zero(eltype(a))
-default_svd_alg(a) = "divide_and_conquer"
-default_use_absolute_cutoff(a) = false
-default_use_relative_cutoff(a) = true
-
 # TODO: Rewrite this function to be more modern:
 # 1. Output `Spectrum` as a keyword argument that gets overwritten.
 # 2. Dispatch on `alg`.
@@ -22,13 +15,6 @@ function svd(
   alg=default_svd_alg(T),
   use_absolute_cutoff=default_use_absolute_cutoff(T),
   use_relative_cutoff=default_use_relative_cutoff(T),
-  # These are getting passed erroneously.
-  # TODO: Make sure they don't get passed down
-  # to here.
-  ## which_decomp=nothing,
-  ## tags=nothing,
-  ## eigen_perturbation=nothing,
-  ## normalize=nothing,
 )
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
   maxdim = isnothing(maxdim) ? default_maxdim(T) : maxdim

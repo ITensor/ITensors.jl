@@ -131,7 +131,7 @@ function contract!(
     for i in 1:min_dim
       c₁ += A[DiagIndex(i)] * B[DiagIndex(i)]
     end
-    C[DiagIndex(1)] =  α * c₁ + β * C[DiagIndex(1)]
+    C[DiagIndex(1)] = α * c₁ + β * C[DiagIndex(1)]
   else
     # not all indices are summed over, set the diagonals of the result
     # to the product of the diagonals of A and B

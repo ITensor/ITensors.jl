@@ -106,15 +106,23 @@ Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
 
 See also: [`factorize`](@ref), [`eigen`](@ref)
 """
-function svd(A::ITensor, Linds...; leftdir=nothing, rightdir=nothing, kwargs...)
-  utags::TagSet = get(kwargs, :lefttags, get(kwargs, :utags, "Link,u"))
-  vtags::TagSet = get(kwargs, :righttags, get(kwargs, :vtags, "Link,v"))
-
-  # Keyword argument deprecations
-  #if haskey(kwargs, :utags) || haskey(kwargs, :vtags)
-  #  @warn "Keyword arguments `utags` and `vtags` are deprecated in favor of `leftags` and `righttags`."
-  #end
-
+function svd(
+  A::ITensor,
+  Linds...;
+  leftdir=nothing,
+  rightdir=nothing,
+  lefttags="Link,u",
+  righttags="Link,v",
+  mindim=NDTensors.default_mindim(A),
+  maxdim=nothing,
+  cutoff=nothing,
+  alg=NDTensors.default_svd_alg(A),
+  use_absolute_cutoff=NDTensors.default_use_absolute_cutoff(A),
+  use_relative_cutoff=NDTensors.default_use_relative_cutoff(A),
+  # Deprecated
+  utags=lefttags,
+  vtags=righttags,
+)
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
 
@@ -142,7 +150,9 @@ function svd(A::ITensor, Linds...; leftdir=nothing, rightdir=nothing, kwargs...)
     AC = permute(AC, cL, cR)
   end
 
-  USVT = svd(tensor(AC); kwargs...)
+  USVT = svd(
+    tensor(AC); mindim, maxdim, cutoff, alg, use_absolute_cutoff, use_relative_cutoff
+  )
   if isnothing(USVT)
     return nothing
   end
@@ -564,7 +574,18 @@ function factorize_svd(
   normalize=nothing,
 )
   leftdir, rightdir = -dir, -dir
-  USV = svd(A, Linds...; leftdir, rightdir, alg=svd_alg, mindim, maxdim, cutoff, tags)
+  USV = svd(
+    A,
+    Linds...;
+    leftdir,
+    rightdir,
+    alg=svd_alg,
+    mindim,
+    maxdim,
+    cutoff,
+    lefttags=tags,
+    righttags=tags,
+  )
   if isnothing(USV)
     return nothing
   end

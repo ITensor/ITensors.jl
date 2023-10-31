@@ -5,7 +5,7 @@ function contract(
   array2::MatrixOrArrayStorage,
   labels2,
   labelsR=contract_labels(labels1, labels2);
-  kwargs...
+  kwargs...,
 )
   output_array = contraction_output(array1, labels1, array2, labels2, labelsR)
   contract!(output_array, labelsR, array1, labels1, array2, labels2; kwargs...)
