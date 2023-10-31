@@ -82,11 +82,7 @@ end
 
 ## TODO replace this with Exposed 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number})
-  return getindex(leaf_parenttype(T), T)
-end
-
-@propagate_inbounds function getindex(::Type{<:AbstractArray}, T::DenseTensor{<:Number})
-  return data(T)[]
+  return getindex(expose(data(T)))
 end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::Integer...)
@@ -116,14 +112,7 @@ end
 end
 
 @propagate_inbounds function setindex!(T::DenseTensor{<:Number}, x::Number)
-  setindex!(leaf_parenttype(T), T, x)
-  return T
-end
-
-@propagate_inbounds function setindex!(
-  ::Type{<:AbstractArray}, T::DenseTensor{<:Number}, x::Number
-)
-  data(T)[] = x
+  setindex!(expose(data(T)), x)
   return T
 end
 

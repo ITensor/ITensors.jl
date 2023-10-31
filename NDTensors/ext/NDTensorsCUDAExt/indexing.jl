@@ -1,8 +1,8 @@
-function Base.getindex(::Type{<:CuArray}, T::DenseTensor{<:Number})
-  return CUDA.@allowscalar data(T)[]
+function getindex(E::Exposed{<:CuArray})
+  return CUDA.@allowscalar getindex(unexpose(E))
 end
 
-function Base.setindex!(::Type{<:CuArray}, T::DenseTensor{<:Number}, x::Number)
-  CUDA.@allowscalar data(T)[] = x
-  return T
+function setindex!(E::Exposed{<:CuArray}, x::Number)
+  CUDA.@allowscalar setindex!(unexpose(E), x)
+  return unexpose(E)
 end

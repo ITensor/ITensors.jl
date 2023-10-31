@@ -1,8 +1,8 @@
-function Base.getindex(::Type{<:MtlArray}, T::DenseTensor{<:Number})
-  return Metal.@allowscalar data(T)[]
+function Base.getindex(E::Exposed{<:MtlArray})
+  return Metal.@allowscalar getindex(unexpose(E))
 end
 
-function Base.setindex!(::Type{<:MtlArray}, T::DenseTensor{<:Number}, x::Number)
-  Metal.@allowscalar data(T)[] = x
-  return T
+function Base.setindex!(E::Exposed{<:MtlArray}, x::Number)
+  Metal.@allowscalar setindex!(unexpose(E), x)
+  return unexpose(E)
 end
