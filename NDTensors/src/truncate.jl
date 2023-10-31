@@ -1,6 +1,6 @@
 ## TODO write Exposed version of truncate
 function truncate!!(P::AbstractArray; kwargs...)
-  return truncate!!(leaf_parenttype(P), P; kwargs...)
+  return truncate!!(unwrap_type(P), P; kwargs...)
 end
 
 # CPU version.
