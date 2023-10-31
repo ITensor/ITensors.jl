@@ -252,9 +252,13 @@ function eigen(
   sort!(d; rev=true, by=abs)
 
   if truncate
-    d, truncerr, docut = truncate!!(d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff)
+    d, truncerr, docut = truncate!!(
+      d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
+    )
     for n in 1:nnzblocks(T)
-      blockdim = _truncated_blockdim(Ds[n], docut; min_blockdim, singular_values=false, truncate)
+      blockdim = _truncated_blockdim(
+        Ds[n], docut; min_blockdim, singular_values=false, truncate
+      )
       if blockdim == 0
         push!(dropblocks, n)
       else
