@@ -9,16 +9,22 @@ svd of an order-2 DenseTensor
 """
 function svd(
   T::ArrayStorageTensor;
-  mindim=default_mindim(T),
+  mindim=nothing,
   maxdim=nothing,
   cutoff=nothing,
-  alg=default_svd_alg(T),
-  use_absolute_cutoff=default_use_absolute_cutoff(T),
-  use_relative_cutoff=default_use_relative_cutoff(T),
+  alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  # Only used by BlockSparse svd
+  min_blockdim=nothing,
 )
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
-  maxdim = isnothing(maxdim) ? default_maxdim(T) : maxdim
-  cutoff = isnothing(cutoff) ? default_cutoff(T) : cutoff
+  mindim = replace_nothing(mindim, default_mindim(T))
+  maxdim = replace_nothing(maxdim, default_maxdim(T))
+  cutoff = replace_nothing(cutoff, default_cutoff(T))
+  use_absolute_cutoff = replace_nothing(use_absolute_cutoff, default_use_absolute_cutoff(T))
+  use_relative_cutoff = replace_nothing(use_relative_cutoff, default_use_relative_cutoff(T))
+  alg = replace_nothing(alg, default_svd_alg(T))
 
   # TODO: Dispatch on `Algorithm(alg)`.
   if alg == "divide_and_conquer"

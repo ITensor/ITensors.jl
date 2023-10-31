@@ -100,11 +100,12 @@ function svd(
   cutoff=nothing,
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
-  alg=default_svd_alg(T),
+  alg=nothing,
   # Only used by BlockSparse svd
-  min_blockdim=0,
+  min_blockdim=nothing,
 ) where {ElT,IndsT}
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
+  alg = replace_nothing(alg, default_svd_alg(T))
   if alg == "divide_and_conquer"
     MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.DivideAndConquer())
     if isnothing(MUSV)
@@ -127,7 +128,7 @@ function svd(
   elseif alg == "recursive"
     MUSV = svd_recursive(matrix(T))
   elseif alg == "QRAlgorithm" || alg == "JacobiAlgorithm"
-    MUSV = svd_catch_error(matrix(T); alg=alg)
+    MUSV = svd_catch_error(matrix(T); alg)
   else
     error(
       "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",

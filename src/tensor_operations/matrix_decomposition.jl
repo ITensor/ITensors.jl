@@ -111,19 +111,26 @@ function svd(
   Linds...;
   leftdir=nothing,
   rightdir=nothing,
-  lefttags="Link,u",
-  righttags="Link,v",
-  mindim=NDTensors.default_mindim(A),
+  lefttags=nothing,
+  righttags=nothing,
+  mindim=nothing,
   maxdim=nothing,
   cutoff=nothing,
-  alg=NDTensors.default_svd_alg(A),
-  use_absolute_cutoff=NDTensors.default_use_absolute_cutoff(A),
-  use_relative_cutoff=NDTensors.default_use_relative_cutoff(A),
-  min_blockdim=0,
+  alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  min_blockdim=nothing,
   # Deprecated
-  utags=lefttags,
-  vtags=righttags,
+  utags=nothing,
+  vtags=nothing,
 )
+  lefttags = NDTensors.replace_nothing(lefttags, ts"Link,u")
+  righttags = NDTensors.replace_nothing(righttags, ts"Link,v")
+
+  # Deprecated
+  utags = lefttags
+  vtags = righttags
+
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
 
@@ -173,10 +180,10 @@ function svd(
   U = UC * dag(CL)
   V = VC * dag(CR)
 
-  settags!(U, utags, u)
-  settags!(S, utags, u)
-  settags!(S, vtags, v)
-  settags!(V, vtags, v)
+  U = settags(U, utags, u)
+  S = settags(S, utags, u)
+  S = settags(S, vtags, v)
+  V = settags(V, vtags, v)
 
   u = settags(u, utags)
   v = settags(v, vtags)
@@ -545,12 +552,12 @@ function polar(A::ITensor, Linds...)
   return Q, P, commoninds(Q, P)
 end
 
-function factorize_qr(A::ITensor, Linds...; ortho="left")
+function factorize_qr(A::ITensor, Linds...; ortho="left", tags=nothing, positive=false)
   if ortho == "left"
-    L, R, q = qr(A, Linds...)
+    L, R, q = qr(A, Linds...; tags, positive)
   elseif ortho == "right"
     Lis = uniqueinds(A, indices(Linds...))
-    R, L, q = qr(A, Lis...)
+    R, L, q = qr(A, Lis...; tags, positive)
   else
     error("In factorize using qr decomposition, ortho keyword
     $ortho not supported. Supported options are left or right.")
@@ -579,12 +586,13 @@ function factorize_svd(
   (singular_values!)=nothing,
   ortho="left",
   alg=NDTensors.default_svd_alg(A),
-  dir=ITensors.In,
+  dir=nothing,
   mindim=NDTensors.default_mindim(A),
   maxdim=nothing,
   cutoff=nothing,
   tags=nothing,
 )
+  dir = NDTensors.replace_nothing(dir, ITensors.In)
   leftdir, rightdir = -dir, -dir
   USV = svd(
     A,
@@ -709,17 +717,19 @@ function factorize(
   mindim=nothing,
   maxdim=nothing,
   cutoff=nothing,
-  ortho="left",
-  tags="Link,fact",
-  plev=0,
+  ortho=nothing,
+  tags=nothing,
+  plev=nothing,
   which_decomp=nothing,
   # eigen
   eigen_perturbation=nothing,
   # svd
-  svd_alg=NDTensors.default_svd_alg(A),
-  use_absolute_cutoff=NDTensors.default_use_absolute_cutoff(A),
-  use_relative_cutoff=NDTensors.default_use_relative_cutoff(A),
-  min_blockdim=0,
+  svd_alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  min_blockdim=nothing,
+  (singular_values!)=nothing,
+  dir=nothing,
 )
   if !isnothing(eigen_perturbation)
     if !(isnothing(which_decomp) || which_decomp == "eigen")
@@ -729,6 +739,9 @@ function factorize(
     end
     which_decomp = "eigen"
   end
+  ortho = NDTensors.replace_nothing(ortho, "left")
+  tags = NDTensors.replace_nothing(tags, ts"Link,fact")
+  plev = NDTensors.replace_nothing(plev, 0)
 
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
@@ -774,8 +787,8 @@ function factorize(
   # Set the tags and prime level
   l = commonind(L, R)
   l̃ = setprime(settags(l, tags), plev)
-  replaceind!(L, l, l̃)
-  replaceind!(R, l, l̃)
+  L = replaceind(L, l, l̃)
+  R = replaceind(R, l, l̃)
   l = l̃
 
   return L, R, spec, l
