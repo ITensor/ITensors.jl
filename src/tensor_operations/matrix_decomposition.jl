@@ -551,20 +551,24 @@ function factorize_svd(
   Linds...;
   (singular_values!)=nothing,
   ortho="left",
-  svd_alg="divide_and_conquer",
+  svd_alg=NDTensors.default_svd_alg(A),
   dir=ITensors.In,
-  kwargs...,
+  mindim=NDTensors.default_mindim(A),
+  maxdim=nothing,
+  cutoff=nothing,
+  tags=nothing,
+  # Passed erroneously
+  # TODO: Delete
+  which_decomp=nothing,
+  eigen_perturbation=nothing,
+  normalize=nothing,
 )
   leftdir, rightdir = -dir, -dir
-  @show A
-  USV = svd(A, Linds...; leftdir, rightdir, alg=svd_alg, kwargs...)
+  USV = svd(A, Linds...; leftdir, rightdir, alg=svd_alg, mindim, maxdim, cutoff, tags)
   if isnothing(USV)
     return nothing
   end
   U, S, V, spec, u, v = USV
-  @show U
-  @show S
-  @show V
   if ortho == "left"
     L, R = U, S * V
   elseif ortho == "right"

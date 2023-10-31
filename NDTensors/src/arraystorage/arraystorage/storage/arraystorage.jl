@@ -29,3 +29,8 @@ const MatrixOrArrayStorage{T} = Union{MatrixStorage{T},ArrayStorage{T}}
 function to_arraystorage(x::DenseTensor)
   return tensor(reshape(data(x), size(x)), inds(x))
 end
+
+# TODO: Delete once `Diag` is removed.
+function to_arraystorage(x::DiagTensor)
+  return tensor(DiagonalArray(data(x), size(x)), inds(x))
+end

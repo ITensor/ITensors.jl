@@ -151,6 +151,8 @@ include("arraystorage/arraystorage/tensor/eigen.jl")
 include("arraystorage/arraystorage/tensor/svd.jl")
 
 # DiagonalArray storage
+include("arraystorage/diagonalarray/storage/contract.jl")
+
 include("arraystorage/diagonalarray/tensor/contract.jl")
 
 # BlockSparseArray storage

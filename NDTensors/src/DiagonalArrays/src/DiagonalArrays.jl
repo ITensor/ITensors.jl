@@ -3,7 +3,7 @@ module DiagonalArrays
 using Compat # allequal
 using LinearAlgebra
 
-export DiagonalArray, DiagonalMatrix, DiagonalVector
+export DiagonalArray, DiagonalMatrix, DiagonalVector, DiagIndex, DiagIndices, densearray
 
 include("diagview.jl")
 

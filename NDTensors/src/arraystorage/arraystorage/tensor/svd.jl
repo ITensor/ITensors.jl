@@ -1,3 +1,10 @@
+default_maxdim(a) = minimum(size(a))
+default_mindim(a) = true
+default_cutoff(a) = zero(eltype(a))
+default_svd_alg(a) = "divide_and_conquer"
+default_use_absolute_cutoff(a) = false
+default_use_relative_cutoff(a) = true
+
 # TODO: Rewrite this function to be more modern:
 # 1. Output `Spectrum` as a keyword argument that gets overwritten.
 # 2. Dispatch on `alg`.
@@ -9,25 +16,23 @@ svd of an order-2 DenseTensor
 """
 function svd(
   T::ArrayStorageTensor;
+  mindim=default_mindim(T),
   maxdim=nothing,
-  mindim=1,
   cutoff=nothing,
-  alg="divide_and_conquer", # TODO: Define `default_alg(T)`
-  use_absolute_cutoff=false,
-  use_relative_cutoff=true,
+  alg=default_svd_alg(T),
+  use_absolute_cutoff=default_use_absolute_cutoff(T),
+  use_relative_cutoff=default_use_relative_cutoff(T),
   # These are getting passed erroneously.
   # TODO: Make sure they don't get passed down
   # to here.
-  which_decomp=nothing,
-  tags=nothing,
-  eigen_perturbation=nothing,
-  normalize=nothing,
+  ## which_decomp=nothing,
+  ## tags=nothing,
+  ## eigen_perturbation=nothing,
+  ## normalize=nothing,
 )
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
-  # TODO: Define `default_maxdim(T)`.
-  maxdim = isnothing(maxdim) ? minimum(dims(T)) : maxdim
-  # TODO: Define `default_cutoff(T)`.
-  cutoff = isnothing(cutoff) ? zero(eltype(T)) : cutoff
+  maxdim = isnothing(maxdim) ? default_maxdim(T) : maxdim
+  cutoff = isnothing(cutoff) ? default_cutoff(T) : cutoff
 
   # TODO: Dispatch on `Algorithm(alg)`.
   if alg == "divide_and_conquer"
