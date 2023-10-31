@@ -34,17 +34,12 @@ devs = devices_list(copy(ARGS))
                                                                                                        [
       qr, ql
     ],
+    elt in [Float64, ComplexF64, Float32, ComplexF32],
     positive in [false, true],
     singular in [false, true],
-    dev in devs,
-    elt in (
-      if dev == NDTensors.mtl
-        [Float32, ComplexF32]
-      else
-        [Float64, ComplexF64, Float32, ComplexF32]
-      end
-    )
+    dev in devs
 
+    if dev == NDTensors.mtl && (elt == Float64 || elt == ComplexF64) continue;
     eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
     n, m = 4, 8
     Id = Diagonal(fill(1.0, min(n, m)))
