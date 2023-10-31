@@ -65,6 +65,6 @@ end
 # TODO: maybe move to another location?
 # Include options for other svd algorithms
 function polar(M::AbstractMatrix)
-  U, S, V = svd(M) # calls LinearAlgebra.svd(_)
+  U, S, V = svd(expose(M)) # calls LinearAlgebra.svd(_)
   return U * V', V * Diagonal(S) * V'
 end
