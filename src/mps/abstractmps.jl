@@ -1592,7 +1592,8 @@ bond indices is performed. Afterward, tensors
 Either modify in-place with `orthogonalize!` or
 out-of-place with `orthogonalize`.
 """
-function orthogonalize!(M::AbstractMPS, j::Int; maxdim=nothing)
+function orthogonalize!(M::AbstractMPS, j::Int; maxdim=nothing, normalize=nothing)
+  # TODO: Delete `maxdim` and `normalize` keyword arguments.
   @debug_check begin
     if !(1 <= j <= length(M))
       error("Input j=$j to `orthogonalize!` out of range (valid range = 1:$(length(M)))")
