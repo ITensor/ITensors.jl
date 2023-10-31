@@ -936,6 +936,78 @@ end
     @test inner(pd00', M2, p00d) ≈ +1.0
   end
 
+  @testset "Chemical Hamiltonian Test" begin
+    for auto_fermion in [false, true]
+      if auto_fermion
+        ITensors.enable_auto_fermion()
+      else
+        ITensors.disable_auto_fermion()
+      end
+      N = 6
+      t = randn(N, N)
+      V = randn(N, N, N, N)
+      s = siteinds("Electron", N; conserve_qns=true)
+
+      ost = OpSum()
+      for i in 1:N, j in 1:N
+        ost += t[i, j], "Cdagup", i, "Cup", j
+        ost += t[i, j], "Cdagdn", i, "Cdn", j
+      end
+      Ht = MPO(ost, s)
+
+      osV = OpSum()
+      for i in 1:N, j in 1:N, k in 1:N, l in 1:N
+        osV += V[i, j, k, l], "Cdagup", i, "Cdagup", j, "Cup", k, "Cup", l
+        osV += V[i, j, k, l], "Cdagup", i, "Cdagdn", j, "Cdn", k, "Cup", l
+        osV += V[i, j, k, l], "Cdagdn", i, "Cdagup", j, "Cup", k, "Cdn", l
+        osV += V[i, j, k, l], "Cdagdn", i, "Cdagdn", j, "Cdn", k, "Cdn", l
+      end
+      HV = MPO(osV, s)
+
+      for i in 1:N, j in 1:N
+        stᵢ = fill("0", N)
+        stⱼ = fill("0", N)
+        stᵢ[i] = "Up"
+        stⱼ[j] = "Up"
+        psiᵢ = MPS(s, stᵢ)
+        psiⱼ = MPS(s, stⱼ)
+        @test abs(inner(psiᵢ', Ht, psiⱼ) - t[i, j]) < 1E-10
+      end
+
+      for i in 1:N, j in 1:N, k in 1:N, l in 1:N
+        ((i == j) || (k == l)) && continue
+
+        stᵢⱼ = fill("0", N)
+        stᵢⱼ[i] = "Up"
+        stᵢⱼ[j] = "Up"
+        psiᵢⱼ = MPS(s, stᵢⱼ)
+
+        stₖₗ = fill("0", N)
+        stₖₗ[k] = "Up"
+        stₖₗ[l] = "Up"
+        psiₖₗ = MPS(s, stₖₗ)
+
+        mpo_val = inner(psiᵢⱼ', HV, psiₖₗ)
+        exact_val = 0.0
+        for m in 1:N, n in 1:N, p in 1:N, q in 1:N
+          if m == i && n == j && p == l && q == k
+            exact_val += V[i, j, l, k]
+          elseif m == i && n == j && p == k && q == l
+            exact_val += -V[i, j, k, l]
+          elseif m == j && n == i && p == l && q == k
+            exact_val += -V[j, i, l, k]
+          elseif m == j && n == i && p == k && q == l
+            exact_val += V[j, i, k, l]
+          end
+        end
+        (k > l) && (exact_val *= -1)
+        (i > j) && (exact_val *= -1)
+        @test abs(mpo_val - exact_val) < 1E-10
+      end
+    end
+    ITensors.disable_auto_fermion()
+  end
+
   @testset "Complex OpSum Coefs" begin
     N = 4
 
