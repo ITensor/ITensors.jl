@@ -95,18 +95,16 @@ svd of an order-2 DenseTensor
 """
 function svd(
   T::DenseTensor{ElT,2,IndsT};
-  mindim=default_mindim(T),
+  mindim=nothing,
   maxdim=nothing,
   cutoff=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
   alg=default_svd_alg(T),
-  use_absolute_cutoff=default_use_absolute_cutoff(T),
-  use_relative_cutoff=default_use_relative_cutoff(T),
+  # Only used by BlockSparse svd
+  min_blockdim=0,
 ) where {ElT,IndsT}
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
-  maxdim = isnothing(maxdim) ? default_maxdim(T) : maxdim
-  cutoff = isnothing(cutoff) ? default_cutoff(T) : cutoff
-
-  #@timeit_debug timer "dense svd" begin
   if alg == "divide_and_conquer"
     MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.DivideAndConquer())
     if isnothing(MUSV)
@@ -178,27 +176,14 @@ function svd(
 end
 
 function eigen(
-  T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}}; kwargs...
+  T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
 ) where {ElT<:Union{Real,Complex},IndsT}
-  # Keyword argument deprecations
-  use_absolute_cutoff = false
-  if haskey(kwargs, :absoluteCutoff)
-    @warn "In svd, keyword argument absoluteCutoff is deprecated in favor of use_absolute_cutoff"
-    use_absolute_cutoff = get(kwargs, :absoluteCutoff, use_absolute_cutoff)
-  end
-  use_relative_cutoff = true
-  if haskey(kwargs, :doRelCutoff)
-    @warn "In svd, keyword argument doRelCutoff is deprecated in favor of use_relative_cutoff"
-    use_relative_cutoff = get(kwargs, :doRelCutoff, use_relative_cutoff)
-  end
-
-  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
-  maxdim::Int = get(kwargs, :maxdim, minimum(dims(T)))
-  mindim::Int = get(kwargs, :mindim, 1)
-  cutoff::Union{Nothing,Float64} = get(kwargs, :cutoff, 0.0)
-  use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
-  use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
-
+  truncate = !isnothing(maxdim) || !isnothing(cutoff)
   matrixT = matrix(T)
   ## TODO Here I am calling parent to ensure that the correct `any` function
   ## is envoked for non-cpu matrices
@@ -220,7 +205,7 @@ function eigen(
 
   if truncate
     DM, truncerr, _ = truncate!!(
-      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
     dD = length(DM)
     if dD < size(VM, 2)
@@ -298,27 +283,14 @@ random_orthog(::Type{ElT}, n::Int, m::Int) where {ElT<:Real} = random_unitary(El
 random_orthog(n::Int, m::Int) = random_orthog(Float64, n, m)
 
 function eigen(
-  T::DenseTensor{ElT,2,IndsT}; kwargs...
+  T::DenseTensor{ElT,2,IndsT};
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
 ) where {ElT<:Union{Real,Complex},IndsT}
-  # Keyword argument deprecations
-  use_absolute_cutoff = false
-  if haskey(kwargs, :absoluteCutoff)
-    @warn "In svd, keyword argument absoluteCutoff is deprecated in favor of use_absolute_cutoff"
-    use_absolute_cutoff = get(kwargs, :absoluteCutoff, use_absolute_cutoff)
-  end
-  use_relative_cutoff = true
-  if haskey(kwargs, :doRelCutoff)
-    @warn "In svd, keyword argument doRelCutoff is deprecated in favor of use_relative_cutoff"
-    use_relative_cutoff = get(kwargs, :doRelCutoff, use_relative_cutoff)
-  end
-
-  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
-  maxdim::Int = get(kwargs, :maxdim, minimum(dims(T)))
-  mindim::Int = get(kwargs, :mindim, 1)
-  cutoff::Float64 = get(kwargs, :cutoff, 0.0)
-  use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
-  use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
-
+  truncate = !isnothing(maxdim) || !isnothing(cutoff)
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
     throw(
@@ -337,7 +309,7 @@ function eigen(
 
   if truncate
     DM, truncerr, _ = truncate!!(
-      DM; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
     dD = length(DM)
     if dD < size(VM, 2)
@@ -362,22 +334,22 @@ function eigen(
 end
 
 # NDTensors.qr
-function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
+function qr(T::DenseTensor{<:Any,2}; positive=false)
   qxf = positive ? qr_positive : qr
-  return qx(qxf, T; kwargs...)
+  return qx(qxf, T)
 end
 
 # NDTensors.ql
-function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
+function ql(T::DenseTensor{<:Any,2}; positive=false)
   qxf = positive ? ql_positive : ql
-  return qx(qxf, T; kwargs...)
+  return qx(qxf, T)
 end
 
 #
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
+function qx(qx::Function, T::DenseTensor{<:Any,2})
   QM, XM = qx(matrix(T))
   # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
   # It gets converted to matrix below.
@@ -465,7 +437,7 @@ end
 #  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
-function ql(A::AbstractMatrix; kwargs...)
+function ql(A::AbstractMatrix)
   Base.require_one_based_indexing(A)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
@@ -475,7 +447,7 @@ function ql(A::AbstractMatrix; kwargs...)
     cutype = leaf_parenttype(AA)
     AA = NDTensors.cpu(AA)
   end
-  Q, L = ql!(AA; kwargs...)
+  Q, L = ql!(AA)
   if iscuda
     Q = adapt(cutype, Q)
     L = adapt(cutype, L)

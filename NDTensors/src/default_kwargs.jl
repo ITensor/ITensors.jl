@@ -1,3 +1,6 @@
+replace_nothing(::Nothing, replacement) = replacement
+replace_nothing(value, replacement) = value
+
 default_maxdim(a) = minimum(size(a))
 default_mindim(a) = true
 default_cutoff(a) = zero(eltype(a))

@@ -34,12 +34,19 @@ per row/column, otherwise it fails.
 This assumption makes it so the result can be
 computed from the dense svds of seperate blocks.
 """
-function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
-  alg::String = get(kwargs, :alg, "divide_and_conquer")
-  min_blockdim::Int = get(kwargs, :min_blockdim, 0)
-  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
-
-  #@timeit_debug timer "block sparse svd" begin
+function svd(
+  T::Tensor{ElT,2,<:BlockSparse};
+  mindim=default_mindim(T),
+  maxdim=nothing,
+  cutoff=nothing,
+  alg=default_svd_alg(T),
+  use_absolute_cutoff=default_use_absolute_cutoff(T),
+  use_relative_cutoff=default_use_relative_cutoff(T),
+  min_blockdim=0,
+) where {ElT}
+  truncate = !isnothing(maxdim) || !isnothing(cutoff)
+  maxdim = isnothing(maxdim) ? default_maxdim(T) : maxdim
+  cutoff = isnothing(cutoff) ? default_cutoff(T) : cutoff
 
   Us = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
   Ss = Vector{DiagTensor{real(ElT),2}}(undef, nnzblocks(T))
@@ -50,7 +57,7 @@ function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
 
   for (n, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
-    USVb = svd(blockT; alg=alg)
+    USVb = svd(blockT; alg)
     if isnothing(USVb)
       return nothing
     end
@@ -78,7 +85,9 @@ function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
 
   dropblocks = Int[]
   if truncate
-    d, truncerr, docut = truncate!!(d; kwargs...)
+    d, truncerr, docut = truncate!!(
+      d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
+    )
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(
         Ss[n], docut; min_blockdim, singular_values=true, truncate
