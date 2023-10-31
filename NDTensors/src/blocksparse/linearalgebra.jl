@@ -4,8 +4,9 @@ const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,Stor
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 
 function _truncated_blockdim(
-  S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=0
+  S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=nothing
 )
+  min_blockdim = replace_nothing(min_blockdim, 0)
   # TODO: Replace `cpu` with `leaf_parenttype` dispatch.
   S = cpu(S)
   full_dim = diaglength(S)
@@ -45,7 +46,6 @@ function svd(
   use_relative_cutoff=nothing,
 ) where {ElT}
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
-  min_blockdim = replace_nothing(min_blockdim, 0)
 
   Us = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
   Ss = Vector{DiagTensor{real(ElT),2}}(undef, nnzblocks(T))
