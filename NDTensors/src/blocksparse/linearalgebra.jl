@@ -36,17 +36,16 @@ computed from the dense svds of seperate blocks.
 """
 function svd(
   T::Tensor{ElT,2,<:BlockSparse};
-  mindim=default_mindim(T),
+  min_blockdim=nothing,
+  mindim=nothing,
   maxdim=nothing,
   cutoff=nothing,
-  alg=default_svd_alg(T),
-  use_absolute_cutoff=default_use_absolute_cutoff(T),
-  use_relative_cutoff=default_use_relative_cutoff(T),
-  min_blockdim=0,
+  alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
 ) where {ElT}
   truncate = !isnothing(maxdim) || !isnothing(cutoff)
-  maxdim = isnothing(maxdim) ? default_maxdim(T) : maxdim
-  cutoff = isnothing(cutoff) ? default_cutoff(T) : cutoff
+  min_blockdim = replace_nothing(min_blockdim, 0)
 
   Us = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
   Ss = Vector{DiagTensor{real(ElT),2}}(undef, nnzblocks(T))
@@ -208,7 +207,6 @@ function svd(
     copyto!(blockview(V, blockV), Vb)
   end
   return U, S, V, Spectrum(d, truncerr)
-  #end # @timeit_debug
 end
 
 _eigen_eltypes(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}}) where {ElT} = real(ElT), ElT
