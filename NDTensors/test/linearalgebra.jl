@@ -34,16 +34,16 @@ devs = devices_list(copy(ARGS))
                                                                                                        [
       qr, ql
     ],
+    positive in [false, true],
+    singular in [false, true],
+    dev in devs,
     elt in (
       if dev == NDTensors.mtl
         [Float32, ComplexF32]
       else
         [Float64, ComplexF64, Float32, ComplexF32]
       end
-    ),
-    positive in [false, true],
-    singular in [false, true],
-    dev in devs
+    )
 
     eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
     n, m = 4, 8
