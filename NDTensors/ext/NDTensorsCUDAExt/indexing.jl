@@ -1,9 +1,9 @@
 function Base.getindex(E::Exposed{<:CuArray})
-  return CUDA.@allowscalar getindex(unexpose(E))
+  return CUDA.@allowscalar unexpose(E)[]
 end
 
 function setindex!(E::Exposed{<:CuArray}, x::Number)
-  CUDA.@allowscalar setindex!(unexpose(E), x)
+  CUDA.@allowscalar unexpose(E)[] = x
   return unexpose(E)
 end
 
@@ -14,5 +14,5 @@ end
 
 function Base.copy(E::Exposed{<:CuArray,<:Base.ReshapedArray})
   Ep = parent(E)
-  return Base.copy(Ep)
+  return copy(Ep)
 end
