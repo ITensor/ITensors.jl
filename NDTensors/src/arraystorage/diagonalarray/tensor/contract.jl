@@ -2,7 +2,9 @@
 parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
 
 # TODO: Move to a different file.
-function promote_rule(storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:DiagonalArray})
+function promote_rule(
+  storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:DiagonalArray}
+)
   # TODO: Replace with `unwrap_type` once
   # https://github.com/ITensor/ITensors.jl/pull/1220
   # is merged.
@@ -11,13 +13,23 @@ end
 
 # The output must be initialized as zero since it is sparse, cannot be undefined
 # Overspecifying types to fix ambiguity error.
-function contraction_output(T1::Tensor{T,N,<:DiagonalArray{T,N,<:AbstractVector{T}}}, T2::ArrayStorageTensor, indsR) where {T,N}
+function contraction_output(
+  T1::Tensor{T,N,<:DiagonalArray{T,N,<:AbstractVector{T}}}, T2::ArrayStorageTensor, indsR
+) where {T,N}
   return zero_contraction_output(T1, T2, indsR)
 end
-contraction_output(T1::ArrayStorageTensor, T2::Tensor{T,N,<:DiagonalArray{T,N,<:AbstractVector{T}}}, indsR) where {T,N} = contraction_output(T2, T1, indsR)
+function contraction_output(
+  T1::ArrayStorageTensor, T2::Tensor{T,N,<:DiagonalArray{T,N,<:AbstractVector{T}}}, indsR
+) where {T,N}
+  return contraction_output(T2, T1, indsR)
+end
 
 # Overspecifying types to fix ambiguity error.
-function contraction_output(tensor1::Tensor{T1,N1,<:DiagonalArray{T1,N1,<:AbstractVector{T1}}}, tensor2::Tensor{T2,N2,<:DiagonalArray{T2,N2,<:AbstractVector{T2}}}, indsR) where {T1,N1,T2,N2}
+function contraction_output(
+  tensor1::Tensor{T1,N1,<:DiagonalArray{T1,N1,<:AbstractVector{T1}}},
+  tensor2::Tensor{T2,N2,<:DiagonalArray{T2,N2,<:AbstractVector{T2}}},
+  indsR,
+) where {T1,N1,T2,N2}
   return zero_contraction_output(tensor1, tensor2, indsR)
 end
 
@@ -65,7 +77,10 @@ function contract!(
       # TODO: should we make this return a Diag storage?
       for i in 1:min_dim
         DiagonalArrays.setdiagindex!(
-          C, α * DiagonalArrays.getdiagindex(A, i) * DiagonalArrays.getdiagindex(B, i) + β * DiagonalArrays.getdiagindex(C, i), i
+          C,
+          α * DiagonalArrays.getdiagindex(A, i) * DiagonalArrays.getdiagindex(B, i) +
+          β * DiagonalArrays.getdiagindex(C, i),
+          i,
         )
       end
     end
@@ -73,7 +88,16 @@ function contract!(
     # Most general contraction
     if convert_to_dense
       # TODO: Define `densearray(::Tensor)`.
-      contract!(C, Clabels, tensor(DiagonalArrays.densearray(storage(A)), inds(A)), Alabels, B, Blabels, α, β)
+      contract!(
+        C,
+        Clabels,
+        tensor(DiagonalArrays.densearray(storage(A)), inds(A)),
+        Alabels,
+        B,
+        Blabels,
+        α,
+        β,
+      )
     else
       if !isone(α) || !iszero(β)
         error(
