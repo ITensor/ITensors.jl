@@ -40,8 +40,8 @@ devs = devices_list(copy(ARGS))
     dev in devs
 
     ## Skip Float64 on Metal
-    if dev == NDTensors.mtl && (elt == Float64 || elt == ComplexF64) 
-      continue;
+    if dev == NDTensors.mtl && (elt == Float64 || elt == ComplexF64)
+      continue
     end
     eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
     n, m = 4, 8
