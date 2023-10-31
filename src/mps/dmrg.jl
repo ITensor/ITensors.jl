@@ -311,10 +311,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
             mindim=mindim(sweeps, sw),
             cutoff=cutoff(sweeps, sw),
             eigen_perturbation=drho,
-            ortho=ortho,
+            ortho,
             normalize=true,
-            which_decomp=which_decomp,
-            svd_alg=svd_alg,
+            which_decomp,
+            svd_alg,
           )
         end
         maxtruncerr = max(maxtruncerr, spec.truncerr)

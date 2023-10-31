@@ -296,14 +296,22 @@ function eigen(
   cutoff=nothing,
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
-  ishermitian=false,
-  tags="Link,eigen",
-  lefttags=tags,
-  righttags=tags,
-  plev=0,
-  leftplev=plev,
-  rightplev=plev,
+  ishermitian=nothing,
+  tags=nothing,
+  lefttags=nothing,
+  righttags=nothing,
+  plev=nothing,
+  leftplev=nothing,
+  rightplev=nothing,
 )
+  ishermitian = NDTensors.replace_nothing(ishermitian, false)
+  tags = NDTensors.replace_nothing(tags, ts"Link,eigen")
+  lefttags = NDTensors.replace_nothing(lefttags, tags)
+  righttags = NDTensors.replace_nothing(righttags, tags)
+  plev = NDTensors.replace_nothing(plev, 0)
+  leftplev = NDTensors.replace_nothing(leftplev, plev)
+  rightplev = NDTensors.replace_nothing(rightplev, plev)
+
   @debug_check begin
     if hasqns(A)
       @assert flux(A) == QN()
@@ -366,7 +374,7 @@ function eigen(
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
 
-  DT, VT, spec = eigen(AT; mindim, maxdim, cutoff)
+  DT, VT, spec = eigen(AT; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff)
   D, VC = itensor(DT), itensor(VT)
 
   V = VC * dag(CR)
