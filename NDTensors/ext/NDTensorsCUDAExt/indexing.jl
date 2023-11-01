@@ -20,5 +20,5 @@ end
 Base.any(f, E::Exposed{<:CuArray,<:NDTensors.Tensor}) = any(f, data(unexpose(E)))
 
 function Base.print_array(io::IO, E::Exposed{<:CuArray})
-  CUDA.@allowscalar Base.print_array(io, unexpose(E))
+  Base.print_array(io, expose(NDTensors.cpu(E)))
 end
