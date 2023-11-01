@@ -332,7 +332,7 @@ function eigen(
   return D, V, spec
 end
 
-# NDTensors.Unwrap.qr
+# LinearAlgebra.qr
 function qr(T::DenseTensor{<:Any,2}; positive=false)
   qxf = positive ? qr_positive : qr
   return qx(qxf, T)
