@@ -951,6 +951,7 @@ function correlation_matrix_to_mps(
   Λ_dn0::AbstractSymmetry;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=min(size(Λ_up0, 1), size(Λ_dn0, 1)),
+  minblocksize::Int=1,
   kwargs...,
 )
   MPS_Elt = promote_type(eltype(Λ_up0.data), eltype(Λ_dn0.data))
