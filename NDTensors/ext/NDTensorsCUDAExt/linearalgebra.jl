@@ -20,16 +20,16 @@ function NDTensors.svd_catch_error(A::CuMatrix, ::CUDA.CUSOLVER.QRAlgorithm)
   s = size(A)
   if s[1] < s[2]
     At = copy(Adjoint(A))
-    
-    USV = try 
+
+    USV = try
       svd(At; alg=CUDA.CUSOLVER.QRAlgorithm())
     catch
       return nothing
     end
-    MV ,MS, MU = USV;
+    MV, MS, MU = USV
     USV = SVD(copy(MU), MS, Adjoint(MV))
   else
-    USV = try 
+    USV = try
       svd(A; alg=CUDA.CUSOLVER.QRAlgorithm())
     catch
       return nothing
