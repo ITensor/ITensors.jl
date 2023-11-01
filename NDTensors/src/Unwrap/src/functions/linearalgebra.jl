@@ -24,6 +24,6 @@ function eigen(E::Exposed)
   return eigen(unexpose(E))
 end
 
-function svd(E::Exposed)
-  return svd(unexpose(E))
+function svd(E::Exposed; kwargs...)
+  return svd(unexpose(E); kwargs...)
 end

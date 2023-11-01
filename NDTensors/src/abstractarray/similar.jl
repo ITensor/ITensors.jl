@@ -125,13 +125,13 @@ end
 @traitfn function similartype(
   arraytype::Type{ArrayT}, eltype::Type
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return similartype(parenttype(arraytype), eltype)
+  return similartype(unwrap_type(arraytype), eltype)
 end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, dims::Tuple
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return similartype(parenttype(arraytype), dims)
+  return similartype(unwrap_type(arraytype), dims)
 end
 
 # This is for uniform `Diag` storage which uses

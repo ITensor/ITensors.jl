@@ -5,15 +5,11 @@ A Julia `DiagonalArray` type.
 ````julia
 using NDTensors.DiagonalArrays:
   DiagonalArray,
-  densearray,
-  diagview,
-  diaglength,
-  getdiagindex,
-  setdiagindex!,
-  setdiag!,
-  diagcopyto!
+  DiagIndex,
+  DiagIndices,
+  densearray
 
-d = DiagonalArray([1., 2, 3], 3, 4, 5)
+d = DiagonalArray([1.0, 2, 3], 3, 4, 5)
 @show d[1, 1, 1] == 1
 @show d[2, 2, 2] == 2
 @show d[1, 2, 1] == 0
@@ -21,20 +17,20 @@ d = DiagonalArray([1., 2, 3], 3, 4, 5)
 d[2, 2, 2] = 22
 @show d[2, 2, 2] == 22
 
-@show diaglength(d) == 3
+@show length(d[DiagIndices()]) == 3
 @show densearray(d) == d
-@show getdiagindex(d, 2) == d[2, 2, 2]
+@show d[DiagIndex(2)] == d[2, 2, 2]
 
-setdiagindex!(d, 222, 2)
+d[DiagIndex(2)] = 222
 @show d[2, 2, 2] == 222
 
 a = randn(3, 4, 5)
 new_diag = randn(3)
-setdiag!(a, new_diag)
-diagcopyto!(d, a)
+a[DiagIndices()] = new_diag
+d[DiagIndices()] = a[DiagIndices()]
 
-@show diagview(a) == new_diag
-@show diagview(d) == new_diag
+@show a[DiagIndices()] == new_diag
+@show d[DiagIndices()] == new_diag
 ````
 
 You can generate this README with:

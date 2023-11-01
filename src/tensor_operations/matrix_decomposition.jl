@@ -106,14 +106,30 @@ Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
 
 See also: [`factorize`](@ref), [`eigen`](@ref)
 """
-function svd(A::ITensor, Linds...; leftdir=nothing, rightdir=nothing, kwargs...)
-  utags::TagSet = get(kwargs, :lefttags, get(kwargs, :utags, "Link,u"))
-  vtags::TagSet = get(kwargs, :righttags, get(kwargs, :vtags, "Link,v"))
+function svd(
+  A::ITensor,
+  Linds...;
+  leftdir=nothing,
+  rightdir=nothing,
+  lefttags=nothing,
+  righttags=nothing,
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  min_blockdim=nothing,
+  # Deprecated
+  utags=lefttags,
+  vtags=righttags,
+)
+  lefttags = NDTensors.replace_nothing(lefttags, ts"Link,u")
+  righttags = NDTensors.replace_nothing(righttags, ts"Link,v")
 
-  # Keyword argument deprecations
-  #if haskey(kwargs, :utags) || haskey(kwargs, :vtags)
-  #  @warn "Keyword arguments `utags` and `vtags` are deprecated in favor of `leftags` and `righttags`."
-  #end
+  # Deprecated
+  utags = NDTensors.replace_nothing(utags, ts"Link,u")
+  vtags = NDTensors.replace_nothing(vtags, ts"Link,v")
 
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
@@ -142,7 +158,16 @@ function svd(A::ITensor, Linds...; leftdir=nothing, rightdir=nothing, kwargs...)
     AC = permute(AC, cL, cR)
   end
 
-  USVT = svd(tensor(AC); kwargs...)
+  USVT = svd(
+    tensor(AC);
+    mindim,
+    maxdim,
+    cutoff,
+    alg,
+    use_absolute_cutoff,
+    use_relative_cutoff,
+    min_blockdim,
+  )
   if isnothing(USVT)
     return nothing
   end
@@ -155,10 +180,10 @@ function svd(A::ITensor, Linds...; leftdir=nothing, rightdir=nothing, kwargs...)
   U = UC * dag(CL)
   V = VC * dag(CR)
 
-  settags!(U, utags, u)
-  settags!(S, utags, u)
-  settags!(S, vtags, v)
-  settags!(V, vtags, v)
+  U = settags(U, utags, u)
+  S = settags(S, utags, u)
+  S = settags(S, vtags, v)
+  V = settags(V, vtags, v)
 
   u = settags(u, utags)
   v = settags(v, vtags)
@@ -262,7 +287,31 @@ A * U ≈ Ul * D # true
 
 See also: [`svd`](@ref), [`factorize`](@ref)
 """
-function eigen(A::ITensor, Linds, Rinds; kwargs...)
+function eigen(
+  A::ITensor,
+  Linds,
+  Rinds;
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  ishermitian=nothing,
+  tags=nothing,
+  lefttags=nothing,
+  righttags=nothing,
+  plev=nothing,
+  leftplev=nothing,
+  rightplev=nothing,
+)
+  ishermitian = NDTensors.replace_nothing(ishermitian, false)
+  tags = NDTensors.replace_nothing(tags, ts"Link,eigen")
+  lefttags = NDTensors.replace_nothing(lefttags, tags)
+  righttags = NDTensors.replace_nothing(righttags, tags)
+  plev = NDTensors.replace_nothing(plev, 0)
+  leftplev = NDTensors.replace_nothing(leftplev, plev)
+  rightplev = NDTensors.replace_nothing(rightplev, plev)
+
   @debug_check begin
     if hasqns(A)
       @assert flux(A) == QN()
@@ -275,16 +324,6 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   NL != NR && error("Must have equal number of left and right indices")
   N != NL + NR &&
     error("Number of left and right indices must add up to total number of indices")
-
-  ishermitian::Bool = get(kwargs, :ishermitian, false)
-
-  tags::TagSet = get(kwargs, :tags, "Link,eigen")
-  lefttags::TagSet = get(kwargs, :lefttags, tags)
-  righttags::TagSet = get(kwargs, :righttags, tags)
-
-  plev::Int = get(kwargs, :plev, 0)
-  leftplev::Int = get(kwargs, :leftplev, plev)
-  rightplev::Int = get(kwargs, :rightplev, plev)
 
   if lefttags == righttags && leftplev == rightplev
     leftplev = rightplev + 1
@@ -335,7 +374,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
 
-  DT, VT, spec = eigen(AT; kwargs...)
+  DT, VT, spec = eigen(AT; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff)
   D, VC = itensor(DT), itensor(VT)
 
   V = VC * dag(CR)
@@ -445,7 +484,9 @@ end
 #
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
 #
-function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
+function qx(
+  qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qx", positive=false
+)
   # Strip out any extra indices that are not in A.
   # Unit test test/base/test_itensor.jl line 1469 will fail without this.
   Linds = commoninds(A, Linds)
@@ -468,7 +509,7 @@ function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwar
   #
   AC = permute(AC, cL, cR; allow_alias=true)
 
-  QT, XT = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  QT, XT = qx(tensor(AC); positive) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
@@ -491,8 +532,10 @@ end
 #  Generic function implementing both rq and lq decomposition. Implemented using qr/ql 
 #  with swapping the left and right indices.  The X tensor = R or L. 
 #
-function xq(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
-  Q, X, q = qx(A, Rinds, Linds; kwargs...)
+function xq(
+  qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,xq", positive=false
+)
+  Q, X, q = qx(A, Rinds, Linds; positive)
   #
   # fix up the tag name for the index between Q and L.
   #  
@@ -507,8 +550,8 @@ polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
 
 # TODO: allow custom tags in internal indices?
 # TODO: return the new common indices?
-function polar(A::ITensor, Linds...; kwargs...)
-  U, S, V = svd(A, Linds...; kwargs...)
+function polar(A::ITensor, Linds...)
+  U, S, V = svd(A, Linds...)
   u = commoninds(S, U)
   v = commoninds(S, V)
   δᵤᵥ′ = δ(u..., v'...)
@@ -517,13 +560,12 @@ function polar(A::ITensor, Linds...; kwargs...)
   return Q, P, commoninds(Q, P)
 end
 
-function factorize_qr(A::ITensor, Linds...; kwargs...)
-  ortho::String = get(kwargs, :ortho, "left")
+function factorize_qr(A::ITensor, Linds...; ortho="left", tags=nothing, positive=false)
   if ortho == "left"
-    L, R, q = qr(A, Linds...; kwargs...)
+    L, R, q = qr(A, Linds...; tags, positive)
   elseif ortho == "right"
     Lis = uniqueinds(A, indices(Linds...))
-    R, L, q = qr(A, Lis...; kwargs...)
+    R, L, q = qr(A, Lis...; tags, positive)
   else
     error("In factorize using qr decomposition, ortho keyword
     $ortho not supported. Supported options are left or right.")
@@ -551,12 +593,27 @@ function factorize_svd(
   Linds...;
   (singular_values!)=nothing,
   ortho="left",
-  svd_alg="divide_and_conquer",
-  dir=ITensors.In,
-  kwargs...,
+  alg=nothing,
+  dir=nothing,
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  tags=nothing,
 )
+  dir = NDTensors.replace_nothing(dir, ITensors.In)
   leftdir, rightdir = -dir, -dir
-  USV = svd(A, Linds...; leftdir, rightdir, alg=svd_alg, kwargs...)
+  USV = svd(
+    A,
+    Linds...;
+    leftdir,
+    rightdir,
+    alg,
+    mindim,
+    maxdim,
+    cutoff,
+    lefttags=tags,
+    righttags=tags,
+  )
   if isnothing(USV)
     return nothing
   end
@@ -579,9 +636,17 @@ function factorize_svd(
   return L, R, spec
 end
 
-function factorize_eigen(A::ITensor, Linds...; kwargs...)
-  ortho::String = get(kwargs, :ortho, "left")
-  delta_A2 = get(kwargs, :eigen_perturbation, nothing)
+function factorize_eigen(
+  A::ITensor,
+  Linds...;
+  ortho="left",
+  eigen_perturbation=nothing,
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  tags=nothing,
+)
+  delta_A2 = eigen_perturbation
   if ortho == "left"
     Lis = commoninds(A, indices(Linds...))
   elseif ortho == "right"
@@ -599,7 +664,7 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
     noprime!(delta_A2)
     A2 += delta_A2
   end
-  F = eigen(A2, Lis, simLis; ishermitian=true, kwargs...)
+  F = eigen(A2, Lis, simLis; ishermitian=true, mindim, maxdim, cutoff, tags)
   D, _, spec = F
   L = F.Vt
   R = dag(L) * A
@@ -654,13 +719,26 @@ Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`
 
 For truncation arguments, see: [`svd`](@ref)
 """
-function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
-  ortho::String = get(kwargs, :ortho, "left")
-  tags::TagSet = get(kwargs, :tags, "Link,fact")
-  plev::Int = get(kwargs, :plev, 0)
-  which_decomp::Union{String,Nothing} = get(kwargs, :which_decomp, nothing)
-  cutoff = get(kwargs, :cutoff, nothing)
-  eigen_perturbation = get(kwargs, :eigen_perturbation, nothing)
+function factorize(
+  A::ITensor,
+  Linds...;
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  ortho=nothing,
+  tags=nothing,
+  plev=nothing,
+  which_decomp=nothing,
+  # eigen
+  eigen_perturbation=nothing,
+  # svd
+  svd_alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  min_blockdim=nothing,
+  (singular_values!)=nothing,
+  dir=nothing,
+)
   if !isnothing(eigen_perturbation)
     if !(isnothing(which_decomp) || which_decomp == "eigen")
       error("""when passing a non-trivial eigen_perturbation to `factorize`,
@@ -669,11 +747,9 @@ function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
     end
     which_decomp = "eigen"
   end
-
-  if haskey(kwargs, :which_factorization)
-    error("""which_factorization keyword in factorize has
-    been replace by which_decomp.""")
-  end
+  ortho = NDTensors.replace_nothing(ortho, "left")
+  tags = NDTensors.replace_nothing(tags, ts"Link,fact")
+  plev = NDTensors.replace_nothing(plev, 0)
 
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
@@ -697,17 +773,18 @@ function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
       which_decomp = "eigen"
     end
   end
-
   if which_decomp == "svd"
-    LR = factorize_svd(A, Linds...; kwargs..., maxdim=maxdim)
+    LR = factorize_svd(
+      A, Linds...; mindim, maxdim, cutoff, tags, ortho, alg=svd_alg, dir, singular_values!
+    )
     if isnothing(LR)
       return nothing
     end
     L, R, spec = LR
   elseif which_decomp == "eigen"
-    L, R, spec = factorize_eigen(A, Linds...; kwargs..., maxdim=maxdim)
+    L, R, spec = factorize_eigen(A, Linds...; mindim, maxdim, cutoff, tags, ortho)
   elseif which_decomp == "qr"
-    L, R = factorize_qr(A, Linds...; kwargs...)
+    L, R = factorize_qr(A, Linds...; ortho, tags)
     spec = Spectrum(nothing, 0.0)
   else
     throw(ArgumentError("""In factorize, factorization $which_decomp is not
@@ -717,8 +794,8 @@ function factorize(A::ITensor, Linds...; maxdim=nothing, kwargs...)
   # Set the tags and prime level
   l = commonind(L, R)
   l̃ = setprime(settags(l, tags), plev)
-  replaceind!(L, l, l̃)
-  replaceind!(R, l, l̃)
+  L = replaceind(L, l, l̃)
+  R = replaceind(R, l, l̃)
   l = l̃
 
   return L, R, spec, l

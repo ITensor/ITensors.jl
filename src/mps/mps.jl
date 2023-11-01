@@ -527,19 +527,24 @@ Factorize the ITensor `phi` and replace the ITensors
 `b` and `b+1` of MPS `M` with the factors. Choose
 the orthogonality with `ortho="left"/"right"`.
 """
-function replacebond!(M::MPS, b::Int, phi::ITensor; kwargs...)
-  ortho::String = get(kwargs, :ortho, "left")
-  swapsites::Bool = get(kwargs, :swapsites, false)
-  which_decomp::Union{String,Nothing} = get(kwargs, :which_decomp, nothing)
-  normalize::Bool = get(kwargs, :normalize, false)
-
-  # Deprecated keywords
-  if haskey(kwargs, :dir)
-    error(
-      """dir keyword in replacebond! has been replaced by ortho.
-      Note that the options are now the same as factorize, so use `left` instead of `fromleft` and `right` instead of `fromright`.""",
-    )
-  end
+function replacebond!(
+  M::MPS,
+  b::Int,
+  phi::ITensor;
+  normalize=nothing,
+  swapsites=nothing,
+  ortho=nothing,
+  # Decomposition kwargs
+  which_decomp=nothing,
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  eigen_perturbation=nothing,
+  svd_alg=nothing,
+)
+  normalize = NDTensors.replace_nothing(normalize, false)
+  swapsites = NDTensors.replace_nothing(swapsites, false)
+  ortho = NDTensors.replace_nothing(ortho, "left")
 
   indsMb = inds(M[b])
   if swapsites
@@ -548,7 +553,16 @@ function replacebond!(M::MPS, b::Int, phi::ITensor; kwargs...)
     indsMb = replaceind(indsMb, sb, sbp1)
   end
   L, R, spec = factorize(
-    phi, indsMb; which_decomp=which_decomp, tags=tags(linkind(M, b)), kwargs...
+    phi,
+    indsMb;
+    mindim,
+    maxdim,
+    cutoff,
+    ortho,
+    which_decomp,
+    eigen_perturbation,
+    svd_alg,
+    tags=tags(linkind(M, b)),
   )
   M[b] = L
   M[b + 1] = R
