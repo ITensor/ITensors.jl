@@ -34,3 +34,11 @@ end
 function to_arraystorage(x::DiagTensor)
   return tensor(DiagonalArray(data(x), size(x)), inds(x))
 end
+
+# TODO: Delete once `BlockSparse` is removed.
+function to_arraystorage(x::BlockSparseTensor)
+  blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], inds(x))
+  blocktype = set_ndims(datatype(x), ndims(x))
+  arraystorage = BlockSparseArray{eltype(x),ndims(x),blocktype}(blockinds)
+  return tensor(arraystorage, inds(x))
+end
