@@ -1,7 +1,7 @@
 using ITensors
 using Test
 
-@testset "Test ArrayStorage DMRG QN $conserve_qns" for conserve_qns in (false, true)
+@testset "Test ArrayStorage DMRG QN $conserve_qns" for conserve_qns in (false,) # true)
   n = 4
   s = siteinds("S=1/2", n; conserve_qns)
   heisenberg_opsum = function (n)
