@@ -11,3 +11,8 @@ end
 function zeros(tensortype::Type{<:ArrayStorageTensor}, inds::Tuple{Vararg{Integer}})
   return _zeros(tensortype, inds)
 end
+
+# To resolve ambiguity error with `Base.zeros`.
+function zeros(tensortype::Type{<:ArrayStorageTensor}, inds::Tuple{})
+  return _zeros(tensortype, inds)
+end

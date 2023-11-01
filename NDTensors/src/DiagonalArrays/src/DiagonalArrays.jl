@@ -3,7 +3,7 @@ module DiagonalArrays
 using Compat # allequal
 using LinearAlgebra
 
-export DiagonalArray
+export DiagonalArray, DiagonalMatrix, DiagonalVector, DiagIndex, DiagIndices, densearray
 
 include("diagview.jl")
 
@@ -18,6 +18,9 @@ struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractArray{T,N}
   dims::NTuple{N,Int}
   zero::Zero
 end
+
+const DiagonalVector{T,Diag,Zero} = DiagonalArray{T,1,Diag,Zero}
+const DiagonalMatrix{T,Diag,Zero} = DiagonalArray{T,2,Diag,Zero}
 
 function DiagonalArray{T,N}(
   diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()
@@ -51,6 +54,25 @@ end
 
 function DiagonalArray(diag::AbstractVector{T}, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(diag, d)
+end
+
+default_size(diag::AbstractVector, n) = ntuple(Returns(length(diag)), n)
+
+# Infer size from diagonal
+function DiagonalArray{T,N}(diag::AbstractVector) where {T,N}
+  return DiagonalArray{T,N}(diag, default_size(diag, N))
+end
+
+function DiagonalArray{<:Any,N}(diag::AbstractVector{T}) where {T,N}
+  return DiagonalArray{T,N}(diag)
+end
+
+function DiagonalMatrix(diag::AbstractVector)
+  return DiagonalArray{<:Any,2}(diag)
+end
+
+function DiagonalVector(diag::AbstractVector)
+  return DiagonalArray{<:Any,1}(diag)
 end
 
 # undef

@@ -6,6 +6,7 @@ const ArrayStorage{T,N} = Union{
   SubArray{T,N},
   PermutedDimsArray{T,N},
   StridedView{T,N},
+  DiagonalArray{T,N},
   BlockSparseArray{T,N},
 }
 
@@ -27,4 +28,9 @@ const MatrixOrArrayStorage{T} = Union{MatrixStorage{T},ArrayStorage{T}}
 # TODO: Delete once `Dense` is removed.
 function to_arraystorage(x::DenseTensor)
   return tensor(reshape(data(x), size(x)), inds(x))
+end
+
+# TODO: Delete once `Diag` is removed.
+function to_arraystorage(x::DiagTensor)
+  return tensor(DiagonalArray(data(x), size(x)), inds(x))
 end

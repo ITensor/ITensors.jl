@@ -46,6 +46,7 @@ include("exports.jl")
 #####################################
 # General functionality
 #
+include("default_kwargs.jl")
 include("algorithm.jl")
 include("aliasstyle.jl")
 include("abstractarray/set_types.jl")
@@ -151,6 +152,8 @@ include("arraystorage/arraystorage/tensor/eigen.jl")
 include("arraystorage/arraystorage/tensor/svd.jl")
 
 # DiagonalArray storage
+include("arraystorage/diagonalarray/storage/contract.jl")
+
 include("arraystorage/diagonalarray/tensor/contract.jl")
 
 # BlockSparseArray storage

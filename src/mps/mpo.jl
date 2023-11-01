@@ -597,13 +597,12 @@ end
 
 Apply(A::MPO, ψ::MPS; kwargs...) = Applied(apply, (A, ψ), NamedTuple(kwargs))
 
-function contract(A::MPO, ψ::MPS; alg="densitymatrix", kwargs...)
-  if haskey(kwargs, :method)
-    # Backwards compatibility, use `method`.
-    alg = get(kwargs, :method, "densitymatrix")
-  end
+function contract(A::MPO, ψ::MPS; alg=nothing, method=alg, kwargs...)
+  # TODO: Delete `method` since it is deprecated.
+  alg = NDTensors.replace_nothing(method, "densitymatrix")
 
   # Keyword argument deprecations
+  # TODO: Delete these.
   if alg == "DensityMatrix"
     @warn "In contract, method DensityMatrix is deprecated in favor of densitymatrix"
     alg = "densitymatrix"
