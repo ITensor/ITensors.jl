@@ -242,12 +242,18 @@ function permutedims_combine_output(
   ## return BlockSparseTensor(leaf_parenttype(T), blocks_perm_comb, is)
   blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], is)
   blocktype = set_ndims(leaf_parenttype(T), ndims(T))
-  return tensor(BlockSparseArray{eltype(T),ndims(T),blocktype}(undef, blocks_perm_comb, blockinds), is)
+  return tensor(
+    BlockSparseArray{eltype(T),ndims(T),blocktype}(undef, blocks_perm_comb, blockinds), is
+  )
 end
 
-function combine_dims(blocks::Dictionary{CartesianIndex{N},BlockArrays.Block{N,Int}}, inds, combdims::NTuple{NC,Int}) where {N,NC}
+function combine_dims(
+  blocks::Dictionary{CartesianIndex{N},BlockArrays.Block{N,Int}},
+  inds,
+  combdims::NTuple{NC,Int},
+) where {N,NC}
   nblcks = nblocks(inds, combdims)
-  blocks_comb = Vector{BlockArrays.Block{N-NC+1,Int}}(undef, length(blocks))
+  blocks_comb = Vector{BlockArrays.Block{N - NC + 1,Int}}(undef, length(blocks))
   for (i, block) in enumerate(blocks)
     blocks_comb[i] = combine_dims(block, inds, combdims)
   end
@@ -265,7 +271,9 @@ function perm_blocks(blocks::Vector{BlockArrays.Block{N,Int}}, dim::Int, perm) w
 end
 
 # In the dimension dim, combine the specified blocks
-function combine_blocks(blocks::Vector{<:BlockArrays.Block}, dim::Int, blockcomb::Vector{Int})
+function combine_blocks(
+  blocks::Vector{<:BlockArrays.Block}, dim::Int, blockcomb::Vector{Int}
+)
   blocks_comb = copy(blocks)
   nnz_comb = length(blocks)
   for (i, block) in enumerate(blocks)
