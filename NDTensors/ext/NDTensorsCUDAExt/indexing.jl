@@ -16,3 +16,7 @@ function Base.copy(E::Exposed{<:CuArray,<:Base.ReshapedArray})
   Ap = parent(E)
   return copy(expose(Ap))
 end
+
+Base.any(f, E::Exposed{<:CuArray, <:NDTensors.Tensor}) = any(f, data(unexpose(E)))
+
+Base.print_array(io::IO, E::Exposed{<:CuArray}) = CUDA.@allowscalar Base.print_array(io, unexpose(E))

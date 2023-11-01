@@ -136,7 +136,7 @@ function svd(
     )
   end
   if isnothing(MUSV)
-    if any(isnan, T)
+    if any(isnan, expose(T))
       println("SVD failed, the matrix you were trying to SVD contains NaNs.")
     else
       println(lapack_svd_error_message(alg))

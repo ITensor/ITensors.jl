@@ -16,3 +16,7 @@ getindex(E::Exposed, I...) = unexpose(E)[I...]
 function copy(E::Exposed)
   return copy(unexpose(E))
 end
+
+any(f, E::Exposed) = any(f, unexpose(E))
+
+print_array(io::IO, E::Exposed) = print_array(io, unexpose(E))
