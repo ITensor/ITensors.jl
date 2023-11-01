@@ -39,17 +39,20 @@ parenttype(::Type{<:StridedView{<:Any,<:Any,P}}) where {P} = P
 # `SimpleTraits.jl` traits dispatch.
 parenttype(array::AbstractArray) = parenttype(typeof(array))
 
-@traitfn function leaf_parenttype(
+## These functions will be used in place of unwrap_type but will be 
+## call indirectly through the expose function.
+@traitfn function unwrap_type(
   arraytype::Type{ArrayT}
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return leaf_parenttype(parenttype(arraytype))
+  return unwrap_type(parenttype(arraytype))
 end
 
-@traitfn function leaf_parenttype(
+@traitfn function unwrap_type(
   arraytype::Type{ArrayT}
 ) where {ArrayT; !IsWrappedArray{ArrayT}}
   return arraytype
 end
 
 # For working with instances.
-leaf_parenttype(array::AbstractArray) = leaf_parenttype(typeof(array))
+unwrap_type(array::AbstractArray) = unwrap_type(typeof(array))
+unwrap_type(E::Exposed) = unwrap_type(unexpose(E))

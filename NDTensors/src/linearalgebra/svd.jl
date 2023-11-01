@@ -1,6 +1,6 @@
 # The state of the `svd_recursive` algorithm.
 function svd_recursive_state(S::AbstractArray, thresh::Float64)
-  return svd_recursive_state(leaf_parenttype(S), S, thresh)
+  return svd_recursive_state(unwrap_type(S), S, thresh)
 end
 
 # CPU version.
@@ -36,7 +36,7 @@ function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=
 
   #rho = BLAS.gemm('N','T',-1.0,M,M) #negative to sort eigenvalues greatest to smallest
   rho = -M * M' #negative to sort eigenvalues in decreasing order
-  D, U = eigen(Hermitian(rho))
+  D, U = eigen(expose(Hermitian(rho)))
 
   Nd = length(D)
 
@@ -65,6 +65,6 @@ end
 # TODO: maybe move to another location?
 # Include options for other svd algorithms
 function polar(M::AbstractMatrix)
-  U, S, V = svd(M) # calls LinearAlgebra.svd(_)
+  U, S, V = svd(expose(M)) # calls LinearAlgebra.svd(_)
   return U * V', V * Diagonal(S) * V'
 end

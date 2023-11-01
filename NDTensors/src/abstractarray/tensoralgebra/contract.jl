@@ -71,7 +71,13 @@ function _gemm!(
   beta::BT,
   C::AbstractVecOrMat,
 ) where {AT,BT}
-  mul!(C, tA == 'T' ? transpose(A) : A, tB == 'T' ? transpose(B) : B, alpha, beta)
+  mul!(
+    expose(C),
+    expose(tA == 'T' ? transpose(A) : A),
+    expose(tB == 'T' ? transpose(B) : B),
+    alpha,
+    beta,
+  )
   return C
 end
 
@@ -97,7 +103,7 @@ function _contract_scalar_perm!(
       # Rᵃ .= β .* Rᵃ
       LinearAlgebra.scal!(length(Rᵃ), β, Rᵃ, 1)
     else
-      Rᵃ .= α .* permutedims(Tᵃ, perm) .+ β .* Rᵃ
+      Rᵃ .= α .* permutedims(expose(Tᵃ), perm) .+ β .* Rᵃ
     end
   end
   return Rᵃ
@@ -114,7 +120,7 @@ function _contract!(
   tA = 'N'
   if props.permuteA
     #@timeit_debug timer "_contract!: permutedims A" begin
-    Ap = permutedims(AT, props.PA)
+    Ap = permutedims(expose(AT), props.PA)
     #end # @timeit
     AM = transpose(reshape(Ap, (props.dmid, props.dleft)))
   else
@@ -129,7 +135,7 @@ function _contract!(
   tB = 'N'
   if props.permuteB
     #@timeit_debug timer "_contract!: permutedims B" begin
-    Bp = permutedims(BT, props.PB)
+    Bp = permutedims(expose(BT), props.PB)
     #end # @timeit
     BM = reshape(Bp, (props.dmid, props.dright))
   else
@@ -146,7 +152,7 @@ function _contract!(
     # we need to make sure C is permuted to the same 
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
-      CM = reshape(permutedims(CT, invperm(props.PC)), (props.dleft, props.dright))
+      CM = reshape(permutedims(expose(CT), invperm(props.PC)), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
       # into C later  
@@ -168,7 +174,7 @@ function _contract!(
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin 
-    CT .= permutedims(Cr, props.PC)
+    CT .= permutedims(expose(Cr), props.PC)
     #end # @timeit
   end
 

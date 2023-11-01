@@ -7,7 +7,7 @@ function _truncated_blockdim(
   S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=nothing
 )
   min_blockdim = replace_nothing(min_blockdim, 0)
-  # TODO: Replace `cpu` with `leaf_parenttype` dispatch.
+  # TODO: Replace `cpu` with `Expose` dispatch.
   S = cpu(S)
   full_dim = diaglength(S)
   !truncate && return full_dim
@@ -156,11 +156,9 @@ function svd(
   indsS = setindex(inds(T), dag(uind), 1)
   indsS = setindex(indsS, dag(vind), 2)
 
-  U = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksU, indsU)
-  S = DiagBlockSparseTensor(
-    set_eltype(leaf_parenttype(T), real(ElT)), undef, nzblocksS, indsS
-  )
-  V = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksV, indsV)
+  U = BlockSparseTensor(unwrap_type(T), undef, nzblocksU, indsU)
+  S = DiagBlockSparseTensor(set_eltype(unwrap_type(T), real(ElT)), undef, nzblocksS, indsS)
+  V = BlockSparseTensor(unwrap_type(T), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Ub, Sb, Vb = Us[n], Ss[n], Vs[n]
@@ -187,7 +185,7 @@ function svd(
 
     blockviewS = blockview(S, blockS)
     # TODO: Replace `data` with `diagview`.
-    copyto!(data(blockviewS), data(Sb))
+    copyto!(expose(data(blockviewS)), expose(data(Sb)))
 
     #<fermions>
     sV = left_arrow_sign(vind, blockV[2])
@@ -231,14 +229,14 @@ function eigen(
 
   b = first(eachnzblock(T))
   blockT = blockview(T, b)
-  Db, Vb = eigen(blockT)
+  Db, Vb = eigen(expose(blockT))
   Ds = [Db]
   Vs = [Vb]
   append!(d, abs.(data(Db)))
   for (n, b) in enumerate(eachnzblock(T))
     n == 1 && continue
     blockT = blockview(T, b)
-    Db, Vb = eigen(blockT)
+    Db, Vb = eigen(expose(blockT))
     push!(Ds, Db)
     push!(Vs, Vb)
     append!(d, abs.(data(Db)))
@@ -318,9 +316,9 @@ function eigen(
   end
 
   D = DiagBlockSparseTensor(
-    set_ndims(set_eltype(leaf_parenttype(T), ElD), 1), undef, nzblocksD, indsD
+    set_ndims(set_eltype(unwrap_type(T), ElD), 1), undef, nzblocksD, indsD
   )
-  V = BlockSparseTensor(set_eltype(leaf_parenttype(T), ElV), undef, nzblocksV, indsV)
+  V = BlockSparseTensor(set_eltype(unwrap_type(T), ElV), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Db, Vb = Ds[n], Vs[n]
@@ -328,7 +326,7 @@ function eigen(
     blockD = nzblocksD[n]
     blockviewD = blockview(D, blockD)
     # TODO: Replace `data` with `diagview`.
-    copyto!(data(blockviewD), data(Db))
+    copyto!(expose(data(blockviewD)), expose(data(Db)))
 
     blockV = nzblocksV[n]
     copyto!(blockview(V, blockV), Vb)
@@ -337,7 +335,7 @@ function eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
+Unwrap.ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #
 #  Generic function to implelement blocks sparse qr/ql decomposition.  It calls
@@ -391,16 +389,16 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; positive=nothing)
     nzblocksX[n] = (UInt(n), blockT[2])
   end
 
-  Q = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksQ, indsQ)
-  X = BlockSparseTensor(leaf_parenttype(T), undef, nzblocksX, indsX)
+  Q = BlockSparseTensor(unwrap_type(T), undef, nzblocksQ, indsQ)
+  X = BlockSparseTensor(unwrap_type(T), undef, nzblocksX, indsX)
 
   for n in 1:nnzblocksT
     copyto!(blockview(Q, nzblocksQ[n]), Qs[n])
     copyto!(blockview(X, nzblocksX[n]), Xs[n])
   end
 
-  Q = adapt(leaf_parenttype(T), Q)
-  X = adapt(leaf_parenttype(T), X)
+  Q = adapt(unwrap_type(T), Q)
+  X = adapt(unwrap_type(T), X)
   return Q, X
 end
 

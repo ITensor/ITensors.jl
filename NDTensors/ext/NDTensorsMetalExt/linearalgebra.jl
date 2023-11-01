@@ -1,16 +1,30 @@
-function NDTensors.qr(leaf_parenttype::Type{<:MtlArray}, A::AbstractMatrix)
-  Q, R = NDTensors.qr(NDTensors.cpu(A))
-  return adapt(leaf_parenttype, Matrix(Q)), adapt(leaf_parenttype, R)
+function LinearAlgebra.qr(A::Exposed{<:MtlMatrix})
+  Q, R = qr(expose(NDTensors.cpu(A)))
+  return adapt(unwrap_type(A), Matrix(Q)), adapt(unwrap_type(A), R)
 end
 
-function NDTensors.eigen(leaf_parenttype::Type{<:MtlArray}, A::AbstractMatrix)
-  D, U = NDTensors.eigen(NDTensors.cpu(A))
-  return adapt(set_ndims(leaf_parenttype, ndims(D)), D), adapt(leaf_parenttype, U)
+function NDTensors.Unwrap.qr_positive(A::Exposed{<:MtlMatrix})
+  Q, R = qr_positive(expose(NDTensors.cpu(A)))
+  return adapt(unwrap_type(A), Matrix(Q)), adapt(unwrap_type(A), R)
 end
 
-function NDTensors.svd(leaf_parenttype::Type{<:MtlArray}, A::AbstractMatrix)
-  U, S, V = NDTensors.svd(NDTensors.cpu(A))
-  return adapt(leaf_parenttype, U),
-  adapt(set_ndims(leaf_parenttype, ndims(S)), S),
-  adapt(leaf_parenttype, V)
+function NDTensors.Unwrap.ql(A::Exposed{<:MtlMatrix})
+  Q, L = ql(expose(NDTensors.cpu(A)))
+  return adapt(unwrap_type(A), Matrix(Q)), adapt(unwrap_type(A), L)
+end
+function NDTensors.Unwrap.ql_positive(A::Exposed{<:MtlMatrix})
+  Q, L = ql_positive(expose(NDTensors.cpu(A)))
+  return adapt(unwrap_type(A), Matrix(Q)), adapt(unwrap_type(A), L)
+end
+
+function LinearAlgebra.eigen(A::Exposed{<:MtlMatrix})
+  D, U = eigen(expose(NDTensors.cpu(A)))
+  return adapt(set_ndims(unwrap_type(A), ndims(D)), D), adapt(unwrap_type(A), U)
+end
+
+function LinearAlgebra.svd(A::Exposed{<:MtlMatrix}; kwargs...)
+  U, S, V = svd(expose(NDTensors.cpu(A)); kwargs...)
+  return adapt(unwrap_type(A), U),
+  adapt(set_ndims(unwrap_type(A), ndims(S)), S),
+  adapt(unwrap_type(A), V)
 end

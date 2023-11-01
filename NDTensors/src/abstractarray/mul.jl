@@ -1,20 +1,12 @@
 function mul!!(CM::AbstractArray, AM::AbstractArray, BM::AbstractArray, α, β)
-  return mul!!(
-    leaf_parenttype(CM), CM, leaf_parenttype(AM), AM, leaf_parenttype(BM), BM, α, β
-  )
+  CM = mul!(expose(CM), expose(AM), expose(BM), α, β)
   return CM
 end
 
-function mul!!(
-  ::Type{<:AbstractArray},
-  CM,
-  ::Type{<:AbstractArray},
-  AM,
-  ::Type{<:AbstractArray},
-  BM,
-  α,
-  β,
-)
-  mul!(CM, AM, BM, α, β)
+## TODO There is an issue in CUDA.jl
+## When all are transpose CUDA.mul! isn't being
+## Called correctly in `NDTensorsCUDAExt`
+function mul!!(CM::Transpose, AM::Transpose, BM::Transpose, α, β)
+  CM = mul!!(parent(CM), parent(BM), parent(AM), α, β)
   return CM
 end
