@@ -531,9 +531,9 @@ function replacebond!(
   M::MPS,
   b::Int,
   phi::ITensor;
-  normalize=false,
-  swapsites=false,
-  ortho="left",
+  normalize=nothing,
+  swapsites=nothing,
+  ortho=nothing,
   # Decomposition kwargs
   which_decomp=nothing,
   mindim=nothing,
@@ -542,6 +542,10 @@ function replacebond!(
   eigen_perturbation=nothing,
   svd_alg=nothing,
 )
+  normalize = NDTensors.replace_nothing(normalize, false)
+  swapsites = NDTensors.replace_nothing(swapsites, false)
+  ortho = NDTensors.replace_nothing(ortho, "left")
+
   indsMb = inds(M[b])
   if swapsites
     sb = siteind(M, b)
@@ -554,6 +558,7 @@ function replacebond!(
     mindim,
     maxdim,
     cutoff,
+    ortho,
     which_decomp,
     eigen_perturbation,
     svd_alg,

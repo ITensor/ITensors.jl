@@ -104,7 +104,6 @@ function svd(
   # Only used by BlockSparse svd
   min_blockdim=nothing,
 ) where {ElT,IndsT}
-  truncate = !isnothing(maxdim) || !isnothing(cutoff)
   alg = replace_nothing(alg, default_svd_alg(T))
   if alg == "divide_and_conquer"
     MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.DivideAndConquer())
@@ -147,7 +146,7 @@ function svd(
   #end # @timeit_debug
 
   P = MS .^ 2
-  if truncate
+  if any(!isnothing, (maxdim, cutoff))
     P, truncerr, _ = truncate!!(
       P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
@@ -184,7 +183,6 @@ function eigen(
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
 ) where {ElT<:Union{Real,Complex},IndsT}
-  truncate = !isnothing(maxdim) || !isnothing(cutoff)
   matrixT = matrix(T)
   ## TODO Here I am calling parent to ensure that the correct `any` function
   ## is envoked for non-cpu matrices
@@ -204,7 +202,7 @@ function eigen(
   DM = DM[p]
   VM = VM[:, p]
 
-  if truncate
+  if any(!isnothing, (maxdim, cutoff))
     DM, truncerr, _ = truncate!!(
       DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
@@ -291,7 +289,6 @@ function eigen(
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
 ) where {ElT<:Union{Real,Complex},IndsT}
-  truncate = !isnothing(maxdim) || !isnothing(cutoff)
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
     throw(
@@ -308,7 +305,7 @@ function eigen(
   #DM = DM[p]
   #VM = VM[:,p]
 
-  if truncate
+  if any(!isnothing, (maxdim, cutoff))
     DM, truncerr, _ = truncate!!(
       DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )

@@ -66,7 +66,7 @@ function tsvd(
   conj!(V)
 
   P = S .^ 2
-  if !isnothing(maxdim) || !isnothing(cutoff)
+  if any(!isnothing, (maxdim, cutoff))
     P, truncerr, _ = truncate!!(
       P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )

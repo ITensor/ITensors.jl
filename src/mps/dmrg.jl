@@ -269,7 +269,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
             phi,
             1,
             eigsolve_which_eigenvalue;
-            ishermitian=ishermitian,
+            ishermitian,
             tol=eigsolve_tol,
             krylovdim=eigsolve_krylovdim,
             maxiter=eigsolve_maxiter,

@@ -45,8 +45,6 @@ function svd(
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
 ) where {ElT}
-  truncate = !isnothing(maxdim) || !isnothing(cutoff)
-
   Us = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
   Ss = Vector{DiagTensor{real(ElT),2}}(undef, nnzblocks(T))
   Vs = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
@@ -83,13 +81,13 @@ function svd(
   nzblocksT = nzblocks(T)
 
   dropblocks = Int[]
-  if truncate
+  if any(!isnothing, (maxdim, cutoff))
     d, truncerr, docut = truncate!!(
       d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(
-        Ss[n], docut; min_blockdim, singular_values=true, truncate
+        Ss[n], docut; min_blockdim, singular_values=true, truncate=true
       )
       if blockdim == 0
         push!(dropblocks, n)
@@ -222,8 +220,6 @@ function eigen(
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
 ) where {ElT<:Union{Real,Complex}}
-  truncate = !isnothing(maxdim) || !isnothing(cutoff)
-
   ElD, ElV = _eigen_eltypes(T)
 
   # Sorted eigenvalues
@@ -251,13 +247,13 @@ function eigen(
   dropblocks = Int[]
   sort!(d; rev=true, by=abs)
 
-  if truncate
+  if any(!isnothing, (maxdim, cutoff))
     d, truncerr, docut = truncate!!(
       d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(
-        Ds[n], docut; min_blockdim, singular_values=false, truncate
+        Ds[n], docut; min_blockdim, singular_values=false, truncate=true
       )
       if blockdim == 0
         push!(dropblocks, n)
