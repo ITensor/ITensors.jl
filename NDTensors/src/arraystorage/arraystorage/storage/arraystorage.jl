@@ -39,6 +39,8 @@ end
 function to_arraystorage(x::BlockSparseTensor)
   blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], inds(x))
   blocktype = set_ndims(datatype(x), ndims(x))
+  # TODO: Make a simpler constructor:
+  # BlockSparseArray(blocktype, blockinds)
   arraystorage = BlockSparseArray{eltype(x),ndims(x),blocktype}(blockinds)
   return tensor(arraystorage, inds(x))
 end
