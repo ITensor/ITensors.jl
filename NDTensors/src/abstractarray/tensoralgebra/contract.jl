@@ -168,15 +168,7 @@ function _contract!(
 
   #tC = similar(CM)
   #_gemm!(tA, tB, El(α), AM, BM, El(β), CM)
-  ## If C^T = A^T * B^T => C = B * A
-  ## TODO There is an issue in CUDA.jl
-  ## When all are transpose CUDA.mul! isn't being
-  ## Called correctly in `NDTensorsCUDAExt`
-  if AM isa Transpose && BM isa Transpose && CM isa Transpose
-    CM = mul!!(parent(CM), parent(BM), parent(AM), El(α), El(β))
-  else
-    CM = mul!!(CM, AM, BM, El(α), El(β))
-  end
+  CM = mul!!(CM, AM, BM, El(α), El(β))
 
   if props.permuteC
     Cr = reshape(CM, props.newCrange)
