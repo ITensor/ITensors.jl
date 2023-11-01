@@ -41,6 +41,13 @@ function BlockSparseArray(
   return BlockSparseArray(Dictionary(blocks, blockdata), axes)
 end
 
+function BlockSparseArray{T,N,B}(
+  ::UndefInitializer, blocks::AbstractVector{<:Block{N}}, axes::Tuple{Vararg{Any,N}}
+) where {T,N,B}
+  blockdata = map(block -> B(undef, block_size(axes, block)), Indices(blocks))
+  return BlockSparseArray(blockdata, axes)
+end
+
 function BlockSparseArray(
   blockdata::Dictionary{<:Block{N}}, axes::Tuple{Vararg{AbstractUnitRange{Int},N}}
 ) where {N}
