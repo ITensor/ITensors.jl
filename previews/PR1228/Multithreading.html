@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Multithreading · ITensors.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">ITensors.jl</a></span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Introduction</a></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="getting_started/DebugChecks.html">Enabling Debug Checks</a></li><li><a class="tocitem" href="getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/DMRG.html">DMRG</a></li><li><a class="tocitem" href="tutorials/QN_DMRG.html">Quantum Number Conserving DMRG</a></li><li><a class="tocitem" href="tutorials/MPSTimeEvolution.html">MPS Time Evolution</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="examples/ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="examples/MPSandMPO.html">MPS and MPO Examples</a></li><li><a class="tocitem" href="examples/DMRG.html">DMRG Examples</a></li><li><a class="tocitem" href="examples/Physics.html">Physics (SiteType) System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="IndexType.html">Index</a></li><li><a class="tocitem" href="IndexSetType.html">Index collections</a></li><li><a class="tocitem" href="ITensorType.html">ITensor</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="QN.html">QN</a></li><li><a class="tocitem" href="SiteType.html">SiteType and op, state, val functions</a></li><li><a class="tocitem" href="IncludedSiteTypes.html">SiteTypes Included with ITensor</a></li><li><input class="collapse-toggle" id="menuitem-5-8" type="checkbox"/><label class="tocitem" for="menuitem-5-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="DMRG.html">DMRG</a></li><li><a class="tocitem" href="Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="OpSum.html">OpSum (AutoMPO)</a></li></ul></li><li><span class="tocitem">Frequently Asked Questions</span><ul><li><a class="tocitem" href="faq/JuliaAndCpp.html">Programming Language (Julia, C++, ...) FAQs</a></li><li><a class="tocitem" href="faq/DMRG.html">DMRG FAQs</a></li><li><a class="tocitem" href="faq/QN.html">Quantum Number (QN) FAQs</a></li><li><a class="tocitem" href="faq/Development.html">ITensor Development FAQs</a></li><li><a class="tocitem" href="faq/RelationshipToOtherLibraries.html">Relationship of ITensor to other tensor libraries FAQs</a></li><li><a class="tocitem" href="faq/JuliaPkg.html">Julia Package Manager FAQs</a></li><li><a class="tocitem" href="faq/HPC.html">High-Performance Computing FAQs</a></li></ul></li><li><span class="tocitem">Upgrade guides</span><ul><li><a class="tocitem" href="UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a></li></ul></li><li><a class="tocitem" href="Einsum.html">ITensor indices and Einstein notation</a></li><li><span class="tocitem">Advanced Usage Guide</span><ul><li><a class="tocitem" href="AdvancedUsageGuide.html">Advanced Usage Guide</a></li><li class="is-active"><a class="tocitem" href="Multithreading.html">Multithreading</a></li><li><a class="tocitem" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a></li><li><a class="tocitem" href="CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="ContractionSequenceOptimization.html">Contraction sequence optimization</a></li><li><a class="tocitem" href="HDF5FileFormats.html">HDF5 File Formats</a></li></ul></li><li><a class="tocitem" href="DeveloperGuide.html">Developer Guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Advanced Usage Guide</a></li><li class="is-active"><a href="Multithreading.html">Multithreading</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="Multithreading.html">Multithreading</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/main/docs/src/Multithreading.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Multithreading"><a class="docs-heading-anchor" href="#Multithreading">Multithreading</a><a id="Multithreading-1"></a><a class="docs-heading-anchor-permalink" href="#Multithreading" title="Permalink"></a></h1><p>Most modern computers, including laptops, have multiple cores (processing units) which can be used to perform multiple tasks at the same time and therefore speed up computations. Multithreading is a form of shared memory parallelism that makes use of these multiple cores that you may have available.</p><p>There are three primary sources of parallelization available to ITensors.jl. These are:</p><ul><li>BLAS/LAPACK multithreading (through whatever flavor you are using, i.e. OpenBLAS or MKL).</li><li>The Strided.jl package, which implements efficient multithreaded dense array permutations.</li><li>Block sparse multithreading (currently only for block sparse contractions) implemented in the NDTensors.jl package.</li></ul><p>First, you can obtain the number of threads that are available to you with:</p><pre><code class="language-julia hljs">julia&gt; Sys.CPU_THREADS
+6</code></pre><p>If your computations are dominated by large dense tensors, you likely want to make use of BLAS multithreading in order to multithread dense matrix multiplications and other linear algebra methods like SVD and QR decompositions. This will be on by default. The BLAS/LAPACK multithreading can be controlled in the usual way with environment variables such as by starting Julia with:</p><pre><code class="nohighlight hljs">$ MKL_NUM_THREADS=4 julia # Set the number of MKL threads to 4
+
+$ OPENBLAS_NUM_THREADS=4 julia # Set the number of OpenBLAS threads to 4
+
+$ OMP_NUM_THREADS=4 julia # Set the number of OpenMP threads to 4, which will be used by MKL or OpenBLAS if they are not specifically set</code></pre><p>or at runtime from within Julia:</p><pre><code class="language-julia hljs">julia&gt; using LinearAlgebra
+
+julia&gt; BLAS.vendor()  # Check which BLAS you are using
+:mkl
+
+julia&gt; using ITensors
+
+julia&gt; BLAS.get_num_threads()
+6
+
+julia&gt; BLAS.set_num_threads(4)
+
+julia&gt; BLAS.get_num_threads()
+4</code></pre><p>Note that in Julia v1.6, you will be able to use the command <code>using LinearAlgebra; BLAS.get_num_threads()</code>.</p><p>We would highly recommend using MKL (see the installation instructions for how to do that), especially if you are using an Intel chip. How well BLAS multithreading will work depends on how much your calculations are dominated by large dense matrix operations (which is not always the case, especially if you are using QN conservation).</p><p>Currently, ITensors.jl makes use of the package <a href="https://github.com/Jutho/Strided.jl">Strided.jl</a> for performant dense array permutations. It also provides multithreaded array permutations. If you start Julia with multiple threads, Strided multithreading is on by default:</p><pre><code class="language-julia hljs">$ julia -t 4
+
+julia&gt; Threads.nthreads()
+4
+
+julia&gt; ITensors.Strided.get_num_threads()
+4</code></pre><p>We find that this threading competes with BLAS threading as well as ITensors.jl&#39;s own block sparse multithreading, so if you are using Julia with multiple threads you may want to disable Strided.jl&#39;s threading with:</p><pre><code class="language-julia hljs">julia&gt; ITensors.Strided.disable_threads()
+1
+
+julia&gt; ITensors.Strided.get_num_threads()
+1</code></pre><p>in favor of either BLAS threading or ITensors.jl&#39;s block sparse threading.</p><p>Additionally, ITensors.jl, through the <a href="https://github.com/ITensor/NDTensors.jl">NDTensors.jl</a> library, provides multithreaded block sparse operations. By default, this kind of threading is disabled. If your computations involve QN conserving tensors, you may want to consider enabling block sparse multithreading as described below.</p><article class="docstring"><header><a class="docstring-binding" id="ITensors.enable_threaded_blocksparse" href="#ITensors.enable_threaded_blocksparse"><code>ITensors.enable_threaded_blocksparse</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">ITensors.enable_threaded_blocksparse()
+ITensors.disable_threaded_blocksparse()</code></pre><p>Enable or disable block sparse multithreading.</p><p>Returns the current state of <code>ITensors.using_threaded_blocksparse()</code>, i.e. <code>true</code> if threaded block sparse was previously enabled, and <code>false</code> if threaded block sparse was previously disabled. This is helpful for turning block sparse threading on or off temporarily. For example:</p><pre><code class="language-julia hljs">using_threaded_blocksparse = ITensors.enable_threaded_blocksparse()
+# Run code that you want to be threaded
+if !using_threaded_blocksparse
+  ITensors.disable_threaded_blocksparse()
+end</code></pre><p>Note that you need to start Julia with multiple threads. For example, to start Julia with 4 threads, you can use any of the following:</p><pre><code class="nohighlight hljs">$ julia --threads=4
+
+$ julia -t 4
+
+$ JULIA_NUM_THREADS=4 julia</code></pre><p>In addition, we have found that it is best to disable <code>BLAS</code> and <code>Strided</code> multithreading when using block sparse multithreading. You can do that with the commands <code>using LinearAlgebra; BLAS.set_num_threads(1)</code> and <code>ITensors.Strided.disable_threads()</code>.</p><p>See also: <code>ITensors.enable_threaded_blocksparse</code>, <code>ITensors.disable_threaded_blocksparse</code>, <code>ITensors.using_threaded_blocksparse</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/ITensor/ITensors.jl/blob/5a6fdcc3db15c38f594ba7176ce665cdda8ce078/src/global_variables.jl#L142-L169">source</a></section><section><div><pre><code class="nohighlight hljs">enable_threaded_blocksparse(enable::Bool)</code></pre><p><code>enable_threaded_blocksparse(true)</code> enables threaded block sparse operations (equivalent to <code>enable_threaded_blocksparse()</code>).</p><p><code>enable_threaded_blocksparse(false)</code> disables threaded block sparse operations (equivalent to <code>enable_threaded_blocksparse()</code>).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/ITensor/ITensors.jl/blob/5a6fdcc3db15c38f594ba7176ce665cdda8ce078/src/global_variables.jl#L147-L155">source</a></section></article><p>Here is a simple example of using block sparse multithreading to speed up a sparse tensor contraction:</p><pre><code class="language-julia hljs">using BenchmarkTools
+using ITensors
+using LinearAlgebra
+
+function main(; d = 20, order = 4)
+  BLAS.set_num_threads(1)
+  ITensors.Strided.set_num_threads(1)
+
+  println(&quot;#################################################&quot;)
+  println(&quot;# order = &quot;, order)
+  println(&quot;# d = &quot;, d)
+  println(&quot;#################################################&quot;)
+  println()
+
+  i(n) = Index(QN(0) =&gt; d, QN(1) =&gt; d; tags = &quot;i$n&quot;)
+  is = IndexSet(i, order ÷ 2)
+  A = randomITensor(is&#39;..., dag(is)...)
+  B = randomITensor(is&#39;..., dag(is)...)
+
+  ITensors.enable_threaded_blocksparse(false)
+
+  println(&quot;Serial contract:&quot;)
+  @disable_warn_order begin
+    C_contract = @btime $A&#39; * $B samples = 5
+  end
+  println()
+
+  println(&quot;Threaded contract:&quot;)
+  @disable_warn_order begin
+    ITensors.enable_threaded_blocksparse(true)
+    C_threaded_contract = @btime $A&#39; * $B samples = 5
+    ITensors.enable_threaded_blocksparse(false)
+  end
+  println()
+  @show C_contract ≈ C_threaded_contract
+  return nothing
+end
+
+main(d = 20, order = 4)</code></pre><p>which outputs the following on a laptop with 6 threads, starting Julia with 5 threads:</p><pre><code class="nohighlight hljs">julia&gt; main(d = 20, order = 4)
+#################################################
+# order = 4
+# d = 20
+#################################################
+
+Threads.nthreads() = 5
+Sys.CPU_THREADS = 6
+BLAS.get_num_threads() = 1
+ITensors.Strided.get_num_threads() = 1
+
+Serial contract:
+  21.558 ms (131 allocations: 7.34 MiB)
+
+Threaded contract:
+  5.934 ms (446 allocations: 7.37 MiB)
+
+C_contract ≈ C_threaded_contract = true</code></pre><p>Here is a full example of making use of block sparse multithreading to speed up a DMRG calculation:</p><pre><code class="language-julia hljs">using ITensors
+using LinearAlgebra
+using Random
+
+include(joinpath(ITensors.examples_dir(), &quot;src&quot;, &quot;electronk.jl&quot;))
+include(joinpath(ITensors.examples_dir(), &quot;src&quot;, &quot;hubbard.jl&quot;))
+
+function main(; Nx::Int=6, Ny::Int=3, U::Float64=4.0, t::Float64=1.0,
+                maxdim::Int=3000, conserve_ky=true,
+                nsweeps=10, blas_num_threads=1, strided_num_threads=1,
+                threaded_blocksparse=true, outputlevel=1,
+                seed=1234)
+  Random.seed!(seed)
+  ITensors.Strided.set_num_threads(strided_num_threads)
+  BLAS.set_num_threads(blas_num_threads)
+  ITensors.enable_threaded_blocksparse(threaded_blocksparse)
+
+  if outputlevel &gt; 0
+    @show Threads.nthreads()
+    @show Sys.CPU_THREADS
+    @show BLAS.get_num_threads()
+    @show ITensors.Strided.get_num_threads()
+    @show ITensors.using_threaded_blocksparse()
+    println()
+  end
+
+  N = Nx * Ny
+
+  maxdim = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
+  cutoff = 1E-6
+  noise = [1E-6, 1E-7, 1E-8, 0.0]
+
+  sites = siteinds(&quot;ElecK&quot;, N; conserve_qns=true,
+                   conserve_ky, modulus_ky=Ny)
+
+  hubbard_ops = hubbard(Nx, Ny, t, U, ky=true)
+  H = MPO(hubbard_ops, sites)
+
+  # Number of structural nonzero elements in a bulk
+  # Hamiltonian MPO tensor
+  if outputlevel &gt; 0
+    @show nnz(H[end÷2])
+    @show nnzblocks(H[end÷2])
+  end
+
+  # Create starting state with checkerboard
+  # pattern
+  state = map(CartesianIndices((Ny, Nx))) do I
+    return iseven(I[1]) ⊻ iseven(I[2]) ? &quot;↓&quot; : &quot;↑&quot;
+  end
+  display(state)
+
+  psi0 = randomMPS(sites, state; linkdims=10)
+
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel)
+
+  if outputlevel &gt; 0
+    @show Nx, Ny
+    @show t, U
+    @show flux(psi)
+    @show maxlinkdim(psi)
+    @show energy
+  end
+  return nothing
+end
+
+println(&quot;Without threaded block sparse:\n&quot;)
+main(; nsweeps=10, threaded_blocksparse=false)
+println()
+println(&quot;With threaded block sparse:\n&quot;)
+main(; nsweeps=10, threaded_blocksparse=true)
+println()</code></pre><p>which when run on a laptop with 6 cores gives (after running once with 1 or 2 sweeps to trigger compilation):</p><pre><code class="nohighlight hljs">Without threaded block sparse:
+
+Threads.nthreads() = 5
+Sys.CPU_THREADS = 6
+BLAS.get_num_threads() = 1
+ITensors.Strided.get_num_threads() = 1
+ITensors.using_threaded_blocksparse() = false
+
+splitblocks = true
+nnz(H[end ÷ 2]) = 67
+nnzblocks(H[end ÷ 2]) = 67
+After sweep 1 energy=-5.861157015737 maxlinkdim=78 time=0.633
+After sweep 2 energy=-12.397725587986 maxlinkdim=200 time=6.980
+After sweep 3 energy=-13.472412477115 maxlinkdim=400 time=14.257
+After sweep 4 energy=-13.627475223585 maxlinkdim=800 time=9.801
+After sweep 5 energy=-13.693628527487 maxlinkdim=2000 time=15.343
+After sweep 6 energy=-13.711928225391 maxlinkdim=3000 time=24.260
+After sweep 7 energy=-13.715575192226 maxlinkdim=3000 time=25.752
+After sweep 8 energy=-13.716394378223 maxlinkdim=3000 time=25.907
+After sweep 9 energy=-13.716535094341 maxlinkdim=3000 time=24.748
+After sweep 10 energy=-13.716556326664 maxlinkdim=3000 time=24.185
+171.903248 seconds (575.56 M allocations: 207.370 GiB, 9.37% gc time)
+(Nx, Ny) = (6, 3)
+(t, U) = (1.0, 4.0)
+flux(psi) = QN((&quot;Ky&quot;,0,3),(&quot;Nf&quot;,18,-1),(&quot;Sz&quot;,0))
+maxlinkdim(psi) = 3000
+energy = -13.716556326663678
+
+With threaded block sparse:
+
+Threads.nthreads() = 5
+Sys.CPU_THREADS = 6
+BLAS.get_num_threads() = 1
+ITensors.Strided.get_num_threads() = 1
+ITensors.using_threaded_blocksparse() = true
+
+splitblocks = true
+nnz(H[end ÷ 2]) = 67
+nnzblocks(H[end ÷ 2]) = 67
+After sweep 1 energy=-5.861157015735 maxlinkdim=78 time=1.117
+After sweep 2 energy=-12.397725588011 maxlinkdim=200 time=6.587
+After sweep 3 energy=-13.472412477124 maxlinkdim=400 time=12.094
+After sweep 4 energy=-13.627475223588 maxlinkdim=800 time=8.760
+After sweep 5 energy=-13.693628527488 maxlinkdim=2000 time=12.447
+After sweep 6 energy=-13.711928225390 maxlinkdim=3000 time=17.401
+After sweep 7 energy=-13.715575192226 maxlinkdim=3000 time=18.863
+After sweep 8 energy=-13.716394378223 maxlinkdim=3000 time=19.258
+After sweep 9 energy=-13.716535094341 maxlinkdim=3000 time=19.627
+After sweep 10 energy=-13.716556326664 maxlinkdim=3000 time=18.446
+134.604491 seconds (1.69 G allocations: 300.213 GiB, 18.02% gc time)
+(Nx, Ny) = (6, 3)
+(t, U) = (1.0, 4.0)
+flux(psi) = QN((&quot;Ky&quot;,0,3),(&quot;Nf&quot;,18,-1),(&quot;Sz&quot;,0))
+maxlinkdim(psi) = 3000
+energy = -13.71655632666368</code></pre><p>Speedups should be greater for problems with tensors that are more sparse or have more blocks (for example larger system sizes).</p><p>In addition, we plan to add more threading to other parts of the code beyond contraction (such as SVD) and improve composibility with other forms of threading like BLAS and Strided, so stay tuned!</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AdvancedUsageGuide.html">« Advanced Usage Guide</a><a class="docs-footer-nextpage" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Wednesday 1 November 2023 20:53">Wednesday 1 November 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
