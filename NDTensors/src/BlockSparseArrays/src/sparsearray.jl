@@ -34,11 +34,15 @@ function Base.zero(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray})
   # TODO: Make a simpler empty constructor.
   # SparseArray(size(a), parent(a).zero)
   # TODO: Define `zero_elt`.
-  return SparseArray(Dictionary{CartesianIndex{ndims(a)},eltype(a)}(), size(a), parent(a).zero)
+  return SparseArray(
+    Dictionary{CartesianIndex{ndims(a)},eltype(a)}(), size(a), parent(a).zero
+  )
 end
 
 # TODO: Make `PermutedSparseArray`.
-function map_nonzeros!(f, a_dest::AbstractArray, a_src::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray})
+function map_nonzeros!(
+  f, a_dest::AbstractArray, a_src::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
+)
   for index in nonzero_keys(a_src)
     a_dest[index] = f(a_src[index])
   end

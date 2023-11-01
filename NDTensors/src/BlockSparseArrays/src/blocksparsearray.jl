@@ -62,11 +62,15 @@ function BlockSparseArray(
 end
 
 # Empty constructors
-function BlockSparseArray{T,N,A}(blockinds::Tuple{Vararg{AbstractVector,N}}) where {T,N,A<:AbstractArray{T,N}}
+function BlockSparseArray{T,N,A}(
+  blockinds::Tuple{Vararg{AbstractVector,N}}
+) where {T,N,A<:AbstractArray{T,N}}
   return BlockSparseArray(Dictionary{Block{N},A}(), blockinds)
 end
 
-function BlockSparseArray{T,N,A}(blockinds::Vararg{AbstractVector,N}) where {T,N,A<:AbstractArray{T,N}}
+function BlockSparseArray{T,N,A}(
+  blockinds::Vararg{AbstractVector,N}
+) where {T,N,A<:AbstractArray{T,N}}
   return BlockSparseArray{T,N,A}(blockinds)
 end
 
@@ -176,7 +180,9 @@ function Base.permutedims(a::BlockSparseArray, perm)
 end
 
 # TODO: Make `PermutedBlockSparseArray`.
-blocks(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray}) = PermutedDimsArray(blocks(parent(a)), perm(a))
+function blocks(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray})
+  return PermutedDimsArray(blocks(parent(a)), perm(a))
+end
 
 # TODO: Make `PermutedBlockSparseArray`.
 function Base.zero(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray})
@@ -184,7 +190,10 @@ function Base.zero(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArr
 end
 
 # TODO: Make `PermutedBlockSparseArray`.
-function Base.copyto!(a_src::BlockSparseArray, a_dest::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray})
+function Base.copyto!(
+  a_src::BlockSparseArray,
+  a_dest::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray},
+)
   map_nonzeros!(x -> permutedims(x, perm(a_dest)), blocks(a_src), blocks(a_dest))
   return a_src
 end
