@@ -3,7 +3,7 @@
 A Julia `DiagonalArray` type.
 
 ````julia
-using NDTensors.DiagonalArrays: DiagonalArray, DiagIndex, DiagIndices, densearray
+using NDTensors.DiagonalArrays: DiagonalArray, DiagIndex, DiagIndices
 using Test
 
 function main()
@@ -16,7 +16,7 @@ function main()
   @test d[2, 2, 2] == 22
 
   @test length(d[DiagIndices()]) == 3
-  @test densearray(d) == d
+  @test Array(d) == d
   @test d[DiagIndex(2)] == d[2, 2, 2]
 
   d[DiagIndex(2)] = 222
@@ -36,7 +36,7 @@ function main()
 
   mapped_d = map(x -> 2x, d)
   @test mapped_d isa DiagonalArray
-  @test mapped_d == map(x -> 2x, densearray(d))
+  @test mapped_d == map(x -> 2x, Array(d))
 
   return nothing
 end
@@ -46,9 +46,10 @@ main()
 
 You can generate this README with:
 ```julia
-using NDTensors.DiagonalArrays
 using Literate
-Literate.markdown(joinpath(pkgdir(DiagonalArrays), "src", "DiagonalArrays", "examples", "README.jl"), "."; flavor=Literate.CommonMarkFlavor())
+using NDTensors.DiagonalArrays
+dir = joinpath(pkgdir(DiagonalArrays), "src", "DiagonalArrays")
+Literate.markdown(joinpath(dir, "examples", "README.jl"), dir; flavor=Literate.CommonMarkFlavor())
 ```
 
 ---
