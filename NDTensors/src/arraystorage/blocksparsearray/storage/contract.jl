@@ -1,6 +1,11 @@
-parenttype(::Type{<:BlockSparseArray{<:Any,<:Any,P}}) where {P} = P
+Unwrap.parenttype(::Type{<:BlockSparseArray{<:Any,<:Any,P}}) where {P} = P
 
-permutedims(a::BlockSparseArray, perm) = Base.permutedims(a, perm)
+# Needed for implementing block sparse combiner contraction.
+using .BlockSparseArrays: blocks, nonzero_keys
+using .BlockSparseArrays.BlockArrays: BlockArrays
+# TODO: Move to `BlockSparseArrays`, come up with better name.
+# `nonzero_block_keys`?
+nzblocks(a::BlockSparseArray) = BlockArrays.Block.(Tuple.(nonzero_keys(blocks(a))))
 
 function contract!!(
   ::ArrayStorageTensor,
@@ -239,9 +244,9 @@ function permutedims_combine_output(
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
 
-  ## return BlockSparseTensor(leaf_parenttype(T), blocks_perm_comb, is)
+  ## return BlockSparseTensor(unwrap_type(T), blocks_perm_comb, is)
   blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], is)
-  blocktype = set_ndims(leaf_parenttype(T), ndims(T))
+  blocktype = set_ndims(unwrap_type(T), ndims(T))
   return tensor(
     BlockSparseArray{eltype(T),ndims(T),blocktype}(undef, blocks_perm_comb, blockinds), is
   )
@@ -283,13 +288,6 @@ function combine_blocks(
   unique!(blocks_comb)
   return blocks_comb
 end
-
-# Needed for implementing block sparse combiner contraction.
-using .BlockSparseArrays: blocks, nonzero_keys
-using .BlockSparseArrays.BlockArrays: BlockArrays
-# TODO: Move to `BlockSparseArrays`, come up with better name.
-# `nonzero_block_keys`?
-nzblocks(a::BlockSparseArray) = BlockArrays.Block.(Tuple.(nonzero_keys(blocks(a))))
 
 ## # TODO: Implement.
 ## function contraction_output(tensor1::BlockSparseArray, tensor2::BlockSparseArray, indsR)
