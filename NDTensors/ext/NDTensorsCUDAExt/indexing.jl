@@ -20,5 +20,5 @@ end
 Base.any(f, E::Exposed{<:CuArray,<:NDTensors.Tensor}) = any(f, data(unexpose(E)))
 
 function Base.print_array(io::IO, E::Exposed{<:CuArray})
-  Base.print_array(io, expose(NDTensors.cpu(E)))
+  return Base.print_array(io, expose(NDTensors.cpu(E)))
 end
