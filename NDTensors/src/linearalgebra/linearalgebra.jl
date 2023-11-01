@@ -52,7 +52,6 @@ function entropy(s::Spectrum)
   return S
 end
 
-## using expose here fixes an error where `V` is returned as `Transpose(Matrix)`
 function svd_catch_error(A; kwargs...)
   USV = try
     svd(expose(A); kwargs...)
