@@ -14,6 +14,7 @@ end
   devs = devices_list(copy(ARGS))
 
   @testset "test device: $dev" for dev in devs
+    elt = (dev == NDTensors.mtl ? Float32 : Float64)
     # Indices
     indsA = ([2, 3], [4, 5])
 
@@ -93,7 +94,7 @@ end
       @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
     end
 
-    A = dev(BlockSparseTensor(ComplexF64, locs, indsA))
+    A = dev(BlockSparseTensor(complex(elt), locs, indsA))
     randn!(A)
     @test conj(data(store(A))) == data(store(conj(A)))
     @test typeof(conj(A)) <: BlockSparseTensor
@@ -102,28 +103,28 @@ end
       T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
-      @test eltype(T) == Float64
+      @test eltype(T) == elt
       @test norm(T) ≉ 0
 
-      Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(Tc) == 2
       @test nnz(Tc) == 8
-      @test eltype(Tc) == ComplexF64
+      @test eltype(Tc) == complex(elt)
       @test norm(Tc) ≉ 0
     end
 
     @testset "Complex Valued Operations" begin
-      T = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      T = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       rT = real(T)
-      @test eltype(rT) == Float64
+      @test eltype(rT) == elt
       @test nnzblocks(rT) == nnzblocks(T)
       iT = imag(T)
-      @test eltype(iT) == Float64
+      @test eltype(iT) == elt
       @test nnzblocks(iT) == nnzblocks(T)
       @test norm(rT)^2 + norm(iT)^2 ≈ norm(T)^2
 
       cT = conj(T)
-      @test eltype(cT) == ComplexF64
+      @test eltype(cT) == complex(elt)
       @test nnzblocks(cT) == nnzblocks(T)
     end
     @testset "similartype regression test" begin
@@ -142,13 +143,13 @@ end
       T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
-      @test eltype(T) == Float64
+      @test eltype(T) == elt
       @test norm(T) ≉ 0
 
-      Tc = dev(randomBlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(Tc) == 2
       @test nnz(Tc) == 8
-      @test eltype(Tc) == ComplexF64
+      @test eltype(Tc) == complex(elt)
       @test norm(Tc) ≉ 0
     end
 
@@ -175,7 +176,7 @@ end
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2, 3], [4, 5])
 
-    for I in eachindex(C)
+    for I in eachindex(T)
       @test T[I] == 0.0
     end
     @test nnz(T) == 0

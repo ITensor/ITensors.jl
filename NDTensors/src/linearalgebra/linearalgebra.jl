@@ -4,6 +4,7 @@
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
+import .Unwrap: qr_positive, ql, ql_positive
 
 function (
   T1::Tensor{ElT1,2,StoreT1} * T2::Tensor{ElT2,2,StoreT2}
@@ -53,7 +54,7 @@ end
 
 function svd_catch_error(A; kwargs...)
   USV = try
-    svd(A; kwargs...)
+    svd(expose(A); kwargs...)
   catch
     return nothing
   end
@@ -134,7 +135,7 @@ function svd(
     )
   end
   if isnothing(MUSV)
-    if any(isnan, T)
+    if any(isnan, expose(T))
       println("SVD failed, the matrix you were trying to SVD contains NaNs.")
     else
       println(lapack_svd_error_message(alg))
@@ -160,7 +161,7 @@ function svd(
     # Fails on some GPU backends like Metal.
     # resize!(MS, dS)
     MS = MS[1:dS]
-    MV = MV[:, 1:dS]
+    MV = expose(MV)[:, 1:dS]
   end
 
   # Make the new indices to go onto U and V
@@ -194,10 +195,10 @@ function eigen(
     )
   end
 
-  DM, VM = eigen(matrixT)
+  DM, VM = eigen(expose(matrixT))
 
   # Sort by largest to smallest eigenvalues
-  # TODO: Replace `cpu` with `leaf_parenttype` dispatch.
+  # TODO: Replace `cpu` with `unwrap_type` dispatch.
   p = sortperm(cpu(DM); rev=true, by=abs)
   DM = DM[p]
   VM = VM[:, p]
@@ -298,7 +299,7 @@ function eigen(
     )
   end
 
-  DM, VM = eigen(matrixT)
+  DM, VM = eigen(expose(matrixT))
 
   # Sort by largest to smallest eigenvalues
   #p = sortperm(DM; rev = true)
@@ -331,13 +332,13 @@ function eigen(
   return D, V, spec
 end
 
-# NDTensors.qr
+# LinearAlgebra.qr
 function qr(T::DenseTensor{<:Any,2}; positive=false)
   qxf = positive ? qr_positive : qr
   return qx(qxf, T)
 end
 
-# NDTensors.ql
+# NDTensors.Unwrap.ql
 function ql(T::DenseTensor{<:Any,2}; positive=false)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T)
@@ -348,7 +349,7 @@ end
 #  The X tensor = R or L.
 #
 function qx(qx::Function, T::DenseTensor{<:Any,2})
-  QM, XM = qx(matrix(T))
+  QM, XM = qx(expose(matrix(T)))
   # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
   # It gets converted to matrix below.
   # Make the new indices to go onto Q and R
@@ -375,6 +376,7 @@ end
 #
 # Just flip signs between Q and R to get all the diagonals of R >=0.
 # For rectangular M the indexing for "diagonal" is non-trivial.
+# NDTensors.Unwrap.qr_positive and # NDTensors.Unwrap.ql_positive
 #
 """
     qr_positive(M::AbstractMatrix)
@@ -408,7 +410,7 @@ function ql_positive(M::AbstractMatrix)
   # like `qr_positive`.
   iscuda = iscu(M)
   if iscuda
-    cutype = leaf_parenttype(M)
+    cutype = unwrap_type(M)
     M = NDTensors.cpu(M)
   end
   sparseQ, L = ql(M)
@@ -439,10 +441,10 @@ function ql(A::AbstractMatrix)
   Base.require_one_based_indexing(A)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
-  copyto!(AA, A)
+  copyto!(expose(AA), expose(A))
   iscuda = iscu(AA)
   if iscuda
-    cutype = leaf_parenttype(AA)
+    cutype = unwrap_type(AA)
     AA = NDTensors.cpu(AA)
   end
   Q, L = ql!(AA)

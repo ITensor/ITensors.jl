@@ -1,1 +1,1 @@
-leaf_parenttype(T::ITensor) = leaf_parenttype(tensor(T))
+NDTensors.Unwrap.unwrap_type(T::ITensor) = unwrap_type(tensor(T))

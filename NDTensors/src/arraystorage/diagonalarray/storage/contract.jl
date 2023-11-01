@@ -1,5 +1,5 @@
 # TODO: Move to a different file.
-parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
+Unwrap.parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
 
 # TODO: Move to a different file.
 function promote_rule(
@@ -8,7 +8,7 @@ function promote_rule(
   # TODO: Replace with `unwrap_type` once
   # https://github.com/ITensor/ITensors.jl/pull/1220
   # is merged.
-  return promote_type(storagetype1, leaf_parenttype(storagetype2))
+  return promote_type(storagetype1, unwrap_type(storagetype2))
 end
 
 # TODO: Move to a different file.

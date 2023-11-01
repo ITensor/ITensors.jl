@@ -5,7 +5,7 @@ function NDTensors.svd_catch_error(A::CuMatrix; alg="JacobiAlgorithm")
     alg = CUDA.CUSOLVER.QRAlgorithm()
   end
   USV = try
-    svd(A; alg=alg)
+    svd(expose(A); alg=alg)
   catch
     return nothing
   end
