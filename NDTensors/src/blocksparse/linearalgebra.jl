@@ -4,8 +4,9 @@ const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,Stor
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 
 function _truncated_blockdim(
-  S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=0
+  S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=nothing
 )
+  min_blockdim = replace_nothing(min_blockdim, 0)
   # TODO: Replace `cpu` with `unwrap_type` dispatch.
   S = cpu(S)
   full_dim = diaglength(S)
@@ -34,13 +35,16 @@ per row/column, otherwise it fails.
 This assumption makes it so the result can be
 computed from the dense svds of seperate blocks.
 """
-function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
-  alg::String = get(kwargs, :alg, "divide_and_conquer")
-  min_blockdim::Int = get(kwargs, :min_blockdim, 0)
-  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
-
-  #@timeit_debug timer "block sparse svd" begin
-
+function svd(
+  T::Tensor{ElT,2,<:BlockSparse};
+  min_blockdim=nothing,
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+) where {ElT}
   Us = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
   Ss = Vector{DiagTensor{real(ElT),2}}(undef, nnzblocks(T))
   Vs = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
@@ -50,7 +54,7 @@ function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
 
   for (n, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
-    USVb = svd(blockT; alg=alg)
+    USVb = svd(blockT; alg)
     if isnothing(USVb)
       return nothing
     end
@@ -77,11 +81,13 @@ function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
   nzblocksT = nzblocks(T)
 
   dropblocks = Int[]
-  if truncate
-    d, truncerr, docut = truncate!!(d; kwargs...)
+  if any(!isnothing, (maxdim, cutoff))
+    d, truncerr, docut = truncate!!(
+      d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
+    )
     for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(
-        Ss[n], docut; min_blockdim, singular_values=true, truncate
+        Ss[n], docut; min_blockdim, singular_values=true, truncate=true
       )
       if blockdim == 0
         push!(dropblocks, n)
@@ -197,7 +203,6 @@ function svd(T::Tensor{ElT,2,<:BlockSparse}; kwargs...) where {ElT}
     copyto!(blockview(V, blockV), Vb)
   end
   return U, S, V, Spectrum(d, truncerr)
-  #end # @timeit_debug
 end
 
 _eigen_eltypes(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}}) where {ElT} = real(ElT), ElT
@@ -206,10 +211,13 @@ _eigen_eltypes(T::BlockSparseMatrix{ElT}) where {ElT} = complex(ElT), complex(El
 
 function eigen(
   T::Union{Hermitian{ElT,<:Tensor{ElT,2,<:BlockSparse}},Tensor{ElT,2,<:BlockSparse}};
-  kwargs...,
+  min_blockdim=nothing,
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
 ) where {ElT<:Union{Real,Complex}}
-  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
-
   ElD, ElV = _eigen_eltypes(T)
 
   # Sorted eigenvalues
@@ -237,10 +245,14 @@ function eigen(
   dropblocks = Int[]
   sort!(d; rev=true, by=abs)
 
-  if truncate
-    d, truncerr, docut = truncate!!(d; kwargs...)
+  if any(!isnothing, (maxdim, cutoff))
+    d, truncerr, docut = truncate!!(
+      d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
+    )
     for n in 1:nnzblocks(T)
-      blockdim = _truncated_blockdim(Ds[n], docut)
+      blockdim = _truncated_blockdim(
+        Ds[n], docut; min_blockdim, singular_values=false, truncate=true
+      )
       if blockdim == 0
         push!(dropblocks, n)
       else
@@ -331,7 +343,7 @@ qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #  This code thanks to Niklas Tausendpfund 
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
+function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; positive=nothing)
   ElT = eltype(T)
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
@@ -342,7 +354,7 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
 
   for (jj, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
-    QXb = qx(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+    QXb = qx(blockT; positive)
 
     if (isnothing(QXb))
       return nothing

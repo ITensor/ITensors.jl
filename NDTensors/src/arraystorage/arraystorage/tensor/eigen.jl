@@ -5,10 +5,10 @@
 function eigen(
   T::Hermitian{<:Any,<:ArrayStorageTensor};
   maxdim=nothing,
-  mindim=1,
+  mindim=nothing,
   cutoff=nothing,
-  use_absolute_cutoff=false,
-  use_relative_cutoff=true,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
   # These are getting passed erroneously.
   # TODO: Make sure they don't get passed down
   # to here.
@@ -20,12 +20,6 @@ function eigen(
   ortho=nothing,
   svd_alg=nothing,
 )
-  truncate = !isnothing(maxdim) || !isnothing(cutoff)
-  # TODO: Define `default_maxdim(T)`.
-  maxdim = isnothing(maxdim) ? minimum(dims(T)) : maxdim
-  # TODO: Define `default_cutoff(T)`.
-  cutoff = isnothing(cutoff) ? zero(eltype(T)) : cutoff
-
   matrixT = matrix(T)
   ## TODO Here I am calling parent to ensure that the correct `any` function
   ## is envoked for non-cpu matrices
@@ -45,7 +39,7 @@ function eigen(
   DM = DM[p]
   VM = VM[:, p]
 
-  if truncate
+  if any(!isnothing, (maxdim, cutoff))
     DM, truncerr, _ = truncate!!(
       DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
     )
@@ -68,7 +62,6 @@ function eigen(
   Vinds = indstype((dag(ind(T, 2)), dag(r)))
   Dinds = indstype((l, dag(r)))
   V = tensor(VM, Vinds)
-  # TODO: Replace with `DiagonalArray`.
-  D = tensor(Diag(DM), Dinds)
+  D = tensor(DiagonalMatrix(DM), Dinds)
   return D, V, spec
 end

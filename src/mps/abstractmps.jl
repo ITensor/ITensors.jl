@@ -1592,7 +1592,8 @@ bond indices is performed. Afterward, tensors
 Either modify in-place with `orthogonalize!` or
 out-of-place with `orthogonalize`.
 """
-function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
+function orthogonalize!(M::AbstractMPS, j::Int; maxdim=nothing, normalize=nothing)
+  # TODO: Delete `maxdim` and `normalize` keyword arguments.
   @debug_check begin
     if !(1 <= j <= length(M))
       error("Input j=$j to `orthogonalize!` out of range (valid range = 1:$(length(M)))")
@@ -1608,7 +1609,7 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     else
       ltags = TagSet("Link,l=$b")
     end
-    L, R = factorize(M[b], linds; tags=ltags, kwargs...)
+    L, R = factorize(M[b], linds; tags=ltags, maxdim)
     M[b] = L
     M[b + 1] *= R
     setleftlim!(M, b)
@@ -1629,7 +1630,7 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     else
       ltags = TagSet("Link,l=$b")
     end
-    L, R = factorize(M[b + 1], rinds; tags=ltags, kwargs...)
+    L, R = factorize(M[b + 1], rinds; tags=ltags, maxdim)
     M[b + 1] = L
     M[b] *= R
 

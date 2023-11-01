@@ -1,4 +1,5 @@
-function qr(A::ArrayStorageTensor)
+function qr(A::ArrayStorageTensor; positive=false)
+  positive && error("Not implemented")
   Q, R = qr(storage(A))
   Q = convert(typeof(R), Q)
   i, j = inds(A)
