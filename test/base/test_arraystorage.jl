@@ -3,10 +3,10 @@ using LinearAlgebra
 using Test
 
 module TestArrayStorage
-  using ITensors
-  using ITensors.NDTensors.BlockSparseArrays
-  default_arraystoragetype(space) = Array
-  default_arraystoragetype(space::Vector{<:Pair{<:QN}}) = BlockSparseArray
+using ITensors
+using ITensors.NDTensors.BlockSparseArrays
+default_arraystoragetype(space) = Array
+default_arraystoragetype(space::Vector{<:Pair{<:QN}}) = BlockSparseArray
 end
 
 @testset "ITensor Array storage $space" for space in (2, [QN(0) => 2, QN(1) => 3])
@@ -32,7 +32,8 @@ end
 
   # TODO: Still need to implement.
   if space isa Vector{<:Pair{<:QN}}
-    @test_broken NDTensors.storage(A * B) isa TestArrayStorage.default_arraystoragetype(space)
+    @test_broken NDTensors.storage(A * B) isa
+      TestArrayStorage.default_arraystoragetype(space)
     @test_broken A[1, 1] = 11
   else
     @test NDTensors.storage(A * B) isa TestArrayStorage.default_arraystoragetype(space)
