@@ -125,6 +125,11 @@ ITensor(is, st::TensorStorage)::ITensor = ITensor(NeverAlias(), st, is)
 itensor(T::ITensor) = T
 ITensor(T::ITensor) = copy(T)
 
+# TODO: Delete once `TensorStorage` is removed.
+function NDTensors.to_arraystorage(x::ITensor)
+  return itensor(NDTensors.to_arraystorage(tensor(x)))
+end
+
 """
     itensor(args...; kwargs...)
 
@@ -268,6 +273,14 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 #
 # EmptyStorage ITensor constructors
 #
+
+# TODO: Replace with a simpler and more generic `zeros` constructor
+# when the new `UnallocatedZeros` type lands.
+# This is only used internally inside the implementation of `directsum`
+# right now.
+function zeros_itensor(elt::Type{<:Number}, inds::Index...)
+  return ITensor(elt, zero(elt), inds...)
+end
 
 # TODO: Deprecated!
 """

@@ -1,16 +1,14 @@
-# Combiner
-promote_rule(::Type{<:Combiner}, arraytype::Type{<:MatrixOrArrayStorage}) = arraytype
-
 # Generic AbstractArray code
 function contract(
   array1::MatrixOrArrayStorage,
   labels1,
   array2::MatrixOrArrayStorage,
   labels2,
-  labelsR=contract_labels(labels1, labels2),
+  labelsR=contract_labels(labels1, labels2);
+  kwargs...,
 )
   output_array = contraction_output(array1, labels1, array2, labels2, labelsR)
-  contract!(output_array, labelsR, array1, labels1, array2, labels2)
+  contract!(output_array, labelsR, array1, labels1, array2, labels2; kwargs...)
   return output_array
 end
 
@@ -43,26 +41,21 @@ function contraction_output(
 end
 
 # Required interface for specific AbstractArray types
+# TODO: Define `default_α` and `default_β`.
+# TODO: Define this as a `ttgt` or `matricize` backend.
 function contract!(
-  arrayR::MatrixOrArrayStorage,
-  labelsR,
+  array_dest::MatrixOrArrayStorage,
+  labels_dest,
   array1::MatrixOrArrayStorage,
   labels1,
   array2::MatrixOrArrayStorage,
   labels2,
+  α=one(eltype(array_dest)),
+  β=zero(eltype(array_dest));
 )
-  props = ContractionProperties(labels1, labels2, labelsR)
-  compute_contraction_properties!(props, array1, array2, arrayR)
+  props = ContractionProperties(labels1, labels2, labels_dest)
+  compute_contraction_properties!(props, array1, array2, array_dest)
   # TODO: Change this to just `contract!`, or maybe `contract_ttgt!`?
-  _contract!(arrayR, array1, array2, props)
-  return arrayR
-end
-
-function permutedims!(
-  output_array::MatrixOrArrayStorage, array::MatrixOrArrayStorage, perm, f::Function
-)
-  output_array = permutedims!!(
-    leaf_parenttype(output_array), output_array, leaf_parenttype(array), array, perm, f
-  )
-  return output_array
+  _contract!(array_dest, array1, array2, props, α, β)
+  return array_dest
 end

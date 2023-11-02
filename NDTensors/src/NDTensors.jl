@@ -24,6 +24,8 @@ include("UnspecifiedTypes/src/UnspecifiedTypes.jl")
 using .UnspecifiedTypes
 include("UnallocatedArrays/src/UnallocatedArrays.jl")
 using .UnallocatedArrays
+include("DiagonalArrays/src/DiagonalArrays.jl")
+using .DiagonalArrays
 include("BlockSparseArrays/src/BlockSparseArrays.jl")
 using .BlockSparseArrays
 include("SmallVectors/src/SmallVectors.jl")
@@ -32,6 +34,8 @@ include("SortedSets/src/SortedSets.jl")
 using .SortedSets
 include("TagSets/src/TagSets.jl")
 using .TagSets
+include("Unwrap/src/Unwrap.jl")
+using .Unwrap
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
@@ -48,19 +52,18 @@ include("exports.jl")
 #####################################
 # General functionality
 #
+include("default_kwargs.jl")
 include("algorithm.jl")
 include("aliasstyle.jl")
 include("abstractarray/set_types.jl")
 include("abstractarray/to_shape.jl")
-include("abstractarray/iswrappedarray.jl")
 include("abstractarray/iscu.jl")
 include("abstractarray/similar.jl")
 include("abstractarray/ndims.jl")
-include("abstractarray/copyto.jl")
+include("abstractarray/mul.jl")
+include("abstractarray/append.jl")
 include("abstractarray/permutedims.jl")
 include("abstractarray/fill.jl")
-include("abstractarray/mul.jl")
-include("abstractarray/linearalgebra.jl")
 include("array/set_types.jl")
 include("array/permutedims.jl")
 include("array/mul.jl")
@@ -75,8 +78,6 @@ include("tensor/tensor.jl")
 include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
-include("tensor/permutedims.jl")
-include("tensor/linearalgebra.jl")
 include("adapt.jl")
 include("tensoralgebra/generic_tensor_operations.jl")
 include("tensoralgebra/contraction_logic.jl")
@@ -135,11 +136,34 @@ include("empty/adapt.jl")
 
 #####################################
 # Array Tensor (experimental)
-# TODO: Move to `Experimental` module.
 #
-include("arraytensor/arraytensor.jl")
-include("arraytensor/array.jl")
-include("arraytensor/blocksparsearray.jl")
+include("arraystorage/arraystorage/storage/arraystorage.jl")
+include("arraystorage/arraystorage/storage/conj.jl")
+include("arraystorage/arraystorage/storage/permutedims.jl")
+include("arraystorage/arraystorage/storage/contract.jl")
+
+include("arraystorage/arraystorage/tensor/arraystorage.jl")
+include("arraystorage/arraystorage/tensor/zeros.jl")
+include("arraystorage/arraystorage/tensor/indexing.jl")
+include("arraystorage/arraystorage/tensor/permutedims.jl")
+include("arraystorage/arraystorage/tensor/mul.jl")
+include("arraystorage/arraystorage/tensor/contract.jl")
+include("arraystorage/arraystorage/tensor/qr.jl")
+include("arraystorage/arraystorage/tensor/eigen.jl")
+include("arraystorage/arraystorage/tensor/svd.jl")
+
+# DiagonalArray storage
+include("arraystorage/diagonalarray/storage/contract.jl")
+
+include("arraystorage/diagonalarray/tensor/contract.jl")
+
+# BlockSparseArray storage
+include("arraystorage/blocksparsearray/storage/contract.jl")
+
+# Combiner storage
+include("arraystorage/combiner/storage/contract.jl")
+
+include("arraystorage/combiner/tensor/contract.jl")
 
 #####################################
 # Deprecations

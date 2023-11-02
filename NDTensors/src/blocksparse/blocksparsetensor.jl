@@ -453,7 +453,7 @@ function permutedims_combine_output(
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
 
-  return BlockSparseTensor(leaf_parenttype(T), blocks_perm_comb, is)
+  return BlockSparseTensor(unwrap_type(T), blocks_perm_comb, is)
 end
 
 function permutedims_combine(
@@ -518,7 +518,7 @@ function permutedims_combine(
     # for GPUs.
     Tbₐ = convert(Array, Tb)
     ## @strided Rb .= permutedims(Tbₐ, perm)
-    permutedims!(Rb, Tbₐ, perm)
+    permutedims!(expose(Rb), expose(Tbₐ), perm)
   end
 
   return R
@@ -594,7 +594,7 @@ function uncombine_output(
   blocks_uncomb_perm = perm_blocks(blocks_uncomb, combdim, invperm(blockperm))
   boffs_uncomb_perm, nnz_uncomb_perm = blockoffsets(blocks_uncomb_perm, inds_uncomb_perm)
   T_uncomb_perm = tensor(
-    BlockSparse(leaf_parenttype(T), boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
+    BlockSparse(unwrap_type(T), boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
   )
   R = reshape(T_uncomb_perm, is)
   return R
@@ -653,7 +653,10 @@ function uncombine(
       #copyto!(Rb,Tb)
 
       if length(Tb) == 1
-        Rb[] = Tb[]
+        # Call `cpu` to avoid allowscalar error on GPU.
+        # TODO: Replace with `@allowscalar`, requires adding
+        # `GPUArraysCore.jl` as a dependency.
+        Rb[] = cpu(Tb)[]
       else
         # XXX: this used to be:
         # Rbₐᵣ = ReshapedArray(parent(Rbₐ), size(Tb), ())
@@ -662,7 +665,7 @@ function uncombine(
         ## Rbₐᵣ = ReshapedArray(Rbₐ, size(Tb), ())
         Rbₐᵣ = reshape(Rbₐ, size(Tb))
         ## @strided Rbₐᵣ .= Tb
-        copyto!(Rbₐᵣ, Tb)
+        copyto!(expose(Rbₐᵣ), expose(Tb))
       end
     end
   end
@@ -712,7 +715,7 @@ function permutedims!!(
   ## copyto!(data(RR), data(R))
 
   if new_nnz > nnz(RR)
-    dataRR = append!(data(RR), zeros(new_nnz - nnz(RR)))
+    dataRR = append!!(data(RR), generic_zeros(unwrap_type(R), new_nnz - nnz(RR)))
     RR = Tensor(BlockSparse(dataRR, bofsRR), inds(RR))
   end
 

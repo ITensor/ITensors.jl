@@ -80,17 +80,14 @@ end
 # Single index
 #
 
+## TODO replace this with Exposed 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number})
-  return getindex(leaf_parenttype(T), T)
-end
-
-@propagate_inbounds function getindex(::Type{<:AbstractArray}, T::DenseTensor{<:Number})
-  return data(T)[]
+  return getindex(expose(data(T)))
 end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::Integer...)
   Base.@_inline_meta
-  return getindex(data(T), Base._sub2ind(T, I...))
+  return getindex(expose(data(T)), Base._sub2ind(T, I...))
 end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::CartesianIndex)
@@ -115,14 +112,7 @@ end
 end
 
 @propagate_inbounds function setindex!(T::DenseTensor{<:Number}, x::Number)
-  setindex!(leaf_parenttype(T), T, x)
-  return T
-end
-
-@propagate_inbounds function setindex!(
-  ::Type{<:AbstractArray}, T::DenseTensor{<:Number}, x::Number
-)
-  data(T)[] = x
+  setindex!(expose(data(T)), x)
   return T
 end
 
@@ -178,6 +168,7 @@ function reshape(T::DenseTensor, dims::Int...)
   return tensor(storage(T), tuple(dims...))
 end
 
+## TODO might have to look into these functions more
 # If the storage data are regular Vectors, use Base.copyto!
 function copyto!(
   R::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
@@ -215,13 +206,7 @@ function permutedims!(
 ) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
-  permutedims!(RA, TA, perm)
-  return R
-end
-
-# NDTensors.copyto!
-function copyto!(R::DenseTensor, T::DenseTensor)
-  copyto!(array(R), array(T))
+  permutedims!(expose(RA), expose(TA), perm)
   return R
 end
 
@@ -231,7 +216,7 @@ function permutedims!(
 ) where {N}
   RA = array(R)
   TA = array(T)
-  RA .= permutedims(TA, perm)
+  RA .= permutedims(expose(TA), perm)
   return R
 end
 

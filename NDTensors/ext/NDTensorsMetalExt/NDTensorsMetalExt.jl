@@ -2,7 +2,7 @@ module NDTensorsMetalExt
 
 using Adapt
 using Functors
-using LinearAlgebra: LinearAlgebra
+using LinearAlgebra: LinearAlgebra, Transpose, mul!
 using NDTensors
 using NDTensors.SetParameters
 
@@ -18,5 +18,7 @@ include("set_types.jl")
 include("indexing.jl")
 include("linearalgebra.jl")
 include("copyto.jl")
+include("append.jl")
 include("permutedims.jl")
+include("mul.jl")
 end

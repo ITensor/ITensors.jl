@@ -269,7 +269,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
             phi,
             1,
             eigsolve_which_eigenvalue;
-            ishermitian=ishermitian,
+            ishermitian,
             tol=eigsolve_tol,
             krylovdim=eigsolve_krylovdim,
             maxiter=eigsolve_maxiter,
@@ -281,7 +281,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         ## into `DeviceMemory`. This conversion line is here temporarily to fix that problem when it arises
         ## Adapt is only called when using CUDA backend. CPU will work as implemented previously.
         phi::ITensor = if NDTensors.iscu(phi) && NDTensors.iscu(vecs[1])
-          adapt(set_eltype(leaf_parenttype(phi), eltype(vecs[1])), vecs[1])
+          adapt(set_eltype(unwrap_type(phi), eltype(vecs[1])), vecs[1])
         else
           vecs[1]
         end
@@ -311,10 +311,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
             mindim=mindim(sweeps, sw),
             cutoff=cutoff(sweeps, sw),
             eigen_perturbation=drho,
-            ortho=ortho,
+            ortho,
             normalize=true,
-            which_decomp=which_decomp,
-            svd_alg=svd_alg,
+            which_decomp,
+            svd_alg,
           )
         end
         maxtruncerr = max(maxtruncerr, spec.truncerr)
