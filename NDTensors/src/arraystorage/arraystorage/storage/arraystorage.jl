@@ -42,5 +42,8 @@ function to_arraystorage(x::BlockSparseTensor)
   # TODO: Make a simpler constructor:
   # BlockSparseArray(blocktype, blockinds)
   arraystorage = BlockSparseArray{eltype(x),ndims(x),blocktype}(blockinds)
+  for b in nzblocks(x)
+    arraystorage[BlockArrays.Block(Tuple(b)...)] = x[b]
+  end
   return tensor(arraystorage, inds(x))
 end

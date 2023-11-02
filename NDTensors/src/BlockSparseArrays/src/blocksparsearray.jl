@@ -14,8 +14,13 @@ blocks(a::BlockSparseArray) = a.blocks
 blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 
 # The size of a block
-function block_size(axes::Tuple, block::Block)
+function block_size(axes::Tuple{Vararg{AbstractUnitRange}}, block::Block)
   return length.(getindex.(axes, Block.(block.n)))
+end
+
+# The size of a block
+function block_size(blockinds::Tuple{Vararg{AbstractVector}}, block::Block)
+  return block_size(blockedrange.(blockinds), block)
 end
 
 struct BlockZero{Axes}
@@ -46,6 +51,16 @@ function BlockSparseArray{T,N,B}(
 ) where {T,N,B}
   blockdata = map(block -> B(undef, block_size(axes, block)), Indices(blocks))
   return BlockSparseArray(blockdata, axes)
+end
+
+function BlockSparseArray{T,N}(::UndefInitializer, axes::Tuple{Vararg{Any,N}}) where {T,N}
+  B = Array{T,N} # TODO: Use `default_blocktype`.
+  return BlockSparseArray{T,N,B}(undef, axes)
+end
+
+function BlockSparseArray{T,N,B}(::UndefInitializer, axes::Tuple{Vararg{Any,N}}) where {T,N,B}
+  blocks = Vector{Block{N}}()
+  return BlockSparseArray{T,N,B}(undef, blocks, axes)
 end
 
 function BlockSparseArray(
@@ -114,13 +129,22 @@ function BlockArrays.viewblock(block_arr::BlockSparseArray, block)
   return block_arr.blocks[blks...] # Fails because zero isn't defined
 end
 
-function Base.getindex(block_arr::BlockSparseArray{T,N}, bi::BlockIndex{N}) where {T,N}
+function _getindex(block_arr::BlockSparseArray{T,N}, bi::BlockIndex{N}) where {T,N}
   @boundscheck blockcheckbounds(block_arr, Block(bi.I))
   bl = view(block_arr, block(bi))
   inds = bi.α
   @boundscheck checkbounds(bl, inds...)
   v = bl[inds...]
   return v
+end
+
+function Base.getindex(block_arr::BlockSparseArray{T,N}, bi::BlockIndex{N}) where {T,N}
+  return _getindex(block_arr, bi)
+end
+
+# Avoid ambiguity error
+function Base.getindex(block_arr::BlockSparseArray{T,1}, bi::BlockIndex{1}) where {T}
+  return _getindex(block_arr, bi)
 end
 
 function Base.setindex!(
@@ -203,4 +227,9 @@ function Base.copyto!(
 )
   map_nonzeros!(x -> permutedims(x, perm(a_dest)), blocks(a_src), blocks(a_dest))
   return a_src
+end
+
+function Base.map(f, as::BlockSparseArray...)
+  @assert allequal(axes.(as))
+  return BlockSparseArray(map(f, blocks.(as)...), axes(first(as)))
 end

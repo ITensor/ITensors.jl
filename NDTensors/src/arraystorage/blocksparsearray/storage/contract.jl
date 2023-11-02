@@ -163,11 +163,11 @@ function permutedims_combine(
   ind_comb = permuteblocks(ind_comb, blockperm)
 
   for b in nzblocks(storage(T))
-    Tb = @view T[b]
+    Tb = @view storage(T)[b]
     b_perm = permute(b, perm)
     b_perm_comb = combine_dims(b_perm, inds_perm, combdims_perm)
     b_perm_comb = perm_block(b_perm_comb, comb_ind_loc, blockperm)
-    b_in_combined_dim = b_perm_comb[comb_ind_loc]
+    b_in_combined_dim = b_perm_comb.n[comb_ind_loc]
     new_b_in_combined_dim = blockcomb[b_in_combined_dim]
     offset = 0
     pos_in_new_combined_block = 1
@@ -178,8 +178,9 @@ function permutedims_combine(
     end
     b_new = setindex(b_perm_comb, new_b_in_combined_dim, comb_ind_loc)
 
-    Rb_total = blockview(R, b_new)
-    dimsRb_tot = dims(Rb_total)
+    # TODO: Define block view for Tensor?
+    Rb_total = @view storage(R)[b_new]
+    dimsRb_tot = size(Rb_total)
     subind = ntuple(
       i -> if i == comb_ind_loc
         range(1 + offset; stop=offset + blockdim(ind_comb, b_in_combined_dim))
@@ -188,14 +189,15 @@ function permutedims_combine(
       end,
       N - NC + 1,
     )
-    Rb = @view array(Rb_total)[subind...]
+
+    Rb = @view Rb_total[subind...]
 
     # XXX Are these equivalent?
     #Tb_perm = permutedims(Tb,perm)
     #copyto!(Rb,Tb_perm)
 
     # XXX Not sure what this was for
-    Rb = reshape(Rb, permute(dims(Tb), perm))
+    Rb = reshape(Rb, permute(size(Tb), perm))
     # TODO: Make this `convert` call more general
     # for GPUs.
     Tbₐ = convert(Array, Tb)
@@ -225,13 +227,8 @@ function permutedims_combine_output(
   # Permute the nonzero blocks (dimension-wise)
   blocks = nzblocks(T)
 
-  @show blocks
-  @show perm
-
   # TODO: Use `permute.(blocks, perm)`.
-  blocks_perm = permute.(blocks, Ref(perm))
-
-  @show blocks_perm
+  blocks_perm = BlockArrays.Block.(permute.(getfield.(blocks, :n), Ref(perm)))
 
   # Combine the nonzero blocks (dimension-wise)
   blocks_perm_comb = combine_dims(blocks_perm, inds_perm, combdims_perm)
@@ -246,9 +243,9 @@ function permutedims_combine_output(
 
   ## return BlockSparseTensor(unwrap_type(T), blocks_perm_comb, is)
   blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], is)
-  blocktype = set_ndims(unwrap_type(T), ndims(T))
+  blocktype = set_ndims(unwrap_type(T), length(is))
   return tensor(
-    BlockSparseArray{eltype(T),ndims(T),blocktype}(undef, blocks_perm_comb, blockinds), is
+    BlockSparseArray{eltype(T),length(is),blocktype}(undef, blocks_perm_comb, blockinds), is
   )
 end
 
@@ -265,12 +262,38 @@ function combine_dims(
   return blocks_comb
 end
 
+function getindices(b::BlockArrays.Block, I::Tuple)
+  return getindices(b.n, I)
+end
+deleteat(b::BlockArrays.Block, pos) = BlockArrays.Block(deleteat(b.n, pos))
+insertafter(b::BlockArrays.Block, val, pos) = BlockArrays.Block(insertafter(b.n, Int.(val), pos))
+setindex(b::BlockArrays.Block, val, pos) = BlockArrays.Block(setindex(b.n, Int(val), pos))
+permute(s::BlockArrays.Block, perm::Tuple) = BlockArrays.Block(permute(s.n, perm))
+# define block ordering with reverse lexographical order
+function isblockless(b1::BlockArrays.Block{N}, b2::BlockArrays.Block{N}) where {N}
+  return CartesianIndex(b1.n) < CartesianIndex(b2.n)
+end
+# In the dimension dim, permute the block
+function perm_block(block::BlockArrays.Block, dim::Int, perm)
+  iperm = invperm(perm)
+  return setindex(block, iperm[block.n[dim]], dim)
+end
+
+function combine_dims(block::BlockArrays.Block, inds, combdims::NTuple{NC,Int}) where {NC}
+  nblcks = nblocks(inds, combdims)
+  slice = getindices(block, combdims)
+  slice_comb = LinearIndices(nblcks)[slice...]
+  block_comb = deleteat(block, combdims)
+  block_comb = insertafter(block_comb, tuple(slice_comb), minimum(combdims) - 1)
+  return block_comb
+end
+
 # In the dimension dim, permute the blocks
 function perm_blocks(blocks::Vector{BlockArrays.Block{N,Int}}, dim::Int, perm) where {N}
   blocks_perm = Vector{BlockArrays.Block{N,Int}}(undef, length(blocks))
   iperm = invperm(perm)
   for (i, block) in enumerate(blocks)
-    blocks_perm[i] = setindex(block, iperm[block[dim]], dim)
+    blocks_perm[i] = setindex(block, iperm[block.n[dim]], dim)
   end
   return blocks_perm
 end
@@ -282,7 +305,7 @@ function combine_blocks(
   blocks_comb = copy(blocks)
   nnz_comb = length(blocks)
   for (i, block) in enumerate(blocks)
-    dimval = block[dim]
+    dimval = block.n[dim]
     blocks_comb[i] = setindex(block, blockcomb[dimval], dim)
   end
   unique!(blocks_comb)
