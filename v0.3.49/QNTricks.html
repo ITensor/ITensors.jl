@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Symmetric (QN conserving) tensors: background and usage · ITensors.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">ITensors.jl</a></span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Introduction</a></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="getting_started/DebugChecks.html">Enabling Debug Checks</a></li><li><a class="tocitem" href="getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/DMRG.html">DMRG</a></li><li><a class="tocitem" href="tutorials/QN_DMRG.html">Quantum Number Conserving DMRG</a></li><li><a class="tocitem" href="tutorials/MPSTimeEvolution.html">MPS Time Evolution</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="examples/ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="examples/MPSandMPO.html">MPS and MPO Examples</a></li><li><a class="tocitem" href="examples/DMRG.html">DMRG Examples</a></li><li><a class="tocitem" href="examples/Physics.html">Physics (SiteType) System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="IndexType.html">Index</a></li><li><a class="tocitem" href="IndexSetType.html">Index collections</a></li><li><a class="tocitem" href="ITensorType.html">ITensor</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="QN.html">QN</a></li><li><a class="tocitem" href="SiteType.html">SiteType and op, state, val functions</a></li><li><a class="tocitem" href="IncludedSiteTypes.html">SiteTypes Included with ITensor</a></li><li><input class="collapse-toggle" id="menuitem-5-8" type="checkbox"/><label class="tocitem" for="menuitem-5-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="DMRG.html">DMRG</a></li><li><a class="tocitem" href="Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="OpSum.html">OpSum (AutoMPO)</a></li></ul></li><li><span class="tocitem">Frequently Asked Questions</span><ul><li><a class="tocitem" href="faq/JuliaAndCpp.html">Programming Language (Julia, C++, ...) FAQs</a></li><li><a class="tocitem" href="faq/DMRG.html">DMRG FAQs</a></li><li><a class="tocitem" href="faq/QN.html">Quantum Number (QN) FAQs</a></li><li><a class="tocitem" href="faq/Development.html">ITensor Development FAQs</a></li><li><a class="tocitem" href="faq/RelationshipToOtherLibraries.html">Relationship of ITensor to other tensor libraries FAQs</a></li><li><a class="tocitem" href="faq/JuliaPkg.html">Julia Package Manager FAQs</a></li><li><a class="tocitem" href="faq/HPC.html">High-Performance Computing FAQs</a></li></ul></li><li><span class="tocitem">Upgrade guides</span><ul><li><a class="tocitem" href="UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a></li></ul></li><li><a class="tocitem" href="Einsum.html">ITensor indices and Einstein notation</a></li><li><span class="tocitem">Advanced Usage Guide</span><ul><li><a class="tocitem" href="AdvancedUsageGuide.html">Advanced Usage Guide</a></li><li><a class="tocitem" href="Multithreading.html">Multithreading</a></li><li class="is-active"><a class="tocitem" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a><ul class="internal"><li><a class="tocitem" href="#Combiners-and-Symmetric-Tensors"><span>Combiners and Symmetric Tensors</span></a></li><li><a class="tocitem" href="#Block-Sparsity-and-Quantum-Numbers"><span>Block Sparsity and Quantum Numbers</span></a></li></ul></li><li><a class="tocitem" href="CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="ContractionSequenceOptimization.html">Contraction sequence optimization</a></li><li><a class="tocitem" href="HDF5FileFormats.html">HDF5 File Formats</a></li></ul></li><li><a class="tocitem" href="DeveloperGuide.html">Developer Guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Advanced Usage Guide</a></li><li class="is-active"><a href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/main/docs/src/QNTricks.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Symmetric-(QN-Conserving)-Tensors:-Background-and-Usage"><a class="docs-heading-anchor" href="#Symmetric-(QN-Conserving)-Tensors:-Background-and-Usage">Symmetric (QN Conserving) Tensors: Background and Usage</a><a id="Symmetric-(QN-Conserving)-Tensors:-Background-and-Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Symmetric-(QN-Conserving)-Tensors:-Background-and-Usage" title="Permalink"></a></h1><p>Here is a collection of background material and example codes for understanding how symmetric tensors (tensors with conserved quantum numbers) work in ITensors.jl</p><h2 id="Combiners-and-Symmetric-Tensors"><a class="docs-heading-anchor" href="#Combiners-and-Symmetric-Tensors">Combiners and Symmetric Tensors</a><a id="Combiners-and-Symmetric-Tensors-1"></a><a class="docs-heading-anchor-permalink" href="#Combiners-and-Symmetric-Tensors" title="Permalink"></a></h2><p>In ITensors.jl, combiners are special sparse tensors that represent the action of taking the tensor product of one or more indices. It generalizes the idea of reshaping and permuting. For dense ITensors, a combiner is just the action of permuting and reshaping the data of the tensor. For symmetric tensors (quantum number conserving tensors represented as block sparse tensors), the combiner also fuses symmetry sectors together. They can be used for various purposes. Generally they are used internally in the library, for example in order to reshape a high order ITensor into an order 2 ITensor to perform a matrix decomposition like an SVD or eigendecomposition.</p><p>For example:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using ITensors</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; # This is a short code showing how a combiner
+       # can be used to &quot;flip&quot; the direction of an Index
+       i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)</code><code class="nohighlight hljs ansi" style="display:block;">(dim=5|id=261|&quot;i&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; j = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;)</code><code class="nohighlight hljs ansi" style="display:block;">(dim=5|id=374|&quot;j&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = randomITensor(i, dag(j))</code><code class="nohighlight hljs ansi" style="display:block;">ITensor ord=2
+(dim=5|id=261|&quot;i&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3
+(dim=5|id=374|&quot;j&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; C = combiner(i, dag(j); tags = &quot;c&quot;, dir = dir(i))</code><code class="nohighlight hljs ansi" style="display:block;">ITensor ord=3
+(dim=25|id=89|&quot;c&quot;) &lt;Out&gt;
+ 1: QN(-1) =&gt; 6
+ 2: QN(0) =&gt; 13
+ 3: QN(1) =&gt; 6
+(dim=5|id=261|&quot;i&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3
+(dim=5|id=374|&quot;j&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3
+NDTensors.Combiner</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; inds(A)</code><code class="nohighlight hljs ansi" style="display:block;">((dim=5|id=261|&quot;i&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3, (dim=5|id=374|&quot;j&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; inds(A * C)</code><code class="nohighlight hljs ansi" style="display:block;">((dim=25|id=89|&quot;c&quot;) &lt;Out&gt;
+ 1: QN(-1) =&gt; 6
+ 2: QN(0) =&gt; 13
+ 3: QN(1) =&gt; 6,)</code></pre><p>You can see that the combiner reshapes the indices of <code>A</code> into a single Index that contains the tensor product of the two input spaces. The spaces have size <code>QN(-1) =&gt; 2 * 3</code>, <code>QN(0) =&gt; 2 * 2 + 3 * 3</code>, and <code>QN(0) =&gt; 2 * 3</code> (determined from all of the combinations of combining the sectors of the different indices, where the QNs are added and the block dimensions are multiplied). The ordering of the sectors is determined internally by ITensors.jl.</p><p>You can also use a combiner on a single Index, which can be helpful for changing the direction of an Index or combining multiple sectors of the same symmetry into a single sector:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using ITensors</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; # This is a short code showing how a combiner
+       # can be used to &quot;flip&quot; the direction of an Index
+       i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)</code><code class="nohighlight hljs ansi" style="display:block;">(dim=5|id=481|&quot;i&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; j = dag(Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;))</code><code class="nohighlight hljs ansi" style="display:block;">(dim=5|id=309|&quot;j&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = randomITensor(i, j)</code><code class="nohighlight hljs ansi" style="display:block;">ITensor ord=2
+(dim=5|id=481|&quot;i&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3
+(dim=5|id=309|&quot;j&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; C = combiner(j; tags = &quot;jflip&quot;, dir = -dir(j))</code><code class="nohighlight hljs ansi" style="display:block;">ITensor ord=2
+(dim=5|id=633|&quot;jflip&quot;) &lt;Out&gt;
+ 1: QN(-1) =&gt; 3
+ 2: QN(0) =&gt; 2
+(dim=5|id=309|&quot;j&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3
+NDTensors.Combiner</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; inds(A)</code><code class="nohighlight hljs ansi" style="display:block;">((dim=5|id=481|&quot;i&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3, (dim=5|id=309|&quot;j&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; inds(A * C)</code><code class="nohighlight hljs ansi" style="display:block;">((dim=5|id=633|&quot;jflip&quot;) &lt;Out&gt;
+ 1: QN(-1) =&gt; 3
+ 2: QN(0) =&gt; 2, (dim=5|id=481|&quot;i&quot;) &lt;Out&gt;
+ 1: QN(0) =&gt; 2
+ 2: QN(1) =&gt; 3)</code></pre><p>Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.</p><h2 id="Block-Sparsity-and-Quantum-Numbers"><a class="docs-heading-anchor" href="#Block-Sparsity-and-Quantum-Numbers">Block Sparsity and Quantum Numbers</a><a id="Block-Sparsity-and-Quantum-Numbers-1"></a><a class="docs-heading-anchor-permalink" href="#Block-Sparsity-and-Quantum-Numbers" title="Permalink"></a></h2><p>In general, not all blocks that are allowed according to the flux will actually exist in the tensor (which helps in many cases for efficiency). Usually this would happen when the tensor is first constructed and not all blocks are explicitly set:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using ITensors</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])</code><code class="nohighlight hljs ansi" style="display:block;">(dim=2|id=223) &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = ITensor(i&#39;, dag(i));</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A[2, 2] = 1.0;</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show A;</code><code class="nohighlight hljs ansi" style="display:block;">A = ITensor ord=2
+Dim 1: (dim=2|id=223)&#39; &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=2|id=223) &lt;In&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
+ 2×2
+Block(2, 2)
+ [2:2, 2:2]
+ 1.0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; D, U = eigen(A; ishermitian=true);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show D;</code><code class="nohighlight hljs ansi" style="display:block;">D = ITensor ord=2
+Dim 1: (dim=1|id=227|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
+ 1: QN(1) =&gt; 1
+Dim 2: (dim=1|id=227|&quot;Link,eigen&quot;) &lt;In&gt;
+ 1: QN(1) =&gt; 1
+NDTensors.DiagBlockSparse{Float64, Vector{Float64}, 2}
+ 1×1
+Block(1, 1)
+ [1:1, 1:1]
+ 1.0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show U;</code><code class="nohighlight hljs ansi" style="display:block;">U = ITensor ord=2
+Dim 1: (dim=2|id=223) &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=1|id=227|&quot;Link,eigen&quot;) &lt;In&gt;
+ 1: QN(1) =&gt; 1
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
+ 2×1
+Block(2, 1)
+ [2:2, 1:1]
+ 1.0</code></pre><p>If we had set <code>A[1, 1] = 0.0</code> as well, then all of the allowed blocks (according to the flux <code>QN(0)</code> would exist and would be included in the eigendecomposition:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using ITensors</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])</code><code class="nohighlight hljs ansi" style="display:block;">(dim=2|id=340) &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = ITensor(i&#39;, dag(i));</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A[2, 2] = 1.0;</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A[1, 1] = 0.0;</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show A;</code><code class="nohighlight hljs ansi" style="display:block;">A = ITensor ord=2
+Dim 1: (dim=2|id=340)&#39; &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=2|id=340) &lt;In&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
+ 2×2
+Block(2, 2)
+ [2:2, 2:2]
+ 1.0
+
+Block(1, 1)
+ [1:1, 1:1]
+ 0.0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; D, U = eigen(A; ishermitian=true);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show D;</code><code class="nohighlight hljs ansi" style="display:block;">D = ITensor ord=2
+Dim 1: (dim=2|id=84|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=2|id=84|&quot;Link,eigen&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+NDTensors.DiagBlockSparse{Float64, Vector{Float64}, 2}
+ 2×2
+Block(1, 1)
+ [1:1, 1:1]
+ 0.0
+
+Block(2, 2)
+ [2:2, 2:2]
+ 1.0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show U;</code><code class="nohighlight hljs ansi" style="display:block;">U = ITensor ord=2
+Dim 1: (dim=2|id=340) &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=2|id=84|&quot;Link,eigen&quot;) &lt;In&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
+ 2×2
+Block(1, 1)
+ [1:1, 1:1]
+ 1.0
+
+Block(2, 2)
+ [2:2, 2:2]
+ 1.0</code></pre><p>&quot;Missing&quot; blocks can also occur with tensor contractions, since the final blocks of the output tensor are made from combinations of contractions of blocks from the input tensors, and there is no guarantee that all flux-consistent blocks will end up in the result:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using ITensors</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])</code><code class="nohighlight hljs ansi" style="display:block;">(dim=2|id=775) &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; j = Index([QN(0) =&gt; 1])</code><code class="nohighlight hljs ansi" style="display:block;">(dim=1|id=795) &lt;Out&gt;
+ 1: QN(0) =&gt; 1</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = ITensor(i, dag(j));</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A[2, 1] = 1.0;</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show A;</code><code class="nohighlight hljs ansi" style="display:block;">A = ITensor ord=2
+Dim 1: (dim=2|id=775) &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=1|id=795) &lt;In&gt;
+ 1: QN(0) =&gt; 1
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
+ 2×1
+Block(2, 1)
+ [2:2, 1:1]
+ 1.0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A2 = prime(A, i) * dag(A);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show A2;</code><code class="nohighlight hljs ansi" style="display:block;">A2 = ITensor ord=2
+Dim 1: (dim=2|id=775)&#39; &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=2|id=775) &lt;In&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
+ 2×2
+Block(2, 2)
+ [2:2, 2:2]
+ 1.0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; D, U = eigen(A2; ishermitian=true);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show D;</code><code class="nohighlight hljs ansi" style="display:block;">D = ITensor ord=2
+Dim 1: (dim=1|id=71|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
+ 1: QN(1) =&gt; 1
+Dim 2: (dim=1|id=71|&quot;Link,eigen&quot;) &lt;In&gt;
+ 1: QN(1) =&gt; 1
+NDTensors.DiagBlockSparse{Float64, Vector{Float64}, 2}
+ 1×1
+Block(1, 1)
+ [1:1, 1:1]
+ 1.0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @show U;</code><code class="nohighlight hljs ansi" style="display:block;">U = ITensor ord=2
+Dim 1: (dim=2|id=775) &lt;Out&gt;
+ 1: QN(0) =&gt; 1
+ 2: QN(1) =&gt; 1
+Dim 2: (dim=1|id=71|&quot;Link,eigen&quot;) &lt;In&gt;
+ 1: QN(1) =&gt; 1
+NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
+ 2×1
+Block(2, 1)
+ [2:2, 1:1]
+ 1.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Thursday 2 November 2023 16:33">Thursday 2 November 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
