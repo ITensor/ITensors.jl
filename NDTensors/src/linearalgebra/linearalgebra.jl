@@ -105,7 +105,7 @@ function svd(
   # Only used by BlockSparse svd
   min_blockdim=nothing,
 ) where {ElT,IndsT}
-  alg = replace_nothing(alg, default_svd_alg(T, unwrap_type(T)))
+  alg = replace_nothing(alg, default_svd_alg(T))
   if alg == "divide_and_conquer"
     MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.DivideAndConquer())
     if isnothing(MUSV)

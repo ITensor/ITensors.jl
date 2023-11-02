@@ -1,1 +1,1 @@
-NDTensors.default_svd_alg(a, ::Type{<:CuArray}) = "qr_algorithm"
+NDTensors.default_svd_alg(::Type{<:CuArray}, a) = "qr_algorithm"

@@ -51,7 +51,7 @@ function tsvd(
   # Only used by BlockSparse svd
   min_blockdim=nothing,
 )
-  alg = replace_nothing(alg, default_svd_alg(a, unwrap_type(a)))
+  alg = replace_nothing(alg, default_svd_alg(a))
   USV = svd(Algorithm(alg), a)
   if isnothing(USV)
     if any(isnan, a)
