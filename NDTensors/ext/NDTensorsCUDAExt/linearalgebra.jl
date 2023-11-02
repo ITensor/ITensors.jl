@@ -31,7 +31,7 @@ function NDTensors.svd_catch_error(A::CuMatrix, ::CUDA.CUSOLVER.QRAlgorithm)
       return nothing
     end
     MV, MS, MU = USV
-    USV = SVD(copy(MU), MS, Adjoint(MV))
+    USV = (MU, MS, MV)
   else
     USV = try
       svd(A; alg=CUDA.CUSOLVER.QRAlgorithm())
