@@ -13,6 +13,28 @@ blocks(a::BlockSparseArray) = a.blocks
 # TODO: Use `SetParameters`.
 blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 
+# TODO: Use `SetParameters`.
+set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
+
+function Base.reshape(a::BlockSparseArray, ax::Tuple{Vararg{AbstractUnitRange}})
+  ## TODO: Use `SparseArray` reshape in some way?
+  ## blocks_reshaped = reshape(blocks(a), blocklength.(ax))
+  blocktype_reshaped = set_ndims(blocktype(a), length(ax))
+  # TODO: Some other way of getting `zero` function?
+  blocks_reshaped = SparseArray(Dictionary{CartesianIndex{length(ax)},blocktype_reshaped}(), blocklength.(ax), BlockZero(ax))
+  for I in nonzero_keys(blocks(a))
+    i = LinearIndices(blocks(a))[I]
+    I_reshaped = CartesianIndices(blocks_reshaped)[i]
+    blocks_reshaped[I_reshaped] = reshape(a[Block(Tuple(I))], block_size(ax, Block(Tuple(I_reshaped))))
+  end
+  a_reshaped = BlockSparseArray(blocks_reshaped, ax)
+  return a_reshaped
+end
+
+function Base.reshape(a::BlockSparseArray, blockinds::Tuple{Vararg{AbstractVector}})
+  return reshape(a, blockedrange.(blockinds))
+end
+
 # The size of a block
 function block_size(axes::Tuple{Vararg{AbstractUnitRange}}, block::Block)
   return length.(getindex.(axes, Block.(block.n)))

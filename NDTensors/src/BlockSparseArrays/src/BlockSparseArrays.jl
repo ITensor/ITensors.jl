@@ -10,5 +10,6 @@ include("abstractarray.jl")
 include("permuteddimsarray.jl")
 include("sparsearray.jl")
 include("blocksparsearray.jl")
+include("broadcast.jl")
 
 end

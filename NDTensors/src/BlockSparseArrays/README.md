@@ -52,6 +52,11 @@ function main()
   @test permuted_B isa BlockSparseArray
   @test permuted_B == permutedims(Array(B), (2, 1))
 
+  @test B + B ≈ Array(B) + Array(B)
+  @test 2B ≈ 2Array(B)
+
+  @test reshape(B, ([4, 6, 6, 9],)) isa BlockSparseArray{<:Any,1}
+
   return nothing
 end
 
