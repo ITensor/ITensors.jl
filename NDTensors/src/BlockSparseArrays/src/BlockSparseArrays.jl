@@ -1,5 +1,6 @@
 module BlockSparseArrays
 using BlockArrays
+using Compat
 using Dictionaries
 
 using BlockArrays: block
