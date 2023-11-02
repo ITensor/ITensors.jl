@@ -81,8 +81,8 @@ function lapack_svd_error_message(alg)
          "   ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of\n" *
          "   ``A^{\\dagger} U`` is used to compute `V`. This is performed\n" *
          "   recursively to compute small singular values.\n" *
-         " - `\"QRAlgorithm\"` is a CUDA.jl implemented SVD algorithm using QR.\n" *
-         " - `\"JacobiAlgorithm\"` is a CUDA.jl implemented SVD algorithm.\n\n" *
+         " - `\"qr_algorithm\"` is a CUDA.jl implemented SVD algorithm using QR.\n" *
+         " - `\"jacobi_algorithm\"` is a CUDA.jl implemented SVD algorithm.\n\n" *
          "Returning `nothing`. For an output `F = svd(A, ...)` you can check if\n" *
          "`isnothing(F)` in your code and try a different algorithm.\n\n" *
          "To suppress this message in the future, you can wrap the `svd` call in the\n" *
@@ -127,7 +127,7 @@ function svd(
     end
   elseif alg == "recursive"
     MUSV = svd_recursive(matrix(T))
-  elseif alg == "QRAlgorithm" || alg == "JacobiAlgorithm"
+  elseif alg == "qr_algorithm" || alg == "jacobi_algorithm"
     MUSV = svd_catch_error(matrix(T); alg)
   else
     error(
