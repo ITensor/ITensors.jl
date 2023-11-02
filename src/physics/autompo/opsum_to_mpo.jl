@@ -17,6 +17,7 @@ function svdMPO(ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...)::MPO wh
   end
 
   rightmaps = [Dict{Vector{Op},Int}() for _ in 1:N]
+
   for n in 1:N
     leftbond_coefs = MatElem{ValType}[]
 
