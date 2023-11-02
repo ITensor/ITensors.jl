@@ -5,8 +5,8 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
   ## type info functions.
   ## TODO determine min number of functions needed to be forwarded
   @eval begin
-    alloctype(A::$Typ) = alloctype(typeof(A))
-    alloctype(::Type{<:$Typ{ElT,N,Axes,Alloc}}) where {ElT,N,Axes,Alloc} = Alloc
+    alloctype(A::$Typ) = alloctype($Typ)
+    alloctype(::Type{<:$Typ}) = get_parameter($Typ, Position{4})
 
     getindex(A::$Typ, i...) = getindex(parent(A), i...)
 
