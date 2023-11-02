@@ -29,7 +29,9 @@ end
 # SparseArrayKit.jl syntax
 nonzero_keys(a::SparseArray) = keys(a.data)
 
-function Base.reshape(a::SparseArray{T,N,Zero}, dims::Tuple{Vararg{Int,M}}) where {T,N,M,Zero}
+function Base.reshape(
+  a::SparseArray{T,N,Zero}, dims::Tuple{Vararg{Int,M}}
+) where {T,N,M,Zero}
   a_reshaped = SparseArray{T,M,Zero}(Dictionary{CartesianIndex{M},T}(), dims, a.zero)
   copyto!(a_reshaped, Base.ReshapedArray(a, dims, ()))
   for I in nonzero_keys(a)
@@ -59,12 +61,12 @@ function Base.zero(a::SparseArray)
   # TODO: Make a simpler empty constructor.
   # SparseArray(size(a), parent(a).zero)
   # TODO: Define `zero_elt`.
-  return SparseArray(
-    Dictionary{CartesianIndex{ndims(a)},eltype(a)}(), size(a), a.zero
-  )
+  return SparseArray(Dictionary{CartesianIndex{ndims(a)},eltype(a)}(), size(a), a.zero)
 end
 
-const SparseArrayLike{T,N,Zero} = Union{SparseArray{T,N,Zero},PermutedDimsArray{T,N,<:Any,<:Any,SparseArray{T,N,Zero}}}
+const SparseArrayLike{T,N,Zero} = Union{
+  SparseArray{T,N,Zero},PermutedDimsArray{T,N,<:Any,<:Any,SparseArray{T,N,Zero}}
+}
 
 # TODO: Include `PermutedDimsArray`.
 # TODO: Define `SparseArrayLike`.

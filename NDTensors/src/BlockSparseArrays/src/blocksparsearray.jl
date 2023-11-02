@@ -21,11 +21,17 @@ function Base.reshape(a::BlockSparseArray, ax::Tuple{Vararg{AbstractUnitRange}})
   ## blocks_reshaped = reshape(blocks(a), blocklength.(ax))
   blocktype_reshaped = set_ndims(blocktype(a), length(ax))
   # TODO: Some other way of getting `zero` function?
-  blocks_reshaped = SparseArray(Dictionary{CartesianIndex{length(ax)},blocktype_reshaped}(), blocklength.(ax), BlockZero(ax))
+  blocks_reshaped = SparseArray(
+    Dictionary{CartesianIndex{length(ax)},blocktype_reshaped}(),
+    blocklength.(ax),
+    BlockZero(ax),
+  )
   for I in nonzero_keys(blocks(a))
     i = LinearIndices(blocks(a))[I]
     I_reshaped = CartesianIndices(blocks_reshaped)[i]
-    blocks_reshaped[I_reshaped] = reshape(a[Block(Tuple(I))], block_size(ax, Block(Tuple(I_reshaped))))
+    blocks_reshaped[I_reshaped] = reshape(
+      a[Block(Tuple(I))], block_size(ax, Block(Tuple(I_reshaped)))
+    )
   end
   a_reshaped = BlockSparseArray(blocks_reshaped, ax)
   return a_reshaped
@@ -80,7 +86,9 @@ function BlockSparseArray{T,N}(::UndefInitializer, axes::Tuple{Vararg{Any,N}}) w
   return BlockSparseArray{T,N,B}(undef, axes)
 end
 
-function BlockSparseArray{T,N,B}(::UndefInitializer, axes::Tuple{Vararg{Any,N}}) where {T,N,B}
+function BlockSparseArray{T,N,B}(
+  ::UndefInitializer, axes::Tuple{Vararg{Any,N}}
+) where {T,N,B}
   blocks = Vector{Block{N}}()
   return BlockSparseArray{T,N,B}(undef, blocks, axes)
 end

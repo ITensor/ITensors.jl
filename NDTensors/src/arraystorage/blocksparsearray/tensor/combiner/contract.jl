@@ -248,9 +248,7 @@ function permutedims_combine_output(
 end
 
 function combine_dims(
-  blocks::Vector{BlockArrays.Block{N,Int}},
-  inds,
-  combdims::NTuple{NC,Int},
+  blocks::Vector{BlockArrays.Block{N,Int}}, inds, combdims::NTuple{NC,Int}
 ) where {N,NC}
   nblcks = nblocks(inds, combdims)
   blocks_comb = Vector{BlockArrays.Block{N - NC + 1,Int}}(undef, length(blocks))
@@ -264,7 +262,9 @@ function getindices(b::BlockArrays.Block, I::Tuple)
   return getindices(b.n, I)
 end
 deleteat(b::BlockArrays.Block, pos) = BlockArrays.Block(deleteat(b.n, pos))
-insertafter(b::BlockArrays.Block, val, pos) = BlockArrays.Block(insertafter(b.n, Int.(val), pos))
+function insertafter(b::BlockArrays.Block, val, pos)
+  return BlockArrays.Block(insertafter(b.n, Int.(val), pos))
+end
 setindex(b::BlockArrays.Block, val, pos) = BlockArrays.Block(setindex(b.n, Int(val), pos))
 permute(s::BlockArrays.Block, perm::Tuple) = BlockArrays.Block(permute(s.n, perm))
 # define block ordering with reverse lexographical order

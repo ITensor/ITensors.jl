@@ -81,8 +81,9 @@ function uncombine_output(
   ##   BlockSparse(unwrap_type(T), boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
   ## )
   # TODO: Should this be zero data instead of undef?
-  a_uncomb_perm =
-    BlockSparseArray{ElT,length(inds_uncomb_perm),unwrap_type(T)}(undef, blocks_uncomb_perm, blockinds_uncomb_perm)
+  a_uncomb_perm = BlockSparseArray{ElT,length(inds_uncomb_perm),unwrap_type(T)}(
+    undef, blocks_uncomb_perm, blockinds_uncomb_perm
+  )
   blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], is)
   R = tensor(reshape(a_uncomb_perm, blockinds), is)
   return R
@@ -92,7 +93,9 @@ end
 # according to the pattern in blockcomb (for example, blockcomb
 # is [1,2,2,3] and dim = 2, so the blocks (1,2),(2,3) get
 # split into (1,2),(1,3),(2,4))
-function uncombine_blocks(blocks::Vector{BlockArrays.Block{N,Int}}, dim::Int, blockcomb::Vector{Int}) where {N}
+function uncombine_blocks(
+  blocks::Vector{BlockArrays.Block{N,Int}}, dim::Int, blockcomb::Vector{Int}
+) where {N}
   blocks_uncomb = Vector{BlockArrays.Block{N,Int}}()
   ncomb_tot = 0
   for i in 1:length(blocks)
@@ -108,7 +111,9 @@ function uncombine_blocks(blocks::Vector{BlockArrays.Block{N,Int}}, dim::Int, bl
   return blocks_uncomb
 end
 
-function uncombine_block(block::BlockArrays.Block{N}, dim::Int, blockcomb::Vector{Int}) where {N}
+function uncombine_block(
+  block::BlockArrays.Block{N}, dim::Int, blockcomb::Vector{Int}
+) where {N}
   blocks_uncomb = Vector{BlockArrays.Block{N,Int}}()
   ncomb_tot = 0
   blockval = block.n[dim]

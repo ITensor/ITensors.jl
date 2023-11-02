@@ -6,8 +6,9 @@ Base.BroadcastStyle(::Type{<:BlockSparseArray{<:Any,N}}) where {N} = BlockSparse
 BlockSparseStyle(::Val{N}) where {N} = BlockSparseStyle{N}()
 BlockSparseStyle{M}(::Val{N}) where {N,M} = BlockSparseStyle{N}()
 
-Base.similar(bc::Broadcasted{BlockSparseStyle{N}}, ::Type{T}) where {T,N} =
-  BlockSparseArray{T,N}(undef, axes(bc))
+function Base.similar(bc::Broadcasted{BlockSparseStyle{N}}, ::Type{T}) where {T,N}
+  return BlockSparseArray{T,N}(undef, axes(bc))
+end
 
 function preserves_zeros(f, elts::Type...)
   return iszero(f(zero.(elts)...))
