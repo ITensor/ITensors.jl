@@ -2,9 +2,10 @@ module NDTensorsMetalExt
 
 using Adapt
 using Functors
-using LinearAlgebra: LinearAlgebra, Transpose, mul!
+using LinearAlgebra: LinearAlgebra, Transpose, mul!, qr, eigen, svd
 using NDTensors
 using NDTensors.SetParameters
+using NDTensors.Unwrap: qr_positive, ql_positive, ql
 
 if isdefined(Base, :get_extension)
   using Metal
