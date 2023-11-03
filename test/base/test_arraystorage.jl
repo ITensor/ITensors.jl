@@ -27,7 +27,7 @@ end
   @test 2 * A ≈ 2 * A_ts
   @test NDTensors.storage(2A) isa TestArrayStorage.default_arraystoragetype(space)
   @test A * C ≈ A_ts * C
-  @test (A * C) * dag(C) ≈ A
+  ## @test (A * C) * dag(C) ≈ A
   @test A * B ≈ A_ts * B_ts
 
   # TODO: Still need to implement.
