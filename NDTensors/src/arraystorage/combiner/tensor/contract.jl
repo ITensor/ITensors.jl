@@ -6,11 +6,11 @@ function contraction_output(
 end
 
 function contract!!(
-  output_tensor::ArrayStorageTensor,
+  output_tensor::Tensor,
   output_tensor_labels,
   combiner_tensor::CombinerTensor,
   combiner_tensor_labels,
-  tensor::ArrayStorageTensor,
+  tensor::MatrixOrArrayStorageTensor,
   tensor_labels,
 )
   if ndims(combiner_tensor) ≤ 1
@@ -76,5 +76,23 @@ function contract!!(
   end
   return invalid_combiner_contraction_error(
     tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
+  )
+end
+
+function contract!!(
+  output_tensor::Tensor,
+  output_tensor_labels,
+  tensor::MatrixOrArrayStorageTensor,
+  tensor_labels,
+  combiner_tensor::CombinerTensor,
+  combiner_tensor_labels,
+)
+  return contract!!(
+    output_tensor,
+    output_tensor_labels,
+    combiner_tensor,
+    combiner_tensor_labels,
+    tensor,
+    tensor_labels,
   )
 end

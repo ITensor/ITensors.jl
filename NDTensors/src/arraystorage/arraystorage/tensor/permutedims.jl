@@ -1,9 +1,14 @@
 function permutedims!(
-  output_tensor::MatrixOrArrayStorageTensor,
-  tensor::MatrixOrArrayStorageTensor,
+  tensor_dest::MatrixOrArrayStorageTensor,
+  tensor_src::MatrixOrArrayStorageTensor,
   perm,
   f::Function,
 )
-  permutedims!(storage(output_tensor), storage(tensor), perm, f)
-  return output_tensor
+  permutedims!(storage(tensor_dest), storage(tensor_src), perm, f)
+  return tensor_dest
+end
+
+function permutedims(t::MatrixOrArrayStorageTensor, perm)
+  a_perm = permutedims(storage(t), perm)
+  return tensor(a_perm, permute(inds(t), perm))
 end
