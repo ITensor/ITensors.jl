@@ -169,7 +169,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   end
 
   which_decomp::Union{String,Nothing} = get(kwargs, :which_decomp, nothing)
-  svd_alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
+  svd_alg::Union{String,Nothing} = get(kwargs, :svd_alg, nothing)
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
 
