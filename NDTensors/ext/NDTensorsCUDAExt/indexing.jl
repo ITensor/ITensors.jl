@@ -9,7 +9,7 @@ end
 
 function Base.getindex(E::Exposed{<:CuArray,<:Adjoint}, I...)
   Ap = parent(E)
-  return expose(Ap)[I...]
+  return (expose(Ap)[I[2], I[1]])'
 end
 
 function Base.copy(E::Exposed{<:CuArray,<:Base.ReshapedArray})
