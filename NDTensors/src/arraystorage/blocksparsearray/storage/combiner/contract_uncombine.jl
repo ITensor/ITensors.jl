@@ -1,11 +1,13 @@
 function contract_uncombine!!(
-  ::ArrayStorageTensor,
+  ::ArrayStorage,
   ::Any,
-  tensor::Tensor{<:Any,<:Any,<:BlockSparseArray},
+  tensor::BlockSparseArray,
   tensor_labels,
   combiner_tensor::CombinerTensor,
   combiner_tensor_labels,
 )
+  error("Not implemented")
+
   # Get the label marking the combined index
   # By convention the combined index is the first one
   # TODO: Consider storing the location of the combined
@@ -74,7 +76,7 @@ function contract_uncombine!!(
 end
 
 function uncombine(
-  T::Tensor{ElT,NT,<:BlockSparseArray{ElT,NT}},
+  T::BlockSparseArray{ElT,NT},
   T_labels,
   is,
   is_labels,
@@ -136,7 +138,7 @@ function uncombine(
 end
 
 function uncombine_output(
-  T::Tensor{ElT,N,<:BlockSparseArray{ElT,N}},
+  T::BlockSparseArray{ElT,N},
   T_labels,
   is,
   is_labels,
@@ -163,50 +165,3 @@ function uncombine_output(
   R = tensor(reshape(a_uncomb_perm, blockinds), is)
   return R
 end
-
-# Uncombine the blocks along the dimension dim
-# according to the pattern in blockcomb (for example, blockcomb
-# is [1,2,2,3] and dim = 2, so the blocks (1,2),(2,3) get
-# split into (1,2),(1,3),(2,4))
-function uncombine_blocks(
-  blocks::Vector{BlockArrays.Block{N,Int}}, dim::Int, blockcomb::Vector{Int}
-) where {N}
-  blocks_uncomb = Vector{BlockArrays.Block{N,Int}}()
-  ncomb_tot = 0
-  for i in 1:length(blocks)
-    block = blocks[i]
-    blockval = block.n[dim]
-    ncomb = _number_uncombined(blockval, blockcomb)
-    ncomb_shift = _number_uncombined_shift(blockval, blockcomb)
-    push!(blocks_uncomb, setindex(block, blockval + ncomb_shift, dim))
-    for j in 1:(ncomb - 1)
-      push!(blocks_uncomb, setindex(block, blockval + ncomb_shift + j, dim))
-    end
-  end
-  return blocks_uncomb
-end
-
-## function uncombine_block(
-##   block::BlockArrays.Block{N}, dim::Int, blockcomb::Vector{Int}
-## ) where {N}
-##   blocks_uncomb = Vector{BlockArrays.Block{N,Int}}()
-##   ncomb_tot = 0
-##   blockval = block.n[dim]
-##   ncomb = _number_uncombined(blockval, blockcomb)
-##   ncomb_shift = _number_uncombined_shift(blockval, blockcomb)
-##   push!(blocks_uncomb, setindex(block, blockval + ncomb_shift, dim))
-##   for j in 1:(ncomb - 1)
-##     push!(blocks_uncomb, setindex(block, blockval + ncomb_shift + j, dim))
-##   end
-##   return blocks_uncomb
-## end
-## 
-## # TODO: Rethink this function.
-## function reshape(blockT::BlockArrays.Block{NT}, indsT, indsR) where {NT}
-##   nblocksT = nblocks(indsT)
-##   nblocksR = nblocks(indsR)
-##   blockR = Tuple(
-##     CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(blockT.n)]]
-##   )
-##   return BlockArrays.Block(blockR)
-## end

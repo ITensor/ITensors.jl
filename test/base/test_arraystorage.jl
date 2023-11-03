@@ -26,6 +26,8 @@ end
   @test NDTensors.storage(A + A) isa TestArrayStorage.default_arraystoragetype(space)
   @test 2 * A ≈ 2 * A_ts
   @test NDTensors.storage(2A) isa TestArrayStorage.default_arraystoragetype(space)
+
+  # TODO: Test combining over subset of indices.
   @test A * C ≈ A_ts * C
   ## @test (A * C) * dag(C) ≈ A
   @test A * B ≈ A_ts * B_ts
