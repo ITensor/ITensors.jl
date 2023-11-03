@@ -1,9 +1,7 @@
-function contract_uncombine!!(
-  ::ArrayStorage,
-  ::Any,
+function contract_uncombine(
   tensor::BlockSparseArray,
   tensor_labels,
-  combiner_tensor::CombinerTensor,
+  combiner_tensor::CombinerArray,
   combiner_tensor_labels,
 )
   error("Not implemented")

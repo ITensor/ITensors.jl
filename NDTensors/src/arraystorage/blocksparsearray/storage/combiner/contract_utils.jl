@@ -7,7 +7,9 @@ nzblocks(a::BlockSparseArray) = BlockArrays.Block.(Tuple.(collect(nonzero_keys(b
 
 function outer(i1::BlockArrays.BlockedUnitRange, i2::BlockArrays.BlockedUnitRange)
   axes = (i1, i2)
-  return BlockArrays.blockedrange(prod.(length, vec(collect(Iterators.product(BlockArrays.blocks.(axes)...)))))
+  return BlockArrays.blockedrange(
+    prod.(length, vec(collect(Iterators.product(BlockArrays.blocks.(axes)...))))
+  )
 end
 
 function combine_dims(

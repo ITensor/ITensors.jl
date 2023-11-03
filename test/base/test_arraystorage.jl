@@ -15,11 +15,11 @@ end
   # TensorStorage
   A_ts = randomITensor(i, dag(j))
   B_ts = randomITensor(j, dag(k))
-
-  C = combiner(i, dag(j))
+  C_ts = combiner(i, dag(j))
 
   A = NDTensors.to_arraystorage(A_ts)
   B = NDTensors.to_arraystorage(B_ts)
+  C = NDTensors.to_arraystorage(C_ts)
 
   @test NDTensors.storage(A) isa TestArrayStorage.default_arraystoragetype(space)
   @test A + A ≈ A_ts + A_ts
@@ -28,9 +28,16 @@ end
   @test NDTensors.storage(2A) isa TestArrayStorage.default_arraystoragetype(space)
 
   # TODO: Test combining over subset of indices.
-  @test A * C ≈ A_ts * C
+  @test A * C ≈ A_ts * C_ts
   ## @test (A * C) * dag(C) ≈ A
   @test A * B ≈ A_ts * B_ts
+
+  # Partial combiner
+  D_ts = randomITensor(i, j, k)
+  Cᴰ_ts = combiner(i, k)
+  D = NDTensors.to_arraystorage(D_ts)
+  Cᴰ = NDTensors.to_arraystorage(Cᴰ_ts)
+  @test D * Cᴰ ≈ D_ts * Cᴰ_ts
 
   # TODO: Still need to implement.
   if space isa Vector{<:Pair{<:QN}}

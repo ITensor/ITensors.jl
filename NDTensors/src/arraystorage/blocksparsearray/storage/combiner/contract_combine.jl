@@ -1,9 +1,7 @@
-function contract_combine!!(
-  ::ArrayStorage,
-  ::Any,
+function contract_combine(
   tensor::BlockSparseArray,
   tensor_labels,
-  combiner_tensor::CombinerTensor,
+  combiner_tensor::CombinerArray,
   combiner_tensor_labels,
 )
   # Get the label marking the combined index
@@ -25,13 +23,14 @@ function contract_combine!!(
   # TODO: This is doing the wrong thing for partial combining.
   # Rewrite so that we don't need this.
   output_tensor_inds = contract_inds(
-    inds(combiner_tensor),
+    axes(combiner_tensor),
     combiner_tensor_labels,
-    inds(tensor),
+    axes(tensor),
     tensor_labels,
     output_tensor_labels,
   )
 
+  ## TODO: Add this back.
   ## #<fermions>:
   ## tensor = before_combiner_signs(
   ##   tensor,
@@ -94,7 +93,9 @@ function permutedims_combine(
     while b_in_combined_dim - pos_in_new_combined_block > 0 &&
       blockcomb[b_in_combined_dim - pos_in_new_combined_block] == new_b_in_combined_dim
       # offset += blockdim(ind_comb, b_in_combined_dim - pos_in_new_combined_block)
-      offset += length(ind_comb[BlockArrays.Block(b_in_combined_dim - pos_in_new_combined_block)])
+      offset += length(
+        ind_comb[BlockArrays.Block(b_in_combined_dim - pos_in_new_combined_block)]
+      )
       pos_in_new_combined_block += 1
     end
     b_new = setindex(b_perm_comb, new_b_in_combined_dim, comb_ind_loc)
@@ -102,7 +103,9 @@ function permutedims_combine(
     dimsRb_tot = size(Rb_total)
     subind = ntuple(
       i -> if i == comb_ind_loc
-        range(1 + offset; stop=offset + length(ind_comb[BlockArrays.Block(b_in_combined_dim)]))
+        range(
+          1 + offset; stop=offset + length(ind_comb[BlockArrays.Block(b_in_combined_dim)])
+        )
       else
         range(1; stop=dimsRb_tot[i])
       end,
@@ -156,13 +159,6 @@ function permutedims_combine_output(
 
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
-
-  ## return BlockSparseTensor(unwrap_type(T), blocks_perm_comb, is)
-  # TODO: Do this without `is`.
-  blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], is)
   blocktype = set_ndims(unwrap_type(T), length(is))
-  ## return tensor(
-  ##  BlockSparseArray{eltype(T),length(is),blocktype}(undef, blocks_perm_comb, blockinds), is
-  ##)
-  return BlockSparseArray{eltype(T),length(is),blocktype}(undef, blocks_perm_comb, blockinds)
+  return BlockSparseArray{eltype(T),length(is),blocktype}(undef, blocks_perm_comb, is)
 end
