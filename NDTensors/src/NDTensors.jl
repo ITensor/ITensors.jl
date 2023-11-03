@@ -158,6 +158,7 @@ include("arraystorage/blocksparsearray/storage/unwrap.jl")
 include("arraystorage/blocksparsearray/storage/contract.jl")
 
 include("arraystorage/blocksparsearray/tensor/combiner/contract.jl")
+include("arraystorage/blocksparsearray/tensor/combiner/contract_combine.jl")
 include("arraystorage/blocksparsearray/tensor/combiner/contract_uncombine.jl")
 
 # Combiner storage
