@@ -116,8 +116,8 @@ end
 
 # TODO: Rethink this function.
 function reshape(blockT::BlockArrays.Block{NT}, indsT, indsR) where {NT}
-  nblocksT = nblocks(indsT)
-  nblocksR = nblocks(indsR)
+  nblocksT = BlockArrays.blocklength.(indsT)
+  nblocksR = BlockArrays.blocklength.(indsR)
   blockR = Tuple(
     CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(blockT.n)]]
   )
