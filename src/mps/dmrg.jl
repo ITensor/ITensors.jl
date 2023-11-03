@@ -126,7 +126,7 @@ Optional keyword arguments:
      or threshold to use for truncating the bond dimension or rank of the MPS.
   - `eigsolve_krylovdim::Int = 3` - maximum dimension of Krylov space used to
      locally solve the eigenvalue problem. Try setting to a higher value if
-     convergence is slow. [^krylovkit]
+     convergence is slow or the Hamiltonian is close to a critical point. [^krylovkit]
   - `eigsolve_tol::Number = 1e-14` - Krylov eigensolver tolerance. [^krylovkit]
   - `eigsolve_maxiter::Int = 1` - number of times the Krylov subspace can be
      rebuilt. [^krylovkit]
