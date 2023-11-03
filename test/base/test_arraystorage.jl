@@ -9,6 +9,9 @@ default_arraystoragetype(space) = Array
 default_arraystoragetype(space::Vector{<:Pair{<:QN}}) = BlockSparseArray
 end
 
+is_qn_space(i) = false
+is_qn_space(i::Vector{<:Pair{<:QN}}) = true
+
 @testset "ITensor Array storage $space" for space in (2, [QN(0) => 2, QN(1) => 3])
   i, j, k = Index.((space, space, space))
 
@@ -29,7 +32,11 @@ end
 
   # TODO: Test combining over subset of indices.
   @test A * C ≈ A_ts * C_ts
-  ## @test (A * C) * dag(C) ≈ A
+  if is_qn_space(space)
+    @test_broken (A * C) * dag(C) ≈ A
+  else
+    @test (A * C) * dag(C) ≈ A
+  end
   @test A * B ≈ A_ts * B_ts
 
   # Partial combiner
@@ -40,7 +47,7 @@ end
   @test D * Cᴰ ≈ D_ts * Cᴰ_ts
 
   # TODO: Still need to implement.
-  if space isa Vector{<:Pair{<:QN}}
+  if is_qn_space(space)
     @test_broken NDTensors.storage(A * B) isa
       TestArrayStorage.default_arraystoragetype(space)
     @test_broken A[1, 1] = 11

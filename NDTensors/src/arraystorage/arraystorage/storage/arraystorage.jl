@@ -42,7 +42,7 @@ function to_axes(inds::Tuple)
   if any(is_blocked_ind, inds)
     return BlockArrays.blockedrange.(map(i -> [blockdim(i, b) for b in 1:nblocks(i)], inds))
   else
-    return dim.(inds)
+    return Base.OneTo.(dim.(inds))
   end
 end
 

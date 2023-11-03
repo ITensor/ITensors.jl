@@ -38,17 +38,17 @@ function contract_uncombine(
     output_tensor_labels_uc,
   )
 
-  # <fermions>:
-  tensor = before_combiner_signs(
-    tensor,
-    tensor_labels,
-    inds(tensor),
-    combiner_tensor,
-    combiner_tensor_labels,
-    inds(combiner_tensor),
-    output_tensor_labels_uc,
-    output_tensor_inds_uc,
-  )
+  ## # <fermions>:
+  ## tensor = before_combiner_signs(
+  ##   tensor,
+  ##   tensor_labels,
+  ##   inds(tensor),
+  ##   combiner_tensor,
+  ##   combiner_tensor_labels,
+  ##   inds(combiner_tensor),
+  ##   output_tensor_labels_uc,
+  ##   output_tensor_inds_uc,
+  ## )
 
   output_tensor = uncombine(
     tensor,
@@ -60,15 +60,15 @@ function contract_uncombine(
     blockcomb(combiner_tensor),
   )
 
-  # <fermions>:
-  output_tensor = after_combiner_signs(
-    output_tensor,
-    output_tensor_labels_uc,
-    output_tensor_inds_uc,
-    combiner_tensor,
-    combiner_tensor_labels,
-    inds(combiner_tensor),
-  )
+  ## # <fermions>:
+  ## output_tensor = after_combiner_signs(
+  ##   output_tensor,
+  ##   output_tensor_labels_uc,
+  ##   output_tensor_inds_uc,
+  ##   combiner_tensor,
+  ##   combiner_tensor_labels,
+  ##   inds(combiner_tensor),
+  ## )
 
   return output_tensor
 end
