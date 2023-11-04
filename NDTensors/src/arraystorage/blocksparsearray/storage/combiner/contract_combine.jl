@@ -29,7 +29,7 @@ function contract_combine(
     a_src, axes_dest, perm, ucpos_in_labels_src, blockperm(a_comb), blockcomb(a_comb)
   )
 
-  return a_dest
+  return a_dest, labels_dest
 end
 
 function permutedims_combine(

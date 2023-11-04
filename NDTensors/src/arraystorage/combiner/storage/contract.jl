@@ -14,23 +14,29 @@ function contract(
   return invalid_comb_contraction_error(t, labels_src, a_comb, labels_comb)
 end
 
+function contract(
+  a_src::MatrixOrArrayStorage, labels_src, a_comb::CombinerArray, labels_comb
+)
+  return contract(a_comb, labels_comb, a_src, labels_src)
+end
+
 # Empty comb, acts as multiplying by 1
 function contract_scalar(
   a_comb::CombinerArray, labels_comb, a_src::MatrixOrArrayStorage, labels_src
 )
   error("Not implemented")
-  return copy(a_src), labels_dest
+  return copy(a_src), labels_src
 end
 
 function contract_replacement(
   a_comb::CombinerArray, labels_comb, a_src::MatrixOrArrayStorage, labels_src
 )
-  error("Not implemented")
-  ui = setdiff(labels_comb, labels_src)[]
-  new_axis = axes(a_comb)[findfirst(==(ui), labels_comb)]
-  cpos1, cpos2 = intersect_positions(labels_comb, labels_src)
+  @assert length(labels_src) == 2
   a_dest = copy(a_src)
-  ## axes_dest = setindex(axes(a_src), new_axis, cpos2)
+  replacement_label = only(setdiff(labels_comb, labels_src))
+  common_label = only(intersect(labels_src, labels_comb))
+  common_label_src_pos = findfirst(==(common_label), labels_src)
+  labels_dest = setindex(labels_src, replacement_label, common_label_src_pos)
   return a_dest, labels_dest
 end
 

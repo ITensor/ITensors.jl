@@ -5,6 +5,7 @@ end
 
 Base.axes(a::CombinerArray) = a.axes
 Base.size(a::CombinerArray) = length.(axes(a))
+Base.getindex(a::CombinerArray{0}) = true
 
 function Base.conj(aliasstyle::AliasStyle, a::CombinerArray)
   return CombinerArray(conj(aliasstyle, a.combiner), axes(a))

@@ -16,9 +16,8 @@ function contract_inds_uncombine(inds_src::Tuple, labels_src, inds_comb::Tuple, 
     labels_src = permute(labels_src, perm)
   end
   labels_dest = insertat(labels_dest, labels_uc, cpos_in_labels_dest)
-  return contract_inds(inds_comb, labels_comb, inds_src, labels_src, labels_dest),
-  labels_dest, perm,
-  cpos_in_labels_dest
+  inds_dest = contract_inds(inds_comb, labels_comb, inds_src, labels_src, labels_dest)
+  return inds_dest, labels_dest, perm, cpos_in_labels_dest
 end
 
 function contract_uncombine(
@@ -63,7 +62,7 @@ function contract_uncombine(
   ##   axes(a_comb),
   ## )
 
-  return a_dest
+  return a_dest, labels_dest
 end
 
 function uncombine(
