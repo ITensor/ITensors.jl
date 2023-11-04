@@ -1,17 +1,12 @@
 function contract(
-  tensor::BlockSparseArray,
-  tensor_labels,
-  combiner_tensor::CombinerArray,
-  combiner_tensor_labels,
+  a_src::BlockSparseArray,
+  labels_src,
+  a_comb::CombinerArray,
+  labels_comb,
 )
-  if is_combining(tensor, tensor_labels, combiner_tensor, combiner_tensor_labels)
-    return contract_combine(tensor, tensor_labels, combiner_tensor, combiner_tensor_labels)
-  else # Uncombining
-    return contract_uncombine(
-      tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
-    )
+  return if is_combining(a_src, labels_src, a_comb, labels_comb)
+    contract_combine(a_src, labels_src, a_comb, labels_comb)
+  else
+    contract_uncombine(a_src, labels_src, a_comb, labels_comb)
   end
-  return invalid_combiner_contraction_error(
-    combiner_tensor, tensor_labels, tensor, tensor_labels
-  )
 end
