@@ -30,7 +30,7 @@ is_qn_space(i::Vector{<:Pair{<:QN}}) = true
   @test 2 * A ≈ 2 * A_ts
   @test NDTensors.storage(2A) isa TestArrayStorage.default_arraystoragetype(space)
 
-  # TODO: Test combining over subset of indices.
+  # Combine all indices
   @test A * C ≈ A_ts * C_ts
   if is_qn_space(space)
     @test_broken (A * C) * dag(C) ≈ A
@@ -45,6 +45,11 @@ is_qn_space(i::Vector{<:Pair{<:QN}}) = true
   D = NDTensors.to_arraystorage(D_ts)
   Cᴰ = NDTensors.to_arraystorage(Cᴰ_ts)
   @test D * Cᴰ ≈ D_ts * Cᴰ_ts
+  if is_qn_space(space)
+    @test_broken (D * Cᴰ) * dag(Cᴰ) ≈ D
+  else
+    @test (D * Cᴰ) * dag(Cᴰ) ≈ D
+  end
 
   # TODO: Still need to implement.
   if is_qn_space(space)

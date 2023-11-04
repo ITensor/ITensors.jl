@@ -160,20 +160,24 @@ include("arraystorage/diagonalarray/tensor/contract.jl")
 # BlockSparseArray storage
 include("arraystorage/blocksparsearray/storage/unwrap.jl")
 include("arraystorage/blocksparsearray/storage/contract.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_utils.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_combine.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_uncombine.jl")
 
-include("arraystorage/blocksparsearray/tensor/combiner/contract.jl")
 ## TODO: Delete once it is rewritten for array storage types.
 ## include("arraystorage/blocksparsearray/tensor/combiner/contract_uncombine.jl")
 
 # Combiner storage
 include("arraystorage/combiner/storage/promote_rule.jl")
 include("arraystorage/combiner/storage/contract_utils.jl")
+include("arraystorage/combiner/storage/contract.jl")
 
+include("arraystorage/combiner/tensor/to_arraystorage.jl")
 include("arraystorage/combiner/tensor/contract.jl")
+
+include("arraystorage/blocksparsearray/storage/combiner/contract.jl")
+include("arraystorage/blocksparsearray/storage/combiner/contract_utils.jl")
+include("arraystorage/blocksparsearray/storage/combiner/contract_combine.jl")
+include("arraystorage/blocksparsearray/storage/combiner/contract_uncombine.jl")
+
+include("arraystorage/blocksparsearray/tensor/combiner/contract.jl")
 
 #####################################
 # Deprecations
