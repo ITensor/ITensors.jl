@@ -61,6 +61,62 @@ end
 
 main()
 
+# ## BlockSparseArrays.jl and BlockArrays.jl interface
+
+using NDTensors.BlockSparseArrays
+using BlockArrays: BlockArrays
+
+i1 = [2, 3]
+i2 = [2, 3]
+B = BlockSparseArray{Float64}(i1, i2)
+B[BlockArrays.Block(1, 1)] = randn(2, 2)
+B[BlockArrays.Block(2, 2)] = randn(3, 3)
+
+# Minimal interface
+
+# Specifies the block structure
+@show collect.(BlockArrays.blockaxes(axes(B, 1)))
+
+# Index range of a block
+@show axes(B, 1)[BlockArrays.Block(1)]
+
+# Last index of each block
+@show BlockArrays.blocklasts(axes(B, 1))
+
+# Find the block containing the index
+@show BlockArrays.findblock(axes(B, 1), 3)
+
+# Retrieve a block
+@show B[BlockArrays.Block(1, 1)]
+@show BlockArrays.viewblock(B, BlockArrays.Block(1, 1))
+
+# Check block bounds
+@show BlockArrays.blockcheckbounds(B, 2, 2)
+@show BlockArrays.blockcheckbounds(B, BlockArrays.Block(2, 2))
+
+# Derived interface
+
+# Specifies the block structure
+@show collect(Iterators.product(BlockArrays.blockaxes(B)...))
+
+# Iterate over block views
+@show sum.(BlockArrays.eachblock(B))
+
+# Reshape into 1-d
+@show BlockArrays.blockvec(B)[BlockArrays.Block(1)]
+
+# Array-of-array view
+@show BlockArrays.blocks(B)[1, 1] == B[BlockArrays.Block(1, 1)]
+
+# Access an index within a block
+@show B[BlockArrays.Block(1, 1)[1, 1]] == B[1, 1]
+
+# BlockSparseArray interface
+
+# Define `eachblockindex`
+eachblockindex(B::BlockArrays.AbstractBlockArray) = Iterators.product(BlockArrays.blockaxes(B)...)
+eachblockindex(B::BlockSparseArray) = Iterators.product(BlockArrays.blockaxes(B)...)
+
 #=
 You can generate this README with:
 ```julia
