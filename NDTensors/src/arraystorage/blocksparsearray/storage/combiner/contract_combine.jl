@@ -1,32 +1,8 @@
 function contract_combine(
-  a_src::BlockSparseArray,
-  labels_src,
-  a_comb::CombinerArray,
-  labels_comb,
+  a_src::BlockSparseArray, labels_src, a_comb::CombinerArray, labels_comb
 )
-  # Get the label marking the combined index
-  # By convention the combined index is the first one
-  # TODO: Consider storing the location of the combined
-  # index in preperation for multiple combined indices
-  # TODO: Use `combinedind_label(...)`, `uncombinedind_labels(...)`, etc.
-  cpos_in_labels_comb = 1
-  clabel = labels_comb[cpos_in_labels_comb]
-  c = combinedind(a_comb)
-  labels_uc = deleteat(labels_comb, cpos_in_labels_comb)
-
   labels_dest = contract_labels(labels_comb, labels_src)
-  cpos_in_labels_dest = findfirst(==(clabel), labels_dest)
-  labels_dest_uc = insertat(
-    labels_dest, labels_uc, cpos_in_labels_dest
-  )
-
-  axes_dest = contract_inds(
-    axes(a_comb),
-    labels_comb,
-    axes(a_src),
-    labels_src,
-    labels_dest,
-  )
+  axes_dest = contract_inds(axes(a_comb), labels_comb, axes(a_src), labels_src, labels_dest)
 
   ## TODO: Add this back.
   ## #<fermions>:
@@ -41,16 +17,18 @@ function contract_combine(
   ##   axes_dest,
   ## )
 
+  # Account for permutation of data.
+  cpos_in_labels_comb = 1
+  clabel = labels_comb[cpos_in_labels_comb]
+  labels_uc = deleteat(labels_comb, cpos_in_labels_comb)
+  cpos_in_labels_dest = findfirst(==(clabel), labels_dest)
+  labels_dest_uc = insertat(labels_dest, labels_uc, cpos_in_labels_dest)
   perm = getperm(labels_dest_uc, labels_src)
   ucpos_in_labels_src = Tuple(findall(x -> x in labels_uc, labels_src))
   a_dest = permutedims_combine(
-    a_src,
-    axes_dest,
-    perm,
-    ucpos_in_labels_src,
-    blockperm(a_comb),
-    blockcomb(a_comb),
+    a_src, axes_dest, perm, ucpos_in_labels_src, blockperm(a_comb), blockcomb(a_comb)
   )
+
   return a_dest
 end
 
@@ -62,7 +40,9 @@ function permutedims_combine(
   blockperm::Vector{Int},
   blockcomb::Vector{Int},
 )
-  a_dest = permutedims_combine_output(a_src, axes_dest, perm, combdims, blockperm, blockcomb)
+  a_dest = permutedims_combine_output(
+    a_src, axes_dest, perm, combdims, blockperm, blockcomb
+  )
 
   # Permute the indices
   axes_perm = permute(axes(a_src), perm)
@@ -103,7 +83,8 @@ function permutedims_combine(
     subind = ntuple(ndims(a_src) - length(combdims) + 1) do i
       if i == comb_ind_loc
         range(
-          1 + offset; stop=offset + length(axis_comb[BlockArrays.Block(b_in_combined_dim)])
+          1 + offset;
+          stop=offset + length(axis_comb[BlockArrays.Block(b_in_combined_dim)]),
         )
       else
         range(1; stop=size(a_dest_b_total)[i])
@@ -155,5 +136,7 @@ function permutedims_combine_output(
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
   blocktype = set_ndims(unwrap_type(a_src), length(axes_dest))
-  return BlockSparseArray{eltype(a_src),length(axes_dest),blocktype}(undef, blocks_perm_comb, axes_dest)
+  return BlockSparseArray{eltype(a_src),length(axes_dest),blocktype}(
+    undef, blocks_perm_comb, axes_dest
+  )
 end

@@ -13,7 +13,7 @@ is_qn_space(i) = false
 is_qn_space(i::Vector{<:Pair{<:QN}}) = true
 
 @testset "ITensor Array storage $space" for space in (2, [QN(0) => 2, QN(1) => 3])
-  i, j, k = Index.((space, space, space))
+  i, j, k, l = Index.((space, space, space, space))
 
   # TensorStorage
   A_ts = randomITensor(i, dag(j))
@@ -32,24 +32,29 @@ is_qn_space(i::Vector{<:Pair{<:QN}}) = true
 
   # Combine all indices
   @test A * C ≈ A_ts * C_ts
-  if is_qn_space(space)
-    @test_broken (A * C) * dag(C) ≈ A
-  else
-    @test (A * C) * dag(C) ≈ A
-  end
+  @test C * A ≈ A_ts * C_ts
+  @test (A * C) * dag(C) ≈ A
+  @test dag(C) * (A * C) ≈ A
+  @test (C * A) * dag(C) ≈ A
+  @test dag(C) * (C * A) ≈ A
   @test A * B ≈ A_ts * B_ts
 
   # Partial combiner
-  D_ts = randomITensor(i, j, k)
+  D_ts = randomITensor(i, j, k, l)
   Cᴰ_ts = combiner(i, k)
   D = NDTensors.to_arraystorage(D_ts)
   Cᴰ = NDTensors.to_arraystorage(Cᴰ_ts)
+  cᴰ = uniqueind(Cᴰ, D)
+
   @test D * Cᴰ ≈ D_ts * Cᴰ_ts
-  if is_qn_space(space)
-    @test_broken (D * Cᴰ) * dag(Cᴰ) ≈ D
-  else
-    @test (D * Cᴰ) * dag(Cᴰ) ≈ D
-  end
+  @test permute(D * Cᴰ, j, cᴰ, l) * dag(Cᴰ) ≈ D
+  @test dag(Cᴰ) * permute(D * Cᴰ, j, cᴰ, l) ≈ D
+  @test permute(D * Cᴰ, cᴰ, j, l) * dag(Cᴰ) ≈ D
+  @test dag(Cᴰ) * permute(D * Cᴰ, cᴰ, j, l) ≈ D
+  @test permute(Cᴰ * D, j, cᴰ, l) * dag(Cᴰ) ≈ D
+  @test dag(Cᴰ) * permute(Cᴰ * D, j, cᴰ, l) ≈ D
+  @test permute(Cᴰ * D, cᴰ, j, l) * dag(Cᴰ) ≈ D
+  @test dag(Cᴰ) * permute(Cᴰ * D, cᴰ, j, l) ≈ D
 
   # TODO: Still need to implement.
   if is_qn_space(space)
