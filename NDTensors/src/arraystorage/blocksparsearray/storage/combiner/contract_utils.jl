@@ -12,6 +12,8 @@ function outer(i1::BlockArrays.BlockedUnitRange, i2::BlockArrays.BlockedUnitRang
   )
 end
 
+outer(i::BlockArrays.BlockedUnitRange) = i
+
 function combine_dims(
   blocks::Vector{BlockArrays.Block{N,Int}}, inds, combdims::NTuple{NC,Int}
 ) where {N,NC}

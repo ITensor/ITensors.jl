@@ -177,8 +177,6 @@ include("arraystorage/blocksparsearray/storage/combiner/contract_utils.jl")
 include("arraystorage/blocksparsearray/storage/combiner/contract_combine.jl")
 include("arraystorage/blocksparsearray/storage/combiner/contract_uncombine.jl")
 
-include("arraystorage/blocksparsearray/tensor/combiner/contract.jl")
-
 #####################################
 # Deprecations
 #
