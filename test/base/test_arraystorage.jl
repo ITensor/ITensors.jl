@@ -7,10 +7,9 @@ using ITensors
 using ITensors.NDTensors.BlockSparseArrays
 default_arraystoragetype(space) = Array
 default_arraystoragetype(space::Vector{<:Pair{<:QN}}) = BlockSparseArray
-end
-
 is_qn_space(i) = false
 is_qn_space(i::Vector{<:Pair{<:QN}}) = true
+end
 
 @testset "ITensor Array storage $space" for space in (2, [QN(0) => 2, QN(1) => 3])
   i, j, k, l = Index.((space, space, space, space))
@@ -57,7 +56,7 @@ is_qn_space(i::Vector{<:Pair{<:QN}}) = true
   @test dag(Cᴰ) * permute(Cᴰ * D, cᴰ, j, l) ≈ D
 
   # TODO: Still need to implement.
-  if is_qn_space(space)
+  if TestArrayStorage.is_qn_space(space)
     @test_broken NDTensors.storage(A * B) isa
       TestArrayStorage.default_arraystoragetype(space)
     @test_broken A[1, 1] = 11
