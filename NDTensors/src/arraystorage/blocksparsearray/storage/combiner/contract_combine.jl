@@ -135,8 +135,8 @@ function permutedims_combine_output(
 
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
-  blocktype = set_ndims(unwrap_type(a_src), length(axes_dest))
-  return BlockSparseArray{eltype(a_src),length(axes_dest),blocktype}(
-    undef, blocks_perm_comb, axes_dest
-  )
+  T = eltype(a_src)
+  N = length(axes_dest)
+  B = set_ndims(unwrap_type(a_src), length(axes_dest))
+  return BlockSparseArray{T,N,B}(undef, blocks_perm_comb, axes_dest)
 end
