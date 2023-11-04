@@ -26,10 +26,10 @@ function contract_replacement(
 )
   error("Not implemented")
   ui = setdiff(labels_comb, labels_src)[]
-  newind = axes(a_comb)[findfirst(==(ui), labels_comb)]
+  new_axis = axes(a_comb)[findfirst(==(ui), labels_comb)]
   cpos1, cpos2 = intersect_positions(labels_comb, labels_src)
   a_dest = copy(a_src)
-  axes_dest = setindex(axes(a_src), newind, cpos2)
+  axes_dest = setindex(axes(a_src), new_axis, cpos2)
   return tensor(a_dest, axes_dest)
 end
 
