@@ -11,7 +11,7 @@ is_qn_space(i) = false
 is_qn_space(i::Vector{<:Pair{<:QN}}) = true
 end
 
-@testset "ITensor Array storage $space" for space in (2, [QN(0) => 2, QN(1) => 3],)
+@testset "ITensor Array storage $space" for space in (2, [QN(0) => 2, QN(1) => 3])
   i, j, k, l = Index.((space, space, space, space))
 
   # TensorStorage
