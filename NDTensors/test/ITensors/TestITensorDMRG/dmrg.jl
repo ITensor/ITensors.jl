@@ -2,12 +2,7 @@ using Test
 using ITensors
 using NDTensors
 
-function test_dmrg(
-  elt,
-  N::Integer, 
-  dev::Function, 
-  cut::Float64,
-  no::Float64)
+function test_dmrg(elt, N::Integer, dev::Function, cut::Float64, no::Float64)
   # Create N spin-one degrees of freedom
   sites = siteinds("S=1", N)
 
@@ -36,9 +31,7 @@ function test_dmrg(
 
   # Run the DMRG algorithm, returning energy and optimized MPS
   energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel=0)
-  ref = TestITensorDMRG.get_ref_value(dev,N,cut,no,elt)
+  ref = TestITensorDMRG.get_ref_value(dev, N, cut, no, elt)
   println("$N, $cut, $no, $elt, $energy, $ref")
   @test energy ≈ get_ref_value(dev, N, cut, no, elt)
 end
-
-
