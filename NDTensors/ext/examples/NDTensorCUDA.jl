@@ -113,4 +113,39 @@ function main()
   @test inner(cm', cH, cm) ≈ inner(m', H, m)
 end
 
+function test_dmrg()
+ gpu = NDTensors.cu
+
+ for n in [2, 50]
+    N = n
+    sites = siteinds("S=1", N)
+
+    ampo = AutoMPO()
+    for j in 1:(N - 1)
+      ampo .+= 0.5, "S+", j, "S-", j + 1
+      ampo .+= 0.5, "S-", j, "S+", j + 1
+      ampo .+= "Sz", j, "Sz", j + 1
+    end
+    H = gpu(MPO(ampo, sites))
+
+    ψ₀ = gpu(randomMPS(sites))
+
+    sweeps = Sweeps(6)
+    maxdim!(sweeps, 10, 20, 40, 100)
+    mindim!(sweeps, 1, 10)
+    cutoff!(sweeps, 1e-11)
+    noise!(sweeps, 1e-10)
+    energy, ψ = @time dmrg(H, ψ₀, sweeps);
+    tg = @elapsed dmrg(H, ψ₀, sweeps);
+    if n == 50 
+      @test tg < 10
+    end
+    cH = NDTensors.cpu(H);
+    cP = NDTensors.cpu(ψ₀);
+    cenergy, p = @time dmrg(cH, cP, sweeps);
+    @test energy ≈ cenergy 
+  end
+end
+
 main()
+test_dmrg()
