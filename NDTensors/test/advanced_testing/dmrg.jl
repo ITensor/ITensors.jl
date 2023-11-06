@@ -3,11 +3,10 @@ using NDTensors
 using CUDA
 using Test
 
-
 function test_dmrg(N::Integer, dev::Function, cut::Float64, ref_energy, ref_time)
   # Create N spin-one degrees of freedom
   sites = siteinds("S=1", N)
-  
+
   # Input operator terms which define a Hamiltonian
   os = OpSum()
   for j in 1:(N - 1)
@@ -41,9 +40,10 @@ end
 include("../device_list.jl")
 devs = devices_list(ARGS)
 
-ref_energies = Vector{Float64}([-2.0000000000000004,-2.0000000000000004
-,-10.12463722168637,-10.124637222358869])
-ref_cpu_times = Vector{Float64}([0.005, 0.005, 2.2, 2.2]) 
+ref_energies = Vector{Float64}([
+  -2.0000000000000004, -2.0000000000000004, -10.12463722168637, -10.124637222358869
+])
+ref_cpu_times = Vector{Float64}([0.005, 0.005, 2.2, 2.2])
 ## actual time
 ## Vector{Float64}([ 0.003366999,0.003374851,0.226856982,0.184108744])
 ## When running test NDTensors last two timings are ~2.1s
@@ -52,19 +52,16 @@ ref_cuda_times = Vector{Float64}([0.05, 0.05, 1.5, 1.5])
 ## Vector{Float64}([tg = 0.020535662,0.022319508,0.512673502, 0.42965219])
 ## When running test(NDTensors; test_args=["cuda"]) last two timings are ~1.4s
 @testset "Testing DMRG different backends" for dev in devs
-    count = 0
-    ref_times = 
-        if dev == NDTensors.cpu 
-            ref_cpu_times 
-        elseif dev == NDTensors.cu
-            ref_cuda_times
-        elseif dev == NDTensors.mtl
-            nothing
-        end 
-    for n in [2, 8], 
-    cut in [1e-10, 0.]
-        test_dmrg(n, dev, cut, ref_energies[count % 4 + 1], ref_times[count % 4 + 1])
-        count += 1
-    end
+  count = 0
+  ref_times = if dev == NDTensors.cpu
+    ref_cpu_times
+  elseif dev == NDTensors.cu
+    ref_cuda_times
+  elseif dev == NDTensors.mtl
+    nothing
+  end
+  for n in [2, 8], cut in [1e-10, 0.0]
+    test_dmrg(n, dev, cut, ref_energies[count % 4 + 1], ref_times[count % 4 + 1])
+    count += 1
+  end
 end
-

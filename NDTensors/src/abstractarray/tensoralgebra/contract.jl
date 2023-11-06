@@ -81,7 +81,6 @@ function _gemm!(
   return C
 end
 
-
 # Non-trivial permutation
 function _contract_scalar_perm!(
   Rᵃ::AbstractArray{ElR}, Tᵃ::AbstractArray, perm, α, β=zero(ElR)
