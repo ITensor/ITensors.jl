@@ -1,4 +1,6 @@
 using Test
+using ITensors
+using NDTensors
 
 function test_dmrg(
   elt,
@@ -21,10 +23,10 @@ function test_dmrg(
   H = dev(MPO(elt, os, sites))
 
   # Create an initial random matrix product state
-  psi0 = dev(randomMPS(elt, sites; linkdims=10))
+  psi0 = dev(randomMPS(elt, sites;))
 
   # Plan to do 5 DMRG sweeps:
-  nsweeps = 5
+  nsweeps = 3
   # Set maximum MPS bond dimensions for each sweep
   maxdim = [10, 20, 100, 100, 200]
   # Set maximum truncation error allowed when adapting bond dimensions
@@ -34,8 +36,9 @@ function test_dmrg(
 
   # Run the DMRG algorithm, returning energy and optimized MPS
   energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel=0)
-  println(energy)
-  #@test energy ≈ get_ref_value(dev, cut, no, eltype)
+  ref = TestITensorDMRG.get_ref_value(dev,N,cut,no,elt)
+  println("$N, $cut, $no, $elt, $energy, $ref")
+  @test energy ≈ get_ref_value(dev, N, cut, no, elt)
 end
 
 
