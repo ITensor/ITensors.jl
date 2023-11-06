@@ -114,9 +114,9 @@ function main()
 end
 
 function test_dmrg()
- gpu = NDTensors.cu
+  gpu = NDTensors.cu
 
- for n in [2, 50]
+  for n in [2, 50]
     N = n
     sites = siteinds("S=1", N)
 
@@ -135,15 +135,15 @@ function test_dmrg()
     mindim!(sweeps, 1, 10)
     cutoff!(sweeps, 1e-11)
     noise!(sweeps, 1e-10)
-    energy, ψ = @time dmrg(H, ψ₀, sweeps);
-    tg = @elapsed dmrg(H, ψ₀, sweeps);
-    if n == 50 
+    energy, ψ = @time dmrg(H, ψ₀, sweeps)
+    tg = @elapsed dmrg(H, ψ₀, sweeps)
+    if n == 50
       @test tg < 10
     end
-    cH = NDTensors.cpu(H);
-    cP = NDTensors.cpu(ψ₀);
-    cenergy, p = @time dmrg(cH, cP, sweeps);
-    @test energy ≈ cenergy 
+    cH = NDTensors.cpu(H)
+    cP = NDTensors.cpu(ψ₀)
+    cenergy, p = @time dmrg(cH, cP, sweeps)
+    @test energy ≈ cenergy
   end
 end
 
