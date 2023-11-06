@@ -10,7 +10,7 @@ let
   # Create N spin-one degrees of freedom
   sites = siteinds("S=1", N)
   # Alternatively can make spin-half sites instead
-  #sites = siteinds("S=1/2",N)
+  #sites = siteinds("S=1/2", N)
 
   # Input operator terms which define a Hamiltonian
   os = OpSum()
@@ -23,7 +23,7 @@ let
   H = MPO(os, sites)
 
   # Create an initial random matrix product state
-  psi0 = randomMPS(sites, 10)
+  psi0 = randomMPS(sites; linkdims=10)
 
   # Plan to do 5 DMRG sweeps:
   nsweeps = 5
