@@ -34,7 +34,7 @@ end
     "emptystorage.jl",
     "combiner.jl",
     "arraytensor/arraytensor.jl",
-    "advanced_testing/dmrg.jl",
+    #"advanced_testing/dmrg.jl",
   ]
     println("Running $filename")
     include(filename)

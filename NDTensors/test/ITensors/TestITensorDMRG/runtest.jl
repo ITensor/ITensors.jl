@@ -1,0 +1,12 @@
+using Test
+using .TestITensorDMRG
+
+## I am still working on this whole thing its a little messy still no need to review yet
+include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
+devs = devices_list(ARGS)
+
+@testset "Testing DMRG different backends" for dev in devs,
+    N in [2, 8], cut in [1e-3, 1e-13], 
+    no in [0, 1e-12], elt in [Float32, ComplexF32, Float64, ComplexF64]
+        test_dmrg(elt, N, dev, cut, no)
+end
