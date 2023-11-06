@@ -187,6 +187,7 @@ function eigen(
   matrixT = matrix(T)
   ## TODO Here I am calling parent to ensure that the correct `any` function
   ## is envoked for non-cpu matrices
+  ## TODO use expose here
   if any(!isfinite, parent(matrixT))
     throw(
       ArgumentError(
@@ -195,6 +196,7 @@ function eigen(
     )
   end
 
+  ### What do we do if DM is full of Nan or Inf?
   DM, VM = eigen(expose(matrixT))
 
   # Sort by largest to smallest eigenvalues
