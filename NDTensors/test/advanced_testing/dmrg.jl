@@ -1,7 +1,12 @@
 using ITensors
 using NDTensors
-using CUDA
 using Test
+if "cuda" in ARGS || "all" in ARGS
+  using CUDA
+end
+if "metal" in ARGS || "all" in ARGS
+  using Metal
+end
 
 function test_dmrg(N::Integer, dev::Function, cut::Float64, ref_energy, ref_time)
   # Create N spin-one degrees of freedom
