@@ -81,25 +81,6 @@ function _gemm!(
   return C
 end
 
-function _gemm!(
-  ::GemmBackend{:Generic},
-  tA,
-  tB,
-  alpha::AT,
-  A::AbstractVecOrMat,
-  B::AbstractVecOrMat,
-  beta::BT,
-  C::Tensor,
-) where {AT,BT}
-  mul!(
-    expose(matrix(C)),
-    expose(tA == 'T' ? transpose(A) : A),
-    expose(tB == 'T' ? transpose(B) : B),
-    alpha,
-    beta,
-  )
-  return C
-end
 
 # Non-trivial permutation
 function _contract_scalar_perm!(
