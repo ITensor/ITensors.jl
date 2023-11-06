@@ -646,7 +646,6 @@ function factorize_eigen(
   cutoff=nothing,
   tags=nothing,
 )
-  delta_A2 = eigen_perturbation
   if ortho == "left"
     Lis = commoninds(A, indices(Linds...))
   elseif ortho == "right"
@@ -657,11 +656,11 @@ function factorize_eigen(
   end
   simLis = sim(Lis)
   A2 = A * replaceinds(dag(A), Lis, simLis)
-  if !isnothing(delta_A2)
+  if !isnothing(eigen_perturbation)
     # This assumes delta_A2 has indices:
     # (Lis..., prime(Lis)...)
-    delta_A2 = replaceinds(delta_A2, Lis, dag(simLis))
-    noprime!(delta_A2)
+    delta_A2 = replaceinds(eigen_perturbation, Lis, dag(simLis))
+    delta_A2 = noprime(delta_A2)
     A2 += delta_A2
   end
   F = eigen(A2, Lis, simLis; ishermitian=true, mindim, maxdim, cutoff, tags)
@@ -782,7 +781,9 @@ function factorize(
     end
     L, R, spec = LR
   elseif which_decomp == "eigen"
-    L, R, spec = factorize_eigen(A, Linds...; mindim, maxdim, cutoff, tags, ortho)
+    L, R, spec = factorize_eigen(
+      A, Linds...; mindim, maxdim, cutoff, tags, ortho, eigen_perturbation
+    )
   elseif which_decomp == "qr"
     L, R = factorize_qr(A, Linds...; ortho, tags)
     spec = Spectrum(nothing, 0.0)
