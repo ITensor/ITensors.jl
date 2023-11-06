@@ -1,10 +1,8 @@
 using ITensors
 using NDTensors
 using CUDA
-using Random
 using Test
 
-Random.seed!(1234)
 
 function test_dmrg(N::Integer, dev::Function, cut::Float64, ref_energy, ref_time)
   # Create N spin-one degrees of freedom
@@ -35,8 +33,8 @@ function test_dmrg(N::Integer, dev::Function, cut::Float64, ref_energy, ref_time
   energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, outputlevel=0)
   @test energy ≈ ref_energy
 
+  @elapsed dmrg(H, psi0; nsweeps, maxdim, cutoff, outputlevel=0)
   tg = @elapsed dmrg(H, psi0; nsweeps, maxdim, cutoff, outputlevel=0)
-  #println(tg)
   @test tg < ref_time
 end
 
@@ -45,15 +43,16 @@ devs = devices_list(ARGS)
 
 ref_energies = Vector{Float64}([-2.0000000000000004,-2.0000000000000004
 ,-10.12463722168637,-10.124637222358869])
-ref_cpu_times = Vector{Float64}([0.005, 0.005, 0.4, 0.4]) 
+ref_cpu_times = Vector{Float64}([0.005, 0.005, 2.2, 2.2]) 
 ## actual time
-#Vector{Float64}([ 0.003366999,0.003374851,0.226856982,0.184108744])
-ref_cuda_times = Vector{Float64}([0.05, 0.05, 0.7, 0.7])
+## Vector{Float64}([ 0.003366999,0.003374851,0.226856982,0.184108744])
+## When running test NDTensors last two timings are ~2.1s
+ref_cuda_times = Vector{Float64}([0.05, 0.05, 1.5, 1.5])
 ## actual time
-#Vector{Float64}([tg = 0.020535662,0.022319508,0.512673502, 0.42965219])
-
-count = 0
-for dev in devs
+## Vector{Float64}([tg = 0.020535662,0.022319508,0.512673502, 0.42965219])
+## When running test(NDTensors; test_args=["cuda"]) last two timings are ~1.4s
+@testset "Testing DMRG different backends" for dev in devs
+    count = 0
     ref_times = 
         if dev == NDTensors.cpu 
             ref_cpu_times 
