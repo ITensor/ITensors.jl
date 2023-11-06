@@ -157,7 +157,7 @@ function svd(
   spec = Spectrum(P, truncerr)
   dS = length(P)
   if dS < length(MS)
-    MU = MU[:, 1:dS]
+    MU = expose(MU)[:, 1:dS]
     # Fails on some GPU backends like Metal.
     # resize!(MS, dS)
     MS = MS[1:dS]
