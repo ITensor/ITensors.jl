@@ -31,7 +31,7 @@ end
 function contract_replacement(
   a_comb::CombinerArray, labels_comb, a_src::MatrixOrArrayStorage, labels_src
 )
-  @assert length(labels_src) == 2
+  @assert length(labels_comb) == 2
   a_dest = copy(a_src)
   replacement_label = only(setdiff(labels_comb, labels_src))
   common_label = only(intersect(labels_src, labels_comb))
