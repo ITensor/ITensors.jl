@@ -21,17 +21,15 @@ function test_dmrg(elt, N::Integer, dev::Function, cut::Float64, no::Float64)
   psi0 = dev(randomMPS(elt, sites;))
 
   # Plan to do 5 DMRG sweeps:
-  nsweeps = 3
+  nsweeps = 7
   # Set maximum MPS bond dimensions for each sweep
-  maxdim = [10, 20, 100, 100, 200]
   # Set maximum truncation error allowed when adapting bond dimensions
   cutoff = [cut]
   # Set the noise
   noise = [no]
 
   # Run the DMRG algorithm, returning energy and optimized MPS
-  energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel=0)
-  ref = TestITensorDMRG.get_ref_value(dev, N, cut, no, elt)
-  println("$N, $cut, $no, $elt, $energy, $ref")
+  energy, psi = dmrg(H, psi0; nsweeps, cutoff, noise, outputlevel=0)
+  #println("$N, $cut, $no, $elt, $energy")
   @test energy ≈ get_ref_value(dev, N, cut, no, elt)
 end
