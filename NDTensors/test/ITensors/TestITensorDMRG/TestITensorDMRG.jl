@@ -9,9 +9,5 @@ reference_energies = Dict([
   (4, -1.6160254037844384), (8, -3.374932598687889), (10, -4.258035207282885)
 ])
 
-function get_ref_value(device, sites, elt)
-  return reference_energies[sites]
-end
-
 include("dmrg.jl")
 end

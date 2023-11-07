@@ -3,8 +3,6 @@ using ITensors
 using NDTensors
 using Random
 
-Random.seed!(1234)
-
 function test_dmrg(elt, N::Integer, dev::Function)
   sites = siteinds("S=1/2", N)
 
@@ -15,14 +13,17 @@ function test_dmrg(elt, N::Integer, dev::Function)
     os += 0.5, "S-", j, "S+", j + 1
   end
 
+  Random.seed!(1234)
+  psi0 = dev(randomMPS(Float64, sites;))
   H = dev(MPO(elt, os, sites; linkdims=4))
 
-  psi0 = dev(randomMPS(elt, sites;))
-
-  nsweeps = 7
+  nsweeps = 3
   cutoff = [1e-3, 1e-13]
   noise = [1e-12, 0]
+  ## running these with nsweeps = 100 and no maxdim
+  ## all problems do not have a maxlinkdim > 32
+  maxdim=32
 
-  energy, psi = dmrg(H, psi0; nsweeps, cutoff, noise, outputlevel=0)
-  @test energy ≈ get_ref_value(dev, N, elt)
+  energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel=1)
+  @test energy ≈ reference_energies[N] rtol = 1e-12
 end
