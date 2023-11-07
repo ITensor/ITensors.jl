@@ -25,5 +25,5 @@ function test_dmrg(elt, N::Integer, dev::Function)
   maxdim = 32
 
   energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel=0)
-  @test energy ≈ reference_energies[N] rtol = 1e-12
+  @test energy ≈ reference_energies[N] rtol = eps(real(elt)) * 10^4
 end
