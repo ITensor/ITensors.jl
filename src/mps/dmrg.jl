@@ -159,7 +159,7 @@ function dmrg(
   sweeps::Sweeps;
   which_decomp=nothing,
   svd_alg=nothing,
-  obs=NoObserver(),
+  observer=NoObserver(),
   outputlevel=1,
   write_when_maxdim_exceeds=nothing,
   write_path=tempdir(),
@@ -310,7 +310,7 @@ function dmrg(
 
         sweep_is_done = (b == 1 && ha == 2)
         measure!(
-          obs;
+          observer;
           energy,
           psi,
           projected_operator=PH,
@@ -334,7 +334,7 @@ function dmrg(
       )
       flush(stdout)
     end
-    isdone = checkdone!(obs; energy=energy, psi=psi, sweep=sw, outputlevel=outputlevel)
+    isdone = checkdone!(observer; energy, psi, sweep=sw, outputlevel)
     isdone && break
   end
   return (energy, psi)
