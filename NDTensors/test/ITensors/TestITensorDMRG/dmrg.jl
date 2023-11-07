@@ -1,12 +1,13 @@
 using Test
 using ITensors
 using NDTensors
+using Random 
 
-function test_dmrg(elt, N::Integer, dev::Function, cut::Float64, no::Float64)
-  # Create N spin-one degrees of freedom
-  sites = siteinds("S=1", N)
+Random.seed!(1234)
 
-  # Input operator terms which define a Hamiltonian
+function test_dmrg(elt, N::Integer, dev::Function)
+  sites = siteinds("S=1/2", N)
+
   os = OpSum()
   for j in 1:(N - 1)
     os += "Sz", j, "Sz", j + 1
@@ -14,22 +15,14 @@ function test_dmrg(elt, N::Integer, dev::Function, cut::Float64, no::Float64)
     os += 0.5, "S-", j, "S+", j + 1
   end
 
-  # Convert these terms to an MPO tensor network
-  H = dev(MPO(elt, os, sites))
+  H = dev(MPO(elt, os, sites; linkdims=4))
 
-  # Create an initial random matrix product state
   psi0 = dev(randomMPS(elt, sites;))
 
-  # Plan to do 5 DMRG sweeps:
   nsweeps = 7
-  # Set maximum MPS bond dimensions for each sweep
-  # Set maximum truncation error allowed when adapting bond dimensions
-  cutoff = [cut]
-  # Set the noise
-  noise = [no]
+  cutoff = [1e-3, 1e-13]
+  noise = [1e-12, 0]
 
-  # Run the DMRG algorithm, returning energy and optimized MPS
   energy, psi = dmrg(H, psi0; nsweeps, cutoff, noise, outputlevel=0)
-  #println("$N, $cut, $no, $elt, $energy")
-  @test energy ≈ get_ref_value(dev, N, cut, no, elt)
+  @test energy ≈ get_ref_value(dev, N, elt)
 end
