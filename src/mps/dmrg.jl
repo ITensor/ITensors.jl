@@ -37,7 +37,7 @@ function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
   return dmrg(PHS, psi0, sweeps; kwargs...)
 end
 
-function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; weight=1.0, kwargs...)
+function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; weight=true, kwargs...)
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   for M in Ms
@@ -45,7 +45,7 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; weight=1.0, kw
   end
   H = permute(H, (linkind, siteinds, linkind))
   Ms .= permute.(Ms, Ref((linkind, siteinds, linkind)))
-  if weight <= 0.0
+  if weight <= 0
     error(
       "weight parameter should be > 0.0 in call to excited-state dmrg (value passed was weight=$weight)",
     )
@@ -340,8 +340,17 @@ function dmrg(
   return (energy, psi)
 end
 
+default_maxdim() = typemax(Int)
+default_mindim() = true
+default_cutoff() = 1e-8
+default_noise() = false
+
 function _dmrg_sweeps(;
-  nsweeps, maxdim=typemax(Int), mindim=1, cutoff=1E-8, noise=0.0, kwargs...
+  nsweeps,
+  maxdim=default_maxdim(),
+  mindim=default_mindim(),
+  cutoff=default_cutoff(),
+  noise=default_noise(),
 )
   sweeps = Sweeps(nsweeps)
   setmaxdim!(sweeps, maxdim...)
@@ -351,10 +360,31 @@ function _dmrg_sweeps(;
   return sweeps
 end
 
-function dmrg(x1, x2, psi0::MPS; kwargs...)
-  return dmrg(x1, x2, psi0, _dmrg_sweeps(; kwargs...); kwargs...)
+function dmrg(
+  x1,
+  x2,
+  psi0::MPS;
+  nsweeps,
+  maxdim=default_maxdim(),
+  mindim=default_mindim(),
+  cutoff=default_cutoff(),
+  noise=default_noise(),
+  kwargs...,
+)
+  return dmrg(
+    x1, x2, psi0, _dmrg_sweeps(; nsweeps, maxdim, mindim, cutoff, noise); kwargs...
+  )
 end
 
-function dmrg(x1, psi0::MPS; kwargs...)
-  return dmrg(x1, psi0, _dmrg_sweeps(; kwargs...); kwargs...)
+function dmrg(
+  x1,
+  psi0::MPS;
+  nsweeps,
+  maxdim=default_maxdim(),
+  mindim=default_mindim(),
+  cutoff=default_cutoff(),
+  noise=default_noise(),
+  kwargs...,
+)
+  return dmrg(x1, psi0, _dmrg_sweeps(; nsweeps, maxdim, mindim, cutoff, noise); kwargs...)
 end
