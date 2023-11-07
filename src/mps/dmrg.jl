@@ -341,7 +341,7 @@ function dmrg(
 end
 
 default_maxdim() = typemax(Int)
-default_mindim() = true
+default_mindim() = 1
 default_cutoff() = 1e-8
 default_noise() = false
 
