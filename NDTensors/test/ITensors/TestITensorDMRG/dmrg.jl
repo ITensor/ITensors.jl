@@ -24,6 +24,6 @@ function test_dmrg(elt, N::Integer, dev::Function)
   ## all problems do not have a maxlinkdim > 32
   maxdim = 32
 
-  energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel=1)
+  energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel=0)
   @test energy ≈ reference_energies[N] rtol = 1e-12
 end
