@@ -68,7 +68,7 @@ cuda_sites = Dict([(2, cpu_2_cut), (8, cpu_8_cut)])
 ref = Dict([(NDTensors.cpu, cpu_sites), (NDTensors.cu, cpu_sites)])
 
 function get_ref_value(device, sites, cutoff, noise, elt)
-  return sites == 2 ? elt(-2.0) : -10.124637222357;
+  return sites == 2 ? elt(-2.0) : -10.124637222357
   #return ref[device][sites][cutoff][noise][elt]
 end
 
