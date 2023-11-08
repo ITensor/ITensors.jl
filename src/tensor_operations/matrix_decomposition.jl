@@ -602,10 +602,10 @@ function factorize_svd(
 )
   leftdir, rightdir = dir, dir
   if !isnothing(leftdir)
-    leftdir *= -1
+    leftdir = -leftdir
   end
   if !isnothing(rightdir)
-    rightdir *= -1
+    rightdir = -rightdir
   end
   USV = svd(
     A,
