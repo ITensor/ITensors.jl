@@ -9,6 +9,7 @@ export BlockSparseArray, SparseArray
 
 include("abstractarray.jl")
 include("permuteddimsarray.jl")
+include("blockarrays.jl")
 include("sparsearray.jl")
 include("blocksparsearray.jl")
 include("broadcast.jl")

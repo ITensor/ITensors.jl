@@ -43,7 +43,7 @@ end
 
 # The size of a block
 function block_size(axes::Tuple{Vararg{AbstractUnitRange}}, block::Block)
-  return length.(getindex.(axes, Block.(block.n)))
+  return length.(getindex.(axes, blocktuple(block)))
 end
 
 # The size of a block
@@ -100,7 +100,7 @@ function BlockSparseArray(
   cartesianblocks = if isempty(blockdata)
     Dictionary{Block{N},CartesianIndex{N}}()
   else
-    map(block -> CartesianIndex(block.n), blocks)
+    map(block -> CartesianIndex(inttuple(block)), blocks)
   end
   cartesiandata = Dictionary(cartesianblocks, blockdata)
   block_storage = SparseArray(cartesiandata, blocklength.(axes), BlockZero(axes))
@@ -151,7 +151,7 @@ function Base.copy(block_arr::BlockSparseArray)
 end
 
 function BlockArrays.viewblock(block_arr::BlockSparseArray, block)
-  blks = block.n
+  blks = inttuple(block)
   @boundscheck blockcheckbounds(block_arr, blks...)
   ## block_size = length.(getindex.(axes(block_arr), Block.(blks)))
   # TODO: Make this `Zeros`?
