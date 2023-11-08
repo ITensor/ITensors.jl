@@ -57,11 +57,12 @@ include("../../../test/device_list.jl")
   @test q * r ≈ mp
 
   square = dev(rand(Float64, (10, 10)))
-  square = (square + square) ./ 2.0
+  square = (square + transpose(square)) ./ 2.0
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
   ## TODO I am not sure how to check this because square * U[:,1] != l[1] * U[:,1]
   l, U = eigen(expose(Symmetric(square)))
+  square * U ≈ U * Diagonal(l)
 
   U, S, V, = svd(expose(mp))
   @test U * Diagonal(S) * V' ≈ mp
