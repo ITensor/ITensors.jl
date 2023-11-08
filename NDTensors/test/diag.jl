@@ -6,6 +6,7 @@ using Test
   devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs,
     elt in (Float32, ComplexF32, Float64, ComplexF64)
+
     if dev == NDTensors.mtl && real(elt) ≠ Float32
       # Metal doesn't support double precision
       continue
