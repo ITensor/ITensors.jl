@@ -1,5 +1,4 @@
-function combiner(is::Indices; kwargs...)
-  tags = get(kwargs, :tags, "CMB,Link")
+function combiner(is::Indices; tags="CMB,Link")
   new_ind = Index(prod(dims(is)), tags)
   new_is = (new_ind, is...)
   return itensor(Combiner(), new_is)

@@ -1966,8 +1966,7 @@ end
 
 Swap the sites `b` and `b+1`.
 """
-function swapbondsites(ψ::AbstractMPS, b::Integer; kwargs...)
-  ortho = get(kwargs, :ortho, "right")
+function swapbondsites(ψ::AbstractMPS, b::Integer; ortho="right")
   ψ = copy(ψ)
   if ortho == "left"
     orthocenter = b + 1

@@ -438,10 +438,9 @@ randomITensor(inds::QNIndex...) = randomITensor(Random.default_rng(), inds...)
 # TODO: generalize to list of Tuple, Vector, and QNIndex
 randomITensor(rng::AbstractRNG, inds::QNIndex...) = randomITensor(rng, Float64, QN(), inds)
 
-function combiner(inds::QNIndices; kwargs...)
+function combiner(inds::QNIndices; tags="CMB,Link", kwargs...)
   # TODO: support combining multiple set of indices
   is = Tuple(inds)
-  tags = get(kwargs, :tags, "CMB,Link")
   new_ind = ⊗(is...; kwargs...)
   new_ind = settags(new_ind, tags)
   comb_ind, perm, comb = combineblocks(new_ind)

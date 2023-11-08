@@ -910,13 +910,12 @@ block(inds::Indices, vals::Integer...) = blockindex(inds, vals...)[2]
 # Read and write
 #
 
-function readcpp(io::IO, ::Type{<:Indices}; kwargs...)
-  format = get(kwargs, :format, "v3")
+function readcpp(io::IO, ::Type{<:Indices}; format="v3")
   is = IndexSet()
   if format == "v3"
     size = read(io, Int)
     function readind(io, n)
-      i = readcpp(io, Index; kwargs...)
+      i = readcpp(io, Index; format)
       stride = read(io, UInt64)
       return i
     end

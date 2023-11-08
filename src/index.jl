@@ -657,8 +657,7 @@ function Base.show(io::IO, i::Index)
   end
 end
 
-function readcpp(io::IO, ::Type{Index}; kwargs...)
-  format = get(kwargs, :format, "v3")
+function readcpp(io::IO, ::Type{Index}; format="v3")
   if format != "v3"
     throw(ArgumentError("read Index: format=$format not supported"))
   end
