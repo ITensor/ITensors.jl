@@ -25,6 +25,7 @@ end
     "SmallVectors.jl",
     "SortedSets.jl",
     "TagSets.jl",
+    "Unwrap.jl",
     "linearalgebra.jl",
     "dense.jl",
     "blocksparse.jl",
@@ -34,7 +35,7 @@ end
     "emptystorage.jl",
     "combiner.jl",
     "arraytensor/arraytensor.jl",
-    "ITensors/runtest.jl",
+    "ITensors/runtests.jl",
   ]
     println("Running $filename")
     include(filename)

@@ -1,0 +1,1 @@
+include("TestITensorDMRG/runtests.jl")
