@@ -5,10 +5,12 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
   ## type info functions.
   ## TODO determine min number of functions needed to be forwarded
   @eval begin
-    alloctype(A::$Typ) = alloctype($Typ)
-    alloctype(::Type{<:$Typ}) = get_parameter($Typ, Position{4})
+    alloctype(A::$Typ) = alloctype(typeof(A))
+    alloctype(Atype::Type{<:$Typ}) = get_parameter(Atype, Position{4}())
 
-    getindex(A::$Typ, i...) = getindex(parent(A), i...)
+    # function getindex(A::$Typ, i...) 
+    #   parent(A)[i...]
+    # end
 
     Array(A::$Typ) = alloctype(typeof(A))
 

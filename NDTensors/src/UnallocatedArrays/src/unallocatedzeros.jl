@@ -1,5 +1,6 @@
-## TODO still working to make this implementation simplified
-struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
+## TODO Should Alloc also be of ElT and N or should there be 
+## More freedom there?
+struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray} <:
        FillArrays.AbstractZeros{ElT,N,Axes}
   z::FillArrays.Zeros{ElT,N,Axes}
   ## TODO use `set_parameters` as constructor to these types
