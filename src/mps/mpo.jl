@@ -691,6 +691,7 @@ function contract(
     return MPS([A[1] * ψ[1]])
   end
   mindim = max(mindim, 1)
+  requested_maxdim = maxdim
   ψ_out = similar(ψ)
 
   any(i -> isempty(i), siteinds(commoninds, A, ψ)) &&

@@ -35,7 +35,7 @@ struct Index{T}
   dir::Arrow
   tags::TagSet
   plev::Int
-  function Index{T}(id, space::T, dir, tags, plev) where {T}
+  function Index{T}(id, space::T, dir::Arrow, tags, plev) where {T}
     return new{T}(id, space, dir, tags, plev)
   end
 end
@@ -48,10 +48,10 @@ end
 # mostly for internal usage
 Index{T}(dim::T) where {T} = Index(dim)
 
-## # `Nothing` direction gets converted to `Neither`.
-## function Index{T}(id, space::T, dir::Nothing, tags, plev) where {T}
-##   return new{T}(id, space, Neither, tags, plev)
-## end
+# `Nothing` direction gets converted to `Neither`.
+function Index{T}(id, space::T, dir::Nothing, tags, plev) where {T}
+  return Index{T}(id, space, Neither, tags, plev)
+end
 
 function Index(id, space::T, dir, tags, plev) where {T}
   return Index{T}(id, space, dir, tags, plev)
