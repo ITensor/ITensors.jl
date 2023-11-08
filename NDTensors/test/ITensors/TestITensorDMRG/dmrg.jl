@@ -9,7 +9,7 @@ function test_dmrg(elt, N::Integer, dev::Function)
   end
 
   Random.seed!(1234)
-  psi0 = dev(randomMPS(Float64, sites;))
+  psi0 = dev(randomMPS(Float64, sites; linkdims=4))
   H = dev(MPO(elt, os, sites))
 
   nsweeps = 3
