@@ -56,7 +56,7 @@ include("../../../test/device_list.jl")
   q, r = Unwrap.qr_positive(expose(mp))
   @test q * r ≈ mp
 
-  square = NDTensors.cu(rand(Float64, (10, 10)))
+  square = dev(rand(Float64, (10, 10)))
   square = (square + square) ./ 2.0
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
