@@ -39,16 +39,16 @@ include("../../../test/device_list.jl")
 
   o = dev(Vector{Float32})(undef, 1)
   expose(o)[] = 2
-  expose(o)[] == 2
+  @test expose(o)[] == 2
 
   fill!(m, 0)
   @test any(!Base.isinf, expose(m))
 
   mp = copy(Ea)
-  mp == ma
+  @test mp == ma
   fill!(ma, 2.0)
   copyto!(expose(mp), expose(ma))
-  mp == ma
+  @test mp == ma
 
   q, r = qr(expose(mp))
   @test q * r ≈ mp
@@ -61,14 +61,14 @@ include("../../../test/device_list.jl")
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
   l, U = eigen(expose(Symmetric(square)))
-  square * U ≈ U * Diagonal(l)
+  @test square * U ≈ U * Diagonal(l)
 
   U, S, V, = svd(expose(mp))
   @test U * Diagonal(S) * V' ≈ mp
 
   cm = dev(fill!(Matrix{Float64}(undef, (2, 2)), 0.0))
   mul!(expose(cm), expose(mp), expose(mp'), 1.0, 0.0)
-  cm ≈ mp * mp'
+  @test cm ≈ mp * mp'
 
   @test permutedims(expose(mp), (2, 1)) == transpose(mp)
   fill!(mt, 3.0)
