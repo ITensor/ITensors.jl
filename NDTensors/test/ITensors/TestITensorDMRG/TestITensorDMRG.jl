@@ -10,7 +10,6 @@ using Random
 reference_energies = Dict([
   (4, -1.6160254037844384), (8, -3.374932598687889), (10, -4.258035207282885)
 ])
-test_tolerance = Dict(([Float32, 1e-5], [Float64, 1e-12]))
 
 include("dmrg.jl")
 end
