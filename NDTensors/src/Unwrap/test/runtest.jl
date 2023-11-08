@@ -3,6 +3,7 @@ using NDTensors.Unwrap
 using LinearAlgebra
 
 ## Still working on this
+## TODO add cu
 @testset "Testing Unwrap" begin
   v = Vector{Float64}(undef, 10)
   vt = transpose(v)
@@ -41,5 +42,38 @@ using LinearAlgebra
   expose(o)[] = 2
   expose(o)[] == 2
 
-  @which expose(m)[1, 1]
+  fill!(m, 0)
+  @test any(!Base.isinf, expose(m))
+
+  mp = copy(Ea)
+  mp == ma
+  fill!(ma, 2.0)
+  copyto!(expose(mp), expose(ma))
+  mp == ma
+
+  q,r = qr(expose(mp))
+  @test q * r ≈ mp
+
+  q,r = Unwrap.qr_positive(expose(mp))
+  @test q * r ≈ mp
+
+  square = rand(Float64, (10,10))
+  ## TODO finish this test
+  l, U = eigen(expose(square))
+
+  U,S,V, = svd(expose(mp))
+  @test U * Diagonal(S) * V' ≈ mp
+
+  cm = fill!(Matrix{Float64}(undef, (2,2)), 0.0)
+  mul!(expose(cm), expose(mp), expose(mp'), 1.0, 0.0)
+  cm ≈ mp * mp'
+
+  @test permutedims(expose(mp), (2,1)) == transpose(mp)
+  fill!(mt, 3.)
+  permutedims!(expose(m), expose(mt), (2,1))
+  @test norm(m) == sqrt(3^2 * 10)
+  @test size(m) == (5,2)
+  permutedims!(expose(m), expose(mt), (2,1), +)
+  @test size(m) == (5,2)
+  @test norm(m) == sqrt(6^2 * 10)
 end
