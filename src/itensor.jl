@@ -2073,8 +2073,7 @@ function show(io::IO, mime::MIME"text/plain", T::ITensor)
   return summary(io, T)
 end
 
-function readcpp(io::IO, ::Type{Dense{ValT}}; kwargs...) where {ValT}
-  format = get(kwargs, :format, "v3")
+function readcpp(io::IO, ::Type{Dense{ValT}}; format="v3") where {ValT}
   if format == "v3"
     size = read(io, UInt64)
     data = Vector{ValT}(undef, size)
@@ -2087,8 +2086,7 @@ function readcpp(io::IO, ::Type{Dense{ValT}}; kwargs...) where {ValT}
   end
 end
 
-function readcpp(io::IO, ::Type{ITensor}; kwargs...)
-  format = get(kwargs, :format, "v3")
+function readcpp(io::IO, ::Type{ITensor}; format="v3")
   if format == "v3"
     # TODO: use Vector{Index} here?
     inds = readcpp(io, IndexSet; kwargs...)
