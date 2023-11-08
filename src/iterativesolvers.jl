@@ -43,7 +43,9 @@ function expand_krylov_space(M::Matrix{elT}, V, AV, ni) where {elT}
   return newM
 end
 
-function davidson(A, phi0::ITensorT; kwargs...) where {ITensorT<:ITensor}
+function davidson(
+  A, phi0::ITensorT; maxiter=2, miniter=1, errgoal=1e-14, Northo_pass=1
+) where {ITensorT<:ITensor}
   elTA = eltype(A)
   elTphi = eltype(phi0)
 
@@ -56,12 +58,6 @@ function davidson(A, phi0::ITensorT; kwargs...) where {ITensorT<:ITensor}
   else
     phi = copy(phi0)
   end
-
-  maxiter = get(kwargs, :maxiter, 2)
-  miniter = get(kwargs, :miniter, 1)
-  errgoal = get(kwargs, :errgoal, 1E-14)
-  Northo_pass = get(kwargs, :Northo_pass, 1)
-
   approx0 = 1E-12
 
   nrm = norm(phi)
