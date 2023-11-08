@@ -16,7 +16,8 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
   end
 
   ## TODO forwarding functions to fillarrays
-  for fun in (:size, :length, :convert, :sum, :getindex_value)
+  ## convert doesn't work
+  for fun in (:size, :length, :sum, :getindex_value)
     @eval FillArrays.$fun(A::$Typ) = $fun(parent(A))
   end
   ## TODO Here I am defining LinearAlgebra functions in one sweep
