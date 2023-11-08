@@ -7,14 +7,12 @@ function setindex!(E::Exposed{<:CuArray}, x::Number)
   return unexpose(E)
 end
 
-function Base.getindex(E::Exposed{<:CuArray,<:Adjoint}, I...)
-  Ap = parent(E)
-  return expose(Ap)[I...]
+function Base.getindex(E::Exposed{<:CuArray,<:Adjoint}, i, j)
+  return (expose(parent(E))[j, i])'
 end
 
 function Base.copy(E::Exposed{<:CuArray,<:Base.ReshapedArray})
-  Ap = parent(E)
-  return copy(expose(Ap))
+  return reshape(copy(expose(parent(E))), size(unexpose(E)))
 end
 
 Base.any(f, E::Exposed{<:CuArray,<:NDTensors.Tensor}) = any(f, data(unexpose(E)))
