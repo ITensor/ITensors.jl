@@ -3,7 +3,7 @@
 # 2. Output `Spectrum` as a keyword argument that gets overwritten.
 # 3. Make this into two layers, one that handles indices and one that works with `AbstractMatrix`.
 function eigen(
-  T::Hermitian{<:Any,<:ArrayStorageTensor};
+  T::Hermitian{ElT,<:ArrayStorageTensor{ElT}};
   maxdim=nothing,
   mindim=nothing,
   cutoff=nothing,
@@ -19,7 +19,7 @@ function eigen(
   ishermitian=nothing,
   ortho=nothing,
   svd_alg=nothing,
-)
+) where {ElT<:Union{Real,Complex}}
   matrixT = matrix(T)
   ## TODO Here I am calling parent to ensure that the correct `any` function
   ## is envoked for non-cpu matrices

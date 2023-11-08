@@ -176,8 +176,9 @@ function measure!(obs::DMRGObserver; kwargs...)
   end
 end
 
-function checkdone!(o::DMRGObserver; kwargs...)
-  outputlevel = get(kwargs, :outputlevel, false)
+function checkdone!(
+  o::DMRGObserver; outputlevel=false, energy=nothing, psi=nothing, sweep=nothing
+)
   if (
     length(real(energies(o))) > o.minsweeps &&
     abs(real(energies(o))[end] - real(energies(o))[end - 1]) < o.etol

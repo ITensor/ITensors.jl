@@ -19,8 +19,16 @@ struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractArray{T,N}
   zero::Zero
 end
 
-const DiagonalVector{T,Diag,Zero} = DiagonalArray{T,1,Diag,Zero}
-const DiagonalMatrix{T,Diag,Zero} = DiagonalArray{T,2,Diag,Zero}
+# TODO: Use `Accessors.jl`.
+set_diag(a::DiagonalArray, diag) = DiagonalArray(diag, size(a), a.zero)
+
+Base.copy(a::DiagonalArray) = set_diag(a, copy(a[DiagIndices()]))
+Base.similar(a::DiagonalArray) = set_diag(a, similar(a[DiagIndices()]))
+
+Base.size(a::DiagonalArray) = a.dims
+
+diagview(a::DiagonalArray) = a.diag
+LinearAlgebra.diag(a::DiagonalArray) = copy(diagview(a))
 
 function DiagonalArray{T,N}(
   diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}, zero=DefaultZero()
@@ -67,14 +75,6 @@ function DiagonalArray{<:Any,N}(diag::AbstractVector{T}) where {T,N}
   return DiagonalArray{T,N}(diag)
 end
 
-function DiagonalMatrix(diag::AbstractVector)
-  return DiagonalArray{<:Any,2}(diag)
-end
-
-function DiagonalVector(diag::AbstractVector)
-  return DiagonalArray{<:Any,1}(diag)
-end
-
 # undef
 function DiagonalArray{T,N}(::UndefInitializer, d::Tuple{Vararg{Int,N}}) where {T,N}
   return DiagonalArray{T,N}(Vector{T}(undef, minimum(d)), d)
@@ -92,25 +92,20 @@ function DiagonalArray{T}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(undef, d)
 end
 
-Base.size(a::DiagonalArray) = a.dims
-
-diagview(a::DiagonalArray) = a.diag
-LinearAlgebra.diag(a::DiagonalArray) = copy(diagview(a))
-
 function Base.getindex(a::DiagonalArray{T,N}, I::CartesianIndex{N}) where {T,N}
   i = diagindex(a, I)
   isnothing(i) && return a.zero(T, I)
-  return getdiagindex(a, i)
+  return a[DiagIndex(i)]
 end
 
 function Base.getindex(a::DiagonalArray{T,N}, I::Vararg{Int,N}) where {T,N}
-  return getindex(a, CartesianIndex(I))
+  return a[CartesianIndex(I)]
 end
 
 function Base.setindex!(a::DiagonalArray{T,N}, v, I::CartesianIndex{N}) where {T,N}
   i = diagindex(a, I)
   isnothing(i) && return error("Can't set off-diagonal element of DiagonalArray")
-  setdiagindex!(a, v, i)
+  a[DiagIndex(i)] = v
   return a
 end
 
@@ -127,6 +122,73 @@ function densearray(a::DiagonalArray)
   fill!(d, zero(eltype(a)))
   diagcopyto!(d, a)
   return d
+end
+
+function Base.permutedims!(a_dest::AbstractArray, a_src::DiagonalArray, perm)
+  @assert ndims(a_src) == ndims(a_dest) == length(perm)
+  a_dest[DiagIndices()] = a_src[DiagIndices()]
+  return a_dest
+end
+
+# TODO: Should this copy? `LinearAlgebra.Diagonal` does not copy
+# with `permutedims`.
+# TODO: Use `copy(a)` or `permutedims!!`? May be better for immutable diagonals.
+function Base.permutedims(a::DiagonalArray, perm)
+  a_dest = similar(a)
+  permutedims!(a_dest, a, perm)
+  return a_dest
+end
+
+# This function is used by Julia broadcasting for sparse arrays
+# to decide how to allocated the output:
+# LinearAlgebra.fzeropreserving(Broadcast.Broadcasted(f, (a,)))
+# If it preserves zeros value, it keeps it structured, if not
+# it allocates an Array.
+# TODO: Introduce an `IsSparse` trait? This would be generic
+# for any type that implements `map_nonzeros!`.
+function Base.map(f, a::DiagonalArray)
+  # TODO: Test `iszero(f(x))`.
+  return map_nonzeros(f, a)
+end
+
+function map_diag(f, a::DiagonalArray)
+  return set_diag(a, map(f, a[DiagIndices()]))
+end
+
+# API from `SparseArray`/`BlockSparseArray`
+function map_nonzeros(f, a::DiagonalArray)
+  return map_diag(f, a)
+end
+
+# TODO: Introduce an `IsSparse` trait? This would be generic
+# for any type that implements `map_nonzeros!`.
+function Base.map!(f, a_dest::AbstractArray, a_src::DiagonalArray)
+  # TODO: Test `iszero(f(x))`.
+  map_nonzeros!(f, a_dest, a_src)
+  return a_dest
+end
+
+function map_diag!(f, a_dest::AbstractArray, a_src::DiagonalArray)
+  map!(f, a_dest[DiagIndices()], a_src[DiagIndices()])
+  return a_dest
+end
+
+# API from `SparseArray`/`BlockSparseArray`
+function map_nonzeros!(f, a_dest::AbstractArray, a_src::DiagonalArray)
+  map_diag!(f, a_dest, a_src)
+  return a_dest
+end
+
+const DiagonalMatrix{T,Diag,Zero} = DiagonalArray{T,2,Diag,Zero}
+
+function DiagonalMatrix(diag::AbstractVector)
+  return DiagonalArray{<:Any,2}(diag)
+end
+
+const DiagonalVector{T,Diag,Zero} = DiagonalArray{T,1,Diag,Zero}
+
+function DiagonalVector(diag::AbstractVector)
+  return DiagonalArray{<:Any,1}(diag)
 end
 
 end

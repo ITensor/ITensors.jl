@@ -68,8 +68,7 @@ but can be made periodic in the y direction
 by specifying the keyword argument
 `yperiodic=true`.
 """
-function square_lattice(Nx::Int, Ny::Int; kwargs...)::Lattice
-  yperiodic = get(kwargs, :yperiodic, false)
+function square_lattice(Nx::Int, Ny::Int; yperiodic=false)::Lattice
   yperiodic = yperiodic && (Ny > 2)
   N = Nx * Ny
   Nbond = 2N - Ny + (yperiodic ? 0 : -Nx)
@@ -106,8 +105,7 @@ but can be made periodic in the y direction
 by specifying the keyword argument
 `yperiodic=true`.
 """
-function triangular_lattice(Nx::Int, Ny::Int; kwargs...)::Lattice
-  yperiodic = get(kwargs, :yperiodic, false)
+function triangular_lattice(Nx::Int, Ny::Int; yperiodic=false)::Lattice
   yperiodic = yperiodic && (Ny > 2)
   N = Nx * Ny
   Nbond = 3N - 2Ny + (yperiodic ? 0 : -2Nx + 1)

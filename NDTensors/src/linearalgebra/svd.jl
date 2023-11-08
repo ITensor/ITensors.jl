@@ -42,7 +42,7 @@ function svd_recursive(M::AbstractMatrix; thresh::Float64=1E-3, north_pass::Int=
 
   V = M' * U
 
-  V, R = qr_positive(V)
+  V, R = qr_positive(expose(V))
   D[1:Nd] = diag(R)[1:Nd]
 
   (done, start) = svd_recursive_state(D, thresh)

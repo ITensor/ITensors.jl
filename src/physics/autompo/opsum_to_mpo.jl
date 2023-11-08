@@ -1,10 +1,8 @@
 # `ValType::Type{<:Number}` is used instead of `ValType::Type` for efficiency, possibly due to increased method specialization.
 # See https://github.com/ITensor/ITensors.jl/pull/1183.
-function svdMPO(ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...)::MPO where {C}
-  mindim::Int = get(kwargs, :mindim, 1)
-  maxdim::Int = get(kwargs, :maxdim, 10000)
-  cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
-
+function svdMPO(
+  ValType::Type{<:Number}, os::OpSum{C}, sites; mindim=1, maxdim=typemax(Int), cutoff=1e-15
+)::MPO where {C}
   N = length(sites)
 
   # Specifying the element type with `Matrix{ValType}[...]` improves type inference and therefore efficiency.
@@ -16,7 +14,7 @@ function svdMPO(ValType::Type{<:Number}, os::OpSum{C}, sites; kwargs...)::MPO wh
     return (only(site(t[1])) <= n <= only(site(t[end])))
   end
 
-  rightmaps = fill(Dict{Vector{Op},Int}(), N)
+  rightmaps = [Dict{Vector{Op},Int}() for _ in 1:N]
 
   for n in 1:N
     leftbond_coefs = MatElem{ValType}[]

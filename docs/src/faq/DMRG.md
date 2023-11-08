@@ -28,6 +28,7 @@ We list some of these with the most fundamental and important ones first:
   If 10 sweeps made a difference, try 20 sweeps.
 
 * Try setting the `eigsolve_krylovdim` keyword argument to a higher value (the default is 3).
+  This can be particularily helpful when the Hamiltonian is close to a critical point.
   This may make slowly-converging calculations converge in fewer sweeps, but setting it 
   too high can make each sweep run slowly.
 

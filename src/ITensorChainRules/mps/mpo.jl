@@ -34,14 +34,12 @@ function rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
   return rrule(+, x1, -x2; kwargs...)
 end
 
-function rrule(::typeof(tr), x::MPO; kwargs...)
-  y = tr(x; kwargs...)
+function rrule(::typeof(tr), x::MPO; plev=(0 => 1), kwargs...)
+  y = tr(x; plev, kwargs...)
   function tr_pullback(ȳ)
     s = noprime(firstsiteinds(x))
     n = length(s)
     x̄ = MPO(s, "Id")
-
-    plev = get(kwargs, :plev, 0 => 1)
     for j in 1:n
       x̄[j] = mapprime(x̄[j], 0 => first(plev), 1 => last(plev))
     end
