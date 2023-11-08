@@ -37,7 +37,7 @@ function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
   return dmrg(PHS, psi0, sweeps; kwargs...)
 end
 
-function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
+function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; weight=true, kwargs...)
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   for M in Ms
@@ -45,13 +45,12 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   end
   H = permute(H, (linkind, siteinds, linkind))
   Ms .= permute.(Ms, Ref((linkind, siteinds, linkind)))
-  weight = get(kwargs, :weight, 1.0)
-  if weight <= 0.0
+  if weight <= 0
     error(
       "weight parameter should be > 0.0 in call to excited-state dmrg (value passed was weight=$weight)",
     )
   end
-  PMM = ProjMPO_MPS(H, Ms; weight=weight)
+  PMM = ProjMPO_MPS(H, Ms; weight)
   return dmrg(PMM, psi0, sweeps; kwargs...)
 end
 
@@ -154,7 +153,24 @@ Optional keyword arguments:
     See the `KrylovKit.jl` documention on the `eigsolve` function for more details:
     [KrylovKit.eigsolve](https://jutho.github.io/KrylovKit.jl/stable/man/eig/#KrylovKit.eigsolve).
 """
-function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
+function dmrg(
+  PH,
+  psi0::MPS,
+  sweeps::Sweeps;
+  which_decomp=nothing,
+  svd_alg=nothing,
+  observer=NoObserver(),
+  outputlevel=1,
+  write_when_maxdim_exceeds=nothing,
+  write_path=tempdir(),
+  # eigsolve kwargs
+  eigsolve_tol=1e-14,
+  eigsolve_krylovdim=3,
+  eigsolve_maxiter=1,
+  eigsolve_verbosity=0,
+  eigsolve_which_eigenvalue=:SR,
+  ishermitian=true,
+)
   if length(psi0) == 1
     error(
       "`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.",
@@ -166,52 +182,6 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
     # Enable with ITensors.enable_debug_checks()
     checkflux(psi0)
     checkflux(PH)
-  end
-
-  which_decomp::Union{String,Nothing} = get(kwargs, :which_decomp, nothing)
-  svd_alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
-  obs = get(kwargs, :observer, NoObserver())
-  outputlevel::Int = get(kwargs, :outputlevel, 1)
-
-  write_when_maxdim_exceeds::Union{Int,Nothing} = get(
-    kwargs, :write_when_maxdim_exceeds, nothing
-  )
-  write_path = get(kwargs, :write_path, tempdir())
-
-  # eigsolve kwargs
-  eigsolve_tol::Number = get(kwargs, :eigsolve_tol, 1e-14)
-  eigsolve_krylovdim::Int = get(kwargs, :eigsolve_krylovdim, 3)
-  eigsolve_maxiter::Int = get(kwargs, :eigsolve_maxiter, 1)
-  eigsolve_verbosity::Int = get(kwargs, :eigsolve_verbosity, 0)
-
-  ishermitian::Bool = get(kwargs, :ishermitian, true)
-
-  # TODO: add support for targeting other states with DMRG
-  # (such as the state with the largest eigenvalue)
-  # get(kwargs, :eigsolve_which_eigenvalue, :SR)
-  eigsolve_which_eigenvalue::Symbol = :SR
-
-  # TODO: use this as preferred syntax for passing arguments
-  # to eigsolve
-  #default_eigsolve_args = (tol = 1e-14, krylovdim = 3, maxiter = 1,
-  #                         verbosity = 0, ishermitian = true,
-  #                         which_eigenvalue = :SR)
-  #eigsolve = get(kwargs, :eigsolve, default_eigsolve_args)
-
-  # Keyword argument deprecations
-  if haskey(kwargs, :maxiter)
-    error("""maxiter keyword has been replaced by eigsolve_krylovdim.
-             Note: compared to the C++ version of ITensor,
-             setting eigsolve_krylovdim 3 is the same as setting
-             a maxiter of 2.""")
-  end
-
-  if haskey(kwargs, :errgoal)
-    error("errgoal keyword has been replaced by eigsolve_tol.")
-  end
-
-  if haskey(kwargs, :quiet)
-    error("quiet keyword has been replaced by outputlevel")
   end
 
   psi = copy(psi0)
@@ -340,16 +310,16 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
         sweep_is_done = (b == 1 && ha == 2)
         measure!(
-          obs;
-          energy=energy,
-          psi=psi,
+          observer;
+          energy,
+          psi,
           projected_operator=PH,
           bond=b,
           sweep=sw,
           half_sweep=ha,
-          spec=spec,
-          outputlevel=outputlevel,
-          sweep_is_done=sweep_is_done,
+          spec,
+          outputlevel,
+          sweep_is_done,
         )
       end
     end
@@ -364,14 +334,23 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
       )
       flush(stdout)
     end
-    isdone = checkdone!(obs; energy=energy, psi=psi, sweep=sw, outputlevel=outputlevel)
+    isdone = checkdone!(observer; energy, psi, sweep=sw, outputlevel)
     isdone && break
   end
   return (energy, psi)
 end
 
+default_maxdim() = typemax(Int)
+default_mindim() = 1
+default_cutoff() = 1e-8
+default_noise() = false
+
 function _dmrg_sweeps(;
-  nsweeps, maxdim=typemax(Int), mindim=1, cutoff=1E-8, noise=0.0, kwargs...
+  nsweeps,
+  maxdim=default_maxdim(),
+  mindim=default_mindim(),
+  cutoff=default_cutoff(),
+  noise=default_noise(),
 )
   sweeps = Sweeps(nsweeps)
   setmaxdim!(sweeps, maxdim...)
@@ -381,10 +360,31 @@ function _dmrg_sweeps(;
   return sweeps
 end
 
-function dmrg(x1, x2, psi0::MPS; kwargs...)
-  return dmrg(x1, x2, psi0, _dmrg_sweeps(; kwargs...); kwargs...)
+function dmrg(
+  x1,
+  x2,
+  psi0::MPS;
+  nsweeps,
+  maxdim=default_maxdim(),
+  mindim=default_mindim(),
+  cutoff=default_cutoff(),
+  noise=default_noise(),
+  kwargs...,
+)
+  return dmrg(
+    x1, x2, psi0, _dmrg_sweeps(; nsweeps, maxdim, mindim, cutoff, noise); kwargs...
+  )
 end
 
-function dmrg(x1, psi0::MPS; kwargs...)
-  return dmrg(x1, psi0, _dmrg_sweeps(; kwargs...); kwargs...)
+function dmrg(
+  x1,
+  psi0::MPS;
+  nsweeps,
+  maxdim=default_maxdim(),
+  mindim=default_mindim(),
+  cutoff=default_cutoff(),
+  noise=default_noise(),
+  kwargs...,
+)
+  return dmrg(x1, psi0, _dmrg_sweeps(; nsweeps, maxdim, mindim, cutoff, noise); kwargs...)
 end

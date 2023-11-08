@@ -2,7 +2,7 @@ module Unwrap
 using SimpleTraits
 using LinearAlgebra
 using Base: ReshapedArray
-using Strided.StridedViews
+using StridedViews
 
 include("expose.jl")
 include("iswrappedarray.jl")
