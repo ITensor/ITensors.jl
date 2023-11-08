@@ -21,9 +21,12 @@ function outer!(
   v1 = data(T1)
   v2 = data(T2)
   RM = reshape(R, length(v1), length(v2))
+  ## Potential fix is call reshape on array
+  #RM = reshape(array(R), length(v1), length(v2))
   #RM .= v1 .* transpose(v2)
   #mul!(RM, v1, transpose(v2))
   _gemm!('N', 'T', one(ElR), v1, v2, zero(ElR), RM)
+  #mul!!(RM, v1, transpose(v2), one(ElR), zero(ElR))
   return R
 end
 
