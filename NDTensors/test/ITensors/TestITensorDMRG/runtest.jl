@@ -2,7 +2,7 @@ using Test
 using NDTensors
 include("TestITensorDMRG.jl")
 
-include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
+include("../../device_list.jl")
 
 @testset "Testing DMRG different backends" begin
   for dev in devices_list(ARGS),

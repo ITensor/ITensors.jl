@@ -51,29 +51,29 @@ using LinearAlgebra
   copyto!(expose(mp), expose(ma))
   mp == ma
 
-  q,r = qr(expose(mp))
+  q, r = qr(expose(mp))
   @test q * r ≈ mp
 
-  q,r = Unwrap.qr_positive(expose(mp))
+  q, r = Unwrap.qr_positive(expose(mp))
   @test q * r ≈ mp
 
-  square = rand(Float64, (10,10))
+  square = rand(Float64, (10, 10))
   ## TODO finish this test
   l, U = eigen(expose(square))
 
-  U,S,V, = svd(expose(mp))
+  U, S, V, = svd(expose(mp))
   @test U * Diagonal(S) * V' ≈ mp
 
-  cm = fill!(Matrix{Float64}(undef, (2,2)), 0.0)
+  cm = fill!(Matrix{Float64}(undef, (2, 2)), 0.0)
   mul!(expose(cm), expose(mp), expose(mp'), 1.0, 0.0)
   cm ≈ mp * mp'
 
-  @test permutedims(expose(mp), (2,1)) == transpose(mp)
-  fill!(mt, 3.)
-  permutedims!(expose(m), expose(mt), (2,1))
+  @test permutedims(expose(mp), (2, 1)) == transpose(mp)
+  fill!(mt, 3.0)
+  permutedims!(expose(m), expose(mt), (2, 1))
   @test norm(m) == sqrt(3^2 * 10)
-  @test size(m) == (5,2)
-  permutedims!(expose(m), expose(mt), (2,1), +)
-  @test size(m) == (5,2)
+  @test size(m) == (5, 2)
+  permutedims!(expose(m), expose(mt), (2, 1), +)
+  @test size(m) == (5, 2)
   @test norm(m) == sqrt(6^2 * 10)
 end

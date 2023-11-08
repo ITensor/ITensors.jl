@@ -1,8 +1,3 @@
-using Test
-using ITensors
-using NDTensors
-using Random
-
 function test_dmrg(elt, N::Integer, dev::Function)
   sites = siteinds("S=1/2", N)
 
@@ -15,7 +10,7 @@ function test_dmrg(elt, N::Integer, dev::Function)
 
   Random.seed!(1234)
   psi0 = dev(randomMPS(Float64, sites;))
-  H = dev(MPO(elt, os, sites; linkdims=4))
+  H = dev(MPO(elt, os, sites))
 
   nsweeps = 3
   cutoff = [1e-3, 1e-13]
