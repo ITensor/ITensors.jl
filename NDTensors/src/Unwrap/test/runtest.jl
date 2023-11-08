@@ -17,10 +17,8 @@ include("../../../test/device_list.jl")
   v_type = typeof(v)
   e_type = eltype(v)
   @test typeof(E) == Exposed{v_type,v_type}
-  @test typeof(Et) ==
-    Exposed{v_type,LinearAlgebra.Transpose{e_type,v_type}}
-  @test typeof(Ea) ==
-    Exposed{v_type,LinearAlgebra.Adjoint{e_type,v_type}}
+  @test typeof(Et) == Exposed{v_type,LinearAlgebra.Transpose{e_type,v_type}}
+  @test typeof(Ea) == Exposed{v_type,LinearAlgebra.Adjoint{e_type,v_type}}
 
   @test parent(E) == v
   @test parent(Et) == v
@@ -37,11 +35,9 @@ include("../../../test/device_list.jl")
   Ea = expose(ma)
 
   m_type = typeof(m)
-  @test typeof(E) == Exposed{m_type, m_type}
-  @test typeof(Et) ==
-    Exposed{m_type, LinearAlgebra.Transpose{e_type,m_type}}
-  @test typeof(Ea) ==
-    Exposed{m_type, LinearAlgebra.Adjoint{e_type,m_type}}
+  @test typeof(E) == Exposed{m_type,m_type}
+  @test typeof(Et) == Exposed{m_type,LinearAlgebra.Transpose{e_type,m_type}}
+  @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
 
   o = dev(Vector{Float32})(undef, 1)
   expose(o)[] = 2
@@ -63,7 +59,7 @@ include("../../../test/device_list.jl")
   @test q * r ≈ mp
 
   square = NDTensors.cu(rand(Float64, (10, 10)))
-  square = (square + square) ./ 2.
+  square = (square + square) ./ 2.0
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
   l, U = eigen(expose(Symmetric(square)))
@@ -83,13 +79,13 @@ include("../../../test/device_list.jl")
   permutedims!(expose(m), expose(mt), (2, 1), +)
   @test size(m) == (5, 2)
   @test norm(m) == sqrt(6^2 * 10)
-  
-  m = reshape(m, (5,2,1))
-  mt = fill!(similar(m), 3.)
-  m = permutedims(expose(m), (2,1,3))
-  @test size(m) == (2,5,1)
-  permutedims!(expose(m), expose(mt), (2,1,3))
+
+  m = reshape(m, (5, 2, 1))
+  mt = fill!(similar(m), 3.0)
+  m = permutedims(expose(m), (2, 1, 3))
+  @test size(m) == (2, 5, 1)
+  permutedims!(expose(m), expose(mt), (2, 1, 3))
   @test norm(m) == sqrt(3^2 * 10)
-  permutedims!(expose(m), expose(mt), (2,1,3), -)
+  permutedims!(expose(m), expose(mt), (2, 1, 3), -)
   @test norm(m) == 0
 end
