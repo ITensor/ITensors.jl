@@ -20,6 +20,4 @@ include("functions/permutedims.jl")
 export IsWrappedArray,
   is_wrapped_array, parenttype, unwrap_type, expose, Exposed, unexpose, cpu
 
-## TODO write exposed based functions in the NDTensors Extensions when necessary
-
 end
