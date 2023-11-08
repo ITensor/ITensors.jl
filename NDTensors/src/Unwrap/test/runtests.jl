@@ -4,8 +4,6 @@ using NDTensors
 using LinearAlgebra
 
 include("../../../test/device_list.jl")
-## Still working on this
-## TODO add cu
 @testset "Testing Unwrap" for dev in devices_list(ARGS)
   v = dev(Vector{Float64}(undef, 10))
   vt = transpose(v)
@@ -62,6 +60,7 @@ include("../../../test/device_list.jl")
   square = (square + square) ./ 2.0
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
+  ## TODO I am not sure how to check this because square * U[:,1] != l[1] * U[:,1]
   l, U = eigen(expose(Symmetric(square)))
 
   U, S, V, = svd(expose(mp))
