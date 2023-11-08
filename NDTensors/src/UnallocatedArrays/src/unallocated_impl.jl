@@ -8,12 +8,6 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
     alloctype(A::$Typ) = alloctype(typeof(A))
     alloctype(Atype::Type{<:$Typ}) = get_parameter(Atype, Position{4}())
 
-    ## something is wrong when this function is
-    ## called an error is thrown.
-    # function getindex(A::$Typ, i...) 
-    #   parent(A)[i...]
-    # end
-
     Array(A::$Typ) = alloctype(typeof(A))
 
     copy(A::$Typ) = A
