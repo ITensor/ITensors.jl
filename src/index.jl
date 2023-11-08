@@ -48,6 +48,11 @@ end
 # mostly for internal usage
 Index{T}(dim::T) where {T} = Index(dim)
 
+## # `Nothing` direction gets converted to `Neither`.
+## function Index{T}(id, space::T, dir::Nothing, tags, plev) where {T}
+##   return new{T}(id, space, Neither, tags, plev)
+## end
+
 function Index(id, space::T, dir, tags, plev) where {T}
   return Index{T}(id, space, dir, tags, plev)
 end
@@ -101,7 +106,7 @@ julia> tags(i)
 ```
 """
 function Index(dim::Number, tags::Union{AbstractString,TagSet}; plev::Int=0)
-  return Index(dim; tags=tags, plev=plev)
+  return Index(dim; tags, plev)
 end
 
 # This is so that when IndexSets are converted

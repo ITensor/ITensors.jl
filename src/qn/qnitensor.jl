@@ -1,4 +1,3 @@
-
 @propagate_inbounds @inline function _setindex!!(
   ::HasQNs, T::Tensor, x::Number, I::Integer...
 )

@@ -600,8 +600,13 @@ function factorize_svd(
   cutoff=nothing,
   tags=nothing,
 )
-  dir = NDTensors.replace_nothing(dir, ITensors.In)
-  leftdir, rightdir = -dir, -dir
+  leftdir, rightdir = dir, dir
+  if !isnothing(leftdir)
+    leftdir *= -1
+  end
+  if !isnothing(rightdir)
+    rightdir *= -1
+  end
   USV = svd(
     A,
     Linds...;
