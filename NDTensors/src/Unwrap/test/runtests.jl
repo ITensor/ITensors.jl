@@ -60,7 +60,6 @@ include("../../../test/device_list.jl")
   square = (square + transpose(square)) ./ 2.0
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
-  ## TODO I am not sure how to check this because square * U[:,1] != l[1] * U[:,1]
   l, U = eigen(expose(Symmetric(square)))
   square * U ≈ U * Diagonal(l)
 
