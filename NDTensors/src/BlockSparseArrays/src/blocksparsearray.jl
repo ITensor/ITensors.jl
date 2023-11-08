@@ -89,6 +89,7 @@ end
 function BlockSparseArray{T,N,B}(
   ::UndefInitializer, axes::Tuple{Vararg{Any,N}}
 ) where {T,N,B}
+  # TODO: `Block{N,Int}`?
   blocks = Vector{Block{N}}()
   return BlockSparseArray{T,N,B}(undef, blocks, axes)
 end
