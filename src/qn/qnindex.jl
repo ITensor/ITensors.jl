@@ -378,7 +378,7 @@ function outer(i1::QNIndex, i2::QNIndex; dir=nothing, tags="", plev::Integer=0)
     end
   end
   newspace = dir * ((ITensors.dir(i1) * space(i1)) ⊗ (ITensors.dir(i2) * space(i2)))
-  return Index(newspace; dir=dir, tags=tags, plev=plev)
+  return Index(newspace; dir, tags, plev)
 end
 
 # TODO: rename tensorproduct with ⊗ alias
@@ -387,7 +387,7 @@ function outer(i::QNIndex; dir=nothing, tags="", plev::Integer=0)
     dir = ITensors.dir(i)
   end
   newspace = dir * (ITensors.dir(i) * space(i))
-  return Index(newspace; dir=dir, tags=tags, plev=plev)
+  return Index(newspace; dir, tags, plev)
 end
 
 # TODO: add ⊕ alias
@@ -397,7 +397,7 @@ function directsum(
   dir(i) ≠ dir(j) && error(
     "To direct sum two indices, they must have the same direction. Trying to direct sum indices $i and $j.",
   )
-  return Index(vcat(space(i), space(j)); dir=dir(i), tags=tags)
+  return Index(vcat(space(i), space(j)); dir=dir(i), tags)
 end
 
 isless(qnb1::QNBlock, qnb2::QNBlock) = isless(qn(qnb1), qn(qnb2))

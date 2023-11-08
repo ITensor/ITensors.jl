@@ -1,5 +1,5 @@
-function combiner(is::Indices; tags="CMB,Link")
-  new_ind = Index(prod(dims(is)), tags)
+function combiner(is::Indices; dir=nothing, tags="CMB,Link")
+  new_ind = Index(prod(dims(is)); dir, tags)
   new_is = (new_ind, is...)
   return itensor(Combiner(), new_is)
 end
