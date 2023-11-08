@@ -133,8 +133,7 @@ function Base.show(io::IO, s::SmallString)
   end
 end
 
-function readcpp(io::IO, ::Type{SmallString}; kwargs...)
-  format = get(kwargs, :format, "v3")
+function readcpp(io::IO, ::Type{SmallString}; format="v3")
   s = SmallString()
   if format == "v3"
     for n in 1:7

@@ -331,8 +331,7 @@ function Base.show(io::IO, T::TagSet)
   return print(io, "\"$(tagstring(T))\"")
 end
 
-function readcpp(io::IO, ::Type{TagSet}; kwargs...)
-  format = get(kwargs, :format, "v3")
+function readcpp(io::IO, ::Type{TagSet}; format="v3")
   ts = TagSet()
   if format == "v3"
     mstore = empty_storage(MTagSetStorage{IntTag,4})

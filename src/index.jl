@@ -35,7 +35,7 @@ struct Index{T}
   dir::Arrow
   tags::TagSet
   plev::Int
-  function Index{T}(id, space::T, dir, tags, plev) where {T}
+  function Index{T}(id, space::T, dir::Arrow, tags, plev) where {T}
     return new{T}(id, space, dir, tags, plev)
   end
 end
@@ -47,6 +47,11 @@ end
 # Used in NDTensors for generic code,
 # mostly for internal usage
 Index{T}(dim::T) where {T} = Index(dim)
+
+# `Nothing` direction gets converted to `Neither`.
+function Index{T}(id, space::T, dir::Nothing, tags, plev) where {T}
+  return Index{T}(id, space, Neither, tags, plev)
+end
 
 function Index(id, space::T, dir, tags, plev) where {T}
   return Index{T}(id, space, dir, tags, plev)
@@ -101,7 +106,7 @@ julia> tags(i)
 ```
 """
 function Index(dim::Number, tags::Union{AbstractString,TagSet}; plev::Int=0)
-  return Index(dim; tags=tags, plev=plev)
+  return Index(dim; tags, plev)
 end
 
 # This is so that when IndexSets are converted
@@ -657,8 +662,7 @@ function Base.show(io::IO, i::Index)
   end
 end
 
-function readcpp(io::IO, ::Type{Index}; kwargs...)
-  format = get(kwargs, :format, "v3")
+function readcpp(io::IO, ::Type{Index}; format="v3")
   if format != "v3"
     throw(ArgumentError("read Index: format=$format not supported"))
   end

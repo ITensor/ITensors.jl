@@ -36,9 +36,7 @@ length in the dense case), and appear in `A` with opposite directions.
 When `ishermitian=true` the exponential of `Hermitian(A_{lr})` is
 computed internally.
 """
-function exp(A::ITensor, Linds, Rinds; kwargs...)
-  ishermitian = get(kwargs, :ishermitian, false)
-
+function exp(A::ITensor, Linds, Rinds; ishermitian=false)
   @debug_check begin
     if hasqns(A)
       @assert flux(A) == QN()

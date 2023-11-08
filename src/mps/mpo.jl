@@ -674,19 +674,25 @@ contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
 
 #@doc (@doc contract(::MPO, ::MPS)) *(::MPO, ::MPS)
 
-function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
+function contract(
+  ::Algorithm"densitymatrix",
+  A::MPO,
+  ψ::MPS;
+  cutoff=1e-13,
+  maxdim=maxlinkdim(A) * maxlinkdim(ψ),
+  mindim=1,
+  normalize=false,
+  kwargs...,
+)::MPS
   n = length(A)
   n != length(ψ) &&
     throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(ψ))) do not match"))
   if n == 1
     return MPS([A[1] * ψ[1]])
   end
-
+  mindim = max(mindim, 1)
+  requested_maxdim = maxdim
   ψ_out = similar(ψ)
-  cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
-  requested_maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(ψ))
-  mindim::Int = max(get(kwargs, :mindim, 1), 1)
-  normalize::Bool = get(kwargs, :normalize, false)
 
   any(i -> isempty(i), siteinds(commoninds, A, ψ)) &&
     error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
@@ -719,7 +725,7 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   ts = isnothing(l) ? "" : tags(l)
   Lis = siteinds(uniqueinds, A, ψ, n)
   Ris = siteinds(uniqueinds, simA_c, ψ_c, n)
-  F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, kwargs...)
+  F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, cutoff, maxdim, mindim, kwargs...)
   D, U, Ut = F.D, F.V, F.Vt
   l_renorm, r_renorm = F.l, F.r
   ψ_out[n] = Ut
@@ -739,7 +745,7 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
     ts = isnothing(l) ? "" : tags(l)
     Lis = IndexSet(s..., l_renorm)
     Ris = IndexSet(s̃..., r_renorm)
-    F = eigen(ρ, Lis, Ris; ishermitian=true, maxdim=maxdim, tags=ts, kwargs...)
+    F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, cutoff, maxdim, mindim, kwargs...)
     D, U, Ut = F.D, F.V, F.Vt
     l_renorm, r_renorm = F.l, F.r
     ψ_out[j] = Ut
@@ -755,9 +761,7 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   return ψ_out
 end
 
-function _contract(::Algorithm"naive", A, ψ; kwargs...)
-  truncate = get(kwargs, :truncate, true)
-
+function _contract(::Algorithm"naive", A, ψ; truncate=true, kwargs...)
   A = sim(linkinds, A)
   ψ = sim(linkinds, ψ)
 
@@ -801,16 +805,20 @@ function contract(alg::Algorithm"naive", A::MPO, B::MPO; kwargs...)
   return _contract(alg, A, B; kwargs...)
 end
 
-function contract(::Algorithm"zipup", A::MPO, B::MPO; kwargs...)
+function contract(
+  ::Algorithm"zipup",
+  A::MPO,
+  B::MPO;
+  cutoff=1e-14,
+  maxdim=maxlinkdim(A) * maxlinkdim(B),
+  mindim=1,
+  kwargs...,
+)
   if hassameinds(siteinds, A, B)
     error(
       "In `contract(A::MPO, B::MPO)`, MPOs A and B have the same site indices. The indices of the MPOs in the contraction are taken literally, and therefore they should only share one site index per site so the contraction results in an MPO. You may want to use `replaceprime(contract(A', B), 2 => 1)` or `apply(A, B)` which automatically adjusts the prime levels assuming the input MPOs have pairs of primed and unprimed indices.",
     )
   end
-  cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
-  resp_degen::Bool = get(kwargs, :respect_degenerate, true)
-  maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(B))
-  mindim::Int = max(get(kwargs, :mindim, 1), 1)
   N = length(A)
   N != length(B) &&
     throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
@@ -832,9 +840,9 @@ function contract(::Algorithm"zipup", A::MPO, B::MPO; kwargs...)
       left_inds;
       ortho="left",
       tags=commontags(linkinds(A, i)),
-      cutoff=cutoff,
-      maxdim=maxdim,
-      mindim=mindim,
+      cutoff,
+      maxdim,
+      mindim,
       kwargs...,
     )
     lCᵢ = dag(commoninds(C[i], R))
@@ -847,9 +855,9 @@ function contract(::Algorithm"zipup", A::MPO, B::MPO; kwargs...)
     left_inds;
     ortho="right",
     tags=commontags(linkinds(A, i)),
-    cutoff=cutoff,
-    maxdim=maxdim,
-    mindim=mindim,
+    cutoff,
+    maxdim,
+    mindim,
     kwargs...,
   )
   truncate!(C; kwargs...)
