@@ -970,7 +970,7 @@ dens = expect(psi, "Ntot")
 updens, dndens = expect(psi, "Nup", "Ndn") # pass more than one operator
 ```
 """
-function expect(psi::MPS, ops; sites=1:N, site_range=nothing)
+function expect(psi::MPS, ops; sites=1:length(psi), site_range=nothing)
   psi = copy(psi)
   N = length(psi)
   ElT = promote_itensor_eltype(psi)
