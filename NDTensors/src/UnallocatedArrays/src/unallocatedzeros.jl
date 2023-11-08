@@ -5,7 +5,7 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
   ## TODO use `set_parameters` as constructor to these types
 end
 
-parent(Z::UnallocatedZeros) = Z.z
+Base.parent(Z::UnallocatedZeros) = Z.z
 
 # function complex(z::UnallocatedZeros)
 #   ElT = complex(eltype(z))

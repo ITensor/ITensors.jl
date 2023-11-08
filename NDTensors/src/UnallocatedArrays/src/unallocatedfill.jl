@@ -6,4 +6,4 @@ struct UnallocatedFill{ElT,N,Axes,Alloc<:AbstractArray} <:
   ## TODO use `set_parameters` as constructor to these types
 end
 
-parent(F::UnallocatedFill) = F.f
+Base.parent(F::UnallocatedFill) = F.f

@@ -17,6 +17,6 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
     SetParameters.default_parameter(::Type{<:$Typ}, ::Position{4}) =
       UnspecifiedTypes.UnspecifiedArray
 
-    nparameters(::Type{<:$Typ}) = Val(4)
+    SetParameters.nparameters(::Type{<:$Typ}) = Val(4)
   end
 end

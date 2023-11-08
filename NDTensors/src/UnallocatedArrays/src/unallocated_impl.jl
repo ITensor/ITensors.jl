@@ -12,7 +12,7 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
 
     Array(A::$Typ) = alloctype(typeof(A))
 
-    Base.copy(A::$Typ) = A
+    copy(A::$Typ) = A
     ## TODO Implement vec
     # Base.vec(Z::UnallocatedZeros) = typeof(Z)(length(Z))
   end
