@@ -6,11 +6,8 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
   ## TODO use `set_parameters` as constructor to these types
 end
 
-Base.parent(Z::UnallocatedZeros) = Z.z
+function set_alloctype(z::Zeros, alloc::Type{<:AbstractArray})
+  return UnallocatedZeros{eltype(z),ndims(z),typeof(axes(z)),alloc}(z)
+end
 
-# function complex(z::UnallocatedZeros)
-#   ElT = complex(eltype(z))
-#   N = ndims(z)
-#   AllocT = similartype(alloctype(z), ElT)
-#   return UnallocatedZeros{ElT,N,AllocT}(dims(z))
-# end
+Base.parent(Z::UnallocatedZeros) = Z.z

@@ -6,4 +6,8 @@ struct UnallocatedFill{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
   ## TODO use `set_parameters` as constructor to these types
 end
 
+function set_alloctype(f::Fill, alloc::Type{<:AbstractArray})
+  return UnallocatedFill{eltype(f),ndims(f),typeof(axes(f)),alloc}(f)
+end
+
 Base.parent(F::UnallocatedFill) = F.f

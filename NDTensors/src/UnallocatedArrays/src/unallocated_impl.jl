@@ -22,16 +22,4 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
     )
   end
 
-  ## TODO forwarding functions to fillarrays
-  ## convert doesn't work
-  for fun in (:size, :length, :sum, :getindex_value)
-    @eval FillArrays.$fun(A::$Typ) = $fun(parent(A))
-  end
-end
-
-function set_alloctype(f::Fill, alloc::Type{<:AbstractArray})
-  return UnallocatedFill{eltype(f),ndims(f),typeof(axes(f)),alloc}(f)
-end
-function set_alloctype(z::Zeros, alloc::Type{<:AbstractArray})
-  return UnallocatedZeros{eltype(z),ndims(z),typeof(axes(z)),alloc}(z)
 end
