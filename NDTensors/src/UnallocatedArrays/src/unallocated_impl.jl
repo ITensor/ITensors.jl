@@ -27,10 +27,6 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
   for fun in (:size, :length, :sum, :getindex_value)
     @eval FillArrays.$fun(A::$Typ) = $fun(parent(A))
   end
-  ## TODO Here I am defining LinearAlgebra functions in one sweep
-  for fun in (:norm,)
-    @eval LinearAlgebra.$fun(A::$Typ) = $fun(parent(A))
-  end
 end
 
 function set_alloctype(f::Fill, alloc::Type{<:AbstractArray})
