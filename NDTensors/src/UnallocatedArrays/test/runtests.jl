@@ -19,7 +19,7 @@ using Test
   @test Zc == Z
   Zc = complex(Z)
   @test eltype(Zc) == complex(eltype(z))
-  @test Zc[1,2] == 0.0 + 0.0im
+  @test Zc[1, 2] == 0.0 + 0.0im
 
   # z = Zeros(())
   # Z = UnallocatedZeros{Float32, ndims(z), typeof(axes(z)), Vector{Float32}}(z)
@@ -47,6 +47,6 @@ using Test
   @test Fc == F
   Fc = allocate(complex(F))
   @test eltype(Fc) == complex(eltype(F))
-  Fc[2,3,4] = 4.0 + 3.0im
-  @test Fc[2,3,4] == 4.0 + 3.0im
+  Fc[2, 3, 4] = 4.0 + 3.0im
+  @test Fc[2, 3, 4] == 4.0 + 3.0im
 end
