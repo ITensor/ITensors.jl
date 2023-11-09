@@ -25,3 +25,6 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
     @eval LinearAlgebra.$fun(A::$Typ) = $fun(parent(A))
   end
 end
+
+set_alloctype(f::Fill, alloc::Type{<:AbstractArray}) = UnallocatedFill{eltype(f), ndims(f), typeof(axes(f)), alloc}(f)
+set_alloctype(z::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros{eltype(z), ndims(z), typeof(axes(z)), alloc}(z)

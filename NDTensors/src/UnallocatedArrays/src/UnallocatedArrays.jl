@@ -10,5 +10,5 @@ include("unallocatedzeros.jl")
 include("set_types.jl")
 include("unallocated_impl.jl")
 
-export UnallocatedFill, UnallocatedZeros, alloctype
+export UnallocatedFill, UnallocatedZeros, alloctype, set_alloctype
 end
