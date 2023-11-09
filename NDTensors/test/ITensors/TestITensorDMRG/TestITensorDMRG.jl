@@ -15,7 +15,9 @@ default_rtol(elt::Type) = 10^(0.75 * log10(eps(real(elt))))
 
 is_supported_eltype(dev, elt::Type) = true
 is_supported_eltype(dev::typeof(NDTensors.mtl), elt::Type{Float64}) = false
-is_supported_eltype(dev::typeof(NDTensors.mtl), elt::Type{<:Complex}) = is_supported_eltype(dev, real(elt))
+function is_supported_eltype(dev::typeof(NDTensors.mtl), elt::Type{<:Complex})
+  return is_supported_eltype(dev, real(elt))
+end
 
 include("dmrg.jl")
 
