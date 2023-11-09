@@ -5,7 +5,9 @@ using LinearAlgebra
 
 include("../../../test/device_list.jl")
 @testset "Testing Unwrap" for dev in devices_list(ARGS)
-  v = dev(Vector{Float64}(undef, 10))
+  elt = Float32
+
+  v = dev(Vector{elt}(undef, 10))
   vt = transpose(v)
   va = v'
 
@@ -37,7 +39,7 @@ include("../../../test/device_list.jl")
   @test typeof(Et) == Exposed{m_type,LinearAlgebra.Transpose{e_type,m_type}}
   @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
 
-  o = dev(Vector{Float32})(undef, 1)
+  o = dev(Vector{elt})(undef, 1)
   expose(o)[] = 2
   @test expose(o)[] == 2
 
@@ -56,8 +58,8 @@ include("../../../test/device_list.jl")
   q, r = Unwrap.qr_positive(expose(mp))
   @test q * r ≈ mp
 
-  square = dev(rand(Float64, (10, 10)))
-  square = (square + transpose(square)) ./ 2.0
+  square = dev(rand(elt, (10, 10)))
+  square = (square + transpose(square)) / 2
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
   l, U = eigen(expose(Symmetric(square)))
@@ -66,25 +68,59 @@ include("../../../test/device_list.jl")
   U, S, V, = svd(expose(mp))
   @test U * Diagonal(S) * V' ≈ mp
 
-  cm = dev(fill!(Matrix{Float64}(undef, (2, 2)), 0.0))
+  cm = dev(fill!(Matrix{elt}(undef, (2, 2)), 0.0))
   mul!(expose(cm), expose(mp), expose(mp'), 1.0, 0.0)
   @test cm ≈ mp * mp'
 
   @test permutedims(expose(mp), (2, 1)) == transpose(mp)
-  fill!(mt, 3.0)
+  fill!(mt, 3)
   permutedims!(expose(m), expose(mt), (2, 1))
-  @test norm(m) == sqrt(3^2 * 10)
+  @test norm(m) ≈ sqrt(3^2 * 10)
   @test size(m) == (5, 2)
   permutedims!(expose(m), expose(mt), (2, 1), +)
   @test size(m) == (5, 2)
-  @test norm(m) == sqrt(6^2 * 10)
+  @test norm(m) ≈ sqrt(6^2 * 10)
 
   m = reshape(m, (5, 2, 1))
   mt = fill!(similar(m), 3.0)
   m = permutedims(expose(m), (2, 1, 3))
   @test size(m) == (2, 5, 1)
   permutedims!(expose(m), expose(mt), (2, 1, 3))
-  @test norm(m) == sqrt(3^2 * 10)
+  @test norm(m) ≈ sqrt(3^2 * 10)
   permutedims!(expose(m), expose(mt), (2, 1, 3), -)
   @test norm(m) == 0
+
+  x = dev(rand(elt, 4, 4))
+  y = dev(rand(elt, 4, 4))
+  copyto!(expose(y), expose(x))
+  @test y == x
+
+  y = dev(rand(elt, 4, 4))
+  x = Base.ReshapedArray(dev(rand(elt, 16)), (4, 4), ())
+  copyto!(expose(y), expose(x))
+  @test NDTensors.cpu(y) == NDTensors.cpu(x)
+  @test NDTensors.cpu(copy(expose(x))) == NDTensors.cpu(x)
+
+  y = dev(rand(elt, 4, 4))
+  x = @view dev(rand(elt, 8, 8))[1:4, 1:4]
+  copyto!(expose(y), expose(x))
+  @test y == x
+  @test copy(x) == x
+
+  y = dev(randn(elt, 16))
+  x = reshape(dev(randn(elt, 4, 4))', 16)
+  copyto!(expose(y), expose(x))
+  @test y == x
+  @test copy(x) == x
+
+  y = dev(randn(elt, 8))
+  x = @view reshape(dev(randn(elt, 8, 8))', 64)[1:8]
+  copyto!(expose(y), expose(x))
+  @test y == x
+  @test copy(x) == x
+
+  y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())
+  x = dev(randn(elt, 4, 4))
+  permutedims!(expose(y), expose(x), (2, 1))
+  @test NDTensors.cpu(y) == transpose(NDTensors.cpu(x))
 end
