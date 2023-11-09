@@ -1,7 +1,7 @@
 ## Here are functions specifically defined for UnallocatedArrays
 ## not implemented by FillArrays
 ## TODO determine min number of functions needed to be forwarded
-const UnallocFillOrZero = Union{<:UnallocatedFill, <:UnallocatedZeros}
+const UnallocFillOrZero = Union{<:UnallocatedFill,<:UnallocatedZeros}
 
 alloctype(A::UnallocFillOrZero) = alloctype(typeof(A))
 function alloctype(Atype::Type{UnallocFillOrZero})
@@ -12,13 +12,13 @@ allocate(A::Union{UnallocFillOrZero}) = alloctype(A)(parent(A))
 
 ## TODO Still working here I am not sure these functions and the
 ## Set parameter functions are working properly
-function set_alloctype(
-  F::Type{UnallocFillOrZero}, alloc::Type{<:AbstractArray}
-)
+function set_alloctype(F::Type{UnallocFillOrZero}, alloc::Type{<:AbstractArray})
   return set_parameter(F, Position{4}(), alloc)
 end
 ## TODO this is broken 
-set_eltype(F::Type{UnallocFillOrZero}, elt::Type) = set_alloctype(set_eltype(parent(z), elt), set_eltype(alloctype(F), elt))
+function set_eltype(F::Type{UnallocFillOrZero}, elt::Type)
+  return set_alloctype(set_eltype(parent(z), elt), set_eltype(alloctype(F), elt))
+end
 
 ## With these functions defined I can print UnallocatedArrays
 ## compute things like sum and norm, compute the size and length
