@@ -13,6 +13,10 @@ for Typ in (:UnallocatedFill, :UnallocatedZeros)
     copy(A::$Typ) = A
     ## TODO Implement vec
     # Base.vec(Z::UnallocatedZeros) = typeof(Z)(length(Z))
+    ## TODO Still working here I am not sure these functions and the
+    ## Set parameter functions are working properly
+    set_alloctype(F::Type{<:$Typ}, alloc::Type{<:AbstractArray}) = set_parameter(F, Position{4}(), alloc)
+    Base.complex(A::$Typ) = set_alloctype(complex(parent(A)), set_eltype(alloctype(A), complex(eltype(alloctype(A)))))
   end
 
   ## TODO forwarding functions to fillarrays
