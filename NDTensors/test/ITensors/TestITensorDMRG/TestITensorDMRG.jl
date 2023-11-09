@@ -12,5 +12,11 @@ reference_energies = Dict([
 ])
 
 default_rtol(elt::Type) = 10^(0.75 * log10(eps(real(elt))))
+
+is_supported_eltype(dev, elt::Type) = true
+is_supported_eltype(dev::typeof(NDTensors.mtl), elt::Type{Float64}) = false
+is_supported_eltype(dev::typeof(NDTensors.mtl), elt::Type{<:Complex}) = is_supported_eltype(dev, real(elt))
+
 include("dmrg.jl")
+
 end

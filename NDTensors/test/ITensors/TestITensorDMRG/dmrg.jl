@@ -1,5 +1,5 @@
-function test_dmrg(elt, N::Integer, dev::Function)
-  sites = siteinds("S=1/2", N)
+function test_dmrg(elt, N::Integer; dev::Function, conserve_qns)
+  sites = siteinds("S=1/2", N; conserve_qns)
 
   os = OpSum()
   for j in 1:(N - 1)
@@ -9,12 +9,13 @@ function test_dmrg(elt, N::Integer, dev::Function)
   end
 
   Random.seed!(1234)
-  psi0 = dev(randomMPS(Float64, sites; linkdims=4))
+  init = j -> isodd(j) ? "↑" : "↓"
+  psi0 = dev(randomMPS(elt, sites, init; linkdims=4))
   H = dev(MPO(elt, os, sites))
 
   nsweeps = 3
   cutoff = [1e-3, 1e-13]
-  noise = [1e-12, 0]
+  noise = real(elt)[1e-6, 0]
   ## running these with nsweeps = 100 and no maxdim
   ## all problems do not have a maxlinkdim > 32
   maxdim = 32
