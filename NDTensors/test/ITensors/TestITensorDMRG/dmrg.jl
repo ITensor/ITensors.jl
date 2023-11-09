@@ -15,7 +15,7 @@ function test_dmrg(elt, N::Integer; dev::Function, conserve_qns)
 
   nsweeps = 3
   cutoff = [1e-3, 1e-13]
-  noise = real(elt)[1e-6, 0]
+  noise = [1e-6, 0]
   ## running these with nsweeps = 100 and no maxdim
   ## all problems do not have a maxlinkdim > 32
   maxdim = 32
