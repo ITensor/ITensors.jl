@@ -16,6 +16,8 @@ blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 # TODO: Use `SetParameters`.
 set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
 
+nonzero_blockkeys(a::BlockSparseArray) = map(Block ∘ Tuple, collect(nonzero_keys(blocks(a))))
+
 function Base.reshape(a::BlockSparseArray, ax::Tuple{Vararg{AbstractUnitRange}})
   ## TODO: Use `SparseArray` reshape in some way?
   ## blocks_reshaped = reshape(blocks(a), blocklength.(ax))
