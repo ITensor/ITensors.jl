@@ -181,7 +181,7 @@ function svd(
     if sU == -1
       Ub *= -1
     end
-    copyto!(blockview(U, blockU), Ub)
+    copyto!(expose(blockview(U, blockU)), expose(Ub))
 
     blockviewS = blockview(S, blockS)
     # TODO: Replace `data` with `diagview`.
@@ -200,7 +200,7 @@ function svd(
     if (sV * sVP) == -1
       Vb *= -1
     end
-    copyto!(blockview(V, blockV), Vb)
+    copyto!(expose(blockview(V, blockV)), expose(Vb))
   end
   return U, S, V, Spectrum(d, truncerr)
 end
