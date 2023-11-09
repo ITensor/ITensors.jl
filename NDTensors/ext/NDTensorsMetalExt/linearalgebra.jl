@@ -23,8 +23,9 @@ function LinearAlgebra.eigen(A::Exposed{<:MtlMatrix})
 end
 
 function LinearAlgebra.svd(A::Exposed{<:MtlMatrix}; kwargs...)
-  U, S, V = svd(expose(NDTensors.cpu(A)); kwargs...)
-  return adapt(unwrap_type(A), U),
-  adapt(set_ndims(unwrap_type(A), ndims(S)), S),
-  adapt(unwrap_type(A), V)
+  Ucpu, Scpu, Vcpu = svd(expose(NDTensors.cpu(A)); kwargs...)
+  U = adapt(unwrap_type(A), Ucpu)
+  S = adapt(set_ndims(unwrap_type(A), ndims(Scpu)), Scpu)
+  V = adapt(unwrap_type(A), Vcpu)
+  return U, S, V
 end

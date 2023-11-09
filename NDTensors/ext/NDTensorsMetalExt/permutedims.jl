@@ -1,4 +1,4 @@
-function permutedims!(
+function Base.permutedims!(
   Edest::Exposed{<:MtlArray,<:Base.ReshapedArray}, Esrc::Exposed{<:MtlArray}, perm
 )
   Aperm = permutedims(Esrc, perm)

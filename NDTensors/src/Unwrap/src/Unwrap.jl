@@ -3,6 +3,7 @@ using SimpleTraits
 using LinearAlgebra
 using Base: ReshapedArray
 using StridedViews
+using Adapt: Adapt, adapt, adapt_structure
 
 include("expose.jl")
 include("iswrappedarray.jl")
@@ -16,6 +17,7 @@ include("functions/copyto.jl")
 include("functions/linearalgebra.jl")
 include("functions/mul.jl")
 include("functions/permutedims.jl")
+include("functions/adapt.jl")
 
 export IsWrappedArray,
   is_wrapped_array, parenttype, unwrap_type, expose, Exposed, unexpose, cpu

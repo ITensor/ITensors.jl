@@ -1,13 +1,23 @@
-# Catches a bug in `copyto!` in Metal backend.
-function NDTensors.copyto!(
-  ::Type{<:MtlArray}, dest::AbstractArray, ::Type{<:MtlArray}, src::SubArray
+function Base.copy(src::Exposed{<:MtlArray,<:Base.ReshapedArray})
+  return reshape(copy(parent(src)), size(unexpose(src)))
+end
+
+function Base.copy(
+  src::Exposed{
+    <:MtlArray,<:SubArray{<:Any,<:Any,<:Base.ReshapedArray{<:Any,<:Any,<:Adjoint}}
+  },
 )
-  return Base.copyto!(dest, copy(src))
+  return copy(@view copy(expose(parent(src)))[parentindices(unexpose(src))...])
 end
 
 # Catches a bug in `copyto!` in Metal backend.
-function NDTensors.copyto!(
-  ::Type{<:MtlArray}, dest::AbstractArray, ::Type{<:MtlArray}, src::Base.ReshapedArray
+function Base.copyto!(dest::Exposed{<:MtlArray}, src::Exposed{<:MtlArray,<:SubArray})
+  return copyto!(dest, expose(copy(src)))
+end
+
+# Catches a bug in `copyto!` in Metal backend.
+function Base.copyto!(
+  dest::Exposed{<:MtlArray}, src::Exposed{<:MtlArray,<:Base.ReshapedArray}
 )
-  return NDTensors.copyto!(dest, parent(src))
+  return copyto!(dest, expose(parent(src)))
 end
