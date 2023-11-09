@@ -24,4 +24,5 @@ include("iscu.jl")
 include("adapt.jl")
 include("indexing.jl")
 include("linearalgebra.jl")
+include("mul.jl")
 end
