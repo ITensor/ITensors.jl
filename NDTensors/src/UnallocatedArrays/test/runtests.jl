@@ -3,7 +3,7 @@ using NDTensors.UnallocatedArrays
 using LinearAlgebra
 using Test
 
-begin
+@testset "Testing UnallocatedArrays" begin
   z = Zeros{Float64}((2, 3))
   Z = UnallocatedZeros{eltype(z),ndims(z),typeof(axes(z)),Matrix{eltype(z)}}(z)
 
@@ -17,6 +17,9 @@ begin
   @test Zp == Z
   Zc = copy(Z)
   @test Zc == Z
+  Zc = complex(Z)
+  @test eltype(Zc) == complex(eltype(z))
+  @test Zc[1,2] == 0.0 + 0.0im
 
   # z = Zeros(())
   # Z = UnallocatedZeros{Float32, ndims(z), typeof(axes(z)), Vector{Float32}}(z)
@@ -42,4 +45,8 @@ begin
   @test Fp == F
   Fc = copy(F)
   @test Fc == F
+  Fc = allocate(complex(F))
+  @test eltype(Fc) == complex(eltype(F))
+  Fc[2,3,4] = 4.0 + 3.0im
+  @test Fc[2,3,4] == 4.0 + 3.0im
 end
