@@ -160,9 +160,11 @@ include("arraystorage/diagonalarray/tensor/contract.jl")
 # BlockSparseArray storage
 include("arraystorage/blocksparsearray/storage/unwrap.jl")
 include("arraystorage/blocksparsearray/storage/contract.jl")
+include("arraystorage/blocksparsearray/storage/qr.jl")
+include("arraystorage/blocksparsearray/storage/eigen.jl")
+include("arraystorage/blocksparsearray/storage/svd.jl")
 
-## TODO: Delete once it is rewritten for array storage types.
-## include("arraystorage/blocksparsearray/tensor/combiner/contract_uncombine.jl")
+include("arraystorage/blocksparsearray/tensor/contract.jl")
 
 # Combiner storage
 include("arraystorage/combiner/storage/promote_rule.jl")
