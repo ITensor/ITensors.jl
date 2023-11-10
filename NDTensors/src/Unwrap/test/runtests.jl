@@ -4,8 +4,8 @@ using NDTensors
 using LinearAlgebra
 
 include("../../../test/device_list.jl")
-@testset "Testing Unwrap" for dev in devices_list(ARGS)
-  elt = Float32
+@testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
+  elt in (Float32, ComplexF32)
 
   v = dev(Vector{elt}(undef, 10))
   vt = transpose(v)
@@ -58,14 +58,29 @@ include("../../../test/device_list.jl")
   q, r = Unwrap.qr_positive(expose(mp))
   @test q * r ≈ mp
 
-  square = dev(rand(elt, (10, 10)))
+  square = dev(rand(real(elt), (10, 10)))
   square = (square + transpose(square)) / 2
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
   l, U = eigen(expose(Symmetric(square)))
+  @test eltype(l) == real(elt)
+  @test eltype(U) == real(elt)
+  @test square * U ≈ U * Diagonal(l)
+
+  square = dev(rand(elt, (10, 10)))
+  # Can use `hermitianpart` in Julia 1.10
+  square = (square + square') / 2
+  ## CUDA only supports Hermitian or Symmetric eigen decompositions
+  ## So I symmetrize square and call symetric here
+  l, U = eigen(expose(Hermitian(square)))
+  @test eltype(l) == real(elt)
+  @test eltype(U) == elt
   @test square * U ≈ U * Diagonal(l)
 
   U, S, V, = svd(expose(mp))
+  @test eltype(U) == elt
+  @test eltype(S) == real(elt)
+  @test eltype(V) == elt
   @test U * Diagonal(S) * V' ≈ mp
 
   cm = dev(fill!(Matrix{elt}(undef, (2, 2)), 0.0))
