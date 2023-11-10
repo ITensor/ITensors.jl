@@ -7,7 +7,7 @@ include("../../../test/device_list.jl")
 @testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
 
-  v = dev(Vector{elt}(undef, 10))
+  v = dev(randn(elt, 10))
   vt = transpose(v)
   va = v'
 
@@ -39,7 +39,7 @@ include("../../../test/device_list.jl")
   @test typeof(Et) == Exposed{m_type,LinearAlgebra.Transpose{e_type,m_type}}
   @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
 
-  o = dev(Vector{elt})(undef, 1)
+  o = dev(randn(elt, 1))
   expose(o)[] = 2
   @test expose(o)[] == 2
 
@@ -83,7 +83,7 @@ include("../../../test/device_list.jl")
   @test eltype(V) == elt
   @test U * Diagonal(S) * V' ≈ mp
 
-  cm = dev(fill!(Matrix{elt}(undef, (2, 2)), 0.0))
+  cm = dev(randn(elt, 2, 2))
   mul!(expose(cm), expose(mp), expose(mp'), 1.0, 0.0)
   @test cm ≈ mp * mp'
 
