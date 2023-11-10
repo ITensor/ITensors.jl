@@ -147,7 +147,7 @@ include("../../../test/device_list.jl")
   Cp = copy(C)
 
   ## This fails with scalar indexing 
-  #mul!(transpose(C), transpose(A), B, true, false)
+  @test_broken mul!(transpose(C), transpose(A), B, true, false)
   mul!(C, transpose(B), A, true, false)
   mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), true, false)
   @test C ≈ Cp
@@ -158,11 +158,11 @@ include("../../../test/device_list.jl")
 
   Cp = zero(C)
   ## This fails with scalar indexing 
-  #mul!(C', A', B, true, false)
+  @test_broken mul!(C', A', B, true, false)
   mul!(C, B', A, true, false)
   mul!(expose(Cp'), expose(A'), expose(B), true, false)
   @test C ≈ Cp
   Cp = zero(C)
   Cpt = NDTensors.mul!!(Cp', A', B, true, false)
-  @test transpose(Cpt) ≈ C
+  @test Cpt' ≈ C
 end
