@@ -18,14 +18,16 @@ function NDTensors.Unwrap.ql_positive(A::Exposed{<:MtlMatrix})
 end
 
 function LinearAlgebra.eigen(A::Exposed{<:MtlMatrix})
-  D, U = eigen(expose(NDTensors.cpu(A)))
-  return adapt(set_ndims(unwrap_type(A), ndims(D)), D), adapt(unwrap_type(A), U)
+  Dcpu, Ucpu = eigen(expose(NDTensors.cpu(A)))
+  D = adapt(set_ndims(set_eltype(unwrap_type(A), eltype(Dcpu)), ndims(Dcpu)), Dcpu)
+  U = adapt(unwrap_type(A), Ucpu)
+  return D, U
 end
 
 function LinearAlgebra.svd(A::Exposed{<:MtlMatrix}; kwargs...)
   Ucpu, Scpu, Vcpu = svd(expose(NDTensors.cpu(A)); kwargs...)
   U = adapt(unwrap_type(A), Ucpu)
-  S = adapt(set_ndims(unwrap_type(A), ndims(Scpu)), Scpu)
+  S = adapt(set_ndims(set_eltype(unwrap_type(A), eltype(Scpu)), ndims(Scpu)), Scpu)
   V = adapt(unwrap_type(A), Vcpu)
   return U, S, V
 end
