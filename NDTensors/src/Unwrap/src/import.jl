@@ -1,4 +1,5 @@
 import Base:
+  adjoint,
   permutedims,
   permutedims!,
   copy,
