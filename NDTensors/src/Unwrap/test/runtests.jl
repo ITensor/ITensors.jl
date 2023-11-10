@@ -7,7 +7,7 @@ include("../../../test/device_list.jl")
 @testset "Testing Unwrap" for dev in devices_list(ARGS)
   elt = Float32
 
-  v = dev(Vector{elt}(undef, 10))
+  v = dev(rand(elt, 10))
   vt = transpose(v)
   va = v'
 
@@ -39,7 +39,7 @@ include("../../../test/device_list.jl")
   @test typeof(Et) == Exposed{m_type,LinearAlgebra.Transpose{e_type,m_type}}
   @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
 
-  o = dev(Vector{elt})(undef, 1)
+  o = dev(rand(elt, 1))
   expose(o)[] = 2
   @test expose(o)[] == 2
 
