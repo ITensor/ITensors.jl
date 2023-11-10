@@ -123,4 +123,33 @@ include("../../../test/device_list.jl")
   x = dev(randn(elt, 4, 4))
   permutedims!(expose(y), expose(x), (2, 1))
   @test NDTensors.cpu(y) == transpose(NDTensors.cpu(x))
+
+  ##########################################
+  ### Testing an issue with CUDA&Metal transpose/adjoint mul
+  A = dev(randn(Float64, (3, 2)))
+  B = dev(randn(Float64, (3, 4)))
+  C = dev(randn(Float64, (4, 2)))
+  Cp = copy(C)
+  if (dev == NDTensors.cu)
+    CUDA.allowscalar(false)
+  end
+  ## This fails with scalar indexing 
+  #mul!(transpose(C), transpose(A), B, 1.0, 0.0)
+  mul!(C, transpose(B), A, 1.0, 0.0)
+  mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), 1.0, 0.0)
+  @test C ≈ Cp
+  Cp = fill!(similar(C), 0.0)
+  ## Try calling mul!! with transposes to verify that code works
+  NDTensors.mul!!(transpose(Cp), transpose(A), B, 1.0, 0.0)
+  @test C ≈ Cp
+
+  Cp = fill!(similar(C), 0.0)
+  ## This fails with scalar indexing 
+  #mul!(C', A', B, 1.0, 0)
+  mul!(C, B', A, 1.0, 0.0)
+  mul!(expose(Cp'), expose(A'), expose(B), 1.0, 0)
+  @test C ≈ Cp
+  Cp = fill!(similar(C), 0.0)
+  NDTensors.mul!!(Cp', A', B, 1.0, 0.0)
+  @test Cp ≈ C
 end
