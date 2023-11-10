@@ -9,14 +9,16 @@ struct BlockSparseArray{
 end
 
 Base.axes(block_arr::BlockSparseArray) = block_arr.axes
-blocks(a::BlockSparseArray) = a.blocks
+BlockArrays.blocks(a::BlockSparseArray) = a.blocks
 # TODO: Use `SetParameters`.
 blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 
 # TODO: Use `SetParameters`.
 set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
 
-nonzero_blockkeys(a::BlockSparseArray) = map(Block ∘ Tuple, collect(nonzero_keys(blocks(a))))
+function nonzero_blockkeys(a::BlockSparseArray)
+  return map(Block ∘ Tuple, collect(nonzero_keys(blocks(a))))
+end
 
 function Base.reshape(a::BlockSparseArray, ax::Tuple{Vararg{AbstractUnitRange}})
   ## TODO: Use `SparseArray` reshape in some way?
@@ -244,7 +246,9 @@ function Base.permutedims(a::BlockSparseArray, perm)
 end
 
 # TODO: Make `PermutedBlockSparseArray`.
-function blocks(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray})
+function BlockArrays.blocks(
+  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray}
+)
   return PermutedDimsArray(blocks(parent(a)), perm(a))
 end
 

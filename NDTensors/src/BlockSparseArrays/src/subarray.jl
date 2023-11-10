@@ -1,4 +1,6 @@
-function Base.axes(a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}})
+function Base.axes(
+  a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}}
+)
   axes_src = axes(parent(a))
   axes_parent = parentindices(a)
   return sub_axes(axes_src, axes_parent)
@@ -7,7 +9,9 @@ end
 # Map the location in the sliced array of a parent block `b` to the location
 # in a block slice. Return `nothing` if the block
 # isn't in the slice.
-function sub_blockkey(a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}}, b::Block)
+function sub_blockkey(
+  a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}}, b::Block
+)
   btuple = blocktuple(b)
   dims_a = ntuple(identity, ndims(a))
   subblock_ranges = parentindices(a)
@@ -18,7 +22,9 @@ function sub_blockkey(a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{
   return Block(I)
 end
 
-function nonzero_sub_blockkeys(a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}})
+function nonzero_sub_blockkeys(
+  a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}}
+)
   sub_blockkeys_a = Block{ndims(a),Int}[]
   parent_blockkeys_a = Block{ndims(a),Int}[]
   for b in nonzero_blockkeys(parent(a))
@@ -35,7 +41,9 @@ end
 # ArrayLayouts.sub_materialize
 # ArrayLayouts.MemoryLayout, BlockLayout, BlockSparseLayout
 # etc.
-function Base.copy(a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}})
+function Base.copy(
+  a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:Vector{<:Block}}}}
+)
   axes_dest = axes(a)
   nonzero_sub_blockkeys_a = nonzero_sub_blockkeys(a)
   # TODO: Preserve the grades here.
@@ -47,7 +55,7 @@ function Base.copy(a::SubArray{<:Any,<:Any,<:BlockSparseArray,<:Tuple{Vararg{<:V
 end
 
 # Permute the blocks
-function getindices(a::BlockSparseArray, b::Vector{<:Block{1}}...)
+function Base.getindex(a::BlockSparseArray, b::Vararg{Vector{<:Block{1}}})
   # Lazy version
   ap = @view a[b...]
   return copy(ap)
