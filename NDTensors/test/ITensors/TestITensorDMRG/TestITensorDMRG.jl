@@ -19,6 +19,9 @@ function is_supported_eltype(dev::typeof(NDTensors.mtl), elt::Type{<:Complex})
   return is_supported_eltype(dev, real(elt))
 end
 
+is_broken(dev, elt::Type, conserve_qns::Val) = false
+is_broken(dev::typeof(NDTensors.cu), elt::Type, conserve_qns::Val{true}) = true
+
 include("dmrg.jl")
 
 end
