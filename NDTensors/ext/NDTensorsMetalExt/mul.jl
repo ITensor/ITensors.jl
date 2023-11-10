@@ -16,7 +16,6 @@ end
 function LinearAlgebra.mul!(
   CM::Exposed{<:MtlArray,<:Adjoint}, AM::Exposed{<:MtlArray}, BM::Exposed{<:MtlArray}, α, β
 )
-  return mul!(parent(CM), BM', AM', α, β)
-
+  mul!(CM', BM', AM', α, β)
   return unexpose(CM)
 end

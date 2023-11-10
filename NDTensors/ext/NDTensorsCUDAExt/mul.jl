@@ -1,27 +1,25 @@
 # This was calling generic matrix multiplication.
 # TODO: Raise an issue with `CUDA.jl`.
-function mul!(
+function LinearAlgebra.mul!(
   CM::Exposed{<:CuArray,<:LinearAlgebra.Transpose},
   AM::Exposed{<:CuArray},
   BM::Exposed{<:CuArray},
   α,
   β,
 )
-  return mul!(parent(CM), transpose(BM), transpose(AM), α, β)
-
+  mul!(transpose(CM), transpose(BM), transpose(AM), α, β)
   return unexpose(CM)
 end
 
 # This was calling generic matrix multiplication.
 # TODO: Raise an issue with `CUDA.jl`.
-function mul!(
+function LinearAlgebra.mul!(
   CM::Exposed{<:CuArray,<:LinearAlgebra.Adjoint},
   AM::Exposed{<:CuArray},
   BM::Exposed{<:CuArray},
   α,
   β,
 )
-  return mul!(parent(CM), BM', AM', α, β)
-
+  mul!(CM', BM', AM', α, β)
   return unexpose(CM)
 end

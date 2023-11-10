@@ -126,30 +126,28 @@ include("../../../test/device_list.jl")
 
   ##########################################
   ### Testing an issue with CUDA&Metal transpose/adjoint mul
-  A = dev(randn(Float64, (3, 2)))
-  B = dev(randn(Float64, (3, 4)))
-  C = dev(randn(Float64, (4, 2)))
+  A = dev(randn(elt, (3, 2)))
+  B = dev(randn(elt, (3, 4)))
+  C = dev(randn(elt, (4, 2)))
   Cp = copy(C)
-  if (dev == NDTensors.cu)
-    CUDA.allowscalar(false)
-  end
-  ## This fails with scalar indexing 
-  #mul!(transpose(C), transpose(A), B, 1.0, 0.0)
-  mul!(C, transpose(B), A, 1.0, 0.0)
-  mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), 1.0, 0.0)
-  @test C ≈ Cp
-  Cp = fill!(similar(C), 0.0)
-  ## Try calling mul!! with transposes to verify that code works
-  NDTensors.mul!!(transpose(Cp), transpose(A), B, 1.0, 0.0)
-  @test C ≈ Cp
 
-  Cp = fill!(similar(C), 0.0)
   ## This fails with scalar indexing 
-  #mul!(C', A', B, 1.0, 0)
-  mul!(C, B', A, 1.0, 0.0)
-  mul!(expose(Cp'), expose(A'), expose(B), 1.0, 0)
+  #mul!(transpose(C), transpose(A), B, true, false)
+  mul!(C, transpose(B), A, true, false)
+  mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), true, false)
   @test C ≈ Cp
-  Cp = fill!(similar(C), 0.0)
-  NDTensors.mul!!(Cp', A', B, 1.0, 0.0)
-  @test Cp ≈ C
+  Cp = zero(C)
+  ## Try calling mul!! with transposes to verify that code works
+  Cpt = NDTensors.mul!!(transpose(Cp), transpose(A), B, true, false)
+  @test transpose(Cpt) ≈ C
+
+  Cp = zero(C)
+  ## This fails with scalar indexing 
+  #mul!(C', A', B, true, false)
+  mul!(C, B', A, true, false)
+  mul!(expose(Cp'), expose(A'), expose(B), true, false)
+  @test C ≈ Cp
+  Cp = zero(C)
+  Cpt = NDTensors.mul!!(Cp', A', B, true, false)
+  @test transpose(Cpt) ≈ C
 end
