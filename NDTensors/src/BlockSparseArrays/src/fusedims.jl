@@ -7,7 +7,9 @@ function fusedims(a::AbstractArray, subperms::Tuple...)
   sublengths = length.(subperms)
   substops = cumsum(sublengths)
   substarts = (1, (Base.front(substops) .+ 1)...)
-  subranges = range.(substarts, substops)
+  # TODO: `step=1` is not required as of Julia 1.7.
+  # Remove once we drop support for Julia 1.6.
+  subranges = range.(substarts, substops; step=1)
   # Get a naive product of the axes in the subrange
   axes_prod = map(subranges) do subrange
     return ⊗(map(i -> axes(a_permuted, i), subrange)...)
