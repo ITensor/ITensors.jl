@@ -1,5 +1,5 @@
 using Test
-using BlockArrays: BlockArrays, Block, blockedrange, blocksize
+using BlockArrays: BlockArrays, blockedrange, blocksize
 using NDTensors.BlockSparseArrays:
   BlockSparseArrays, BlockSparseArray, gradedrange, nonzero_blockkeys, fusedims
 using ITensors: QN
@@ -13,12 +13,12 @@ using ITensors: QN
     ) isa Any
   end
   @testset "Mixed block test" begin
-    blocks = [Block(1, 1), Block(2, 2)]
+    blocks = [BlockArrays.Block(1, 1), BlockArrays.Block(2, 2)]
     block_data = [randn(2, 2)', randn(3, 3)]
     inds = ([2, 3], [2, 3])
     A = BlockSparseArray(blocks, block_data, inds)
-    @test A[Block(1, 1)] == block_data[1]
-    @test A[Block(1, 2)] == zeros(2, 3)
+    @test A[BlockArrays.Block(1, 1)] == block_data[1]
+    @test A[BlockArrays.Block(1, 2)] == zeros(2, 3)
   end
   @testset "fusedims" begin
     elt = Float64
@@ -27,16 +27,21 @@ using ITensors: QN
     i = gradedrange(d, sectors)
 
     B = BlockSparseArray{elt}(i, i, i, i)
-    B[Block(1, 1, 1, 1)] = randn(2, 2, 2, 2)
-    B[Block(2, 2, 2, 2)] = randn(3, 3, 3, 3)
+    B[BlockArrays.Block(1, 1, 1, 1)] = randn(2, 2, 2, 2)
+    B[BlockArrays.Block(2, 2, 2, 2)] = randn(3, 3, 3, 3)
     @test size(B) == (5, 5, 5, 5)
     @test blocksize(B) == (2, 2, 2, 2)
     # TODO: Define `nnz`.
     @test length(nonzero_blockkeys(B)) == 2
 
-    B_sub = B[[Block(2)], [Block(2)], [Block(2)], [Block(2)]]
+    B_sub = B[
+      [BlockArrays.Block(2)],
+      [BlockArrays.Block(2)],
+      [BlockArrays.Block(2)],
+      [BlockArrays.Block(2)],
+    ]
     @test B_sub isa BlockSparseArray{elt,4}
-    @test B[Block(2, 2, 2, 2)] == B_sub[Block(1, 1, 1, 1)]
+    @test B[BlockArrays.Block(2, 2, 2, 2)] == B_sub[BlockArrays.Block(1, 1, 1, 1)]
     @test size(B_sub) == (3, 3, 3, 3)
     @test blocksize(B_sub) == (1, 1, 1, 1)
     # TODO: Define `nnz`.
