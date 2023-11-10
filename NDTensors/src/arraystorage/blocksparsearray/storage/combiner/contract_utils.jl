@@ -5,6 +5,8 @@ using .BlockSparseArrays.BlockArrays: BlockArrays
 # `nonzero_block_keys`?
 nzblocks(a::BlockSparseArray) = BlockArrays.Block.(Tuple.(collect(nonzero_keys(blocks(a)))))
 
+# ⊗
+# TODO: Rename this function.
 function outer(i1::BlockArrays.BlockedUnitRange, i2::BlockArrays.BlockedUnitRange)
   axes = (i1, i2)
   return BlockArrays.blockedrange(

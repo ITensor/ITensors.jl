@@ -9,12 +9,16 @@ struct BlockSparseArray{
 end
 
 Base.axes(block_arr::BlockSparseArray) = block_arr.axes
-blocks(a::BlockSparseArray) = a.blocks
+BlockArrays.blocks(a::BlockSparseArray) = a.blocks
 # TODO: Use `SetParameters`.
 blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 
 # TODO: Use `SetParameters`.
 set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
+
+function nonzero_blockkeys(a::BlockSparseArray)
+  return map(Block ∘ Tuple, collect(nonzero_keys(blocks(a))))
+end
 
 function Base.reshape(a::BlockSparseArray, ax::Tuple{Vararg{AbstractUnitRange}})
   ## TODO: Use `SparseArray` reshape in some way?
@@ -43,7 +47,7 @@ end
 
 # The size of a block
 function block_size(axes::Tuple{Vararg{AbstractUnitRange}}, block::Block)
-  return length.(getindex.(axes, Block.(block.n)))
+  return length.(getindex.(axes, blocktuple(block)))
 end
 
 # The size of a block
@@ -89,6 +93,7 @@ end
 function BlockSparseArray{T,N,B}(
   ::UndefInitializer, axes::Tuple{Vararg{Any,N}}
 ) where {T,N,B}
+  # TODO: `Block{N,Int}`?
   blocks = Vector{Block{N}}()
   return BlockSparseArray{T,N,B}(undef, blocks, axes)
 end
@@ -100,7 +105,7 @@ function BlockSparseArray(
   cartesianblocks = if isempty(blockdata)
     Dictionary{Block{N},CartesianIndex{N}}()
   else
-    map(block -> CartesianIndex(block.n), blocks)
+    map(block -> CartesianIndex(inttuple(block)), blocks)
   end
   cartesiandata = Dictionary(cartesianblocks, blockdata)
   block_storage = SparseArray(cartesiandata, blocklength.(axes), BlockZero(axes))
@@ -151,7 +156,7 @@ function Base.copy(block_arr::BlockSparseArray)
 end
 
 function BlockArrays.viewblock(block_arr::BlockSparseArray, block)
-  blks = block.n
+  blks = inttuple(block)
   @boundscheck blockcheckbounds(block_arr, blks...)
   ## block_size = length.(getindex.(axes(block_arr), Block.(blks)))
   # TODO: Make this `Zeros`?
@@ -241,7 +246,9 @@ function Base.permutedims(a::BlockSparseArray, perm)
 end
 
 # TODO: Make `PermutedBlockSparseArray`.
-function blocks(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray})
+function BlockArrays.blocks(
+  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray}
+)
   return PermutedDimsArray(blocks(parent(a)), perm(a))
 end
 
