@@ -234,6 +234,12 @@ function Base.getindex(block_arr::BlockSparseArray{T,N}, i::Vararg{Integer,N}) w
   return v
 end
 
+# Fixes ambiguity error.
+# TODO: Is this needed?
+function Base.getindex(block_arr::BlockSparseArray{<:Any,0})
+  return blocks(block_arr)[CartesianIndex()][]
+end
+
 function Base.permutedims!(a_src::BlockSparseArray, a_dest::BlockSparseArray, perm)
   copyto!(a_src, PermutedDimsArray(a_dest, perm))
   return a_src
@@ -269,4 +275,9 @@ end
 function Base.map(f, as::BlockSparseArray...)
   @assert allequal(axes.(as))
   return BlockSparseArray(map(f, blocks.(as)...), axes(first(as)))
+end
+
+function Base.map!(f, a_dest::BlockSparseArray, as::BlockSparseArray...)
+  @assert allequal(axes.((a_dest, as...)))
+  return BlockSparseArray(map!(f, blocks(a_dest), blocks.(as)...), axes(a_dest))
 end

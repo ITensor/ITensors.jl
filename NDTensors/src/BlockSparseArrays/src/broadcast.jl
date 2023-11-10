@@ -26,6 +26,14 @@ function _broadcast(f, as::AbstractArray...)
   return map(f, as...)
 end
 
+function _broadcast!(f, a_dest::AbstractArray, as::AbstractArray...)
+  if !preserves_zeros(f, as...)
+    error("Broadcasting functions that don't preserve zeros isn't supported yet.")
+  end
+  # TODO: Use `map_nonzeros!` here?
+  return map!(f, a_dest, as...)
+end
+
 isnumber(x::Number) = true
 isnumber(x) = false
 
@@ -49,4 +57,11 @@ function Base.copy(bc::Broadcasted{<:BlockSparseStyle})
   bcf = flatten(bc)
   f, args = flatten_numbers(bcf.f, bcf.args)
   return _broadcast(f, args...)
+end
+
+function Base.copyto!(a_dest::BlockSparseArray, bc::Broadcasted{<:BlockSparseStyle})
+  bcf = flatten(bc)
+  f, args = flatten_numbers(bcf.f, bcf.args)
+  return _broadcast!(f, a_dest, args...)
+  return error("Not implemented")
 end
