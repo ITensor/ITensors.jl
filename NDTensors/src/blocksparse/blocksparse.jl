@@ -128,20 +128,26 @@ can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
 function promote_rule(
   ::Type{<:BlockSparse{ElT1,VecT1,N}}, ::Type{<:BlockSparse{ElT2,VecT2,N}}
 ) where {ElT1,ElT2,VecT1,VecT2,N}
-  return BlockSparse{promote_type(ElT1, ElT2),promote_type(VecT1, VecT2),N}
+  # Promote the element types properly.
+  ElT = promote_type(ElT1, ElT2)
+  VecT = promote_type(set_eltype(VecT1, ElT), set_eltype(VecT2, ElT))
+  return BlockSparse{ElT,VecT,N}
 end
 
 function promote_rule(
   ::Type{<:BlockSparse{ElT1,VecT1,N1}}, ::Type{<:BlockSparse{ElT2,VecT2,N2}}
 ) where {ElT1,ElT2,VecT1,VecT2,N1,N2}
-  return BlockSparse{promote_type(ElT1, ElT2),promote_type(VecT1, VecT2),NR} where {NR}
+  # Promote the element types properly.
+  ElT = promote_type(ElT1, ElT2)
+  VecT = promote_type(set_eltype(VecT1, ElT), set_eltype(VecT2, ElT))
+  return BlockSparse{ElT,VecT,NR} where {NR}
 end
 
 function promote_rule(
-  ::Type{<:BlockSparse{ElT1,Vector{ElT1},N1}}, ::Type{ElT2}
-) where {ElT1,ElT2<:Number,N1}
+  ::Type{<:BlockSparse{ElT1,VecT1,N1}}, ::Type{ElT2}
+) where {ElT1,VecT1<:AbstractVector{ElT1},ElT2<:Number,N1}
   ElR = promote_type(ElT1, ElT2)
-  VecR = Vector{ElR}
+  VecR = set_eltype(VecT1, ElR)
   return BlockSparse{ElR,VecR,N1}
 end
 
