@@ -5,7 +5,7 @@ using NDTensors.SetParameters
 using NDTensors.Unwrap
 using Adapt
 using Functors
-using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!
+using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!, svd
 
 if isdefined(Base, :get_extension)
   using CUDA
