@@ -1,6 +1,7 @@
 using NDTensors
 using Test
-push!(ARGS,"cuda")
+using GPUArraysCore
+
 @testset "Dense Tensors" begin
   include("device_list.jl")
   devs = devices_list(copy(ARGS))
@@ -10,11 +11,11 @@ push!(ARGS,"cuda")
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor(elt, (3, 4)))
-      @allowscalar for I in eachindex(A)
+      GPUArraysCore.@allowscalar for I in eachindex(A)
         @test A[I] == 0
       end
 
-      @test @allowscalar A[2, 1] isa elt
+      @test GPUArraysCore.@allowscalar A[2, 1] isa elt
       @test dims(A[1:2, 1]) == (2,)
       @test dims(A[1:2, 2]) == (2,)
       @test dims(A[2:3, 2]) == (2,)
@@ -40,7 +41,7 @@ push!(ARGS,"cuda")
       Ap = permutedims(A, (2, 1))
       A
       Ap
-      @allowscalar begin 
+      GPUArraysCore.@allowscalar begin 
         for I in eachindex(A)
           @test A[I] != 0
         end
@@ -123,13 +124,13 @@ push!(ARGS,"cuda")
       T = dev(randomTensor(elt, (2, 2)))
       @test dims(T) == (2, 2)
       @test eltype(T) == elt
-      @test @allowscalar T[1, 1] ≉ 0
+      @test GPUArraysCore.@allowscalar T[1, 1] ≉ 0
       @test norm(T) ≉ 0
 
       Tc = dev(randomTensor(complex(elt), (2, 2)))
       @test dims(Tc) == (2, 2)
       @test eltype(Tc) == complex(elt)
-      @test @allowscalar Tc[1, 1] ≉ 0
+      @test GPUArraysCore.@allowscalar Tc[1, 1] ≉ 0
       @test norm(Tc) ≉ 0
     end
 
@@ -141,7 +142,7 @@ push!(ARGS,"cuda")
       iT = imag(T)
       cT = conj(T)
 
-      @allowscalar for n1 in 1:d1, n2 in 1:d2, n3 in 1:d3
+      GPUArraysCore.@allowscalar for n1 in 1:d1, n2 in 1:d2, n3 in 1:d3
         @test rT[n1, n2, n3] ≈ real(T[n1, n2, n3])
         @test iT[n1, n2, n3] ≈ imag(T[n1, n2, n3])
         @test cT[n1, n2, n3] ≈ conj(T[n1, n2, n3])
@@ -161,8 +162,10 @@ push!(ARGS,"cuda")
       @test dims(T) == (2, 3, 4)
       @test ndims(T) == 3
       @test inds(T) == (MyInd(2), MyInd(3), MyInd(4))
-      @allowscalar T[2, 1, 2] = 1.21
-      @test @allowscalar T[2, 1, 2] == elt(1.21)
+      GPUArraysCore.@allowscalar begin 
+        T[2, 1, 2] = 1.21
+        @test T[2, 1, 2] == elt(1.21)
+      end
       @test norm(T) == elt(1.21)
 
       T = dev(randomTensor(complex(elt), (MyInd(4), MyInd(3))))
@@ -208,22 +211,22 @@ push!(ARGS,"cuda")
       @testset "No permutation" begin
         R = dev(Tensor(complex(elt), (2, 2, 1)))
         fill!(R, NaN)
-        @test @allowscalar any(isnan, R)
+        @test GPUArraysCore.@allowscalar any(isnan, R)
         T1 = dev(randomTensor((2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))
         NDTensors.contract!(R, (1, 2, 3), T1, (1, 2, -1), T2, (-1, 1))
-        @test @allowscalar !any(isnan, R)
+        @test GPUArraysCore.@allowscalar !any(isnan, R)
         @test convert(Array, R) ≈ convert(Array, T1) * T2[]
       end
 
       @testset "Permutation" begin
         R = dev(Tensor(complex(elt), (2, 2, 1)))
         fill!(R, NaN)
-        @test @allowscalar any(isnan, R)
+        @test GPUArraysCore.@allowscalar any(isnan, R)
         T1 = dev(randomTensor((2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))
         NDTensors.contract!(R, (2, 1, 3), T1, (1, 2, -1), T2, (-1, 1))
-        @test @allowscalar !any(isnan, R)
+        @test GPUArraysCore.@allowscalar !any(isnan, R)
         @test convert(Array, R) ≈ permutedims(convert(Array, T1), (2, 1, 3)) * T2[]
       end
     end
