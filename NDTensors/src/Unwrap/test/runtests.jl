@@ -146,8 +146,12 @@ include("../../../test/device_list.jl")
   C = dev(randn(elt, (4, 2)))
   Cp = copy(C)
 
-  ## This fails with scalar indexing 
-  @test_broken mul!(transpose(C), transpose(A), B, true, false)
+  ## This fails with scalar indexing
+  if dev != NDTensors.cpu 
+    @test_broken mul!(transpose(C), transpose(A), B, true, false)
+  else
+    mul!(transpose(C), transpose(A), B, true, false)
+  end
   mul!(C, transpose(B), A, true, false)
   mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), true, false)
   @test C ≈ Cp
@@ -158,7 +162,11 @@ include("../../../test/device_list.jl")
 
   Cp = zero(C)
   ## This fails with scalar indexing 
-  @test_broken mul!(C', A', B, true, false)
+  if dev != NDTensors.cpu
+    @test_broken mul!(C', A', B, true, false)
+  else
+    mul!(C', A', B, true, false)
+  end
   mul!(C, B', A, true, false)
   mul!(expose(Cp'), expose(A'), expose(B), true, false)
   @test C ≈ Cp
