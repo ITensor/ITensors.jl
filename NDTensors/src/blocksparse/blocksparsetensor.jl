@@ -335,11 +335,15 @@ view(T::BlockSparseTensor, b::Block) = blockview(T, b)
 # convert to Dense
 function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
   R = zeros(dense(TensorT), inds(T))
+  ## Here this failed with scalar indexing (R[blockindices] = blockview)
+  ## We can fix this by using copyto the arrays
+  r = Array(R)
   for block in keys(blockoffsets(T))
     # TODO: make sure this assignment is efficient
-    R[blockindices(T, block)] = blockview(T, block)
+    rview = @view r[blockindices(T, block)]
+    copyto!(expose(rview), expose(array(blockview(T, block))))
   end
-  return R
+  return tensor(Dense(r), inds(T))
 end
 
 #
