@@ -23,6 +23,7 @@ Strided = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
 StridedViews = "4db3bf67-4bd7-4b4e-b153-31dc3fb37143"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
+GPUArraysCore="46192b85-c4d5-4398-a991-12ede77f4527"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"

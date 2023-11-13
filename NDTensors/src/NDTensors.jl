@@ -17,6 +17,7 @@ using SplitApplyCombine
 using Strided
 using TimerOutputs
 using TupleTools
+using GPUArraysCore
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
