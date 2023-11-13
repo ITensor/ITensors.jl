@@ -1,6 +1,7 @@
 using NDTensors
 using LinearAlgebra
 using Test
+using GPUArraysCore: @allowscalar
 
 @testset "random_orthog" begin
   n, m = 10, 4

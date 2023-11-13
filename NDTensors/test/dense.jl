@@ -1,5 +1,6 @@
 using NDTensors
 using Test
+using GPUArraysCore: @allowscalar
 
 @testset "Dense Tensors" begin
   include("device_list.jl")

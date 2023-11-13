@@ -1,6 +1,7 @@
 using NDTensors
 using LinearAlgebra
 using Test
+using GPUArraysCore: @allowscalar
 
 # Testing generic block indices
 using ITensors: QN, Index

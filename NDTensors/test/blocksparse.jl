@@ -1,6 +1,7 @@
 using NDTensors
 using LinearAlgebra
 using Test
+using GPUArraysCore: @allowscalar
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
