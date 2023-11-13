@@ -13,7 +13,6 @@ function devices_list(test_args)
   end
 
   if "cuda" in test_args || "all" in test_args
-    #CUDA.allowscalar()
     if CUDA.functional()
       push!(devs, NDTensors.cu)
     else
