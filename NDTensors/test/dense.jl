@@ -38,8 +38,6 @@ using Test
       C = permutedims!!(C, B, (1, 2), .+)
 
       Ap = permutedims(A, (2, 1))
-      A
-      Ap
       @allowscalar begin
         for I in eachindex(A)
           @test A[I] != 0
