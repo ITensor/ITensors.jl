@@ -134,7 +134,7 @@ include("../../../test/device_list.jl")
   y = dev(randn(elt, 8))
   x = @view reshape(dev(randn(elt, 8, 8))', 64)[1:8]
   copyto!(expose(y), expose(x))
-  @allowscalar begin  
+  @allowscalar begin
     @test y == x
     @test copy(x) == x
   end
