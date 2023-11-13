@@ -2,7 +2,7 @@ function Base.getindex(E::Exposed{<:CuArray})
   return CUDA.@allowscalar unexpose(E)[]
 end
 
-function setindex!(E::Exposed{<:CuArray}, x::Number)
+function Base.setindex!(E::Exposed{<:CuArray}, x::Number)
   CUDA.@allowscalar unexpose(E)[] = x
   return unexpose(E)
 end
