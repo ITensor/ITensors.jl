@@ -1,5 +1,6 @@
 using Test
-using BlockArrays: BlockArrays, blockedrange, blocksize
+using BlockArrays: BlockArrays, BlockRange, blocksize
+using NDTensors: contract
 using NDTensors.BlockSparseArrays:
   BlockSparseArrays, BlockSparseArray, gradedrange, nonzero_blockkeys, fusedims
 using ITensors: QN
@@ -55,5 +56,27 @@ using ITensors: QN
     # This is broken because it allocates all blocks,
     # need to fix that.
     @test_broken length(nonzero_blockkeys(B_fused)) == 2
+  end
+  @testset "contract" begin
+    function randn_even_blocks!(a)
+      for b in BlockRange(a)
+        if iseven(sum(b.n))
+          a[b] = randn(eltype(a), size(@view(a[b])))
+        end
+      end
+    end
+
+    d1, d2, d3, d4 = [2, 3], [3, 4], [4, 5], [5, 6]
+    elt = Float64
+    a1 = BlockSparseArray{elt}(d1, d2, d3)
+    randn_even_blocks!(a1)
+    a2 = BlockSparseArray{elt}(d2, d4)
+    randn_even_blocks!(a2)
+    a_dest, labels_dest = contract(a1, (1, -1, 2), a2, (-1, 3))
+    @show labels_dest == (1, 2, 3)
+
+    # TODO: Output `labels_dest` as well.
+    a_dest_dense = contract(Array(a1), (1, -1, 2), Array(a2), (-1, 3))
+    @show a_dest ≈ a_dest_dense
   end
 end
