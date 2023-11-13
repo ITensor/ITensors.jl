@@ -2,7 +2,6 @@ using Test
 using NDTensors.Unwrap
 using NDTensors
 using LinearAlgebra
-using GPUArraysCore
 
 include("../../../test/device_list.jl")
 @testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
@@ -41,11 +40,9 @@ include("../../../test/device_list.jl")
   @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
 
   o = dev(randn(elt, 1))
-  GPUArraysCore.@allowscalar begin
-    expose(o)[] = 2
-    @test expose(o)[] == 2
-  end
-
+  expose(o)[] = 2
+  @test expose(o)[] == 2
+  
   fill!(m, 0)
   @test any(!Base.isinf, expose(m))
 
@@ -157,8 +154,6 @@ include("../../../test/device_list.jl")
   ## This fails with scalar indexing
   if dev != NDTensors.cpu
     @test_broken mul!(transpose(C), transpose(A), B, true, false)
-  else
-    mul!(transpose(C), transpose(A), B, true, false)
   end
   mul!(C, transpose(B), A, true, false)
   mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), true, false)
@@ -172,8 +167,6 @@ include("../../../test/device_list.jl")
   ## This fails with scalar indexing 
   if dev != NDTensors.cpu
     @test_broken mul!(C', A', B, true, false)
-  else
-    mul!(C', A', B, true, false)
   end
   mul!(C, B', A, true, false)
   mul!(expose(Cp'), expose(A'), expose(B), true, false)
