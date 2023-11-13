@@ -1,5 +1,6 @@
 using Test
 using SafeTestsets
+using GPUArraysCore
 
 println("Passing arguments ARGS=$(ARGS) to test.")
 

@@ -1,6 +1,7 @@
 using NDTensors
 using LinearAlgebra
 using Test
+using GPUArraysCore
 
 # Testing generic block indices
 using ITensors: QN, Index
@@ -22,12 +23,12 @@ using ITensors: QN, Index
       @test output_tensor isa DenseTensor
       @test dims(output_tensor) == output_tensor_inds
       for i in 1:length(input_tensor)
-        @test input_tensor[i] == output_tensor[i]
+        @test GPUArraysCore.@allowscalar input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining
       new_input_tensor = contract(output_tensor, (1, -1), combiner_tensor, (-1, 2, 3))
-      @test new_input_tensor == input_tensor
+      @test NDTensors.cpu(new_input_tensor) == NDTensors.cpu(input_tensor)
 
       # Catch invalid combining
       input_tensor_inds = (d,)
@@ -62,13 +63,13 @@ using ITensors: QN, Index
       @test dims(output_tensor) == dims(output_tensor_inds)
       output_tensor = permutedims(output_tensor, (2, 1))
       for i in 1:length(input_tensor)
-        @test input_tensor[i] == output_tensor[i]
+        @test GPUArraysCore.@allowscalar input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining. Broken for inds that are not `Index`.
       new_input_tensor = contract(output_tensor, (1, -1), combiner_tensor, (-1, 2, 3))
       new_input_tensor = permutedims(new_input_tensor, (3, 1, 2))
-      @test new_input_tensor == input_tensor
+      @test NDTensors.cpu(new_input_tensor) == NDTensors.cpu(input_tensor)
 
       # Catch invalid combining
       invalid_input_tensor_inds = (k,)
