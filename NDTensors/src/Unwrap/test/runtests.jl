@@ -133,9 +133,8 @@ include("../../../test/device_list.jl")
 
   y = dev(randn(elt, 8))
   x = @view reshape(dev(randn(elt, 8, 8))', 64)[1:8]
-  ## TODO This line fails on GPU with scalar indexing
-  @allowscalar begin
-    copyto!(expose(y), expose(x))
+  copyto!(expose(y), expose(x))
+  @allowscalar begin  
     @test y == x
     @test copy(x) == x
   end
