@@ -42,7 +42,7 @@ include("../../../test/device_list.jl")
   o = dev(randn(elt, 1))
   expose(o)[] = 2
   @test expose(o)[] == 2
-  
+
   fill!(m, 0)
   @test any(!Base.isinf, expose(m))
 

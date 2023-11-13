@@ -99,7 +99,7 @@ function main()
   s = ITensors.siteinds("S=1/2", 8)
   m = randomMPS(s; linkdims=4)
   cm = NDTensors.cu(m)
-  H = MPO(s,"Id")
+  H = MPO(s, "Id")
   cH = NDTensors.cu(H)
 
   @test inner(cm', cH, cm) ≈ inner(m', H, m)
