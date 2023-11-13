@@ -1,6 +1,5 @@
 using NDTensors
 using Test
-using GPUArraysCore
 
 @testset "DiagTensor basic functionality" begin
   include("device_list.jl")
@@ -19,7 +18,7 @@ using GPUArraysCore
     d = rand(real(elt), 10)
     D = dev(Diag{elt}(d))
     @test eltype(D) == elt
-    @test GPUArraysCore.@allowscalar dev(Array(dense(D))) == convert.(elt, d)
+    @test @allowscalar dev(Array(dense(D))) == convert.(elt, d)
     simD = similar(D)
     @test length(simD) == length(D)
     @test eltype(simD) == eltype(D)
@@ -34,13 +33,13 @@ using GPUArraysCore
     vr = rand(elt, d)
     D = dev(tensor(Diag(vr), (d, d)))
     Da = Array(D)
-    @test GPUArraysCore.@allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
+    @test @allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
     Da = Matrix(D)
-    @test GPUArraysCore.@allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
+    @test @allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
 
     ## TODO Currently this permutedims requires scalar indexing on GPU. 
-    GPUArraysCore.@allowscalar Da = permutedims(D, (2, 1))
-    @test GPUArraysCore.@allowscalar Da == D
+    @allowscalar Da = permutedims(D, (2, 1))
+    @test @allowscalar Da == D
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
     S = dev(tensor(Diag(randn(elt, 2)), (2, 2)))
@@ -50,7 +49,7 @@ using GPUArraysCore
     V = dev(tensor(Dense(randn(elt, 12, 2)'), (3, 4, 2)))
     S1 = contract(S, (2, -1), V, (3, 4, -1))
     S2 = contract(dense(S), (2, -1), copy(V), (3, 4, -1))
-    @test GPUArraysCore.@allowscalar S1 ≈ S2
+    @test @allowscalar S1 ≈ S2
   end
 end
 @testset "DiagTensor contractions" begin

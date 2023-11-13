@@ -1,7 +1,6 @@
 using NDTensors
 using LinearAlgebra
 using Test
-using GPUArraysCore
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
@@ -46,7 +45,7 @@ using GPUArraysCore
     @test nnzblocks(A) == 2
     @test nnzblocks(B) == 2
 
-    GPUArraysCore.@allowscalar begin
+    @allowscalar begin
       A[1, 5] = 15
       A[2, 5] = 25
 
@@ -56,7 +55,7 @@ using GPUArraysCore
     end
     D = dense(A)
 
-    GPUArraysCore.@allowscalar begin
+    @allowscalar begin
       @test D == A
 
       for I in eachindex(A)
@@ -68,7 +67,7 @@ using GPUArraysCore
 
     @test dims(A12) == (2, 5)
 
-    GPUArraysCore.@allowscalar for I in eachindex(A12)
+    @allowscalar for I in eachindex(A12)
       @test A12[I] == A[I + CartesianIndex(0, 4)]
     end
 
@@ -77,7 +76,7 @@ using GPUArraysCore
 
     C = A + B
 
-    GPUArraysCore.@allowscalar for I in eachindex(C)
+    @allowscalar for I in eachindex(C)
       @test C[I] == A[I] + B[I]
     end
 
@@ -88,7 +87,7 @@ using GPUArraysCore
     @test nnz(A) == nnz(Ap)
     @test nnzblocks(A) == nnzblocks(Ap)
 
-    GPUArraysCore.@allowscalar for I in eachindex(C)
+    @allowscalar for I in eachindex(C)
       @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
     end
 
@@ -166,7 +165,7 @@ using GPUArraysCore
       for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
         blockAp = blockview(Ap, bAp)
         blockB = blockview(B, bB)
-        @test GPUArraysCore.@allowscalar reshape(blockAp, size(blockB)) == blockB
+        @test @allowscalar reshape(blockAp, size(blockB)) == blockB
       end
     end
   end
@@ -174,7 +173,7 @@ using GPUArraysCore
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2, 3], [4, 5])
 
-    GPUArraysCore.@allowscalar for I in eachindex(T)
+    @allowscalar for I in eachindex(T)
       @test T[I] == 0.0
     end
     @test nnz(T) == 0
@@ -230,7 +229,7 @@ using GPUArraysCore
       A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test GPUArraysCore.@allowscalar isapprox(
+      @test @allowscalar isapprox(
         norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14
       )
     end
@@ -239,7 +238,7 @@ using GPUArraysCore
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
       randn!(A)
       U, S, V = svd(A)
-      @test GPUArraysCore.@allowscalar isapprox(
+      @test @allowscalar isapprox(
         norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
       )
     end
@@ -248,7 +247,7 @@ using GPUArraysCore
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test GPUArraysCore.@allowscalar isapprox(
+      @test @allowscalar isapprox(
         norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
       )
     end
@@ -257,7 +256,7 @@ using GPUArraysCore
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
       randn!(A)
       U, S, V = svd(A)
-      @test GPUArraysCore.@allowscalar isapprox(
+      @test @allowscalar isapprox(
         norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
       )
     end
@@ -266,7 +265,7 @@ using GPUArraysCore
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
       randn!(A)
       U, S, V = svd(A)
-      @test GPUArraysCore.@allowscalar isapprox(
+      @test @allowscalar isapprox(
         norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
       )
     end

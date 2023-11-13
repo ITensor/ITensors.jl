@@ -1,6 +1,6 @@
 using Test
 using SafeTestsets
-using GPUArraysCore
+using GPUArraysCore: @allowscalar
 
 println("Passing arguments ARGS=$(ARGS) to test.")
 

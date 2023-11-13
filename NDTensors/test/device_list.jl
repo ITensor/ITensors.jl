@@ -1,4 +1,4 @@
-using GPUArraysCore
+using GPUArraysCore: @allowscalar
 if "cuda" in ARGS || "all" in ARGS
   using CUDA
 end
