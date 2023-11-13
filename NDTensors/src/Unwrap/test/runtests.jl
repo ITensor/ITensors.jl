@@ -2,6 +2,7 @@ using Test
 using NDTensors.Unwrap
 using NDTensors
 using LinearAlgebra
+using GPUArraysCore
 
 include("../../../test/device_list.jl")
 @testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
@@ -24,8 +25,8 @@ include("../../../test/device_list.jl")
   @test parent(Et) == v
   @test parent(Ea) == v
   @test transpose(E) == vt
-  @test cpu(E) == v
-  @test cpu(Et) == vt
+  @test cpu(E) == cpu(v)
+  @test cpu(Et) == cpu(vt)
 
   m = reshape(v, (5, 2))
   mt = transpose(m)
@@ -40,8 +41,10 @@ include("../../../test/device_list.jl")
   @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
 
   o = dev(randn(elt, 1))
-  expose(o)[] = 2
-  @test expose(o)[] == 2
+  GPUArraysCore.@allowscalar begin
+    expose(o)[] = 2
+    @test expose(o)[] == 2
+  end
 
   fill!(m, 0)
   @test any(!Base.isinf, expose(m))
@@ -125,14 +128,19 @@ include("../../../test/device_list.jl")
   y = dev(randn(elt, 16))
   x = reshape(dev(randn(elt, 4, 4))', 16)
   copyto!(expose(y), expose(x))
-  @test y == x
-  @test copy(x) == x
+  @allowscalar begin
+    @test y == x
+    @test copy(x) == x
+  end
 
   y = dev(randn(elt, 8))
   x = @view reshape(dev(randn(elt, 8, 8))', 64)[1:8]
-  copyto!(expose(y), expose(x))
-  @test y == x
-  @test copy(x) == x
+  ## TODO This line fails on GPU with scalar indexing
+  @allowscalar begin
+    copyto!(expose(y), expose(x))
+    @test y == x
+    @test copy(x) == x
+  end
 
   y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())
   x = dev(randn(elt, 4, 4))
