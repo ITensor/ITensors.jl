@@ -155,7 +155,7 @@ include("../../../test/device_list.jl")
   Cp = copy(C)
 
   ## This fails with scalar indexing
-  if dev != NDTensors.cpu 
+  if dev != NDTensors.cpu
     @test_broken mul!(transpose(C), transpose(A), B, true, false)
   else
     mul!(transpose(C), transpose(A), B, true, false)

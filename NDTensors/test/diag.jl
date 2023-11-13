@@ -37,9 +37,9 @@ using GPUArraysCore
     @test GPUArraysCore.@allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
     Da = Matrix(D)
     @test GPUArraysCore.@allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
-    
+
     ## TODO Currently this permutedims requires scalar indexing on GPU. 
-    GPUArraysCore.@allowscalar Da = permutedims(D, (2,1))
+    GPUArraysCore.@allowscalar Da = permutedims(D, (2, 1))
     @test GPUArraysCore.@allowscalar Da == D
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199

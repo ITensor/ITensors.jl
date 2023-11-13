@@ -36,12 +36,12 @@ using GPUArraysCore
       B = dev(Tensor(undef, (3, 4)))
       randn!(B)
       C = copy(A)
-      C = permutedims!!(C, B, (1,2), .+)
+      C = permutedims!!(C, B, (1, 2), .+)
 
       Ap = permutedims(A, (2, 1))
       A
       Ap
-      GPUArraysCore.@allowscalar begin 
+      GPUArraysCore.@allowscalar begin
         for I in eachindex(A)
           @test A[I] != 0
         end
@@ -60,7 +60,7 @@ using GPUArraysCore
         for I in eachindex(A)
           @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
         end
-        
+
         A[1, 1] = 11
         @test A[1, 1] == 11
 
@@ -162,7 +162,7 @@ using GPUArraysCore
       @test dims(T) == (2, 3, 4)
       @test ndims(T) == 3
       @test inds(T) == (MyInd(2), MyInd(3), MyInd(4))
-      GPUArraysCore.@allowscalar begin 
+      GPUArraysCore.@allowscalar begin
         T[2, 1, 2] = 1.21
         @test T[2, 1, 2] == elt(1.21)
       end
