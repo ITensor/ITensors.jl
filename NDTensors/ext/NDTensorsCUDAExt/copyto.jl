@@ -2,5 +2,6 @@
 function Base.copyto!(
   dest::Exposed{<:CuArray}, src::Exposed{<:CuArray,<:Base.ReshapedArray}
 )
-  return copyto!(dest, expose(parent(src)))
+  copyto!(dest, expose(parent(src)))
+  return unexpose(dest)
 end
