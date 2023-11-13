@@ -1,7 +1,6 @@
 using NDTensors
 using LinearAlgebra
 using Test
-using GPUArraysCore
 
 # Testing generic block indices
 using ITensors: QN, Index
@@ -23,7 +22,7 @@ using ITensors: QN, Index
       @test output_tensor isa DenseTensor
       @test dims(output_tensor) == output_tensor_inds
       for i in 1:length(input_tensor)
-        @test GPUArraysCore.@allowscalar input_tensor[i] == output_tensor[i]
+        @test @allowscalar input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining
@@ -63,7 +62,7 @@ using ITensors: QN, Index
       @test dims(output_tensor) == dims(output_tensor_inds)
       output_tensor = permutedims(output_tensor, (2, 1))
       for i in 1:length(input_tensor)
-        @test GPUArraysCore.@allowscalar input_tensor[i] == output_tensor[i]
+        @test @allowscalar input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining. Broken for inds that are not `Index`.
