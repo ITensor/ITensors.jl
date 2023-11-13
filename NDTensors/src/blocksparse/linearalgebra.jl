@@ -200,7 +200,7 @@ function svd(
     if (sV * sVP) == -1
       Vb *= -1
     end
-    copyto!((blockview(V, blockV)), (Vb))
+    copyto!(blockview(V, blockV), Vb)
   end
   return U, S, V, Spectrum(d, truncerr)
 end
