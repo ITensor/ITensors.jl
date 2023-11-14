@@ -66,11 +66,9 @@ function Dense(data::AbstractVector)
   return Dense{eltype(data)}(data)
 end
 
-## This was updated to work with arbitrary backend in a no-copy 
-## manner
 function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,N}} where {N}
-  vectype = set_ndims(unwrap_type(data), 1)
-  return Dense(convert(vectype, vec(data)))
+  #println("Warning: Only vector based datatypes are currenlty supported by Dense. The data structure provided will be vectorized.")
+  return Dense(vec(data))
 end
 
 function Dense(DataT::Type{<:AbstractArray}, dim::Integer)
