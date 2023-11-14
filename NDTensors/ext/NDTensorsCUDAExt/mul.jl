@@ -35,6 +35,6 @@ function LinearAlgebra.mul!(
   α,
   β,
 )
-  mul!(CM, AM, expose(copy(BM)), α, β)
+  mul!(CM, AM, expose(transpose(copy(expose(parent(BM))))), α, β)
   return unexpose(CM)
 end
