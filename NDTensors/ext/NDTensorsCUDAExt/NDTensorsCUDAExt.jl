@@ -6,16 +6,9 @@ using NDTensors.Unwrap
 using Adapt
 using Functors
 using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!, svd
-
-if isdefined(Base, :get_extension)
-  using CUDA
-  using CUDA.CUBLAS
-  using CUDA.CUSOLVER
-else
-  using ..CUDA
-  using .CUBLAS
-  using .CUSOLVER
-end
+using CUDA
+using CUDA.CUBLAS
+using CUDA.CUSOLVER
 
 ## TODO I added copyto and permutedims which match the functions in 
 ## NDTensorsMetalExt because I found similar issues in CUDA
