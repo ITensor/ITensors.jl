@@ -44,7 +44,9 @@ end
 # Defaults to `ArrayStructure`.
 # Maybe define a `default_output_structure`?
 function output_structure(f::typeof(map_nonzeros), fmap, as::AbstractArray...)
-  return ArrayStructure(eltype=output_eltype(f, fmap, as...), axes=output_axes(f, fmap, as...))
+  return ArrayStructure(;
+    eltype=output_eltype(f, fmap, as...), axes=output_axes(f, fmap, as...)
+  )
 end
 
 # Defaults to `ArrayStructure`.
@@ -92,7 +94,11 @@ function allocate(arraytype::Type{<:SparseArray}, structure::SparseArrayStructur
 end
 
 function output_structure(f::typeof(map_nonzeros), fmap, as::SparseArrayLike...)
-  return SparseArrayStructure(eltype=output_eltype(f, fmap, as...), axes=output_axes(f, fmap, as...), zero=output_zero(f, fmap, as...))
+  return SparseArrayStructure(;
+    eltype=output_eltype(f, fmap, as...),
+    axes=output_axes(f, fmap, as...),
+    zero=output_zero(f, fmap, as...),
+  )
 end
 
 function output_type(f::typeof(map_nonzeros), fmap, as::SparseArrayLike...)

@@ -87,7 +87,7 @@ function qr_block_sparse_structure(alg::Algorithm"thin", a::BlockSparseArray{<:A
   display(r)
 
   nblocks = size(q, 2)
-  error("Not implemented")
+  return error("Not implemented")
 end
 
 ## # TODO: Is this correct? Maybe the blocks get permuted

@@ -7,10 +7,16 @@ end
 
 default_zero() = (eltype, I) -> zero(eltype)
 
-SparseArray{T}(size::Tuple{Vararg{Integer}}, zero=default_zero()) where {T} = SparseArray(Dictionary{CartesianIndex{length(size)},T}(), size, zero)
+function SparseArray{T}(size::Tuple{Vararg{Integer}}, zero=default_zero()) where {T}
+  return SparseArray(Dictionary{CartesianIndex{length(size)},T}(), size, zero)
+end
 SparseArray{T}(size::Integer...) where {T} = SparseArray{T}(size)
 
-SparseArray{T}(axes::Tuple{Vararg{AbstractUnitRange}}, zero=default_zero()) where {T} = SparseArray{T}(length.(axes), zero)
+function SparseArray{T}(
+  axes::Tuple{Vararg{AbstractUnitRange}}, zero=default_zero()
+) where {T}
+  return SparseArray{T}(length.(axes), zero)
+end
 SparseArray{T}(axes::AbstractUnitRange...) where {T} = SparseArray{T}(length.(axes))
 
 Base.size(a::SparseArray) = a.dims

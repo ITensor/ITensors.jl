@@ -68,9 +68,7 @@ function (f::BlockZero)(
 end
 
 # Fallback so that `SparseArray` with scalar elements works.
-function (f::BlockZero)(
-  blocktype::Type{<:Number}, I::CartesianIndex
-)
+function (f::BlockZero)(blocktype::Type{<:Number}, I::CartesianIndex)
   return zero(blocktype)
 end
 
