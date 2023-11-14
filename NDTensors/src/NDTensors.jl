@@ -295,10 +295,6 @@ end
 # Optional backends
 #
 
-if !isdefined(Base, :get_extension)
-  using Requires
-end
-
 const _using_tblis = Ref(false)
 
 using_tblis() = _using_tblis[]
@@ -315,26 +311,9 @@ end
 
 function backend_octavian end
 
+using PackageExtensionCompat
 function __init__()
-  @static if !isdefined(Base, :get_extension)
-    @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
-      enable_tblis()
-      include("../ext/NDTensorsTBLISExt/NDTensorsTBLISExt.jl")
-    end
-    @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
-      include("../ext/NDTensorsOctavianExt/NDTensorsOctavianExt.jl")
-    end
-
-    @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
-      if CUDA.functional()
-        include("../ext/NDTensorsCUDAExt/NDTensorsCUDAExt.jl")
-      end
-    end
-
-    @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
-      include("../ext/NDTensorsMetalExt/NDTensorsMetalExt.jl")
-    end
-  end
+  @require_extensions
 end
 
 end # module NDTensors

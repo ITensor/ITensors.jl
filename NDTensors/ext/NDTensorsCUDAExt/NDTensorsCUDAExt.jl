@@ -6,16 +6,9 @@ using NDTensors.Unwrap
 using Adapt
 using Functors
 using LinearAlgebra
-
-if isdefined(Base, :get_extension)
-  using CUDA
-  using CUDA.CUBLAS
-  using CUDA.CUSOLVER
-else
-  using ..CUDA
-  using .CUBLAS
-  using .CUSOLVER
-end
+using CUDA
+using CUDA.CUBLAS
+using CUDA.CUSOLVER
 
 include("imports.jl")
 include("default_kwargs.jl")
