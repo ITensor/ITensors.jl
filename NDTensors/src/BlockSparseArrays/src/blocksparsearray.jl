@@ -60,9 +60,18 @@ struct BlockZero{Axes}
 end
 
 function (f::BlockZero)(
-  arraytype::Type{<:AbstractArray{T,N}}, I::CartesianIndex{N}
-) where {T,N}
+  arraytype::Type{<:AbstractArray{<:Any,N}}, I::CartesianIndex{N}
+) where {N}
+  # TODO: Make sure this works for sparse or block sparse blocks, immutable
+  # blocks, diagonal blocks, etc.!
   return fill!(arraytype(undef, block_size(f.axes, Block(Tuple(I)))), false)
+end
+
+# Fallback so that `SparseArray` with scalar elements works.
+function (f::BlockZero)(
+  blocktype::Type{<:Number}, I::CartesianIndex
+)
+  return zero(blocktype)
 end
 
 # Fallback to Array if it is abstract
