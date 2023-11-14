@@ -31,7 +31,12 @@ end
 function LinearAlgebra.mul!(
   CM::Exposed{<:CuArray},
   AM::Exposed{<:CuArray},
-  BM::Exposed{<:CuArray,<:LinearAlgebra.Transpose{<:Any, <:Base.ReshapedArray{<:Any, <:Any, <:LinearAlgebra.Adjoint}}},
+  BM::Exposed{
+    <:CuArray,
+    <:LinearAlgebra.Transpose{
+      <:Any,<:Base.ReshapedArray{<:Any,<:Any,<:LinearAlgebra.Adjoint}
+    },
+  },
   α,
   β,
 )
