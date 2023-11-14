@@ -52,11 +52,11 @@ using GPUArraysCore: @allowscalar
     S2 = contract(dense(S), (2, -1), copy(V), (3, 4, -1))
     @test @allowscalar S1 ≈ S2
 
-    S1M = dev(Matrix{elt}(undef, (2,12)))
+    S1M = dev(Matrix{elt}(undef, (2, 12)))
     SM = array(S)
-    VM = transpose(reshape(array(V), (12,2)))
+    VM = transpose(reshape(array(V), (12, 2)))
     NDTensors.mul!!(S1M, SM, VM, 1.0, 0.0)
-    @test @allowscalar reshape(S1M, (2,3,4)) ≈ array(S1)
+    @test @allowscalar reshape(S1M, (2, 3, 4)) ≈ array(S1)
   end
 end
 @testset "DiagTensor contractions" begin
