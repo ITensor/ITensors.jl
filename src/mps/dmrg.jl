@@ -260,10 +260,12 @@ function dmrg(
         ortho = ha == 1 ? "left" : "right"
 
         drho = nothing
-        if noise(sweeps, sw) > 0.0
+        if noise(sweeps, sw) > 0
           @timeit_debug timer "dmrg: noiseterm" begin
-            # Use noise term when determining new MPS basis
-            drho = noise(sweeps, sw) * noiseterm(PH, phi, ortho)
+            # Use noise term when determining new MPS basis.
+            # This is used to preserve the element type of the MPS.
+            elt = real(scalartype(psi))
+            drho = elt(noise(sweeps, sw)) * noiseterm(PH, phi, ortho)
           end
         end
 

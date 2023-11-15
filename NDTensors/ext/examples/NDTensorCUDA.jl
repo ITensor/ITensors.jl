@@ -61,9 +61,9 @@ function main()
   #Currently this code fails with CUDA.allowscalar(false)
   # Because of outer calling the _gemm! function which calls a 
   # generic implementation
-  grad = gradient(f, cA, cB, cC, cD)
-  @test NDTensors.cpu(cB * cC * cD) ≈ NDTensors.cpu(grad[1])
-  @test (cB * cC * cD) ≈ grad[1]
+  @allowscalar grad = gradient(f, cA, cB, cC, cD)
+  @allowscalar @test NDTensors.cpu(cB * cC * cD) ≈ NDTensors.cpu(grad[1])
+  @allowscalar @test (cB * cC * cD) ≈ grad[1]
   # Create a tuple of indices
   decomp = (
     dim(NDTensors.ind(grad[1], 1)),

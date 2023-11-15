@@ -2,6 +2,8 @@ parent(E::Exposed) = parent(unexpose(E))
 
 transpose(E::Exposed) = transpose(unexpose(E))
 
+adjoint(E::Exposed) = adjoint(unexpose(E))
+
 cpu(E::Exposed) = cpu(unexpose(E))
 
 getindex(E::Exposed) = unexpose(E)[]

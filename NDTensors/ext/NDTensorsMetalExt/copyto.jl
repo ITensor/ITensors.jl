@@ -12,12 +12,14 @@ end
 
 # Catches a bug in `copyto!` in Metal backend.
 function Base.copyto!(dest::Exposed{<:MtlArray}, src::Exposed{<:MtlArray,<:SubArray})
-  return copyto!(dest, expose(copy(src)))
+  copyto!(dest, expose(copy(src)))
+  return unexpose(dest)
 end
 
 # Catches a bug in `copyto!` in Metal backend.
 function Base.copyto!(
   dest::Exposed{<:MtlArray}, src::Exposed{<:MtlArray,<:Base.ReshapedArray}
 )
-  return copyto!(dest, expose(parent(src)))
+  copyto!(dest, expose(parent(src)))
+  return unexpose(dest)
 end
