@@ -2,6 +2,7 @@ using Test
 using NDTensors.Unwrap
 using NDTensors
 using LinearAlgebra
+using GPUArraysCore: @allowscalar
 
 include("../../../test/device_list.jl")
 @testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
@@ -24,8 +25,8 @@ include("../../../test/device_list.jl")
   @test parent(Et) == v
   @test parent(Ea) == v
   @test transpose(E) == vt
-  @test cpu(E) == v
-  @test cpu(Et) == vt
+  @test cpu(E) == cpu(v)
+  @test cpu(Et) == cpu(vt)
 
   m = reshape(v, (5, 2))
   mt = transpose(m)
@@ -125,17 +126,68 @@ include("../../../test/device_list.jl")
   y = dev(randn(elt, 16))
   x = reshape(dev(randn(elt, 4, 4))', 16)
   copyto!(expose(y), expose(x))
-  @test y == x
-  @test copy(x) == x
+  @allowscalar begin
+    @test y == x
+    @test copy(x) == x
+  end
 
   y = dev(randn(elt, 8))
   x = @view reshape(dev(randn(elt, 8, 8))', 64)[1:8]
   copyto!(expose(y), expose(x))
-  @test y == x
-  @test copy(x) == x
+  @allowscalar begin
+    @test y == x
+    @test copy(x) == x
+  end
 
   y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())
   x = dev(randn(elt, 4, 4))
   permutedims!(expose(y), expose(x), (2, 1))
   @test NDTensors.cpu(y) == transpose(NDTensors.cpu(x))
+
+  ##########################################
+  ### Testing an issue with CUDA&Metal transpose/adjoint mul
+  A = dev(randn(elt, (3, 2)))
+  B = dev(randn(elt, (3, 4)))
+  C = dev(randn(elt, (4, 2)))
+  Cp = copy(C)
+
+  ## This fails with scalar indexing
+  if dev != NDTensors.cpu
+    @test_broken mul!(transpose(C), transpose(A), B, true, false)
+  end
+  mul!(C, transpose(B), A, true, false)
+  mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), true, false)
+  @test C ≈ Cp
+  Cp = zero(C)
+  ## Try calling mul!! with transposes to verify that code works
+  Cpt = NDTensors.mul!!(transpose(Cp), transpose(A), B, true, false)
+  @test transpose(Cpt) ≈ C
+
+  Cp = zero(C)
+  ## This fails with scalar indexing 
+  if dev != NDTensors.cpu
+    @test_broken mul!(C', A', B, true, false)
+  end
+  mul!(C, B', A, true, false)
+  mul!(expose(Cp'), expose(A'), expose(B), true, false)
+  @test C ≈ Cp
+  Cp = zero(C)
+  Cpt = NDTensors.mul!!(Cp', A', B, true, false)
+  @test Cpt' ≈ C
+
+  ##################################
+  ### Add test for transpose(reshape(adjoint )) failure in CUDA
+
+  A = dev(transpose(reshape(randn(elt, 2, 12)', (12, 2))))
+  B = dev(randn(elt, 2, 2))
+  C = dev(zeros(elt, 2, 12))
+  NDTensors.mul!(expose(C), expose(B), expose(A), true, false)
+  Cp = NDTensors.cpu(similar(C))
+  NDTensors.mul!(
+    expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false
+  )
+  @test NDTensors.cpu(C) ≈ Cp
+  NDTensors.zero(C)
+  NDTensors.mul!!(C, B, A, true, false)
+  @test NDTensors.cpu(C) ≈ Cp
 end
