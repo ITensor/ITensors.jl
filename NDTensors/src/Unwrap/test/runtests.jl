@@ -183,6 +183,8 @@ include("../../../test/device_list.jl")
   C = dev(zeros(elt, 2, 12))
   NDTensors.mul!(expose(C), expose(B), expose(A), true, false)
   Cp = NDTensors.cpu(similar(C))
-  NDTensors.mul!(expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false)
+  NDTensors.mul!(
+    expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false
+  )
   @test NDTensors.cpu(C) ≈ Cp
 end
