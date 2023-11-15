@@ -1,6 +1,4 @@
-## IT looks like CuArray suffers from the same issues as MtlArray.
-## To fix this subarray copyto problem I copied same code from MetalExt
-## This means we can probably write a generic implmenetation for GPUArrays
+# Same definition as `MtlArray`.
 function Base.copy(src::Exposed{<:CuArray,<:Base.ReshapedArray})
   return reshape(copy(parent(src)), size(unexpose(src)))
 end
