@@ -177,10 +177,13 @@ include("../../../test/device_list.jl")
 
   ##################################
   ### Add test for transpose(reshape(adjoint )) failure in CUDA
+  ## TODO I have only tested this with Metal so far and will be running on 
+  ## workstation to verify that it works for CUDA
   A = dev(transpose(reshape(randn(elt, 2, 12)', (12, 2))))
   B = dev(randn(elt, 2, 2))
-  C = dev(zeros(elt, (2, 12)))
+  C = dev(zeros(elt, 2, 12))
   NDTensors.mul!!(C, B, A, true, false)
-  Cp = B * copy(A)
-  @test @allowscalar C ≈ Cp
+  Cp = NDTensors.cpu(similar(C))
+  NDTensors.mul!!(Cp, NDTensors.cpu(B), NDTensors.cpu(A), true, false)
+  @test NDTensors.cpu(C) ≈ Cp
 end

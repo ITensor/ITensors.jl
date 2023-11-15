@@ -34,13 +34,15 @@ using GPUArraysCore: @allowscalar
     vr = rand(elt, d)
     D = dev(tensor(Diag(vr), (d, d)))
     Da = Array(D)
-    @test @allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
-    Da = Matrix(D)
-    @test @allowscalar Da == NDTensors.LinearAlgebra.diagm(0 => vr)
+    Dm = Matrix(D)
+    @allowscalar begin
+      @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
+      @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
 
-    ## TODO Currently this permutedims requires scalar indexing on GPU. 
-    @allowscalar Da = permutedims(D, (2, 1))
-    @test @allowscalar Da == D
+      ## TODO Currently this permutedims requires scalar indexing on GPU. 
+      Da = permutedims(D, (2, 1))
+      @test Da == D
+    end
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
     S = dev(tensor(Diag(randn(elt, 2)), (2, 2)))

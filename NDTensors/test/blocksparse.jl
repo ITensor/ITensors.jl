@@ -163,10 +163,10 @@ using GPUArraysCore: @allowscalar
 
       Ap = NDTensors.permutedims(A, (3, 2, 1))
 
-      for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
+      @allowscalar for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
         blockAp = blockview(Ap, bAp)
         blockB = blockview(B, bB)
-        @test @allowscalar reshape(blockAp, size(blockB)) == blockB
+        @test reshape(blockAp, size(blockB)) == blockB
       end
     end
   end

@@ -22,8 +22,8 @@ using ITensors: QN, Index
       output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
       @test output_tensor isa DenseTensor
       @test dims(output_tensor) == output_tensor_inds
-      for i in 1:length(input_tensor)
-        @test @allowscalar input_tensor[i] == output_tensor[i]
+      @allowscalar for i in 1:length(input_tensor)
+        @test input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining
@@ -62,8 +62,8 @@ using ITensors: QN, Index
       @test output_tensor isa BlockSparseTensor
       @test dims(output_tensor) == dims(output_tensor_inds)
       output_tensor = permutedims(output_tensor, (2, 1))
-      for i in 1:length(input_tensor)
-        @test @allowscalar input_tensor[i] == output_tensor[i]
+      @allowscalar for i in 1:length(input_tensor)
+        @test input_tensor[i] == output_tensor[i]
       end
 
       # Test uncombining. Broken for inds that are not `Index`.
