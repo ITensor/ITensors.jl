@@ -174,4 +174,13 @@ include("../../../test/device_list.jl")
   Cp = zero(C)
   Cpt = NDTensors.mul!!(Cp', A', B, true, false)
   @test Cpt' ≈ C
+
+  ##################################
+  ### Add test for transpose(reshape(adjoint )) failure in CUDA
+  A = dev(transpose(reshape(randn(elt, 2, 12)', (12, 2))))
+  B = dev(randn(elt, 2, 2))
+  C = dev(zeros(elt, (2, 12)))
+  NDTensors.mul!!(C, B, A, true, false)
+  Cp = B * copy(A)
+  @test @allowscalar C ≈ Cp
 end
