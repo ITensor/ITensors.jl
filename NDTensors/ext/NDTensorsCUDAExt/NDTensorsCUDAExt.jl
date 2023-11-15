@@ -10,8 +10,6 @@ using CUDA
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
 
-## TODO I added copyto and permutedims which match the functions in 
-## NDTensorsMetalExt because I found similar issues in CUDA
 include("imports.jl")
 include("default_kwargs.jl")
 include("copyto.jl")
