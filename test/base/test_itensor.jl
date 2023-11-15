@@ -872,9 +872,6 @@ end
       3 4 0
       0 0 0
     ]
-    ## TODO the current definition of Dense is causing an issue here
-    ## Because the data is being copied somewhere and is not a pointer
-    ## To M. Still working here will get to it tomorrow
     M = @view X[1:2, 1:2]
     T = itensor(M, i, j)
     T[i => 1, j => 1] = 3.3
