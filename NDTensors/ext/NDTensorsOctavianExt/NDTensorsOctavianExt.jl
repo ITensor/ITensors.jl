@@ -1,12 +1,7 @@
 module NDTensorsOctavianExt
 
 using NDTensors
-
-if isdefined(Base, :get_extension)
-  using Octavian
-else
-  using ..Octavian
-end
+using Octavian
 
 include("import.jl")
 include("octavian.jl")

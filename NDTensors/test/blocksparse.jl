@@ -1,6 +1,7 @@
 using NDTensors
 using LinearAlgebra
 using Test
+using GPUArraysCore: @allowscalar
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
@@ -45,26 +46,29 @@ using Test
     @test nnzblocks(A) == 2
     @test nnzblocks(B) == 2
 
-    A[1, 5] = 15
-    A[2, 5] = 25
+    @allowscalar begin
+      A[1, 5] = 15
+      A[2, 5] = 25
 
-    @test A[1, 1] == 0
-    @test A[1, 5] == 15
-    @test A[2, 5] == 25
-
+      @test A[1, 1] == 0
+      @test A[1, 5] == 15
+      @test A[2, 5] == 25
+    end
     D = dense(A)
 
-    @test D == A
+    @allowscalar begin
+      @test D == A
 
-    for I in eachindex(A)
-      @test D[I] == A[I]
+      for I in eachindex(A)
+        @test D[I] == A[I]
+      end
     end
 
     A12 = blockview(A, (1, 2))
 
     @test dims(A12) == (2, 5)
 
-    for I in eachindex(A12)
+    @allowscalar for I in eachindex(A12)
       @test A12[I] == A[I + CartesianIndex(0, 4)]
     end
 
@@ -73,7 +77,7 @@ using Test
 
     C = A + B
 
-    for I in eachindex(C)
+    @allowscalar for I in eachindex(C)
       @test C[I] == A[I] + B[I]
     end
 
@@ -84,7 +88,7 @@ using Test
     @test nnz(A) == nnz(Ap)
     @test nnzblocks(A) == nnzblocks(Ap)
 
-    for I in eachindex(C)
+    @allowscalar for I in eachindex(C)
       @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
     end
 
@@ -159,7 +163,7 @@ using Test
 
       Ap = NDTensors.permutedims(A, (3, 2, 1))
 
-      for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
+      @allowscalar for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
         blockAp = blockview(Ap, bAp)
         blockB = blockview(B, bB)
         @test reshape(blockAp, size(blockB)) == blockB
@@ -170,7 +174,7 @@ using Test
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2, 3], [4, 5])
 
-    for I in eachindex(T)
+    @allowscalar for I in eachindex(T)
       @test T[I] == 0.0
     end
     @test nnz(T) == 0
@@ -226,35 +230,45 @@ using Test
       A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14)
+      @test @allowscalar isapprox(
+        norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14
+      )
     end
 
     @testset "svd example 2" begin
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
+      @test @allowscalar isapprox(
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
+      )
     end
 
     @testset "svd example 3" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
+      @test @allowscalar isapprox(
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
+      )
     end
 
     @testset "svd example 4" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
+      @test @allowscalar isapprox(
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
+      )
     end
 
     @testset "svd example 5" begin
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
       randn!(A)
       U, S, V = svd(A)
-      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
+      @test @allowscalar isapprox(
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
+      )
     end
   end
 

@@ -1,6 +1,7 @@
 using NDTensors
 using LinearAlgebra
 using Test
+using GPUArraysCore: @allowscalar
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -44,16 +45,17 @@ devs = devices_list(copy(ARGS))
     #
     A = dev(randomTensor(elt, (n, m)))
     # We want to test 0.0 on the diagonal.  We need to make all rows equal to gaurantee this with numerical roundoff.
-    if singular
+    @allowscalar if singular
       for i in 2:n
         A[i, :] = A[1, :]
       end
     end
     Q, X = qx(A; positive=positive) #X is R or L.
-    @test A ≈ Q * X atol = eps
-    @test array(Q)' * array(Q) ≈ Id atol = eps
-    @test array(Q) * array(Q)' ≈ Id atol = eps
-    if positive
+    Ap = Q * X
+    @test NDTensors.cpu(A) ≈ NDTensors.cpu(Ap) atol = eps
+    @test NDTensors.cpu(array(Q)' * array(Q)) ≈ Id atol = eps
+    @test NDTensors.cpu(array(Q) * array(Q)') ≈ Id atol = eps
+    @allowscalar if positive
       nr, nc = size(X)
       dr = qx == ql ? Base.max(0, nc - nr) : 0
       diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
@@ -65,15 +67,16 @@ devs = devices_list(copy(ARGS))
     #
     A = dev(randomTensor(elt, (m, n))) #Tall array
     # We want to test 0.0 on the diagonal.  We need make all rows equal to gaurantee this with numerical roundoff.
-    if singular
+    @allowscalar if singular
       for i in 2:m
         A[i, :] = A[1, :]
       end
     end
     Q, X = qx(A; positive=positive)
-    @test A ≈ Q * X atol = eps
-    @test array(Q)' * array(Q) ≈ Id atol = eps
-    if positive
+    Ap = Q * X
+    @test NDTensors.cpu(A) ≈ NDTensors.cpu(Ap) atol = eps
+    @test NDTensors.cpu(array(Q)' * array(Q)) ≈ Id atol = eps
+    @allowscalar if positive
       nr, nc = size(X)
       dr = qx == ql ? Base.max(0, nc - nr) : 0
       diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
