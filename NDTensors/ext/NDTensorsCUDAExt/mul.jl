@@ -24,8 +24,6 @@ function LinearAlgebra.mul!(
   return unexpose(CM)
 end
 
-## TODO I wasn't sure the best route to go here, if there is a better route than
-## copy please let me know!
 ## Fix issue in CUDA.jl where it cannot distinguish Transpose{Reshape{Adjoint{CuArray}}}
 ## as a CuArray and calls generic matmul
 function LinearAlgebra.mul!(
