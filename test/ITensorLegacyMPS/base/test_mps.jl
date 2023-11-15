@@ -856,6 +856,13 @@ end
     @test res[2, 1] ≈ eSx[3:7]
     @test res[1, 2] ≈ eSx[3:7]
     @test res[2, 2] ≈ eSz[3:7]
+
+    # Test that passing zero-norm MPS leads to an error
+    # (expect not well-defined in that case)
+    psi0 = copy(psi)
+    psi0[1] *= 0.0
+    @test iszero(norm(psi0))
+    @test_throws ErrorException expect(psi0, "Sz")
   end
 
   @testset "Expected value and Correlations" begin
