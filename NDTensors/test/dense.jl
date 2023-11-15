@@ -2,14 +2,14 @@ using NDTensors
 using Test
 using GPUArraysCore: @allowscalar
 
-#@testset "Dense Tensors" begin
+@testset "Dense Tensors" begin
   include("device_list.jl")
   devs = devices_list(copy(ARGS))
-  #@testset "test device: $dev" for dev in devs
+  @testset "test device: $dev" for dev in devs
     elt = dev == NDTensors.mtl ? Float32 : Float64
 
     # Testing with GPU and CPU backends
-    #@testset "DenseTensor basic functionality" begin
+    @testset "DenseTensor basic functionality" begin
       A = dev(Tensor(elt, (3, 4)))
       @allowscalar for I in eachindex(A)
         @test A[I] == 0
