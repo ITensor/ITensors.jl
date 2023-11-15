@@ -20,3 +20,8 @@ array(tensor::MatrixOrArrayStorageTensor) = storage(tensor)
 function Base.adjoint(tens::MatrixStorageTensor)
   return tensor(adjoint(storage(tens)), reverse(inds(tens)))
 end
+
+# Linear algebra (matrix algebra)
+function LinearAlgebra.Hermitian(tens::MatrixStorageTensor)
+  return tensor(Hermitian(storage(tens)), inds(tens))
+end

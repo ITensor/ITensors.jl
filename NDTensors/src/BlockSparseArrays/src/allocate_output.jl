@@ -5,7 +5,16 @@
 function output_type(f, args::Type...)
   # TODO: Is this good to use here?
   # Seems best for `Number` subtypes, maybe restrict to that here.
-  return Base.promote_op(f, args...)
+  return typeof(f(zero.(args)...))
+  # return Base.promote_op(f, args...)
+end
+
+function output_type(f::Function, as::Type{<:AbstractArray}...)
+  @assert allequal(ndims.(as))
+  elt = output_type(f, eltype.(as)...)
+  n = ndims(first(as))
+  # TODO: Generalize this to GPU arrays!
+  return Array{elt,n}
 end
 
 #############################################################################

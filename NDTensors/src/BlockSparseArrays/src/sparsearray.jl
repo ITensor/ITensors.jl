@@ -93,53 +93,6 @@ function map_nonzeros!(f, a_dest::AbstractArray, as::SparseArrayLike...)
   return a_dest
 end
 
-## function output_type(f, args::Type...)
-##   # TODO: Is this good to use here?
-##   # Seems best for `Number` subtypes, maybe restrict to that here.
-##   return Base.promote_op(f, args...)
-## end
-## 
-## function output_eltype(::typeof(map_nonzeros), fmap, as::Type{<:AbstractArray}...)
-##   return output_type(fmap, eltype.(as)...)
-## end
-## 
-## function output_eltype(f::typeof(map_nonzeros), fmap, as::AbstractArray...)
-##   return output_eltype(f, fmap, typeof.(as)...)
-## end
-## 
-## function output_structure(f::typeof(map_nonzeros), fmap, as::SparseArray...)
-## end
-## 
-## function output_structure(f::typeof(map_nonzeros), fmap, as::AbstractArray...)
-##   return ArrayStructure(; eltype=output_eltype(f, fmap, as...), axes=output_axes(f, fmap, as...))
-## end
-## 
-## function output_type(f::typeof(map_nonzeros), fmap, as::AbstractArray...)
-##   return error("Not implemented")
-## end
-## 
-## function output_type(f::typeof(map_nonzeros), fmap, as::SparseArrayLike...)
-##   return SparseArray
-## end
-## 
-## # Allocate an array with uninitialized/undefined memory
-## # according the array type and structure (for example the
-## # size or axes).
-## function allocate(arraytype::Type{<:AbstractArray}, structure)
-##   return arraytype(undef, structure)
-## end
-## 
-## function allocate_zeros(arraytype::Type{<:AbstractArray}, structure)
-##   a = allocate(arraytype, structure)
-##   # TODO: Use `zeros!!` or `zerovector!!` from VectorInterface.jl.
-##   zeros!(a)
-##   return a
-## end
-## 
-## function allocate_output(f::typeof(map_nonzeros), fmap, as::AbstractArray...)
-##   return allocate_zeros(output_type(f, fmap, as...), output_structure(f, fmap, as...))
-## end
-## 
 function map_nonzeros(f, as::SparseArrayLike...)
   ## @assert allequal(axes.(as))
   # Preserves the element type:

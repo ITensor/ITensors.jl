@@ -16,7 +16,8 @@ blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 # TODO: Use `SetParameters`.
 set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
 
-function nonzero_blockkeys(a::BlockSparseArray)
+# TODO: Move to `AbstractArray` file.
+function nonzero_blockkeys(a::AbstractArray)
   return map(Block ∘ Tuple, collect(nonzero_keys(blocks(a))))
 end
 
@@ -103,6 +104,22 @@ function BlockSparseArray{T,N,B}(
   # TODO: `Block{N,Int}`?
   blocks = Vector{Block{N}}()
   return BlockSparseArray{T,N,B}(undef, blocks, axes)
+end
+
+## struct BlockSparseArray{
+##   T,N,A<:AbstractArray{T,N},Blocks<:SparseArray{A,N},Axes<:NTuple{N,AbstractUnitRange{Int}}
+## } <: AbstractBlockArray{T,N}
+##   blocks::Blocks
+##   axes::Axes
+## end
+
+function BlockSparseArray(a::SparseArray, axes::Tuple{Vararg{AbstractUnitRange}})
+  A = eltype(a)
+  T = eltype(A)
+  N = ndims(a)
+  Blocks = typeof(a)
+  Axes = typeof(axes)
+  return BlockSparseArray{T,N,A,Blocks,Axes}(a, axes)
 end
 
 function BlockSparseArray(
@@ -263,6 +280,13 @@ function BlockArrays.blocks(
   a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray}
 )
   return PermutedDimsArray(blocks(parent(a)), perm(a))
+end
+
+# TODO: Make `PermutedBlockSparseArray`.
+function BlockArrays.blocks(
+  a::Hermitian{<:Any,<:BlockSparseArray}
+)
+  return Hermitian(blocks(parent(a)))
 end
 
 # TODO: Make `PermutedBlockSparseArray`.
