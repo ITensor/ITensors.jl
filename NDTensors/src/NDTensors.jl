@@ -6,6 +6,7 @@ using Compat
 using Dictionaries
 using FLoops
 using Folds
+using GPUArraysCore
 using InlineStrings
 using Random
 using LinearAlgebra
@@ -17,7 +18,6 @@ using SplitApplyCombine
 using Strided
 using TimerOutputs
 using TupleTools
-using GPUArraysCore
 
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
