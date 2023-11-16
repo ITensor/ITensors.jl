@@ -989,6 +989,7 @@ function expect(psi::MPS, ops; sites=1:length(psi), site_range=nothing)
 
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi)^2
+  iszero(norm2_psi) && error("MPS has zero norm in function `expect`")
 
   ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
   for (entry, j) in enumerate(site_range)
