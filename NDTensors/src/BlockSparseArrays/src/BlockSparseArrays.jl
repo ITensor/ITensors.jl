@@ -1,5 +1,4 @@
 module BlockSparseArrays
-## using Compat
 using BlockArrays:
   AbstractBlockArray,
   BlockArrays,
@@ -18,6 +17,7 @@ using BlockArrays:
   blocklengths,
   blockedrange,
   blocks
+using Compat: @kwdef
 using Dictionaries: Dictionary, Indices, getindices, set! # TODO: Move to `SparseArraysExtensions`.
 using LinearAlgebra: Hermitian
 using SplitApplyCombine: groupcount
