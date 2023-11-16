@@ -1,5 +1,4 @@
 module NDTensors
-
 using Adapt
 using Base.Threads
 using Compat
@@ -19,6 +18,8 @@ using Strided
 using TimerOutputs
 using TupleTools
 
+# TODO: Define an `AlgorithmSelection` module
+include("algorithm.jl")
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
 include("DiagonalArrays/src/DiagonalArrays.jl")
@@ -50,7 +51,6 @@ include("exports.jl")
 # General functionality
 #
 include("default_kwargs.jl")
-include("algorithm.jl")
 include("aliasstyle.jl")
 include("abstractarray/set_types.jl")
 include("abstractarray/to_shape.jl")
@@ -161,7 +161,7 @@ include("arraystorage/diagonalarray/tensor/contract.jl")
 # BlockSparseArray storage
 include("arraystorage/blocksparsearray/storage/unwrap.jl")
 include("arraystorage/blocksparsearray/storage/contract.jl")
-include("arraystorage/blocksparsearray/storage/qr.jl")
+## include("arraystorage/blocksparsearray/storage/qr.jl")
 include("arraystorage/blocksparsearray/storage/eigen.jl")
 include("arraystorage/blocksparsearray/storage/svd.jl")
 

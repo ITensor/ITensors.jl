@@ -1,4 +1,12 @@
-function truncate!!(d::AbstractVector, u::AbstractMatrix; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff)
+function truncate!!(
+  d::AbstractVector,
+  u::AbstractMatrix;
+  mindim,
+  maxdim,
+  cutoff,
+  use_absolute_cutoff,
+  use_relative_cutoff,
+)
   error("Not implemented")
   # Sort by largest to smallest eigenvalues
   # TODO: Replace `cpu` with `Expose` dispatch.

@@ -2,26 +2,20 @@ using SparseArrays: SparseArrays, SparseMatrixCSC, spzeros, sparse
 using BlockArrays: BlockArrays, blockedrange
 using .BlockSparseArrays: nonzero_blockkeys
 
-## # Check if the matrix has 1 or fewer entries
-## # per row/column.
-## function is_permutation_matrix(a::SparseMatrixCSC)
-##   return all(col -> length(nzrange(a, col)) ≤ 1, axes(a, 2))
-## end
+# Check if the matrix has 1 or fewer entries
+# per row/column.
+function is_permutation_matrix(a::SparseMatrixCSC)
+  return all(col -> length(nzrange(a, col)) ≤ 1, axes(a, 2))
+end
 
-## row_to_col: [0, 3, 1, 2, 0]
-## col_to_row: invperm(nonzeros(row_to_col))
-## col_to_row = zero(row_to_col)
-## nzrows = findall(!iszero, row_to_col)
-## col_to_row[nzrows] = invperm(@view(row_to_col[nzrows]))
-##
-## struct PermutationMatrix <: AbstractSparseMatrix{Bool,Int}
-##   row_to_col::Vector{Int}
-##   col_to_row::Vector{Int}
-## end
-
-## function findnonzerocols(a::SparseMatrixCSC, row)
-##   return view(a.rowval, a.colptr[row]:(a.colptr[row + 1] - 1))
-## end
+# Check if the matrix has 1 or fewer entries
+# per row/column.
+function is_permutation_matrix(a::SparseArray{<:Any,2})
+  keys = collect(Iterators.map(Tuple, nonzero_keys(a)))
+  I = first.(keys)
+  J = last.(keys)
+  return allunique(I) && allunique(J)
+end
 
 function findnonzerorows(a::SparseMatrixCSC, col)
   return view(a.rowval, a.colptr[col]:(a.colptr[col + 1] - 1))
@@ -38,32 +32,22 @@ function SparseArrays.SparseMatrixCSC(a::SparseArray{<:Any,2})
 end
 
 # Get the sparse structure of a SparseArray as a SparseMatrixCSC.
-function sparse_structure(a::SparseArray{<:Any,2})
+function sparse_structure(structure_type::Type{<:SparseMatrixCSC}, a::SparseArray{<:Any,2})
   # Idealy would work but a bit too complicated for `map` right now:
   # return SparseMatrixCSC(map(x -> iszero(x) ? false : true, a))
-  a_csc = spzeros(Bool, size(a))
+  a_structure = structure_type(spzeros(Bool, size(a)))
   for I in nonzero_keys(a)
     i, j = Tuple(I)
-    a_csc[i, j] = true
+    a_structure[i, j] = true
   end
-  return a_csc
-end
-
-# Check if the matrix has 1 or fewer entries
-# per row/column.
-# TODO: Define for `SparseMatrixCSC`, use `eachnz`?
-function is_permutation_matrix(a::SparseArray{<:Any,2})
-  keys = collect(Iterators.map(Tuple, nonzero_keys(a)))
-  I = first.(keys)
-  J = last.(keys)
-  return allunique(I) && allunique(J)
+  return a_structure
 end
 
 # Get the sparsity structure as a `SparseMatrixCSC` with values
 # of `true` where there are structural nonzero blocks and `false`
 # otherwise.
-function block_sparse_structure(a::BlockSparseArray{<:Any,2})
-  return sparse_structure(blocks(a))
+function block_sparse_structure(structure_type::Type, a::BlockSparseArray{<:Any,2})
+  return sparse_structure(structure_type, blocks(a))
 end
 
 function is_block_permutation_matrix(a::BlockSparseArray{<:Any,2})
@@ -75,11 +59,11 @@ qr_rank(alg::Algorithm"thin", a::AbstractArray{<:Any,2}) = minimum(size(a))
 # m × n → (m × min(m, n)) ⋅ (min(m, n) × n)
 function qr_block_sparse_structure(alg::Algorithm"thin", a::BlockSparseArray{<:Any,2})
   axes_row, axes_col = axes(a)
-  a_csc = block_sparse_structure(a)
+  a_csc = block_sparse_structure(SparseMatrixCSC, a)
   F = qr(float(a_csc))
   # Outputs full Q
   # q_csc = sparse(F.Q[invperm(F.prow), :])
-  q_csc = (F.Q * sparse(I, size(a_csc)))[invperm(F.prow), :]
+  q_csc = (F.Q * sparse(I, size(a_csc, 1), minimum(size(a_csc))))[invperm(F.prow), :]
   r_csc = F.R[:, invperm(F.pcol)]
   nblocks = size(q_csc, 2)
   @assert nblocks == size(r_csc, 1)
@@ -104,6 +88,11 @@ function qr_block_sparse_structure(alg::Algorithm"thin", a::BlockSparseArray{<:A
   return q_csc, axes_q, r_csc, axes_r
 end
 
+# m × n → (m × m) ⋅ (m × n)
+function qr_block_sparse_structure(alg::Algorithm"full", a::BlockSparseArray{<:Any,2})
+  return error("Not implemented")
+end
+
 function qr_blocks(a, structure_r, block_a)
   i, k = block_a.n
   j = only(findnonzerorows(structure_r, k))
@@ -117,14 +106,13 @@ end
 
 # Block-preserving QR.
 function LinearAlgebra.qr(alg::Algorithm, a::BlockSparseArray{<:Any,2})
-  # Must have 1 or fewer blocks per row/column.
   if !is_block_permutation_matrix(a)
+    # Must have 1 or fewer blocks per row/column.
     println("Block sparsity structure is:")
     display(nonzero_blockkeys(a))
     error("Not a block permutation matrix")
   end
   eltype_a = eltype(a)
-
   # TODO: `structure_q` isn't needed.
   structure_q, axes_q, structure_r, axes_r = qr_block_sparse_structure(alg, a)
   # TODO: Make this generic to GPU, use `similar`.
@@ -136,7 +124,6 @@ function LinearAlgebra.qr(alg::Algorithm, a::BlockSparseArray{<:Any,2})
     # Determine the block of Q and R
     # TODO: Do the block locations change for `alg="full"`?
     block_q, block_r = qr_blocks(a, structure_r, block_a)
-    ## block_r = r_block(a, structure_r, block_a)
 
     # TODO Make this generic to GPU.
     q[block_q] = Matrix(q_b)

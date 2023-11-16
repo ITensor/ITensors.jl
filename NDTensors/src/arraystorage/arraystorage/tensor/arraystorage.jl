@@ -16,7 +16,6 @@ end
 array(tensor::MatrixOrArrayStorageTensor) = storage(tensor)
 
 # Linear algebra (matrix algebra)
-# TODO: Remove `Base.`? Is it imported?
 function Base.adjoint(tens::MatrixStorageTensor)
   return tensor(adjoint(storage(tens)), reverse(inds(tens)))
 end

@@ -1,11 +1,21 @@
 module BlockSparseArrays
-using BlockArrays
-using Compat
-using Dictionaries
-using SplitApplyCombine
-using LinearAlgebra: Hermitian, Transpose
-
-using BlockArrays: block
+## using Compat
+## using SplitApplyCombine
+using BlockArrays:
+  BlockArrays,
+  AbstractBlockArray,
+  Block,
+  BlockIndex,
+  BlockRange,
+  BlockedUnitRange,
+  findblockindex,
+  block,
+  blockcheckbounds,
+  blocklength,
+  blockedrange,
+  blocks
+using Dictionaries: Dictionary, set! # TODO: Move to `SparseArraysExtensions`.
+using LinearAlgebra: Hermitian
 
 export BlockSparseArray, SparseArray
 
@@ -14,10 +24,8 @@ include("base.jl")
 include("axes.jl")
 include("abstractarray.jl")
 include("permuteddimsarray.jl")
-include("hermitian.jl")
-include("transpose.jl")
 include("blockarrays.jl")
-# TODO: Split off into `NDSparseArrays` module.
+# TODO: Split off into `SparseArraysExtensions` module, rename to `SparseArrayDOK`.
 include("sparsearray.jl")
 include("blocksparsearray.jl")
 include("allocate_output.jl")
@@ -25,5 +33,6 @@ include("subarray.jl")
 include("broadcast.jl")
 include("fusedims.jl")
 include("gradedrange.jl")
+include("LinearAlgebraExt/LinearAlgebraExt.jl")
 
 end

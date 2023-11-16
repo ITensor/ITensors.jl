@@ -1,9 +1,12 @@
 using Test
 using BlockArrays: BlockArrays, BlockRange, blocksize
+using LinearAlgebra: norm, qr
 using NDTensors: contract
 using NDTensors.BlockSparseArrays:
   BlockSparseArrays, BlockSparseArray, gradedrange, nonzero_blockkeys, fusedims
 using ITensors: QN
+
+include("TestBlockSparseArraysUtils.jl")
 
 @testset "Test NDTensors.BlockSparseArrays" begin
   @testset "README" begin
@@ -78,5 +81,14 @@ using ITensors: QN
     # TODO: Output `labels_dest` as well.
     a_dest_dense = contract(Array(a1), (1, -1, 2), Array(a2), (-1, 3))
     @show a_dest ≈ a_dest_dense
+  end
+  @testset "qr (eltype=$elt)" for elt in (Float32, Float64)
+    for d in
+        (([3, 4], [2, 3]), ([2, 3], [3, 4]), ([2, 3], [3]), ([3, 4], [2]), ([2], [3, 4]))
+      a = BlockSparseArray{elt}(d)
+      TestBlockSparseArraysUtils.set_blocks!(a, randn, b -> iseven(sum(b.n)))
+      q, r = qr(a)
+      @test q * r ≈ a
+    end
   end
 end

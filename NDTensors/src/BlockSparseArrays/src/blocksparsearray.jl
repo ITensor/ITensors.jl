@@ -283,9 +283,7 @@ function BlockArrays.blocks(
 end
 
 # TODO: Make `PermutedBlockSparseArray`.
-function BlockArrays.blocks(
-  a::Hermitian{<:Any,<:BlockSparseArray}
-)
+function BlockArrays.blocks(a::Hermitian{<:Any,<:BlockSparseArray})
   return Hermitian(blocks(parent(a)))
 end
 
