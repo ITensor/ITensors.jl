@@ -297,7 +297,7 @@ function permute_reshape(
   return reshape(T, newinds)
 end
 
-function show(io::IO, mime::MIME"text/plain", T::DenseTensor)
+function Base.show(io::IO, mime::MIME"text/plain", T::DenseTensor)
   summary(io, T)
   return print_tensor(io, T)
 end

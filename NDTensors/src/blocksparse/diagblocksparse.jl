@@ -677,7 +677,7 @@ function contract!(
   return contract!(C, Clabels, B, Blabels, A, Alabels)
 end
 
-function show(io::IO, mime::MIME"text/plain", T::DiagBlockSparseTensor)
+function Base.show(io::IO, mime::MIME"text/plain", T::DiagBlockSparseTensor)
   summary(io, T)
   for (n, block) in enumerate(keys(diagblockoffsets(T)))
     blockdimsT = blockdims(T, block)

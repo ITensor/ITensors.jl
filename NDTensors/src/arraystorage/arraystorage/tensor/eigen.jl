@@ -1,42 +1,9 @@
-function truncate!!(
-  d::AbstractVector,
-  u::AbstractMatrix;
-  mindim,
-  maxdim,
-  cutoff,
-  use_absolute_cutoff,
-  use_relative_cutoff,
-)
-  error("Not implemented")
-  # Sort by largest to smallest eigenvalues
-  # TODO: Replace `cpu` with `Expose` dispatch.
-  p = sortperm(cpu(d); rev=true, by=abs)
-  d = d[p]
-  u = u[:, p]
-
-  if any(!isnothing, (maxdim, cutoff))
-    d, truncerr, _ = truncate!!(
-      d; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
-    )
-    length_d = length(d)
-    if length_d < size(u, 2)
-      u = u[:, 1:length_d]
-    end
-  else
-    length_d = length(d)
-    # TODO: Make this `zero(eltype(d))`?
-    truncerr = 0.0
-  end
-  spec = Spectrum(d, truncerr)
-  return d, u, spec
-end
-
 # TODO: Rewrite this function to be more modern:
 # 1. List keyword arguments in function signature.
 # 2. Output `Spectrum` as a keyword argument that gets overwritten.
 # 3. Make this into two layers, one that handles indices and one that works with `AbstractMatrix`.
 function LinearAlgebra.eigen(
-  t::ArrayStorageTensor{ElT};
+  T::MatrixOrArrayStorageTensor;
   maxdim=nothing,
   mindim=nothing,
   cutoff=nothing,
@@ -52,33 +19,49 @@ function LinearAlgebra.eigen(
   ishermitian=nothing,
   ortho=nothing,
   svd_alg=nothing,
-) where {ElT<:Union{Real,Complex}}
-  a = storage(t)
+)
+  matrixT = matrix(T)
   ## TODO Here I am calling parent to ensure that the correct `any` function
   ## is envoked for non-cpu matrices
-  if any(!isfinite, parent(a))
+  if any(!isfinite, parent(matrixT))
     throw(
       ArgumentError(
         "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
       ),
     )
   end
-  d, u = eigen(a)
-  d, u, spec = truncate!!(d, u)
 
-  error("Not implemented")
+  DM, VM = eigen(matrixT)
+
+  # Sort by largest to smallest eigenvalues
+  # TODO: Replace `cpu` with `Expose` dispatch.
+  p = sortperm(cpu(DM); rev=true, by=abs)
+  DM = DM[p]
+  VM = VM[:, p]
+
+  if any(!isnothing, (maxdim, cutoff))
+    DM, truncerr, _ = truncate!!(
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff
+    )
+    dD = length(DM)
+    if dD < size(VM, 2)
+      VM = VM[:, 1:dD]
+    end
+  else
+    dD = length(DM)
+    truncerr = 0.0
+  end
+  spec = Spectrum(DM, truncerr)
 
   # Make the new indices to go onto V
   # TODO: Put in a separate function, such as
   # `rewrap_inds` or something like that.
-  indstype = typeof(inds(t))
-
-  # TODO: Make this generic to dense or block sparse.
-  l = eltype(indstype)(axes(t, 1))
-  r = eltype(indstype)(axes(t, 2))
-  inds_d = indstype((l, dag(r)))
-  inds_u = indstype((dag(ind(T, 2)), dag(r)))
-  dₜ = tensor(DiagonalMatrix(DM), Dinds)
-  uₜ = tensor(u, u_inds)
-  return dₜ, uₜ, spec
+  indstype = typeof(inds(T))
+  l = eltype(indstype)(dD)
+  r = eltype(indstype)(dD)
+  Vinds = indstype((dag(ind(T, 2)), dag(r)))
+  Dinds = indstype((l, dag(r)))
+  V = tensor(VM, Vinds)
+  D = tensor(DiagonalMatrix(DM), Dinds)
+  return D, V, spec
 end
