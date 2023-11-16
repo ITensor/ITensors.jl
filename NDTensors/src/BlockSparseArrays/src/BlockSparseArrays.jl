@@ -1,21 +1,26 @@
 module BlockSparseArrays
 ## using Compat
-## using SplitApplyCombine
 using BlockArrays:
-  BlockArrays,
   AbstractBlockArray,
+  BlockArrays,
+  BlockVector,
   Block,
   BlockIndex,
   BlockRange,
   BlockedUnitRange,
   findblockindex,
   block,
+  blockaxes,
   blockcheckbounds,
+  blockfirsts,
+  blocklasts,
   blocklength,
+  blocklengths,
   blockedrange,
   blocks
-using Dictionaries: Dictionary, set! # TODO: Move to `SparseArraysExtensions`.
+using Dictionaries: Dictionary, Indices, getindices, set! # TODO: Move to `SparseArraysExtensions`.
 using LinearAlgebra: Hermitian
+using SplitApplyCombine: groupcount
 
 export BlockSparseArray, SparseArray
 
