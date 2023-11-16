@@ -860,7 +860,7 @@ end
     # Test that passing zero-norm MPS leads to an error
     # (expect not well-defined in that case)
     psi0 = copy(psi)
-    psi0[1] *= false
+    psi0[1] *= zero(Bool)
     @test iszero(norm(psi0))
     @test_throws ErrorException expect(psi0, "Sz")
   end
