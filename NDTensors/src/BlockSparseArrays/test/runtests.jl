@@ -1,6 +1,6 @@
 using Test
 using BlockArrays: BlockArrays, BlockRange, blocksize
-using LinearAlgebra: norm, qr
+using LinearAlgebra: Diagonal, Hermitian, eigen, qr
 using NDTensors: contract
 using NDTensors.BlockSparseArrays:
   BlockSparseArrays, BlockSparseArray, gradedrange, nonzero_blockkeys, fusedims
@@ -82,7 +82,7 @@ include("TestBlockSparseArraysUtils.jl")
     a_dest_dense = contract(Array(a1), (1, -1, 2), Array(a2), (-1, 3))
     @show a_dest ≈ a_dest_dense
   end
-  @testset "qr (eltype=$elt)" for elt in (Float32, Float64)
+  @testset "qr (eltype=$elt)" for elt in (Float32, ComplexF32, Float64, ComplexF64)
     for d in
         (([3, 4], [2, 3]), ([2, 3], [3, 4]), ([2, 3], [3]), ([3, 4], [2]), ([2], [3, 4]))
       a = BlockSparseArray{elt}(d)
@@ -90,5 +90,14 @@ include("TestBlockSparseArraysUtils.jl")
       q, r = qr(a)
       @test q * r ≈ a
     end
+  end
+  @testset "eigen (eltype=$elt)" for elt in (Float32, ComplexF32, Float64, ComplexF64)
+    d1, d2 = [2, 3], [2, 3]
+    a = BlockSparseArray{elt}(d1, d2)
+    TestBlockSparseArraysUtils.set_blocks!(a, randn, b -> allequal(b.n))
+    d, u = eigen(Hermitian(a))
+    @test eltype(d) == real(elt)
+    @test eltype(u) == elt
+    @test Hermitian(Matrix(a)) * Matrix(u) ≈ Matrix(u) * Diagonal(Vector(d))
   end
 end
