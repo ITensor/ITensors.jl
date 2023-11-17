@@ -25,7 +25,9 @@ function outer!(
   #RM = reshape(array(R), length(v1), length(v2))
   #RM .= v1 .* transpose(v2)
   #mul!(RM, v1, transpose(v2))
-  _gemm!('N', 'T', one(ElR), v1, v2, zero(ElR), RM)
+  #ger!(one(ElR), zero(ElR), v1, v2)
+  #_gemm!('N', 'T', one(ElR), v1, v2, zero(ElR), array(RM))
+  mul!!(array(RM), v1, transpose(v2), one(ElR), zero(ElR))
   #mul!!(RM, v1, transpose(v2), one(ElR), zero(ElR))
   return R
 end
