@@ -209,7 +209,7 @@ _eigen_eltypes(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}}) where {ElT} = real(El
 
 _eigen_eltypes(T::BlockSparseMatrix{ElT}) where {ElT} = complex(ElT), complex(ElT)
 
-function eigen(
+function LinearAlgebra.eigen(
   T::Union{Hermitian{ElT,<:Tensor{ElT,2,<:BlockSparse}},Tensor{ElT,2,<:BlockSparse}};
   min_blockdim=nothing,
   mindim=nothing,

@@ -176,7 +176,7 @@ function svd(
   return U, S, V, spec
 end
 
-function eigen(
+function LinearAlgebra.eigen(
   T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
   mindim=nothing,
   maxdim=nothing,
@@ -284,7 +284,7 @@ random_orthog(::Type{ElT}, n::Int, m::Int) where {ElT<:Real} = random_unitary(El
 
 random_orthog(n::Int, m::Int) = random_orthog(Float64, n, m)
 
-function eigen(
+function LinearAlgebra.eigen(
   T::DenseTensor{ElT,2,IndsT};
   mindim=nothing,
   maxdim=nothing,

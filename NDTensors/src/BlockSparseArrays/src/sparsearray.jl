@@ -5,6 +5,20 @@ struct SparseArray{T,N,Zero} <: AbstractArray{T,N}
   zero::Zero
 end
 
+default_zero() = (eltype, I) -> zero(eltype)
+
+function SparseArray{T}(size::Tuple{Vararg{Integer}}, zero=default_zero()) where {T}
+  return SparseArray(Dictionary{CartesianIndex{length(size)},T}(), size, zero)
+end
+SparseArray{T}(size::Integer...) where {T} = SparseArray{T}(size)
+
+function SparseArray{T}(
+  axes::Tuple{Vararg{AbstractUnitRange}}, zero=default_zero()
+) where {T}
+  return SparseArray{T}(length.(axes), zero)
+end
+SparseArray{T}(axes::AbstractUnitRange...) where {T} = SparseArray{T}(length.(axes))
+
 Base.size(a::SparseArray) = a.dims
 
 function Base.setindex!(a::SparseArray{T,N}, v, I::CartesianIndex{N}) where {T,N}
@@ -80,8 +94,10 @@ function map_nonzeros!(f, a_dest::AbstractArray, as::SparseArrayLike...)
 end
 
 function map_nonzeros(f, as::SparseArrayLike...)
-  @assert allequal(axes.(as))
-  a_dest = zero(first(as))
+  ## @assert allequal(axes.(as))
+  # Preserves the element type:
+  # a_dest = zero(first(as))
+  a_dest = allocate_output(map_nonzeros, f, as...)
   map!(f, a_dest, as...)
   return a_dest
 end

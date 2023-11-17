@@ -175,6 +175,6 @@ hash(b::Block, h::UInt) = h + hash(b)
 # Printing for Block type
 #
 
-show(io::IO, mime::MIME"text/plain", b::Block) = print(io, "Block$(Int.(Tuple(b)))")
+Base.show(io::IO, mime::MIME"text/plain", b::Block) = print(io, "Block$(Int.(Tuple(b)))")
 
-show(io::IO, b::Block) = show(io, MIME("text/plain"), b)
+Base.show(io::IO, b::Block) = show(io, MIME("text/plain"), b)

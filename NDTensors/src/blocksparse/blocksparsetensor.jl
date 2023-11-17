@@ -922,7 +922,7 @@ function _range2string(rangestart::NTuple{N,Int}, rangeend::NTuple{N,Int}) where
   return s
 end
 
-function show(io::IO, mime::MIME"text/plain", T::BlockSparseTensor)
+function Base.show(io::IO, mime::MIME"text/plain", T::BlockSparseTensor)
   summary(io, T)
   for (n, block) in enumerate(keys(blockoffsets(T)))
     blockdimsT = blockdims(T, block)
@@ -933,4 +933,4 @@ function show(io::IO, mime::MIME"text/plain", T::BlockSparseTensor)
   end
 end
 
-show(io::IO, T::BlockSparseTensor) = show(io, MIME("text/plain"), T)
+Base.show(io::IO, T::BlockSparseTensor) = show(io, MIME("text/plain"), T)

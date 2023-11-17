@@ -14,8 +14,8 @@ struct Algorithm{Alg} end
 Algorithm(s) = Algorithm{Symbol(s)}()
 algorithm_string(::Algorithm{Alg}) where {Alg} = string(Alg)
 
-show(io::IO, alg::Algorithm) = print(io, "Algorithm type ", algorithm_string(alg))
-print(io::IO, ::Algorithm{Alg}) where {Alg} = print(io, Alg)
+Base.show(io::IO, alg::Algorithm) = print(io, "Algorithm type ", algorithm_string(alg))
+Base.print(io::IO, ::Algorithm{Alg}) where {Alg} = print(io, Alg)
 
 """
     @Algorithm_str

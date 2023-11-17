@@ -16,7 +16,8 @@ blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 # TODO: Use `SetParameters`.
 set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
 
-function nonzero_blockkeys(a::BlockSparseArray)
+# TODO: Move to `AbstractArray` file.
+function nonzero_blockkeys(a::AbstractArray)
   return map(Block ∘ Tuple, collect(nonzero_keys(blocks(a))))
 end
 
@@ -60,9 +61,16 @@ struct BlockZero{Axes}
 end
 
 function (f::BlockZero)(
-  arraytype::Type{<:AbstractArray{T,N}}, I::CartesianIndex{N}
-) where {T,N}
+  arraytype::Type{<:AbstractArray{<:Any,N}}, I::CartesianIndex{N}
+) where {N}
+  # TODO: Make sure this works for sparse or block sparse blocks, immutable
+  # blocks, diagonal blocks, etc.!
   return fill!(arraytype(undef, block_size(f.axes, Block(Tuple(I)))), false)
+end
+
+# Fallback so that `SparseArray` with scalar elements works.
+function (f::BlockZero)(blocktype::Type{<:Number}, I::CartesianIndex)
+  return zero(blocktype)
 end
 
 # Fallback to Array if it is abstract
@@ -96,6 +104,22 @@ function BlockSparseArray{T,N,B}(
   # TODO: `Block{N,Int}`?
   blocks = Vector{Block{N}}()
   return BlockSparseArray{T,N,B}(undef, blocks, axes)
+end
+
+## struct BlockSparseArray{
+##   T,N,A<:AbstractArray{T,N},Blocks<:SparseArray{A,N},Axes<:NTuple{N,AbstractUnitRange{Int}}
+## } <: AbstractBlockArray{T,N}
+##   blocks::Blocks
+##   axes::Axes
+## end
+
+function BlockSparseArray(a::SparseArray, axes::Tuple{Vararg{AbstractUnitRange}})
+  A = eltype(a)
+  T = eltype(A)
+  N = ndims(a)
+  Blocks = typeof(a)
+  Axes = typeof(axes)
+  return BlockSparseArray{T,N,A,Blocks,Axes}(a, axes)
 end
 
 function BlockSparseArray(
@@ -234,6 +258,12 @@ function Base.getindex(block_arr::BlockSparseArray{T,N}, i::Vararg{Integer,N}) w
   return v
 end
 
+# Fixes ambiguity error.
+# TODO: Is this needed?
+function Base.getindex(block_arr::BlockSparseArray{<:Any,0})
+  return blocks(block_arr)[CartesianIndex()][]
+end
+
 function Base.permutedims!(a_src::BlockSparseArray, a_dest::BlockSparseArray, perm)
   copyto!(a_src, PermutedDimsArray(a_dest, perm))
   return a_src
@@ -253,6 +283,11 @@ function BlockArrays.blocks(
 end
 
 # TODO: Make `PermutedBlockSparseArray`.
+function BlockArrays.blocks(a::Hermitian{<:Any,<:BlockSparseArray})
+  return Hermitian(blocks(parent(a)))
+end
+
+# TODO: Make `PermutedBlockSparseArray`.
 function Base.zero(a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:BlockSparseArray})
   return BlockSparseArray(zero(blocks(a)), axes(a))
 end
@@ -269,4 +304,9 @@ end
 function Base.map(f, as::BlockSparseArray...)
   @assert allequal(axes.(as))
   return BlockSparseArray(map(f, blocks.(as)...), axes(first(as)))
+end
+
+function Base.map!(f, a_dest::BlockSparseArray, as::BlockSparseArray...)
+  @assert allequal(axes.((a_dest, as...)))
+  return BlockSparseArray(map!(f, blocks(a_dest), blocks.(as)...), axes(a_dest))
 end

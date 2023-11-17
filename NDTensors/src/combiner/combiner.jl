@@ -159,12 +159,12 @@ function invalid_combiner_contraction_error(
   )
 end
 
-function show(io::IO, mime::MIME"text/plain", S::Combiner)
+function Base.show(io::IO, mime::MIME"text/plain", S::Combiner)
   println(io, "Permutation of blocks: ", S.perm)
   return println(io, "Combination of blocks: ", S.comb)
 end
 
-function show(io::IO, mime::MIME"text/plain", T::CombinerTensor)
+function Base.show(io::IO, mime::MIME"text/plain", T::CombinerTensor)
   summary(io, T)
   println(io)
   return show(io, mime, storage(T))

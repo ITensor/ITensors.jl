@@ -11,4 +11,4 @@ import Base:
   setindex!,
   any
 
-import LinearAlgebra: mul!, qr, eigen, svd
+import LinearAlgebra: mul!, qr, svd
