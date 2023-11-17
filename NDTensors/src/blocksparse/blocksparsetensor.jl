@@ -49,7 +49,7 @@ Construct a block sparse tensor with uninitialized memory
 from indices and locations of non-zero blocks.
 """
 function BlockSparseTensor(::UndefInitializer, blockoffsets, inds)
-  return BlockSparseTensor(Float64, undef, blockoffsets, inds)
+  return BlockSparseTensor(NDTensors.default_eltype(), undef, blockoffsets, inds)
 end
 
 function BlockSparseTensor(
@@ -65,7 +65,7 @@ function BlockSparseTensor(eltype::Type{<:Number}, blockoffsets::BlockOffsets, i
 end
 
 function BlockSparseTensor(blockoffsets::BlockOffsets, inds)
-  return BlockSparseTensor(Float64, blockoffsets, inds)
+  return BlockSparseTensor(NDTensors.default_eltype(), blockoffsets, inds)
 end
 
 """
@@ -73,7 +73,7 @@ end
 
 Construct a block sparse tensor with no blocks.
 """
-BlockSparseTensor(inds) = BlockSparseTensor(Float64, inds)
+BlockSparseTensor(inds) = BlockSparseTensor(FloNDTensors.default_eltype()at64, inds)
 
 function BlockSparseTensor(datatype::Type{<:AbstractArray}, inds)
   return BlockSparseTensor(datatype, BlockOffsets{length(inds)}(), inds)
@@ -99,7 +99,7 @@ Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
 function BlockSparseTensor(blocks::Vector{BlockT}, inds) where {BlockT<:Union{Block,NTuple}}
-  return BlockSparseTensor(Float64, blocks, inds)
+  return BlockSparseTensor(NDTensors.default_eltype(), blocks, inds)
 end
 
 function BlockSparseTensor(
@@ -160,7 +160,7 @@ function randomBlockSparseTensor(blocks::Vector, inds)
 end
 
 function randomBlockSparseTensor(rng::AbstractRNG, blocks::Vector, inds)
-  return randomBlockSparseTensor(rng, Float64, blocks, inds)
+  return randomBlockSparseTensor(rng, NDTensors.default_eltype(), blocks, inds)
 end
 
 """
