@@ -2,7 +2,7 @@ using Combinatorics: permutations
 using LinearAlgebra: qr
 using NDTensors.TensorAlgebra: TensorAlgebra
 using TensorOperations: TensorOperations
-using Test: @test, @testset
+using Test: @test, @test_broken, @testset
 
 @testset "TensorAlgebra" begin
   elts = (Float32, ComplexF32, Float64, ComplexF64)
@@ -28,15 +28,24 @@ using Test: @test, @testset
       end
     end
   end
+  @testset "contract broken" begin
+    a1 = randn(3, 5, 8)
+    a2 = randn(8, 2, 4)
+    labels_dest = (:a, :b, :c, :d)
+    labels1 = (:c, :a, :x)
+    labels2 = (:x, :d, :b)
+    @test_broken a′ = TensorAlgebra.contract(labels_dest, a1, labels1, a2, labels2)
+  end
   @testset "qr" begin
-    a = randn(2, 2, 2, 2)
-    biperm = ((1, 2), (3, 4))
+    a = randn(5, 4, 3, 2)
     labels_a = (:a, :b, :c, :d)
-    labels_q = (:a, :b)
-    labels_r = (:c, :d)
-    q, r = @test_broken qr(a, labels_a, labels_q, labels_r)
+    labels_q = (:b, :a)
+    labels_r = (:d, :c)
+    q, r = qr(a, labels_a, labels_q, labels_r)
     label_qr = :qr
-    a′ = contract(labels_a, q, (labels_q..., label_qr), r, (label_qr, labels_r...))
+    a′ = TensorAlgebra.contract(
+      labels_a, q, (labels_q..., label_qr), r, (label_qr, labels_r...)
+    )
     @test a ≈ a′
   end
 end
