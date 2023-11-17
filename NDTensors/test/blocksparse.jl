@@ -174,6 +174,9 @@ using GPUArraysCore: @allowscalar
         @test reshape(blockAp, size(blockB)) == blockB
       end
     end
+    if dev == NDTensors.mtl
+      NDTensors.default_eltype() = Float64
+    end
   end
 
   @testset "BlockSparseTensor setindex! add block" begin
@@ -231,12 +234,16 @@ using GPUArraysCore: @allowscalar
   end
 
   @testset "svd on $dev" for dev in devs
+    if dev == NDTensors.mtl
+      NDTensors.default_eltype() = Float32
+    end
+    atol = 10^(0.75 * log10(eps(real(elt))))
     @testset "svd example 1" begin
       A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14
+        norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=atol
       )
     end
 
@@ -245,7 +252,7 @@ using GPUArraysCore: @allowscalar
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
       )
     end
 
@@ -254,7 +261,7 @@ using GPUArraysCore: @allowscalar
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
       )
     end
 
@@ -263,7 +270,7 @@ using GPUArraysCore: @allowscalar
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
       )
     end
 
@@ -272,8 +279,11 @@ using GPUArraysCore: @allowscalar
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
       )
+    end
+    if dev == NDTensors.mtl
+      NDTensors.default_eltype() = Float64
     end
   end
 
