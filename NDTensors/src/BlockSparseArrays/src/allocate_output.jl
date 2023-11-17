@@ -93,7 +93,8 @@ end
 # TODO: Make this backwards compatible.
 # TODO: Add a default for `eltype` and `zero`.
 # TODO: Change `Base.@kwdef` to `@kwdef`.
-Base.@kwdef struct SparseArrayStructure{ElType,Axes,Zero} <: AbstractArrayStructure{ElType,Axes}
+Base.@kwdef struct SparseArrayStructure{ElType,Axes,Zero} <:
+                   AbstractArrayStructure{ElType,Axes}
   eltype::ElType
   axes::Axes
   zero::Zero
