@@ -1,4 +1,4 @@
-# TODO: These should be generic `Tensor` definitions.
+# TODO: This should be generic `Tensor` definition.
 function contract(
   t1::Tensor{<:Any,<:Any,<:CombinerArray}, labels1, t2::MatrixOrArrayStorageTensor, labels2
 )
@@ -7,6 +7,7 @@ function contract(
   return tensor(a_dest, inds_dest)
 end
 
+# TODO: This should be generic `Tensor` definition.
 function contract(
   t1::MatrixOrArrayStorageTensor, labels1, t2::Tensor{<:Any,<:Any,<:CombinerArray}, labels2
 )

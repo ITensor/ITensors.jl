@@ -87,7 +87,7 @@ complex(S::EmptyStorage) = complex(typeof(S))()
 
 blockoffsets(storage::EmptyStorage) = BlockOffsets{ndims(storage)}()
 
-function show(io::IO, mime::MIME"text/plain", S::EmptyStorage)
+function Base.show(io::IO, mime::MIME"text/plain", S::EmptyStorage)
   return println(io, typeof(S))
 end
 

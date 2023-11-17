@@ -1,10 +1,12 @@
 [deps]
 BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
-GPUArraysCore="46192b85-c4d5-4398-a991-12ede77f4527"
+GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
 ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

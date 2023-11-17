@@ -20,7 +20,7 @@ function ql_positive(E::Exposed)
   return ql_positive(unexpose(E))
 end
 
-function eigen(E::Exposed)
+function LinearAlgebra.eigen(E::Exposed)
   return eigen(unexpose(E))
 end
 

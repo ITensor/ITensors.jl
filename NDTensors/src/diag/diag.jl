@@ -39,7 +39,7 @@ setdata(storagetype::Type{<:Diag}, data) = Diag(data)
 copy(D::Diag) = Diag(copy(data(D)))
 
 # Special printing for uniform Diag
-function show(io::IO, mime::MIME"text/plain", diag::UniformDiag)
+function Base.show(io::IO, mime::MIME"text/plain", diag::UniformDiag)
   println(io, typeof(diag))
   println(io, "Diag storage with uniform diagonal value:")
   println(io, diag[1])
