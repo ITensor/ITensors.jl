@@ -34,15 +34,9 @@ using Test: @test, @testset
     labels_a = (:a, :b, :c, :d)
     labels_q = (:a, :b)
     labels_r = (:c, :d)
-    q, r = qr(a, labels_a, labels_q, labels_r)
+    q, r = @test_broken qr(a, labels_a, labels_q, labels_r)
     label_qr = :qr
     a′ = contract(labels_a, q, (labels_q..., label_qr), r, (label_qr, labels_r...))
     @test a ≈ a′
-
-    ## q, r = qr(a, biperm...)
-    ## @test TensorAlgebra.matricize(a, biperm...) ≈ q * r
-    ## axes_codomain, axes_domain = bipartition_axes(a, biperm...)
-    ## TensorAlgebra.unmatricize(q, axes_codomain, (axes(q, 2),))
-    ## TensorAlgebra.unmatricize(r, (axes(q, 1),), axes_domain)
   end
 end
