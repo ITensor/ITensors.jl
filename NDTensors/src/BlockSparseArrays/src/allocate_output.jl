@@ -29,7 +29,8 @@ abstract type AbstractArrayStructure{ElType,Axes} end
 
 # TODO: Make this backwards compatible.
 # TODO: Add a default for `eltype`.
-@kwdef struct ArrayStructure{ElType,Axes} <: AbstractArrayStructure{ElType,Axes}
+# TODO: Change `Base.@kwdef` to `@kwdef`.
+Base.@kwdef struct ArrayStructure{ElType,Axes} <: AbstractArrayStructure{ElType,Axes}
   eltype::ElType
   axes::Axes
 end
@@ -91,7 +92,9 @@ end
 # TODO: Maybe store nonzero locations?
 # TODO: Make this backwards compatible.
 # TODO: Add a default for `eltype` and `zero`.
-@kwdef struct SparseArrayStructure{ElType,Axes,Zero} <: AbstractArrayStructure{ElType,Axes}
+# TODO: Change `Base.@kwdef` to `@kwdef`.
+Base.@kwdef struct SparseArrayStructure{ElType,Axes,Zero} <:
+                   AbstractArrayStructure{ElType,Axes}
   eltype::ElType
   axes::Axes
   zero::Zero

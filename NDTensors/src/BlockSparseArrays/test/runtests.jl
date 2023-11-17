@@ -1,5 +1,6 @@
-using Test: @test, @testset
+using Test: @test, @testset, @test_broken
 using BlockArrays: BlockArrays, BlockRange, blocksize
+using Compat: allequal
 using LinearAlgebra: Diagonal, Hermitian, eigen, qr
 using NDTensors: contract
 using NDTensors.BlockSparseArrays:
