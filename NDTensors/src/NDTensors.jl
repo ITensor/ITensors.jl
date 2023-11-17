@@ -1,4 +1,5 @@
 module NDTensors
+# TODO: List types, macros, and functions being used.
 using Adapt
 using Base.Threads
 using Compat
@@ -19,9 +20,12 @@ using TimerOutputs
 using TupleTools
 
 # TODO: Define an `AlgorithmSelection` module
+# TODO: List types, macros, and functions being used.
 include("algorithm.jl")
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("TensorAlgebra/src/TensorAlgebra.jl")
+using .TensorAlgebra: TensorAlgebra
 include("DiagonalArrays/src/DiagonalArrays.jl")
 using .DiagonalArrays
 include("BlockSparseArrays/src/BlockSparseArrays.jl")
@@ -76,8 +80,8 @@ include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
 include("adapt.jl")
-include("tensoralgebra/generic_tensor_operations.jl")
-include("tensoralgebra/contraction_logic.jl")
+include("tensoroperations/generic_tensor_operations.jl")
+include("tensoroperations/contraction_logic.jl")
 include("abstractarray/tensoralgebra/contract.jl")
 
 #####################################

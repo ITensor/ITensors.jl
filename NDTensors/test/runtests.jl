@@ -25,6 +25,7 @@ end
     "SmallVectors.jl",
     "SortedSets.jl",
     "TagSets.jl",
+    "TensorAlgebra.jl",
     "Unwrap.jl",
     "linearalgebra.jl",
     "dense.jl",
