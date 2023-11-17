@@ -8,4 +8,5 @@ include("contract/contract.jl")
 include("contract/output_labels.jl")
 include("contract/allocate_output.jl")
 include("contract/contract_matricize/contract.jl")
+include("LinearAlgebraExtensions/LinearAlgebraExtensions.jl")
 end
