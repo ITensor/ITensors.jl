@@ -27,8 +27,9 @@ function outer!(
   #mul!(RM, v1, transpose(v2))
   #ger!(one(ElR), zero(ElR), v1, v2)
   #_gemm!('N', 'T', one(ElR), v1, v2, zero(ElR), array(RM))
+  ## There is no _gemm! defined for CUDA or Metal so it calls 
+  ## generic matmul. Replace with mul!! to call correct mul!! (ger)
   mul!!(array(RM), v1, transpose(v2), one(ElR), zero(ElR))
-  #mul!!(RM, v1, transpose(v2), one(ElR), zero(ElR))
   return R
 end
 
