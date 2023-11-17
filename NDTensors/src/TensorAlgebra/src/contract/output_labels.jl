@@ -19,6 +19,12 @@ function output_labels(::typeof(contract), labels1, labels2)
   return symdiff(labels1, labels2)
 end
 
+function bipartitioned_permutations(
+  f::typeof(contract), alg::Algorithm, labels_dest, labels1, labels2
+)
+  return bipartitioned_permutations(f, labels_dest, labels1, labels2)
+end
+
 function bipartitioned_permutations(::typeof(contract), labels_dest, labels1, labels2)
   labels12 = (labels1..., labels2...)
   if isodd(length(labels12) - length(labels_dest))
@@ -35,8 +41,8 @@ function bipartitioned_permutations(::typeof(contract), labels_dest, labels1, la
   pos1_uncontracted = map(l -> findfirst(isequal(l), labels1), labels1_uncontracted)
   pos2_uncontracted = map(l -> findfirst(isequal(l), labels2), labels2_uncontracted)
   # Bipartitioned permutations.
-  bipartitioned_perm_dest = BipartitionedPermutation(pos_dest_1, pos_dest_2)
-  bipartitioned_perm1 = BipartitionedPermutation(pos1_uncontracted, pos1_contracted)
-  bipartitioned_perm2 = BipartitionedPermutation(pos2_contracted, pos2_uncontracted)
-  return bipartitioned_perm_dest, bipartitioned_perm1, bipartitioned_perm2
+  biperm_dest = BipartitionedPermutation(pos_dest_1, pos_dest_2)
+  biperm1 = BipartitionedPermutation(pos1_uncontracted, pos1_contracted)
+  biperm2 = BipartitionedPermutation(pos2_contracted, pos2_uncontracted)
+  return biperm_dest, biperm1, biperm2
 end

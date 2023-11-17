@@ -84,10 +84,13 @@ function contract(
   β;
   kwargs...,
 )
-  a_dest = allocate_output(
-    contract, alg, labels_dest, a1, labels1, a2, labels2, α, β; kwargs...
+  biperm_dest, biperm1, biperm2 = bipartitioned_permutations(
+    contract, alg, labels_dest, labels1, labels2
   )
-  contract!(alg, a_dest, labels_dest, a1, labels1, a2, labels2, α, β; kwargs...)
+  a_dest = allocate_output(
+    contract, alg, biperm_dest, a1, biperm1, a2, biperm2, α, β; kwargs...
+  )
+  contract!(alg, a_dest, biperm_dest, a1, biperm1, a2, biperm2, α, β; kwargs...)
   return a_dest
 end
 
