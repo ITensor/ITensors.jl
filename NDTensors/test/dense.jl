@@ -236,6 +236,9 @@ using GPUArraysCore: @allowscalar
         @test convert(Array, R) ≈ permutedims(convert(Array, T1), (2, 1, 3)) * T2[]
       end
     end
+    if dev == NDTensors.mtl
+      NDTensors.default_eltype() = Float64
+    end
   end
 
   # Only CPU backend testing
