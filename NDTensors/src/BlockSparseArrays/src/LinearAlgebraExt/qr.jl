@@ -31,7 +31,8 @@ end
 function sparse_structure(structure_type::Type{<:SparseMatrixCSC}, a::SparseArray{<:Any,2})
   # Idealy would work but a bit too complicated for `map` right now:
   # return SparseMatrixCSC(map(x -> iszero(x) ? false : true, a))
-  a_structure = structure_type(spzeros(Bool, size(a)))
+  # TODO: Change to `spzeros(Bool, size(a))`.
+  a_structure = structure_type(spzeros(Bool, size(a)...))
   for I in nonzero_keys(a)
     i, j = Tuple(I)
     a_structure[i, j] = true
