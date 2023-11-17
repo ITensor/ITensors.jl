@@ -9,7 +9,12 @@ using GPUArraysCore: @allowscalar
   devs = devices_list(copy(ARGS))
 
   @testset "test device: $dev" for dev in devs
-    elt = (dev == NDTensors.mtl ? Float32 : Float64)
+    if dev == NDTensors.mtl
+      elt = Float32
+      NDTensors.default_eltype() = Float32
+    else
+      elt = Float64
+    end
     # Indices
     indsA = ([2, 3], [4, 5])
 
