@@ -3,6 +3,7 @@ fuse(a...) = foldl(fuse, a)
 
 matricize(a::AbstractArray, biperm) = matricize(a, BipartitionedPermutation(biperm...))
 
+# TODO: Make this more generic, i.e. for `BlockSparseArray`.
 function matricize(a::AbstractArray, biperm::BipartitionedPermutation)
   # Permute and fuse the axes
   axes_src = axes(a)
@@ -14,4 +15,9 @@ function matricize(a::AbstractArray, biperm::BipartitionedPermutation)
   perm = flatten(biperm)
   a_permuted = permutedims(a, perm)
   return reshape(a_permuted, (axis_codomain_fused, axis_domain_fused))
+end
+
+# TODO: Make this more generic, i.e. for `BlockSparseArray`.
+function unmatricize(a::AbstractArray, axes_codomain, axes_domain)
+  return reshape(a, (axes_codomain..., axes_domain...))
 end
