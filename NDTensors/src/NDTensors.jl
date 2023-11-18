@@ -30,6 +30,8 @@ include("DiagonalArrays/src/DiagonalArrays.jl")
 using .DiagonalArrays
 include("BlockSparseArrays/src/BlockSparseArrays.jl")
 using .BlockSparseArrays
+include("NamedDimsArrays/src/NamedDimsArrays.jl")
+using .NamedDimsArrays: NamedDimsArrays
 include("SmallVectors/src/SmallVectors.jl")
 using .SmallVectors
 include("SortedSets/src/SortedSets.jl")

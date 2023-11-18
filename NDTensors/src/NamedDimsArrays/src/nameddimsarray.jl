@@ -1,6 +1,23 @@
-struct NamedDimsArray{T,N,Arr<:AbstractArray{T,N},Names} <: AbstractNamedDimsArray{T,N,Names}
+struct NamedDimsArray{T,N,Arr<:AbstractArray{T,N},Names} <:
+       AbstractNamedDimsArray{T,N,Names}
   array::Arr
   names::Names
+end
+
+# TODO: Check size consistency
+function NamedDimsArray{T,N,Arr,Names}(
+  a::AbstractArray, namedsize::Tuple{Vararg{AbstractNamedInt}}
+) where {T,N,Arr<:AbstractArray{T,N},Names}
+  @assert size(a) == unname.(namedsize)
+  return NamedDimsArray{T,N,Arr,Names}(a, name.(namedsize))
+end
+
+# TODO: Check axes consistency
+function NamedDimsArray{T,N,Arr,Names}(
+  a::AbstractArray, namedaxes::Tuple{Vararg{AbstractNamedUnitRange}}
+) where {T,N,Arr<:AbstractArray{T,N},Names}
+  @assert axes(a) == unname.(namedaxes)
+  return NamedDimsArray{T,N,Arr,Names}(a, name.(namedaxes))
 end
 
 # Required interface
@@ -9,12 +26,40 @@ end
 dimnames(a::NamedDimsArray) = a.names
 
 # Unwrapping the names
-Base.parent(::NamedDimsArray) = a.array
+Base.parent(a::NamedDimsArray) = a.array
 
 # Set the names of an unnamed AbstractArray
 function named(a::AbstractArray, names)
   @assert ndims(a) == length(names)
   return NamedDimsArray(a, names)
+end
+
+# TODO: Use `Undefs.jl` instead.
+function undefs(arraytype::Type{<:AbstractArray}, axes::Tuple{Vararg{AbstractUnitRange}})
+  return arraytype(undef, length.(axes))
+end
+
+# TODO: Use `AbstractNamedUnitRange`, determine the `AbstractNamedDimsArray`
+# from a default value. Useful for distinguishing between `NamedDimsArray`
+# and `ITensor`.
+function undefs(arraytype::Type{<:AbstractArray}, axes::Tuple{Vararg{NamedUnitRange}})
+  array = undefs(arraytype, unname.(axes))
+  names = name.(axes)
+  return named(array, names)
+end
+
+# TODO: Use `AbstractNamedUnitRange`, determine the `AbstractNamedDimsArray`
+# from a default value. Useful for distinguishing between `NamedDimsArray`
+# and `ITensor`.
+function Base.similar(arraytype::Type{<:AbstractArray}, axes::Tuple{Vararg{NamedUnitRange}})
+  return undefs(arraytype, axes)
+end
+
+# TODO: Use `AbstractNamedUnitRange`, determine the `AbstractNamedDimsArray`
+# from a default value. Useful for distinguishing between `NamedDimsArray`
+# and `ITensor`.
+function Base.randn(size::Vararg{NamedInt})
+  return named(randn(unname.(size)), name.(size))
 end
 
 # TODO: Define `NamedInt`, `NamedUnitRange`, `NamedVector <: AbstractVector`, etc.
