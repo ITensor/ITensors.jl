@@ -9,5 +9,5 @@ using NDTensors.TensorAlgebra: TensorAlgebra
   na1 = randn(i, j)
   na2 = randn(j, k)
   na_dest = TensorAlgebra.contract(na1, na2)
-  @test unname(na_dest, (i, k)) == unname(na1) * unname(na2)
+  @test unname(na_dest, (i, k)) ≈ unname(na1) * unname(na2)
 end
