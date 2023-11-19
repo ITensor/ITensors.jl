@@ -113,7 +113,8 @@ end
 # Unwrapping names and permuting
 # nameless(a, (:j, :i))
 # Could just call `unname`?
-nameless(a::AbstractNamedDimsArray, names) = unname(align(a, names))
+## nameless(a::AbstractNamedDimsArray, names) = unname(align(a, names))
+unname(a::AbstractNamedDimsArray, names) = unname(align(a, names))
 
 # In `TensorAlgebra` this this `fuse` and `unfuse`,
 # in `NDTensors`/`ITensors` this is `combine` and `uncombine`.

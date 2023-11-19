@@ -51,7 +51,10 @@ end
 # TODO: Use `AbstractNamedUnitRange`, determine the `AbstractNamedDimsArray`
 # from a default value. Useful for distinguishing between `NamedDimsArray`
 # and `ITensor`.
-function Base.similar(arraytype::Type{<:AbstractArray}, axes::Tuple{Vararg{NamedUnitRange}})
+function Base.similar(
+  arraytype::Type{<:AbstractArray}, axes::Tuple{NamedUnitRange,Vararg{NamedUnitRange}}
+)
+  # TODO: Use `unname`?
   return undefs(arraytype, axes)
 end
 
