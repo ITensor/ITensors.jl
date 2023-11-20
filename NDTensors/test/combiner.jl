@@ -2,12 +2,14 @@ using NDTensors
 using LinearAlgebra
 using Test
 using GPUArraysCore: @allowscalar
+## TODO headergaurd
+# include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+# using .NDTensorsTestUtils: default_rtol, devices_list
 
 # Testing generic block indices
 using ITensors: QN, Index
 
 @testset "CombinerTensor basic functionality" begin
-  include("device_list.jl")
   devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs
     @testset "Dense * Combiner" begin

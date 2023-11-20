@@ -1,8 +1,10 @@
 using NDTensors
 using Test
+## TODO headergaurd
+# include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+# using .NDTensorsTestUtils: devices_list
 
 @testset "EmptyStorage test" begin
-  include("device_list.jl")
   devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs
     T = dev(Tensor(EmptyStorage(NDTensors.EmptyNumber), (2, 2)))

@@ -2,6 +2,8 @@ using NDTensors
 using LinearAlgebra
 using Test
 using GPUArraysCore: @allowscalar
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: default_rtol, devices_list
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -21,7 +23,6 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
-include("device_list.jl")
 devs = devices_list(copy(ARGS))
 @testset "QX testing" begin
   @testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular, device=$dev" for qx in

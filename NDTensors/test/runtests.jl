@@ -1,6 +1,9 @@
 using Test
 using SafeTestsets
 
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: default_rtol, devices_list
+
 println("Passing arguments ARGS=$(ARGS) to test.")
 
 if isempty(ARGS) || "base" in ARGS

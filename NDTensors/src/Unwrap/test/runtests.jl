@@ -4,7 +4,9 @@ using NDTensors
 using LinearAlgebra
 using GPUArraysCore: @allowscalar
 
-include("../../../test/device_list.jl")
+include("../../../test/NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: devices_list
+
 @testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
 

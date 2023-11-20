@@ -1,3 +1,5 @@
+include("../../NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: default_rtol, is_supported_eltype, devices_list
 function test_dmrg(elt, N::Integer; dev::Function, conserve_qns)
   sites = siteinds("S=1/2", N; conserve_qns)
 

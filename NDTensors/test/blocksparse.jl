@@ -2,10 +2,12 @@ using NDTensors
 using LinearAlgebra
 using Test
 using GPUArraysCore: @allowscalar
+## TODO headergaurd
+# include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+# using .NDTensorsTestUtils: default_rtol, devices_list
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
-  include("device_list.jl")
   devs = devices_list(copy(ARGS))
 
   @testset "test device: $dev" for dev in devs
@@ -237,41 +239,33 @@ using GPUArraysCore: @allowscalar
     if dev == NDTensors.mtl
       NDTensors.default_eltype() = Float32
     end
-    atol = 10^(0.75 * log10(eps(real(elt))))
+    
     @testset "svd example 1" begin
       A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=atol
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
     end
 
     @testset "svd example 2" begin
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
     end
 
     @testset "svd example 3" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
     end
 
     @testset "svd example 4" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
     end
 
     @testset "svd example 5" begin
@@ -279,7 +273,7 @@ using GPUArraysCore: @allowscalar
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=atol
+        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=default_rtol(eltype(A))
       )
     end
     if dev == NDTensors.mtl
