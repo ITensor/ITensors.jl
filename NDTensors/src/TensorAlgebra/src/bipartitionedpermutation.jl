@@ -15,3 +15,12 @@ end
 function flatten(biperm::BipartitionedPermutation)
   return (biperm[1]..., biperm[2]...)
 end
+
+# Bipartition a vector according to the
+# bipartitioned permutation.
+function bipartition(v, biperm::BipartitionedPermutation)
+  # TODO: Use `TupleTools.getindices`.
+  v1 = map(i -> v[i], biperm[1])
+  v2 = map(i -> v[i], biperm[2])
+  return v1, v2
+end

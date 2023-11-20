@@ -16,7 +16,7 @@ function contract!(
   perm_dest = flatten(biperm_dest)
   # TODO: Create a function `unmatricize` or `unfusedims`.
   # unmatricize!(a_dest, a_dest_matricized, axes(a_dest), perm_dest)
-  a_dest_copy = reshape(a_dest_matricized, axes(a_dest))
-  permutedims!(a_dest, a_dest_copy, perm_dest)
+  a_dest_copy = reshape(a_dest_matricized, map(i -> axes(a_dest, i), perm_dest))
+  permutedims!(a_dest, a_dest_copy, invperm(perm_dest))
   return a_dest
 end
