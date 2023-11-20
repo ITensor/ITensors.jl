@@ -8,13 +8,6 @@ using GPUArraysCore: @allowscalar
 @testset "Dense Tensors" begin
   devs = devices_list(copy(ARGS))
   @testset "test device: $dev" for dev in devs
-    if dev == NDTensors.mtl
-      elt = Float32
-      NDTensors.default_eltype() = Float32
-    else
-      elt = Float64
-    end
-
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor(elt, (3, 4)))
@@ -237,9 +230,6 @@ using GPUArraysCore: @allowscalar
         @test @allowscalar !any(isnan, R)
         @test convert(Array, R) ≈ permutedims(convert(Array, T1), (2, 1, 3)) * T2[]
       end
-    end
-    if dev == NDTensors.mtl
-      NDTensors.default_eltype() = Float64
     end
   end
 

@@ -11,12 +11,6 @@ using GPUArraysCore: @allowscalar
   devs = devices_list(copy(ARGS))
 
   @testset "test device: $dev" for dev in devs
-    if dev == NDTensors.mtl
-      elt = Float32
-      NDTensors.default_eltype() = Float32
-    else
-      elt = Float64
-    end
     # Indices
     indsA = ([2, 3], [4, 5])
 
@@ -176,9 +170,6 @@ using GPUArraysCore: @allowscalar
         @test reshape(blockAp, size(blockB)) == blockB
       end
     end
-    if dev == NDTensors.mtl
-      NDTensors.default_eltype() = Float64
-    end
   end
 
   @testset "BlockSparseTensor setindex! add block" begin
@@ -236,10 +227,6 @@ using GPUArraysCore: @allowscalar
   end
 
   @testset "svd on $dev" for dev in devs
-    if dev == NDTensors.mtl
-      NDTensors.default_eltype() = Float32
-    end
-    
     @testset "svd example 1" begin
       A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
@@ -272,12 +259,7 @@ using GPUArraysCore: @allowscalar
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=default_rtol(eltype(A))
-      )
-    end
-    if dev == NDTensors.mtl
-      NDTensors.default_eltype() = Float64
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
     end
   end
 
@@ -285,7 +267,7 @@ using GPUArraysCore: @allowscalar
     A = BlockSparseTensor([(1, 1), (2, 2)], [2, 4], [2, 4])
     randn!(A)
     expT = exp(A)
-    @test isapprox(norm(array(expT) - exp(array(A))), 0.0; atol=1e-13)
+    @test array(expT) ≈ exp(array(A)); atol=default_rtol(eltype(A))
 
     # Hermitian case
     A = BlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
@@ -296,7 +278,7 @@ using GPUArraysCore: @allowscalar
       blockview(Ah, bA) .= b + b'
     end
     expTh = exp(Hermitian(Ah))
-    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = 1e-13
+    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = default_rtol(eltype(Ah))
 
     A = BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2])
     @test_throws ErrorException exp(A)
