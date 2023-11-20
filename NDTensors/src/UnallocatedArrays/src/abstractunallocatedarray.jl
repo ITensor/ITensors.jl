@@ -1,36 +1,37 @@
+abstract type AbstractUnallocatedArray 
+end
+
 ## Here are functions specifically defined for UnallocatedArrays
 ## not implemented by FillArrays
 ## TODO determine min number of functions needed to be forwarded
-const UnallocFillOrZero = Union{<:UnallocatedFill,<:UnallocatedZeros}
-
-alloctype(A::UnallocFillOrZero) = alloctype(typeof(A))
+alloctype(A::AbstractUnallocatedArray) = alloctype(typeof(A))
 function alloctype(Atype::Type{UnallocFillOrZero})
   return get_parameter(Atype, Position{4}())
 end
 
-allocate(A::Union{UnallocFillOrZero}) = alloctype(A)(parent(A))
+allocate(A::AbstractUnallocatedArray) = alloctype(A)(parent(A))
 
 ## TODO Still working here I am not sure these functions and the
 ## Set parameter functions are working properly
-function set_alloctype(F::Type{UnallocFillOrZero}, alloc::Type{<:AbstractArray})
+function set_alloctype(F::Type{AbstractUnallocatedArray}, alloc::Type{<:AbstractArray})
   return set_parameter(F, Position{4}(), alloc)
 end
 ## TODO this is broken 
-function set_eltype(F::Type{UnallocFillOrZero}, elt::Type)
+function set_eltype(F::Type{AbstractUnallocatedArray}, elt::Type)
   return set_alloctype(set_eltype(parent(z), elt), set_eltype(alloctype(F), elt))
 end
 
 ## With these functions defined I can print UnallocatedArrays
 ## compute things like sum and norm, compute the size and length
-@inline Base.axes(A::UnallocFillOrZero) = axes(parent(A))
-Base.size(A::UnallocFillOrZero) = size(parent(A))
-function FillArrays.getindex_value(A::UnallocFillOrZero)
+@inline Base.axes(A::AbstractUnallocatedArray) = axes(parent(A))
+Base.size(A::AbstractUnallocatedArray) = size(parent(A))
+function FillArrays.getindex_value(A::AbstractUnallocatedArray)
   return FillArrays.getindex_value(parent(A))
 end
-Base.copy(A::UnallocFillOrZero) = A
+Base.copy(A::AbstractUnallocatedArray) = A
 ## Can't actually use NDTensors.set_eltype because it doesn't 
 ## exist yet in thie area
-function Base.complex(A::UnallocFillOrZero)
+function Base.complex(A::AbstractUnallocatedArray)
   return set_alloctype(
     complex(parent(A)), set_parameter(alloctype(A), Position{1}(), complex(eltype(A)))
   )
