@@ -1,6 +1,6 @@
 using FillArrays
 using NDTensors.UnallocatedArrays
-using LinearAlgebra
+using LinearAlgebra : norm
 using Test
 
 @testset "Testing UnallocatedArrays" begin
