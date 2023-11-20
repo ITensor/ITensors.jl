@@ -231,35 +231,40 @@ using GPUArraysCore: @allowscalar
       A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(eltype(A))
     end
 
     @testset "svd example 2" begin
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(eltype(A))
     end
 
     @testset "svd example 3" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(eltype(A))
     end
 
     @testset "svd example 4" begin
       A = dev(BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(eltype(A))
     end
 
     @testset "svd example 5" begin
       A = dev(BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A); atol=default_rtol(eltype(A))
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(eltype(A))
     end
   end
 
@@ -267,7 +272,8 @@ using GPUArraysCore: @allowscalar
     A = BlockSparseTensor([(1, 1), (2, 2)], [2, 4], [2, 4])
     randn!(A)
     expT = exp(A)
-    @test array(expT) ≈ exp(array(A)); atol=default_rtol(eltype(A))
+    @test array(expT) ≈ exp(array(A))
+    atol = default_rtol(eltype(A))
 
     # Hermitian case
     A = BlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2]))

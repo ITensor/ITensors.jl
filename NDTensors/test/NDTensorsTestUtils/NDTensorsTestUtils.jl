@@ -1,11 +1,11 @@
 module NDTensorsTestUtils
 
-  using NDTensors
+using NDTensors
 
-  include("device_list.jl")
-  include("is_suppoted_eltype.jl")
+include("device_list.jl")
+include("is_suppoted_eltype.jl")
 
-  default_rtol(elt::Type) = 10^(0.75 * log10(eps(real(elt))))
+default_rtol(elt::Type) = 10^(0.75 * log10(eps(real(elt))))
 
-  export default_rtol, is_supported_eltype, devices_list;
+export default_rtol, is_supported_eltype, devices_list
 end
