@@ -11,6 +11,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
 
   @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
     elt in [Float32, Float64]
+
     if dev == NDTensors.mtl && elt == Float64
       continue
     end

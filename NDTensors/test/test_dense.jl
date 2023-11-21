@@ -6,7 +6,7 @@ include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: NDTensorsTestUtils
 
 @testset "Dense Tensors" begin
- @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS))
+  @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS))
     elt = dev == NDTensors.mtl ? Float32 : Float64
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
