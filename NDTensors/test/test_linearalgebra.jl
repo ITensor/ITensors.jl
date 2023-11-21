@@ -4,7 +4,7 @@ using LinearAlgebra: Diagonal, qr, diag
 using Test: @testset, @test
 using GPUArraysCore: @allowscalar
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-using .NDTensorsTestUtils: default_rtol, devices_list
+using .NDTensorsTestUtils: NDTensorsTestUtils
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -24,7 +24,6 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
-devs = devices_list(copy(ARGS))
 @testset "QX testing" begin
   @testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular, device=$dev" for qx in
                                                                                                        [
@@ -33,7 +32,7 @@ devs = devices_list(copy(ARGS))
     elt in [Float64, ComplexF64, Float32, ComplexF32],
     positive in [false, true],
     singular in [false, true],
-    dev in devs
+    dev in NDTensorsTestUtils.devices_list(copy(ARGS))
 
     ## Skip Float64 on Metal
     if dev == NDTensors.mtl && (elt == Float64 || elt == ComplexF64)

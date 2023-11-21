@@ -1,5 +1,4 @@
 include("../../NDTensorsTestUtils/NDTensorsTestUtils.jl")
-using .NDTensorsTestUtils: default_rtol, is_supported_eltype, devices_list
 function test_dmrg(elt, N::Integer; dev::Function, conserve_qns)
   sites = siteinds("S=1/2", N; conserve_qns)
 
@@ -23,5 +22,5 @@ function test_dmrg(elt, N::Integer; dev::Function, conserve_qns)
   maxdim = 32
 
   energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel=0)
-  @test energy ≈ reference_energies[N] rtol = default_rtol(elt)
+  @test energy ≈ reference_energies[N] rtol = NDTensorsTestUtils.default_rtol(elt)
 end
