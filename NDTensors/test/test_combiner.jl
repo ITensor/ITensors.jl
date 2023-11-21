@@ -1,17 +1,15 @@
+@eval module $(gensym())
 using NDTensors
-using LinearAlgebra
-using Test
+using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
-## TODO headergaurd
-# include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-# using .NDTensorsTestUtils: default_rtol, devices_list
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: NDTensorsTestUtils
 
 # Testing generic block indices
 using ITensors: QN, Index
 
 @testset "CombinerTensor basic functionality" begin
-  devs = devices_list(copy(ARGS))
-  @testset "test device: $dev" for dev in devs
+  @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS))
     @testset "Dense * Combiner" begin
       d = 2
       input_tensor_inds = (d, d, d)
@@ -87,4 +85,5 @@ using ITensors: QN, Index
       @test_throws Any contract(invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1))
     end
   end
+end
 end

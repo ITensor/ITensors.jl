@@ -1,6 +1,7 @@
-using Dictionaries
+@eval module $(gensym())
+using Dictionaries: Dictionary
 using NDTensors
-using Test
+using Test: @testset, @test
 
 @testset "UniformDiagBlockSparseTensor basic functionality" begin
   NeverAlias = NDTensors.NeverAlias
@@ -23,4 +24,5 @@ using Test
   @test conj(tensor)[1, 1] == conj(c)
   @test conj(NeverAlias(), tensor)[1, 1] == conj(c)
   @test conj(AllowAlias(), tensor)[1, 1] == conj(c)
+end
 end

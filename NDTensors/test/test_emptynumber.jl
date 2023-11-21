@@ -1,6 +1,6 @@
+@eval module $(gensym())
 using NDTensors
-using LinearAlgebra
-using Test
+using Test: @testset, @test, @test_throws
 
 const 𝟎 = NDTensors.EmptyNumber()
 
@@ -28,4 +28,5 @@ const 𝟎 = NDTensors.EmptyNumber()
   @test float(𝟎) isa Float64
   @test norm(𝟎) == 0.0
   @test norm(𝟎) isa Float64
+end
 end

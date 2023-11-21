@@ -1,13 +1,13 @@
+@eval module $(gensym())
 using NDTensors
-using Test
+using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
-## TODO headergaurd
-#include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-#using .NDTensorsTestUtils: default_rtol, devices_list
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: NDTensorsTestUtils
 
 @testset "Dense Tensors" begin
-  devs = devices_list(copy(ARGS))
-  @testset "test device: $dev" for dev in devs
+  @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS))
+    elt = dev == NDTensors.mtl ? Float32 : Float64
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor(elt, (3, 4)))
@@ -276,3 +276,4 @@ using GPUArraysCore: @allowscalar
 end
 
 nothing
+end

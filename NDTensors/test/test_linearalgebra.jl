@@ -1,6 +1,7 @@
+@eval module $(gensym())
 using NDTensors
-using LinearAlgebra
-using Test
+using LinearAlgebra: Diagonal, qr, diag
+using Test: @testset, @test
 using GPUArraysCore: @allowscalar
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: default_rtol, devices_list
@@ -88,3 +89,4 @@ devs = devices_list(copy(ARGS))
 end
 
 nothing
+end

@@ -1,6 +1,4 @@
-using SafeTestsets: @safetestset
-
-@safetestset "test_blocksparse" begin
+@eval module $(gensym())
   using NDTensors
   using LinearAlgebra: exp, Hermitian, svd
   using Test: @testset, @test, @test_throws

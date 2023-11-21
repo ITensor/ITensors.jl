@@ -1,13 +1,12 @@
+@eval module $(gensym())
 using NDTensors
-using Test
+using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
-## TODO headergaurd
-# include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-# using .NDTensorsTestUtils: default_rtol, devices_list
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: NDTensorsTestUtils
 
 @testset "DiagTensor basic functionality" begin
-  devs = devices_list(copy(ARGS))
-  @testset "test device: $dev" for dev in devs,
+  @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
     elt in (Float32, ComplexF32, Float64, ComplexF64)
 
     if dev == NDTensors.mtl && real(elt) ≠ Float32
@@ -66,3 +65,4 @@ end
   @test contract(A, (-2, 1), t, (-2, 3)) == transpose(A)
 end
 nothing
+end

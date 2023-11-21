@@ -1,48 +1,15 @@
-using Test
-using SafeTestsets
-
-include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-using .NDTensorsTestUtils: default_rtol, devices_list
-
-println("Passing arguments ARGS=$(ARGS) to test.")
-
-if isempty(ARGS) || "base" in ARGS
-  println(
-    """\nArguments ARGS = $(ARGS) are empty, or contain `"base"`. Running cpu NDTensors tests.""",
-  )
-end
-if "cuda" in ARGS || "all" in ARGS
-  println("""\nArguments ARGS = $(ARGS) contain `"cuda"`. Running NDTensorCUDA tests.""")
-  using CUDA
-end
-if "metal" in ARGS || "all" in ARGS
-  println("""\nArguments ARGS = $(ARGS) contain`"metal"`. Running NDTensorMetal tests.""")
-  using Metal
-end
+using SafeTestsets: @safetestset
 
 @safetestset "NDTensors" begin
-  @testset "$filename" for filename in [
-    "BlockSparseArrays.jl",
-    "DiagonalArrays.jl",
-    "SetParameters.jl",
-    "SmallVectors.jl",
-    "SortedSets.jl",
-    "TagSets.jl",
-    "TensorAlgebra.jl",
-    "Unwrap.jl",
-    "linearalgebra.jl",
-    "dense.jl",
-    "blocksparse.jl",
-    "diagblocksparse.jl",
-    "diag.jl",
-    "emptynumber.jl",
-    "emptystorage.jl",
-    "combiner.jl",
-    "arraytensor/arraytensor.jl",
-    "ITensors/runtests.jl",
-  ]
-    println("Running $filename")
-    include(filename)
+  using Test: @testset
+  @testset "$(@__DIR__)" begin
+    filenames = filter(readdir(@__DIR__)) do f
+      startswith("test_")(f) && endswith(".jl")(f)
+    end
+    @testset "Test $(@__DIR__)/$filename" for filename in filenames
+      println("Running $(@__DIR__)/$filename")
+      include(filename)
+    end
   end
   if "cuda" in ARGS || "all" in ARGS
     include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
