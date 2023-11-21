@@ -48,6 +48,9 @@ end
 Construct a block sparse tensor with uninitialized memory
 from indices and locations of non-zero blocks.
 """
+function BlockSparseTensor{ElT}(::UndefInitializer, blocksoffsets, inds) where {ElT<:Number}
+  return BlockSparseTensor(ElT, undef, blockoffsets, inds)
+end
 function BlockSparseTensor(::UndefInitializer, blockoffsets, inds)
   return BlockSparseTensor(NDTensors.default_eltype(), undef, blockoffsets, inds)
 end
@@ -170,6 +173,12 @@ BlockSparseTensor(blocks::Vector{Block{N}},
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
+function BlockSparseTensor{ElT}(
+  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
+) where {ElT<:Number,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
+  return BlockSparseTensor(ElT, blocks, inds)
+end
+
 function BlockSparseTensor(
   blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
 ) where {BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
