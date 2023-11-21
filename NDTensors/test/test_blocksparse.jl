@@ -1,299 +1,305 @@
 @eval module $(gensym())
-  using NDTensors
-  using LinearAlgebra: exp, Hermitian, svd
-  using Test: @testset, @test, @test_throws
-  using GPUArraysCore: @allowscalar
-  include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-  using .NDTensorsTestUtils: NDTensorsTestUtils
+using NDTensors
+using LinearAlgebra: exp, Hermitian, svd
+using Test: @testset, @test, @test_throws
+using GPUArraysCore: @allowscalar
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: NDTensorsTestUtils
 
-  @testset "BlockSparseTensor basic functionality" begin
-    C = nothing
+@testset "BlockSparseTensor basic functionality" begin
+  C = nothing
 
-    @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)), elt in [Float32, Float64]
-      if dev == NDTensors.mtl && elt == Float64
-        continue;
-      end
-      # Indices
-      indsA = ([2, 3], [4, 5])
+  @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
+    elt in [Float32, Float64]
 
-      # Locations of non-zero blocks
-      locs = [(1, 2), (2, 1)]
+    if dev == NDTensors.mtl && elt == Float64
+      continue
+    end
+    # Indices
+    indsA = ([2, 3], [4, 5])
 
-      A = dev(BlockSparseTensor{elt}(locs, indsA...))
-      randn!(A)
+    # Locations of non-zero blocks
+    locs = [(1, 2), (2, 1)]
 
-      @test blockdims(A, (1, 2)) == (2, 5)
-      @test blockdims(A, (2, 1)) == (3, 4)
-      @test nnzblocks(A) == 2
-      @test nnz(A) == 2 * 5 + 3 * 4
-      @test inds(A) == ([2, 3], [4, 5])
-      @test isblocknz(A, (2, 1))
-      @test isblocknz(A, (1, 2))
-      @test !isblocknz(A, (1, 1))
-      @test !isblocknz(A, (2, 2))
+    A = dev(BlockSparseTensor{elt}(locs, indsA...))
+    randn!(A)
 
-      # Test different ways of getting nnz
-      @test nnz(blockoffsets(A), inds(A)) == nnz(A)
+    @test blockdims(A, (1, 2)) == (2, 5)
+    @test blockdims(A, (2, 1)) == (3, 4)
+    @test nnzblocks(A) == 2
+    @test nnz(A) == 2 * 5 + 3 * 4
+    @test inds(A) == ([2, 3], [4, 5])
+    @test isblocknz(A, (2, 1))
+    @test isblocknz(A, (1, 2))
+    @test !isblocknz(A, (1, 1))
+    @test !isblocknz(A, (2, 2))
 
-      B = 2 * A
-      @test B[1, 1] == 2 * A[1, 1]
-      @test nnz(A) == 2 * 5 + 3 * 4
-      @test nnz(B) == 2 * 5 + 3 * 4
-      @test nnzblocks(A) == 2
-      @test nnzblocks(B) == 2
+    # Test different ways of getting nnz
+    @test nnz(blockoffsets(A), inds(A)) == nnz(A)
 
-      B = A / 2
-      @test B[1, 1] == A[1, 1] / 2
-      @test nnz(A) == 2 * 5 + 3 * 4
-      @test nnz(B) == 2 * 5 + 3 * 4
-      @test nnzblocks(A) == 2
-      @test nnzblocks(B) == 2
+    B = 2 * A
+    @test B[1, 1] == 2 * A[1, 1]
+    @test nnz(A) == 2 * 5 + 3 * 4
+    @test nnz(B) == 2 * 5 + 3 * 4
+    @test nnzblocks(A) == 2
+    @test nnzblocks(B) == 2
 
-      @allowscalar begin
-        A[1, 5] = 15
-        A[2, 5] = 25
+    B = A / 2
+    @test B[1, 1] == A[1, 1] / 2
+    @test nnz(A) == 2 * 5 + 3 * 4
+    @test nnz(B) == 2 * 5 + 3 * 4
+    @test nnzblocks(A) == 2
+    @test nnzblocks(B) == 2
 
-        @test A[1, 1] == 0
-        @test A[1, 5] == 15
-        @test A[2, 5] == 25
-      end
-      D = dense(A)
+    @allowscalar begin
+      A[1, 5] = 15
+      A[2, 5] = 25
 
-      @allowscalar begin
-        @test D == A
+      @test A[1, 1] == 0
+      @test A[1, 5] == 15
+      @test A[2, 5] == 25
+    end
+    D = dense(A)
 
-        for I in eachindex(A)
-          @test D[I] == A[I]
-        end
-      end
+    @allowscalar begin
+      @test D == A
 
-      A12 = blockview(A, (1, 2))
-
-      @test dims(A12) == (2, 5)
-
-      @allowscalar for I in eachindex(A12)
-        @test A12[I] == A[I + CartesianIndex(0, 4)]
-      end
-
-      B = dev(BlockSparseTensor(undef, locs, indsA))
-      randn!(B)
-
-      C = A + B
-
-      @allowscalar for I in eachindex(C)
-        @test C[I] == A[I] + B[I]
-      end
-
-      Ap = permutedims(A, (2, 1))
-
-      @test blockdims(Ap, (1, 2)) == (4, 3)
-      @test blockdims(Ap, (2, 1)) == (5, 2)
-      @test nnz(A) == nnz(Ap)
-      @test nnzblocks(A) == nnzblocks(Ap)
-
-      @allowscalar for I in eachindex(C)
-        @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
-      end
-
-      A = dev(BlockSparseTensor(complex(elt), locs, indsA))
-      randn!(A)
-      @test conj(data(store(A))) == data(store(conj(A)))
-      @test typeof(conj(A)) <: BlockSparseTensor
-
-      @testset "Random constructor" for elt in [Float32, Float64]
-        T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
-        @test nnzblocks(T) == 2
-        @test nnz(T) == 8
-        @test eltype(T) == elt
-        @test norm(T) ≉ 0
-
-        Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
-        @test nnzblocks(Tc) == 2
-        @test nnz(Tc) == 8
-        @test eltype(Tc) == complex(elt)
-        @test norm(Tc) ≉ 0
-      end
-
-      @testset "Complex Valued Operations" for elt in [Float32, Float64]
-        T = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
-        rT = real(T)
-        @test eltype(rT) == elt
-        @test nnzblocks(rT) == nnzblocks(T)
-        iT = imag(T)
-        @test eltype(iT) == elt
-        @test nnzblocks(iT) == nnzblocks(T)
-        @test norm(rT)^2 + norm(iT)^2 ≈ norm(T)^2
-
-        cT = conj(T)
-        @test eltype(cT) == complex(elt)
-        @test nnzblocks(cT) == nnzblocks(T)
-      end
-
-      @testset "similartype regression test" for elt in [Float32, Float64]
-        # Regression test for issue seen in:
-        # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
-        # Previously, `similartype` wasn't using information about the dimensions
-        # properly and was returning a `BlockSparse` storage of the dimensions
-        # of the input tensor.
-        T = dev(BlockSparseTensor(elt, [(1, 1)], ([2], [2])))
-        @test NDTensors.ndims(
-          NDTensors.storagetype(NDTensors.similartype(typeof(T), ([2], [2], [2])))
-        ) == 3
-      end
-
-      @testset "Random constructor" for elt in [Float32, Float64]
-        T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
-        @test nnzblocks(T) == 2
-        @test nnz(T) == 8
-        @test eltype(T) == elt
-        @test norm(T) ≉ 0
-
-        Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
-        @test nnzblocks(Tc) == 2
-        @test nnz(Tc) == 8
-        @test eltype(Tc) == complex(elt)
-        @test norm(Tc) ≉ 0
-      end
-
-      @testset "permute_combine" for elt in [Float32, Float64]
-        indsA = ([2, 3], [4, 5], [6, 7, 8])
-        locsA = [(2, 1, 1), (1, 2, 1), (2, 2, 3)]
-        A = dev(BlockSparseTensor{elt}(locsA, indsA...))
-        randn!(A)
-
-        B = NDTensors.permute_combine(A, 3, (2, 1))
-        @test nnzblocks(A) == nnzblocks(B)
-        @test nnz(A) == nnz(B)
-
-        Ap = NDTensors.permutedims(A, (3, 2, 1))
-
-        @allowscalar for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
-          blockAp = blockview(Ap, bAp)
-          blockB = blockview(B, bB)
-          @test reshape(blockAp, size(blockB)) == blockB
-        end
+      for I in eachindex(A)
+        @test D[I] == A[I]
       end
     end
 
-    @testset "BlockSparseTensor setindex! add block" begin
-      T = BlockSparseTensor([2, 3], [4, 5])
+    A12 = blockview(A, (1, 2))
 
-      @allowscalar for I in eachindex(T)
-        @test T[I] == 0.0
-      end
-      @test nnz(T) == 0
-      @test nnzblocks(T) == 0
-      @test !isblocknz(T, (1, 1))
-      @test !isblocknz(T, (2, 1))
-      @test !isblocknz(T, (1, 2))
-      @test !isblocknz(T, (2, 2))
+    @test dims(A12) == (2, 5)
 
-      T[1, 1] = 1.0
+    @allowscalar for I in eachindex(A12)
+      @test A12[I] == A[I + CartesianIndex(0, 4)]
+    end
 
-      @test T[1, 1] == 1.0
-      @test nnz(T) == 8
-      @test nnzblocks(T) == 1
-      @test isblocknz(T, (1, 1))
-      @test !isblocknz(T, (2, 1))
-      @test !isblocknz(T, (1, 2))
-      @test !isblocknz(T, (2, 2))
+    B = dev(BlockSparseTensor(undef, locs, indsA))
+    randn!(B)
 
-      T[4, 8] = 2.0
+    C = A + B
 
-      @test T[4, 8] == 2.0
-      @test nnz(T) == 8 + 15
+    @allowscalar for I in eachindex(C)
+      @test C[I] == A[I] + B[I]
+    end
+
+    Ap = permutedims(A, (2, 1))
+
+    @test blockdims(Ap, (1, 2)) == (4, 3)
+    @test blockdims(Ap, (2, 1)) == (5, 2)
+    @test nnz(A) == nnz(Ap)
+    @test nnzblocks(A) == nnzblocks(Ap)
+
+    @allowscalar for I in eachindex(C)
+      @test A[I] == Ap[NDTensors.permute(I, (2, 1))]
+    end
+
+    A = dev(BlockSparseTensor(complex(elt), locs, indsA))
+    randn!(A)
+    @test conj(data(store(A))) == data(store(conj(A)))
+    @test typeof(conj(A)) <: BlockSparseTensor
+
+    @testset "Random constructor" for elt in [Float32, Float64]
+      T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
-      @test isblocknz(T, (1, 1))
-      @test !isblocknz(T, (2, 1))
-      @test !isblocknz(T, (1, 2))
-      @test isblocknz(T, (2, 2))
+      @test nnz(T) == 8
+      @test eltype(T) == elt
+      @test norm(T) ≉ 0
 
-      T[1, 6] = 3.0
-
-      @test T[1, 6] == 3.0
-      @test nnz(T) == 8 + 15 + 10
-      @test nnzblocks(T) == 3
-      @test isblocknz(T, (1, 1))
-      @test !isblocknz(T, (2, 1))
-      @test isblocknz(T, (1, 2))
-      @test isblocknz(T, (2, 2))
-
-      T[4, 2] = 4.0
-
-      @test T[4, 2] == 4.0
-      @test nnz(T) == 8 + 15 + 10 + 12
-      @test nnzblocks(T) == 4
-      @test isblocknz(T, (1, 1))
-      @test isblocknz(T, (2, 1))
-      @test isblocknz(T, (1, 2))
-      @test isblocknz(T, (2, 2))
+      Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      @test nnzblocks(Tc) == 2
+      @test nnz(Tc) == 8
+      @test eltype(Tc) == complex(elt)
+      @test norm(Tc) ≉ 0
     end
 
-    @testset "svd on $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)), elt in [Float32, Float64]
-      if dev == NDTensors.mtl && elt == Float64
-        continue;
-      end
-      @testset "svd example 1" begin
-        A = dev(BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-        atol = NDTensorsTestUtils.default_rtol(elt)
-      end
+    @testset "Complex Valued Operations" for elt in [Float32, Float64]
+      T = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      rT = real(T)
+      @test eltype(rT) == elt
+      @test nnzblocks(rT) == nnzblocks(T)
+      iT = imag(T)
+      @test eltype(iT) == elt
+      @test nnzblocks(iT) == nnzblocks(T)
+      @test norm(rT)^2 + norm(iT)^2 ≈ norm(T)^2
 
-      @testset "svd example 2" begin
-        A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-        atol = NDTensorsTestUtils.default_rtol(elt)
-      end
-
-      @testset "svd example 3" begin
-        A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-        atol = NDTensorsTestUtils.default_rtol(elt)
-      end
-
-      @testset "svd example 4" begin
-        A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-        atol = NDTensorsTestUtils.default_rtol(elt)
-      end
-
-      @testset "svd example 5" begin
-        A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-        atol = NDTensorsTestUtils.default_rtol(elt)
-      end
+      cT = conj(T)
+      @test eltype(cT) == complex(elt)
+      @test nnzblocks(cT) == nnzblocks(T)
     end
 
-    @testset "exp" for elt in [Float32, Float64]
-      A = BlockSparseTensor{elt}([(1, 1), (2, 2)], [2, 4], [2, 4])
-      randn!(A)
-      expT = exp(A)
-      @test array(expT) ≈ exp(array(A))
-      atol = NDTensorsTestUtils.default_rtol(elt)
+    @testset "similartype regression test" for elt in [Float32, Float64]
+      # Regression test for issue seen in:
+      # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
+      # Previously, `similartype` wasn't using information about the dimensions
+      # properly and was returning a `BlockSparse` storage of the dimensions
+      # of the input tensor.
+      T = dev(BlockSparseTensor(elt, [(1, 1)], ([2], [2])))
+      @test NDTensors.ndims(
+        NDTensors.storagetype(NDTensors.similartype(typeof(T), ([2], [2], [2])))
+      ) == 3
+    end
 
-      # Hermitian case
-      A = BlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+    @testset "Random constructor" for elt in [Float32, Float64]
+      T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      @test nnzblocks(T) == 2
+      @test nnz(T) == 8
+      @test eltype(T) == elt
+      @test norm(T) ≉ 0
+
+      Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      @test nnzblocks(Tc) == 2
+      @test nnz(Tc) == 8
+      @test eltype(Tc) == complex(elt)
+      @test norm(Tc) ≉ 0
+    end
+
+    @testset "permute_combine" for elt in [Float32, Float64]
+      indsA = ([2, 3], [4, 5], [6, 7, 8])
+      locsA = [(2, 1, 1), (1, 2, 1), (2, 2, 3)]
+      A = dev(BlockSparseTensor{elt}(locsA, indsA...))
       randn!(A)
-      Ah = BlockSparseTensor(complex(elt), undef, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
-      for bA in eachnzblock(A)
-        b = blockview(A, bA)
-        blockview(Ah, bA) .= b + b'
+
+      B = NDTensors.permute_combine(A, 3, (2, 1))
+      @test nnzblocks(A) == nnzblocks(B)
+      @test nnz(A) == nnz(B)
+
+      Ap = NDTensors.permutedims(A, (3, 2, 1))
+
+      @allowscalar for (bAp, bB) in zip(eachnzblock(Ap), eachnzblock(B))
+        blockAp = blockview(Ap, bAp)
+        blockB = blockview(B, bB)
+        @test reshape(blockAp, size(blockB)) == blockB
       end
-      expTh = exp(Hermitian(Ah))
-      @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = NDTensorsTestUtils.default_rtol(eltype(Ah))
-
-      A = BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2])
-      @test_throws ErrorException exp(A)
     end
   end
+
+  @testset "BlockSparseTensor setindex! add block" begin
+    T = BlockSparseTensor([2, 3], [4, 5])
+
+    @allowscalar for I in eachindex(T)
+      @test T[I] == 0.0
+    end
+    @test nnz(T) == 0
+    @test nnzblocks(T) == 0
+    @test !isblocknz(T, (1, 1))
+    @test !isblocknz(T, (2, 1))
+    @test !isblocknz(T, (1, 2))
+    @test !isblocknz(T, (2, 2))
+
+    T[1, 1] = 1.0
+
+    @test T[1, 1] == 1.0
+    @test nnz(T) == 8
+    @test nnzblocks(T) == 1
+    @test isblocknz(T, (1, 1))
+    @test !isblocknz(T, (2, 1))
+    @test !isblocknz(T, (1, 2))
+    @test !isblocknz(T, (2, 2))
+
+    T[4, 8] = 2.0
+
+    @test T[4, 8] == 2.0
+    @test nnz(T) == 8 + 15
+    @test nnzblocks(T) == 2
+    @test isblocknz(T, (1, 1))
+    @test !isblocknz(T, (2, 1))
+    @test !isblocknz(T, (1, 2))
+    @test isblocknz(T, (2, 2))
+
+    T[1, 6] = 3.0
+
+    @test T[1, 6] == 3.0
+    @test nnz(T) == 8 + 15 + 10
+    @test nnzblocks(T) == 3
+    @test isblocknz(T, (1, 1))
+    @test !isblocknz(T, (2, 1))
+    @test isblocknz(T, (1, 2))
+    @test isblocknz(T, (2, 2))
+
+    T[4, 2] = 4.0
+
+    @test T[4, 2] == 4.0
+    @test nnz(T) == 8 + 15 + 10 + 12
+    @test nnzblocks(T) == 4
+    @test isblocknz(T, (1, 1))
+    @test isblocknz(T, (2, 1))
+    @test isblocknz(T, (1, 2))
+    @test isblocknz(T, (2, 2))
+  end
+
+  @testset "svd on $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
+    elt in [Float32, Float64]
+
+    if dev == NDTensors.mtl && elt == Float64
+      continue
+    end
+    @testset "svd example 1" begin
+      A = dev(BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2]))
+      randn!(A)
+      U, S, V = svd(A)
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = NDTensorsTestUtils.default_rtol(elt)
+    end
+
+    @testset "svd example 2" begin
+      A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
+      randn!(A)
+      U, S, V = svd(A)
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = NDTensorsTestUtils.default_rtol(elt)
+    end
+
+    @testset "svd example 3" begin
+      A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
+      randn!(A)
+      U, S, V = svd(A)
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = NDTensorsTestUtils.default_rtol(elt)
+    end
+
+    @testset "svd example 4" begin
+      A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
+      randn!(A)
+      U, S, V = svd(A)
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = NDTensorsTestUtils.default_rtol(elt)
+    end
+
+    @testset "svd example 5" begin
+      A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
+      randn!(A)
+      U, S, V = svd(A)
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = NDTensorsTestUtils.default_rtol(elt)
+    end
+  end
+
+  @testset "exp" for elt in [Float32, Float64]
+    A = BlockSparseTensor{elt}([(1, 1), (2, 2)], [2, 4], [2, 4])
+    randn!(A)
+    expT = exp(A)
+    @test array(expT) ≈ exp(array(A))
+    atol = NDTensorsTestUtils.default_rtol(elt)
+
+    # Hermitian case
+    A = BlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+    randn!(A)
+    Ah = BlockSparseTensor(complex(elt), undef, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+    for bA in eachnzblock(A)
+      b = blockview(A, bA)
+      blockview(Ah, bA) .= b + b'
+    end
+    expTh = exp(Hermitian(Ah))
+    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = NDTensorsTestUtils.default_rtol(
+      eltype(Ah)
+    )
+
+    A = BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2])
+    @test_throws ErrorException exp(A)
+  end
+end
 end
