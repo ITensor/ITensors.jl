@@ -73,7 +73,7 @@ end
 
 Construct a block sparse tensor with no blocks.
 """
-BlockSparseTensor(inds) = BlockSparseTensor(FloNDTensors.default_eltype()at64, inds)
+BlockSparseTensor(inds) = BlockSparseTensor(NDTensors.default_eltype(), inds)
 
 function BlockSparseTensor(datatype::Type{<:AbstractArray}, inds)
   return BlockSparseTensor(datatype, BlockOffsets{length(inds)}(), inds)
