@@ -28,7 +28,6 @@ Base.@propagate_inbounds function Base.setindex!(S::TensorStorage, v, i::Integer
   return (setindex!(data(S), v, i); S)
 end
 
-## Missing a check or conversion when calling number * Tensor. This causes Metal to fail numerically because it tries to convert it to Float64. Preserve S eltype. ## TODO this could probably be handled differently/better?
 (S::TensorStorage * x::Number) = setdata(S, x * data(S))
 (x::Number * S::TensorStorage) = S * x
 (S::TensorStorage / x::Number) = setdata(S, data(S) / x)
