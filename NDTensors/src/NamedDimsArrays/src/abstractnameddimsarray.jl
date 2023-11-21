@@ -25,8 +25,11 @@ isnamed(::AbstractNamedDimsArray) = true
 # Helper function, move to `utils.jl`.
 named_tuple(t::Tuple, names) = ntuple(i -> named(t[i], names[i]), length(t))
 
+# TODO: Should `axes` output named axes or not?
 # TODO: Use the proper type, `namedaxistype(a)`.
-Base.axes(a::AbstractNamedDimsArray) = named_tuple(axes(unname(a)), dimnames(a))
+# Base.axes(a::AbstractNamedDimsArray) = named_tuple(axes(unname(a)), dimnames(a))
+Base.axes(a::AbstractNamedDimsArray) = axes(unname(a))
+
 # TODO: Use the proper type, `namedlengthtype(a)`.
 Base.size(a::AbstractNamedDimsArray) = length.(axes(a))
 Base.getindex(a::AbstractNamedDimsArray, I...) = unname(a)[I...]

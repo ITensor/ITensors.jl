@@ -1,5 +1,5 @@
 using ..ITensors: ITensors, Index, IndexID, dim, space
-using ..NDTensors: NDTensors
+using ..NDTensors: NDTensors, AliasStyle
 using ..NDTensors.NamedDimsArrays:
   NamedDimsArrays, AbstractNamedDimsArray, NamedInt, dimnames, named, name, unname
 using ITensors: ITensors, Index, IndexID, prime
@@ -27,7 +27,12 @@ Base.:(==)(i1::Index, i2::IndexID) = (name(i1) == i2)
 
 # Accessors
 Base.convert(type::Type{<:IndexID}, i::Index) = type(i)
-NDTensors.inds(na::AbstractNamedDimsArray) = Index.(size(na))
+# TODO: Use this if `size` output named dimensions.
+# NDTensors.inds(na::AbstractNamedDimsArray) = Index.(size(na))
+# TODO: defined `namedsize` and use that here.
+function NDTensors.inds(na::AbstractNamedDimsArray)
+  return Index.(named.(size(na), dimnames(na)))
+end
 NDTensors.storage(na::AbstractNamedDimsArray) = na
 
 # Priming, tagging `IndexID`
@@ -45,6 +50,9 @@ function ITensors.settags(na::AbstractNamedDimsArray, args...; kwargs...)
 end
 function ITensors.replaceind(na::AbstractNamedDimsArray, i::Index, j::Index)
   return replacenames(na, name(i) => name(j))
+end
+function ITensors.replaceinds(na::AbstractNamedDimsArray, is, js)
+  return replacenames(na, (name.(is) .=> name.(js))...)
 end
 
 # TODO: Complex conjugate and flop arrows!

@@ -19,6 +19,19 @@ function LinearAlgebra.qr(na::AbstractNamedDimsArray; kwargs...)
 end
 
 # TODO: Move to `NamedDimsArraysTensorAlgebraExt`.
+using LinearAlgebra: LinearAlgebra, Hermitian, eigen
+function LinearAlgebra.eigen(
+  a::Hermitian{T,<:AbstractNamedDimsArray{T}};
+  mindim=nothing,
+  maxdim=nothing,
+  cutoff=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+) where {T<:Union{Real,Complex}}
+  return error("Not implemented")
+end
+
+# TODO: Move to `NamedDimsArraysTensorAlgebraExt`.
 function TensorAlgebra.fusedims(na::AbstractNamedDimsArray, fusions::Pair...)
   # TODO: generalize to multiple fused groups of dimensions
   @assert isone(length(fusions))
