@@ -29,7 +29,7 @@ end
                                                                                                        [
       qr, ql
     ],
-    elt in [Float64, ComplexF64, Float32, ComplexF32],
+    elt in (Float64, ComplexF64, Float32, ComplexF32),
     positive in [false, true],
     singular in [false, true],
     dev in NDTensorsTestUtils.devices_list(copy(ARGS))
