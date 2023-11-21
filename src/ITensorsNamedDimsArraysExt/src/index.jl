@@ -1,8 +1,7 @@
-using ..ITensors: ITensors, Index, IndexID, dim, space
+using ..ITensors: ITensors, Index, IndexID, dim, noprime, prime, settags, space
 using ..NDTensors: NDTensors, AliasStyle
 using ..NDTensors.NamedDimsArrays:
   NamedDimsArrays, AbstractNamedDimsArray, NamedInt, dimnames, named, name, unname
-using ITensors: ITensors, Index, IndexID, prime
 
 function replacenames(na::AbstractNamedDimsArray, replacement::Pair...)
   return named(unname(na), replace(dimnames(na), replacement...))

@@ -5,7 +5,7 @@ using NDTensors: NDTensors, Tensor, Combiner
 
 # TODO: Move to `NamedDimsArraysTensorAlgebraExt`.
 using LinearAlgebra: LinearAlgebra, qr
-function LinearAlgebra.qr(na::AbstractNamedDimsArray; kwargs...)
+function LinearAlgebra.qr(na::AbstractNamedDimsArray; positive=nothing)
   # TODO: Make this more systematic.
   i, j = dimnames(na)
   # TODO: Create a `TensorAlgebra.qr`.
