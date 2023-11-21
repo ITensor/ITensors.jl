@@ -1,5 +1,5 @@
 using NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, named, unname
-using NDTensors.TensorAlgebra: contract
+using NDTensors.TensorAlgebra: TensorAlgebra, contract
 
 function TensorAlgebra.contract(
   na1::AbstractNamedDimsArray, na2::AbstractNamedDimsArray, α, β; kwargs...

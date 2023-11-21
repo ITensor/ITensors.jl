@@ -58,13 +58,6 @@ function Base.similar(
   return undefs(arraytype, axes)
 end
 
-# TODO: Use `AbstractNamedUnitRange`, determine the `AbstractNamedDimsArray`
-# from a default value. Useful for distinguishing between `NamedDimsArray`
-# and `ITensor`.
-function Base.randn(size::Vararg{NamedInt})
-  return named(randn(unname.(size)), name.(size))
-end
-
 # TODO: Define `NamedInt`, `NamedUnitRange`, `NamedVector <: AbstractVector`, etc.
 # See https://github.com/mcabbott/NamedPlus.jl/blob/v0.0.5/src/int.jl.
 

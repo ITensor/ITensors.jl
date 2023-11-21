@@ -1,3 +1,6 @@
+# Private inner constructor
+function _ITensor end
+
 """
     ITensor
 
@@ -76,23 +79,21 @@ NDTensors.Dense{Float64,Array{Float64,1}}
   1.2579101497658178  -1.3559959053693322
 ```
 """
-
-## The categories in this file are
-## constructors, properties, iterators,
-## Accessor Functions, Index Functions and Operations
 mutable struct ITensor
-  tensor::Tensor
-  function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:Any,<:Tuple})
-    @debug_check begin
-      is = inds(T)
-      if !allunique(is)
-        error(
-          "Trying to create ITensors with collection of indices $is. Indices must be unique.",
-        )
-      end
+  tensor
+  global @inline _ITensor(parent) = new(parent)
+end
+
+function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:Any,<:Tuple})
+  @debug_check begin
+    is = inds(T)
+    if !allunique(is)
+      error(
+        "Trying to create ITensors with collection of indices $is. Indices must be unique.",
+      )
     end
-    return new(T)
   end
+  return _ITensor(T)
 end
 
 #########################

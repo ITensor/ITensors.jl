@@ -141,6 +141,12 @@ include("adapt.jl")
 include("set_types.jl")
 
 #####################################
+# ITensorsNamedDimsArraysExt
+#
+include("ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
+using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
+
+#####################################
 # Experimental ITensor Functions
 #
 include("tensor_operations/itensor_combiner.jl")

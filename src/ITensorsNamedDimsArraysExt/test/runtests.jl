@@ -1,6 +1,6 @@
 using Test: @testset
 
-@testset "NamedDimsArrays" begin
+@testset "ITensorsNamedDimsArraysExt" begin
   filenames = filter(readdir(@__DIR__)) do filename
     startswith("test_")(filename) && endswith(".jl")(filename)
   end
