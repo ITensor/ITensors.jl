@@ -34,6 +34,8 @@ function NDTensors.inds(na::AbstractNamedDimsArray)
 end
 NDTensors.storage(na::AbstractNamedDimsArray) = na
 
+NDTensors.dim(na::AbstractNamedDimsArray) = length(na)
+
 # Priming, tagging `IndexID`
 ITensors.prime(i::IndexID) = IndexID(prime(Index(named(0, i))))
 ITensors.noprime(i::IndexID) = IndexID(noprime(Index(named(0, i))))

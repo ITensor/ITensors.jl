@@ -31,7 +31,16 @@ function ITensors._map!!(
   na2::AbstractNamedDimsArray,
 )
   # TODO: Handle maybe-mutation.
-  # TODO: Handle permutations!
+  # TODO: Handle permutations better!
+  perm1 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na1))
+  perm2 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na2))
+  perm1 = invperm(perm1)
+  perm2 = invperm(perm2)
+  # TODO: Preserve names in `permutedims`.
+  na1 = named(permutedims(na1, perm1), map(i -> dimnames(na1)[i], perm1))
+  na2 = named(permutedims(na2, perm2), map(i -> dimnames(na2)[i], perm2))
+  perm1 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na1))
+  perm2 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na2))
   map!(f, na_dest, na1, na2)
   return na_dest
 end
