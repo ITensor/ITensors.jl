@@ -1,9 +1,5 @@
-using ..NDTensors: DenseTensor, DiagTensor, BlockSparseTensor, data, inds
-using ..NDTensors.DiagonalArrays: DiagonalArray
-using ..NDTensors.BlockSparseArrays: BlockSparseArray
-using ..NDTensors: CombinerTensor, CombinerArray, storage
+using ..NDTensors: data, inds
 using ITensors: ITensor
-using ITensors: AbstractMPS
 
 # TODO: Delete this, it is a hack to decide
 # if an Index is blocked.
@@ -25,16 +21,21 @@ function to_axes(inds::Tuple)
   end
 end
 
+using ..NDTensors: DenseTensor
 # TODO: Delete once `Dense` is removed.
 function to_nameddimsarray(x::DenseTensor)
   return named(reshape(data(x), size(x)), name.(inds(x)))
 end
 
+using ..NDTensors: DiagTensor
+using ..NDTensors.DiagonalArrays: DiagonalArray
 # TODO: Delete once `Diag` is removed.
 function to_nameddimsarray(x::DiagTensor)
   return named(DiagonalArray(data(x), size(x)), name.(inds(x)))
 end
 
+using ..NDTensors: BlockSparseTensor
+using ..NDTensors.BlockSparseArrays: BlockSparseArray
 # TODO: Delete once `BlockSparse` is removed.
 function to_nameddimsarray(x::BlockSparseTensor)
   blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], inds(x))
@@ -48,6 +49,7 @@ function to_nameddimsarray(x::BlockSparseTensor)
   return named(arraystorage, name.(inds(x)))
 end
 
+using ..NDTensors: CombinerTensor, CombinerArray, storage
 # TODO: Delete when we directly use `CombinerArray` as storage.
 function to_nameddimsarray(t::CombinerTensor)
   return named(CombinerArray(storage(t), to_axes(inds(t))), name.(inds(t)))
@@ -55,7 +57,8 @@ end
 
 to_nameddimsarray(t::ITensor) = ITensor(to_nameddimsarray(t.tensor))
 
+using ITensors: AbstractMPS
 # TODO: Delete once `TensorStorage` is removed.
 function to_nameddimsarray(x::AbstractMPS)
-  return to_nameddimsarray.(x)
+   return to_nameddimsarray.(x)
 end

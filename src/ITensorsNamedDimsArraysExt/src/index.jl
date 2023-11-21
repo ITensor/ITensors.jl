@@ -1,4 +1,4 @@
-using ..ITensors: ITensors, Index, IndexID, space
+using ..ITensors: ITensors, Index, IndexID, dim, space
 using ..NDTensors: NDTensors
 using ..NDTensors.NamedDimsArrays: NamedDimsArrays, AbstractNamedDimsArray, NamedInt, dimnames, named, name, unname
 using ITensors: ITensors, Index, IndexID, prime
