@@ -12,6 +12,9 @@ function ITensors.Index(i::NamedInt{<:Any,<:IndexID})
   dir = ITensors.Neither
   return Index(n.id, space, dir, n.tags, n.plev)
 end
+function NamedDimsArrays.NamedInt(i::Index)
+  return named(dim(i), name(i))
+end
 
 # TODO: This is piracy, change this?
 Base.:(==)(i1::IndexID, i2::Index) = (i1 == name(i2))

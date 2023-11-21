@@ -10,8 +10,7 @@ default_eltype() = Float64
 for f in [:rand, :randn]
   @eval begin
     function Base.$f(rng::AbstractRNG, elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}})
-      a = $f(rng, elt, unname.(dims))
-      return ITensor(named(a, name.(dims)))
+      return ITensor($f(rng, elt, NamedInt.(dims)))
     end
     function Base.$f(rng::AbstractRNG, elt::Type{<:Number}, dim1::Index, dims::Vararg{Index})
       return $f(rng, elt, (dim1, dims...))
@@ -25,8 +24,7 @@ end
 for f in [:zeros, :ones]
   @eval begin
     function Base.$f(elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}})
-      a = $f(elt, unname.(dims))
-      return ITensor(named(a, name.(dims)))
+      return ITensor($f(elt, NamedInt.(dims)))
     end
     function Base.$f(elt::Type{<:Number}, dim1::Index, dims::Vararg{Index})
       return $f(elt, (dim1, dims...))
@@ -36,9 +34,8 @@ for f in [:zeros, :ones]
   end
 end
 function Base.fill(value, dims::Tuple{Index,Vararg{Index}})
-  a = fill(value, unname.(dims))
-  return ITensor(named(a, name.(dims)))
+  return ITensor(fill(value, NamedInt.(dims)))
 end
 function Base.fill(value, dim1::Index, dims::Vararg{Index})
   return fill(value, (dim1, dims...))
-end
+ end
