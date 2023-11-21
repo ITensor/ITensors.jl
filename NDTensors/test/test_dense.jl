@@ -1,12 +1,12 @@
 @eval module $(gensym())
 using NDTensors
-using Test: @testset, @test, @test_throws
+using Test: @testset, @test, @test_throws, @test_broken
 using GPUArraysCore: @allowscalar
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: NDTensorsTestUtils
 
 @testset "Dense Tensors" begin
-  @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS))
+ @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS))
     elt = dev == NDTensors.mtl ? Float32 : Float64
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
@@ -33,7 +33,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       Aview = A[2:3, 2:3]
       @test dims(Aview) == (2, 2)
 
-      B = dev(Tensor(undef, (3, 4)))
+      B = dev(Tensor(elt, undef, (3, 4)))
       randn!(B)
       C = copy(A)
       C = permutedims!!(C, B, (1, 2), +)
@@ -68,10 +68,16 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
         @test A[2, 2] == Aview[1, 1]
       end
 
-      ## Right now this treats the `Tensor` type as an abstract Array 
-      ## And calls getindex instead of CUDA.==. Can fix by converting to CPU or 
-      ## Just looking at the data
-      @test data(A * 2.0) == data(2.0 * A)
+      ## There is an issue in metal like this
+      ## julia> MtlVector{Float32}(undef, (10,)) .+ 2.0
+      ## ERROR: Metal does not support Float64 values, try using Float32 instead
+      ## This is a temporary fix while metal is broken
+      if dev == NDTensors.mtl
+        #@test data(A * elt(2.0)) == data(elt(2.0) * A)
+        @test_broken data(A * 2.0) == data(2.0 * A)
+      else
+        @test data(A * 2.0) == data(2.0 * A)
+      end
 
       Asim = similar(data(A), 10)
       @test eltype(Asim) == elt
@@ -116,8 +122,8 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       @test dim(I) == 1000
       @test Array(I) == I_arr
 
-      J = dev(Tensor((2, 2)))
-      K = dev(Tensor((2, 2)))
+      J = dev(Tensor(elt, (2, 2)))
+      K = dev(Tensor(elt, (2, 2)))
       @test Array(J * K) ≈ Array(J) * Array(K)
     end
 
@@ -213,7 +219,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
         R = dev(Tensor(complex(elt), (2, 2, 1)))
         fill!(R, NaN)
         @test @allowscalar any(isnan, R)
-        T1 = dev(randomTensor((2, 2, 1)))
+        T1 = dev(randomTensor(elt, (2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))
         NDTensors.contract!(R, (1, 2, 3), T1, (1, 2, -1), T2, (-1, 1))
         @test @allowscalar !any(isnan, R)
@@ -224,7 +230,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
         R = dev(Tensor(complex(elt), (2, 2, 1)))
         fill!(R, NaN)
         @test @allowscalar any(isnan, R)
-        T1 = dev(randomTensor((2, 2, 1)))
+        T1 = dev(randomTensor(elt, (2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))
         NDTensors.contract!(R, (2, 1, 3), T1, (1, 2, -1), T2, (-1, 1))
         @test @allowscalar !any(isnan, R)

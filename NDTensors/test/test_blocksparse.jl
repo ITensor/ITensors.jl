@@ -11,7 +11,6 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
 
   @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
     elt in [Float32, Float64]
-
     if dev == NDTensors.mtl && elt == Float64
       continue
     end
@@ -77,7 +76,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       @test A12[I] == A[I + CartesianIndex(0, 4)]
     end
 
-    B = dev(BlockSparseTensor(undef, locs, indsA))
+    B = dev(BlockSparseTensor(elt, undef, locs, indsA))
     randn!(B)
 
     C = A + B
@@ -102,7 +101,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
     @test conj(data(store(A))) == data(store(conj(A)))
     @test typeof(conj(A)) <: BlockSparseTensor
 
-    @testset "Random constructor" for elt in [Float32, Float64]
+    @testset "Random constructor" begin
       T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
@@ -116,7 +115,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       @test norm(Tc) ≉ 0
     end
 
-    @testset "Complex Valued Operations" for elt in [Float32, Float64]
+    @testset "Complex Valued Operations" begin
       T = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       rT = real(T)
       @test eltype(rT) == elt
@@ -131,7 +130,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       @test nnzblocks(cT) == nnzblocks(T)
     end
 
-    @testset "similartype regression test" for elt in [Float32, Float64]
+    @testset "similartype regression test" begin
       # Regression test for issue seen in:
       # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
       # Previously, `similartype` wasn't using information about the dimensions
@@ -143,7 +142,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       ) == 3
     end
 
-    @testset "Random constructor" for elt in [Float32, Float64]
+    @testset "Random constructor" begin
       T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
@@ -157,7 +156,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       @test norm(Tc) ≉ 0
     end
 
-    @testset "permute_combine" for elt in [Float32, Float64]
+    @testset "permute_combine" begin
       indsA = ([2, 3], [4, 5], [6, 7, 8])
       locsA = [(2, 1, 1), (1, 2, 1), (2, 2, 3)]
       A = dev(BlockSparseTensor{elt}(locsA, indsA...))
