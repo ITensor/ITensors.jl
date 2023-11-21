@@ -1,7 +1,12 @@
 using ..ITensors: ITensors, Index, IndexID, dim, space
 using ..NDTensors: NDTensors
-using ..NDTensors.NamedDimsArrays: NamedDimsArrays, AbstractNamedDimsArray, NamedInt, dimnames, named, name, unname
+using ..NDTensors.NamedDimsArrays:
+  NamedDimsArrays, AbstractNamedDimsArray, NamedInt, dimnames, named, name, unname
 using ITensors: ITensors, Index, IndexID, prime
+
+function replacenames(na::AbstractNamedDimsArray, replacement::Pair...)
+  return named(unname(na), replace(dimnames(na), replacement...))
+end
 
 # TODO: NamedDimsArrays.named(space, ::IndexID) = Index(...)
 NamedDimsArrays.name(i::Index) = IndexID(i)
@@ -25,6 +30,22 @@ Base.convert(type::Type{<:IndexID}, i::Index) = type(i)
 NDTensors.inds(na::AbstractNamedDimsArray) = Index.(size(na))
 NDTensors.storage(na::AbstractNamedDimsArray) = na
 
-# Priming, tagging
+# Priming, tagging `IndexID`
 ITensors.prime(i::IndexID) = IndexID(prime(Index(named(0, i))))
+ITensors.noprime(i::IndexID) = IndexID(noprime(Index(named(0, i))))
+function ITensors.settags(is::Tuple{Vararg{IndexID}}, args...; kwargs...)
+  return IndexID.(settags(map(i -> Index(named(0, i)), is), args...; kwargs...))
+end
+
+# Priming, tagging `AbstractNamedDimsArray`
 ITensors.prime(na::AbstractNamedDimsArray) = named(unname(na), prime.(dimnames(na)))
+ITensors.noprime(na::AbstractNamedDimsArray) = named(unname(na), noprime.(dimnames(na)))
+function ITensors.settags(na::AbstractNamedDimsArray, args...; kwargs...)
+  return named(unname(na), settags(dimnames(na), args...; kwargs...))
+end
+function ITensors.replaceind(na::AbstractNamedDimsArray, i::Index, j::Index)
+  return replacenames(na, name(i) => name(j))
+end
+
+# TODO: Complex conjugate and flop arrows!
+ITensors.dag(::AliasStyle, na::AbstractNamedDimsArray) = na

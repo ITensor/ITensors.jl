@@ -17,6 +17,11 @@ function contract!(
   # TODO: Create a function `unmatricize` or `unfusedims`.
   # unmatricize!(a_dest, a_dest_matricized, axes(a_dest), perm_dest)
   a_dest_copy = reshape(a_dest_matricized, map(i -> axes(a_dest, i), perm_dest))
-  permutedims!(a_dest, a_dest_copy, invperm(perm_dest))
+  if iszero(ndims(a_dest)) && iszero(ndims(a_dest_copy)) && iszero(length(perm_dest))
+    # TODO: Raise an issue with Base Julia.
+    a_dest[] = a_dest_copy[]
+  else
+    permutedims!(a_dest, a_dest_copy, invperm(perm_dest))
+  end
   return a_dest
 end

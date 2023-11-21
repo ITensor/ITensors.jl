@@ -60,6 +60,12 @@ function get_name_perm(a::AbstractNamedDimsArray, names::Tuple)
   return getperm(dimnames(a), names)
 end
 
+# Ambiguity error
+function get_name_perm(a::AbstractNamedDimsArray, names::Tuple{})
+  @assert iszero(ndims(a))
+  return ()
+end
+
 function get_name_perm(
   a::AbstractNamedDimsArray, namedints::Tuple{Vararg{AbstractNamedInt}}
 )

@@ -7,15 +7,21 @@ using Random: AbstractRNG, default_rng
 default_eltype() = Float64
 for f in [:rand, :randn]
   @eval begin
-    function Base.$f(rng::AbstractRNG, elt::Type{<:Number}, dims::Tuple{NamedInt,Vararg{NamedInt}})
+    function Base.$f(
+      rng::AbstractRNG, elt::Type{<:Number}, dims::Tuple{NamedInt,Vararg{NamedInt}}
+    )
       a = $f(rng, elt, unname.(dims))
       return named(a, name.(dims))
     end
-    function Base.$f(rng::AbstractRNG, elt::Type{<:Number}, dim1::NamedInt, dims::Vararg{NamedInt})
+    function Base.$f(
+      rng::AbstractRNG, elt::Type{<:Number}, dim1::NamedInt, dims::Vararg{NamedInt}
+    )
       return $f(rng, elt, (dim1, dims...))
     end
-    Base.$f(elt::Type{<:Number}, dims::Tuple{NamedInt,Vararg{NamedInt}}) = $f(default_rng(), elt, dims)
-    Base.$f(elt::Type{<:Number}, dim1::NamedInt, dims::Vararg{NamedInt}) = $f(elt, (dim1, dims...))
+    Base.$f(elt::Type{<:Number}, dims::Tuple{NamedInt,Vararg{NamedInt}}) =
+      $f(default_rng(), elt, dims)
+    Base.$f(elt::Type{<:Number}, dim1::NamedInt, dims::Vararg{NamedInt}) =
+      $f(elt, (dim1, dims...))
     Base.$f(dims::Tuple{NamedInt,Vararg{NamedInt}}) = $f(default_eltype(), dims)
     Base.$f(dim1::NamedInt, dims::Vararg{NamedInt}) = $f((dim1, dims...))
   end

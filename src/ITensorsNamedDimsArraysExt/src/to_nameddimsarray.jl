@@ -57,8 +57,9 @@ end
 
 to_nameddimsarray(t::ITensor) = ITensor(to_nameddimsarray(t.tensor))
 
-using ITensors: AbstractMPS
+using ITensors: ITensors
 # TODO: Delete once `TensorStorage` is removed.
-function to_nameddimsarray(x::AbstractMPS)
-   return to_nameddimsarray.(x)
+# TODO: Move to `ITensors`?
+function to_nameddimsarray(x::ITensors.AbstractMPS)
+  return to_nameddimsarray.(x)
 end

@@ -38,7 +38,9 @@ using NDTensors.NamedDimsArrays:
     na′ = align(na, (aj, ai))
     @test a == permutedims(unname(na′), (2, 1))
   end
-  @testset "Shorthand constructors (eltype=$elt)" for elt in (Float32, ComplexF32, Float64, ComplexF64)
+  @testset "Shorthand constructors (eltype=$elt)" for elt in (
+    Float32, ComplexF32, Float64, ComplexF64
+  )
     i, j = named.((2, 2), ("i", "j"))
     value = rand(elt)
     for na in (zeros(elt, i, j), zeros(elt, (i, j)))

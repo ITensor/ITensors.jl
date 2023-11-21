@@ -9,14 +9,20 @@ ITensors.itensor(na::AbstractNamedDimsArray) = ITensors._ITensor(na)
 default_eltype() = Float64
 for f in [:rand, :randn]
   @eval begin
-    function Base.$f(rng::AbstractRNG, elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}})
+    function Base.$f(
+      rng::AbstractRNG, elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}}
+    )
       return ITensor($f(rng, elt, NamedInt.(dims)))
     end
-    function Base.$f(rng::AbstractRNG, elt::Type{<:Number}, dim1::Index, dims::Vararg{Index})
+    function Base.$f(
+      rng::AbstractRNG, elt::Type{<:Number}, dim1::Index, dims::Vararg{Index}
+    )
       return $f(rng, elt, (dim1, dims...))
     end
-    Base.$f(elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}}) = $f(default_rng(), elt, dims)
-    Base.$f(elt::Type{<:Number}, dim1::Index, dims::Vararg{Index}) = $f(elt, (dim1, dims...))
+    Base.$f(elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}}) =
+      $f(default_rng(), elt, dims)
+    Base.$f(elt::Type{<:Number}, dim1::Index, dims::Vararg{Index}) =
+      $f(elt, (dim1, dims...))
     Base.$f(dims::Tuple{Index,Vararg{Index}}) = $f(default_eltype(), dims)
     Base.$f(dim1::Index, dims::Vararg{Index}) = $f((dim1, dims...))
   end
@@ -38,4 +44,4 @@ function Base.fill(value, dims::Tuple{Index,Vararg{Index}})
 end
 function Base.fill(value, dim1::Index, dims::Vararg{Index})
   return fill(value, (dim1, dims...))
- end
+end

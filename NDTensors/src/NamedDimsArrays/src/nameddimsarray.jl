@@ -1,23 +1,49 @@
+function _NamedDimsArray end
+
 struct NamedDimsArray{T,N,Arr<:AbstractArray{T,N},Names} <:
        AbstractNamedDimsArray{T,N,Names}
   array::Arr
   names::Names
+  global @inline function _NamedDimsArray(array::AbstractArray, names)
+    elt = eltype(array)
+    n = ndims(array)
+    arraytype = typeof(array)
+    namestype = typeof(names)
+    return new{elt,n,arraytype,namestype}(array, names)
+  end
 end
 
+function NamedDimsArray{T,N,Arr,Names}(
+  a::AbstractArray, names
+) where {T,N,Arr<:AbstractArray{T,N},Names}
+  return _NamedDimsArray(convert(Arr, a), convert(Names, names))
+end
+
+# TODO: Combine with other constructor definitions.
+function NamedDimsArray{T,N,Arr,Names}(
+  a::AbstractArray, names::Tuple{}
+) where {T,N,Arr<:AbstractArray{T,N},Names}
+  return _NamedDimsArray(convert(Arr, a), convert(Names, names))
+end
+
+NamedDimsArray(a::AbstractArray, names) = _NamedDimsArray(a, names)
+
 # TODO: Check size consistency
+# TODO: Combine with other constructor definitions.
 function NamedDimsArray{T,N,Arr,Names}(
   a::AbstractArray, namedsize::Tuple{Vararg{AbstractNamedInt}}
 ) where {T,N,Arr<:AbstractArray{T,N},Names}
   @assert size(a) == unname.(namedsize)
-  return NamedDimsArray{T,N,Arr,Names}(a, name.(namedsize))
+  return _NamedDimsArray(convert(Arr, a), convert(Names, name.(namedsize)))
 end
 
 # TODO: Check axes consistency
+# TODO: Combine with other constructor definitions.
 function NamedDimsArray{T,N,Arr,Names}(
   a::AbstractArray, namedaxes::Tuple{Vararg{AbstractNamedUnitRange}}
 ) where {T,N,Arr<:AbstractArray{T,N},Names}
   @assert axes(a) == unname.(namedaxes)
-  return NamedDimsArray{T,N,Arr,Names}(a, name.(namedaxes))
+  return _NamedDimsArray(convert(Arr, a), convert(Names, name.(namedaxes)))
 end
 
 # Required interface

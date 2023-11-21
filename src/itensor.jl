@@ -89,7 +89,7 @@ function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:Any,<:Tuple})
     is = inds(T)
     if !allunique(is)
       error(
-        "Trying to create ITensors with collection of indices $is. Indices must be unique.",
+        "Trying to create ITensors with collection of indices $is. Indices must be unique."
       )
     end
   end
