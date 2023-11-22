@@ -1,7 +1,15 @@
 @eval module $(gensym())
 using Test: @test, @testset
 using NDTensors.NamedDimsArrays:
-  NamedDimsArrays, NamedDimsArray, align, dimnames, isnamed, named, namedaxes, namedsize, unname
+  NamedDimsArrays,
+  NamedDimsArray,
+  align,
+  dimnames,
+  isnamed,
+  named,
+  namedaxes,
+  namedsize,
+  unname
 
 @testset "NamedDimsArrays $(@__FILE__)" begin
   @testset "Basic functionality" begin

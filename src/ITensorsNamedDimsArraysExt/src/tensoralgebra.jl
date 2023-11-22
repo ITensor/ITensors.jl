@@ -15,8 +15,10 @@ function ITensors._contract(na1::AbstractNamedDimsArray, na2::AbstractNamedDimsA
 end
 
 function ITensors._add(na1::AbstractNamedDimsArray, na2::AbstractNamedDimsArray)
-  # TODO: Implement.
-  return error("Not implemented yet")
+  # TODO: Handle permutation better.
+  a1 = unname(na1)
+  a2 = unname(na2, dimnames(na1))
+  return named(a1 + a2, dimnames(na1))
 end
 
 function ITensors._permute(::AliasStyle, na::AbstractNamedDimsArray, dims::Tuple)
@@ -32,15 +34,10 @@ function ITensors._map!!(
 )
   # TODO: Handle maybe-mutation.
   # TODO: Handle permutations better!
-  perm1 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na1))
-  perm2 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na2))
-  perm1 = invperm(perm1)
-  perm2 = invperm(perm2)
   # TODO: Preserve names in `permutedims`.
-  na1 = named(permutedims(na1, perm1), map(i -> dimnames(na1)[i], perm1))
-  na2 = named(permutedims(na2, perm2), map(i -> dimnames(na2)[i], perm2))
-  perm1 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na1))
-  perm2 = map(n -> findfirst(isequal(n), dimnames(na_dest)), dimnames(na2))
-  map!(f, na_dest, na1, na2)
+  a1 = unname(na1, dimnames(na_dest))
+  a2 = unname(na2, dimnames(na_dest))
+  a_dest = unname(na_dest)
+  map!(f, a_dest, a1, a2)
   return na_dest
 end

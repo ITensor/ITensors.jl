@@ -1871,7 +1871,7 @@ end
 # Unfortunately this is more complicated than it might seem since it
 # has to pass through the broadcasting mechanism first.
 function (A::ITensor + B::ITensor)
-  return _add(tensor(A), tensor(B))
+  return itensor(_add(tensor(A), tensor(B)))
 end
 
 # TODO: move the order-0 EmptyStorage ITensor special to NDTensors
