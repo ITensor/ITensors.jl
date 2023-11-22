@@ -170,16 +170,16 @@ BlockSparseTensor(blocks::Vector{Block{N}},
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
-function BlockSparseTensor{ElT}(
-  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
-) where {ElT<:Number,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
-  return BlockSparseTensor(ElT, blocks, inds)
-end
-
 function BlockSparseTensor(
   blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
 ) where {BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
   return BlockSparseTensor(blocks, inds)
+end
+
+function BlockSparseTensor{ElT}(
+  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
+) where {ElT<:Number,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
+  return BlockSparseTensor(ElT, blocks, inds)
 end
 
 function zeros(
