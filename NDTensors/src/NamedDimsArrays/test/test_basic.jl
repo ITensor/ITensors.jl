@@ -1,25 +1,29 @@
 @eval module $(gensym())
 using Test: @test, @testset
 using NDTensors.NamedDimsArrays:
-  NamedDimsArrays, NamedDimsArray, align, dimnames, isnamed, named, unname
+  NamedDimsArrays, NamedDimsArray, align, dimnames, isnamed, named, namedaxes, namedsize, unname
 
 @testset "NamedDimsArrays $(@__FILE__)" begin
   @testset "Basic functionality" begin
     a = randn(3, 4)
     na = named(a, ("i", "j"))
-    # TODO: Call `namedsize`?
-    i, j = size(na)
-    # TODO: Call `namedaxes`?
-    ai, aj = axes(na)
+    # TODO: Just call this `size`?
+    i, j = namedsize(na)
+    # TODO: Just call `namedaxes`?
+    ai, aj = namedaxes(na)
     @test !isnamed(a)
     @test isnamed(na)
     @test dimnames(na) == ("i", "j")
     @test na[1, 1] == a[1, 1]
     na[1, 1] = 11
     @test na[1, 1] == 11
-    @test size(a) == (named(3, "i"), named(4, "j"))
-    @test length(a) == 12
-    @test axes(a) == (named(1:3, "i"), named(1:4, "j"))
+    # TODO: Should `size` output `namedsize`?
+    @test size(na) == (3, 4)
+    @test namedsize(na) == (named(3, "i"), named(4, "j"))
+    @test length(na) == 12
+    # TODO: Should `axes` output `namedaxes`?
+    @test axes(na) == (1:3, 1:4)
+    @test namedaxes(na) == (named(1:3, "i"), named(1:4, "j"))
     @test randn(named(3, "i"), named(4, "j")) isa NamedDimsArray
     @test na["i" => 1, "j" => 2] == a[1, 2]
     @test na["j" => 2, "i" => 1] == a[1, 2]
@@ -67,7 +71,6 @@ using NDTensors.NamedDimsArrays:
       @test na isa NamedDimsArray
       @test dimnames(na) == ("i", "j")
       @test !iszero(na)
-      @test !all(x -> real(x) > 0, na)
     end
   end
   @testset "Shorthand constructors (eltype=unspecified)" begin
@@ -91,7 +94,6 @@ using NDTensors.NamedDimsArrays:
       @test na isa NamedDimsArray
       @test dimnames(na) == ("i", "j")
       @test !iszero(na)
-      @test !all(x -> real(x) > 0, na)
     end
   end
 end

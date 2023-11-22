@@ -29,9 +29,10 @@ named_tuple(t::Tuple, names) = ntuple(i -> named(t[i], names[i]), length(t))
 # TODO: Use the proper type, `namedaxistype(a)`.
 # Base.axes(a::AbstractNamedDimsArray) = named_tuple(axes(unname(a)), dimnames(a))
 Base.axes(a::AbstractNamedDimsArray) = axes(unname(a))
-
+namedaxes(a::AbstractNamedDimsArray) = named.(axes(unname(a)), dimnames(a))
 # TODO: Use the proper type, `namedlengthtype(a)`.
-Base.size(a::AbstractNamedDimsArray) = length.(axes(a))
+Base.size(a::AbstractNamedDimsArray) = size(unname(a))
+namedsize(a::AbstractNamedDimsArray) = named.(size(unname(a)), dimnames(a))
 Base.getindex(a::AbstractNamedDimsArray, I...) = unname(a)[I...]
 function Base.setindex!(a::AbstractNamedDimsArray, x, I...)
   unname(a)[I...] = x
@@ -72,13 +73,13 @@ end
 function get_name_perm(
   a::AbstractNamedDimsArray, namedints::Tuple{Vararg{AbstractNamedInt}}
 )
-  return getperm(size(a), namedints)
+  return getperm(namedsize(a), namedints)
 end
 
 function get_name_perm(
-  a::AbstractNamedDimsArray, namedaxes::Tuple{Vararg{AbstractNamedUnitRange}}
+  a::AbstractNamedDimsArray, new_namedaxes::Tuple{Vararg{AbstractNamedUnitRange}}
 )
-  return getperm(axes(a), namedaxes)
+  return getperm(namedaxes(a), new_namedaxes)
 end
 
 # Indexing

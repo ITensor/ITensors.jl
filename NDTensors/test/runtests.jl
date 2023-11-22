@@ -21,6 +21,7 @@ end
   @testset "$filename" for filename in [
     "BlockSparseArrays.jl",
     "DiagonalArrays.jl",
+    "NamedDimsArrays.jl",
     "SetParameters.jl",
     "SmallVectors.jl",
     "SortedSets.jl",
