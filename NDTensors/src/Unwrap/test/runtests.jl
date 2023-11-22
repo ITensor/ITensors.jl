@@ -1,7 +1,7 @@
 using Test: @testset, @test, @test_broken
 using NDTensors.Unwrap
 using NDTensors: NDTensors, mul!!
-using LinearAlgebra: LinearAlgebra, Adjoint, Diagonal, Hermitian, Symmetric, Transpose, eigen , mul!, qr, svd
+using LinearAlgebra: LinearAlgebra, Adjoint, Diagonal, Hermitian, Symmetric, Transpose, eigen , mul!, norm, qr, svd
 using GPUArraysCore: @allowscalar
 include("../../../test/NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: NDTensorsTestUtils
@@ -182,9 +182,9 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   A = dev(transpose(reshape(randn(elt, 2, 12)', (12, 2))))
   B = dev(randn(elt, 2, 2))
   C = dev(zeros(elt, 2, 12))
-  LinearAlgebra..mul!(expose(C), expose(B), expose(A), true, false)
+  LinearAlgebra.mul!(expose(C), expose(B), expose(A), true, false)
   Cp = NDTensors.cpu(similar(C))
-  LinearAlgebra..mul!(
+  LinearAlgebra.mul!(
     expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false
   )
   @test NDTensors.cpu(C) ≈ Cp
