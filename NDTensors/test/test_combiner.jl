@@ -9,7 +9,9 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
 using ITensors: QN, Index
 
 @testset "CombinerTensor basic functionality" begin
-  @testset "test device: $dev, eltype: $elt" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
+  @testset "test device: $dev, eltype: $elt" for dev in NDTensorsTestUtils.devices_list(
+      copy(ARGS)
+    ),
     elt in (Float64, Float32)
 
     if dev == NDTensors.mtl && elt == Float64

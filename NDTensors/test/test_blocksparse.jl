@@ -9,7 +9,9 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
 
-  @testset "test device: $dev, eltype: $elt" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
+  @testset "test device: $dev, eltype: $elt" for dev in NDTensorsTestUtils.devices_list(
+      copy(ARGS)
+    ),
     elt in (Float32, Float64)
 
     if dev == NDTensors.mtl && elt == Float64
@@ -231,7 +233,8 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
     @test isblocknz(T, (2, 2))
   end
 
-  @testset "svd on $dev, eltype: $elt" for dev in NDTensorsTestUtils.devices_list(copy(ARGS)),
+  @testset "svd on $dev, eltype: $elt" for dev in
+                                           NDTensorsTestUtils.devices_list(copy(ARGS)),
     elt in (Float32, Float64)
 
     if dev == NDTensors.mtl && elt == Float64

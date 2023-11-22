@@ -1,7 +1,18 @@
 using Test: @testset, @test, @test_broken
 using NDTensors.Unwrap
 using NDTensors: NDTensors, mul!!
-using LinearAlgebra: LinearAlgebra, Adjoint, Diagonal, Hermitian, Symmetric, Transpose, eigen , mul!, norm, qr, svd
+using LinearAlgebra:
+  LinearAlgebra,
+  Adjoint,
+  Diagonal,
+  Hermitian,
+  Symmetric,
+  Transpose,
+  eigen,
+  mul!,
+  norm,
+  qr,
+  svd
 using GPUArraysCore: @allowscalar
 include("../../../test/NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: NDTensorsTestUtils
