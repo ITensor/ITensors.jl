@@ -1,3 +1,5 @@
+using ...NDTensors.TensorAlgebra: fusedims, splitdims
+
 function TensorAlgebra.fusedims(na::AbstractNamedDimsArray, fusions::Pair...)
   # TODO: generalize to multiple fused groups of dimensions
   @assert isone(length(fusions))

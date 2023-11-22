@@ -1,8 +1,8 @@
 ## using ..ITensors: IndexID
 using LinearAlgebra: LinearAlgebra, Hermitian, eigen
 ## using ..NDTensors.DiagonalArrays: DiagonalMatrix
-using ..NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name, unname
-using ..NDTensors: Spectrum, truncate!!
+using ...NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name, unname
+## using ...NDTensors: Spectrum, truncate!!
 function LinearAlgebra.eigen(
   na::Hermitian{T,<:AbstractNamedDimsArray{T}};
   mindim=nothing,

@@ -1,6 +1,6 @@
-using ..ITensors: IndexID
+# using ..ITensors: IndexID
 using LinearAlgebra: LinearAlgebra, qr
-using ..NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name, unname
+using ...NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name, unname
 function LinearAlgebra.qr(na::AbstractNamedDimsArray; positive=nothing)
   # TODO: Make this more systematic.
   i, j = dimnames(na)
