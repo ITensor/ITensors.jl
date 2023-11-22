@@ -1,4 +1,6 @@
-function test_dmrg(elt, N::Integer; dev::Function, conserve_qns, rtol_scale=true, outputlevel=0)
+function test_dmrg(
+  elt, N::Integer; dev::Function, conserve_qns, rtol_scale=true, outputlevel=0
+)
   sites = siteinds("S=1/2", N; conserve_qns)
 
   os = OpSum()

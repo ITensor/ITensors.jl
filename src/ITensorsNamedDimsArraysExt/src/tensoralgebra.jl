@@ -1,10 +1,6 @@
-# AbstractArray algebra
-# TODO: Move to `NamedDimsArrays`.
-# TODO: Make this more generic, based on `VectorInterface.add!!`,
-# broadcast, map, etc.
-Base.:*(a::AbstractNamedDimsArray, c::Number) = named(unname(a) * c, dimnames(a))
-Base.:*(c::Number, a::AbstractNamedDimsArray) = named(c * unname(a), dimnames(a))
-
+# AbstractArray algebra needed for ITensors.jl.
+# TODO: Instead dispatch on `tensortype(::ITensor)` from within
+# ITensors.jl.
 using ..NDTensors.NamedDimsArrays: AbstractNamedDimsArray, align
 using ..NDTensors.TensorAlgebra: TensorAlgebra
 using ..NDTensors: AliasStyle
