@@ -68,16 +68,8 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
         @test A[2, 2] == Aview[1, 1]
       end
 
-      ## There is an issue in metal like this
-      ## julia> MtlVector{Float32}(undef, (10,)) .+ 2.0
-      ## ERROR: Metal does not support Float64 values, try using Float32 instead
-      ## This is a temporary fix while metal is broken
-      if dev == NDTensors.mtl
-        #@test data(A * elt(2.0)) == data(elt(2.0) * A)
-        @test_broken data(A * 2.0) == data(2.0 * A)
-      else
-        @test data(A * 2.0) == data(2.0 * A)
-      end
+      ## add elt around 2.0 to preserve the eltype of A.
+      @test data(A * elt(2.0)) == data(elt(2.0) * A)
 
       Asim = similar(data(A), 10)
       @test eltype(Asim) == elt
