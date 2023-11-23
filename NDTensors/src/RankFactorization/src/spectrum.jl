@@ -7,10 +7,10 @@ struct Spectrum{VecT<:Union{AbstractVector,Nothing},ElT<:Real}
   eigs::VecT
   truncerr::ElT
 end
-  
+
 eigs(s::Spectrum) = s.eigs
-truncerror(s::Spectrum) = s.truncerr 
-  
+truncerror(s::Spectrum) = s.truncerr
+
 function entropy(s::Spectrum)
   S = 0.0
   eigs_s = eigs(s)
