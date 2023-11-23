@@ -1,3 +1,5 @@
+using Test: @test
+
 function test_dmrg(
   elt, N::Integer; dev::Function, conserve_qns, rtol_scale=true, outputlevel=0
 )

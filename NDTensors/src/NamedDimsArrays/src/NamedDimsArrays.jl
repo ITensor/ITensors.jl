@@ -2,6 +2,7 @@ module NamedDimsArrays
 include("BaseExtension/BaseExtension.jl")
 
 include("traits.jl")
+include("randname.jl")
 include("abstractnamedint.jl")
 include("abstractnamedunitrange.jl")
 include("abstractnameddimsarray.jl")

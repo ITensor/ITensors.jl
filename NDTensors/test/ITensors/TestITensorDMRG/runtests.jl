@@ -2,8 +2,8 @@ using SafeTestsets: @safetestset
 
 @safetestset "Downstream tests for ITensor DMRG" begin
   using Test: @testset
-  include("TestITensorDMRG.jl")
-  include("../../device_list.jl")
+  include("TestITensorDMRG/TestITensorDMRG.jl")
+  include("../device_list.jl")
   @testset "Test DMRG $dev, $conserve_qns, $elt, $N" for dev in devices_list(ARGS),
     conserve_qns in [false, true],
     elt in (Float32, ComplexF32, Float64, ComplexF64),

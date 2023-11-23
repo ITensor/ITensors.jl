@@ -1,15 +1,15 @@
 # using ..ITensors: IndexID
 using LinearAlgebra: LinearAlgebra, qr
-using ...NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name, unname
+using ...NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name, randname, unname
 function LinearAlgebra.qr(na::AbstractNamedDimsArray; positive=nothing)
   # TODO: Make this more systematic.
-  i, j = dimnames(na)
+  names_a = dimnames(na)
   # TODO: Create a `TensorAlgebra.qr`.
   q, r = qr(unname(na))
   # TODO: Use `sim` or `rand(::IndexID)`.
-  name_qr = IndexID(rand(UInt64), "", 0)
+  name_qr = randname(names_a[1]) # IndexID(rand(UInt64), "", 0)
   # TODO: Make this GPU-friendly.
-  nq = named(Matrix(q), (i, name_qr))
-  nr = named(Matrix(r), (name_qr, j))
+  nq = named(Matrix(q), (names_a[1], name_qr))
+  nr = named(Matrix(r), (name_qr, names_a[2]))
   return nq, nr
 end

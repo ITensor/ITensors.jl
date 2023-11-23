@@ -1,4 +1,5 @@
 using LinearAlgebra: LinearAlgebra, svd
+using ...NDTensors.RankFactorization: Spectrum, truncate!!
 function LinearAlgebra.svd(
   na::AbstractNamedDimsArray;
   mindim=nothing,
@@ -40,12 +41,12 @@ function LinearAlgebra.svd(
   # TODO: Handle array wrappers more generally.
   names_a = dimnames(na)
   # TODO: Make this more generic, handle `dag`, etc.
-  l = IndexID(rand(UInt64), "", 0)
-  r = IndexID(rand(UInt64), "", 0)
+  l = randname(names_a[1]) # IndexID(rand(UInt64), "", 0)
+  r = randname(names_a[2]) # IndexID(rand(UInt64), "", 0)
   names_u = (names_a[1], l)
   nu = named(u, names_u)
   names_s = (l, r)
-  ns = named(DiagonalMatrix(s), names_s)
+  ns = named(Diagonal(s), names_s)
   names_v = (r, names_a[2])
   nv = named(v, names_v)
   return nu, ns, nv, spec

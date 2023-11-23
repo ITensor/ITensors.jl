@@ -1,8 +1,8 @@
 ## using ..ITensors: IndexID
-using LinearAlgebra: LinearAlgebra, Hermitian, eigen
+using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, eigen
 ## using ..NDTensors.DiagonalArrays: DiagonalMatrix
 using ...NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name, unname
-## using ...NDTensors: Spectrum, truncate!!
+using ...NDTensors.RankFactorization: Spectrum, truncate!!
 function LinearAlgebra.eigen(
   na::Hermitian{T,<:AbstractNamedDimsArray{T}};
   mindim=nothing,
@@ -37,8 +37,8 @@ function LinearAlgebra.eigen(
   # TODO: Handle array wrappers more generally.
   names_a = dimnames(parent(na))
   # TODO: Make this more generic, handle `dag`, etc.
-  l = IndexID(rand(UInt64), "", 0)
-  r = IndexID(rand(UInt64), "", 0)
+  l = randname(names_a[1]) # IndexID(rand(UInt64), "", 0)
+  r = randname(names_a[2]) # IndexID(rand(UInt64), "", 0)
   names_d = (l, r)
   nd = named(Diagonal(d), names_d)
   names_u = (names_a[2], r)

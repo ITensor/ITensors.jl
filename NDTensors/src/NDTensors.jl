@@ -24,6 +24,10 @@ using TupleTools
 include("algorithm.jl")
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("Unwrap/src/Unwrap.jl")
+using .Unwrap
+include("RankFactorization/src/RankFactorization.jl")
+using .RankFactorization: RankFactorization
 include("TensorAlgebra/src/TensorAlgebra.jl")
 using .TensorAlgebra: TensorAlgebra
 include("DiagonalArrays/src/DiagonalArrays.jl")
@@ -38,8 +42,6 @@ include("SortedSets/src/SortedSets.jl")
 using .SortedSets
 include("TagSets/src/TagSets.jl")
 using .TagSets
-include("Unwrap/src/Unwrap.jl")
-using .Unwrap
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 

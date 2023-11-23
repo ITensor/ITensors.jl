@@ -20,6 +20,8 @@ function NamedDimsArrays.NamedInt(i::Index)
   return named(dim(i), name(i))
 end
 
+NamedDimsArrays.randname(i::IndexID) = IndexID(rand(UInt64), "", 0)
+
 # TODO: This is piracy, change this?
 Base.:(==)(i1::IndexID, i2::Index) = (i1 == name(i2))
 Base.:(==)(i1::Index, i2::IndexID) = (name(i1) == i2)
