@@ -52,7 +52,7 @@ rename(a::AbstractNamedDimsArray, names) = named(unname(a), names)
 # `rename` in `NamedPlus.jl`.
 function replacenames(na::AbstractNamedDimsArray, replacements::Pair...)
   # `BaseExtension.replace` needed for `Tuple` support on Julia 1.6 and older.
-  return named(unname(na), BaseExtension.replace(dimnames(na), replacements...))
+  return named(unname(na), BaseExtensions.replace(dimnames(na), replacements...))
 end
 
 # Either define new names or replace names
