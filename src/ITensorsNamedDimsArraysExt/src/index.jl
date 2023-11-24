@@ -1,11 +1,14 @@
 using ..ITensors: ITensors, Index, IndexID, dim, noprime, prime, settags, space
 using ..NDTensors: NDTensors, AliasStyle
 using ..NDTensors.NamedDimsArrays:
-  NamedDimsArrays, AbstractNamedDimsArray, NamedInt, dimnames, named, name, unname
-
-function replacenames(na::AbstractNamedDimsArray, replacement::Pair...)
-  return named(unname(na), replace(dimnames(na), replacement...))
-end
+  NamedDimsArrays,
+  AbstractNamedDimsArray,
+  NamedInt,
+  dimnames,
+  named,
+  name,
+  replacenames,
+  unname
 
 # TODO: NamedDimsArrays.named(space, ::IndexID) = Index(...)
 NamedDimsArrays.name(i::Index) = IndexID(i)
