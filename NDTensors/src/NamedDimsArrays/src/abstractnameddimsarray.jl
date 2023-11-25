@@ -126,10 +126,11 @@ unname(a::AbstractArray) = a
 # Permute into a certain order.
 # align(a, (:j, :k, :i))
 # Like `named(nameless(a, names), names)`
-function align(a::AbstractNamedDimsArray, names)
-  perm = get_name_perm(a, names)
+function align(na::AbstractNamedDimsArray, names)
+  perm = get_name_perm(na, names)
   # TODO: Avoid permutation if it is a trivial permutation?
-  return typeof(a)(permutedims(unname(a), perm), names)
+  # return typeof(a)(permutedims(unname(a), perm), names)
+  return permutedims(na, perm)
 end
 
 # Unwrapping names and permuting

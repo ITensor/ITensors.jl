@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using Test: @test, @testset
-using NDTensors.NamedDimsArrays: dimnames, named, unname
+using NDTensors.NamedDimsArrays: dimnames, named, unname, isnamed
 @testset "NamedDimsArrays $(@__FILE__) (eltype=$elt)" for elt in (
   Float32, ComplexF32, Float64, ComplexF64
 )
@@ -14,30 +14,30 @@ using NDTensors.NamedDimsArrays: dimnames, named, unname
   @test eltype(nc) == elt
   @test dimnames(nc) == ("i", "j")
 
-  nc = similar(na, (3, 4))
-  @test size(nc) == (3, 4)
-  @test eltype(nc) == elt
-  @test dimnames(nc) == ("i", "j")
-
-  nc = similar(na, 3, 4)
-  @test size(nc) == (3, 4)
-  @test eltype(nc) == elt
-  @test dimnames(nc) == ("i", "j")
-
   nc = similar(na, Float32)
   @test size(nc) == (2, 3)
   @test eltype(nc) == Float32
   @test dimnames(nc) == ("i", "j")
 
-  nc = similar(na, Float32, (3, 4))
-  @test size(nc) == (3, 4)
-  @test eltype(nc) == Float32
-  @test dimnames(nc) == ("i", "j")
+  c = similar(na, (3, 4))
+  @test size(c) == (3, 4)
+  @test eltype(c) == elt
+  @test c isa typeof(a)
 
-  nc = similar(na, Float32, 3, 4)
-  @test size(nc) == (3, 4)
-  @test eltype(nc) == Float32
-  @test dimnames(nc) == ("i", "j")
+  c = similar(na, 3, 4)
+  @test size(c) == (3, 4)
+  @test eltype(c) == elt
+  @test c isa typeof(a)
+
+  c = similar(na, Float32, (3, 4))
+  @test size(c) == (3, 4)
+  @test eltype(c) == Float32
+  @test !isnamed(c)
+
+  c = similar(na, Float32, 3, 4)
+  @test size(c) == (3, 4)
+  @test eltype(c) == Float32
+  @test !isnamed(c)
 
   nc = permutedims(na, (2, 1))
   @test unname(nc) ≈ permutedims(unname(na), (2, 1))

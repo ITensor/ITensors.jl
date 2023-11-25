@@ -11,6 +11,11 @@ struct NamedDimsArray{T,N,Arr<:AbstractArray{T,N},Names} <:
     namestype = typeof(names)
     return new{elt,n,arraytype,namestype}(array, names)
   end
+
+  # TODO: Delete
+  global @inline function _NamedDimsArray(array::NamedDimsArray, names)
+    return error("Not implemented, already named.")
+  end
 end
 
 function NamedDimsArray{T,N,Arr,Names}(

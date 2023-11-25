@@ -19,12 +19,15 @@ function Broadcast.BroadcastStyle(
   return DefaultArrayStyle{N}()
 end
 
-function dimnames(bc::Broadcasted{<:NamedDimsArrayStyle})
-  return dimnames(first(map_args(bc)))
-end
+# TODO: Is this needed?
+# Define `output_names`, like `allocate_output`.
+# function dimnames(bc::Broadcasted{<:NamedDimsArrayStyle})
+#   return dimnames(first(map_args(bc)))
+# end
 
-function Base.similar(bc::Broadcasted{<:NamedDimsArrayStyle{N}}, ::Type{T}) where {N,T}
-  return named(similar(convert(Broadcasted{DefaultArrayStyle{N}}, bc), T), dimnames(bc))
+# TODO: Use `allocate_output`, share logic with `map`.
+function Base.similar(bc::Broadcasted{<:NamedDimsArrayStyle}, elt::Type)
+  return similar(first(map_args(bc)), elt)
 end
 
 # Broadcasting implementation
