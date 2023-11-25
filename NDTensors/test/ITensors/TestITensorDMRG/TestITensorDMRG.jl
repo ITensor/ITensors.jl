@@ -2,7 +2,6 @@
 ## Failing for CUDA mostly with eigen (I believe there is some noise in
 ## eigen decomp with CUBLAS to give slightly different answer than BLAS)
 module TestITensorDMRG
-using Test
 using ITensors
 using NDTensors
 using Random
