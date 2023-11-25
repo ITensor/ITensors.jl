@@ -1,6 +1,9 @@
 module NamedDimsArrays
 using ..BaseExtensions: BaseExtensions
 
+# TODO: Move to a `BroadcastMapConversion` module.
+include("broadcastmapconversion.jl")
+
 include("traits.jl")
 include("randname.jl")
 include("abstractnamedint.jl")
@@ -10,7 +13,10 @@ include("namedint.jl")
 include("namedunitrange.jl")
 include("nameddimsarray.jl")
 include("constructors.jl")
-include("tensoralgebra.jl")
+include("similar.jl")
+include("broadcast.jl")
+include("permutedims.jl")
+include("map.jl")
 
 # Extensions
 include("../ext/NamedDimsArraysAdaptExt/src/NamedDimsArraysAdaptExt.jl")
