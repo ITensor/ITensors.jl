@@ -1,3 +1,10 @@
+# Makes `cpu` available as `NDTensors.cpu`.
+# TODO: Define `cpu`, `cu`, etc. in a module `DeviceAbstractions`,
+# similar to:
+# https://github.com/JuliaGPU/KernelAbstractions.jl
+# https://github.com/oschulz/HeterogeneousComputing.jl
+using .Unwrap: cpu
+
 import Base:
   # Types
   AbstractFloat,

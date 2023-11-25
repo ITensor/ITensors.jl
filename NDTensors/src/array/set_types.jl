@@ -1,3 +1,5 @@
+using .SetParameters: Position, set_parameters
+
 """
 TODO: Use `Accessors.jl` notation:
 ```julia
