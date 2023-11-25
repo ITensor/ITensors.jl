@@ -1,7 +1,7 @@
+module BroadcastMapConversion
 # Convert broadcast call to map call by capturing array arguments
 # with `map_args` and creating a map function with `map_function`.
 # Logic from https://github.com/Jutho/Strided.jl/blob/v2.0.4/src/broadcast.jl.
-# TODO: Move to a `BroadcastMapConversion` module.
 
 using Base.Broadcast: Broadcasted
 
@@ -44,4 +44,5 @@ function apply_tuple(t::Tuple, args)
   t1, newargs1 = apply(t[1], args)
   ttail, newargs = apply_tuple(Base.tail(t), newargs1)
   return (t1, ttail...), newargs
+end
 end

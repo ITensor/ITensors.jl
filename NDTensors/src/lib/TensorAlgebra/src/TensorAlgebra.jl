@@ -1,6 +1,6 @@
 module TensorAlgebra
+using ..AlgorithmSelection: Algorithm, @Algorithm_str
 using LinearAlgebra: mul!
-using ..NDTensors: Algorithm, @Algorithm_str
 
 include("bipartitionedpermutation.jl")
 include("fusedims.jl")

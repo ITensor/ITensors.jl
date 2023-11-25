@@ -1,9 +1,4 @@
 module NamedDimsArrays
-using ..BaseExtensions: BaseExtensions
-
-# TODO: Move to a `BroadcastMapConversion` module.
-include("broadcastmapconversion.jl")
-
 include("traits.jl")
 include("randname.jl")
 include("abstractnamedint.jl")

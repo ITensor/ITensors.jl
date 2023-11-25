@@ -19,13 +19,15 @@ using Strided
 using TimerOutputs
 using TupleTools
 
-# TODO: Define an `AlgorithmSelection` module
 # TODO: List types, macros, and functions being used.
-include("lib/algorithm.jl")
+include("lib/AlgorithmSelection/src/AlgorithmSelection.jl")
+using .AlgorithmSelection: AlgorithmSelection
 include("lib/BaseExtensions/src/BaseExtensions.jl")
 using .BaseExtensions: BaseExtensions
 include("lib/SetParameters/src/SetParameters.jl")
 using .SetParameters
+include("lib/BroadcastMapConversion/src/BroadcastMapConversion.jl")
+using .BroadcastMapConversion: BroadcastMapConversion
 include("lib/Unwrap/src/Unwrap.jl")
 using .Unwrap
 include("lib/RankFactorization/src/RankFactorization.jl")

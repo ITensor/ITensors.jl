@@ -1,8 +1,10 @@
 @eval module $(gensym())
 using Test: @testset
 @testset "Test NDTensors lib $lib" for lib in [
+  "AlgorithmSelection",
   "BaseExtensions",
   "BlockSparseArrays",
+  "BroadcastMapConversion",
   "DiagonalArrays",
   "NamedDimsArrays",
   "SetParameters",

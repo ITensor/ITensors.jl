@@ -1,4 +1,5 @@
 using Base.Broadcast: BroadcastStyle, AbstractArrayStyle, DefaultArrayStyle, Broadcasted
+using ..BroadcastMapConversion: map_function, map_args
 
 struct NamedDimsArrayStyle{N} <: AbstractArrayStyle{N} end
 

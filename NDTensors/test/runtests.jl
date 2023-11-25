@@ -20,16 +20,6 @@ end
 @safetestset "NDTensors" begin
   @testset "$filename" for filename in [
     "lib/runtests.jl",
-    ## "lib/BaseExtensions.jl",
-    ## "lib/BlockSparseArrays.jl",
-    ## "lib/DiagonalArrays.jl",
-    ## "lib/NamedDimsArrays.jl",
-    ## "lib/SetParameters.jl",
-    ## "lib/SmallVectors.jl",
-    ## "lib/SortedSets.jl",
-    ## "lib/TagSets.jl",
-    ## "lib/TensorAlgebra.jl",
-    ## "lib/Unwrap.jl",
     "linearalgebra.jl",
     "dense.jl",
     "blocksparse.jl",

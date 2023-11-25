@@ -1,3 +1,6 @@
+using ..BaseExtensions: BaseExtensions
+
+# Some of the interface is inspired by:
 # https://github.com/invenia/NamedDims.jl
 # https://github.com/mcabbott/NamedPlus.jl
 
