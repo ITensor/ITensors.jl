@@ -13,7 +13,12 @@ include("TestBlockSparseArraysUtils.jl")
   @testset "README" begin
     @test include(
       joinpath(
-        pkgdir(BlockSparseArrays), "src", "BlockSparseArrays", "examples", "README.jl"
+        pkgdir(BlockSparseArrays),
+        "src",
+        "lib",
+        "BlockSparseArrays",
+        "examples",
+        "README.jl",
       ),
     ) isa Any
   end

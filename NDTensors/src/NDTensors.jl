@@ -21,28 +21,28 @@ using TupleTools
 
 # TODO: Define an `AlgorithmSelection` module
 # TODO: List types, macros, and functions being used.
-include("algorithm.jl")
-include("BaseExtensions/src/BaseExtensions.jl")
+include("lib/algorithm.jl")
+include("lib/BaseExtensions/src/BaseExtensions.jl")
 using .BaseExtensions: BaseExtensions
-include("SetParameters/src/SetParameters.jl")
+include("lib/SetParameters/src/SetParameters.jl")
 using .SetParameters
-include("Unwrap/src/Unwrap.jl")
+include("lib/Unwrap/src/Unwrap.jl")
 using .Unwrap
-include("RankFactorization/src/RankFactorization.jl")
+include("lib/RankFactorization/src/RankFactorization.jl")
 using .RankFactorization: RankFactorization
-include("TensorAlgebra/src/TensorAlgebra.jl")
+include("lib/TensorAlgebra/src/TensorAlgebra.jl")
 using .TensorAlgebra: TensorAlgebra
-include("DiagonalArrays/src/DiagonalArrays.jl")
+include("lib/DiagonalArrays/src/DiagonalArrays.jl")
 using .DiagonalArrays
-include("BlockSparseArrays/src/BlockSparseArrays.jl")
+include("lib/BlockSparseArrays/src/BlockSparseArrays.jl")
 using .BlockSparseArrays
-include("NamedDimsArrays/src/NamedDimsArrays.jl")
+include("lib/NamedDimsArrays/src/NamedDimsArrays.jl")
 using .NamedDimsArrays: NamedDimsArrays
-include("SmallVectors/src/SmallVectors.jl")
+include("lib/SmallVectors/src/SmallVectors.jl")
 using .SmallVectors
-include("SortedSets/src/SortedSets.jl")
+include("lib/SortedSets/src/SortedSets.jl")
 using .SortedSets
-include("TagSets/src/TagSets.jl")
+include("lib/TagSets/src/TagSets.jl")
 using .TagSets
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
