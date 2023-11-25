@@ -22,6 +22,8 @@ using TupleTools
 # TODO: Define an `AlgorithmSelection` module
 # TODO: List types, macros, and functions being used.
 include("algorithm.jl")
+include("BaseExtensions/src/BaseExtensions.jl")
+using .BaseExtensions: BaseExtensions
 include("SetParameters/src/SetParameters.jl")
 using .SetParameters
 include("Unwrap/src/Unwrap.jl")

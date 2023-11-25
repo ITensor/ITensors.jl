@@ -1,5 +1,5 @@
 module NamedDimsArrays
-include("BaseExtensions/BaseExtensions.jl")
+using ..BaseExtensions: BaseExtensions
 
 include("traits.jl")
 include("randname.jl")
