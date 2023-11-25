@@ -12,8 +12,9 @@ replace(collection, replacements::Pair...) = Base.replace(collection, replacemen
     end
   end
 
-  replace(f::Base.Callable, t::Tuple; count::Integer=typemax(Int)) =
-    _replace(f, t, Base.check_count(count))
+  function replace(f::Base.Callable, t::Tuple; count::Integer=typemax(Int))
+    return _replace(f, t, Base.check_count(count))
+  end
 
   function _replace(t::Tuple, count::Int, old_new::Tuple{Vararg{Pair}})
     return _replace(t, count) do x
@@ -21,10 +22,11 @@ replace(collection, replacements::Pair...) = Base.replace(collection, replacemen
       for o_n in old_new
         isequal(first(o_n), x) && return last(o_n)
       end
-      return x 
+      return x
     end
   end
 
-  replace(t::Tuple, old_new::Pair...; count::Integer=typemax(Int)) =
-    _replace(t, Base.check_count(count), old_new)
+  function replace(t::Tuple, old_new::Pair...; count::Integer=typemax(Int))
+    return _replace(t, Base.check_count(count), old_new)
+  end
 end
