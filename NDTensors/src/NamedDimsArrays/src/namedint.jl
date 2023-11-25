@@ -12,3 +12,17 @@ name(i::NamedInt) = i.name
 
 # Convenient constructor
 named(i::Integer, name) = NamedInt(i, name)
+
+# TODO: Use `isnamed` trait?
+dimnames(a::Tuple{Vararg{AbstractNamedInt}}) = name.(a)
+
+function get_name_perm(a::Tuple{Vararg{AbstractNamedInt}}, names::Tuple)
+  return getperm(dimnames(a), names)
+end
+
+# Permute into a certain order.
+# align(a, (:j, :k, :i))
+function align(a::Tuple{Vararg{AbstractNamedInt}}, names)
+  perm = get_name_perm(a, names)
+  return map(j -> a[j], perm)
+end

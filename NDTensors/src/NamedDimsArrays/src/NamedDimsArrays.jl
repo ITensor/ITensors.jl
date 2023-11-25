@@ -14,9 +14,11 @@ include("namedunitrange.jl")
 include("nameddimsarray.jl")
 include("constructors.jl")
 include("similar.jl")
-include("broadcast.jl")
 include("permutedims.jl")
+include("promote_shape.jl")
 include("map.jl")
+include("broadcast_shape.jl")
+include("broadcast.jl")
 
 # Extensions
 include("../ext/NamedDimsArraysAdaptExt/src/NamedDimsArraysAdaptExt.jl")

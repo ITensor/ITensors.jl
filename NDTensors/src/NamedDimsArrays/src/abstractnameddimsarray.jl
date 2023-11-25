@@ -59,29 +59,38 @@ end
 setnames(a::AbstractArray, names) = named(a, names)
 setnames(a::AbstractNamedDimsArray, names) = rename(a, names)
 
+# TODO: Move to `utils.jl` file.
 function getperm(x, y)
   return map(xᵢ -> findfirst(isequal(xᵢ), y), x)
 end
 
+# TODO: Use `isnamed` trait?
 function get_name_perm(a::AbstractNamedDimsArray, names::Tuple)
+  # TODO: Call `getperm(dimnames(a), dimnames(namedints))`.
   return getperm(dimnames(a), names)
 end
 
-# Ambiguity error
+# Fixes ambiguity error
+# TODO: Use `isnamed` trait?
 function get_name_perm(a::AbstractNamedDimsArray, names::Tuple{})
+  # TODO: Call `getperm(dimnames(a), dimnames(namedints))`.
   @assert iszero(ndims(a))
   return ()
 end
 
+# TODO: Use `isnamed` trait?
 function get_name_perm(
   a::AbstractNamedDimsArray, namedints::Tuple{Vararg{AbstractNamedInt}}
 )
+  # TODO: Call `getperm(dimnames(a), dimnames(namedints))`.
   return getperm(namedsize(a), namedints)
 end
 
+# TODO: Use `isnamed` trait?
 function get_name_perm(
   a::AbstractNamedDimsArray, new_namedaxes::Tuple{Vararg{AbstractNamedUnitRange}}
 )
+  # TODO: Call `getperm(dimnames(a), dimnames(namedints))`.
   return getperm(namedaxes(a), new_namedaxes)
 end
 

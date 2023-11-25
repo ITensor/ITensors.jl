@@ -4,38 +4,38 @@ using NDTensors.NamedDimsArrays: dimnames, named, unname
 @testset "NamedDimsArrays $(@__FILE__) (eltype=$elt)" for elt in (
   Float32, ComplexF32, Float64, ComplexF64
 )
-  a = randn(elt, 2, 2)
+  a = randn(elt, 2, 3)
   na = named(a, ("i", "j"))
-  b = randn(elt, 2, 2)
+  b = randn(elt, 3, 2)
   nb = named(b, ("j", "i"))
 
   nc = similar(na)
-  @test size(nc) == (2, 2)
+  @test size(nc) == (2, 3)
   @test eltype(nc) == elt
   @test dimnames(nc) == ("i", "j")
 
-  nc = similar(na, (3, 3))
-  @test size(nc) == (3, 3)
+  nc = similar(na, (3, 4))
+  @test size(nc) == (3, 4)
   @test eltype(nc) == elt
   @test dimnames(nc) == ("i", "j")
 
-  nc = similar(na, 3, 3)
-  @test size(nc) == (3, 3)
+  nc = similar(na, 3, 4)
+  @test size(nc) == (3, 4)
   @test eltype(nc) == elt
   @test dimnames(nc) == ("i", "j")
 
   nc = similar(na, Float32)
-  @test size(nc) == (2, 2)
+  @test size(nc) == (2, 3)
   @test eltype(nc) == Float32
   @test dimnames(nc) == ("i", "j")
 
-  nc = similar(na, Float32, (3, 3))
-  @test size(nc) == (3, 3)
+  nc = similar(na, Float32, (3, 4))
+  @test size(nc) == (3, 4)
   @test eltype(nc) == Float32
   @test dimnames(nc) == ("i", "j")
 
-  nc = similar(na, Float32, 3, 3)
-  @test size(nc) == (3, 3)
+  nc = similar(na, Float32, 3, 4)
+  @test size(nc) == (3, 4)
   @test eltype(nc) == Float32
   @test dimnames(nc) == ("i", "j")
 
@@ -64,7 +64,7 @@ using NDTensors.NamedDimsArrays: dimnames, named, unname
   @test unname(nc, ("i", "j")) ≈ a + permutedims(b, (2, 1))
   @test eltype(nc) === elt
 
-  nc = named(randn(elt, 2, 2), ("i", "j"))
+  nc = named(randn(elt, 2, 3), ("i", "j"))
   map!(+, nc, na, nb)
   @test unname(nc, ("i", "j")) ≈ a + permutedims(b, (2, 1))
   @test eltype(nc) === elt
