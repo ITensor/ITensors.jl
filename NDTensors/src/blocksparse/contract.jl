@@ -1,3 +1,5 @@
+using .AlgorithmSelection: Algorithm, @Algorithm_str
+
 function contract(
   tensor1::BlockSparseTensor,
   labelstensor1,

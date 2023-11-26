@@ -1,5 +1,12 @@
+using ITensors: MPO, OpSum, dmrg, randomMPS, siteinds
+using Random: Random
+using Test: @test
 include("../../NDTensorsTestUtils/NDTensorsTestUtils.jl")
-function test_dmrg(elt, N::Integer; dev::Function, conserve_qns)
+# TODO: Include file with `reference_energies`.
+
+function test_dmrg(
+  elt, N::Integer; dev::Function, conserve_qns, rtol_scale=true, outputlevel=0
+)
   sites = siteinds("S=1/2", N; conserve_qns)
 
   os = OpSum()
@@ -21,6 +28,8 @@ function test_dmrg(elt, N::Integer; dev::Function, conserve_qns)
   ## all problems do not have a maxlinkdim > 32
   maxdim = 32
 
-  energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel=0)
-  @test energy ≈ reference_energies[N] rtol = NDTensorsTestUtils.default_rtol(elt)
+  energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel)
+
+  @test energy ≈ reference_energies[N] rtol =
+    rtol_scale * NDTensorsTestUtils.default_rtol(elt)
 end

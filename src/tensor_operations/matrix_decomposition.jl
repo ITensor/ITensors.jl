@@ -1,3 +1,4 @@
+using NDTensors.RankFactorization: Spectrum
 
 """
     TruncSVD

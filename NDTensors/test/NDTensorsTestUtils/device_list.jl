@@ -1,3 +1,4 @@
+using NDTensors: NDTensors
 if "cuda" in ARGS || "all" in ARGS
   using CUDA
 end
