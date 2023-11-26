@@ -110,8 +110,7 @@ import LinearAlgebra:
   tr,
   transpose
 
-using ITensors.NDTensors.Unwrap:
-  cpu
+using ITensors.NDTensors.Unwrap: cpu
 
 using ITensors.NDTensors:
   Algorithm,

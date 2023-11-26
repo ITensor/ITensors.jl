@@ -20,20 +20,20 @@ using TimerOutputs
 using TupleTools
 
 for lib in [
- :AlgorithmSelection,
- :BaseExtensions,
- :SetParameters,
- :BroadcastMapConversion,
- :Unwrap,
- :RankFactorization,
- :TensorAlgebra,
- :DiagonalArrays,
- :SparseArrayDOKs,
- :BlockSparseArrays,
- :NamedDimsArrays,
- :SmallVectors,
- :SortedSets,
- :TagSets,
+  :AlgorithmSelection,
+  :BaseExtensions,
+  :SetParameters,
+  :BroadcastMapConversion,
+  :Unwrap,
+  :RankFactorization,
+  :TensorAlgebra,
+  :DiagonalArrays,
+  :SparseArrayDOKs,
+  :BlockSparseArrays,
+  :NamedDimsArrays,
+  :SmallVectors,
+  :SortedSets,
+  :TagSets,
 ]
   include("lib/$(lib)/src/$(lib).jl")
   @eval using .$lib: $lib
