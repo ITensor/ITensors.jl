@@ -35,9 +35,7 @@ function SparseArrayDOK{T,N,Zero}(
   return SparseArrayDOK{T,N,Zero}(dims, zero)
 end
 
-function SparseArrayDOK{T,N}(
-  ::UndefInitializer, dims::Tuple{Vararg{Int}}, zero
-) where {T,N}
+function SparseArrayDOK{T,N}(::UndefInitializer, dims::Tuple{Vararg{Int}}, zero) where {T,N}
   return SparseArrayDOK{T,N}(dims, zero)
 end
 
