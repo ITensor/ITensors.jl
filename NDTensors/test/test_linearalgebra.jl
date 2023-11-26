@@ -35,7 +35,7 @@ end
     dev in NDTensorsTestUtils.devices_list(copy(ARGS))
 
     ## Skip Float64 on Metal
-    if dev == NDTensors.mtl && (elt == Float64 || elt == ComplexF64)
+    if !NDTensorsTestUtils.is_supported_eltype(dev, elt)
       continue
     end
     eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.

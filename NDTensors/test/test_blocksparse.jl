@@ -14,7 +14,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
     ),
     elt in (Float32, Float64)
 
-    if dev == NDTensors.mtl && elt == Float64
+    if !NDTensorsTestUtils.is_supported_eltype(dev, elt)
       continue
     end
     # Indices

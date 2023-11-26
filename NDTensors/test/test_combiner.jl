@@ -14,7 +14,7 @@ using ITensors: QN, Index
     ),
     elt in (Float64, Float32)
 
-    if dev == NDTensors.mtl && elt == Float64
+    if !NDTensorsTestUtils.is_supported_eltype(dev, elt)
       continue
     end
     @testset "Dense * Combiner" begin
