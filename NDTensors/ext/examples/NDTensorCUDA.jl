@@ -1,10 +1,10 @@
-using CUDA
 using NDTensors
-
-using ITensors
-using Test
-
-using Zygote
+using CUDA: cu, CUDA, CuVector
+using ITensors:
+  Index, inner, ITensor, orthogonalize, qr, randomMPO, randomMPS, siteinds, storage, svd
+using Test: @test
+using Zygote: gradient
+using GPUArraysCore: @allowscalar
 
 function main()
   # using ITensorGPU
@@ -22,6 +22,7 @@ function main()
   B = ITensor(NDTensors.generic_randn(CuVector, dim(dim2)), dim2)
   # Contract the two tensors
   cpu = NDTensors.cpu
+  gpu = NDTensors.cu
   C = A * B
   A = cpu(A)
   B = cpu(B)
@@ -36,8 +37,8 @@ function main()
   fill!(B, randn())
 
   # Convert the ITensors to GPU
-  cA = NDTensors.cu(A)
-  cB = NDTensors.cu(B)
+  cA = gpu(A)
+  cB = gpu(B)
 
   #Check that backend of contraction is GPU
   @test A * A ≈ cpu(cA * cA)
@@ -50,7 +51,7 @@ function main()
   cC = ITensor(
     NDTensors.generic_randn(CuVector{Float64,CUDA.Mem.DeviceBuffer}, dim(dim3)), dim3
   )
-  cC = NDTensors.cu(ITensor(NDTensors.generic_randn(Vector{Float64}, dim(dim3)), dim3))
+  cC = gpu(ITensor(NDTensors.generic_randn(Vector{Float64}, dim(dim3)), dim3))
   cD = ITensor(Tensor(CuVector, dim4))
   fill!(cD, randn())
 
@@ -62,19 +63,16 @@ function main()
   # Because of outer calling the _gemm! function which calls a 
   # generic implementation
   grad = gradient(f, cA, cB, cC, cD)
-  @allowscalar @test NDTensors.cpu(cB * cC * cD) ≈ NDTensors.cpu(grad[1])
+  @allowscalar @test cpu(cB * cC * cD) ≈ cpu(grad[1])
   @allowscalar @test (cB * cC * cD) ≈ grad[1]
   # Create a tuple of indices
-  decomp = (
-    dim(NDTensors.ind(grad[1], 1)),
-    dim(NDTensors.ind(grad[1], 2)) * dim(NDTensors.ind(grad[1], 3)),
-  )
+  decomp = (dim(ind(grad[1], 1)), dim(ind(grad[1], 2)) * dim(ind(grad[1], 3)))
   # Reshape the CuVector of data into a matrix
-  cuTensor_data = CUDA.reshape(NDTensors.data(storage(grad[1])), decomp)
+  cuTensor_data = CUDA.reshape(data(storage(grad[1])), decomp)
   # Use cuBLAS to compute SVD of data
   U, S, V = svd(cuTensor_data)
-  decomp = (dim(NDTensors.ind(grad[2], 1)), dim(NDTensors.ind(grad[2], 2)))
-  cuTensor_data = CUDA.reshape(NDTensors.data(storage(grad[2])), decomp)
+  decomp = (dim(ind(grad[2], 1)), dim(ind(grad[2], 2)))
+  cuTensor_data = CUDA.reshape(data(storage(grad[2])), decomp)
   U, S, V = svd(cuTensor_data)
 
   # These things can take up lots of memory, look at memory usage here
@@ -87,8 +85,8 @@ function main()
   CUDA.memory_status()
 
   # Its possible to compute QR of GPU tensor
-  cq = ITensors.qr(cA, (i,), (j, l))
-  q = ITensors.qr(A, (i,), (j, l))
+  cq = qr(cA, (i,), (j, l))
+  q = qr(A, (i,), (j, l))
   A ≈ cpu(cq[1]) * cpu(cq[2])
 
   ## SVD does not yet work with CUDA backend, see above on
@@ -96,24 +94,25 @@ function main()
   ## CuVectors...
   #ITensors.svd(A, (i,), (j, l))
 
-  s = ITensors.siteinds("S=1/2", 8)
+  s = siteinds("S=1/2", 8)
   m = randomMPS(s; linkdims=4)
-  cm = NDTensors.cu(m)
+  cm = gpu(m)
 
   @test inner(cm', cm) ≈ inner(m', m)
 
   H = randomMPO(s)
-  cH = NDTensors.cu(H)
+  cH = gpu(H)
   @test inner(cm', cH, cm) ≈ inner(m', H, m)
 
   m = orthogonalize(m, 1)
-  cm = NDTensors.cu(orthogonalize(cm, 1))
+  cm = gpu(orthogonalize(cm, 1))
   @test inner(m', m) ≈ inner(cm', cm)
 
   H = orthogonalize(H, 1)
-  cH = NDTensors.cu(cH)
+  cH = gpu(cH)
 
   @test inner(cm', cH, cm) ≈ inner(m', H, m)
 end
 
+## running the main function with Float64
 main()
