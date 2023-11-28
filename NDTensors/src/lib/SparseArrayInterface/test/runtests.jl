@@ -6,10 +6,10 @@ using Test: @test, @testset, @test_broken, @test_throws
   @testset "Array" begin
     using NDTensors.SparseArrayInterface: SparseArrayInterface
     a = randn(2, 3)
-    @test SparseArrayInterface.nonzeros(a) == a
-    @test SparseArrayInterface.index_to_nonzero_index(a, CartesianIndex(1, 2)) ==
+    @test SparseArrayInterface.storage(a) == a
+    @test SparseArrayInterface.index_to_storage_index(a, CartesianIndex(1, 2)) ==
       CartesianIndex(1, 2)
-    @test SparseArrayInterface.nonzero_index_to_index(a, CartesianIndex(1, 2)) ==
+    @test SparseArrayInterface.storage_index_to_index(a, CartesianIndex(1, 2)) ==
       CartesianIndex(1, 2)
   end
   @testset "Custom SparseArray" begin
@@ -21,9 +21,11 @@ using Test: @test, @testset, @test_broken, @test_throws
       index_to_dataindex::Dict{CartesianIndex{N},Int}
       dataindex_to_index::Vector{CartesianIndex{N}}
     end
-    SparseArray{T,N}(dims::Tuple{Vararg{Int,N}}) where {T,N} = SparseArray{T,N}(
-      T[], dims, Dict{CartesianIndex{N},Int}(), Vector{CartesianIndex{N}}()
-    )
+    function SparseArray{T,N}(dims::Tuple{Vararg{Int,N}}) where {T,N}
+      return SparseArray{T,N}(
+        T[], dims, Dict{CartesianIndex{N},Int}(), Vector{CartesianIndex{N}}()
+      )
+    end
     SparseArray{T,N}(dims::Vararg{Int,N}) where {T,N} = SparseArray{T,N}(dims)
     SparseArray{T}(dims::Tuple{Vararg{Int}}) where {T} = SparseArray{T,length(dims)}(dims)
     SparseArray{T}(dims::Vararg{Int}) where {T} = SparseArray{T}(dims)
@@ -41,14 +43,14 @@ using Test: @test, @testset, @test_broken, @test_throws
     end
 
     # Minimal interface
-    SparseArrayInterface.nonzeros(a::SparseArray) = a.data
-    function SparseArrayInterface.index_to_nonzero_index(
+    SparseArrayInterface.storage(a::SparseArray) = a.data
+    function SparseArrayInterface.index_to_storage_index(
       a::SparseArray{<:Any,N}, I::CartesianIndex{N}
     ) where {N}
       return get(a.index_to_dataindex, I, nothing)
     end
-    SparseArrayInterface.nonzero_index_to_index(a::SparseArray, I) = a.dataindex_to_index[I]
-    function SparseArrayInterface.setindex_zero!(
+    SparseArrayInterface.storage_index_to_index(a::SparseArray, I) = a.dataindex_to_index[I]
+    function SparseArrayInterface.setindex_notstored!(
       a::SparseArray{<:Any,N}, value, I::CartesianIndex{N}
     ) where {N}
       push!(a.data, value)
@@ -106,9 +108,9 @@ using Test: @test, @testset, @test_broken, @test_throws
     a = SparseArray{elt}(2, 3)
     @test size(a) == (2, 3)
     @test axes(a) == (1:2, 1:3)
-    @test SparseArrayInterface.nonzeros(a) == elt[]
-    @test iszero(SparseArrayInterface.nonzero_length(a))
-    @test collect(SparseArrayInterface.nonzero_indices(a)) == CartesianIndex{2}[]
+    @test SparseArrayInterface.storage(a) == elt[]
+    @test iszero(SparseArrayInterface.nstored(a))
+    @test collect(SparseArrayInterface.stored_indices(a)) == CartesianIndex{2}[]
     @test iszero(a)
     @test iszero(norm(a))
     for I in eachindex(a)
@@ -119,9 +121,10 @@ using Test: @test, @testset, @test_broken, @test_throws
     a[1, 2] = 12
     @test size(a) == (2, 3)
     @test axes(a) == (1:2, 1:3)
-    @test SparseArrayInterface.nonzeros(a) == elt[12]
-    @test isone(SparseArrayInterface.nonzero_length(a))
-    @test collect(SparseArrayInterface.nonzero_indices(a)) == [CartesianIndex(1, 2)]
+    @test a[SparseArrayInterface.StorageIndex(1)] == 12
+    @test SparseArrayInterface.storage(a) == elt[12]
+    @test isone(SparseArrayInterface.nstored(a))
+    @test collect(SparseArrayInterface.stored_indices(a)) == [CartesianIndex(1, 2)]
     @test !iszero(a)
     @test !iszero(norm(a))
     for I in eachindex(a)
@@ -141,7 +144,7 @@ using Test: @test, @testset, @test_broken, @test_throws
     a[1, 2] = 12
     a = zero(a)
     @test size(a) == (2, 3)
-    @test iszero(SparseArrayInterface.nonzero_length(a))
+    @test iszero(SparseArrayInterface.nstored(a))
 
     a = SparseArray{elt}(2, 3)
     a[1, 2] = 12
@@ -188,16 +191,16 @@ using Test: @test, @testset, @test_broken, @test_throws
     a[1, 2] = 12
     a = zero(a)
     @test size(a) == (2, 3)
-    @test iszero(SparseArrayInterface.nonzero_length(a))
+    @test iszero(SparseArrayInterface.nstored(a))
 
     a = SparseArray{elt}(2, 3)
     a[1, 2] = 12
     a = copy(a)
     @test size(a) == (2, 3)
     @test axes(a) == (1:2, 1:3)
-    @test SparseArrayInterface.nonzeros(a) == elt[12]
-    @test isone(SparseArrayInterface.nonzero_length(a))
-    @test collect(SparseArrayInterface.nonzero_indices(a)) == [CartesianIndex(1, 2)]
+    @test SparseArrayInterface.storage(a) == elt[12]
+    @test isone(SparseArrayInterface.nstored(a))
+    @test collect(SparseArrayInterface.stored_indices(a)) == [CartesianIndex(1, 2)]
     @test !iszero(a)
     @test !iszero(norm(a))
     for I in eachindex(a)
@@ -213,9 +216,9 @@ using Test: @test, @testset, @test_broken, @test_throws
     a = 2 * a
     @test size(a) == (2, 3)
     @test axes(a) == (1:2, 1:3)
-    @test SparseArrayInterface.nonzeros(a) == elt[24]
-    @test isone(SparseArrayInterface.nonzero_length(a))
-    @test collect(SparseArrayInterface.nonzero_indices(a)) == [CartesianIndex(1, 2)]
+    @test SparseArrayInterface.storage(a) == elt[24]
+    @test isone(SparseArrayInterface.nstored(a))
+    @test collect(SparseArrayInterface.stored_indices(a)) == [CartesianIndex(1, 2)]
     @test !iszero(a)
     @test !iszero(norm(a))
     for I in eachindex(a)
@@ -233,9 +236,9 @@ using Test: @test, @testset, @test_broken, @test_throws
     c = a + b
     @test size(c) == (2, 3)
     @test axes(c) == (1:2, 1:3)
-    @test SparseArrayInterface.nonzeros(c) == elt[12, 21]
-    @test SparseArrayInterface.nonzero_length(c) == 2
-    @test collect(SparseArrayInterface.nonzero_indices(c)) ==
+    @test SparseArrayInterface.storage(c) == elt[12, 21]
+    @test SparseArrayInterface.nstored(c) == 2
+    @test collect(SparseArrayInterface.stored_indices(c)) ==
       [CartesianIndex(1, 2), CartesianIndex(2, 1)]
     @test !iszero(c)
     @test !iszero(norm(c))
@@ -254,9 +257,9 @@ using Test: @test, @testset, @test_broken, @test_throws
     b = permutedims(a, (2, 1))
     @test size(b) == (3, 2)
     @test axes(b) == (1:3, 1:2)
-    @test SparseArrayInterface.nonzeros(b) == elt[12]
-    @test SparseArrayInterface.nonzero_length(b) == 1
-    @test collect(SparseArrayInterface.nonzero_indices(b)) == [CartesianIndex(2, 1)]
+    @test SparseArrayInterface.storage(b) == elt[12]
+    @test SparseArrayInterface.nstored(b) == 1
+    @test collect(SparseArrayInterface.stored_indices(b)) == [CartesianIndex(2, 1)]
     @test !iszero(b)
     @test !iszero(norm(b))
     for I in eachindex(b)
@@ -272,14 +275,18 @@ using Test: @test, @testset, @test_broken, @test_throws
       data::Vector{T}
       dims::Tuple{Vararg{Int,N}}
     end
-    DiagonalArray{T,N}(::UndefInitializer, dims::Tuple{Vararg{Int,N}}) where {T,N} =
-      DiagonalArray{T,N}(Vector{T}(undef, minimum(dims)), dims)
-    DiagonalArray{T,N}(::UndefInitializer, dims::Vararg{Int,N}) where {T,N} =
-      DiagonalArray{T,N}(undef, dims)
-    DiagonalArray{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}) where {T} =
-      DiagonalArray{T,length(dims)}(undef, dims)
-    DiagonalArray{T}(::UndefInitializer, dims::Vararg{Int}) where {T} =
-      DiagonalArray{T}(undef, dims)
+    function DiagonalArray{T,N}(::UndefInitializer, dims::Tuple{Vararg{Int,N}}) where {T,N}
+      return DiagonalArray{T,N}(Vector{T}(undef, minimum(dims)), dims)
+    end
+    function DiagonalArray{T,N}(::UndefInitializer, dims::Vararg{Int,N}) where {T,N}
+      return DiagonalArray{T,N}(undef, dims)
+    end
+    function DiagonalArray{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}) where {T}
+      return DiagonalArray{T,length(dims)}(undef, dims)
+    end
+    function DiagonalArray{T}(::UndefInitializer, dims::Vararg{Int}) where {T}
+      return DiagonalArray{T}(undef, dims)
+    end
 
     # AbstractArray interface
     Base.size(a::DiagonalArray) = a.dims
@@ -294,24 +301,15 @@ using Test: @test, @testset, @test_broken, @test_throws
     end
 
     # Minimal interface
-    SparseArrayInterface.nonzeros(a::DiagonalArray) = a.data
-    function SparseArrayInterface.index_to_nonzero_index(
+    SparseArrayInterface.storage(a::DiagonalArray) = a.data
+    function SparseArrayInterface.index_to_storage_index(
       a::DiagonalArray{<:Any,N}, I::CartesianIndex{N}
     ) where {N}
       !allequal(Tuple(I)) && return nothing
       return first(Tuple(I))
     end
-    function SparseArrayInterface.nonzero_index_to_index(a::DiagonalArray, I)
+    function SparseArrayInterface.storage_index_to_index(a::DiagonalArray, I)
       return CartesianIndex(ntuple(Returns(I), ndims(a)))
-    end
-    function SparseArrayInterface.setindex_zero!(
-      a::DiagonalArray{<:Any,N}, value, I::CartesianIndex{N}
-    ) where {N}
-      return throw(ArgumentError("Can't set off-diagonal element of DiagonalArray"))
-    end
-    function SparseArrayInterface.sparse_zero(a::DiagonalArray, elt::Type, dims::Tuple)
-      # TODO: Need to make generic to GPU.
-      return DiagonalArray(zeros(elt, minimum(dims)), dims)
     end
 
     # Broadcasting
@@ -367,6 +365,9 @@ using Test: @test, @testset, @test_broken, @test_throws
     @test a[1, 1] == 11
     @test a[2, 2] == 22
     @test_throws ArgumentError a[1, 2] = 12
+    @test SparseArrayInterface.storage_indices(a) == 1:2
+    @test collect(SparseArrayInterface.stored_indices(a)) ==
+      [CartesianIndex(1, 1), CartesianIndex(2, 2)]
     a[1, 2] = 0
     @test a[1, 1] == 11
     @test a[2, 2] == 22
@@ -380,6 +381,9 @@ using Test: @test, @testset, @test_broken, @test_throws
     @test a[1, 1] == 1
     @test a[2, 2] == 2
     @test a[3, 3] == 3
+    @test a[SparseArrayInterface.StorageIndex(1)] == 1
+    @test a[SparseArrayInterface.StorageIndex(2)] == 2
+    @test a[SparseArrayInterface.StorageIndex(3)] == 3
     @test iszero(a[1, 2])
 
     a = DiagonalArray(elt[1, 2, 3], (3, 3))
