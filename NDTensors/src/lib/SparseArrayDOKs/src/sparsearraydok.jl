@@ -28,6 +28,11 @@ function SparseArrayDOK{T}(dims::Int...) where {T}
   return SparseArrayDOK{T}(dims)
 end
 
+# Specify zero function
+function SparseArrayDOK{T}(dims::Tuple{Vararg{Int}}, zero) where {T}
+  return SparseArrayDOK{T,length(dims)}(dims, zero)
+end
+
 # undef
 function SparseArrayDOK{T,N,Zero}(
   ::UndefInitializer, dims::Tuple{Vararg{Int}}, zero
@@ -51,6 +56,10 @@ function SparseArrayDOK{T}(::UndefInitializer, dims::Int...) where {T}
   return SparseArrayDOK{T}(dims...)
 end
 
+function SparseArrayDOK{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}, zero) where {T}
+  return SparseArrayDOK{T}(dims, zero)
+end
+
 # Required `SparseArrayInterface` interface
 nonzero_structure(a::SparseArrayDOK) = a.data
 # TODO: Make this a generic function.
@@ -67,6 +76,7 @@ function Base.getindex(a::SparseArrayDOK{<:Any,N}, I::Vararg{Int,N}) where {N}
   return a[CartesianIndex(I)]
 end
 
+# TODO: Rename `getindex_sparse` or `sparse_getindex`.
 function Base.getindex(a::SparseArrayDOK{<:Any,N}, I::CartesianIndex{N}) where {N}
   if !is_structural_nonzero(a, I)
     return getindex_zero(a, I)
@@ -96,7 +106,15 @@ function Base.setindex!(a::SparseArrayDOK{<:Any,N}, value, I::CartesianIndex{N})
 end
 
 # similar
-# TODO: How does this deal with the converting the zero type?
-function Base.similar(a::SparseArrayDOK{T,N,Zero}) where {T,N,Zero}
-  return SparseArrayDOK{T,N,Zero}(undef, size(a), a.zero)
+function Base.similar(a::SparseArrayDOK)
+  return similar(a, eltype(a))
+end
+
+function Base.similar(a::SparseArrayDOK, elt::Type)
+  return similar(a, elt, size(a))
+end
+
+function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
+  # TODO: Accessor function for `a.zero`.
+  return SparseArrayDOK{elt}(undef, dims, a.zero)
 end

@@ -7,12 +7,15 @@ export DiagonalArray, DiagonalMatrix, DiagonalVector, DiagIndex, DiagIndices, de
 
 include("diagview.jl")
 
+# TODO: Make use of `Zero` type in `SparseArrayInterface`.
 struct DefaultZero end
 
 function (::DefaultZero)(eltype::Type, I::CartesianIndex)
   return zero(eltype)
 end
 
+# TODO: Rename `diag` to `nonzero_values`, to make more
+# generic?
 struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractArray{T,N}
   diag::Diag
   dims::NTuple{N,Int}
@@ -20,6 +23,7 @@ struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractArray{T,N}
 end
 
 # TODO: Use `Accessors.jl`.
+# TODO: Make more generic, call `set_nonzero_values`.
 set_diag(a::DiagonalArray, diag) = DiagonalArray(diag, size(a), a.zero)
 
 Base.copy(a::DiagonalArray) = set_diag(a, copy(a[DiagIndices()]))
@@ -27,6 +31,7 @@ Base.similar(a::DiagonalArray) = set_diag(a, similar(a[DiagIndices()]))
 
 Base.size(a::DiagonalArray) = a.dims
 
+# TODO: Rename `nonzer_values`.
 diagview(a::DiagonalArray) = a.diag
 LinearAlgebra.diag(a::DiagonalArray) = copy(diagview(a))
 
@@ -92,6 +97,7 @@ function DiagonalArray{T}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(undef, d)
 end
 
+# TODO: Use `sparse_getindex` from `SparseArrayInterface`.
 function Base.getindex(a::DiagonalArray{T,N}, I::CartesianIndex{N}) where {T,N}
   i = diagindex(a, I)
   isnothing(i) && return a.zero(T, I)
@@ -102,6 +108,7 @@ function Base.getindex(a::DiagonalArray{T,N}, I::Vararg{Int,N}) where {T,N}
   return a[CartesianIndex(I)]
 end
 
+# TODO: Use `sparse_setindex!` from `SparseArrayInterface`.
 function Base.setindex!(a::DiagonalArray{T,N}, v, I::CartesianIndex{N}) where {T,N}
   i = diagindex(a, I)
   isnothing(i) && return error("Can't set off-diagonal element of DiagonalArray")
@@ -119,11 +126,14 @@ function densearray(a::DiagonalArray)
   # TODO: Check this works on GPU.
   # TODO: Make use of `a.zero`?
   d = similar(diagview(a), size(a))
+  # TODO: Use `getindex_zero(a)` or `zero_value(a)`.
   fill!(d, zero(eltype(a)))
   diagcopyto!(d, a)
   return d
 end
 
+# TODO: Make generic in `SparseArrayInterface`, use a `SparseIndices(:)`
+# iterator?
 function Base.permutedims!(a_dest::AbstractArray, a_src::DiagonalArray, perm)
   @assert ndims(a_src) == ndims(a_dest) == length(perm)
   a_dest[DiagIndices()] = a_src[DiagIndices()]
@@ -151,6 +161,7 @@ function Base.map(f, a::DiagonalArray)
   return map_nonzeros(f, a)
 end
 
+# TODO: Make this generic in `SparseArrayInterface`.
 function map_diag(f, a::DiagonalArray)
   return set_diag(a, map(f, a[DiagIndices()]))
 end

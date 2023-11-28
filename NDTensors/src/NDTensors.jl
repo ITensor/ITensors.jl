@@ -27,6 +27,7 @@ for lib in [
   :Unwrap,
   :RankFactorization,
   :TensorAlgebra,
+  :SparseArrayInterface,
   :DiagonalArrays,
   :SparseArrayDOKs,
   :BlockSparseArrays,
