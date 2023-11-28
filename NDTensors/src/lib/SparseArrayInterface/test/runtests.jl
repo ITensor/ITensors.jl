@@ -200,6 +200,7 @@ using Test: @test, @testset, @test_broken, @test_throws
     @test axes(a) == (1:2, 1:3)
     @test SparseArrayInterface.storage(a) == elt[12]
     @test isone(SparseArrayInterface.nstored(a))
+    @test SparseArrayInterface.storage_indices(a) == 1:1
     @test collect(SparseArrayInterface.stored_indices(a)) == [CartesianIndex(1, 2)]
     @test !iszero(a)
     @test !iszero(norm(a))
