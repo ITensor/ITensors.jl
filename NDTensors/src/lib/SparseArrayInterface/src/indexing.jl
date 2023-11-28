@@ -40,10 +40,6 @@ function index_to_storage_index(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) whe
   return index_to_storage_index(a, CartesianIndex(I))
 end
 
-# Helper type for constructing zero values
-struct GetIndexZero end
-(::GetIndexZero)(a::AbstractArray, I) = zero(eltype(a))
-
 function sparse_getindex(a::AbstractArray, I::NotStoredIndex)
   return getindex_notstored(a, index(I))
 end
@@ -82,7 +78,7 @@ end
 
 # Linear indexing
 function sparse_getindex(a::AbstractArray, I::CartesianIndex{1})
-  return error("Linear indexing not supported yet for sparse arrays")
+  return sparse_getindex(a, CartesianIndices(a)[I])
 end
 
 # Handle trailing indices

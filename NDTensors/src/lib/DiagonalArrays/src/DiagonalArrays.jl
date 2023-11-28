@@ -31,7 +31,7 @@ Base.similar(a::DiagonalArray) = set_diag(a, similar(a[DiagIndices()]))
 
 Base.size(a::DiagonalArray) = a.dims
 
-# TODO: Rename `nonzer_values`.
+# TODO: Rename `storage_values`.
 diagview(a::DiagonalArray) = a.diag
 LinearAlgebra.diag(a::DiagonalArray) = copy(diagview(a))
 

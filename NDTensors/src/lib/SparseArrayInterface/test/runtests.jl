@@ -59,29 +59,17 @@ using Test: @test, @testset, @test_broken, @test_throws
       return a
     end
 
+    # Empty the storage, helps with efficiency in `map!` to drop
+    # zeros.
+    function SparseArrayInterface.empty_storage!(a::SparseArray)
+      empty!(a.data)
+      empty!(a.index_to_dataindex)
+      return empty!(a.dataindex_to_index)
+    end
+
     # Broadcasting
     function Broadcast.BroadcastStyle(arraytype::Type{<:SparseArray})
       return SparseArrayInterface.SparseArrayStyle{ndims(arraytype)}()
-    end
-
-    # Base
-    function Base.iszero(a::SparseArray)
-      return SparseArrayInterface.sparse_iszero(a)
-    end
-    function Base.isreal(a::SparseArray)
-      return SparseArrayInterface.sparse_isreal(a)
-    end
-    function Base.zero(a::SparseArray)
-      return SparseArrayInterface.sparse_zero(a)
-    end
-    function Base.one(a::SparseArray)
-      return SparseArrayInterface.sparse_one(a)
-    end
-    function Base.:(==)(a1::SparseArray, a2::SparseArray)
-      return SparseArrayInterface.sparse_isequal(a1, a2)
-    end
-    function Base.reshape(a::SparseArray, dims::Tuple{Vararg{Int}})
-      return SparseArrayInterface.sparse_reshape(a, dims)
     end
 
     # Map
@@ -100,6 +88,26 @@ using Test: @test, @testset, @test_broken, @test_throws
     function Base.permutedims!(dest::AbstractArray, src::SparseArray, perm)
       SparseArrayInterface.sparse_permutedims!(dest, src, perm)
       return dest
+    end
+
+    # Base
+    function Base.:(==)(a1::SparseArray, a2::SparseArray)
+      return SparseArrayInterface.sparse_isequal(a1, a2)
+    end
+    function Base.reshape(a::SparseArray, dims::Tuple{Vararg{Int}})
+      return SparseArrayInterface.sparse_reshape(a, dims)
+    end
+    function Base.iszero(a::SparseArray)
+      return SparseArrayInterface.sparse_iszero(a)
+    end
+    function Base.isreal(a::SparseArray)
+      return SparseArrayInterface.sparse_isreal(a)
+    end
+    function Base.zero(a::SparseArray)
+      return SparseArrayInterface.sparse_zero(a)
+    end
+    function Base.one(a::SparseArray)
+      return SparseArrayInterface.sparse_one(a)
     end
 
     # Test
@@ -132,6 +140,8 @@ using Test: @test, @testset, @test_broken, @test_throws
 
     a = SparseArray{elt}(2, 3)
     a[1, 2] = 12
+    @test a[1, 2] == 12
+    @test a[3] == 12 # linear indexing
     @test size(a) == (2, 3)
     @test axes(a) == (1:2, 1:3)
     @test a[SparseArrayInterface.StorageIndex(1)] == 12
@@ -283,6 +293,64 @@ using Test: @test, @testset, @test_broken, @test_throws
         @test iszero(b[I])
       end
     end
+
+    a = SparseArray{elt}(2, 3)
+    a[1, 2] = 12
+    b = randn(elt, 2, 3)
+    b .= a
+    @test a == b
+    for I in eachindex(a)
+      @test a[I] == b[I]
+    end
+
+    a = SparseArray{elt}(2, 3)
+    a[1, 2] = 12
+    b = randn(elt, 2, 3)
+    b .= 2 .* a
+    @test 2 * a == b
+    for I in eachindex(a)
+      @test 2 * a[I] == b[I]
+    end
+
+    a = SparseArray{elt}(2, 3)
+    a[1, 2] = 12
+    b = randn(elt, 2, 3)
+    b .= 2 .+ a
+    @test 2 .+ a == b
+    for I in eachindex(a)
+      @test 2 + a[I] == b[I]
+    end
+
+    a = SparseArray{elt}(2, 3)
+    a[1, 2] = 12
+    b = randn(elt, 2, 3)
+    map!(x -> 2x, b, a)
+    @test 2 * a == b
+    for I in eachindex(a)
+      @test 2 * a[I] == b[I]
+    end
+
+    a = SparseArray{elt}(2, 3)
+    a[1, 2] = 12
+    b = zeros(elt, 2, 3)
+    b[2, 1] = 21
+    @test Array(a) == a
+    @test a + b == Array(a) + b
+    @test b + a == Array(a) + b
+    @test b .+ 2 .* a == 2 * Array(a) + b
+    @test a .+ 2 .* b == Array(a) + 2b
+    @test a + b isa Matrix{elt}
+    @test b + a isa Matrix{elt}
+    @test SparseArrayInterface.nstored(a + b) == length(a)
+
+    a = SparseArray{elt}(2, 3)
+    a[1, 2] = 12
+    b = zeros(elt, 2, 3)
+    b[2, 1] = 21
+    a′ = copy(a)
+    a′ .+= b
+    @test a′ == a + b
+    @test SparseArrayInterface.nstored(a′) == 2
   end
   @testset "Custom DiagonalArray" begin
     struct DiagonalArray{T,N} <: AbstractArray{T,N}

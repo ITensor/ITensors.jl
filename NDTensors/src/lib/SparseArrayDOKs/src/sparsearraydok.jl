@@ -1,6 +1,6 @@
-using Dictionaries: Dictionary, set!
+using Dictionaries: Dictionary
 
-# TODO: Define a constructor with a default `zero`.
+# TODO: Parametrize by `data`?
 struct SparseArrayDOK{T,N,Zero} <: AbstractArray{T,N}
   data::Dictionary{CartesianIndex{N},T}
   dims::NTuple{N,Int}
@@ -58,63 +58,4 @@ end
 
 function SparseArrayDOK{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}, zero) where {T}
   return SparseArrayDOK{T}(dims, zero)
-end
-
-# Required `SparseArrayInterface` interface
-nonzero_structure(a::SparseArrayDOK) = a.data
-# TODO: Make this a generic function.
-nonzero_keys(a::SparseArrayDOK) = keys(nonzero_structure(a))
-
-# Optional `SparseArrayInterface` interface
-# TODO: Use `SetParameters`.
-zero_value(a::SparseArrayDOK, I) = a.zero(eltype(a), I)
-
-# Accessors
-Base.size(a::SparseArrayDOK) = a.dims
-
-function Base.getindex(a::SparseArrayDOK{<:Any,N}, I::Vararg{Int,N}) where {N}
-  return a[CartesianIndex(I)]
-end
-
-# TODO: Rename `getindex_sparse` or `sparse_getindex`.
-function Base.getindex(a::SparseArrayDOK{<:Any,N}, I::CartesianIndex{N}) where {N}
-  if !is_structural_nonzero(a, I)
-    return getindex_zero(a, I)
-  end
-  return getindex_nonzero(a, I)
-end
-
-# `SparseArrayInterface` interface
-function setindex_zero!(a::SparseArrayDOK, value, I)
-  # TODO: This is specific to the `Dictionaries.jl`
-  # interface, make more generic?
-  set!(nonzero_structure(a), I, value)
-  return a
-end
-
-function Base.setindex!(a::SparseArrayDOK{<:Any,N}, value, I::Vararg{Int,N}) where {N}
-  a[CartesianIndex(I)] = value
-  return a
-end
-
-function Base.setindex!(a::SparseArrayDOK{<:Any,N}, value, I::CartesianIndex{N}) where {N}
-  if !is_structural_nonzero(a, I)
-    setindex_zero!(a, value, I)
-  end
-  setindex_nonzero!(a, value, I)
-  return a
-end
-
-# similar
-function Base.similar(a::SparseArrayDOK)
-  return similar(a, eltype(a))
-end
-
-function Base.similar(a::SparseArrayDOK, elt::Type)
-  return similar(a, elt, size(a))
-end
-
-function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
-  # TODO: Accessor function for `a.zero`.
-  return SparseArrayDOK{elt}(undef, dims, a.zero)
 end

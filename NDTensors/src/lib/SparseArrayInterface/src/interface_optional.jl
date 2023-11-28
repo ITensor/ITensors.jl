@@ -19,3 +19,11 @@ end
 function stored_indices(a::AbstractArray)
   return Iterators.map(Inz -> storage_index_to_index(a, Inz), storage_indices(a))
 end
+
+# Empty the sparse storage if possible.
+# Array types should overload `Base.dataids` to opt-in
+# to aliasing detection with `Base.mightalias`
+# to avoid emptying an input array in the case of `sparse_map!`.
+# `empty_storage!` is used to zero out the output array.
+# See also `Base.unalias` and `Base.unaliascopy`.
+empty_storage!(a::AbstractArray) = a

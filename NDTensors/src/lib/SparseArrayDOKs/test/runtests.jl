@@ -1,7 +1,14 @@
 @eval module $(gensym())
+
+# TODO: Test:
+# zero (PermutedDimsArray)
+# Custom zero type
+# Slicing
+
 using Test: @test, @testset, @test_broken
-using NDTensors.SparseArrayDOKs: SparseArrayDOK, nonzero_keys, nonzero_length
-using SparseArrays: nnz
+using NDTensors.SparseArrayInterface: storage_indices, nstored
+using NDTensors.SparseArrayDOKs: SparseArrayDOK
+using SparseArrays: SparseMatrixCSC, nnz
 @testset "SparseArrayDOK (eltype=$elt)" for elt in
                                             (Float32, ComplexF32, Float64, ComplexF64)
   @testset "Basics" begin
@@ -11,14 +18,14 @@ using SparseArrays: nnz
     @test a == SparseArrayDOK{elt}(undef, (3, 4))
     @test iszero(a)
     @test iszero(nnz(a))
-    @test nonzero_length(a) == nnz(a)
+    @test nstored(a) == nnz(a)
     @test size(a) == (3, 4)
     @test eltype(a) == elt
     for I in eachindex(a)
       @test iszero(a[I])
       @test a[I] isa elt
     end
-    @test isempty(nonzero_keys(a))
+    @test isempty(storage_indices(a))
 
     x12 = randn(elt)
     x23 = randn(elt)
@@ -31,23 +38,39 @@ using SparseArrays: nnz
     @test !iszero(b)
     @test b[1, 2] == x12
     @test b[2, 3] == x23
-    @test iszero(nonzero_length(a))
-    @test_broken nonzero_length(b) == 2
-
-    # To test:
-    # reshape
-    # zero (PermutedDimsArray)
-    # map[!]
-    # broadcast
-    # Custom zero type
-    # conversion to `SparseMatrixCSC`
+    @test iszero(nstored(a))
+    @test nstored(b) == 2
   end
   @testset "map/broadcast" begin
     a = SparseArrayDOK{elt}(3, 4)
     a[1, 1] = 11
     a[3, 4] = 34
-    @test nonzero_length(a) == 2
-    2 * a
+    @test nstored(a) == 2
+    b = 2 * a
+    @test nstored(b) == 2
+    @test b[1, 1] == 2 * 11
+    @test b[3, 4] == 2 * 34
+  end
+  @testset "reshape" begin
+    a = SparseArrayDOK{elt}(2, 2, 2)
+    a[1, 2, 2] = 122
+    b = reshape(a, 2, 4)
+    @test b[1, 4] == 122
+  end
+  @testset "SparseMatrixCSC" begin
+    a = SparseArrayDOK{elt}(2, 2)
+    a[1, 2] = 12
+    for (type, a′) in ((SparseMatrixCSC, a), (SparseArrayDOK, SparseMatrixCSC(a)))
+      b = type(a′)
+      @test b isa type{elt}
+      @test b[1, 2] == 12
+      @test isone(nnz(b))
+      for I in eachindex(b)
+        if I ≠ CartesianIndex(1, 2)
+          @test iszero(b[I])
+        end
+      end
+    end
   end
 end
 end
