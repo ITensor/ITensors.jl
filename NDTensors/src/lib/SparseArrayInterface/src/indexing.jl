@@ -44,15 +44,11 @@ end
 struct GetIndexZero end
 (::GetIndexZero)(a::AbstractArray, I) = zero(eltype(a))
 
-function sparse_getindex(
-  a::AbstractArray{<:Any,N}, I::NotStoredIndex{CartesianIndex{N}}
-) where {N}
+function sparse_getindex(a::AbstractArray, I::NotStoredIndex)
   return getindex_notstored(a, index(I))
 end
 
-function sparse_getindex(
-  a::AbstractArray{<:Any,N}, I::StoredIndex{CartesianIndex{N}}
-) where {N}
+function sparse_getindex(a::AbstractArray, I::StoredIndex)
   return sparse_getindex(a, StorageIndex(I))
 end
 
@@ -109,16 +105,12 @@ function sparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Vararg{Int,N}) wh
   return a
 end
 
-function sparse_setindex!(
-  a::AbstractArray{<:Any,N}, value, I::StoredIndex{CartesianIndex{N}}
-) where {N}
+function sparse_setindex!(a::AbstractArray, value, I::StoredIndex)
   sparse_setindex!(a, value, StorageIndex(I))
   return a
 end
 
-function sparse_setindex!(
-  a::AbstractArray{<:Any,N}, value, I::NotStoredIndex{CartesianIndex{N}}
-) where {N}
+function sparse_setindex!(a::AbstractArray, value, I::NotStoredIndex)
   if !iszero(value)
     setindex_notstored!(a, value, index(I))
   end

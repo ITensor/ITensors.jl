@@ -102,8 +102,6 @@ using Test: @test, @testset, @test_broken, @test_throws
       return dest
     end
 
-    # TODO: Test `fill!`.
-
     # Test
     a = SparseArray{elt}(2, 3)
     @test size(a) == (2, 3)
@@ -115,6 +113,21 @@ using Test: @test, @testset, @test_broken, @test_throws
     @test iszero(norm(a))
     for I in eachindex(a)
       @test iszero(a)
+    end
+
+    a = SparseArray{elt}(2, 3)
+    fill!(a, 0)
+    @test size(a) == (2, 3)
+    @test iszero(a)
+    @test iszero(SparseArrayInterface.nstored(a))
+
+    a = SparseArray{elt}(2, 3)
+    fill!(a, 2)
+    @test size(a) == (2, 3)
+    @test !iszero(a)
+    @test SparseArrayInterface.nstored(a) == length(a)
+    for I in eachindex(a)
+      @test a[I] == 2
     end
 
     a = SparseArray{elt}(2, 3)

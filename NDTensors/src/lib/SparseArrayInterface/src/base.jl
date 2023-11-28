@@ -10,27 +10,8 @@ function sparse_isreal(a::AbstractArray)
   return isreal(storage(a))
 end
 
-# Fill all values, stored and unstored
-function fill_all!(a::AbstractArray, x)
-  for I in eachindex(a)
-    a[I] = x
-  end
-  return a
-end
-
-# Only fill the stored values
-function fill_stored!(a::AbstractArray, x)
-  fill!(storage(a), x)
-  return a
-end
-
 function sparse_fill!(a::AbstractArray, x)
-  if !iszero(x)
-    # TODO: Reverse naming convention?
-    fill_all!(a, x)
-  else
-    fill_stored!(a, x)
-  end
+  sparse_map!(Returns(x), a, a)
   return a
 end
 
