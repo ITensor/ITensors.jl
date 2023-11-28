@@ -16,7 +16,7 @@ using LinearAlgebra:
 using GPUArraysCore: @allowscalar
 include(
   joinpath(
-    pathof(NDTensors)[1:(end - 16)], "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"
+    pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"
   ),
 )
 using .NDTensorsTestUtils: NDTensorsTestUtils
@@ -34,8 +34,8 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   v_type = typeof(v)
   e_type = eltype(v)
   @test typeof(E) == Exposed{v_type,v_type}
-  @test typeof(Et) == Exposed{v_type,LinearAlgebra.Transpose{e_type,v_type}}
-  @test typeof(Ea) == Exposed{v_type,LinearAlgebra.Adjoint{e_type,v_type}}
+  @test typeof(Et) == Exposed{v_type,Transpose{e_type,v_type}}
+  @test typeof(Ea) == Exposed{v_type,Adjoint{e_type,v_type}}
 
   @test parent(E) == v
   @test parent(Et) == v
@@ -53,8 +53,8 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
 
   m_type = typeof(m)
   @test typeof(E) == Exposed{m_type,m_type}
-  @test typeof(Et) == Exposed{m_type,LinearAlgebra.Transpose{e_type,m_type}}
-  @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
+  @test typeof(Et) == Exposed{m_type,Transpose{e_type,m_type}}
+  @test typeof(Ea) == Exposed{m_type,Adjoint{e_type,m_type}}
 
   o = dev(randn(elt, 1))
   expose(o)[] = 2
@@ -69,7 +69,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   copyto!(expose(mp), expose(ma))
   @test mp == ma
 
-  q, r = LinearAlgebra.qr(expose(mp))
+  q, r = qr(expose(mp))
   @test q * r ≈ mp
 
   q, r = Unwrap.qr_positive(expose(mp))
@@ -79,29 +79,29 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   square = (square + transpose(square)) / 2
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
-  l, U = LinearAlgebra.eigen(expose(LinearAlgebra.Symmetric(square)))
+  l, U = eigen(expose(Symmetric(square)))
   @test eltype(l) == real(elt)
   @test eltype(U) == real(elt)
-  @test square * U ≈ U * LinearAlgebra.Diagonal(l)
+  @test square * U ≈ U * Diagonal(l)
 
   square = dev(rand(elt, (10, 10)))
   # Can use `hermitianpart` in Julia 1.10
   square = (square + square') / 2
   ## CUDA only supports Hermitian or Symmetric eigen decompositions
   ## So I symmetrize square and call symetric here
-  l, U = LinearAlgebra.eigen(expose(LinearAlgebra.Hermitian(square)))
+  l, U = eigen(expose(Hermitian(square)))
   @test eltype(l) == real(elt)
   @test eltype(U) == elt
-  @test square * U ≈ U * LinearAlgebra.Diagonal(l)
+  @test square * U ≈ U * Diagonal(l)
 
-  U, S, V, = LinearAlgebra.svd(expose(mp))
+  U, S, V, = svd(expose(mp))
   @test eltype(U) == elt
   @test eltype(S) == real(elt)
   @test eltype(V) == elt
-  @test U * LinearAlgebra.Diagonal(S) * V' ≈ mp
+  @test U * Diagonal(S) * V' ≈ mp
 
   cm = dev(randn(elt, 2, 2))
-  LinearAlgebra.mul!(expose(cm), expose(mp), expose(mp'), 1.0, 0.0)
+  mul!(expose(cm), expose(mp), expose(mp'), 1.0, 0.0)
   @test cm ≈ mp * mp'
 
   @test permutedims(expose(mp), (2, 1)) == transpose(mp)
@@ -169,10 +169,10 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
 
   ## This fails with scalar indexing
   if dev != NDTensors.cpu
-    @test_broken LinearAlgebra.mul!(transpose(C), transpose(A), B, true, false)
+    @test_broken mul!(transpose(C), transpose(A), B, true, false)
   end
-  LinearAlgebra.mul!(C, transpose(B), A, true, false)
-  LinearAlgebra.mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), true, false)
+  mul!(C, transpose(B), A, true, false)
+  mul!(expose(transpose(Cp)), expose(transpose(A)), expose(B), true, false)
   @test C ≈ Cp
   Cp = zero(C)
   ## Try calling mul!! with transposes to verify that code works
@@ -182,10 +182,10 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   Cp = zero(C)
   ## This fails with scalar indexing 
   if dev != NDTensors.cpu
-    @test_broken LinearAlgebra.mul!(C', A', B, true, false)
+    @test_broken mul!(C', A', B, true, false)
   end
-  LinearAlgebra.mul!(C, B', A, true, false)
-  LinearAlgebra.mul!(expose(Cp'), expose(A'), expose(B), true, false)
+  mul!(C, B', A, true, false)
+  mul!(expose(Cp'), expose(A'), expose(B), true, false)
   @test C ≈ Cp
   Cp = zero(C)
   Cpt = NDTensors.mul!!(Cp', A', B, true, false)
@@ -197,9 +197,9 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   A = dev(transpose(reshape(randn(elt, 2, 12)', (12, 2))))
   B = dev(randn(elt, 2, 2))
   C = dev(zeros(elt, 2, 12))
-  LinearAlgebra.mul!(expose(C), expose(B), expose(A), true, false)
+  mul!(expose(C), expose(B), expose(A), true, false)
   Cp = NDTensors.cpu(similar(C))
-  LinearAlgebra.mul!(
+  mul!(
     expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false
   )
   @test NDTensors.cpu(C) ≈ Cp
