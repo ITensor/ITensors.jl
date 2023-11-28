@@ -15,11 +15,11 @@ using SafeTestsets: @safetestset
     end
   end
   if "cuda" in ARGS || "all" in ARGS
-    using NDTensors
+    using NDTensors: NDTensors
     include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
   end
   if "metal" in ARGS || "all" in ARGS
-    using NDTensors
+    using NDTensors: NDTensors
     include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
   end
 end
