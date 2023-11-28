@@ -67,11 +67,11 @@ function main()
   # Create a tuple of indices
   decomp = (dim(ind(grad[1], 1)), dim(ind(grad[1], 2)) * dim(ind(grad[1], 3)))
   # Reshape the CuVector of data into a matrix
-  cuTensor_data = CUDA.reshape(array(grad[1]), decomp)
+  cuTensor_data = reshape(array(grad[1]), decomp)
   # Use cuBLAS to compute SVD of data
   U, S, V = svd(cuTensor_data)
   decomp = (dim(ind(grad[2], 1)), dim(ind(grad[2], 2)))
-  cuTensor_data = CUDA.reshape(array(grad[2]), decomp)
+  cuTensor_data = reshape(array(grad[2]), decomp)
   U, S, V = svd(cuTensor_data)
 
   # These things can take up lots of memory, look at memory usage here
