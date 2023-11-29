@@ -21,7 +21,9 @@ end
 # such as in `reshape`.
 # TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
 # TODO: Special case 2D to output `SparseMatrixCSC`?
-function SparseArrayInterface.sparse_similar(a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
+function SparseArrayInterface.sparse_similar(
+  a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}}
+)
   return SparseArrayDOK{elt}(undef, dims)
 end
 
@@ -55,7 +57,7 @@ end
 function Base.map!(f, dest::AbstractArray, src::DiagonalArray)
   SparseArrayInterface.sparse_map!(f, dest, src)
   return dest
-end                                           
+end
 
 # permutedims
 function Base.permutedims!(dest::AbstractArray, src::DiagonalArray, perm)

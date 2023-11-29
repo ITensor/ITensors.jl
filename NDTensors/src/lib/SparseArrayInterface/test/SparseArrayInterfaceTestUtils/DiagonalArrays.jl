@@ -41,7 +41,9 @@ end
 function SparseArrayInterface.storage_index_to_index(a::DiagonalArray, I)
   return CartesianIndex(ntuple(Returns(I), ndims(a)))
 end
-function SparseArrayInterface.sparse_similar(a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
+function SparseArrayInterface.sparse_similar(
+  a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}}
+)
   return Array{elt}(undef, dims)
 end
 function SparseArrayInterface.sparse_similar(a::DiagonalArray, elt::Type, dims::Tuple{Int})
