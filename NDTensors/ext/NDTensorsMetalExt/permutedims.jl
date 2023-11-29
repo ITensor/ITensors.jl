@@ -1,13 +1,23 @@
 function Base.permutedims(E::Exposed{<:MtlArray,<:Base.ReshapedArray}, perm)
   A = copy(E)
-  return permutedims(expose(A), perm)
+  return permutedims(A, perm)
 end
+
 ## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted
 function Base.permutedims!(
   Edest::Exposed{<:MtlArray,<:Base.ReshapedArray}, Esrc::Exposed{<:MtlArray}, perm
 )
   Aperm = permutedims(Esrc, perm)
   copyto!(expose(parent(Edest)), expose(Aperm))
+  return unexpose(Edest)
+end
+
+## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted
+function Base.permutedims!(
+  Edest::Exposed{<:MtlArray}, Esrc::Exposed{<:MtlArray, <:Base.ReshapedArray}, perm
+)
+  Aperm = permutedims(Esrc, perm)
+  copyto!(Edest, expose(Aperm))
   return unexpose(Edest)
 end
 

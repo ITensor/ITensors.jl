@@ -129,6 +129,40 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   @test NDTensors.cpu(y) == NDTensors.cpu(x)
   @test NDTensors.cpu(copy(expose(x))) == NDTensors.cpu(x)
 
+  ## Tests for Metal because permutedims with ReshapedArray does not work properly
+  ## transpose(ReshapedArray(MtlArray)) fails with scalar indexing so calling copy to 
+  ## evaluate tests in the following tests
+  y = dev(rand(elt, 4, 4))
+  @test permutedims(expose(y), (2,1)) == transpose(y)
+  y = Base.ReshapedArray(y, (2,8), ())
+  @test permutedims(expose(y), (2,1)) == transpose(copy(expose(y)))
+  yt = dev(rand(elt, (8,2)))
+  permutedims!(expose(y), expose(yt), (2,1))
+  @test copy(expose(y)) == transpose(yt)
+  yt = dev(rand(elt, 8,2))
+  permutedims!(expose(yt), expose(y), (2,1))
+  @test copy(expose(y)) == transpose(yt)
+
+  y = reshape(dev(randn(elt, 8))', 2, 4)
+  x = Base.ReshapedArray(dev(randn(elt, 8, 8)'[1:8]), (2, 4), ())
+  z = dev(fill!(Matrix{elt}(undef, (2, 4)), 0.0))
+  for i in 1:2
+    for j in 1:4
+      @allowscalar z[i, j] = y[i, j] * x[i, j]
+    end
+  end
+  permutedims!(expose(y), expose(x), (1, 2), *)
+  @allowscalar @test reshape(z, size(y)) ≈ y
+  for i in 1:2
+    for j in 1:4
+      @allowscalar z[i, j] = x[i, j] * y[i, j]
+    end
+  end
+  permutedims!(expose(x), expose(y), (1, 2), *)
+  ## I copy x here because it is a ReshapedArray{SubArray} which causes `≈`
+  ## to throw an error 
+  @test z ≈ copy(expose(x))
+  
   y = dev(rand(elt, 4, 4))
   x = @view dev(rand(elt, 8, 8))[1:4, 1:4]
   copyto!(expose(y), expose(x))
@@ -201,23 +235,4 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   NDTensors.mul!!(C, B, A, true, false)
   @test NDTensors.cpu(C) ≈ Cp
 
-  y = reshape(dev(randn(elt, 8))', 2, 4)
-  x = Base.ReshapedArray(dev(randn(elt, 8, 8)'[1:8]), (2, 4), ())
-  z = dev(fill!(Matrix{elt}(undef, (2, 4)), 0.0))
-  for i in 1:2
-    for j in 1:4
-      @allowscalar z[i, j] = y[i, j] * x[i, j]
-    end
-  end
-  permutedims!(expose(y), expose(x), (1, 2), *)
-  @allowscalar @test reshape(z, size(y)) ≈ y
-  for i in 1:2
-    for j in 1:4
-      @allowscalar z[i, j] = x[i, j] * y[i, j]
-    end
-  end
-  permutedims!(expose(x), expose(y), (1, 2), *)
-  ## I copy x here because it is a ReshapedArray{SubArray} which causes `≈`
-  ## to throw an error 
-  @test z ≈ copy(expose(x))
 end
