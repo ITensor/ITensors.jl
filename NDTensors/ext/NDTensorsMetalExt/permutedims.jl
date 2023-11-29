@@ -1,9 +1,11 @@
+## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted using
+## permutedims (failing in that Metal uses scalar indexing)
+## These functions are to address the problem in different instances of permutedims
 function Base.permutedims(E::Exposed{<:MtlArray,<:Base.ReshapedArray}, perm)
   A = copy(E)
   return permutedims(A, perm)
 end
 
-## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted
 function Base.permutedims!(
   Edest::Exposed{<:MtlArray,<:Base.ReshapedArray}, Esrc::Exposed{<:MtlArray}, perm
 )
@@ -12,7 +14,6 @@ function Base.permutedims!(
   return unexpose(Edest)
 end
 
-## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted
 function Base.permutedims!(
   Edest::Exposed{<:MtlArray}, Esrc::Exposed{<:MtlArray,<:Base.ReshapedArray}, perm
 )
@@ -21,8 +22,8 @@ function Base.permutedims!(
   return unexpose(Edest)
 end
 
-## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted
-## To get around this copy and permute Esrc, reshape to the size of Edest's parent
+## To get around the Metal issue here we copy and permute Esrc,
+## then we reshape Esrc to the size of Edest's parent
 ## and broadcast into the parent.
 function Base.permutedims!(
   Edest::Exposed{<:MtlArray,<:Base.ReshapedArray},
