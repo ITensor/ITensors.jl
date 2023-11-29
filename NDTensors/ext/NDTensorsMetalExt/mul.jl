@@ -20,7 +20,7 @@ function LinearAlgebra.mul!(
   return unexpose(CM)
 end
 
-## Fix issue in Metal.jl where it cannot distinguish Transpose{Reshape{Adjoint{CuArray}}}
+## Fix issue in Metal.jl where it cannot distinguish Transpose{Reshape{Adjoint{MtlArray}}}
 ## as a MtlArray and calls generic matmul
 function LinearAlgebra.mul!(
   CM::Exposed{<:MtlArray},
