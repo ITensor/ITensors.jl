@@ -133,14 +133,14 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   ## transpose(ReshapedArray(MtlArray)) fails with scalar indexing so calling copy to 
   ## evaluate tests in the following tests
   y = dev(rand(elt, 4, 4))
-  @test permutedims(expose(y), (2,1)) == transpose(y)
-  y = Base.ReshapedArray(y, (2,8), ())
-  @test permutedims(expose(y), (2,1)) == transpose(copy(expose(y)))
-  yt = dev(rand(elt, (8,2)))
-  permutedims!(expose(y), expose(yt), (2,1))
+  @test permutedims(expose(y), (2, 1)) == transpose(y)
+  y = Base.ReshapedArray(y, (2, 8), ())
+  @test permutedims(expose(y), (2, 1)) == transpose(copy(expose(y)))
+  yt = dev(rand(elt, (8, 2)))
+  permutedims!(expose(y), expose(yt), (2, 1))
   @test copy(expose(y)) == transpose(yt)
-  yt = dev(rand(elt, 8,2))
-  permutedims!(expose(yt), expose(y), (2,1))
+  yt = dev(rand(elt, 8, 2))
+  permutedims!(expose(yt), expose(y), (2, 1))
   @test copy(expose(y)) == transpose(yt)
 
   y = reshape(dev(randn(elt, 8))', 2, 4)
@@ -162,7 +162,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   ## I copy x here because it is a ReshapedArray{SubArray} which causes `≈`
   ## to throw an error 
   @test z ≈ copy(expose(x))
-  
+
   y = dev(rand(elt, 4, 4))
   x = @view dev(rand(elt, 8, 8))[1:4, 1:4]
   copyto!(expose(y), expose(x))
@@ -234,5 +234,4 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   NDTensors.zero(C)
   NDTensors.mul!!(C, B, A, true, false)
   @test NDTensors.cpu(C) ≈ Cp
-
 end
