@@ -20,7 +20,7 @@ function Base.permutedims!(
   perm,
   f,
 )
-  Aperm = unwrap_type(Esrc)(reshape(permutedims(Esrc, perm), size(parent(Edest))))
+  Aperm = reshape(permutedims(Esrc, perm), size(parent(Edest)))
   parent(Edest) .= f.(parent(Edest), Aperm)
   return unexpose(Edest)
 end
