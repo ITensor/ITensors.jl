@@ -1,9 +1,9 @@
-using Metal
+using Metal: MtlVector, mtl, @allowscalar
 using NDTensors
 
-using ITensors
-using Test
-using Zygote
+using ITensors: ITensor, Index, randomITensor
+using Test: @test
+using Zygote: gradient
 
 function main()
   # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
@@ -25,8 +25,6 @@ function main()
 
   @test A * B ≈ cpu(cC)
 
-  #C = A * B
-
   dim3 = (l, k)
   dim4 = (i,)
 
@@ -35,7 +33,8 @@ function main()
 
   f(A, B, C, D) = (A * B * C * D)[]
 
-  return grad = gradient(f, cA, cB, cC, cD)
+  grad = gradient(f, cA, cB, cC, cD)
+  @test grad[2] ≈ cA * cC * cD
 end
 
 main()
