@@ -2,13 +2,23 @@
 #
 # A Julia `DiagonalArray` type.
 
-using NDTensors.DiagonalArrays: DiagonalArray, DiagIndex, DiagIndices, isdiagindex
+using NDTensors.DiagonalArrays: DiagonalArray, DiagonalMatrix, DiagIndex, DiagIndices, isdiagindex
 using Test
 
 function main()
-  d = DiagonalArray([1.0, 2, 3], 3, 4, 5)
+  d = DiagonalMatrix([1.0, 2.0, 3.0])
+  @test eltype(d) == Float64
+  @test size(d) == (3, 3)
+  @test d[1, 1] == 1
+  @test d[2, 2] == 2
+  @test d[3, 3] == 3
+  @test d[1, 2] == 0
+
+  d = DiagonalArray([1.0, 2.0, 3.0], 3, 4, 5)
+  @test eltype(d) == Float64
   @test d[1, 1, 1] == 1
   @test d[2, 2, 2] == 2
+  @test d[3, 3, 3] == 3
   @test d[1, 2, 1] == 0
 
   d[2, 2, 2] = 22
@@ -60,7 +70,7 @@ You can generate this README with:
 ```julia
 using Literate
 using NDTensors.DiagonalArrays
-dir = joinpath(pkgdir(DiagonalArrays), "src", "DiagonalArrays")
+dir = joinpath(pkgdir(DiagonalArrays), "src", "lib", "DiagonalArrays")
 Literate.markdown(joinpath(dir, "examples", "README.jl"), dir; flavor=Literate.CommonMarkFlavor())
 ```
 =#
