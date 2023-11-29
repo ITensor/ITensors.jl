@@ -9,7 +9,7 @@ end
 ## Found an issue in CUDA where if Edest is a reshaped{<:Adjoint}
 ## .= can fail. So instead force Esrc into the shape of parent(Edest)
 function Base.permutedims!(
-  Edest::Exposed{<:CuArray,<:Base.ReshapedArray{<:Any, <:Any, <:Adjoint}},
+  Edest::Exposed{<:CuArray,<:Base.ReshapedArray{<:Any,<:Any,<:Adjoint}},
   Esrc::Exposed{<:CuArray},
   perm,
   f,
