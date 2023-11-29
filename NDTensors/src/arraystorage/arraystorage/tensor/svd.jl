@@ -1,3 +1,5 @@
+using .DiagonalArrays: DiagIndices, DiagonalMatrix
+
 backup_svd_alg(::Algorithm"divide_and_conquer") = Algorithm"qr_iteration"()
 backup_svd_alg(::Algorithm"qr_iteration") = Algorithm"recursive"()
 
@@ -111,7 +113,7 @@ function svd(
   # Make the new indices to go onto U and V
   # TODO: Put in a separate function, such as
   # `rewrap_inds` or something like that.
-  dS = length(S[DiagIndices()])
+  dS = length(S[DiagIndices(:)])
   indstype = typeof(inds(T))
   u = eltype(indstype)(dS)
   v = eltype(indstype)(dS)

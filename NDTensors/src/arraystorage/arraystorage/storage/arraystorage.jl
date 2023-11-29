@@ -1,3 +1,6 @@
+using .BlockSparseArrays: BlockSparseArray
+using .DiagonalArrays: DiagonalArray
+
 # Used for dispatch to distinguish from Tensors wrapping TensorStorage.
 # Remove once TensorStorage is removed.
 const ArrayStorage{T,N} = Union{

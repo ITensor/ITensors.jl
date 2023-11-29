@@ -1,4 +1,7 @@
-## Create the Exposed version of Base.permutedims
+using .Unwrap: Exposed, unexpose
+
+# TODO: Move to `Unwrap` module.
+# Create the Exposed version of Base.permutedims
 function permutedims(E::Exposed{<:Array}, perm)
   ## Creating Mperm here to evaluate the permutation and
   ## avoid returning a Stridedview

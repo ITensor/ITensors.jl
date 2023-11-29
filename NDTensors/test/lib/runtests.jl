@@ -10,6 +10,7 @@ using Test: @testset
   "SetParameters",
   "SmallVectors",
   "SortedSets",
+  "SparseArrayDOKs",
   "TagSets",
   "TensorAlgebra",
   "Unwrap",

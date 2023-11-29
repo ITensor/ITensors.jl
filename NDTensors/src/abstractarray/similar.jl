@@ -1,3 +1,5 @@
+using .Unwrap: IsWrappedArray
+
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.
 

@@ -19,33 +19,26 @@ using Strided
 using TimerOutputs
 using TupleTools
 
-# TODO: List types, macros, and functions being used.
-include("lib/AlgorithmSelection/src/AlgorithmSelection.jl")
-using .AlgorithmSelection: AlgorithmSelection
-include("lib/BaseExtensions/src/BaseExtensions.jl")
-using .BaseExtensions: BaseExtensions
-include("lib/SetParameters/src/SetParameters.jl")
-using .SetParameters
-include("lib/BroadcastMapConversion/src/BroadcastMapConversion.jl")
-using .BroadcastMapConversion: BroadcastMapConversion
-include("lib/Unwrap/src/Unwrap.jl")
-using .Unwrap
-include("lib/RankFactorization/src/RankFactorization.jl")
-using .RankFactorization: RankFactorization
-include("lib/TensorAlgebra/src/TensorAlgebra.jl")
-using .TensorAlgebra: TensorAlgebra
-include("lib/DiagonalArrays/src/DiagonalArrays.jl")
-using .DiagonalArrays
-include("lib/BlockSparseArrays/src/BlockSparseArrays.jl")
-using .BlockSparseArrays
-include("lib/NamedDimsArrays/src/NamedDimsArrays.jl")
-using .NamedDimsArrays: NamedDimsArrays
-include("lib/SmallVectors/src/SmallVectors.jl")
-using .SmallVectors
-include("lib/SortedSets/src/SortedSets.jl")
-using .SortedSets
-include("lib/TagSets/src/TagSets.jl")
-using .TagSets
+for lib in [
+  :AlgorithmSelection,
+  :BaseExtensions,
+  :SetParameters,
+  :BroadcastMapConversion,
+  :Unwrap,
+  :RankFactorization,
+  :TensorAlgebra,
+  :SparseArrayInterface,
+  :SparseArrayDOKs,
+  :DiagonalArrays,
+  :BlockSparseArrays,
+  :NamedDimsArrays,
+  :SmallVectors,
+  :SortedSets,
+  :TagSets,
+]
+  include("lib/$(lib)/src/$(lib).jl")
+  @eval using .$lib: $lib
+end
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
