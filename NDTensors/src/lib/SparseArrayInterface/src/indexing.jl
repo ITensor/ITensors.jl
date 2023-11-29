@@ -87,7 +87,7 @@ function sparse_getindex(a::AbstractArray, I::CartesianIndex)
   length(t) < ndims(a) && error("Not enough indices passed")
   I′ = ntuple(i -> t[i], ndims(a))
   @assert all(i -> isone(I[i]), (ndims(a) + 1):length(I))
-  return _sparse_getindex(a, I′)
+  return _sparse_getindex(a, CartesianIndex(I′))
 end
 
 # Update a nonzero value
@@ -96,9 +96,38 @@ function sparse_setindex!(a::AbstractArray, value, I::StorageIndex)
   return a
 end
 
-function sparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Vararg{Int,N}) where {N}
+# Implementation of element access
+function _sparse_setindex!(a::AbstractArray{<:Any,N}, value, I::CartesianIndex{N}) where {N}
+  @boundscheck checkbounds(a, I)
+  sparse_setindex!(a, value, MaybeStoredIndex(a, I))
+  return a
+end
+
+# Ambiguity with linear indexing
+function sparse_setindex!(a::AbstractArray{<:Any,1}, value, I::CartesianIndex{1})
+  _sparse_setindex!(a, value, I)
+  return a
+end
+
+# Handle trailing indices or linear indexing
+function sparse_setindex!(a::AbstractArray, value, I::Vararg{Int})
   sparse_setindex!(a, value, CartesianIndex(I))
   return a
+end
+
+# Linear indexing
+function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex{1})
+  sparse_setindex!(a, value, CartesianIndices(a)[I])
+  return a
+end
+
+# Handle trailing indices
+function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex)
+  t = Tuple(I)
+  length(t) < ndims(a) && error("Not enough indices passed")
+  I′ = ntuple(i -> t[i], ndims(a))
+  @assert all(i -> isone(I[i]), (ndims(a) + 1):length(I))
+  return _sparse_setindex!(a, value, CartesianIndex(I′))
 end
 
 function sparse_setindex!(a::AbstractArray, value, I::StoredIndex)
@@ -113,7 +142,25 @@ function sparse_setindex!(a::AbstractArray, value, I::NotStoredIndex)
   return a
 end
 
-function sparse_setindex!(a::AbstractArray{<:Any,N}, value, I::CartesianIndex{N}) where {N}
-  sparse_setindex!(a, value, MaybeStoredIndex(a, I))
+# A set of indices into the storage of the sparse array.
+struct StorageIndices{I}
+  i::I
+end
+indices(i::StorageIndices) = i.i
+
+function sparse_getindex(a::AbstractArray, I::StorageIndices{Colon})
+  return storage(a)
+end
+
+function sparse_getindex(a::AbstractArray, I::StorageIndices)
+  return error("Not implemented")
+end
+
+function sparse_setindex!(a::AbstractArray, value, I::StorageIndices{Colon})
+  storage(a) .= value
   return a
+end
+
+function sparse_setindex!(a::AbstractArray, value, I::StorageIndices)
+  return error("Not implemented")
 end

@@ -1,3 +1,22 @@
+# This is used when a sparse output structure not matching
+# the input structure is needed, for example when reshaping
+# a DiagonalArray. Overload:
+#
+# sparse_similar(a::AbstractArray, elt::Type, dims::Tuple{Vararg{Int}})
+#
+# as needed.
+function sparse_similar(a::AbstractArray, elt::Type)
+  return similar(a, elt, size(a))
+end
+
+function sparse_similar(a::AbstractArray, dims::Tuple{Vararg{Int}})
+  return sparse_similar(a, eltype(a), dims)
+end
+
+function sparse_similar(a::AbstractArray)
+  return sparse_similar(a, eltype(a), size(a))
+end
+
 function sparse_reduce(op, a::AbstractArray; kwargs...)
   return sparse_mapreduce(identity, op, a; kwargs...)
 end
@@ -86,14 +105,19 @@ function sparse_isequal(a1::AbstractArray, a2::AbstractArray)
   return true
 end
 
-function sparse_reshape(a::AbstractArray, dims)
-  @assert length(a) == prod(dims)
-  a_reshaped = similar(a, dims)
-  sparse_fill!(a_reshaped, zero(eltype(a)))
-  linear_inds = LinearIndices(a)
+function sparse_reshape!(a_dest::AbstractArray, a_src::AbstractArray, dims)
+  @assert length(a_src) == prod(dims)
+  sparse_fill!(a_dest, zero(eltype(a_src)))
+  linear_inds = LinearIndices(a_src)
   dest_cartesian_inds = CartesianIndices(dims)
-  for I in stored_indices(a)
-    a_reshaped[dest_cartesian_inds[linear_inds[I]]] = a[I]
+  for I in stored_indices(a_src)
+    a_dest[dest_cartesian_inds[linear_inds[I]]] = a_src[I]
   end
+  return a_dest
+end
+
+function sparse_reshape(a::AbstractArray, dims)
+  a_reshaped = sparse_similar(a, dims)
+  sparse_reshape!(a_reshaped, a, dims)
   return a_reshaped
 end

@@ -27,3 +27,8 @@ end
 # `empty_storage!` is used to zero out the output array.
 # See also `Base.unalias` and `Base.unaliascopy`.
 empty_storage!(a::AbstractArray) = a
+
+# Overload
+function sparse_similar(a::AbstractArray, elt::Type, dims::Tuple{Vararg{Int}})
+  return similar(a, elt, dims)
+end
