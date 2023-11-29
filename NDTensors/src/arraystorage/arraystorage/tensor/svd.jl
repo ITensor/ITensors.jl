@@ -1,4 +1,4 @@
-using .DiagonalArrays: DiagonalMatrix
+using .DiagonalArrays: DiagIndices, DiagonalMatrix
 
 backup_svd_alg(::Algorithm"divide_and_conquer") = Algorithm"qr_iteration"()
 backup_svd_alg(::Algorithm"qr_iteration") = Algorithm"recursive"()
