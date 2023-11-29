@@ -21,7 +21,7 @@ function LinearAlgebra.mul!(
 end
 
 ## Fix issue in Metal.jl where it cannot distinguish Transpose{Reshape{Adjoint{CuArray}}}
-## as a CuArray and calls generic matmul
+## as a MtlArray and calls generic matmul
 function LinearAlgebra.mul!(
   CM::Exposed{<:MtlArray},
   AM::Exposed{<:MtlArray},
