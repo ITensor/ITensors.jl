@@ -26,7 +26,7 @@ function Base.reshape(a::BlockSparseArray, ax::Tuple{Vararg{AbstractUnitRange}})
   ## blocks_reshaped = reshape(blocks(a), blocklength.(ax))
   blocktype_reshaped = set_ndims(blocktype(a), length(ax))
   # TODO: Some other way of getting `zero` function?
-  blocks_reshaped = SparseArray(
+  blocks_reshaped = default_sparsearray_type()(
     Dictionary{CartesianIndex{length(ax)},blocktype_reshaped}(),
     blocklength.(ax),
     BlockZero(ax),
@@ -132,7 +132,7 @@ function BlockSparseArray(
     map(block -> CartesianIndex(inttuple(block)), blocks)
   end
   cartesiandata = Dictionary(cartesianblocks, blockdata)
-  block_storage = SparseArray(cartesiandata, blocklength.(axes), BlockZero(axes))
+  block_storage = default_sparsearray_type()(cartesiandata, blocklength.(axes), BlockZero(axes))
   return BlockSparseArray(block_storage, axes)
 end
 
