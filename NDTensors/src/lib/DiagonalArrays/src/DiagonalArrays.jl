@@ -1,7 +1,12 @@
 module DiagonalArrays
+# include("diagonalarrayinterface.jl")
+# include("diagonalarray.jl")
+# include("sparsearrayinterface.jl")
+# include("DiagonalArraysLinearAlgebraExt.jl")
+# include("diagonalmatrix.jl")
+# include("diagonalvector.jl")
 
-using Compat # allequal
-using LinearAlgebra
+using LinearAlgebra: LinearAlgebra
 
 export DiagonalArray, DiagonalMatrix, DiagonalVector, DiagIndex, DiagIndices, densearray
 
@@ -33,6 +38,8 @@ Base.size(a::DiagonalArray) = a.dims
 
 # TODO: Rename `storage_values`.
 diagview(a::DiagonalArray) = a.diag
+
+# DiagonalArraysLinearAlgebraExt.jl
 LinearAlgebra.diag(a::DiagonalArray) = copy(diagview(a))
 
 function DiagonalArray{T,N}(

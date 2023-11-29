@@ -1,3 +1,5 @@
+using Compat: allequal
+
 # Test if the function preserves zero values and therefore
 # preserves the sparsity structure.
 function preserves_zero(f, as...)

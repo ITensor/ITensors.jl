@@ -1,3 +1,5 @@
+using Compat: allequal
+
 # Convert to an offset along the diagonal.
 # Otherwise, return `nothing`.
 function diagindex(a::AbstractArray{T,N}, I::CartesianIndex{N}) where {T,N}

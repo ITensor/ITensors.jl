@@ -1,4 +1,5 @@
 @eval module $(gensym())
+using Compat: Returns, allequal
 using Test: @test, @testset, @test_broken, @test_throws
 
 @testset "SparseArrayInterface (eltype=$elt)" for elt in
