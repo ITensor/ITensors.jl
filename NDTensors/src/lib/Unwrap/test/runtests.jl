@@ -14,11 +14,7 @@ using LinearAlgebra:
   qr,
   svd
 using GPUArraysCore: @allowscalar
-include(
-  joinpath(
-    pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"
-  ),
-)
+include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: NDTensorsTestUtils
 
 @testset "Testing Unwrap $dev, $elt" for dev in NDTensorsTestUtils.devices_list(ARGS),
@@ -199,11 +195,29 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   C = dev(zeros(elt, 2, 12))
   mul!(expose(C), expose(B), expose(A), true, false)
   Cp = NDTensors.cpu(similar(C))
-  mul!(
-    expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false
-  )
+  mul!(expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false)
   @test NDTensors.cpu(C) ≈ Cp
   NDTensors.zero(C)
   NDTensors.mul!!(C, B, A, true, false)
   @test NDTensors.cpu(C) ≈ Cp
+
+  y = reshape(dev(randn(elt, 8))', 2, 4)
+  x = Base.ReshapedArray(dev(randn(elt, 8, 8)'[1:8]), (2, 4), ())
+  z = dev(fill!(Matrix{elt}(undef, (2, 4)), 0.0))
+  for i in 1:2
+    for j in 1:4
+      @allowscalar z[i, j] = y[i, j] * x[i, j]
+    end
+  end
+  permutedims!(expose(y), expose(x), (1, 2), *)
+  @allowscalar @test reshape(z, size(y)) ≈ y
+  for i in 1:2
+    for j in 1:4
+      @allowscalar z[i, j] = x[i, j] * y[i, j]
+    end
+  end
+  permutedims!(expose(x), expose(y), (1, 2), *)
+  ## I copy x here because it is a ReshapedArray{SubArray} which causes `≈`
+  ## to throw an error 
+  @test z ≈ copy(expose(x))
 end
