@@ -11,7 +11,7 @@ is_qn_space(i) = false
 is_qn_space(i::Vector{<:Pair{<:QN}}) = true
 end
 
-@testset "ITensor Array storage $space" for space in (2, [QN(0) => 2, QN(1) => 3])
+@testset "ITensor Array storage (space=$space)" for space in (2, [QN(0) => 2, QN(1) => 3])
   i, j, k, l = Index.((space, space, space, space))
 
   # TensorStorage
@@ -60,13 +60,11 @@ end
   @test permute(Cik * D, cik, j, l) * dag(Cik) ≈ D
   @test dag(Cik) * permute(Cik * D, cik, j, l) ≈ D
 
-  # TODO: Still need to implement.
+  @test NDTensors.storage(A * B) isa TestArrayStorage.default_arraystoragetype(space)
   if TestArrayStorage.is_qn_space(space)
-    @test_broken NDTensors.storage(A * B) isa
-      TestArrayStorage.default_arraystoragetype(space)
+    # TODO: Checking flux is broken.
     @test_broken A[1, 1] = 11
   else
-    @test NDTensors.storage(A * B) isa TestArrayStorage.default_arraystoragetype(space)
     A[1, 1] = 11
     @test A[1, 1] == 11
   end

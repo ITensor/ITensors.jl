@@ -1,4 +1,7 @@
 using LinearAlgebra: BlasFloat
+using .Unwrap: expose
+
+# TODO: Delete these exports
 export backend_auto, backend_blas, backend_generic
 
 @eval struct GemmBackend{T}
