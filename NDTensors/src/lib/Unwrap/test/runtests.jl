@@ -15,9 +15,9 @@ using LinearAlgebra:
   svd
 using GPUArraysCore: @allowscalar
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
-using .NDTensorsTestUtils: NDTensorsTestUtils
+using .NDTensorsTestUtils: devices_list
 
-@testset "Testing Unwrap $dev, $elt" for dev in NDTensorsTestUtils.devices_list(ARGS),
+@testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
 
   v = dev(randn(elt, 10))
@@ -126,8 +126,8 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   y = dev(rand(elt, 4, 4))
   x = Base.ReshapedArray(dev(rand(elt, 16)), (4, 4), ())
   copyto!(expose(y), expose(x))
-  @test NDTensors.cpu(y) == NDTensors.cpu(x)
-  @test NDTensors.cpu(copy(expose(x))) == NDTensors.cpu(x)
+  @test cpu(y) == cpu(x)
+  @test cpu(copy(expose(x))) == cpu(x)
 
   ## Tests for Metal because permutedims with ReshapedArray does not work properly
   ## transpose(ReshapedArray(MtlArray)) fails with scalar indexing so calling copy to 
@@ -188,7 +188,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())
   x = dev(randn(elt, 4, 4))
   permutedims!(expose(y), expose(x), (2, 1))
-  @test NDTensors.cpu(y) == transpose(NDTensors.cpu(x))
+  @test cpu(y) == transpose(cpu(x))
 
   ##########################################
   ### Testing an issue with CUDA&Metal transpose/adjoint mul
@@ -198,7 +198,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   Cp = copy(C)
 
   ## This fails with scalar indexing
-  if dev != NDTensors.cpu
+  if dev != cpu
     @test_broken mul!(transpose(C), transpose(A), B, true, false)
   end
   mul!(C, transpose(B), A, true, false)
@@ -206,19 +206,19 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   @test C ≈ Cp
   Cp = zero(C)
   ## Try calling mul!! with transposes to verify that code works
-  Cpt = NDTensors.mul!!(transpose(Cp), transpose(A), B, true, false)
+  Cpt = mul!!(transpose(Cp), transpose(A), B, true, false)
   @test transpose(Cpt) ≈ C
 
   Cp = zero(C)
   ## This fails with scalar indexing 
-  if dev != NDTensors.cpu
+  if dev != cpu
     @test_broken mul!(C', A', B, true, false)
   end
   mul!(C, B', A, true, false)
   mul!(expose(Cp'), expose(A'), expose(B), true, false)
   @test C ≈ Cp
   Cp = zero(C)
-  Cpt = NDTensors.mul!!(Cp', A', B, true, false)
+  Cpt = mul!!(Cp', A', B, true, false)
   @test Cpt' ≈ C
 
   ##################################
@@ -228,10 +228,10 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
   B = dev(randn(elt, 2, 2))
   C = dev(zeros(elt, 2, 12))
   mul!(expose(C), expose(B), expose(A), true, false)
-  Cp = NDTensors.cpu(similar(C))
-  mul!(expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false)
-  @test NDTensors.cpu(C) ≈ Cp
-  NDTensors.zero(C)
-  NDTensors.mul!!(C, B, A, true, false)
-  @test NDTensors.cpu(C) ≈ Cp
+  Cp = cpu(similar(C))
+  mul!(expose(Cp), expose(cpu(B)), expose(cpu(A)), true, false)
+  @test cpu(C) ≈ Cp
+  zero(C)
+  mul!!(C, B, A, true, false)
+  @test cpu(C) ≈ Cp
 end

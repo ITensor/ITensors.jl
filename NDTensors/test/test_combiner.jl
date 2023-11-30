@@ -3,18 +3,16 @@ using NDTensors
 using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-using .NDTensorsTestUtils: NDTensorsTestUtils
+using .NDTensorsTestUtils: devices_list, is_supported_eltype
 
 # Testing generic block indices
 using ITensors: QN, Index
 
 @testset "CombinerTensor basic functionality" begin
-  @testset "test device: $dev, eltype: $elt" for dev in NDTensorsTestUtils.devices_list(
-      copy(ARGS)
-    ),
+  @testset "test device: $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
     elt in (Float64, Float32)
 
-    if !NDTensorsTestUtils.is_supported_eltype(dev, elt)
+    if !is_supported_eltype(dev, elt)
       continue
     end
     @testset "Dense * Combiner" begin

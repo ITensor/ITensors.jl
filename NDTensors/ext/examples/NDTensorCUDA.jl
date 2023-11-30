@@ -47,7 +47,7 @@ function main()
 
   dim3 = (l, k)
   dim4 = (i,)
-  cC = ITensor( randomTensor(CuVector{Float64, CUDA.Mem.DeviceBuffer}, dim3))
+  cC = ITensor(randomTensor(CuVector{Float64,CUDA.Mem.DeviceBuffer}, dim3))
   cD = ITensor(Tensor(CuVector{Float32}, dim4))
   fill!(cD, randn())
 

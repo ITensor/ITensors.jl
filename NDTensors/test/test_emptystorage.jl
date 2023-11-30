@@ -2,10 +2,10 @@
 using NDTensors
 using Test: @testset, @test
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-using .NDTensorsTestUtils: NDTensorsTestUtils
+using .NDTensorsTestUtils: devices_list
 
 @testset "EmptyStorage test" begin
-  @testset "test device: $dev" for dev in NDTensorsTestUtils.devices_list(copy(ARGS))
+  @testset "test device: $dev" for dev in devices_list(copy(ARGS))
     T = dev(Tensor(EmptyStorage(NDTensors.EmptyNumber), (2, 2)))
     @test size(T) == (2, 2)
     @test eltype(T) == NDTensors.EmptyNumber

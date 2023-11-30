@@ -1,20 +1,18 @@
 @eval module $(gensym())
 using NDTensors
-using LinearAlgebra: exp, Hermitian, svd
+using LinearAlgebra: Hermitian, exp, svd
 using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-using .NDTensorsTestUtils: NDTensorsTestUtils
+using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
 
-  @testset "test device: $dev, eltype: $elt" for dev in NDTensorsTestUtils.devices_list(
-      copy(ARGS)
-    ),
+  @testset "test device: $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
     elt in (Float32, Float64)
 
-    if !NDTensorsTestUtils.is_supported_eltype(dev, elt)
+    if !is_supported_eltype(dev, elt)
       continue
     end
     # Indices
@@ -233,8 +231,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
     @test isblocknz(T, (2, 2))
   end
 
-  @testset "svd on $dev, eltype: $elt" for dev in
-                                           NDTensorsTestUtils.devices_list(copy(ARGS)),
+  @testset "svd on $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
     elt in (Float32, Float64)
 
     if dev == NDTensors.mtl && elt == Float64
@@ -245,7 +242,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-      atol = NDTensorsTestUtils.default_rtol(elt)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 2" begin
@@ -253,7 +250,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-      atol = NDTensorsTestUtils.default_rtol(elt)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 3" begin
@@ -261,7 +258,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-      atol = NDTensorsTestUtils.default_rtol(elt)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 4" begin
@@ -269,7 +266,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-      atol = NDTensorsTestUtils.default_rtol(elt)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 5" begin
@@ -277,7 +274,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       randn!(A)
       U, S, V = svd(A)
       @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
-      atol = NDTensorsTestUtils.default_rtol(elt)
+      atol = default_rtol(elt)
     end
   end
 
@@ -286,7 +283,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
     randn!(A)
     expT = exp(A)
     @test array(expT) ≈ exp(array(A))
-    atol = NDTensorsTestUtils.default_rtol(elt)
+    atol = default_rtol(elt)
 
     # Hermitian case
     A = BlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2]))
@@ -297,9 +294,7 @@ using .NDTensorsTestUtils: NDTensorsTestUtils
       blockview(Ah, bA) .= b + b'
     end
     expTh = exp(Hermitian(Ah))
-    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = NDTensorsTestUtils.default_rtol(
-      eltype(Ah)
-    )
+    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = default_rtol(eltype(Ah))
 
     A = BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2])
     @test_throws ErrorException exp(A)

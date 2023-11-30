@@ -4,7 +4,7 @@ using LinearAlgebra: Diagonal, qr, diag
 using Test: @testset, @test
 using GPUArraysCore: @allowscalar
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
-using .NDTensorsTestUtils: NDTensorsTestUtils
+using .NDTensorsTestUtils: devices_list, is_supported_eltype
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -32,10 +32,10 @@ end
     elt in (Float64, ComplexF64, Float32, ComplexF32),
     positive in [false, true],
     singular in [false, true],
-    dev in NDTensorsTestUtils.devices_list(copy(ARGS))
+    dev in devices_list(copy(ARGS))
 
     ## Skip Float64 on Metal
-    if !NDTensorsTestUtils.is_supported_eltype(dev, elt)
+    if !is_supported_eltype(dev, elt)
       continue
     end
     eps = Base.eps(real(elt)) * 100 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
@@ -53,9 +53,9 @@ end
     end
     Q, X = qx(A; positive=positive) #X is R or L.
     Ap = Q * X
-    @test NDTensors.cpu(A) ≈ NDTensors.cpu(Ap) atol = eps
-    @test NDTensors.cpu(array(Q)' * array(Q)) ≈ Id atol = eps
-    @test NDTensors.cpu(array(Q) * array(Q)') ≈ Id atol = eps
+    @test cpu(A) ≈ cpu(Ap) atol = eps
+    @test cpu(array(Q)' * array(Q)) ≈ Id atol = eps
+    @test cpu(array(Q) * array(Q)') ≈ Id atol = eps
     @allowscalar if positive
       nr, nc = size(X)
       dr = qx == ql ? Base.max(0, nc - nr) : 0
@@ -75,8 +75,8 @@ end
     end
     Q, X = qx(A; positive=positive)
     Ap = Q * X
-    @test NDTensors.cpu(A) ≈ NDTensors.cpu(Ap) atol = eps
-    @test NDTensors.cpu(array(Q)' * array(Q)) ≈ Id atol = eps
+    @test cpu(A) ≈ cpu(Ap) atol = eps
+    @test cpu(array(Q)' * array(Q)) ≈ Id atol = eps
     @allowscalar if positive
       nr, nc = size(X)
       dr = qx == ql ? Base.max(0, nc - nr) : 0

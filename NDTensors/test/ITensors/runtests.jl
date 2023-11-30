@@ -4,16 +4,13 @@ using SafeTestsets: @safetestset
   using Test: @testset
   include("TestITensorDMRG/TestITensorDMRG.jl")
   include("../NDTensorsTestUtils/NDTensorsTestUtils.jl")
-  using .NDTensorsTestUtils: NDTensorsTestUtils
-  @testset "Test DMRG $dev, $conserve_qns, $elt, $N" for dev in
-                                                         NDTensorsTestUtils.devices_list(
-      ARGS
-    ),
+  using .NDTensorsTestUtils: devices_list, is_supported_eltype
+  @testset "Test DMRG $dev, $conserve_qns, $elt, $N" for dev in devices_list(ARGS),
     conserve_qns in [false, true],
     elt in (Float32, ComplexF32, Float64, ComplexF64),
     N in [4, 10]
 
-    if !NDTensorsTestUtils.is_supported_eltype(dev, elt)
+    if !is_supported_eltype(dev, elt)
       continue
     end
     if TestITensorDMRG.is_broken(dev, elt, Val(conserve_qns))
