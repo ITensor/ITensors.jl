@@ -18,12 +18,7 @@ using SplitApplyCombine
 using Strided
 using TimerOutputs
 using TupleTools
-# TODO move these folders to `lib`
-using .UnspecifiedTypes
-include("UnallocatedArrays/src/UnallocatedArrays.jl")
-using .UnallocatedArrays
-include("DiagonalArrays/src/DiagonalArrays.jl")
-=======
+
 for lib in [
   :AlgorithmSelection,
   :BaseExtensions,
@@ -41,6 +36,8 @@ for lib in [
   :SmallVectors,
   :SortedSets,
   :TagSets,
+  :UnspecifiedTypes,
+  :UnallocatedArrays,
 ]
   include("lib/$(lib)/src/$(lib).jl")
   @eval using .$lib: $lib
