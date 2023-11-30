@@ -1,5 +1,5 @@
 using NDTensors
-using CUDA: CUDA, CuVector, @allowscalar, cu, reshape
+using CUDA: CUDA, CuVector, cu, reshape
 using ITensors:
   Index, ITensor, randomMPO, randomMPS, inner, orthogonalize, qr, siteinds, svd
 using Test: @test
@@ -60,7 +60,7 @@ function main()
   # generic implementation
   grad = gradient(f, cA, cB, cC, cD)
   @test cpu(cB * cC * cD) ≈ cpu(grad[1])
-  @allowscalar @test (cB * cC * cD) ≈ grad[1]
+  @test (cB * cC * cD) ≈ grad[1]
   # Create a tuple of indices
   decomp = (dim(ind(grad[1], 1)), dim(ind(grad[1], 2)) * dim(ind(grad[1], 3)))
   # Reshape the CuVector of data into a matrix
