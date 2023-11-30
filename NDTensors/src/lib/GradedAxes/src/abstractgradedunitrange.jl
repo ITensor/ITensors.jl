@@ -49,22 +49,6 @@ function tensor_product(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange
   return gradedrange(a, vec(sectors_a))
 end
 
-# Slicing
-## using BlockArrays: BlockRange, _BlockedUnitRange
-Base.@propagate_inbounds function Base.getindex(
-  b::AbstractGradedUnitRange, KR::BlockRange{1}
-)
-  cs = blocklasts(b)
-  isempty(KR) && return _BlockedUnitRange(1, cs[1:0])
-  K, J = first(KR), last(KR)
-  k, j = Integer(K), Integer(J)
-  bax = blockaxes(b, 1)
-  @boundscheck K in bax || throw(BlockBoundsError(b, K))
-  @boundscheck J in bax || throw(BlockBoundsError(b, J))
-  K == first(bax) && return _BlockedUnitRange(first(b), cs[k:j])
-  return _BlockedUnitRange(cs[k - 1] + 1, cs[k:j])
-end
-
 function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRange)
   show(io, mimetype, sectors(a))
   println(io)
@@ -101,3 +85,20 @@ function fuse(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
   a = tensor_product(a1, a2)
   return blockmergesort(a)
 end
+
+## TODO: Add this back.
+## # Slicing
+## ## using BlockArrays: BlockRange, _BlockedUnitRange
+## Base.@propagate_inbounds function Base.getindex(
+##   b::AbstractGradedUnitRange, KR::BlockRange{1}
+## )
+##   cs = blocklasts(b)
+##   isempty(KR) && return _BlockedUnitRange(1, cs[1:0])
+##   K, J = first(KR), last(KR)
+##   k, j = Integer(K), Integer(J)
+##   bax = blockaxes(b, 1)
+##   @boundscheck K in bax || throw(BlockBoundsError(b, K))
+##   @boundscheck J in bax || throw(BlockBoundsError(b, J))
+##   K == first(bax) && return _BlockedUnitRange(first(b), cs[k:j])
+##   return _BlockedUnitRange(cs[k - 1] + 1, cs[k:j])
+## end

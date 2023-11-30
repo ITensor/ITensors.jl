@@ -1,13 +1,13 @@
 using BlockArrays: BlockArrays, BlockedUnitRange, blockedrange
 
 struct GradedUnitRange{T,G,S} <: AbstractGradedUnitRange{T,G}
-  _blockedrange::BlockedUnitRange{T}
-  _sectors::Vector{G}
+  blockedrange::BlockedUnitRange{T}
+  sectors::Vector{G}
   scale_factor::S
 end
 
-BlockArrays.blockedrange(s::GradedUnitRange) = s._blockedrange
-sectors(s::GradedUnitRange) = s._sectors
+BlockArrays.blockedrange(s::GradedUnitRange) = s.blockedrange
+sectors(s::GradedUnitRange) = s.sectors
 scale_factor(s::GradedUnitRange) = s.scale_factor
 
 function gradedrange(sectors::Vector, blocklengths::Vector{Int}, scale_factor=1)
