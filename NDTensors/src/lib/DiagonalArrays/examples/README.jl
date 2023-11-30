@@ -2,7 +2,8 @@
 #
 # A Julia `DiagonalArray` type.
 
-using NDTensors.DiagonalArrays: DiagonalArray, DiagonalMatrix, DiagIndex, DiagIndices, isdiagindex
+using NDTensors.DiagonalArrays:
+  DiagonalArray, DiagonalMatrix, DiagIndex, DiagIndices, isdiagindex
 using Test
 
 function main()

@@ -132,7 +132,9 @@ function BlockSparseArray(
     map(block -> CartesianIndex(inttuple(block)), blocks)
   end
   cartesiandata = Dictionary(cartesianblocks, blockdata)
-  block_storage = default_sparsearray_type()(cartesiandata, blocklength.(axes), BlockZero(axes))
+  block_storage = default_sparsearray_type()(
+    cartesiandata, blocklength.(axes), BlockZero(axes)
+  )
   return BlockSparseArray(block_storage, axes)
 end
 
