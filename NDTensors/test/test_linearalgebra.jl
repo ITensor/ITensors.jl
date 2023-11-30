@@ -1,5 +1,6 @@
 @eval module $(gensym())
 using NDTensors
+using NDTensors: cpu
 using LinearAlgebra: Diagonal, qr, diag
 using Test: @testset, @test
 using GPUArraysCore: @allowscalar
