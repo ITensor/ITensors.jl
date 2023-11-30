@@ -3,12 +3,14 @@
 A Julia `DiagonalArray` type.
 
 ````julia
-using NDTensors.DiagonalArrays: DiagonalArray, DiagonalMatrix, DiagIndex, DiagIndices, isdiagindex
+using NDTensors.DiagonalArrays:
+  DiagonalArray, DiagonalMatrix, DiagIndex, DiagIndices, diaglength, isdiagindex
 using Test
 
 function main()
   d = DiagonalMatrix([1.0, 2.0, 3.0])
   @test eltype(d) == Float64
+  @test diaglength(d) == 3
   @test size(d) == (3, 3)
   @test d[1, 1] == 1
   @test d[2, 2] == 2
@@ -17,6 +19,7 @@ function main()
 
   d = DiagonalArray([1.0, 2.0, 3.0], 3, 4, 5)
   @test eltype(d) == Float64
+  @test diaglength(d) == 3
   @test d[1, 1, 1] == 1
   @test d[2, 2, 2] == 2
   @test d[3, 3, 3] == 3

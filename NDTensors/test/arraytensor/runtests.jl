@@ -1,8 +1,8 @@
-using NDTensors
-using LinearAlgebra
-using Test
-
-@testset "Tensor wrapping AbstractArrays" begin
-  include("array.jl")
-  include("blocksparsearray.jl")
+@eval module $(gensym())
+  using Test: @testset
+  @testset "Tensor wrapping AbstractArrays $(f)" for f in [
+    "array.jl", "blocksparsearray.jl", "diagonalarray.jl"
+  ]
+    include(f)
+  end
 end
