@@ -1,6 +1,6 @@
-using Test
-using NDTensors.DiagonalArrays
-
+@eval module $(gensym())
+using Test: @test, @testset
+using NDTensors.DiagonalArrays: DiagonalArrays
 @testset "Test NDTensors.DiagonalArrays" begin
   @testset "README" begin
     @test include(
@@ -9,4 +9,5 @@ using NDTensors.DiagonalArrays
       ),
     ) isa Any
   end
+end
 end

@@ -1,3 +1,6 @@
+using .SparseArrayInterface: densearray
+using .DiagonalArrays: DiagIndex, diaglength
+
 # TODO: Move to a different file.
 Unwrap.parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
 
@@ -99,7 +102,7 @@ function contract!(
       coffset += ii * custride[i]
     end
     c = zero(eltype(C))
-    for j in 1:DiagonalArrays.diaglength(A)
+    for j in 1:diaglength(A)
       # With α == 0 && β == 1
       C[cstart + j * c_cstride + coffset] +=
         A[DiagIndex(j)] * B[bstart + j * b_cstride + boffset]

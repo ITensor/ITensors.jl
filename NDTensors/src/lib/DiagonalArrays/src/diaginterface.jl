@@ -1,5 +1,9 @@
 using Compat: allequal
 
+function diaglength(a::AbstractArray)
+  return minimum(size(a))
+end
+
 function isdiagindex(a::AbstractArray{<:Any,N}, I::CartesianIndex{N}) where {N}
   @boundscheck checkbounds(a, I)
   return allequal(Tuple(I))
@@ -16,8 +20,7 @@ function diagstride(a::AbstractArray)
 end
 
 function diagindices(a::AbstractArray)
-  diaglength = minimum(size(a))
-  maxdiag = LinearIndices(a)[CartesianIndex(ntuple(Returns(diaglength), ndims(a)))]
+  maxdiag = LinearIndices(a)[CartesianIndex(ntuple(Returns(diaglength(a)), ndims(a)))]
   return 1:diagstride(a):maxdiag
 end
 

@@ -36,6 +36,10 @@ using Test: @test, @testset, @test_broken, @test_throws
     @test iszero(a)
     @test iszero(SparseArrayInterface.nstored(a))
 
+    a_dense = SparseArrayInterface.densearray(a)
+    @test a_dense == a
+    @test a_dense isa Array{elt,ndims(a)}
+
     a = SparseArray{elt}(2, 3)
     fill!(a, 2)
     @test size(a) == (2, 3)
@@ -287,6 +291,10 @@ using Test: @test, @testset, @test_broken, @test_throws
     a[1, 2] = 0
     @test a[1, 1] == 11
     @test a[2, 2] == 22
+
+    a_dense = SparseArrayInterface.densearray(a)
+    @test a_dense == a
+    @test a_dense isa Array{elt,ndims(a)}
 
     b = similar(a)
     @test b isa DiagonalArray
