@@ -9,5 +9,12 @@ using NDTensors.DiagonalArrays: DiagonalArrays
       ),
     ) isa Any
   end
+  @testset "Basics" begin
+    using NDTensors.DiagonalArrays: diaglength
+    a = fill(1.0, 2, 3)
+    @test diaglength(a) == 2
+    a = fill(1.0)
+    @test diaglength(a) == 1
+  end
 end
 end
