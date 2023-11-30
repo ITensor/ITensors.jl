@@ -1,5 +1,6 @@
+@eval module $(gensym())
 using NDTensors.SmallVectors
-using Test
+using Test: @inferred, @test, @testset, @test_broken
 
 using NDTensors.SmallVectors:
   setindex,
@@ -153,3 +154,4 @@ end
 # @testset "SmallVectors" test_smallvectors()
 # (new in Julia 1.9)
 test_smallvectors()
+end

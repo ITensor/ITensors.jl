@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using Test: @test, @testset, @test_broken
 using BlockArrays: BlockArrays, BlockRange, blocksize
 using Compat: allequal
@@ -100,4 +101,5 @@ include("TestBlockSparseArraysUtils.jl")
     @test eltype(u) == elt
     @test Hermitian(Matrix(a)) * Matrix(u) ≈ Matrix(u) * Diagonal(Vector(d))
   end
+end
 end

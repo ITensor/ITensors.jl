@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using Test: @testset, @test, @test_broken
 using NDTensors.Unwrap
 using NDTensors: NDTensors, mul!!
@@ -234,4 +235,5 @@ using .NDTensorsTestUtils: devices_list
   zero(C)
   mul!!(C, B, A, true, false)
   @test cpu(C) ≈ Cp
+end
 end
