@@ -1,3 +1,5 @@
+using .DiagonalArrays: DiagonalArrays
+
 export dense, dims, dim, mindim, diaglength
 
 # dim and dims are used in the Tensor interface, overload 
@@ -26,7 +28,7 @@ mindim(inds::Tuple) = minimum(dims(inds))
 
 mindim(::Tuple{}) = 1
 
-diaglength(inds::Tuple) = mindim(inds)
+DiagonalArrays.diaglength(inds::Tuple) = mindim(inds)
 
 """
     dim_to_strides(ds)
@@ -94,4 +96,3 @@ dim(T::Tensor) = dim(inds(T))
 dim(T::Tensor, i::Int) = dim(inds(T), i)
 maxdim(T::Tensor) = maxdim(inds(T))
 mindim(T::Tensor) = mindim(inds(T))
-diaglength(T::Tensor) = mindim(T)

@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using NDTensors: contract
+using NDTensors: contract, tensor
 using NDTensors.SparseArrayInterface: densearray
 using NDTensors.DiagonalArrays: DiagonalArray
 using Test: @test, @testset
