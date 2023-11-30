@@ -215,7 +215,7 @@ function permutedims!!(
   return RR
 end
 
-function show(io::IO, mime::MIME"text/plain", T::DiagTensor)
+function Base.show(io::IO, mime::MIME"text/plain", T::DiagTensor)
   summary(io, T)
   print_tensor(io, T)
   return nothing

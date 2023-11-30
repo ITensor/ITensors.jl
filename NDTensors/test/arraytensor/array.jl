@@ -1,9 +1,8 @@
-using NDTensors
-using LinearAlgebra
-using Test
-
-using NDTensors: storage, storagetype
-
+@eval module $(gensym())
+using LinearAlgebra: svd
+using NDTensors: array, contract, inds, storage, storagetype, tensor
+using Random: randn!
+using Test: @test, @testset, @test_broken
 @testset "Tensor wrapping Array" begin
   is1 = (2, 3)
   D1 = randn(is1)
@@ -48,4 +47,5 @@ using NDTensors: storage, storagetype
 
   D12 = contract(D1, (1, -1), D2, (-1, 2))
   @test D12 ≈ Array(T12)
+end
 end

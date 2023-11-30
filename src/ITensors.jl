@@ -180,6 +180,12 @@ include("mps/dmrg.jl")
 include("mps/adapt.jl")
 
 #####################################
+# ITensorsNamedDimsArraysExt
+# Requires `AbstractMPS`.
+include("ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
+using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
+
+#####################################
 # Physics
 #
 include("physics/sitetype.jl")

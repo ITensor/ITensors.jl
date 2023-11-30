@@ -1,3 +1,5 @@
+using NDTensors.RankFactorization: Spectrum, eigs, entropy, truncerror
+
 export
   # From external modules
   # LinearAlgebra
@@ -11,6 +13,7 @@ export
   # NDTensors module
   # Types
   Block,
+  # NDTensors.RankFactorization module
   Spectrum,
   # Methods
   eigs,

@@ -1,5 +1,5 @@
 module NDTensors
-
+# TODO: List types, macros, and functions being used.
 using Adapt
 using Base.Threads
 using Compat
@@ -18,25 +18,33 @@ using SplitApplyCombine
 using Strided
 using TimerOutputs
 using TupleTools
-
-include("SetParameters/src/SetParameters.jl")
-using .SetParameters
-include("UnspecifiedTypes/src/UnspecifiedTypes.jl")
+# TODO move these folders to `lib`
 using .UnspecifiedTypes
 include("UnallocatedArrays/src/UnallocatedArrays.jl")
 using .UnallocatedArrays
 include("DiagonalArrays/src/DiagonalArrays.jl")
-using .DiagonalArrays
-include("BlockSparseArrays/src/BlockSparseArrays.jl")
-using .BlockSparseArrays
-include("SmallVectors/src/SmallVectors.jl")
-using .SmallVectors
-include("SortedSets/src/SortedSets.jl")
-using .SortedSets
-include("TagSets/src/TagSets.jl")
-using .TagSets
-include("Unwrap/src/Unwrap.jl")
-using .Unwrap
+=======
+for lib in [
+  :AlgorithmSelection,
+  :BaseExtensions,
+  :SetParameters,
+  :BroadcastMapConversion,
+  :Unwrap,
+  :RankFactorization,
+  :TensorAlgebra,
+  :SparseArrayInterface,
+  :SparseArrayDOKs,
+  :DiagonalArrays,
+  :BlockSparseArrays,
+  :GradedAxes,
+  :NamedDimsArrays,
+  :SmallVectors,
+  :SortedSets,
+  :TagSets,
+]
+  include("lib/$(lib)/src/$(lib).jl")
+  @eval using .$lib: $lib
+end
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
@@ -54,7 +62,6 @@ include("exports.jl")
 # General functionality
 #
 include("default_kwargs.jl")
-include("algorithm.jl")
 include("aliasstyle.jl")
 include("abstractarray/set_types.jl")
 include("abstractarray/to_shape.jl")
@@ -80,8 +87,8 @@ include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
 include("adapt.jl")
-include("tensoralgebra/generic_tensor_operations.jl")
-include("tensoralgebra/contraction_logic.jl")
+include("tensoroperations/generic_tensor_operations.jl")
+include("tensoroperations/contraction_logic.jl")
 include("abstractarray/tensoralgebra/contract.jl")
 
 #####################################
@@ -166,8 +173,7 @@ include("arraystorage/diagonalarray/tensor/contract.jl")
 include("arraystorage/blocksparsearray/storage/unwrap.jl")
 include("arraystorage/blocksparsearray/storage/contract.jl")
 
-## TODO: Delete once it is rewritten for array storage types.
-## include("arraystorage/blocksparsearray/tensor/combiner/contract_uncombine.jl")
+include("arraystorage/blocksparsearray/tensor/contract.jl")
 
 # Combiner storage
 include("arraystorage/combiner/storage/promote_rule.jl")

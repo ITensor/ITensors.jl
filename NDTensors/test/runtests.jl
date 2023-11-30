@@ -19,23 +19,17 @@ end
 
 @safetestset "NDTensors" begin
   @testset "$filename" for filename in [
-    "BlockSparseArrays.jl",
-    "DiagonalArrays.jl",
-    "SetParameters.jl",
-    "SmallVectors.jl",
-    "SortedSets.jl",
-    "TagSets.jl",
-    "Unwrap.jl",
-    "linearalgebra.jl",
-    "dense.jl",
+    "arraytensor/runtests.jl",
+    "ITensors/runtests.jl",
+    "lib/runtests.jl",
     "blocksparse.jl",
-    "diagblocksparse.jl",
+    "combiner.jl",
+    "dense.jl",
     "diag.jl",
+    "diagblocksparse.jl",
     "emptynumber.jl",
     "emptystorage.jl",
-    "combiner.jl",
-    "arraytensor/arraytensor.jl",
-    "ITensors/runtests.jl",
+    "linearalgebra.jl",
   ]
     println("Running $filename")
     include(filename)

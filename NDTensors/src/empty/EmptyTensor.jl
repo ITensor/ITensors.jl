@@ -178,7 +178,7 @@ function permutedims!!(R::EmptyTensor, T::EmptyTensor, perm::Tuple, f::Function=
   return RR
 end
 
-function show(io::IO, mime::MIME"text/plain", T::EmptyTensor)
+function Base.show(io::IO, mime::MIME"text/plain", T::EmptyTensor)
   summary(io, T)
   return println(io)
 end
