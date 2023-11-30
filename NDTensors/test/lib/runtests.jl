@@ -6,6 +6,7 @@ using Test: @testset
   "BlockSparseArrays",
   "BroadcastMapConversion",
   "DiagonalArrays",
+  "GradedAxes",
   "NamedDimsArrays",
   "SetParameters",
   "SmallVectors",

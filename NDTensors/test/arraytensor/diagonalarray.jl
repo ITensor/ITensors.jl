@@ -1,10 +1,8 @@
-using NDTensors
-using NDTensors.DiagonalArrays
-using LinearAlgebra
-using Test
-
-using NDTensors: storage, storagetype
-
+@eval module $(gensym())
+using NDTensors: contract, tensor
+using NDTensors.SparseArrayInterface: densearray
+using NDTensors.DiagonalArrays: DiagonalArray
+using Test: @test, @testset
 @testset "Tensor wrapping DiagonalArray" begin
   D = DiagonalArray(randn(3), 3, 4, 5)
   Dᵈ = densearray(D)
@@ -23,4 +21,5 @@ using NDTensors: storage, storagetype
   Aᵗ = tensor(A, size(A))
   @test contract(Dᵗ, (-1, -2, -3), Aᵗ, (-1, -2, -3)) ≈
     contract(Dᵈᵗ, (-1, -2, -3), Aᵗ, (-1, -2, -3))
+end
 end

@@ -31,6 +31,7 @@ for lib in [
   :SparseArrayDOKs,
   :DiagonalArrays,
   :BlockSparseArrays,
+  :GradedAxes,
   :NamedDimsArrays,
   :SmallVectors,
   :SortedSets,
