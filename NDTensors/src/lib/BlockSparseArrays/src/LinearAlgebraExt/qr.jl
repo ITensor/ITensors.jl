@@ -1,3 +1,5 @@
+using ...SparseArrayDOKs: SparseArrayDOK
+
 # Check if the matrix has 1 or fewer entries
 # per row/column.
 function is_permutation_matrix(a::SparseMatrixCSC)
@@ -6,7 +8,7 @@ end
 
 # Check if the matrix has 1 or fewer entries
 # per row/column.
-function is_permutation_matrix(a::SparseArray{<:Any,2})
+function is_permutation_matrix(a::SparseArrayDOK{<:Any,2})
   keys = collect(Iterators.map(Tuple, nonzero_keys(a)))
   I = first.(keys)
   J = last.(keys)
@@ -17,7 +19,8 @@ function findnonzerorows(a::SparseMatrixCSC, col)
   return view(a.rowval, a.colptr[col]:(a.colptr[col + 1] - 1))
 end
 
-function SparseArrays.SparseMatrixCSC(a::SparseArray{<:Any,2})
+# TODO: Is this already defined?
+function SparseArrays.SparseMatrixCSC(a::SparseArrayDOK{<:Any,2})
   # Not defined:
   # a_csc = SparseMatrixCSC{eltype(a)}(size(a))
   a_csc = spzeros(eltype(a), size(a))
@@ -27,8 +30,9 @@ function SparseArrays.SparseMatrixCSC(a::SparseArray{<:Any,2})
   return a_csc
 end
 
+# TODO: Is this already defined?
 # Get the sparse structure of a SparseArray as a SparseMatrixCSC.
-function sparse_structure(structure_type::Type{<:SparseMatrixCSC}, a::SparseArray{<:Any,2})
+function sparse_structure(structure_type::Type{<:SparseMatrixCSC}, a::SparseArrayDOK{<:Any,2})
   # Idealy would work but a bit too complicated for `map` right now:
   # return SparseMatrixCSC(map(x -> iszero(x) ? false : true, a))
   # TODO: Change to `spzeros(Bool, size(a))`.

@@ -1,8 +1,9 @@
 using BlockArrays: block
+## using ..SparseArrayDOKs: SparseArrayDOK
 
 # Also add a version with contiguous underlying data.
 struct BlockSparseArray{
-  T,N,A<:AbstractArray{T,N},Blocks<:SparseArray{A,N},Axes<:NTuple{N,AbstractUnitRange{Int}}
+  T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N},Axes<:NTuple{N,AbstractUnitRange{Int}}
 } <: AbstractBlockArray{T,N}
   blocks::Blocks
   axes::Axes
@@ -113,7 +114,7 @@ end
 ##   axes::Axes
 ## end
 
-function BlockSparseArray(a::SparseArray, axes::Tuple{Vararg{AbstractUnitRange}})
+function BlockSparseArray(a::AbstractArray, axes::Tuple{Vararg{AbstractUnitRange}})
   A = eltype(a)
   T = eltype(A)
   N = ndims(a)

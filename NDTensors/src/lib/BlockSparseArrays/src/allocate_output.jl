@@ -89,6 +89,12 @@ end
 # SparseArray
 #############################################################################
 
+using ..SparseArrayDOKs: SparseArrayDOK
+
+const SparseArrayLike{T,N,Zero} = Union{
+  SparseArrayDOK{T,N,Zero},PermutedDimsArray{T,N,<:Any,<:Any,SparseArrayDOK{T,N,Zero}}
+}
+
 # TODO: Maybe store nonzero locations?
 # TODO: Make this backwards compatible.
 # TODO: Add a default for `eltype` and `zero`.
@@ -100,7 +106,7 @@ Base.@kwdef struct SparseArrayStructure{ElType,Axes,Zero} <:
   zero::Zero
 end
 
-function allocate(arraytype::Type{<:SparseArray}, structure::SparseArrayStructure)
+function allocate(arraytype::Type{<:SparseArrayDOK}, structure::SparseArrayStructure)
   # TODO: Use `set_eltype`.
   return arraytype{structure.eltype}(structure.axes, structure.zero)
 end

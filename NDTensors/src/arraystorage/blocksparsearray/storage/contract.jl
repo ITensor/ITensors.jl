@@ -1,6 +1,5 @@
-# TODO: Change to:
-# using .SparseArrayDOKs: SparseArrayDOK
-using .BlockSparseArrays: SparseArray
+# TODO: Define in `SparseArrayInterface`.
+using ..SparseArrayDOKs: SparseArrayDOK
 
 # TODO: This is inefficient, need to optimize.
 # Look at `contract_labels`, `contract_blocks` and `maybe_contract_blocks!` in:
@@ -39,11 +38,11 @@ function default_contract_muladd(a1, labels1, a2, labels2, a_dest, labels_dest)
 end
 
 function contract!(
-  a_dest::SparseArray,
+  a_dest::SparseArrayDOK,
   labels_dest,
-  a1::SparseArray,
+  a1::SparseArrayDOK,
   labels1,
-  a2::SparseArray,
+  a2::SparseArrayDOK,
   labels2;
   muladd=default_contract_muladd,
 )
