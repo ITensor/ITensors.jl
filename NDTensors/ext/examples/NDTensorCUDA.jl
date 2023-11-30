@@ -62,7 +62,8 @@ function main()
   @test cpu(cB * cC * cD) ≈ cpu(grad[1])
   @test (cB * cC * cD) ≈ grad[1]
   # Create a tuple of indices
-  decomp = (dim(ind(grad[1], 1)), dim(ind(grad[1], 2)) * dim(ind(grad[1], 3)))
+  dims = size(grad[1])
+  decomp = (dims[1], dims[2] * dims[3])
   # Reshape the CuVector of data into a matrix
   cuTensor_data = reshape(array(grad[1]), decomp)
   # Use cuBLAS to compute SVD of data
