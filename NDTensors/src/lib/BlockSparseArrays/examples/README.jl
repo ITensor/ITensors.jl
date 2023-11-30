@@ -6,9 +6,9 @@
 # to store non-zero values, specifically a `Dictionary` from `Dictionaries.jl`.
 # `BlockArrays` reinterprets the `SparseArray` as a blocked data structure.
 
-using NDTensors.BlockSparseArrays
+using NDTensors.BlockSparseArrays: BlockSparseArray
 using BlockArrays: BlockArrays, blockedrange
-using Test
+using Test: @test
 
 function main()
   ## Block dimensions
@@ -63,7 +63,7 @@ main()
 
 # # BlockSparseArrays.jl and BlockArrays.jl interface
 
-using NDTensors.BlockSparseArrays
+using NDTensors.BlockSparseArrays: BlockSparseArray
 using BlockArrays: BlockArrays
 
 i1 = [2, 3]

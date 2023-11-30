@@ -32,7 +32,9 @@ end
 
 # TODO: Is this already defined?
 # Get the sparse structure of a SparseArray as a SparseMatrixCSC.
-function sparse_structure(structure_type::Type{<:SparseMatrixCSC}, a::SparseArrayDOK{<:Any,2})
+function sparse_structure(
+  structure_type::Type{<:SparseMatrixCSC}, a::SparseArrayDOK{<:Any,2}
+)
   # Idealy would work but a bit too complicated for `map` right now:
   # return SparseMatrixCSC(map(x -> iszero(x) ? false : true, a))
   # TODO: Change to `spzeros(Bool, size(a))`.

@@ -3,7 +3,11 @@ using BlockArrays: block
 
 # Also add a version with contiguous underlying data.
 struct BlockSparseArray{
-  T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N},Axes<:NTuple{N,AbstractUnitRange{Int}}
+  T,
+  N,
+  A<:AbstractArray{T,N},
+  Blocks<:AbstractArray{A,N},
+  Axes<:NTuple{N,AbstractUnitRange{Int}},
 } <: AbstractBlockArray{T,N}
   blocks::Blocks
   axes::Axes
@@ -59,6 +63,10 @@ end
 
 struct BlockZero{Axes}
   axes::Axes
+end
+
+function (f::BlockZero)(a::AbstractArray, I::CartesianIndex)
+  return f(eltype(a), I)
 end
 
 function (f::BlockZero)(
@@ -272,6 +280,8 @@ function Base.permutedims!(a_src::BlockSparseArray, a_dest::BlockSparseArray, pe
   return a_src
 end
 
+# TODO: Call `map(b -> permutedims(b, perm), blocks(a))`
+# or something like that.
 function Base.permutedims(a::BlockSparseArray, perm)
   a_dest = zero(PermutedDimsArray(a, perm))
   permutedims!(a_dest, a, perm)
