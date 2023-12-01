@@ -1,4 +1,3 @@
-@eval module $(gensym())
 using NDTensors.SmallVectors
 using Test: @inferred, @test, @testset, @test_broken
 
