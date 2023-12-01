@@ -1,3 +1,5 @@
+## TODO this file was not included in the previous testing
+## and appears to be out of date with current code.
 using NDTensors, Test
 using HDF5
 

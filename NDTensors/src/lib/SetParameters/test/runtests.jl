@@ -1,4 +1,5 @@
-using Test
+@eval module $(gensym())
+using Test: @inferred, @test, @testset
 using NDTensors.SetParameters
 
 @testset "Test NDTensors.SetParameters" begin
@@ -151,4 +152,5 @@ using NDTensors.SetParameters
     @test @inferred(set_unspecified_parameters(Array, DefaultParameters())) ==
       Array{Float64,1}
   end
+end
 end

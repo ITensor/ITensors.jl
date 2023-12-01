@@ -1,14 +1,15 @@
+@eval module $(gensym())
 using NDTensors
-using Test
+using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: devices_list, is_supported_eltype
 
 @testset "DiagTensor basic functionality" begin
-  include("device_list.jl")
-  devs = devices_list(copy(ARGS))
-  @testset "test device: $dev" for dev in devs,
+  @testset "test device: $dev" for dev in devices_list(copy(ARGS)),
     elt in (Float32, ComplexF32, Float64, ComplexF64)
 
-    if dev == NDTensors.mtl && real(elt) ≠ Float32
+    if !is_supported_eltype(dev, elt)
       # Metal doesn't support double precision
       continue
     end
@@ -64,3 +65,4 @@ end
   @test contract(A, (-2, 1), t, (-2, 3)) == transpose(A)
 end
 nothing
+end

@@ -24,7 +24,6 @@ function devices_list(test_args)
 
   if "metal" in test_args || "all" in test_args
     push!(devs, NDTensors.mtl)
-    Metal.allowscalar()
   end
   return devs
 end
