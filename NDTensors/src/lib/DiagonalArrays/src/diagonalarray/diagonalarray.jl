@@ -1,4 +1,4 @@
-using ..SparseArrayInterface: Zero
+using ..SparseArrayInterface: Zero, getindex_zero_function
 # TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
 using ..SparseArrayDOKs: SparseArrayDOKs, SparseArrayDOK
 
@@ -34,8 +34,8 @@ function DiagonalArray{T}(diag::AbstractVector, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(diag, d)
 end
 
-function DiagonalArray(diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}) where {T,N}
-  return DiagonalArray{T,N}(diag, d)
+function DiagonalArray(diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}, zero=Zero()) where {T,N}
+  return DiagonalArray{T,N}(diag, d, zero)
 end
 
 function DiagonalArray(diag::AbstractVector{T}, d::Vararg{Int,N}) where {T,N}
@@ -52,16 +52,16 @@ function DiagonalArray{<:Any,N}(diag::AbstractVector{T}) where {T,N}
 end
 
 # undef
-function DiagonalArray{T,N}(::UndefInitializer, d::Tuple{Vararg{Int,N}}) where {T,N}
-  return DiagonalArray{T,N}(Vector{T}(undef, minimum(d)), d)
+function DiagonalArray{T,N}(::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()) where {T,N}
+  return DiagonalArray{T,N}(Vector{T}(undef, minimum(d)), d, zero)
 end
 
 function DiagonalArray{T,N}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(undef, d)
 end
 
-function DiagonalArray{T}(::UndefInitializer, d::Tuple{Vararg{Int,N}}) where {T,N}
-  return DiagonalArray{T,N}(undef, d)
+function DiagonalArray{T}(::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()) where {T,N}
+  return DiagonalArray{T,N}(undef, d, zero)
 end
 
 function DiagonalArray{T}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
@@ -72,7 +72,8 @@ end
 Base.size(a::DiagonalArray) = a.dims
 
 function Base.similar(a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
-  return DiagonalArray{elt}(undef, dims)
+  # TODO: Preserve zero element function.
+  return DiagonalArray{elt}(undef, dims, getindex_zero_function(a))
 end
 
 # Minimal `SparseArrayInterface` interface
@@ -86,7 +87,7 @@ SparseArrayInterface.sparse_storage(a::DiagonalArray) = a.diag
 function SparseArrayInterface.sparse_similar(
   a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}}
 )
-  return SparseArrayDOK{elt}(undef, dims)
+  return SparseArrayDOK{elt}(undef, dims, getindex_zero_function(a))
 end
 
 function SparseArrayDOKs.getindex_zero_function(a::DiagonalArray)
