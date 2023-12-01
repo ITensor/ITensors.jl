@@ -60,7 +60,7 @@ end
 # TODO: Generalize to multiple arguements.
 # TODO: Define `sparse_mapreducedim!`.
 function sparse_mapreduce(f, op, a::AbstractArray; kwargs...)
-  output = mapreduce(f, op, storage(a); kwargs...)
+  output = mapreduce(f, op, sparse_storage(a); kwargs...)
   # TODO: Use more general `zero` value.
   # TODO: Better way to check that zeros don't affect the output?
   @assert op(output, f(zero(eltype(a)))) == output

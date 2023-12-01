@@ -18,7 +18,7 @@ end
 index(i::StoredIndex) = i.iouter
 StorageIndex(i::StoredIndex) = i.istorage
 
-nstored(a::AbstractArray) = length(storage(a))
+nstored(a::AbstractArray) = length(sparse_storage(a))
 
 struct NotStoredIndex{Iouter} <: MaybeStoredIndex{Iouter}
   iouter::Iouter
@@ -32,7 +32,7 @@ MaybeStoredIndex(I, I_storage) = StoredIndex(I, StorageIndex(I_storage))
 MaybeStoredIndex(I, I_storage::Nothing) = NotStoredIndex(I)
 
 function storage_indices(a::AbstractArray)
-  return eachindex(storage(a))
+  return eachindex(sparse_storage(a))
 end
 
 # Derived
@@ -49,7 +49,7 @@ function sparse_getindex(a::AbstractArray, I::StoredIndex)
 end
 
 function sparse_getindex(a::AbstractArray, I::StorageIndex)
-  return storage(a)[index(I)]
+  return sparse_storage(a)[index(I)]
 end
 
 function sparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where {N}
@@ -92,7 +92,7 @@ end
 
 # Update a nonzero value
 function sparse_setindex!(a::AbstractArray, value, I::StorageIndex)
-  storage(a)[index(I)] = value
+  sparse_storage(a)[index(I)] = value
   return a
 end
 
@@ -149,7 +149,7 @@ end
 indices(i::StorageIndices) = i.i
 
 function sparse_getindex(a::AbstractArray, I::StorageIndices{Colon})
-  return storage(a)
+  return sparse_storage(a)
 end
 
 function sparse_getindex(a::AbstractArray, I::StorageIndices)
@@ -157,7 +157,7 @@ function sparse_getindex(a::AbstractArray, I::StorageIndices)
 end
 
 function sparse_setindex!(a::AbstractArray, value, I::StorageIndices{Colon})
-  storage(a) .= value
+  sparse_storage(a) .= value
   return a
 end
 

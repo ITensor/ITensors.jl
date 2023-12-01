@@ -1,6 +1,8 @@
 using ..SparseArrayInterface: Zero
+# TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
+using ..SparseArrayDOKs: SparseArrayDOKs, SparseArrayDOK
 
-struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractArray{T,N}
+struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractDiagonalArray{T,N}
   diag::Diag
   dims::NTuple{N,Int}
   zero::Zero
@@ -64,4 +66,29 @@ end
 
 function DiagonalArray{T}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(undef, d)
+end
+
+# Minimal `AbstractArray` interface
+Base.size(a::DiagonalArray) = a.dims
+
+function Base.similar(a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
+  return DiagonalArray{elt}(undef, dims)
+end
+
+# Minimal `SparseArrayInterface` interface
+SparseArrayInterface.sparse_storage(a::DiagonalArray) = a.diag
+
+# `SparseArrayInterface`
+# Defines similar when the output can't be `DiagonalArray`,
+# such as in `reshape`.
+# TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
+# TODO: Special case 2D to output `SparseMatrixCSC`?
+function SparseArrayInterface.sparse_similar(
+  a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}}
+)
+  return SparseArrayDOK{elt}(undef, dims)
+end
+
+function SparseArrayDOKs.getindex_zero_function(a::DiagonalArray)
+  return a.zero
 end

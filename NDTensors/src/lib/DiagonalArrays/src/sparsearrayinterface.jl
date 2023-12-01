@@ -1,71 +1,62 @@
 using Compat: Returns, allequal
 using ..SparseArrayInterface: SparseArrayInterface
-# TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
-using ..SparseArrayDOKs: SparseArrayDOK
 
-# Minimal interface
-SparseArrayInterface.storage(a::DiagonalArray) = a.diag
+# `SparseArrayInterface` interface
+SparseArrayInterface.sparse_storage(::AbstractDiagonalArray) = error("Not implemented")
+
+# `AbstractArray` interface
+Base.size(::AbstractDiagonalArray) = error("Not implemented")
+
+function Base.similar(a::AbstractDiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
+  return error("Not implemented")
+end
 
 function SparseArrayInterface.index_to_storage_index(
-  a::DiagonalArray{<:Any,N}, I::CartesianIndex{N}
+  a::AbstractDiagonalArray{<:Any,N}, I::CartesianIndex{N}
 ) where {N}
   !allequal(Tuple(I)) && return nothing
   return first(Tuple(I))
 end
 
-function SparseArrayInterface.storage_index_to_index(a::DiagonalArray, I)
+function SparseArrayInterface.storage_index_to_index(a::AbstractDiagonalArray, I)
   return CartesianIndex(ntuple(Returns(I), ndims(a)))
 end
 
-# Defines similar when the output can't be `DiagonalArray`,
-# such as in `reshape`.
-# TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
-# TODO: Special case 2D to output `SparseMatrixCSC`?
+# 1-dimensional case can be `AbstractDiagonalArray`.
 function SparseArrayInterface.sparse_similar(
-  a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}}
+  a::AbstractDiagonalArray, elt::Type, dims::Tuple{Int}
 )
-  return SparseArrayDOK{elt}(undef, dims)
-end
-
-# 1-dimensional case can be `DiagonalArray`.
-function SparseArrayInterface.sparse_similar(a::DiagonalArray, elt::Type, dims::Tuple{Int})
   return similar(a, elt, dims)
 end
 
 # AbstractArray interface
-Base.size(a::DiagonalArray) = a.dims
-
-function Base.getindex(a::DiagonalArray, I...)
+function Base.getindex(a::AbstractDiagonalArray, I...)
   return SparseArrayInterface.sparse_getindex(a, I...)
 end
 
-function Base.setindex!(a::DiagonalArray, I...)
+function Base.setindex!(a::AbstractDiagonalArray, I...)
   return SparseArrayInterface.sparse_setindex!(a, I...)
-end
-
-function Base.similar(a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
-  return DiagonalArray{elt}(undef, dims)
 end
 
 # AbstractArray functionality
 # broadcast
-function Broadcast.BroadcastStyle(arraytype::Type{<:DiagonalArray})
+function Broadcast.BroadcastStyle(arraytype::Type{<:AbstractDiagonalArray})
   return SparseArrayInterface.SparseArrayStyle{ndims(arraytype)}()
 end
 
 # map
-function Base.map!(f, dest::AbstractArray, src::DiagonalArray)
+function Base.map!(f, dest::AbstractArray, src::AbstractDiagonalArray)
   SparseArrayInterface.sparse_map!(f, dest, src)
   return dest
 end
 
 # permutedims
-function Base.permutedims!(dest::AbstractArray, src::DiagonalArray, perm)
+function Base.permutedims!(dest::AbstractArray, src::AbstractDiagonalArray, perm)
   SparseArrayInterface.sparse_permutedims!(dest, src, perm)
   return dest
 end
 
 # reshape
-function Base.reshape(a::DiagonalArray, dims::Tuple{Vararg{Int}})
+function Base.reshape(a::AbstractDiagonalArray, dims::Tuple{Vararg{Int}})
   return SparseArrayInterface.sparse_reshape(a, dims)
 end

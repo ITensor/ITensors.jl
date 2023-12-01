@@ -24,9 +24,12 @@ end
 # Array types should overload `Base.dataids` to opt-in
 # to aliasing detection with `Base.mightalias`
 # to avoid emptying an input array in the case of `sparse_map!`.
-# `empty_storage!` is used to zero out the output array.
+# `dropall!` is used to zero out the output array.
 # See also `Base.unalias` and `Base.unaliascopy`.
-empty_storage!(a::AbstractArray) = a
+# Interface is inspired by Base `SparseArrays.droptol!`
+# and `SparseArrays.dropzeros!`, and is like
+# `dropall!(a) = SparseArrays.droptol!(a, Inf)`.
+dropall!(a::AbstractArray) = a
 
 # Overload
 function sparse_similar(a::AbstractArray, elt::Type, dims::Tuple{Vararg{Int}})

@@ -1,4 +1,5 @@
 using Dictionaries: Dictionary
+using ..SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
 
 # TODO: Parametrize by `data`?
 struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
@@ -67,10 +68,15 @@ function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
   return SparseArrayDOK{elt}(undef, dims)
 end
 
-# SparseArrayInterface interface
-SparseArrayInterface.storage(a::SparseArrayDOK) = a.data
+# `SparseArrayInterface` interface
+SparseArrayInterface.sparse_storage(a::SparseArrayDOK) = a.data
 
+# TODO: Define in `SparseArrayInterface`
 getindex_zero_function(a::SparseArrayDOK) = a.zero
+
+function SparseArrayInterface.dropall!(a::SparseArrayDOK)
+  return empty!(SparseArrayInterface.sparse_storage(a))
+end
 
 # Conversion
 # TODO: Make these more generic to `AbstractSparseArray`.

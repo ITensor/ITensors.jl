@@ -2,22 +2,22 @@ using ..SparseArrayInterface: SparseArrayInterface, StorageIndex, StorageIndices
 
 SparseArrayInterface.StorageIndex(i::DiagIndex) = StorageIndex(index(i))
 
-function Base.getindex(a::DiagonalArray, i::DiagIndex)
+function Base.getindex(a::AbstractDiagonalArray, i::DiagIndex)
   return a[StorageIndex(i)]
 end
 
-function Base.setindex!(a::DiagonalArray, value, i::DiagIndex)
+function Base.setindex!(a::AbstractDiagonalArray, value, i::DiagIndex)
   a[StorageIndex(i)] = value
   return a
 end
 
 SparseArrayInterface.StorageIndices(i::DiagIndices) = StorageIndices(indices(i))
 
-function Base.getindex(a::DiagonalArray, i::DiagIndices)
+function Base.getindex(a::AbstractDiagonalArray, i::DiagIndices)
   return a[StorageIndices(i)]
 end
 
-function Base.setindex!(a::DiagonalArray, value, i::DiagIndices)
+function Base.setindex!(a::AbstractDiagonalArray, value, i::DiagIndices)
   a[StorageIndices(i)] = value
   return a
 end

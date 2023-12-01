@@ -45,17 +45,17 @@ end
 # is used inside of `sparse_map!`.
 function sparse_fill!(a::AbstractArray, x)
   if iszero(x)
-    empty_storage!(a)
+    dropall!(a)
   end
-  fill!(storage(a), x)
+  fill!(sparse_storage(a), x)
   return a
 end
 
 # This could just call `sparse_fill!`
 # but it avoids a zero construction and check.
 function sparse_zero!(a::AbstractArray)
-  empty_storage!(a)
-  fill!(storage(a), zero(eltype(a)))
+  dropall!(a)
+  fill!(sparse_storage(a), zero(eltype(a)))
   return a
 end
 
