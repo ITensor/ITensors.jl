@@ -1,3 +1,4 @@
+using Dictionaries: Dictionary
 using ..SparseArrayInterface: Zero
 
 default_zero() = Zero()
