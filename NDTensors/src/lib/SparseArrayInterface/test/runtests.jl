@@ -1,5 +1,5 @@
 @eval module $(gensym())
-include("test_array.jl")
-include("test_diagonalarray.jl")
-include("test_sparsearray.jl")
+for filename in ["abstractsparsearray", "array", "diagonalarray"]
+  include("test_$filename.jl")
+end
 end

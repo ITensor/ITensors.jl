@@ -18,14 +18,15 @@ SparseArray{T}(dims::Vararg{Int}) where {T} = SparseArray{T}(dims)
 
 # AbstractArray interface
 Base.size(a::SparseArray) = a.dims
+function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})
+  return SparseArray{elt}(dims)
+end
+
 function Base.getindex(a::SparseArray, I...)
   return SparseArrayInterface.sparse_getindex(a, I...)
 end
 function Base.setindex!(a::SparseArray, I...)
   return SparseArrayInterface.sparse_setindex!(a, I...)
-end
-function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})
-  return SparseArray{elt}(dims)
 end
 
 # Minimal interface

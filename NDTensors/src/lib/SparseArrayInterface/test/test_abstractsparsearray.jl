@@ -2,9 +2,14 @@
 using LinearAlgebra: norm
 using NDTensors.SparseArrayInterface: SparseArrayInterface
 include("SparseArrayInterfaceTestUtils/SparseArrayInterfaceTestUtils.jl")
-using .SparseArrayInterfaceTestUtils.SparseArrays: SparseArray
+using .SparseArrayInterfaceTestUtils.AbstractSparseArrays: AbstractSparseArrays
+using .SparseArrayInterfaceTestUtils.SparseArrays: SparseArrays
 using Test: @test, @testset
-@testset "SparseArray (eltype=$elt)" for elt in (Float32, ComplexF32, Float64, ComplexF64)
+@testset "AbstractSparseArray (arraytype=$SparseArray, eltype=$elt)" for SparseArray in (
+    AbstractSparseArrays.SparseArray, SparseArrays.SparseArray
+  ),
+  elt in (Float32, ComplexF32, Float64, ComplexF64)
+
   a = SparseArray{elt}(2, 3)
   @test size(a) == (2, 3)
   @test axes(a) == (1:2, 1:3)

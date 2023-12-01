@@ -1,7 +1,9 @@
 # Optional interface.
 # Access a zero value.
+getindex_zero_function(::AbstractArray) = Zero()
+
 function getindex_notstored(a::AbstractArray, I)
-  return zero(eltype(a))
+  return getindex_zero_function(a)(a, I)
 end
 
 # Optional interface.
