@@ -49,11 +49,11 @@ function to_nameddimsarray(x::BlockSparseTensor)
   return named(arraystorage, name.(inds(x)))
 end
 
-using ..NDTensors: CombinerTensor, CombinerArray, storage
-# TODO: Delete when we directly use `CombinerArray` as storage.
-function to_nameddimsarray(t::CombinerTensor)
-  return named(CombinerArray(storage(t), to_axes(inds(t))), name.(inds(t)))
-end
+## using ..NDTensors: CombinerTensor, CombinerArray, storage
+## # TODO: Delete when we directly use `CombinerArray` as storage.
+## function to_nameddimsarray(t::CombinerTensor)
+##   return named(CombinerArray(storage(t), to_axes(inds(t))), name.(inds(t)))
+## end
 
 to_nameddimsarray(t::ITensor) = ITensor(to_nameddimsarray(t.tensor))
 
