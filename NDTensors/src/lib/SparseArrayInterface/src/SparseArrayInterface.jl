@@ -1,5 +1,6 @@
 module SparseArrayInterface
 include("sparsearrayinterface/densearray.jl")
+include("sparsearrayinterface/vectorinterface.jl")
 include("sparsearrayinterface/interface.jl")
 include("sparsearrayinterface/interface_optional.jl")
 include("sparsearrayinterface/indexing.jl")

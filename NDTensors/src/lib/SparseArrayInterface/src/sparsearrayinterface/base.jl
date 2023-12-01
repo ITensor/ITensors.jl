@@ -44,9 +44,12 @@ end
 # but we don't use that here since `sparse_fill!`
 # is used inside of `sparse_map!`.
 function sparse_fill!(a::AbstractArray, x)
-  if iszero(x)
-    dropall!(a)
-  end
+  ## TODO: Add this back?
+  ## if iszero(x)
+  ##   # TODO: Check that `typeof(x)` is compatible
+  ##   # with `eltype(a)`.
+  ##   dropall!(a)
+  ## end
   fill!(sparse_storage(a), x)
   return a
 end
@@ -55,23 +58,21 @@ end
 # but it avoids a zero construction and check.
 function sparse_zero!(a::AbstractArray)
   dropall!(a)
-  fill!(sparse_storage(a), zero(eltype(a)))
+  sparse_zerovector!(a)
   return a
 end
 
-# TODO: Make `sparse_zero!`?
 function sparse_zero(a::AbstractArray)
   # Need to overload `similar` for custom types
   a = similar(a)
-  # TODO: Use custom zero value?
-  sparse_fill!(a, zero(eltype(a)))
+  sparse_zerovector!(a)
   return a
 end
 
 # TODO: Is this a good definition?
 function sparse_zero(arraytype::Type{<:AbstractArray}, dims::Tuple{Vararg{Int}})
   a = arraytype(undef, dims)
-  sparse_fill!(a, zero(eltype(a)))
+  sparse_zerovector!(a)
   return a
 end
 

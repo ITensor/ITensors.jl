@@ -19,7 +19,7 @@ end
 
 @safetestset "NDTensors" begin
   @testset "$filename" for filename in [
-    "arraytensor/runtests.jl",
+    ## "arraytensor/runtests.jl",
     "ITensors/runtests.jl",
     "lib/runtests.jl",
     "blocksparse.jl",

@@ -1,5 +1,6 @@
 using Dictionaries: Dictionary
-using ..SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
+using ..SparseArrayInterface:
+  SparseArrayInterface, AbstractSparseArray, getindex_zero_function
 
 # TODO: Parametrize by `data`?
 struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
@@ -64,30 +65,17 @@ end
 # Base `AbstractArray` interface
 Base.size(a::SparseArrayDOK) = a.dims
 
+SparseArrayInterface.getindex_zero_function(a::SparseArrayDOK) = a.zero
+
 function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
-  return SparseArrayDOK{elt}(undef, dims)
+  return SparseArrayDOK{elt}(undef, dims, getindex_zero_function(a))
 end
 
 # `SparseArrayInterface` interface
 SparseArrayInterface.sparse_storage(a::SparseArrayDOK) = a.data
 
-# TODO: Define in `SparseArrayInterface`
-getindex_zero_function(a::SparseArrayDOK) = a.zero
-
 function SparseArrayInterface.dropall!(a::SparseArrayDOK)
   return empty!(SparseArrayInterface.sparse_storage(a))
-end
-
-# Conversion
-# TODO: Make these more generic to `AbstractSparseArray`.
-function SparseArrayDOK{T,N,Zero}(a::SparseArrayDOK{T,N,Zero}) where {T,N,Zero}
-  return copy(a)
-end
-
-function Base.convert(
-  ::Type{SparseArrayDOK{T,N,Zero}}, a::SparseArrayDOK{T,N,Zero}
-) where {T,N,Zero}
-  return a
 end
 
 SparseArrayDOK(a::AbstractArray) = SparseArrayDOK{eltype(a)}(a)

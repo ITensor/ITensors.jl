@@ -1,4 +1,8 @@
 module BlockSparseArrays
-include("abstractblocksparsearray.jl")
-include("blocksparsearray.jl")
+include("blocksparsearrayinterface/blocksparsearrayinterface.jl")
+include("blocksparsearrayinterface/blockzero.jl")
+include("abstractblocksparsearray/abstractblocksparsearray.jl")
+include("blocksparsearray/defaults.jl")
+include("blocksparsearray/blocksparsearray.jl")
+include("BlockArraysExtensions/BlockArraysExtensions.jl")
 end

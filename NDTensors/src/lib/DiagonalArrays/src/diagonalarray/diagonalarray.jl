@@ -34,8 +34,8 @@ function DiagonalArray{T}(diag::AbstractVector, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(diag, d)
 end
 
-function DiagonalArray(diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}, zero=Zero()) where {T,N}
-  return DiagonalArray{T,N}(diag, d, zero)
+function DiagonalArray(diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}) where {T,N}
+  return DiagonalArray{T,N}(diag, d)
 end
 
 function DiagonalArray(diag::AbstractVector{T}, d::Vararg{Int,N}) where {T,N}
@@ -52,7 +52,9 @@ function DiagonalArray{<:Any,N}(diag::AbstractVector{T}) where {T,N}
 end
 
 # undef
-function DiagonalArray{T,N}(::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()) where {T,N}
+function DiagonalArray{T,N}(
+  ::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()
+) where {T,N}
   return DiagonalArray{T,N}(Vector{T}(undef, minimum(d)), d, zero)
 end
 
@@ -60,7 +62,9 @@ function DiagonalArray{T,N}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(undef, d)
 end
 
-function DiagonalArray{T}(::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()) where {T,N}
+function DiagonalArray{T}(
+  ::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()
+) where {T,N}
   return DiagonalArray{T,N}(undef, d, zero)
 end
 
@@ -90,6 +94,6 @@ function SparseArrayInterface.sparse_similar(
   return SparseArrayDOK{elt}(undef, dims, getindex_zero_function(a))
 end
 
-function SparseArrayDOKs.getindex_zero_function(a::DiagonalArray)
+function SparseArrayInterface.getindex_zero_function(a::DiagonalArray)
   return a.zero
 end
