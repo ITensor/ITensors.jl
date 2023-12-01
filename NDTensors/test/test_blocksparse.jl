@@ -1,22 +1,27 @@
+@eval module $(gensym())
 using NDTensors
-using LinearAlgebra
-using Test
+using LinearAlgebra: Hermitian, exp, svd
+using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
-  include("device_list.jl")
-  devs = devices_list(copy(ARGS))
 
-  @testset "test device: $dev" for dev in devs
-    elt = (dev == NDTensors.mtl ? Float32 : Float64)
+  @testset "test device: $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
+    elt in (Float32, Float64)
+
+    if !is_supported_eltype(dev, elt)
+      continue
+    end
     # Indices
     indsA = ([2, 3], [4, 5])
 
     # Locations of non-zero blocks
     locs = [(1, 2), (2, 1)]
 
-    A = dev(BlockSparseTensor(locs, indsA...))
+    A = dev(BlockSparseTensor{elt}(locs, indsA...))
     randn!(A)
 
     @test blockdims(A, (1, 2)) == (2, 5)
@@ -72,7 +77,7 @@ using GPUArraysCore: @allowscalar
       @test A12[I] == A[I + CartesianIndex(0, 4)]
     end
 
-    B = dev(BlockSparseTensor(undef, locs, indsA))
+    B = dev(BlockSparseTensor(elt, undef, locs, indsA))
     randn!(B)
 
     C = A + B
@@ -98,7 +103,7 @@ using GPUArraysCore: @allowscalar
     @test typeof(conj(A)) <: BlockSparseTensor
 
     @testset "Random constructor" begin
-      T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
       @test eltype(T) == elt
@@ -125,20 +130,21 @@ using GPUArraysCore: @allowscalar
       @test eltype(cT) == complex(elt)
       @test nnzblocks(cT) == nnzblocks(T)
     end
+
     @testset "similartype regression test" begin
       # Regression test for issue seen in:
       # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
       # Previously, `similartype` wasn't using information about the dimensions
       # properly and was returning a `BlockSparse` storage of the dimensions
       # of the input tensor.
-      T = dev(BlockSparseTensor([(1, 1)], ([2], [2])))
+      T = dev(BlockSparseTensor(elt, [(1, 1)], ([2], [2])))
       @test NDTensors.ndims(
         NDTensors.storagetype(NDTensors.similartype(typeof(T), ([2], [2], [2])))
       ) == 3
     end
 
     @testset "Random constructor" begin
-      T = dev(randomBlockSparseTensor([(1, 1), (2, 2)], ([2, 2], [2, 2])))
+      T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))
       @test nnzblocks(T) == 2
       @test nnz(T) == 8
       @test eltype(T) == elt
@@ -154,7 +160,7 @@ using GPUArraysCore: @allowscalar
     @testset "permute_combine" begin
       indsA = ([2, 3], [4, 5], [6, 7, 8])
       locsA = [(2, 1, 1), (1, 2, 1), (2, 2, 3)]
-      A = dev(BlockSparseTensor(locsA, indsA...))
+      A = dev(BlockSparseTensor{elt}(locsA, indsA...))
       randn!(A)
 
       B = NDTensors.permute_combine(A, 3, (2, 1))
@@ -225,73 +231,73 @@ using GPUArraysCore: @allowscalar
     @test isblocknz(T, (2, 2))
   end
 
-  @testset "svd on $dev" for dev in devs
+  @testset "svd on $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
+    elt in (Float32, Float64)
+
+    if dev == NDTensors.mtl && elt == Float64
+      continue
+    end
     @testset "svd example 1" begin
-      A = dev(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
+      A = dev(BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 2" begin
-      A = dev(BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
+      A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 3" begin
-      A = dev(BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
+      A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 4" begin
-      A = dev(BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
+      A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(elt)
     end
 
     @testset "svd example 5" begin
-      A = dev(BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
+      A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar isapprox(
-        norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13
-      )
+      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      atol = default_rtol(elt)
     end
   end
 
-  @testset "exp" begin
-    A = BlockSparseTensor([(1, 1), (2, 2)], [2, 4], [2, 4])
+  @testset "exp, eltype: $elt" for elt in (Float32, Float64)
+    A = BlockSparseTensor{elt}([(1, 1), (2, 2)], [2, 4], [2, 4])
     randn!(A)
     expT = exp(A)
-    @test isapprox(norm(array(expT) - exp(array(A))), 0.0; atol=1e-13)
+    @test array(expT) ≈ exp(array(A))
+    atol = default_rtol(elt)
 
     # Hermitian case
-    A = BlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+    A = BlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2]))
     randn!(A)
-    Ah = BlockSparseTensor(ComplexF64, undef, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+    Ah = BlockSparseTensor(complex(elt), undef, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
     for bA in eachnzblock(A)
       b = blockview(A, bA)
       blockview(Ah, bA) .= b + b'
     end
     expTh = exp(Hermitian(Ah))
-    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = 1e-13
+    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = default_rtol(eltype(Ah))
 
-    A = BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2])
+    A = BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2])
     @test_throws ErrorException exp(A)
   end
 end
-
-nothing
+end

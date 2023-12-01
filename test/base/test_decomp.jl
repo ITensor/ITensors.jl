@@ -140,7 +140,7 @@ end
                                                                                                     [
       0, 1, 2, 3
     ],
-    elt in [Float64, ComplexF64]
+    elt in (Float64, ComplexF64)
 
     l = Index(5, "l")
     s = Index(2, "s")

@@ -1,5 +1,5 @@
 using NDTensors.SmallVectors
-using Test
+using Test: @inferred, @test, @testset, @test_broken
 
 using NDTensors.SmallVectors:
   setindex,

@@ -1,22 +1,27 @@
+@eval module $(gensym())
 using NDTensors
-using LinearAlgebra
-using Test
+using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: devices_list, is_supported_eltype
 
 # Testing generic block indices
 using ITensors: QN, Index
 
 @testset "CombinerTensor basic functionality" begin
-  include("device_list.jl")
-  devs = devices_list(copy(ARGS))
-  @testset "test device: $dev" for dev in devs
+  @testset "test device: $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
+    elt in (Float64, Float32)
+
+    if !is_supported_eltype(dev, elt)
+      continue
+    end
     @testset "Dense * Combiner" begin
       d = 2
       input_tensor_inds = (d, d, d)
       combiner_tensor_inds = (d^2, d, d)
       output_tensor_inds = (d, d^2)
 
-      input_tensor = dev(tensor(Dense(randn(input_tensor_inds)), input_tensor_inds))
+      input_tensor = dev(tensor(Dense(randn(elt, input_tensor_inds)), input_tensor_inds))
       combiner_tensor = dev(tensor(Combiner([1], [1]), combiner_tensor_inds))
 
       output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
@@ -32,7 +37,7 @@ using ITensors: QN, Index
 
       # Catch invalid combining
       input_tensor_inds = (d,)
-      input_tensor = dev(tensor(Dense(randn(input_tensor_inds)), input_tensor_inds))
+      input_tensor = dev(tensor(Dense(randn(elt, input_tensor_inds)), input_tensor_inds))
       combiner_tensor = dev(tensor(Combiner([1], [1]), combiner_tensor_inds))
       @test_throws Any contract(input_tensor, (-1,), combiner_tensor, (1, -1, -2))
     end
@@ -51,7 +56,7 @@ using ITensors: QN, Index
       input_tensor = dev(
         tensor(
           BlockSparse(
-            randn(dim(input_tensor_inds)), BlockOffsets{3}([Block(1, 1, 1)], [0])
+            randn(elt, dim(input_tensor_inds)), BlockOffsets{3}([Block(1, 1, 1)], [0])
           ),
           input_tensor_inds,
         ),
@@ -76,7 +81,7 @@ using ITensors: QN, Index
       invalid_input_tensor = dev(
         tensor(
           BlockSparse(
-            randn(dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])
+            randn(elt, dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])
           ),
           invalid_input_tensor_inds,
         ),
@@ -85,4 +90,5 @@ using ITensors: QN, Index
       @test_throws Any contract(invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1))
     end
   end
+end
 end

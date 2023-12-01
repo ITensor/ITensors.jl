@@ -1,13 +1,13 @@
+@eval module $(gensym())
 using NDTensors
-using Test
+using Test: @testset, @test, @test_throws, @test_broken
 using GPUArraysCore: @allowscalar
+include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: devices_list
 
 @testset "Dense Tensors" begin
-  include("device_list.jl")
-  devs = devices_list(copy(ARGS))
-  @testset "test device: $dev" for dev in devs
+  @testset "test device: $dev" for dev in devices_list(copy(ARGS))
     elt = dev == NDTensors.mtl ? Float32 : Float64
-
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor(elt, (3, 4)))
@@ -33,7 +33,7 @@ using GPUArraysCore: @allowscalar
       Aview = A[2:3, 2:3]
       @test dims(Aview) == (2, 2)
 
-      B = dev(Tensor(undef, (3, 4)))
+      B = dev(Tensor(elt, undef, (3, 4)))
       randn!(B)
       C = copy(A)
       C = permutedims!!(C, B, (1, 2), +)
@@ -68,10 +68,8 @@ using GPUArraysCore: @allowscalar
         @test A[2, 2] == Aview[1, 1]
       end
 
-      ## Right now this treats the `Tensor` type as an abstract Array 
-      ## And calls getindex instead of CUDA.==. Can fix by converting to CPU or 
-      ## Just looking at the data
-      @test data(A * 2.0) == data(2.0 * A)
+      ## add elt around 2.0 to preserve the eltype of A.
+      @test data(A * elt(2.0)) == data(elt(2.0) * A)
 
       Asim = similar(data(A), 10)
       @test eltype(Asim) == elt
@@ -116,8 +114,8 @@ using GPUArraysCore: @allowscalar
       @test dim(I) == 1000
       @test Array(I) == I_arr
 
-      J = dev(Tensor((2, 2)))
-      K = dev(Tensor((2, 2)))
+      J = dev(Tensor(elt, (2, 2)))
+      K = dev(Tensor(elt, (2, 2)))
       @test Array(J * K) ≈ Array(J) * Array(K)
     end
 
@@ -213,7 +211,7 @@ using GPUArraysCore: @allowscalar
         R = dev(Tensor(complex(elt), (2, 2, 1)))
         fill!(R, NaN)
         @test @allowscalar any(isnan, R)
-        T1 = dev(randomTensor((2, 2, 1)))
+        T1 = dev(randomTensor(elt, (2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))
         NDTensors.contract!(R, (1, 2, 3), T1, (1, 2, -1), T2, (-1, 1))
         @test @allowscalar !any(isnan, R)
@@ -224,7 +222,7 @@ using GPUArraysCore: @allowscalar
         R = dev(Tensor(complex(elt), (2, 2, 1)))
         fill!(R, NaN)
         @test @allowscalar any(isnan, R)
-        T1 = dev(randomTensor((2, 2, 1)))
+        T1 = dev(randomTensor(elt, (2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))
         NDTensors.contract!(R, (2, 1, 3), T1, (1, 2, -1), T2, (-1, 1))
         @test @allowscalar !any(isnan, R)
@@ -276,3 +274,4 @@ using GPUArraysCore: @allowscalar
 end
 
 nothing
+end

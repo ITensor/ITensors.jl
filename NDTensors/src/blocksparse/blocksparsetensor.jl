@@ -49,7 +49,7 @@ Construct a block sparse tensor with uninitialized memory
 from indices and locations of non-zero blocks.
 """
 function BlockSparseTensor(::UndefInitializer, blockoffsets, inds)
-  return BlockSparseTensor(Float64, undef, blockoffsets, inds)
+  return BlockSparseTensor(default_eltype(), undef, blockoffsets, inds)
 end
 
 function BlockSparseTensor(
@@ -65,7 +65,7 @@ function BlockSparseTensor(eltype::Type{<:Number}, blockoffsets::BlockOffsets, i
 end
 
 function BlockSparseTensor(blockoffsets::BlockOffsets, inds)
-  return BlockSparseTensor(Float64, blockoffsets, inds)
+  return BlockSparseTensor(default_eltype(), blockoffsets, inds)
 end
 
 """
@@ -73,7 +73,7 @@ end
 
 Construct a block sparse tensor with no blocks.
 """
-BlockSparseTensor(inds) = BlockSparseTensor(Float64, inds)
+BlockSparseTensor(inds) = BlockSparseTensor(default_eltype(), inds)
 
 function BlockSparseTensor(datatype::Type{<:AbstractArray}, inds)
   return BlockSparseTensor(datatype, BlockOffsets{length(inds)}(), inds)
@@ -99,7 +99,7 @@ Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
 function BlockSparseTensor(blocks::Vector{BlockT}, inds) where {BlockT<:Union{Block,NTuple}}
-  return BlockSparseTensor(Float64, blocks, inds)
+  return BlockSparseTensor(default_eltype(), blocks, inds)
 end
 
 function BlockSparseTensor(
@@ -160,7 +160,7 @@ function randomBlockSparseTensor(blocks::Vector, inds)
 end
 
 function randomBlockSparseTensor(rng::AbstractRNG, blocks::Vector, inds)
-  return randomBlockSparseTensor(rng, Float64, blocks, inds)
+  return randomBlockSparseTensor(rng, default_eltype(), blocks, inds)
 end
 
 """
@@ -174,6 +174,12 @@ function BlockSparseTensor(
   blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
 ) where {BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
   return BlockSparseTensor(blocks, inds)
+end
+
+function BlockSparseTensor{ElT}(
+  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
+) where {ElT<:Number,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
+  return BlockSparseTensor(ElT, blocks, inds)
 end
 
 function zeros(
@@ -440,7 +446,7 @@ function permutedims_combine_output(
 
   # Now that the indices are permuted, compute
   # which indices are now combined
-  combdims_perm = sort(_permute_combdims(combdims, perm))
+  combdims_perm = TupleTools.sort(_permute_combdims(combdims, perm))
 
   # Permute the nonzero blocks (dimension-wise)
   blocks = nzblocks(T)
@@ -475,7 +481,7 @@ function permutedims_combine(
 
   # Now that the indices are permuted, compute
   # which indices are now combined
-  combdims_perm = sort(_permute_combdims(combdims, perm))
+  combdims_perm = TupleTools.sort(_permute_combdims(combdims, perm))
   comb_ind_loc = minimum(combdims_perm)
 
   # Determine the new index before combining
