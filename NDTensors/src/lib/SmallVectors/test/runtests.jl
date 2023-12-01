@@ -153,4 +153,3 @@ end
 # @testset "SmallVectors" test_smallvectors()
 # (new in Julia 1.9)
 test_smallvectors()
-end
