@@ -49,6 +49,7 @@ function to_nameddimsarray(x::BlockSparseTensor)
   return named(arraystorage, name.(inds(x)))
 end
 
+## TODO: Add this back, define `CombinerArrays` library in NDTensors!
 ## using ..NDTensors: CombinerTensor, CombinerArray, storage
 ## # TODO: Delete when we directly use `CombinerArray` as storage.
 ## function to_nameddimsarray(t::CombinerTensor)
