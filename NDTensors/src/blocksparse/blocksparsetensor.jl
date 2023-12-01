@@ -446,7 +446,7 @@ function permutedims_combine_output(
 
   # Now that the indices are permuted, compute
   # which indices are now combined
-  combdims_perm = sort(_permute_combdims(combdims, perm))
+  combdims_perm = TupleTools.sort(_permute_combdims(combdims, perm))
 
   # Permute the nonzero blocks (dimension-wise)
   blocks = nzblocks(T)
@@ -481,7 +481,7 @@ function permutedims_combine(
 
   # Now that the indices are permuted, compute
   # which indices are now combined
-  combdims_perm = sort(_permute_combdims(combdims, perm))
+  combdims_perm = TupleTools.sort(_permute_combdims(combdims, perm))
   comb_ind_loc = minimum(combdims_perm)
 
   # Determine the new index before combining
