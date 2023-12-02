@@ -1,7 +1,9 @@
 using Dictionaries: Dictionary
+using ..SparseArrayInterface:
+  SparseArrayInterface, AbstractSparseArray, getindex_zero_function
 
 # TODO: Parametrize by `data`?
-struct SparseArrayDOK{T,N,Zero} <: AbstractArray{T,N}
+struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
   data::Dictionary{CartesianIndex{N},T}
   dims::NTuple{N,Int}
   zero::Zero
@@ -58,4 +60,28 @@ end
 
 function SparseArrayDOK{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}, zero) where {T}
   return SparseArrayDOK{T}(dims, zero)
+end
+
+# Base `AbstractArray` interface
+Base.size(a::SparseArrayDOK) = a.dims
+
+SparseArrayInterface.getindex_zero_function(a::SparseArrayDOK) = a.zero
+
+function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
+  return SparseArrayDOK{elt}(undef, dims, getindex_zero_function(a))
+end
+
+# `SparseArrayInterface` interface
+SparseArrayInterface.sparse_storage(a::SparseArrayDOK) = a.data
+
+function SparseArrayInterface.dropall!(a::SparseArrayDOK)
+  return empty!(SparseArrayInterface.sparse_storage(a))
+end
+
+SparseArrayDOK(a::AbstractArray) = SparseArrayDOK{eltype(a)}(a)
+
+SparseArrayDOK{T}(a::AbstractArray) where {T} = SparseArrayDOK{T,ndims(a)}(a)
+
+function SparseArrayDOK{T,N}(a::AbstractArray) where {T,N}
+  return SparseArrayInterface.sparse_convert(SparseArrayDOK{T,N}, a)
 end

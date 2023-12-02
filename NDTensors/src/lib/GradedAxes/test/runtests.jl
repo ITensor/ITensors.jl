@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using NDTensors.BlockArrays: Block, blocklength, blocklengths, findblock
+using BlockArrays: Block, blocklength, blocklengths, findblock
 using NDTensors.GradedAxes:
   GradedAxes,
   blockmerge,

@@ -1,3 +1,5 @@
+using .DiagonalArrays: diaglength
+
 const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
 const NonuniformDiagTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:NonuniformDiag}
