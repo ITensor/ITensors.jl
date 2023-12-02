@@ -16,9 +16,13 @@ fuse(l1, l2) = error("Not implemented")
 
 abstract type AbstractGradedUnitRange{T,G} <: AbstractUnitRange{Int} end
 
-BlockArrays.blockedrange(a::AbstractGradedUnitRange) = error("Not implemented")
-sectors(a::AbstractGradedUnitRange) = error("Not implemented")
-scale_factor(a::AbstractGradedUnitRange) = error("Not implemented")
+BlockArrays.blockedrange(::AbstractGradedUnitRange) = error("Not implemented")
+sectors(::AbstractGradedUnitRange) = error("Not implemented")
+isdual(::AbstractGradedUnitRange) = error("Not implemented")
+
+# Overload if there are contravariant and covariant
+# spaces.
+dual(a::AbstractGradedUnitRange) = a
 
 # BlockArrays block axis interface
 BlockArrays.blockaxes(a::AbstractGradedUnitRange) = blockaxes(blockedrange(a))
@@ -44,7 +48,7 @@ sector(a::AbstractGradedUnitRange, I::Integer) = sector(a, findblock(a, I))
 function tensor_product(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
   a = tensor_product(blockedrange(a1), blockedrange(a2))
   sectors_a = map(Iterators.product(sectors(a1), sectors(a2))) do (l1, l2)
-    return fuse(scale_factor(a1) * l1, scale_factor(a2) * l2)
+    return fuse(isdual(a1) ? dual(l1) : l1, isdual(a2) ? dual(l2) : l2)
   end
   return gradedrange(a, vec(sectors_a))
 end
@@ -52,7 +56,7 @@ end
 function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRange)
   show(io, mimetype, sectors(a))
   println(io)
-  println(io, "Scale factor = ", scale_factor(a))
+  println(io, "isdual = ", isdual(a))
   return show(io, mimetype, blockedrange(a))
 end
 
