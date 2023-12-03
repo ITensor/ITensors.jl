@@ -46,6 +46,8 @@ include("lib/SortedSets/src/SortedSets.jl")
 using .SortedSets
 include("lib/TagSets/src/TagSets.jl")
 using .TagSets
+include("lib/Sectors/src/Sectors.jl")
+using .Sectors
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
