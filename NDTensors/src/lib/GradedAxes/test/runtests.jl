@@ -17,7 +17,6 @@ struct U1
   dim::Int
 end
 Base.isless(l1::U1, l2::U1) = isless(l1.dim, l2.dim)
-Base.:*(c::Int, l::U1) = U1(c * l.dim)
 GradedAxes.fuse(l1::U1, l2::U1) = U1(l1.dim + l2.dim)
 GradedAxes.dual(l::U1) = U1(-l.dim)
 
