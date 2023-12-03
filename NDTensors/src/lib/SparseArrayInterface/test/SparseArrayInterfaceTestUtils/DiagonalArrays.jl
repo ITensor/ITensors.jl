@@ -31,7 +31,7 @@ function Base.similar(a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
 end
 
 # Minimal interface
-SparseArrayInterface.storage(a::DiagonalArray) = a.data
+SparseArrayInterface.sparse_storage(a::DiagonalArray) = a.data
 function SparseArrayInterface.index_to_storage_index(
   a::DiagonalArray{<:Any,N}, I::CartesianIndex{N}
 ) where {N}

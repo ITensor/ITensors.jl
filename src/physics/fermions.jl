@@ -157,8 +157,8 @@ end
   # may be a tuple of QNIndex, so convert to a Vector{Index}
   indsR = collect(input_indsR)
 
-  nlabelsT1 = NDTensors.sort(labelsT1; rev=true)
-  nlabelsT2 = NDTensors.sort(labelsT2)
+  nlabelsT1 = TupleTools.sort(labelsT1; rev=true)
+  nlabelsT2 = TupleTools.sort(labelsT2)
 
   # Make orig_labelsR from the order of
   # indices that would result by just 

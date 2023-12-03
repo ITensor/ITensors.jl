@@ -3,13 +3,14 @@ using SafeTestsets: @safetestset
 @safetestset "Downstream tests for ITensor DMRG" begin
   using Test: @testset
   include("TestITensorDMRG/TestITensorDMRG.jl")
-  include("../device_list.jl")
+  include("../NDTensorsTestUtils/NDTensorsTestUtils.jl")
+  using .NDTensorsTestUtils: devices_list, is_supported_eltype
   @testset "Test DMRG $dev, $conserve_qns, $elt, $N" for dev in devices_list(ARGS),
     conserve_qns in [false, true],
     elt in (Float32, ComplexF32, Float64, ComplexF64),
     N in [4, 10]
 
-    if !TestITensorDMRG.is_supported_eltype(dev, elt)
+    if !is_supported_eltype(dev, elt)
       continue
     end
     if TestITensorDMRG.is_broken(dev, elt, Val(conserve_qns))
@@ -21,6 +22,8 @@ using SafeTestsets: @safetestset
     end
   end
   using ITensors.ITensorsNamedDimsArraysExt: to_nameddimsarray
+  ## Without this line this test was throwing an error of ``NDTensors` not defined`
+  using NDTensors: NDTensors
   @testset "Test DMRG with NamedDimsArrays" for dev in (NDTensors.cpu,),
     conserve_qns in [false],
     elt in (Float32, Float64),

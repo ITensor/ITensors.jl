@@ -1,4 +1,5 @@
-using Test
+@eval module $(gensym())
+using Test: @test, @testset
 using NDTensors.SortedSets
 using NDTensors.SmallVectors
 
@@ -37,4 +38,5 @@ using NDTensors.SmallVectors
     @test ("a", 5) ∈ parent(s)
     @test ("a", 3) ∉ parent(s)
   end
+end
 end

@@ -19,3 +19,22 @@ function LinearAlgebra.mul!(
   mul!(CM', BM', AM', α, β)
   return unexpose(CM)
 end
+
+## Fix issue in Metal.jl where it cannot distinguish Transpose{Reshape{Adjoint{MtlArray}}}
+## as a MtlArray and calls generic matmul
+function LinearAlgebra.mul!(
+  CM::Exposed{<:MtlArray},
+  AM::Exposed{<:MtlArray},
+  BM::Exposed{
+    <:MtlArray,
+    <:LinearAlgebra.Transpose{
+      <:Any,<:Base.ReshapedArray{<:Any,<:Any,<:LinearAlgebra.Adjoint}
+    },
+  },
+  α,
+  β,
+)
+  B = copy(expose(parent(BM)))
+  mul!(CM, AM, expose(transpose(B)), α, β)
+  return unexpose(CM)
+end

@@ -1,6 +1,8 @@
 using ITensors: MPO, OpSum, dmrg, randomMPS, siteinds
 using Random: Random
 using Test: @test
+include("../../NDTensorsTestUtils/NDTensorsTestUtils.jl")
+using .NDTensorsTestUtils: default_rtol
 # TODO: Include file with `reference_energies`.
 
 function test_dmrg(
@@ -28,5 +30,6 @@ function test_dmrg(
   maxdim = 32
 
   energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel)
+
   @test energy ≈ reference_energies[N] rtol = rtol_scale * default_rtol(elt)
 end
