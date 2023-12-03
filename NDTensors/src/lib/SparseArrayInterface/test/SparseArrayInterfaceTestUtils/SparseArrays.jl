@@ -18,18 +18,19 @@ SparseArray{T}(dims::Vararg{Int}) where {T} = SparseArray{T}(dims)
 
 # AbstractArray interface
 Base.size(a::SparseArray) = a.dims
+function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})
+  return SparseArray{elt}(dims)
+end
+
 function Base.getindex(a::SparseArray, I...)
   return SparseArrayInterface.sparse_getindex(a, I...)
 end
 function Base.setindex!(a::SparseArray, I...)
   return SparseArrayInterface.sparse_setindex!(a, I...)
 end
-function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})
-  return SparseArray{elt}(dims)
-end
 
 # Minimal interface
-SparseArrayInterface.storage(a::SparseArray) = a.data
+SparseArrayInterface.sparse_storage(a::SparseArray) = a.data
 function SparseArrayInterface.index_to_storage_index(
   a::SparseArray{<:Any,N}, I::CartesianIndex{N}
 ) where {N}
@@ -47,10 +48,11 @@ end
 
 # Empty the storage, helps with efficiency in `map!` to drop
 # zeros.
-function SparseArrayInterface.empty_storage!(a::SparseArray)
+function SparseArrayInterface.dropall!(a::SparseArray)
   empty!(a.data)
   empty!(a.index_to_dataindex)
-  return empty!(a.dataindex_to_index)
+  empty!(a.dataindex_to_index)
+  return a
 end
 
 # Broadcasting

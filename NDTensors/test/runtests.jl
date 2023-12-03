@@ -6,7 +6,7 @@ using SafeTestsets: @safetestset
     filenames = filter(readdir(@__DIR__)) do f
       startswith("test_")(f) && endswith(".jl")(f)
     end
-    for dir in ["lib", "arraytensor", "ITensors"]
+    for dir in ["lib", "ITensors"]
       push!(filenames, joinpath(dir, "runtests.jl"))
     end
     @testset "Test $(@__DIR__)/$filename" for filename in filenames
