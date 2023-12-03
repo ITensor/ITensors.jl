@@ -140,52 +140,6 @@ include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
 
 #####################################
-# Array Tensor (experimental)
-#
-
-# TODO: Turn this into a module `CombinerArray`.
-include("arraystorage/combiner/storage/combinerarray.jl")
-
-include("arraystorage/arraystorage/storage/arraystorage.jl")
-include("arraystorage/arraystorage/storage/conj.jl")
-include("arraystorage/arraystorage/storage/permutedims.jl")
-include("arraystorage/arraystorage/storage/contract.jl")
-
-include("arraystorage/arraystorage/tensor/arraystorage.jl")
-include("arraystorage/arraystorage/tensor/zeros.jl")
-include("arraystorage/arraystorage/tensor/indexing.jl")
-include("arraystorage/arraystorage/tensor/permutedims.jl")
-include("arraystorage/arraystorage/tensor/mul.jl")
-include("arraystorage/arraystorage/tensor/contract.jl")
-include("arraystorage/arraystorage/tensor/qr.jl")
-include("arraystorage/arraystorage/tensor/eigen.jl")
-include("arraystorage/arraystorage/tensor/svd.jl")
-
-# DiagonalArray storage
-include("arraystorage/diagonalarray/storage/contract.jl")
-
-include("arraystorage/diagonalarray/tensor/contract.jl")
-
-# BlockSparseArray storage
-include("arraystorage/blocksparsearray/storage/unwrap.jl")
-include("arraystorage/blocksparsearray/storage/contract.jl")
-
-include("arraystorage/blocksparsearray/tensor/contract.jl")
-
-# Combiner storage
-include("arraystorage/combiner/storage/promote_rule.jl")
-include("arraystorage/combiner/storage/contract_utils.jl")
-include("arraystorage/combiner/storage/contract.jl")
-
-include("arraystorage/combiner/tensor/to_arraystorage.jl")
-include("arraystorage/combiner/tensor/contract.jl")
-
-include("arraystorage/blocksparsearray/storage/combiner/contract.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_utils.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_combine.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_uncombine.jl")
-
-#####################################
 # Deprecations
 #
 include("deprecated.jl")

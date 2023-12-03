@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using Combinatorics: permutations
 using LinearAlgebra: qr
 using NDTensors.TensorAlgebra: TensorAlgebra
@@ -48,4 +49,5 @@ using Test: @test, @test_broken, @testset
     )
     @test a ≈ a′
   end
+end
 end

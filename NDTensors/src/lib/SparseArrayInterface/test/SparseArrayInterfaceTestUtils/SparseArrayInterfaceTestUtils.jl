@@ -1,4 +1,5 @@
 module SparseArrayInterfaceTestUtils
-include("SparseArrays.jl")
+include("AbstractSparseArrays.jl")
 include("DiagonalArrays.jl")
+include("SparseArrays.jl")
 end

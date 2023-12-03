@@ -1,10 +1,23 @@
-using Test
+@eval module $(gensym())
+using Test: @testset, @test, @test_broken
 using NDTensors.Unwrap
-using NDTensors
-using LinearAlgebra
+using NDTensors: NDTensors, mul!!
+using LinearAlgebra:
+  LinearAlgebra,
+  Adjoint,
+  Diagonal,
+  Hermitian,
+  Symmetric,
+  Transpose,
+  eigen,
+  mul!,
+  norm,
+  qr,
+  svd
 using GPUArraysCore: @allowscalar
+include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
+using .NDTensorsTestUtils: devices_list
 
-include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
 @testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
 
@@ -18,8 +31,8 @@ include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
   v_type = typeof(v)
   e_type = eltype(v)
   @test typeof(E) == Exposed{v_type,v_type}
-  @test typeof(Et) == Exposed{v_type,LinearAlgebra.Transpose{e_type,v_type}}
-  @test typeof(Ea) == Exposed{v_type,LinearAlgebra.Adjoint{e_type,v_type}}
+  @test typeof(Et) == Exposed{v_type,Transpose{e_type,v_type}}
+  @test typeof(Ea) == Exposed{v_type,Adjoint{e_type,v_type}}
 
   @test parent(E) == v
   @test parent(Et) == v
@@ -37,8 +50,8 @@ include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
 
   m_type = typeof(m)
   @test typeof(E) == Exposed{m_type,m_type}
-  @test typeof(Et) == Exposed{m_type,LinearAlgebra.Transpose{e_type,m_type}}
-  @test typeof(Ea) == Exposed{m_type,LinearAlgebra.Adjoint{e_type,m_type}}
+  @test typeof(Et) == Exposed{m_type,Transpose{e_type,m_type}}
+  @test typeof(Ea) == Exposed{m_type,Adjoint{e_type,m_type}}
 
   o = dev(randn(elt, 1))
   expose(o)[] = 2
@@ -114,8 +127,42 @@ include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
   y = dev(rand(elt, 4, 4))
   x = Base.ReshapedArray(dev(rand(elt, 16)), (4, 4), ())
   copyto!(expose(y), expose(x))
-  @test NDTensors.cpu(y) == NDTensors.cpu(x)
-  @test NDTensors.cpu(copy(expose(x))) == NDTensors.cpu(x)
+  @test cpu(y) == cpu(x)
+  @test cpu(copy(expose(x))) == cpu(x)
+
+  ## Tests for Metal because permutedims with ReshapedArray does not work properly
+  ## transpose(ReshapedArray(MtlArray)) fails with scalar indexing so calling copy to 
+  ## evaluate tests in the following tests
+  y = dev(rand(elt, 4, 4))
+  @test permutedims(expose(y), (2, 1)) == transpose(y)
+  y = Base.ReshapedArray(y, (2, 8), ())
+  @test permutedims(expose(y), (2, 1)) == transpose(copy(expose(y)))
+  yt = dev(rand(elt, (8, 2)))
+  permutedims!(expose(y), expose(yt), (2, 1))
+  @test copy(expose(y)) == transpose(yt)
+  yt = dev(rand(elt, 8, 2))
+  permutedims!(expose(yt), expose(y), (2, 1))
+  @test copy(expose(y)) == transpose(yt)
+
+  y = reshape(dev(randn(elt, 8))', 2, 4)
+  x = Base.ReshapedArray(dev(randn(elt, 8, 8)'[1:8]), (2, 4), ())
+  z = dev(fill!(Matrix{elt}(undef, (2, 4)), 0.0))
+  for i in 1:2
+    for j in 1:4
+      @allowscalar z[i, j] = y[i, j] * x[i, j]
+    end
+  end
+  permutedims!(expose(y), expose(x), (1, 2), *)
+  @allowscalar @test reshape(z, size(y)) ≈ y
+  for i in 1:2
+    for j in 1:4
+      @allowscalar z[i, j] = x[i, j] * y[i, j]
+    end
+  end
+  permutedims!(expose(x), expose(y), (1, 2), *)
+  ## I copy x here because it is a ReshapedArray{SubArray} which causes `≈`
+  ## to throw an error 
+  @test z ≈ copy(expose(x))
 
   y = dev(rand(elt, 4, 4))
   x = @view dev(rand(elt, 8, 8))[1:4, 1:4]
@@ -142,7 +189,7 @@ include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
   y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())
   x = dev(randn(elt, 4, 4))
   permutedims!(expose(y), expose(x), (2, 1))
-  @test NDTensors.cpu(y) == transpose(NDTensors.cpu(x))
+  @test cpu(y) == transpose(cpu(x))
 
   ##########################################
   ### Testing an issue with CUDA&Metal transpose/adjoint mul
@@ -152,7 +199,7 @@ include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
   Cp = copy(C)
 
   ## This fails with scalar indexing
-  if dev != NDTensors.cpu
+  if dev != cpu
     @test_broken mul!(transpose(C), transpose(A), B, true, false)
   end
   mul!(C, transpose(B), A, true, false)
@@ -160,19 +207,19 @@ include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
   @test C ≈ Cp
   Cp = zero(C)
   ## Try calling mul!! with transposes to verify that code works
-  Cpt = NDTensors.mul!!(transpose(Cp), transpose(A), B, true, false)
+  Cpt = mul!!(transpose(Cp), transpose(A), B, true, false)
   @test transpose(Cpt) ≈ C
 
   Cp = zero(C)
   ## This fails with scalar indexing 
-  if dev != NDTensors.cpu
+  if dev != cpu
     @test_broken mul!(C', A', B, true, false)
   end
   mul!(C, B', A, true, false)
   mul!(expose(Cp'), expose(A'), expose(B), true, false)
   @test C ≈ Cp
   Cp = zero(C)
-  Cpt = NDTensors.mul!!(Cp', A', B, true, false)
+  Cpt = mul!!(Cp', A', B, true, false)
   @test Cpt' ≈ C
 
   ##################################
@@ -181,13 +228,12 @@ include(joinpath(pkgdir(NDTensors), "test", "device_list.jl"))
   A = dev(transpose(reshape(randn(elt, 2, 12)', (12, 2))))
   B = dev(randn(elt, 2, 2))
   C = dev(zeros(elt, 2, 12))
-  NDTensors.mul!(expose(C), expose(B), expose(A), true, false)
-  Cp = NDTensors.cpu(similar(C))
-  NDTensors.mul!(
-    expose(Cp), expose(NDTensors.cpu(B)), expose(NDTensors.cpu(A)), true, false
-  )
-  @test NDTensors.cpu(C) ≈ Cp
-  NDTensors.zero(C)
-  NDTensors.mul!!(C, B, A, true, false)
-  @test NDTensors.cpu(C) ≈ Cp
+  mul!(expose(C), expose(B), expose(A), true, false)
+  Cp = cpu(similar(C))
+  mul!(expose(Cp), expose(cpu(B)), expose(cpu(A)), true, false)
+  @test cpu(C) ≈ Cp
+  zero(C)
+  mul!!(C, B, A, true, false)
+  @test cpu(C) ≈ Cp
+end
 end
