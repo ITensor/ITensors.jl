@@ -4,8 +4,10 @@ using NDTensors.GradedAxes:
   GradedAxes,
   blockmerge,
   blockmergesortperm,
+  dual,
   fuse,
   gradedrange,
+  isdual,
   sector,
   sectors,
   tensor_product
@@ -17,6 +19,7 @@ end
 Base.isless(l1::U1, l2::U1) = isless(l1.dim, l2.dim)
 Base.:*(c::Int, l::U1) = U1(c * l.dim)
 GradedAxes.fuse(l1::U1, l2::U1) = U1(l1.dim + l2.dim)
+GradedAxes.dual(l::U1) = U1(-l.dim)
 
 a = gradedrange([U1(0), U1(1)], [2, 3])
 @test a isa GradedAxes.GradedUnitRange
@@ -43,6 +46,7 @@ a = gradedrange([U1(0), U1(1)], [2, 3])
 @test sector(a, 5) == U1(1)
 
 # Naive tensor product, no sorting and merging
+a = gradedrange([U1(0), U1(1)], [2, 3])
 a2 = tensor_product(a, a)
 @test a2 isa GradedAxes.GradedUnitRange
 @test a2 == gradedrange([U1(0) => 4, U1(1) => 6, U1(1) => 6, U1(2) => 9])
@@ -57,6 +61,7 @@ a2 = tensor_product(a, a)
 @test sector(a2, Block(4)) == U1(2)
 
 # Fusion tensor product, with sorting and merging
+a = gradedrange([U1(0), U1(1)], [2, 3])
 a2 = fuse(a, a)
 @test a2 isa GradedAxes.GradedUnitRange
 @test a2 == gradedrange([U1(0) => 4, U1(1) => 12, U1(2) => 9])
@@ -71,7 +76,57 @@ a2 = fuse(a, a)
 
 # The partitioned permutation needed to sort
 # and merge an unsorted graded space
+a = gradedrange([U1(0), U1(1)], [2, 3])
 perm_a = blockmergesortperm(tensor_product(a, a))
 @test perm_a == [[1], [2, 3], [4]]
 @test blockmerge(tensor_product(a, a), perm_a) == fuse(a, a)
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+@test !isdual(a)
+a = dual(a)
+@test isdual(a)
+@test sectors(a) == [U1(0), U1(-1)]
+@test sector(a, Block(1)) == U1(0)
+@test sector(a, Block(2)) == U1(-1)
+
+# Test fusion with dual spaces
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, a)
+@test !isdual(a2)
+@test sectors(a2) == [U1(0), U1(1), U1(2)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, a; isdual=true)
+@test isdual(a2)
+@test sectors(a2) == [U1(0), U1(1), U1(2)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), dual(a))
+@test isdual(a2)
+@test sectors(a2) == [U1(-2), U1(-1), U1(0)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), dual(a); isdual=false)
+@test !isdual(a2)
+@test sectors(a2) == [U1(-2), U1(-1), U1(0)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, dual(a))
+@test !isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, dual(a); isdual=true)
+@test isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), a)
+@test !isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), a; isdual=true)
+@test isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
 end
