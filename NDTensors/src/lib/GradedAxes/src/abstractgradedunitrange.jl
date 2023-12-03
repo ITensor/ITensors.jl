@@ -16,8 +16,25 @@ fuse(l1, l2) = error("Not implemented")
 
 abstract type AbstractGradedUnitRange{T,G} <: AbstractUnitRange{Int} end
 
+"""
+    blockedrange(::AbstractGradedUnitRange)
+
+The blocked range of values the graded space can take.
+"""
 BlockArrays.blockedrange(::AbstractGradedUnitRange) = error("Not implemented")
-sectors(::AbstractGradedUnitRange) = error("Not implemented")
+
+"""
+    nondual_sectors(::AbstractGradedUnitRange)
+
+A vector of the non-dual sectors of the graded space, one for each block in the space.
+"""
+nondual_sectors(::AbstractGradedUnitRange) = error("Not implemented")
+
+"""
+    isdual(::AbstractGradedUnitRange)
+
+If the graded space is dual or not.
+"""
 isdual(::AbstractGradedUnitRange) = error("Not implemented")
 
 # Overload if there are contravariant and covariant
@@ -41,8 +58,10 @@ Base.length(a::AbstractGradedUnitRange) = length(blockedrange(a))
 Base.step(a::AbstractGradedUnitRange) = step(blockedrange(a))
 Base.unitrange(b::AbstractGradedUnitRange) = first(b):last(b)
 
-sector(a::AbstractGradedUnitRange, b::Block{1}) = sectors(a)[only(b.n)]
+nondual_sector(a::AbstractGradedUnitRange, b::Block{1}) = nondual_sectors(a)[only(b.n)]
+sector(a::AbstractGradedUnitRange, b::Block{1}) = isdual(a) ? dual(nondual_sector(a, b)) : nondual_sector(a, b)
 sector(a::AbstractGradedUnitRange, I::Integer) = sector(a, findblock(a, I))
+sectors(a) = map(s -> isdual(a) ? dual(s) : s, nondual_sectors(a))
 
 # Tensor product, no sorting
 function tensor_product(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
