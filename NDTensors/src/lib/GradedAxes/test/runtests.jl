@@ -88,4 +88,45 @@ a = dual(a)
 @test sectors(a) == [U1(0), U1(-1)]
 @test sector(a, Block(1)) == U1(0)
 @test sector(a, Block(2)) == U1(-1)
+
+# Test fusion with dual spaces
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, a)
+@test !isdual(a2)
+@test sectors(a2) == [U1(0), U1(1), U1(2)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, a; isdual=true)
+@test isdual(a2)
+@test sectors(a2) == [U1(0), U1(1), U1(2)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), dual(a))
+@test isdual(a2)
+@test sectors(a2) == [U1(-2), U1(-1), U1(0)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), dual(a); isdual=false)
+@test !isdual(a2)
+@test sectors(a2) == [U1(-2), U1(-1), U1(0)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, dual(a))
+@test !isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(a, dual(a); isdual=true)
+@test isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), a)
+@test !isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
+
+a = gradedrange([U1(0), U1(1)], [2, 3])
+a2 = fuse(dual(a), a; isdual=true)
+@test isdual(a2)
+@test sectors(a2) == [U1(-1), U1(0), U1(1)]
 end

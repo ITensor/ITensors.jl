@@ -63,27 +63,31 @@ sector(a::AbstractGradedUnitRange, b::Block{1}) = isdual(a) ? dual(nondual_secto
 sector(a::AbstractGradedUnitRange, I::Integer) = sector(a, findblock(a, I))
 sectors(a) = map(s -> isdual(a) ? dual(s) : s, nondual_sectors(a))
 
+function default_isdual(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
+  return isdual(a1) && isdual(a2)
+end
+
 # Tensor product, no sorting
-function tensor_product(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
+function tensor_product(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange; isdual=default_isdual(a1, a2))
   a = tensor_product(blockedrange(a1), blockedrange(a2))
-  sectors_a = map(Iterators.product(sectors(a1), sectors(a2))) do (l1, l2)
-    return fuse(isdual(a1) ? dual(l1) : l1, isdual(a2) ? dual(l2) : l2)
-  end
-  return gradedrange(a, vec(sectors_a))
+  nondual_sectors_a = vec(map(Iterators.product(sectors(a1), sectors(a2))) do (l1, l2)
+      return fuse(isdual ? dual(l1) : l1, isdual ? dual(l2) : l2)
+  end)
+  return gradedrange(a, nondual_sectors_a, isdual)
 end
 
 function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRange)
-  show(io, mimetype, sectors(a))
+  show(io, mimetype, nondual_sectors(a))
   println(io)
   println(io, "isdual = ", isdual(a))
   return show(io, mimetype, blockedrange(a))
 end
 
 function blockmerge(a::AbstractGradedUnitRange, grouped_perm::Vector{Vector{Int}})
-  merged_sectors = map(group -> sector(a, Block(first(group))), grouped_perm)
+  merged_nondual_sectors = map(group -> nondual_sector(a, Block(first(group))), grouped_perm)
   lengths = blocklengths(a)
   merged_lengths = map(group -> sum(@view(lengths[group])), grouped_perm)
-  return gradedrange(merged_sectors, merged_lengths)
+  return gradedrange(merged_nondual_sectors, merged_lengths, isdual(a))
 end
 
 # Sort and merge by the grade of the blocks.
@@ -95,7 +99,10 @@ end
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
 function blockmergesortperm(a::AbstractGradedUnitRange)
-  return groupsortperm(sectors(a))
+  # If it is dual, reverse the sorting so the sectors
+  # end up sorted in the same way whether or not the space
+  # is dual.
+  return groupsortperm(nondual_sectors(a); rev=isdual(a))
 end
 
 function sub_axis(a::AbstractGradedUnitRange, blocks)
@@ -104,8 +111,8 @@ function sub_axis(a::AbstractGradedUnitRange, blocks)
   return AbstractGradedUnitRange(a_sub, sectors_sub)
 end
 
-function fuse(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
-  a = tensor_product(a1, a2)
+function fuse(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange; isdual=default_isdual(a1, a2))
+  a = tensor_product(a1, a2; isdual)
   return blockmergesort(a)
 end
 
