@@ -37,9 +37,9 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          Pkg.update();
           Pkg.develop(path=".");
           Pkg.develop(path="./NDTensors");
+          Pkg.update();
       - name: Run the tests
         shell: julia --project=monorepo {0}
         run: |
