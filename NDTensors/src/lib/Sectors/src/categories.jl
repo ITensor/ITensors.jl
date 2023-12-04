@@ -39,8 +39,6 @@ function ⊗(C::Category, a, b)
   end
 end
 
-Category(C::CategoryName) = Category(basename(C), groupdim(C), level(C))
-
 #
 # Version of Category type but with
 # basename held statically as a 
@@ -68,6 +66,8 @@ macro CategoryName_str(s)
   return :(CategoryName{$(Expr(:quote, String7(s)))})
 end
 
+Category(C::CategoryName) = Category(basename(C), groupdim(C), level(C))
+
 #
 # 2D rotation group U(1)
 #
@@ -82,7 +82,7 @@ U(N::Int) = Category("U", N)
 
 Z(N::Int) = Category("Z", N)
 
-⊗(::CategoryName"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
+⊗(C::CategoryName"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
 
 #
 # SUd(N)
