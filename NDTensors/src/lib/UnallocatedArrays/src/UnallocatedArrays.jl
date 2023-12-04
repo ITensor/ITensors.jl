@@ -3,8 +3,6 @@ using FillArrays: FillArrays, AbstractFill, Fill, Zeros, getindex_value
 using LinearAlgebra
 using NDTensors.SetParameters
 
-include("import.jl")
-
 include("abstractfill/abstractfill.jl")
 include("abstractfill/set_types.jl")
 
