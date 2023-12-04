@@ -25,6 +25,19 @@ using Test
     @test z1 ⊗ z1 == z0
   end
 
+  @testset "Ƶ_3" begin
+    z0 = Sector(0, Z(3))
+    z1 = Sector(1, Z(3))
+    z2 = Sector(2, Z(3))
+
+    @test z0 ⊗ z0 == z0
+    @test z0 ⊗ z1 == z1
+    @test z0 ⊗ z2 == z2
+    @test z1 ⊗ z0 == z1
+    @test z1 ⊗ z1 == z2
+    @test z1 ⊗ z2 == z0
+  end
+
   @testset "SU(2)" begin
     j0 = Sector(0, SU(2))
     j½ = Sector(1 / 2, SU(2))
