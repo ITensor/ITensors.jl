@@ -8,25 +8,20 @@ end
 
 allocate(A::AbstractFill) = alloctype(A)(parent(A))
 
-## TODO Still working here I am not sure these functions and the
-## Set parameter functions are working properly
-function set_alloctype(F::Type{<:AbstractFill}, alloc::Type{<:AbstractArray})
-  return set_parameter(F, Position{4}(), alloc)
-end
-## TODO this is broken 
-function set_eltype(F::Type{<:AbstractFill}, elt::Type)
-  return set_alloctype(set_eltype(parent(z), elt), set_eltype(alloctype(F), elt))
-end
-
+set_eltype(T::Type{<:AbstractFill}, elt::Type) = set_parameters(T, Position{1}(), elt)
+set_ndims(T::Type{<:AbstractFill}, n) = set_parameters(T, Position{2}(), n)
+set_axes(T::Type{<:AbstractFill}, ax::Type) = set_parameters(T, Position{3}(), ax)
+ 
 ## With these functions defined I can print UnallocatedArrays
 ## compute things like sum and norm, compute the size and length
 @inline Base.axes(A::AbstractFill) = axes(parent(A))
 Base.size(A::AbstractFill) = size(parent(A))
 function FillArrays.getindex_value(A::AbstractFill)
-  return FillArrays.getindex_value(parent(A))
+  return getindex_value(parent(A))
 end
 Base.copy(A::AbstractFill) = A
 
+## TODO get these working for UnallocatedX
 # mult_fill(a, b, val, ax) = Fill(val, ax)
 # mult_zeros(a, b, elt, ax) = Zeros{elt}(ax)
 # mult_ones(a, b, elt, ax) = Ones{elt}(ax)

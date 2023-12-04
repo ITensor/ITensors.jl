@@ -1,5 +1,5 @@
 module UnallocatedArrays
-using FillArrays: FillArrays, AbstractFill, Fill, Zeros
+using FillArrays: FillArrays, AbstractFill, Fill, Zeros, getindex_value
 using LinearAlgebra
 using NDTensors.SetParameters
 

@@ -3,12 +3,16 @@
 struct UnallocatedFill{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
        FillArrays.AbstractFill{ElT,N,Axes}
   f::FillArrays.Fill{ElT,N,Axes}
-  ## TODO use `set_parameters` as constructor to these types
 end
 
-function set_alloctype(f::Fill, alloc::Type{<:AbstractArray})
-  return UnallocatedFill{eltype(f),ndims(f),typeof(axes(f)),alloc}(f)
+## TODO use `set_parameters` as constructor to these types
+function UnallocatedFill(f::Fill, alloc::Type{<:AbstractArray})
+  return set_alloctype(set_axes(set_ndims(set_eltype(UnallocatedFill, eltype(f)), ndims(f)), typeof(axes(f))), alloc)(f)
 end
+
+set_alloctype(T::Type{<:UnallocatedFill}, alloc::Type{<:AbstractArray}) = set_parameters(T, Position{4}(), alloc)
+
+set_alloctype(f::Fill, alloc::Type{<:AbstractArray}) = UnallocatedFill(f, alloc)
 
 Base.parent(F::UnallocatedFill) = F.f
 
@@ -17,6 +21,6 @@ Base.parent(F::UnallocatedFill) = F.f
 ## UnallocatedArrays.complex(::AbstractFill) which calls Base.complex on the parent
 function Base.complex(A::UnallocatedFill)
   return set_alloctype(
-    complex(parent(A)), set_parameter(alloctype(A), Position{1}(), complex(eltype(A)))
+    complex(parent(A)), set_parameters(alloctype(A), Position{1}(), complex(eltype(A)))
   )
 end

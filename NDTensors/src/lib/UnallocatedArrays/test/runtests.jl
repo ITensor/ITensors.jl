@@ -11,10 +11,10 @@ include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTest
 using .NDTensorsTestUtils: devices_list
 
 @testset "Testing UnallocatedArrays" for dev in devices_list(ARGS),
-  elt in (Float64, Float32, ComplexF64, ComplexF32)
+elt in (Float64, Float32, ComplexF64, ComplexF32)
 
   z = Zeros{elt}((2, 3))
-  Z = UnallocatedZeros{eltype(z),ndims(z),typeof(axes(z)),dev(Matrix{eltype(z)})}(z)
+  Z = UnallocatedZeros(z, dev(Matrix{eltype(z)}))
 
   @test Z isa AbstractFill
   @test size(Z) == (2, 3)
@@ -43,6 +43,7 @@ using .NDTensorsTestUtils: devices_list
   # UnallocatedFill
   f = Fill{elt}(3.0, (2, 3, 4))
   F = UnallocatedFill{elt,ndims(f),typeof(axes(f)),Array{elt,ndims(f)}}(f)
+  @test F isa AbstractFill
   @test size(F) == (2, 3, 4)
   @test length(F) == 24
   @test sum(F) ≈ 3 * 24

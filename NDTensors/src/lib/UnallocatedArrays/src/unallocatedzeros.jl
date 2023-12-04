@@ -6,9 +6,13 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
   ## TODO use `set_parameters` as constructor to these types
 end
 
-function set_alloctype(z::Zeros, alloc::Type{<:AbstractArray})
-  return UnallocatedZeros{eltype(z),ndims(z),typeof(axes(z)),alloc}(z)
+function UnallocatedZeros(f::Zeros, alloc::Type{<:AbstractArray})
+  return set_alloctype(set_axes(set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))), alloc)(f)
 end
+
+set_alloctype(T::Type{<:UnallocatedZeros}, alloc::Type{<:AbstractArray}) = set_parameters(T, Position{4}(), alloc)
+
+set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, alloc)
 
 Base.parent(Z::UnallocatedZeros) = Z.z
 
@@ -17,6 +21,6 @@ Base.parent(Z::UnallocatedZeros) = Z.z
 ## UnallocatedArrays.complex(::AbstractFill) which calls Base.complex on the parent
 function Base.complex(A::UnallocatedZeros)
   return set_alloctype(
-    complex(parent(A)), set_parameter(alloctype(A), Position{1}(), complex(eltype(A)))
+    complex(parent(A)), set_parameters(alloctype(A), Position{1}(), complex(eltype(A)))
   )
 end
