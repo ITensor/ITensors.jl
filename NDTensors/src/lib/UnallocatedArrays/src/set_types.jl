@@ -28,5 +28,5 @@ end
 SetParameters.default_parameter(::Type{<:UnallocatedFill}, ::Position{4}) = UnspecifiedTypes.UnspecifiedArray
 SetParameters.default_parameter(::Type{<:UnallocatedZeros}, ::Position{4}) = UnspecifiedTypes.UnspecifiedArray
 
-nparameters(::Type{<:UnallocatedFill}) = Val(4)
-nparameters(::Type{<:UnallocatedZeros}) = Val(4)
+SetParameters.nparameters(::Type{<:UnallocatedFill}) = Val(4)
+SetParameters.nparameters(::Type{<:UnallocatedZeros}) = Val(4)

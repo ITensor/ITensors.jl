@@ -1,4 +1,3 @@
-using NDTensors.SetParameters: SetParameters
 ## TODO make unit tests for all of these functions
 ## TODO remove P4
 # `SetParameters.jl` overloads.
