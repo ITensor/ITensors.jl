@@ -7,10 +7,17 @@ end
 
 ## TODO use `set_parameters` as constructor to these types
 function UnallocatedFill(f::Fill, alloc::Type{<:AbstractArray})
-  return set_alloctype(set_axes(set_ndims(set_eltype(UnallocatedFill, eltype(f)), ndims(f)), typeof(axes(f))), alloc)(f)
+  return set_alloctype(
+    set_axes(set_ndims(set_eltype(UnallocatedFill, eltype(f)), ndims(f)), typeof(axes(f))),
+    alloc,
+  )(
+    f
+  )
 end
 
-set_alloctype(T::Type{<:UnallocatedFill}, alloc::Type{<:AbstractArray}) = set_parameters(T, Position{4}(), alloc)
+function set_alloctype(T::Type{<:UnallocatedFill}, alloc::Type{<:AbstractArray})
+  return set_parameters(T, Position{4}(), alloc)
+end
 
 set_alloctype(f::Fill, alloc::Type{<:AbstractArray}) = UnallocatedFill(f, alloc)
 

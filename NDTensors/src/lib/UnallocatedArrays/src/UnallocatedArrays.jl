@@ -1,6 +1,13 @@
 module UnallocatedArrays
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros, getindex_value
-using NDTensors.SetParameters: SetParameters, Position, default_parameter, get_parameter, nparameters, set_parameter, set_parameters
+using NDTensors.SetParameters:
+  SetParameters,
+  Position,
+  default_parameter,
+  get_parameter,
+  nparameters,
+  set_parameter,
+  set_parameters
 
 include("abstractfill/abstractfill.jl")
 include("abstractfill/set_types.jl")

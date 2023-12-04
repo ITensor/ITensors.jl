@@ -14,19 +14,23 @@ end
 
 # ## Setting paramaters
 function SetParameters.set_parameter(
-  T::Type{<:UnallocatedFill{P1, P2, P3, <:Any}}, ::Position{4}, P4::Type{<:AbstractArray}
+  T::Type{<:UnallocatedFill{P1,P2,P3,<:Any}}, ::Position{4}, P4::Type{<:AbstractArray}
 ) where {P1,P2,P3}
   return T{P4}
 end
 function SetParameters.set_parameter(
-  T::Type{<:UnallocatedZeros{P1, P2, P3, <:Any}}, ::Position{4}, P4::Type{<:AbstractArray}
+  T::Type{<:UnallocatedZeros{P1,P2,P3,<:Any}}, ::Position{4}, P4::Type{<:AbstractArray}
 ) where {P1,P2,P3}
   return T{P4}
 end
 
 # ## default parameters
-SetParameters.default_parameter(::Type{<:UnallocatedFill}, ::Position{4}) = UnspecifiedTypes.UnspecifiedArray
-SetParameters.default_parameter(::Type{<:UnallocatedZeros}, ::Position{4}) = UnspecifiedTypes.UnspecifiedArray
+function SetParameters.default_parameter(::Type{<:UnallocatedFill}, ::Position{4})
+  return UnspecifiedTypes.UnspecifiedArray
+end
+function SetParameters.default_parameter(::Type{<:UnallocatedZeros}, ::Position{4})
+  return UnspecifiedTypes.UnspecifiedArray
+end
 
 SetParameters.nparameters(::Type{<:UnallocatedFill}) = Val(4)
 SetParameters.nparameters(::Type{<:UnallocatedZeros}) = Val(4)

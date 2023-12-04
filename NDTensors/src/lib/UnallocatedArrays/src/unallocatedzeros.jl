@@ -7,10 +7,17 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
 end
 
 function UnallocatedZeros(f::Zeros, alloc::Type{<:AbstractArray})
-  return set_alloctype(set_axes(set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))), alloc)(f)
+  return set_alloctype(
+    set_axes(set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))),
+    alloc,
+  )(
+    f
+  )
 end
 
-set_alloctype(T::Type{<:UnallocatedZeros}, alloc::Type{<:AbstractArray}) = set_parameters(T, Position{4}(), alloc)
+function set_alloctype(T::Type{<:UnallocatedZeros}, alloc::Type{<:AbstractArray})
+  return set_parameters(T, Position{4}(), alloc)
+end
 
 set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, alloc)
 

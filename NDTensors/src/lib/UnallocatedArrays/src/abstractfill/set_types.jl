@@ -3,7 +3,11 @@
 # `SetParameters.jl` overloads.
 SetParameters.get_parameter(::Type{<:AbstractFill{P1}}, ::Position{1}) where {P1} = P1
 SetParameters.get_parameter(::Type{<:AbstractFill{<:Any,P2}}, ::Position{2}) where {P2} = P2
-SetParameters.get_parameter(::Type{<:AbstractFill{<:Any,<:Any,P3}}, ::Position{3}) where {P3} = P3
+function SetParameters.get_parameter(
+  ::Type{<:AbstractFill{<:Any,<:Any,P3}}, ::Position{3}
+) where {P3}
+  return P3
+end
 
 ## Setting paramaters
 # right now I am just defining the necessary ones for my implementation still working on full implementation
@@ -11,16 +15,25 @@ SetParameters.get_parameter(::Type{<:AbstractFill{<:Any,<:Any,P3}}, ::Position{3
 SetParameters.set_parameter(T::Type{<:AbstractFill}, ::Position{1}, P1) = T{P1}
 
 # Set parameter 2
-SetParameters.set_parameter(T::Type{<:AbstractFill{P1}}, ::Position{2}, P2) where {P1} = T{P2}
+function SetParameters.set_parameter(
+  T::Type{<:AbstractFill{P1}}, ::Position{2}, P2
+) where {P1}
+  return T{P2}
+end
 
 # Set parameter 3
-SetParameters.set_parameter(T::Type{<:AbstractFill{P1,P2}}, ::Position{3}, P3) where {P1,P2} = T{P3}
-
+function SetParameters.set_parameter(
+  T::Type{<:AbstractFill{P1,P2}}, ::Position{3}, P3
+) where {P1,P2}
+  return T{P3}
+end
 
 ## TODO define a specify_parameters function
 ## To quickly specify P1, P2, and P3 
 ## default parameters
-SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{1}) = UnspecifiedTypes.UnallocatedZeros
+function SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{1})
+  return UnspecifiedTypes.UnallocatedZeros
+end
 SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{2}) = 0
 SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{3}) = Tuple{}
 
