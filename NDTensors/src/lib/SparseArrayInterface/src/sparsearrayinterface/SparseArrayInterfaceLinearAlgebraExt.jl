@@ -12,9 +12,7 @@ function default_mul!!(a_dest::Number, a1::Number, a2::Number, α::Number=true, 
 end
 
 # a1 * a2 * α + a_dest * β
-# Assumes that `a_dest` has been zeroed out
-# already.
-function sparse_mul_zeroed!(
+function sparse_mul!(
   a_dest::AbstractMatrix,
   a1::AbstractMatrix,
   a2::AbstractMatrix,
@@ -30,19 +28,5 @@ function sparse_mul_zeroed!(
       end
     end
   end
-  return a_dest
-end
-
-# a1 * a2 * α + a_dest * β
-function sparse_mul!(
-  a_dest::AbstractMatrix,
-  a1::AbstractMatrix,
-  a2::AbstractMatrix,
-  α::Number=true,
-  β::Number=false;
-  (mul!!)=(default_mul!!),
-)
-  zerovector!(a_dest)
-  sparse_mul_zeroed!(a_dest, a1, a2, α, β; mul!!)
   return a_dest
 end
