@@ -1,4 +1,4 @@
-using Dictionaries: Dictionary
+using Dictionaries: Dictionary, set!
 using ..SparseArrayInterface:
   SparseArrayInterface, AbstractSparseArray, getindex_zero_function
 
@@ -54,6 +54,12 @@ function SparseArrayDOK{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}) where {
   return SparseArrayDOK{T}(dims)
 end
 
+# Axes version
+function SparseArrayDOK{T}(::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange}}) where {T}
+  @assert all(isone, first.(axes))
+  return SparseArrayDOK{T}(length.(axes))
+end
+
 function SparseArrayDOK{T}(::UndefInitializer, dims::Int...) where {T}
   return SparseArrayDOK{T}(dims...)
 end
@@ -66,6 +72,13 @@ end
 Base.size(a::SparseArrayDOK) = a.dims
 
 SparseArrayInterface.getindex_zero_function(a::SparseArrayDOK) = a.zero
+
+function SparseArrayInterface.setindex_notstored!(
+  a::SparseArrayDOK{<:Any,N}, value, I::CartesianIndex{N}
+) where {N}
+  set!(SparseArrayInterface.sparse_storage(a), I, value)
+  return a
+end
 
 function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
   return SparseArrayDOK{elt}(undef, dims, getindex_zero_function(a))
