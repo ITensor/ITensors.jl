@@ -4,5 +4,5 @@ include("initializers.jl")
 include("defaults.jl")
 include("allocate.jl")
 include("base.jl")
-include("linearalgebra.jl")
+include("AllocateDataLinearAlgebraExt/AllocateDataLinearAlgebraExt.jl")
 end

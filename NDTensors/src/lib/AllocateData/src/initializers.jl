@@ -12,7 +12,10 @@ struct UndefInitializer <: AbstractInitializer end
 const undef = UndefInitializer()
 
 # TODO: Move to `AllocateDataBaseExt`.
-base_initializer(::Base.UndefInitializer) = undef
+# Forward constructors to Base constructors.
+function (arraytype::Type{<:AbstractArray})(::AllocateData.UndefInitializer, axes::Tuple)
+  return arraytype(Base.undef, axes)
+end
 
 # TODO: Move to `AllocateDataBlockArraysExt`.
 using BlockArrays: BlockArrays
