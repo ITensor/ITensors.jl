@@ -1,3 +1,4 @@
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"

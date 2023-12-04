@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using LinearAlgebra: norm
+using LinearAlgebra: mul!, norm
 using NDTensors.SparseArrayInterface: SparseArrayInterface
 include("SparseArrayInterfaceTestUtils/SparseArrayInterfaceTestUtils.jl")
 using .SparseArrayInterfaceTestUtils.AbstractSparseArrays: AbstractSparseArrays
@@ -265,5 +265,30 @@ using Test: @test, @testset
   a′ .+= b
   @test a′ == a + b
   @test SparseArrayInterface.nstored(a′) == 2
+
+  # Matrix multiplication
+  a1 = SparseArray{elt}(2, 3)
+  a1[1, 2] = 12
+  a1[2, 1] = 21
+  a2 = SparseArray{elt}(3, 4)
+  a2[1, 1] = 11
+  a2[2, 2] = 22
+  a_dest = a1 * a2
+  @test Array(a_dest) ≈ Array(a1) * Array(a2)
+  @test a_dest isa SparseArray{elt}
+  @test SparseArrayInterface.nstored(a_dest) == 2
+
+  # In-place matrix multiplication
+  a1 = SparseArray{elt}(2, 3)
+  a1[1, 2] = 12
+  a1[2, 1] = 21
+  a2 = SparseArray{elt}(3, 4)
+  a2[1, 1] = 11
+  a2[2, 2] = 22
+  a_dest = SparseArray{elt}(2, 4)
+  mul!(a_dest, a1, a2)
+  @test Array(a_dest) ≈ Array(a1) * Array(a2)
+  @test a_dest isa SparseArray{elt}
+  @test SparseArrayInterface.nstored(a_dest) == 2
 end
 end
