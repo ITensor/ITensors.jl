@@ -1,3 +1,5 @@
+using InlineStrings: String7
+using HalfIntegers: Half
 
 """
 Representation of a category or group, storing its

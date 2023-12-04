@@ -39,12 +39,12 @@ data(q::Sector) = q.data
 nactive(q::Sector) = length(data(q))
 isactive(q::Sector) = (nactive(q) != 0)
 
-union(q1::Sector, q2::Sector) = Sector(union(data(q1), data(q2)))
-union(q1::Sector, v::Union{Vector,Tuple}) = Sector(union(data(q1), v))
-symdiff(q1::Sector, q2::Sector) = Sector(symdiff(data(q1), data(q2)))
-setdiff(q1::Sector, q2::Sector) = Sector(setdiff(data(q1), data(q2)))
-intersect(q1::Sector, q2::Sector) = Sector(intersect(data(q1), data(q2)))
-iterate(q::Sector, args...) = iterate(data(q), args...)
+Base.union(q1::Sector, q2::Sector) = Sector(union(data(q1), data(q2)))
+Base.union(q1::Sector, v::Union{Vector,Tuple}) = Sector(union(data(q1), v))
+Base.symdiff(q1::Sector, q2::Sector) = Sector(symdiff(data(q1), data(q2)))
+Base.setdiff(q1::Sector, q2::Sector) = Sector(setdiff(data(q1), data(q2)))
+Base.intersect(q1::Sector, q2::Sector) = Sector(intersect(data(q1), data(q2)))
+Base.iterate(q::Sector, args...) = iterate(data(q), args...)
 
 """
   ⊗(A::Sector,B::Sector)
@@ -63,27 +63,21 @@ function ⊗(A::Sector, B::Sector)
   qs = [union(B, q) for q in qs]
   return qs
 end
-*(a::Sector, b::Sector) = ⊗(a, b)
+Base.:(*)(a::Sector, b::Sector) = ⊗(a, b)
 
 # Direct sum of Sector and vectors of Sectors
 ⊕(a::Sector, b::Sector) = [a, b]
 ⊕(v::Vector{<:Sector}, b::Sector) = vcat(v, b)
 ⊕(a::Sector, v::Vector{Sector}) = vcat(a, v)
 
-function ==(A::Sector, B::Sector)
+function Base.:(==)(A::Sector, B::Sector)
   common_labels = zip(intersect(A, B), intersect(B, A))
   common_labels_match = all(t -> (t[1] == t[2]), common_labels)
   unique_labels_zero = all(l -> iszero(val(l)), symdiff(A, B))
   return common_labels_match && unique_labels_zero
 end
 
-# Treat [q] as q for comparison purposes
-# so we can check things like a ⊗ b = c
-# when a ⊗ b returns a Vector
-==(q::Sector, v::Vector{<:Sector}) = (length(v) == 1 && q == first(v))
-==(v::Vector{<:Sector}, q::Sector) = (q == v)
-
-function show(io::IO, q::Sector)
+function Base.show(io::IO, q::Sector)
   Na = nactive(q)
   print(io, "Sector(")
   for (n, s) in enumerate(data(q))
@@ -99,7 +93,7 @@ function show(io::IO, q::Sector)
   return print(io, ")")
 end
 
-function show(io::IO, q::Vector{<:Sector})
+function Base.show(io::IO, q::Vector{<:Sector})
   isempty(q) && return nothing
   symbol = ""
   for l in q

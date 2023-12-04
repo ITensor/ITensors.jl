@@ -47,9 +47,9 @@ function ⊗(s1::Label, s2::Label)
     Label(name(s1), v, category(s1)) for v in fusion_rule(category(s1), vals(s1), vals(s2))
   ]
 end
-*(s1::Label, s2::Label) = ⊗(s1, s2)
+Base.:(*)(s1::Label, s2::Label) = ⊗(s1, s2)
 
-function show(io::IO, l::Label)
+function Base.show(io::IO, l::Label)
   if nvals(category(l)) == 1
     return print(io, "Label(\"", name(l), "\",", val(l), ",", category(l), ")")
   end
