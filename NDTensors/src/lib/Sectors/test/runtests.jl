@@ -106,8 +106,8 @@ using Test
   end
 
   @testset "SU(2) with z component" begin
-    q½p = Sector("J", 1 / 2, 1//2, SUz(2))
-    q½m = Sector("J", 1 / 2, -1//2, SUz(2))
+    q½p = Sector("J", 1 / 2, 1 / 2, SUz(2))
+    q½m = Sector("J", 1 / 2, -1 / 2, SUz(2))
     q1p = Sector("J", 1, +1, SUz(2))
     q10 = Sector("J", 1, 0, SUz(2))
     q1m = Sector("J", 1, -1, SUz(2))
