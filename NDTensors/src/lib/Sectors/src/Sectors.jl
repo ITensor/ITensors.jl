@@ -13,6 +13,7 @@ import Base: *, ==, getindex, intersect, union, setdiff, symdiff, iterate, lengt
 export ⊗, ⊕, U, SU, SUd, SUz, Z, Fib, Ising, Sector, nactive, show
 
 include("categories.jl")
+include("category_definitions.jl")
 include("label.jl")
 include("sector.jl")
 
