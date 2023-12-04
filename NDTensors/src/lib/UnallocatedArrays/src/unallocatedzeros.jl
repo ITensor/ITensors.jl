@@ -1,9 +1,7 @@
 ## TODO Should Alloc also be of ElT and N or should there be 
 ## More freedom there?
-struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <:
-       FillArrays.AbstractZeros{ElT,N,Axes}
-  z::FillArrays.Zeros{ElT,N,Axes}
-  ## TODO use `set_parameters` as constructor to these types
+struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractZeros{ElT,N,Axes}
+  z::Zeros{ElT,N,Axes}
 end
 
 function UnallocatedZeros(f::Zeros, alloc::Type{<:AbstractArray})
