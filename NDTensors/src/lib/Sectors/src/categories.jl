@@ -9,6 +9,7 @@ Category(basename, N::Int=0) = Category(basename, N, 0)
 
 Category() = Category("")
 
+basename(C::Category) = C.basename
 groupdim(C::Category) = C.N
 level(C::Category) = C.level
 
@@ -27,6 +28,37 @@ end
 
 Base.show(io::IO, C::Category) = print(io, name(C))
 
+nvals(::Any) = 1
+nvals(C::Category) = nvals(CategoryName(C))
+
+function ⊗(C::Category, a, b) 
+  if nvals(C)==1
+    return ⊗(CategoryName(C), a[1], b[1])
+  else
+    return ⊗(CategoryName(C), a, b)
+  end
+end
+
+Category(C::CategoryName) = Category(basename(C),groupdim(C),level(C))
+
+
+#
+# Version of Category type but with
+# basename held statically as a 
+# type parameter. Mostly for internal use.
+#
+struct CategoryName{N}
+  N::Int
+  level::Int
+end
+
+CategoryName(C::Category) = CategoryName{basename(C)}(groupdim(C),level(C))
+
+basename(C::CategoryName{N}) where {N} = N
+groupdim(C::CategoryName) = C.N
+level(C::CategoryName) = C.level
+name(C::CategoryName) = name(Category(C))
+
 """
 Convenience macro for value dispatch on names 
 of Category objects. Writing (::CategoryName"Name", ...)
@@ -34,20 +66,8 @@ in function arguments allows Val-based dispatch based on
 the name value.
 """
 macro CategoryName_str(s)
-  return :(Val{$(Expr(:quote, String7(s)))})
+  return :(CategoryName{$(Expr(:quote, String7(s)))})
 end
-
-nvals(::Any) = 1
-nvals(C::Category) = nvals(Val(C.basename))
-
-function ⊗(C::Category, a, b) 
-  if nvals(C)==1
-    return ⊗(Val(C.basename), C, a[1], b[1])
-  else
-    return ⊗(Val(C.basename), C, a, b)
-  end
-end
-
 
 #
 # 2D rotation group U(1)
@@ -55,7 +75,7 @@ end
 
 U(N::Int) = Category("U", N)
 
-⊗(::CategoryName"U", C, n1, n2) = [(n1 + n2)]
+⊗(::CategoryName"U", n1, n2) = [(n1 + n2)]
 
 #
 # Cyclic group Ƶₙ
@@ -63,7 +83,7 @@ U(N::Int) = Category("U", N)
 
 Z(N::Int) = Category("Z", N)
 
-⊗(::CategoryName"Z", C, n1, n2) = [(n1 + n2) % groupdim(C)]
+⊗(::CategoryName"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
 
 #
 # SUd(N)
@@ -74,14 +94,13 @@ Z(N::Int) = Category("Z", N)
 
 SUd(N::Int, k=0) = Category("SUd", N, k)
 
-function ⊗(::CategoryName"SUd", C, d1, d2)
+function ⊗(C::CategoryName"SUd", d1, d2)
   if groupdim(C) != 2
     error(
       "Only SUd(2) and SUd(2)_k currently supported [input was SUd($(groupdim(C)),$(level(C)))]",
     )
   end
   if level(C) == 0
-    #@show collect((abs(d1 - d2)+1):(d1+d2-1))
     return collect((abs(d1 - d2)+1):2:(d1+d2-1))
   else
     error("level > 0 not yet supported for category SUd")
@@ -95,7 +114,7 @@ end
 
 SU(N::Int, k=0) = Category("SU", N, k)
 
-function ⊗(::CategoryName"SU", C, j1, j2)
+function ⊗(C::CategoryName"SU", j1, j2)
   if groupdim(C) != 2
     error(
       "Only SU(2) and SU(2)_k currently supported [input was SU($(groupdim(C)),$(level(C)))]",
@@ -115,7 +134,7 @@ end
 
 SUz(N::Int) = Category("SUz", N)
 
-function ⊗(::CategoryName"SUz", C, jm1::Tuple, jm2::Tuple)
+function ⊗(C::CategoryName"SUz", jm1::Tuple, jm2::Tuple)
   @assert groupdim(C) == 2
   @assert level(C) == 0
   j1,m1 = jm1
@@ -123,7 +142,7 @@ function ⊗(::CategoryName"SUz", C, jm1::Tuple, jm2::Tuple)
   return [(J,m1+m2) for J in abs(m1+m2):(j1+j2)]
 end
 
-nvals(::CategoryName"SUz") = 2
+nvals(C::CategoryName"SUz") = 2
 
 #
 # Fibonacci category
@@ -134,7 +153,7 @@ const Fib = Category("Fib")
 # Fusion rules of subcategory containing
 # {0,1} of A_4 i.e. su(2)₃
 # (see arxiv:2008.08598)
-⊗(::CategoryName"Fib", C, a1, a2) = ⊗(SU(2, 3), a1, a2)
+⊗(::CategoryName"Fib", a1, a2) = ⊗(SU(2, 3), a1, a2)
 
 val_to_str(::CategoryName"Fib", a) = ("1", "τ")[a + 1]
 string_to_val(::CategoryName"Fib", a::AbstractString) = (a == "τ") ? 1 : 0
@@ -153,7 +172,7 @@ const Ising = Category("Ising")
 # i.e. fusion rules are su(2)₂ a.k.a. A_3
 # but with different Frobenius-Schur sign
 # (see arxiv:2008.08598)
-⊗(::CategoryName"Ising", C, a1, a2) = ⊗(SU(2, 2), a1, a2)
+⊗(::CategoryName"Ising", a1, a2) = ⊗(SU(2, 2), a1, a2)
 
 val_to_str(::CategoryName"Ising", a) = ("1", "σ", "ψ")[Int(2 * a + 1)]
 

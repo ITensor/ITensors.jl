@@ -11,7 +11,7 @@ end
 
 Label() = Label("", 0, 0, Category())
 Label(name::AbstractString, val::Number, cat=U(1))  = Label(name,val,0,cat)
-Label(name::AbstractString, val::AbstractString, cat=U(1))  = Label(name,string_to_val(Val(cat.basename), val),0,cat)
+Label(name::AbstractString, val::AbstractString, cat=U(1))  = Label(name,string_to_val(cat, val),0,cat)
 
 Label(name::AbstractString, vals::Tuple, cat=U(1)) = Label(name, vals[1], vals[2], cat)
 
@@ -23,7 +23,8 @@ end
 vals(s::Label) = (s.val1,s.val2)
 category(s::Label) = s.cat
 
-string_to_val(C::Any,v::AbstractString) = error("String values not implemented for category $C")
+string_to_val(C::CategoryName,v::AbstractString) = error("String values not implemented for category $(name(C))")
+string_to_val(C::Category,v) = string_to_val(CategoryName(C),v)
 
 val_to_str(::Any, val) = string(val)
 function val_to_str(s::Label) 
