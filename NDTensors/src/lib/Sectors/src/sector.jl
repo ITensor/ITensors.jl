@@ -1,15 +1,11 @@
-#
-# Sector
-#
-
 const default_sector_size = 4
 default_sector_data() = Label
 const SStorage = SmallSet{default_sector_size,default_sector_data()}
 const MSStorage = MSmallSet{default_sector_size,default_sector_data()}
 
 """
-A Sector object stores a collection of up to four
-named values such as ("Sz", 1, U1) or ("N", 0, U1).
+A Sector is a sorted collection of named
+symmetry Labels such as ("J", 1, SU(2)) or ("N", 2, U(1))
 """
 struct Sector{T,D<:AbstractSmallSet{T}}
   data::D

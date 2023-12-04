@@ -1,4 +1,13 @@
 
+"""
+Representation of a category or group, storing its
+name and the dimension of its defining representation.
+One can also specify a quantum deformation "level".
+
+For example, Category("SU",2) is the group SU(2). 
+Category("Fib") is the Fibonacci category. 
+Category("SU",2,3) is the "quantum group" SU(2) level 3.
+"""
 struct Category
   basename::String7
   N::Int
@@ -31,12 +40,11 @@ Base.show(io::IO, C::Category) = print(io, name(C))
 nvals(::Any) = 1
 nvals(C::Category) = nvals(CategoryName(C))
 
-function ⊗(C::Category, a, b)
+function fusion_rule(C::Category, a, b)
   if nvals(C) == 1
-    return ⊗(CategoryName(C), a[1], b[1])
-  else
-    return ⊗(CategoryName(C), a, b)
+    return fusion_rule(CategoryName(C), a[1], b[1])
   end
+  return fusion_rule(CategoryName(C), a, b)
 end
 
 #
@@ -74,7 +82,7 @@ Category(C::CategoryName) = Category(basename(C), groupdim(C), level(C))
 
 U(N::Int) = Category("U", N)
 
-⊗(::CategoryName"U", n1, n2) = [(n1 + n2)]
+fusion_rule(::CategoryName"U", n1, n2) = [(n1 + n2)]
 
 #
 # Cyclic group Ƶₙ
@@ -82,7 +90,7 @@ U(N::Int) = Category("U", N)
 
 Z(N::Int) = Category("Z", N)
 
-⊗(C::CategoryName"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
+fusion_rule(C::CategoryName"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
 
 #
 # SUd(N)
@@ -92,7 +100,7 @@ Z(N::Int) = Category("Z", N)
 
 SUd(N::Int, k=0) = Category("SUd", N, k)
 
-function ⊗(C::CategoryName"SUd", d1, d2)
+function fusion_rule(C::CategoryName"SUd", d1, d2)
   if groupdim(C) != 2
     error(
       "Only SUd(2) and SUd(2)_k currently supported [input was SUd($(groupdim(C)),$(level(C)))]",
@@ -112,7 +120,7 @@ end
 
 SU(N::Int, k=0) = Category("SU", N, k)
 
-function ⊗(C::CategoryName"SU", j1, j2)
+function fusion_rule(C::CategoryName"SU", j1, j2)
   if groupdim(C) != 2
     error(
       "Only SU(2) and SU(2)_k currently supported [input was SU($(groupdim(C)),$(level(C)))]",
@@ -128,11 +136,13 @@ end
 #
 # Special unitary group SU(N)
 # but only conserving U(1) (Sz) subgroup
+# while still organizing spaces into
+# well-defined j values
 #
 
 SUz(N::Int) = Category("SUz", N)
 
-function ⊗(C::CategoryName"SUz", jm1::Tuple, jm2::Tuple)
+function fusion_rule(C::CategoryName"SUz", jm1::Tuple, jm2::Tuple)
   @assert groupdim(C) == 2
   @assert level(C) == 0
   j1, m1 = jm1
@@ -151,7 +161,7 @@ const Fib = Category("Fib")
 # Fusion rules of subcategory containing
 # {0,1} of A_4 i.e. su(2)₃
 # (see arxiv:2008.08598)
-⊗(::CategoryName"Fib", a1, a2) = ⊗(SU(2, 3), a1, a2)
+fusion_rule(::CategoryName"Fib", a1, a2) = fusion_rule(SU(2, 3), a1, a2)
 
 val_to_str(::CategoryName"Fib", a) = ("1", "τ")[a + 1]
 string_to_val(::CategoryName"Fib", a::AbstractString) = (a == "τ") ? 1 : 0
@@ -170,7 +180,7 @@ const Ising = Category("Ising")
 # i.e. fusion rules are su(2)₂ a.k.a. A_3
 # but with different Frobenius-Schur sign
 # (see arxiv:2008.08598)
-⊗(::CategoryName"Ising", a1, a2) = ⊗(SU(2, 2), a1, a2)
+fusion_rule(::CategoryName"Ising", a1, a2) = fusion_rule(SU(2, 2), a1, a2)
 
 val_to_str(::CategoryName"Ising", a) = ("1", "σ", "ψ")[Int(2 * a + 1)]
 
