@@ -42,7 +42,10 @@ include("TestBlockSparseArraysUtils.jl")
     a1[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
     a2 = BlockSparseArray{elt}([2, 3], [2, 3])
     a2[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
-    @show typeof(a1 * a2)
+    a_dest = a1 * a2
+    @test Array(a_dest) ≈ Array(a1) * Array(a2)
+    @test a_dest isa BlockSparseArray{elt}
+    @test block_nstored(a_dest) == 1
   end
 end
 end

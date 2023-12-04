@@ -1,4 +1,4 @@
-using BlockArrays: BlockArrays, AbstractBlockArray, Block, BlockIndex
+using BlockArrays: BlockArrays, AbstractBlockArray, Block, BlockIndex, BlockedUnitRange
 
 # TODO: Delete this. This function was replaced
 # by `nstored` but is still used in `NDTensors`.
