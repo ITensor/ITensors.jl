@@ -27,11 +27,17 @@ Sector(v::Vector) = Sector(SStorage(v; by=name))
 
 # Convenience constructor where extra parenthesis not needed for one label:
 Sector(name::String, val::Union{Number,String}, cat=U(1)) = Sector((name, val, cat))
-Sector(name::String, val1::Union{Number,String}, val2::Union{Number,String}, cat=U(1)) = Sector((name, (val1,val2), cat))
+function Sector(
+  name::String, val1::Union{Number,String}, val2::Union{Number,String}, cat=U(1)
+)
+  return Sector((name, (val1, val2), cat))
+end
 
 # Convenience constructor where name nor extra parenthesis not needed for one label:
 Sector(val::Union{Number,String}, cat=U(1)) = Sector(("", val, cat))
-Sector(val1::Union{Number,String},val2::Union{Number,String}, cat=U(1)) = Sector(("", (val1,val2), cat))
+function Sector(val1::Union{Number,String}, val2::Union{Number,String}, cat=U(1))
+  return Sector(("", (val1, val2), cat))
+end
 
 data(q::Sector) = q.data
 nactive(q::Sector) = length(data(q))

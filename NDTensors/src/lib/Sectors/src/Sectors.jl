@@ -10,19 +10,7 @@ import Base: *, ==, getindex, intersect, union, setdiff, symdiff, iterate, lengt
 #import NDTensors: ⊗
 #import NDTensors.SortedSets: AbstractSmallSet
 
-export
-  ⊗,
-  ⊕,
-  U,
-  SU,
-  SUd,
-  SUz,
-  Z,
-  Fib,
-  Ising,
-  Sector,
-  nactive,
-  show
+export ⊗, ⊕, U, SU, SUd, SUz, Z, Fib, Ising, Sector, nactive, show
 
 include("categories.jl")
 include("label.jl")

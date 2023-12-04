@@ -10,24 +10,28 @@ struct Label
 end
 
 Label() = Label("", 0, 0, Category())
-Label(name::AbstractString, val::Number, cat=U(1))  = Label(name,val,0,cat)
-Label(name::AbstractString, val::AbstractString, cat=U(1))  = Label(name,string_to_val(cat, val),0,cat)
+Label(name::AbstractString, val::Number, cat=U(1)) = Label(name, val, 0, cat)
+function Label(name::AbstractString, val::AbstractString, cat=U(1))
+  return Label(name, string_to_val(cat, val), 0, cat)
+end
 
 Label(name::AbstractString, vals::Tuple, cat=U(1)) = Label(name, vals[1], vals[2], cat)
 
 name(s::Label) = s.name
-function val(s::Label) 
+function val(s::Label)
   s.val2 != 0 && error("Second value of Label is non-zero = ($(s.val1),$(s.val2))")
   return s.val1
 end
-vals(s::Label) = (s.val1,s.val2)
+vals(s::Label) = (s.val1, s.val2)
 category(s::Label) = s.cat
 
-string_to_val(C::CategoryName,v::AbstractString) = error("String values not implemented for category $(name(C))")
-string_to_val(C::Category,v) = string_to_val(CategoryName(C),v)
+function string_to_val(C::CategoryName, v::AbstractString)
+  return error("String values not implemented for category $(name(C))")
+end
+string_to_val(C::Category, v) = string_to_val(CategoryName(C), v)
 
 val_to_str(::Any, val) = string(val)
-function val_to_str(s::Label) 
+function val_to_str(s::Label)
   if nvals(category(s)) == 1
     return val_to_str(Val(category(s).basename), val(s))
   else
@@ -59,4 +63,3 @@ function show(io::IO, l::Label)
     return print(io, "Label(\"", name(l), "\",", vals(l), ",", category(l), ")")
   end
 end
-

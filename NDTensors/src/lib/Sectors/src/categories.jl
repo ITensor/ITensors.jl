@@ -31,16 +31,15 @@ Base.show(io::IO, C::Category) = print(io, name(C))
 nvals(::Any) = 1
 nvals(C::Category) = nvals(CategoryName(C))
 
-function ⊗(C::Category, a, b) 
-  if nvals(C)==1
+function ⊗(C::Category, a, b)
+  if nvals(C) == 1
     return ⊗(CategoryName(C), a[1], b[1])
   else
     return ⊗(CategoryName(C), a, b)
   end
 end
 
-Category(C::CategoryName) = Category(basename(C),groupdim(C),level(C))
-
+Category(C::CategoryName) = Category(basename(C), groupdim(C), level(C))
 
 #
 # Version of Category type but with
@@ -52,7 +51,7 @@ struct CategoryName{N}
   level::Int
 end
 
-CategoryName(C::Category) = CategoryName{basename(C)}(groupdim(C),level(C))
+CategoryName(C::Category) = CategoryName{basename(C)}(groupdim(C), level(C))
 
 basename(C::CategoryName{N}) where {N} = N
 groupdim(C::CategoryName) = C.N
@@ -91,7 +90,6 @@ Z(N::Int) = Category("Z", N)
 # using dimensions as labels
 #
 
-
 SUd(N::Int, k=0) = Category("SUd", N, k)
 
 function ⊗(C::CategoryName"SUd", d1, d2)
@@ -101,7 +99,7 @@ function ⊗(C::CategoryName"SUd", d1, d2)
     )
   end
   if level(C) == 0
-    return collect((abs(d1 - d2)+1):2:(d1+d2-1))
+    return collect((abs(d1 - d2) + 1):2:(d1 + d2 - 1))
   else
     error("level > 0 not yet supported for category SUd")
   end
@@ -137,9 +135,9 @@ SUz(N::Int) = Category("SUz", N)
 function ⊗(C::CategoryName"SUz", jm1::Tuple, jm2::Tuple)
   @assert groupdim(C) == 2
   @assert level(C) == 0
-  j1,m1 = jm1
-  j2,m2 = jm2
-  return [(J,m1+m2) for J in abs(m1+m2):(j1+j2)]
+  j1, m1 = jm1
+  j2, m2 = jm2
+  return [(J, m1 + m2) for J in abs(m1 + m2):(j1 + j2)]
 end
 
 nvals(C::CategoryName"SUz") = 2
@@ -182,4 +180,3 @@ function string_to_val(::CategoryName"Ising", s::AbstractString)
   end
   return error("Unrecognized string \"$s\" for Ising category")
 end
-

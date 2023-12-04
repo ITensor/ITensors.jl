@@ -27,9 +27,9 @@ using Test
 
   @testset "SU(2)" begin
     j0 = Sector(0, SU(2))
-    j½ = Sector(1/2, SU(2))
+    j½ = Sector(1 / 2, SU(2))
     j1 = Sector(1, SU(2))
-    j3_2 = Sector(3/2, SU(2))
+    j3_2 = Sector(3 / 2, SU(2))
     j2 = Sector(2, SU(2))
 
     @test j0 ⊗ j0 == j0
@@ -76,7 +76,7 @@ using Test
     @test ψ ⊗ ψ == ı
 
     @test Sector(0, Ising) == ı
-    @test Sector(1/2, Ising) == σ
+    @test Sector(1 / 2, Ising) == σ
     @test Sector(1, Ising) == ψ
   end
 
@@ -93,15 +93,15 @@ using Test
   end
 
   @testset "SU(2) with z component" begin
-    q½p = Sector("J",1/2,1//2,SUz(2))
-    q½m = Sector("J",1/2,-1//2,SUz(2))
-    q1p = Sector("J",1,+1,SUz(2))
-    q10 = Sector("J",1, 0,SUz(2))
-    q1m = Sector("J",1,-1,SUz(2))
-    q00 = Sector("J",0, 0,SUz(2))
-    q22 = Sector("J",2,+2,SUz(2))
-    q21 = Sector("J",2,+1,SUz(2))
-    q20 = Sector("J",2, 0,SUz(2))
+    q½p = Sector("J", 1 / 2, 1//2, SUz(2))
+    q½m = Sector("J", 1 / 2, -1//2, SUz(2))
+    q1p = Sector("J", 1, +1, SUz(2))
+    q10 = Sector("J", 1, 0, SUz(2))
+    q1m = Sector("J", 1, -1, SUz(2))
+    q00 = Sector("J", 0, 0, SUz(2))
+    q22 = Sector("J", 2, +2, SUz(2))
+    q21 = Sector("J", 2, +1, SUz(2))
+    q20 = Sector("J", 2, 0, SUz(2))
 
     @test q½p ⊗ q½p == q1p
     @test q½p ⊗ q½m == q00 ⊕ q10
@@ -126,12 +126,12 @@ using Test
 
   @testset "U(1) ⊗ SU(2)" begin
     q0 = Sector()
-    q0h = Sector(("J", 1/2, SU(2)))
+    q0h = Sector(("J", 1 / 2, SU(2)))
     q10 = Sector(("N", 1), ("J", 0, SU(2)))
-    q1h = Sector(("N", 1), ("J", 1/2, SU(2)))
+    q1h = Sector(("N", 1), ("J", 1 / 2, SU(2)))
     q11 = Sector(("N", 1), ("J", 1, SU(2)))
-    q20 = Sector(("N",2))
-    q2h = Sector(("N", 2), ("J", 1/2, SU(2)))
+    q20 = Sector(("N", 2))
+    q2h = Sector(("N", 2), ("J", 1 / 2, SU(2)))
     q21 = Sector(("N", 2), ("J", 1, SU(2)))
     q22 = Sector(("N", 2), ("J", 2, SU(2)))
 
@@ -153,20 +153,19 @@ using Test
   end
 
   @testset "Comparison with unspecified labels" begin
-    q2 = Sector("N",2,U(1))
+    q2 = Sector("N", 2, U(1))
 
-    q20 = Sector(("N",2,U(1)),("J",0,SU(2)))
-
+    q20 = Sector(("N", 2, U(1)), ("J", 0, SU(2)))
 
     @test q20 == q2
 
-    q21 = Sector(("N",2,U(1)),("J",1,SU(2)))
+    q21 = Sector(("N", 2, U(1)), ("J", 1, SU(2)))
     @test q21 != q2
 
-    a = Sector(("A",0),("B",2))
-    b = Sector(("B",2),("C",0))
+    a = Sector(("A", 0), ("B", 2))
+    b = Sector(("B", 2), ("C", 0))
     @test a == b
-    c = Sector(("B",2),("C",1))
+    c = Sector(("B", 2), ("C", 1))
     @test a != c
   end
 end
