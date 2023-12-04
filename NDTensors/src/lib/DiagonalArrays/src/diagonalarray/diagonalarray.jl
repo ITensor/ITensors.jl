@@ -68,6 +68,14 @@ function DiagonalArray{T}(
   return DiagonalArray{T,N}(undef, d, zero)
 end
 
+# Axes version
+function DiagonalArray{T}(
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}, zero=Zero()
+) where {T,N}
+  @assert all(isone, first.(axes))
+  return DiagonalArray{T,N}(undef, length.(axes), zero)
+end
+
 function DiagonalArray{T}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
   return DiagonalArray{T,N}(undef, d)
 end

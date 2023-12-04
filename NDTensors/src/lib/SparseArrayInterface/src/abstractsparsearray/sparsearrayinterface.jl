@@ -13,6 +13,5 @@ end
 function SparseArrayInterface.setindex_notstored!(
   a::AbstractSparseArray{<:Any,N}, value, I::CartesianIndex{N}
 ) where {N}
-  set!(SparseArrayInterface.sparse_storage(a), I, value)
-  return a
+  return error("Setting the specified unstored index is not supported.")
 end
