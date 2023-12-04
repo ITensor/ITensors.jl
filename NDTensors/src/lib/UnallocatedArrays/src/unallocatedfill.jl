@@ -22,11 +22,16 @@ set_alloctype(f::Fill, alloc::Type{<:AbstractArray}) = UnallocatedFill(f, alloc)
 
 Base.parent(F::UnallocatedFill) = F.f
 
-## Here I can't overload ::AbstractFill because this overwrites Base.complex in 
-## Fill arrays which creates an infinite loop. Another option would be to write
-## UnallocatedArrays.complex(::AbstractFill) which calls Base.complex on the parent
+## These functions are the same for UnallocatedX
 function Base.complex(A::UnallocatedFill)
   return set_alloctype(
     complex(parent(A)), set_parameters(alloctype(A), Position{1}(), complex(eltype(A)))
   )
 end
+
+@inline Base.axes(A::UnallocatedFill) = axes(parent(A))
+Base.size(A::UnallocatedFill) = size(parent(A))
+function FillArrays.getindex_value(A::UnallocatedFill)
+  return getindex_value(parent(A))
+end
+Base.copy(A::UnallocatedFill) = A

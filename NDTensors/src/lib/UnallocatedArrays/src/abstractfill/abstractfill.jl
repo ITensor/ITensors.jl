@@ -12,15 +12,6 @@ set_eltype(T::Type{<:AbstractFill}, elt::Type) = set_parameters(T, Position{1}()
 set_ndims(T::Type{<:AbstractFill}, n) = set_parameters(T, Position{2}(), n)
 set_axes(T::Type{<:AbstractFill}, ax::Type) = set_parameters(T, Position{3}(), ax)
 
-## With these functions defined I can print UnallocatedArrays
-## compute things like sum and norm, compute the size and length
-@inline Base.axes(A::AbstractFill) = axes(parent(A))
-Base.size(A::AbstractFill) = size(parent(A))
-function FillArrays.getindex_value(A::AbstractFill)
-  return getindex_value(parent(A))
-end
-Base.copy(A::AbstractFill) = A
-
 ## TODO get these working for UnallocatedX
 # mult_fill(a, b, val, ax) = Fill(val, ax)
 # mult_zeros(a, b, elt, ax) = Zeros{elt}(ax)
