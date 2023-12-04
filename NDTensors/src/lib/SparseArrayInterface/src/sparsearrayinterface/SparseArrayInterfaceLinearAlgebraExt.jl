@@ -2,12 +2,20 @@ using LinearAlgebra: mul!, norm
 
 sparse_norm(a::AbstractArray, p::Real=2) = norm(sparse_storage(a))
 
-function default_mul!!(a_dest::AbstractMatrix, a1::AbstractMatrix, a2::AbstractMatrix, α::Number=true, β::Number=false)
+function default_mul!!(
+  a_dest::AbstractMatrix,
+  a1::AbstractMatrix,
+  a2::AbstractMatrix,
+  α::Number=true,
+  β::Number=false,
+)
   mul!(a_dest, a1, a2, α, β)
   return a_dest
 end
 
-function default_mul!!(a_dest::Number, a1::Number, a2::Number, α::Number=true, β::Number=false)
+function default_mul!!(
+  a_dest::Number, a1::Number, a2::Number, α::Number=true, β::Number=false
+)
   return a1 * a2 * α + a_dest * β
 end
 

@@ -1,7 +1,8 @@
 @eval module $(gensym())
-using Test: @test, @testset
+using BlockArrays: Block, BlockedUnitRange, blockedrange, blocklength, blocksize
+using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
-using BlockArrays: BlockedUnitRange, blockedrange, blocklength, blocksize
+using Test: @test, @testset
 include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
@@ -35,6 +36,13 @@ include("TestBlockSparseArraysUtils.jl")
         iszero(a[I])
       end
     end
+  end
+  @testset "LinearAlgebra" begin
+    a1 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a1[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    a2 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a2[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    @show typeof(a1 * a2)
   end
 end
 end

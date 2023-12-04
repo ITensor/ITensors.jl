@@ -14,6 +14,9 @@ BlockArrays.blocks(::AbstractBlockSparseArray) = error("Not implemented")
 
 blocktype(a::AbstractBlockSparseArray) = eltype(blocks(a))
 
+blockstype(::Type{<:AbstractBlockSparseArray}) = error("Not implemented")
+blocktype(arraytype::Type{<:AbstractBlockSparseArray}) = eltype(blockstype(arraytype))
+
 # Base `AbstractArray` interface
 function Base.getindex(a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}) where {N}
   return blocksparse_getindex(a, I...)
@@ -43,4 +46,12 @@ function BlockArrays.viewblock(
   a::AbstractBlockSparseArray{<:Any,N}, I::Block{N,Int}
 ) where {N}
   return blocksparse_viewblock(a, I)
+end
+
+# Needed by `BlockArrays` matrix multiplication interface
+function Base.similar(
+  arraytype::Type{<:AbstractBlockSparseArray{T}}, axes::Tuple{Vararg{BlockedUnitRange}}
+) where {T}
+  # TODO: Make generic for GPU!
+  return BlockSparseArray{T}(undef, axes)
 end
