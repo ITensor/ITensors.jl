@@ -19,26 +19,6 @@ function set_parameter(
 ) where {P2,P3}
   return T{P1,P2,P3}
 end
-function set_parameter(
-  T::Type{<:AbstractFill{<:Any,P2,P3,P4}}, ::Position{1}, P1
-) where {P2,P3,P4}
-  return T{P1,P2,P3,P4}
-end
-function set_parameter(
-  T::Type{<:AbstractFill{<:Any,<:Any,P3,P4}}, ::Position{1}, P1
-) where {P3,P4}
-  return T{P1,<:Any,P3,P4}
-end
-function set_parameter(
-  T::Type{<:AbstractFill{<:Any,P2,<:Any,P4}}, ::Position{1}, P1
-) where {P2,P4}
-  return T{P1,P2,<:Any,P4}
-end
-function set_parameter(
-  T::Type{<:AbstractFill{<:Any,<:Any,<:Any,P4}}, ::Position{1}, P1
-) where {P4}
-  return T{P1,<:Any,<:Any,P4}
-end
 
 # Set parameter 2
 set_parameter(T::Type{<:AbstractFill}, ::Position{2}, P2) = T{<:Any,P2}

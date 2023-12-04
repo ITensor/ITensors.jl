@@ -1,11 +1,13 @@
 module UnallocatedArrays
-using FillArrays
+using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using LinearAlgebra
 using NDTensors.SetParameters
 
 include("import.jl")
 
-include("abstractunallocatedarray.jl")
+include("abstractfill/abstractfill.jl")
+include("abstractfill/set_types.jl")
+
 include("unallocatedfill.jl")
 include("unallocatedzeros.jl")
 include("set_types.jl")
