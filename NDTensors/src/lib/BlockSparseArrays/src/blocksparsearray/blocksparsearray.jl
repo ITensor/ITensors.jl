@@ -59,8 +59,39 @@ function BlockSparseArray{T}(dims::Tuple{Vararg{Vector{Int}}}) where {T}
   return BlockSparseArray{T,length(dims)}(dims)
 end
 
+function BlockSparseArray{T}(axes::Tuple{Vararg{AbstractUnitRange}}) where {T}
+  return BlockSparseArray{T,length(axes)}(axes)
+end
+
 function BlockSparseArray{T}(dims::Vararg{Vector{Int}}) where {T}
   return BlockSparseArray{T}(dims)
+end
+
+# undef
+function BlockSparseArray{T,N}(
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}
+) where {T,N}
+  return BlockSparseArray{T,N}(axes)
+end
+
+function BlockSparseArray{T,N}(
+  ::UndefInitializer, dims::Tuple{Vararg{Vector{Int},N}}
+) where {T,N}
+  return BlockSparseArray{T,N}(dims)
+end
+
+function BlockSparseArray{T}(
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange}}
+) where {T}
+  return BlockSparseArray{T}(axes)
+end
+
+function BlockSparseArray{T}(::UndefInitializer, dims::Tuple{Vararg{Vector{Int}}}) where {T}
+  return BlockSparseArray{T}(dims)
+end
+
+function BlockSparseArray{T}(::UndefInitializer, dims::Vararg{Vector{Int}}) where {T}
+  return BlockSparseArray{T}(dims...)
 end
 
 # Base `AbstractArray` interface

@@ -21,6 +21,7 @@ using TupleTools
 
 for lib in [
   :AlgorithmSelection,
+  :AllocateData,
   :BaseExtensions,
   :SetParameters,
   :BroadcastMapConversion,
