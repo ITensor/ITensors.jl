@@ -52,14 +52,14 @@ end
 # basename held statically as a 
 # type parameter. Mostly for internal use.
 #
-struct CategoryName{N}
+struct CategoryName{Name}
   N::Int
   level::Int
 end
 
 CategoryName(C::Category) = CategoryName{basename(C)}(groupdim(C), level(C))
 
-basename(C::CategoryName{N}) where {N} = N
+basename(C::CategoryName{Name}) where {Name} = Name
 groupdim(C::CategoryName) = C.N
 level(C::CategoryName) = C.level
 name(C::CategoryName) = name(Category(C))
