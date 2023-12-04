@@ -7,5 +7,10 @@ function LinearAlgebra.Diagonal{T}(
 ) where {T}
   dims = to_dim.(axes)
   @assert allequal(dims)
-  return Diagonal{T}(Base.undef, first(dims))
+  diag_dim = first(dims)
+  if VERSION < v"1.7.0-DEV.986"
+    # https://github.com/JuliaLang/julia/pull/38282
+    return Diagonal(Vector{T}(Base.undef, diag_dim))
+  end
+  return Diagonal{T}(Base.undef, diag_dim)
 end
