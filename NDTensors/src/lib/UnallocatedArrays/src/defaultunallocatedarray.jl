@@ -1,10 +1,10 @@
-@inline Base.axes(A::Union{<:UnallocatedFill, <:UnallocatedZeros}) = axes(parent(A))
-Base.size(A::Union{<:UnallocatedFill, <:UnallocatedZeros}) = size(parent(A))
-function FillArrays.getindex_value(A::Union{<:UnallocatedFill, <:UnallocatedZeros})
+@inline Base.axes(A::Union{<:UnallocatedFill,<:UnallocatedZeros}) = axes(parent(A))
+Base.size(A::Union{<:UnallocatedFill,<:UnallocatedZeros}) = size(parent(A))
+function FillArrays.getindex_value(A::Union{<:UnallocatedFill,<:UnallocatedZeros})
   return getindex_value(parent(A))
 end
 
-function Base.complex(A::Union{<:UnallocatedFill, <:UnallocatedZeros})
+function Base.complex(A::Union{<:UnallocatedFill,<:UnallocatedZeros})
   return set_alloctype(
     complex(parent(A)), set_parameters(alloctype(A), Position{1}(), complex(eltype(A)))
   )
