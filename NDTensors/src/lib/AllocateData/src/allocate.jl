@@ -1,10 +1,16 @@
 # Allocate undefined memory.
-function allocate(arraytype::Type{<:AbstractArray}, ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange}})
+function allocate(
+  arraytype::Type{<:AbstractArray},
+  ::UndefInitializer,
+  axes::Tuple{Vararg{AbstractUnitRange}},
+)
   # Defaults to `undef` constructor, like `Base.similar`.
   return arraytype(undef, axes)
 end
 
-function allocate(arraytype::Type{<:AbstractArray}, initializer::AbstractInitializer, dims::Tuple)
+function allocate(
+  arraytype::Type{<:AbstractArray}, initializer::AbstractInitializer, dims::Tuple
+)
   return allocate(arraytype, initializer, to_axis.(dims))
 end
 

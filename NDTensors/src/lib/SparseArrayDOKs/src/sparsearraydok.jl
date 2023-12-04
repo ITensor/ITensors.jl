@@ -55,7 +55,9 @@ function SparseArrayDOK{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}) where {
 end
 
 # Axes version
-function SparseArrayDOK{T}(::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange}}) where {T}
+function SparseArrayDOK{T}(
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange}}
+) where {T}
   @assert all(isone, first.(axes))
   return SparseArrayDOK{T}(length.(axes))
 end
