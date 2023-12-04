@@ -20,17 +20,3 @@ end
 set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, alloc)
 
 Base.parent(Z::UnallocatedZeros) = Z.z
-
-## These functions are the same for UnallocatedX
-function Base.complex(A::UnallocatedZeros)
-  return set_alloctype(
-    complex(parent(A)), set_parameters(alloctype(A), Position{1}(), complex(eltype(A)))
-  )
-end
-
-@inline Base.axes(A::UnallocatedZeros) = axes(parent(A))
-Base.size(A::UnallocatedZeros) = size(parent(A))
-function FillArrays.getindex_value(A::UnallocatedZeros)
-  return getindex_value(parent(A))
-end
-Base.copy(A::UnallocatedZeros) = A
