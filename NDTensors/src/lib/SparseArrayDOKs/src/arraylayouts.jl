@@ -7,6 +7,8 @@ ArrayLayouts.MemoryLayout(::Type{<:SparseArrayDOK}) = SparseLayout()
 default_sparsearraytype(elt::Type) = SparseArrayDOK{elt}
 
 # TODO: Preserve GPU memory! Implement `CuSparseArrayLayout`, `MtlSparseLayout`?
-function Base.similar(::MulAdd{<:AbstractSparseLayout,<:AbstractSparseLayout}, elt::Type, axes)
+function Base.similar(
+  ::MulAdd{<:AbstractSparseLayout,<:AbstractSparseLayout}, elt::Type, axes
+)
   return similar(default_sparsearraytype(elt), axes)
 end

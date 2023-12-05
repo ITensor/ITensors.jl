@@ -11,7 +11,8 @@ using NDTensors.SparseArrayInterface: nstored
       ),
     ) isa Any
   end
-  @testset "DiagonalArray (eltype=$elt)" for elt in (Float32, Float64, ComplexF32, ComplexF64)
+  @testset "DiagonalArray (eltype=$elt)" for elt in
+                                             (Float32, Float64, ComplexF32, ComplexF64)
     @testset "Basics" begin
       a = fill(one(elt), 2, 3)
       @test diaglength(a) == 2
