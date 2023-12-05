@@ -23,6 +23,6 @@ function ArrayLayouts.materialize!(
   },
 )
   α, a1, a2, β, a_dest = m.α, m.A, m.B, m.β, m.C
-  mul!(blocks(a_dest), blocks(a1), blocks(a2), α, β)
+  mul!(a_dest, a1, a2, α, β)
   return a_dest
 end

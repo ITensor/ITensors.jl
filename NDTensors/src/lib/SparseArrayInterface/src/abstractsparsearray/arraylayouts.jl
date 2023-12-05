@@ -1,4 +1,4 @@
-using ArrayLayouts: ArrayLayouts, MemoryLayout
+using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
 
 abstract type AbstractSparseLayout <: MemoryLayout end
 
