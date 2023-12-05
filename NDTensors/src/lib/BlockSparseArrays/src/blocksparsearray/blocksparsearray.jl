@@ -99,3 +99,6 @@ Base.axes(a::BlockSparseArray) = a.axes
 
 # BlockArrays `AbstractBlockArray` interface
 BlockArrays.blocks(a::BlockSparseArray) = a.blocks
+
+# TODO: Use `SetParameters`.
+blockstype(::Type{<:BlockSparseArray{<:Any,<:Any,<:Any,B}}) where {B} = B
