@@ -42,6 +42,7 @@ NDTensorsTBLISExt = "TBLIS"
 
 [compat]
 Adapt = "3.7"
+ArrayLayouts = "1"
 BlockArrays = "0.16"
 Compat = "4.9"
 Dictionaries = "0.3.5"
