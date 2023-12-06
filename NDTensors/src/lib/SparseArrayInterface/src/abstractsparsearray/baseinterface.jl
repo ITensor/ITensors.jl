@@ -10,6 +10,10 @@ function Base.getindex(a::AbstractSparseArray, I...)
   return SparseArrayInterface.sparse_getindex(a, I...)
 end
 
+function Base.isassigned(a::AbstractSparseArray, I::Integer...)
+  return SparseArrayInterface.sparse_isassigned(a, I...)
+end
+
 function Base.setindex!(a::AbstractSparseArray, I...)
   return SparseArrayInterface.sparse_setindex!(a, I...)
 end

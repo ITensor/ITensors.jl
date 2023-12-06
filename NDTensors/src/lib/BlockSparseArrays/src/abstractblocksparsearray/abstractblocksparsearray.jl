@@ -42,6 +42,7 @@ function Base.setindex!(a::AbstractBlockSparseArray{<:Any,N}, value, I::Block{N}
 end
 
 # `BlockArrays` interface
+# TODO: Is this needed if `blocks` is defined?
 function BlockArrays.viewblock(
   a::AbstractBlockSparseArray{<:Any,N}, I::Block{N,Int}
 ) where {N}

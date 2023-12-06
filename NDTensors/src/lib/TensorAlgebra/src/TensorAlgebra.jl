@@ -1,4 +1,5 @@
 module TensorAlgebra
+# TODO: Move inside `include`.
 using ..AlgorithmSelection: Algorithm, @Algorithm_str
 using LinearAlgebra: mul!
 
