@@ -54,6 +54,10 @@ end
 function blocksparse_blocks(a::PermutedDimsArray)
   blocks_parent = blocksparse_blocks(parent(a))
   # Lazily permute each block
-  blocks_parent_mapped = mappedarray(Base.Fix2(PermutedDimsArray, perm(a)), Base.Fix2(PermutedDimsArray, iperm(a)), blocks_parent)
+  blocks_parent_mapped = mappedarray(
+    Base.Fix2(PermutedDimsArray, perm(a)),
+    Base.Fix2(PermutedDimsArray, iperm(a)),
+    blocks_parent,
+  )
   return PermutedDimsArray(blocks_parent_mapped, perm(a))
 end

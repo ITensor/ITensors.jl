@@ -152,7 +152,9 @@ function sparse_isassigned(a::AbstractArray, I::Integer...)
 end
 sparse_isassigned(a::AbstractArray, I::NotStoredIndex) = true
 sparse_isassigned(a::AbstractArray, I::StoredIndex) = sparse_isassigned(a, StorageIndex(I))
-sparse_isassigned(a::AbstractArray, I::StorageIndex) = isassigned(sparse_storage(a), index(I))
+function sparse_isassigned(a::AbstractArray, I::StorageIndex)
+  return isassigned(sparse_storage(a), index(I))
+end
 function sparse_isassigned(a::AbstractArray, I::CartesianIndex)
   return sparse_isassigned(a, storage_index(a, I))
 end

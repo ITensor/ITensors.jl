@@ -12,10 +12,14 @@ BlockSparseArrayStyle(::Val{N}) where {N} = BlockSparseArrayStyle{N}()
 BlockSparseArrayStyle{M}(::Val{N}) where {M,N} = BlockSparseArrayStyle{N}()
 
 Broadcast.BroadcastStyle(a::BlockSparseArrayStyle, ::DefaultArrayStyle{0}) = a
-function Broadcast.BroadcastStyle(::BlockSparseArrayStyle{N}, a::DefaultArrayStyle) where {N}
+function Broadcast.BroadcastStyle(
+  ::BlockSparseArrayStyle{N}, a::DefaultArrayStyle
+) where {N}
   return BroadcastStyle(DefaultArrayStyle{N}(), a)
 end
-function Broadcast.BroadcastStyle(::BlockSparseArrayStyle{N}, ::Broadcast.Style{Tuple}) where {N}
+function Broadcast.BroadcastStyle(
+  ::BlockSparseArrayStyle{N}, ::Broadcast.Style{Tuple}
+) where {N}
   return DefaultArrayStyle{N}()
 end
 
