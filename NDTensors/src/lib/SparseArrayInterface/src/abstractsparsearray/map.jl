@@ -1,3 +1,5 @@
+using ArrayLayouts: LayoutArray
+
 # Map
 function Base.map!(f, dest::AbstractArray, src::AbstractSparseArray)
   SparseArrayInterface.sparse_map!(f, dest, src)
@@ -10,6 +12,12 @@ function Base.copy!(dest::AbstractArray, src::AbstractSparseArray)
 end
 
 function Base.copyto!(dest::AbstractArray, src::AbstractSparseArray)
+  SparseArrayInterface.sparse_copyto!(dest, src)
+  return dest
+end
+
+# Fix ambiguity error
+function Base.copyto!(dest::LayoutArray, src::AbstractSparseArray)
   SparseArrayInterface.sparse_copyto!(dest, src)
   return dest
 end
