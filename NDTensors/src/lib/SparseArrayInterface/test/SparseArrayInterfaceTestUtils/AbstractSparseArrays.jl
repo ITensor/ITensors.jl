@@ -1,5 +1,6 @@
 module AbstractSparseArrays
 using NDTensors.SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
+using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
 
 struct SparseArray{T,N} <: AbstractSparseArray{T,N}
   data::Vector{T}
@@ -14,7 +15,17 @@ function SparseArray{T,N}(dims::Tuple{Vararg{Int,N}}) where {T,N}
 end
 SparseArray{T,N}(dims::Vararg{Int,N}) where {T,N} = SparseArray{T,N}(dims)
 SparseArray{T}(dims::Tuple{Vararg{Int}}) where {T} = SparseArray{T,length(dims)}(dims)
+function SparseArray{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}) where {T}
+  return SparseArray{T}(dims)
+end
 SparseArray{T}(dims::Vararg{Int}) where {T} = SparseArray{T}(dims)
+
+# ArrayLayouts interface
+struct SparseLayout <: MemoryLayout end
+ArrayLayouts.MemoryLayout(::Type{<:SparseArray}) = SparseLayout()
+function Base.similar(::MulAdd{<:SparseLayout,<:SparseLayout}, elt::Type, axes)
+  return similar(SparseArray{elt}, axes)
+end
 
 # AbstractArray interface
 Base.size(a::SparseArray) = a.dims

@@ -65,5 +65,12 @@ using Test: @test, @testset, @test_throws
   for I in LinearIndices(a)
     @test a[I] == a_r[I]
   end
+
+  # Matrix multiplication!
+  a1 = DiagonalArray(elt[1, 2], (2, 2))
+  a2 = DiagonalArray(elt[2, 3], (2, 2))
+  a_dest = a1 * a2
+  @test Array(a_dest) ≈ Array(a1) * Array(a2)
+  @test a_dest isa DiagonalArray{elt}
 end
 end

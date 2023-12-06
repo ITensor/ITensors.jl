@@ -6,8 +6,8 @@
 # Slicing
 
 using Test: @test, @testset, @test_broken
+using NDTensors.SparseArrayDOKs: SparseArrayDOK, SparseMatrixDOK
 using NDTensors.SparseArrayInterface: storage_indices, nstored
-using NDTensors.SparseArrayDOKs: SparseArrayDOK
 using SparseArrays: SparseMatrixCSC, nnz
 @testset "SparseArrayDOK (eltype=$elt)" for elt in
                                             (Float32, ComplexF32, Float64, ComplexF64)
@@ -56,6 +56,28 @@ using SparseArrays: SparseMatrixCSC, nnz
     a[1, 2, 2] = 122
     b = reshape(a, 2, 4)
     @test b[1, 4] == 122
+  end
+  @testset "Matrix multiplication" begin
+    a1 = SparseArrayDOK{elt}(2, 3)
+    a1[1, 2] = 12
+    a1[2, 1] = 21
+    a2 = SparseArrayDOK{elt}(3, 4)
+    a2[1, 1] = 11
+    a2[2, 2] = 22
+    a2[3, 3] = 33
+    a_dest = a1 * a2
+    # TODO: Use `densearray` to make generic to GPU.
+    @test Array(a_dest) ≈ Array(a1) * Array(a2)
+    # TODO: Make this work with `ArrayLayouts`.
+    @test nstored(a_dest) == 2
+    @test a_dest isa SparseMatrixDOK{elt}
+
+    a2 = randn(elt, (3, 4))
+    a_dest = a1 * a2
+    # TODO: Use `densearray` to make generic to GPU.
+    @test Array(a_dest) ≈ Array(a1) * Array(a2)
+    @test nstored(a_dest) == 8
+    @test a_dest isa Matrix{elt}
   end
   @testset "SparseMatrixCSC" begin
     a = SparseArrayDOK{elt}(2, 2)

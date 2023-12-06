@@ -20,5 +20,8 @@ include("abstractsparsearray/map.jl")
 include("abstractsparsearray/baseinterface.jl")
 include("abstractsparsearray/convert.jl")
 include("abstractsparsearray/SparseArrayInterfaceSparseArraysExt.jl")
+include("abstractsparsearray/abstractsparsematrix.jl")
 include("abstractsparsearray/SparseArrayInterfaceLinearAlgebraExt.jl")
+include("abstractsparsearray/abstractsparsevector.jl")
+include("abstractsparsearray/arraylayouts.jl")
 end
