@@ -18,9 +18,3 @@ function index_to_storage_index(
 ) where {N}
   return storage_index_to_index(parent(a), genperm(I, perm(a)))
 end
-
-## # TODO: Add `SubArray`, `ReshapedArray`, `Diagonal`, etc.
-## function getindex_zero_function(a::PermutedDimsArray)
-##   # TODO: Use a different function here?
-##   return genperm(getindex_zero_function(parent(a)), perm(a))
-## end
