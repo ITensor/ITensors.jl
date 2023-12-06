@@ -34,6 +34,7 @@ ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [compat]
 Adapt = "3.5"
+ArrayLayouts = "1"
 BitIntegers = "0.2, 0.3"
 ChainRulesCore = "1.10"
 Compat = "2.1, 3, 4"
