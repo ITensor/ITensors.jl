@@ -33,7 +33,22 @@ using .NDTensorsTestUtils: devices_list
 
   ## Things that are still broken
   R = Zc * Zc'
-  @test_broken R isa UnallocatedZeros
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (2,2)
+  M = rand(elt, (3,4))
+  R = Zc * M
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (2,4)
+  R = M' * Zc'
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (4,2)
+  R = transpose(M) * transpose(Zc)
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (4,2)
   R = Zc + Zc
   @test_broken R isa UnallocatedZeros
   R = Zc .* Zc

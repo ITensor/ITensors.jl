@@ -20,3 +20,15 @@ end
 set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, alloc)
 
 Base.parent(Z::UnallocatedZeros) = Z.z
+
+FillArrays.mult_zeros(a::UnallocatedZeros, b, elt, ax) = UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+FillArrays.mult_zeros(a, b::UnallocatedZeros, elt, ax) = mult_zeros(b,a, elt, ax)
+function FillArrays.mult_zeros(a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)
+  @assert(alloctype(a) == alloctype(b))
+  return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+end
+
+# broadcasted_zeros(f, a, elt, ax) = Zeros{elt}(ax)
+# broadcasted_zeros(f, a, b, elt, ax) = Zeros{elt}(ax)
+
+# kron_zeros(a, b, elt, ax) = Zeros{elt}(ax)
