@@ -1,5 +1,14 @@
 module UnallocatedArrays
-using FillArrays: FillArrays, AbstractFill, AbstractZeros, Fill, Zeros, broadcasted_zeros, getindex_value, kron_zeros, mult_zeros
+using FillArrays:
+  FillArrays,
+  AbstractFill,
+  AbstractZeros,
+  Fill,
+  Zeros,
+  broadcasted_zeros,
+  getindex_value,
+  kron_zeros,
+  mult_zeros
 using NDTensors.SetParameters:
   SetParameters,
   Position,

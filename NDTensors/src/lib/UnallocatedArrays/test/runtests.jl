@@ -1,17 +1,15 @@
-#@eval module $(gensym())
+@eval module $(gensym())
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
-## Could potentially need this
-#using GPUArraysCore: @allowscalar
 
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
 
-#@testset "Testing UnallocatedArrays" for dev in devices_list(ARGS),
- # elt in (Float64, Float32, ComplexF64, ComplexF32)
+@testset "Testing UnallocatedArrays" for dev in devices_list(ARGS),
+  elt in (Float64, Float32, ComplexF64, ComplexF32)
 
   z = Zeros{elt}((2, 3))
   Z = UnallocatedZeros(z, dev(Matrix{eltype(z)}))
@@ -35,28 +33,28 @@ using .NDTensorsTestUtils: devices_list
   R = Zc * Zc'
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
-  @test size(R) == (2,2)
-  M = rand(elt, (3,4))
+  @test size(R) == (2, 2)
+  M = rand(elt, (3, 4))
   R = Zc * M
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
-  @test size(R) == (2,4)
+  @test size(R) == (2, 4)
   R = M' * Zc'
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
-  @test size(R) == (4,2)
+  @test size(R) == (4, 2)
   R = transpose(M) * transpose(Zc)
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
-  @test size(R) == (4,2)
-  
+  @test size(R) == (4, 2)
+
   R = eltype(Zc)(2.0) .* Zc
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
   R = Zc .* eltype(Zc)(2.0)
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
-  
+
   R = Zc .* Zc
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
@@ -74,7 +72,7 @@ using .NDTensorsTestUtils: devices_list
   @test_broken alloctype(R) == alloctype(Zc)
   R = Zc .+ eltype(Zc)(2.0)
   @test_broken R isa UnallocatedFill
-  
+
   #########################################
   # UnallocatedFill
   f = Fill{elt}(3.0, (2, 3, 4))

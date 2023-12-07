@@ -21,21 +21,29 @@ set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, allo
 
 Base.parent(Z::UnallocatedZeros) = Z.z
 
-FillArrays.mult_zeros(a::UnallocatedZeros, b, elt, ax) = UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
-FillArrays.mult_zeros(a, b::UnallocatedZeros, elt, ax) = mult_zeros(b,a, elt, ax)
+function FillArrays.mult_zeros(a::UnallocatedZeros, b, elt, ax)
+  return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+end
+FillArrays.mult_zeros(a, b::UnallocatedZeros, elt, ax) = mult_zeros(b, a, elt, ax)
 function FillArrays.mult_zeros(a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)
   @assert(alloctype(a) == alloctype(b))
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end
 
-FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, elt, ax) = UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+function FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, elt, ax)
+  return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+end
 function FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)
-  @assert(alloctype(a) == alloctype(b)) 
+  @assert(alloctype(a) == alloctype(b))
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end
 
-FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, b, elt, ax) = UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
-FillArrays.broadcasted_zeros(f, a, b::UnallocatedZeros, elt, ax) = broadcasted_zeros(f, b, a, elt, ax)
+function FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, b, elt, ax)
+  return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+end
+function FillArrays.broadcasted_zeros(f, a, b::UnallocatedZeros, elt, ax)
+  return broadcasted_zeros(f, b, a, elt, ax)
+end
 
 function FillArrays.kron_zeros(a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)
   @assert alloctype(a) == alloctype(b)
@@ -48,5 +56,5 @@ function FillArrays.kron_zeros(a::UnallocatedZeros, b::UnallocatedFill, elt, ax)
 end
 
 function FillArrays.kron_zeros(a::UnallocatedFill, b::UnallocatedZeros, elt, ax)
-  kron_zeros(b,a,elt,ax)
+  return kron_zeros(b, a, elt, ax)
 end

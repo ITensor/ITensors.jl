@@ -10,11 +10,11 @@ function Base.complex(A::Union{<:UnallocatedFill,<:UnallocatedZeros})
   )
 end
 
-function Base.transpose(a::Union{<:UnallocatedFill, <:UnallocatedZeros})
+function Base.transpose(a::Union{<:UnallocatedFill,<:UnallocatedZeros})
   return set_alloctype(transpose(parent(a)), alloctype(a))
 end
 
-function Base.adjoint(a::Union{<:UnallocatedFill, <:UnallocatedZeros})
+function Base.adjoint(a::Union{<:UnallocatedFill,<:UnallocatedZeros})
   return set_alloctype(adjoint(parent(a)), alloctype(a))
 end
 
