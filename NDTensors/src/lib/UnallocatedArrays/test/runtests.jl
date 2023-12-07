@@ -59,8 +59,8 @@ using .NDTensorsTestUtils: devices_list
   @test R isa UnallocatedZeros
   @test alloctype(R) == alloctype(Zc)
 
-  A = UnallocatedZeros(Zeros{elt}(2), Vector{Float32})
-  B = UnallocatedZeros(Zeros{elt}(2), Vector{Float32})
+  A = UnallocatedZeros(Zeros{elt}(2), Vector{elt})
+  B = UnallocatedZeros(Zeros{elt}(2), Vector{elt})
   C = kron(A, B)
   @test C isa UnallocatedZeros
   @test alloctype(C) == alloctype(B)
