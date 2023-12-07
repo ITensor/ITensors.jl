@@ -157,7 +157,7 @@ using Zygote: ZygoteRuleConfig, gradient
     atol=1.0e-7,
   )
 
-  if (VERSION > v"1.7")
+  if VERSION > v"1.7"
     f = function (x)
       y = ITensor(exp(-x * Op("X", 1) * Op("X", 2)), s)
       return norm(y)
@@ -251,7 +251,7 @@ using Zygote: ZygoteRuleConfig, gradient
   args = (x,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-  if (VERSION > v"1.7")
+  if VERSION > v"1.7"
     f = function (x)
       y = exp(-x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2)); alg=Trotter{1}(1))
       U = ITensor(y, s)
