@@ -1,9 +1,5 @@
 using Base.Broadcast: Broadcast
 
-function Broadcast.BroadcastStyle(arraytype::Type{<:AbstractBlockSparseArray})
-  return BlockSparseArrayStyle{ndims(arraytype)}()
-end
-
-function Broadcast.BroadcastStyle(arraytype::Type{<:PermutedDimsBlockSparseArray})
+function Broadcast.BroadcastStyle(arraytype::Type{<:BlockSparseArrayLike})
   return BlockSparseArrayStyle{ndims(arraytype)}()
 end

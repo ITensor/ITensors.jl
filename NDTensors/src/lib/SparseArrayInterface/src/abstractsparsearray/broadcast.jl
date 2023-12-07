@@ -1,4 +1,4 @@
 # Broadcasting
-function Broadcast.BroadcastStyle(arraytype::Type{<:AbstractSparseArray})
+function Broadcast.BroadcastStyle(arraytype::Type{<:SparseArrayLike})
   return SparseArrayInterface.SparseArrayStyle{ndims(arraytype)}()
 end
