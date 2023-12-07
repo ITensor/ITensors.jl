@@ -36,4 +36,17 @@ end
 
 FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, b, elt, ax) = UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 FillArrays.broadcasted_zeros(f, a, b::UnallocatedZeros, elt, ax) = broadcasted_zeros(f, b, a, elt, ax)
-# kron_zeros(a, b, elt, ax) = Zeros{elt}(ax)
+
+function FillArrays.kron_zeros(a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)
+  @assert alloctype(a) == alloctype(b)
+  return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+end
+
+function FillArrays.kron_zeros(a::UnallocatedZeros, b::UnallocatedFill, elt, ax)
+  @assert alloctype(a) == alloctype(b)
+  return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
+end
+
+function FillArrays.kron_zeros(a::UnallocatedFill, b::UnallocatedZeros, elt, ax)
+  kron_zeros(b,a,elt,ax)
+end
