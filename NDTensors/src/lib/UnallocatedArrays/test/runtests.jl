@@ -119,10 +119,10 @@ using .NDTensorsTestUtils: devices_list
     #F2 .+= elt(2.0) ## This is broken
     F2 = F2 .+ elt(2.0)
     @test F2 isa UnallocatedFill
-    @test F2[1,1,1] == elt(8.0)
+    @test F2[1, 1, 1] == elt(8.0)
     @test alloctype(F2) == alloctype(F)
 
-    F = UnallocatedFill(Fill(elt(2.0), (2,3)), dev(Matrix{elt}))
+    F = UnallocatedFill(Fill(elt(2.0), (2, 3)), dev(Matrix{elt}))
     R = Z + F
     @test R isa UnallocatedFill
     @test alloctype(R) == alloctype(Z)
@@ -164,9 +164,8 @@ using .NDTensorsTestUtils: devices_list
   R = Z .+ elt(2.0)
   @test_broken R isa UnallocatedFill
 
-  F = UnallocatedFill(Fill(elt(2),(2,3)), dev(Matrix{elt}))
+  F = UnallocatedFill(Fill(elt(2), (2, 3)), dev(Matrix{elt}))
   R = F + F
   @test_broken R isa UnallocatedFill
-
 end
 end
