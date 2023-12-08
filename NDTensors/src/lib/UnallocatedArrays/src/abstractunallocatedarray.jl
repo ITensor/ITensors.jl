@@ -18,13 +18,11 @@ function Base.adjoint(a::Union{<:UnallocatedFill,<:UnallocatedZeros})
   return set_alloctype(adjoint(parent(a)), alloctype(a))
 end
 
-# mult_fill(a, b, val, ax) = Fill(val, ax)
-# mult_ones(a, b, elt, ax) = Ones{elt}(ax)
+## TODO fix this because reshape loses alloctype
+#FillArrays.reshape(a::Union{<:UnallocatedFill, <:UnallocatedZeros}, dims) = set_alloctype(reshape(parent(a), dims), allocate(a))
 
-# broadcasted_fill(f, a, val, ax) = Fill(val, ax)
-# broadcasted_fill(f, a, b, val, ax) = Fill(val, ax)
-# broadcasted_ones(f, a, elt, ax) = Ones{elt}(ax)
-# broadcasted_ones(f, a, b, elt, ax) = Ones{elt}(ax)
+# function Adapt.adapt_storage(to::Type{<:AbstractArray}, x::Union{<:UnallocatedFill, <:UnallocatedZeros})
+#   return set_alloctype(parent(x), to)
+# end
 
-# kron_fill(a, b, val, ax) = Fill(val, ax)
-# kron_ones(a, b, elt, ax) = Ones{elt}(ax)
+# function Adapt.adapt_storage(to::Type{<:Number}, x::)
