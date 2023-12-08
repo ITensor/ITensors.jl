@@ -21,3 +21,33 @@ end
 set_alloctype(f::Fill, alloc::Type{<:AbstractArray}) = UnallocatedFill(f, alloc)
 
 Base.parent(F::UnallocatedFill) = F.f
+
+# mult_fill(a, b, val, ax) = Fill(val, ax)
+function FillArrays.mult_fill(a::UnallocatedFill, b, val, ax)
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
+FillArrays.mult_fill(a, b::UnallocatedFill, val, ax) = mult_fill(b, a, val, ax)
+function FillArrays.mult_fill(a::UnallocatedFill, b::UnallocatedFill, val, ax)
+  @assert(alloctype(a) == alloctype(b))
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
+
+function FillArrays.broadcasted_fill(f, a::UnallocatedFill, val, ax)
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
+function FillArrays.broadcasted_fill(f, a::UnallocatedFill, b::UnallocatedFill, val, ax)
+  @assert(alloctype(a) == alloctype(b))
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
+
+function FillArrays.broadcasted_fill(f, a::UnallocatedFill, b, val, ax)
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
+function FillArrays.broadcasted_fill(f, a, b::UnallocatedFill, val, ax)
+  return broadcasted_fill(f, b, a, val, ax)
+end
+
+function FillArrays.kron_fill(a::UnallocatedFill, b::UnallocatedFill, val, ax)
+  @assert alloctype(a) == alloctype(b)
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
