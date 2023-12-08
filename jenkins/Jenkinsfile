@@ -34,7 +34,7 @@ pipeline {
             '''
           }
         }
-        stage('julia-1.8') {
+        stage('julia-1.9') {
 	  options {
             timeout(time: 45, unit: 'MINUTES')
           }
