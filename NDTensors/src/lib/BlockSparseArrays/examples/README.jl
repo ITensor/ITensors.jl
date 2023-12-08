@@ -64,6 +64,8 @@ function main()
   @test permuted_b == permutedims(Array(b), (2, 1))
 
   @test b + b ≈ Array(b) + Array(b)
+  @test b + b isa BlockSparseArray
+  @test block_nstored(b + b) == 2
 
   scaled_b = 2b
   @test scaled_b ≈ 2Array(b)

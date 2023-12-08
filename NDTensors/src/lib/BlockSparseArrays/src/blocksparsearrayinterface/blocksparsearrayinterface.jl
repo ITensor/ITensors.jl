@@ -1,5 +1,10 @@
 using BlockArrays: Block, BlockIndex, block, blocks, blockcheckbounds, findblockindex
-using ..SparseArrayInterface: nstored
+using ..SparseArrayInterface: perm, iperm, nstored
+using MappedArrays: mappedarray
+
+function blocksparse_blocks(a::AbstractArray)
+  return blocks(a)
+end
 
 function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where {N}
   @boundscheck checkbounds(a, I...)
@@ -24,7 +29,7 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Block{N}) wh
   # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
   i = I.n
   @boundscheck blockcheckbounds(a, i...)
-  blocks(a)[i...] = value
+  blocksparse_blocks(a)[i...] = value
   return a
 end
 
@@ -32,9 +37,27 @@ function blocksparse_viewblock(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
   # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
   i = I.n
   @boundscheck blockcheckbounds(a, i...)
-  return blocks(a)[i...]
+  return blocksparse_blocks(a)[i...]
 end
 
 function block_nstored(a::AbstractArray)
-  return nstored(blocks(a))
+  return nstored(blocksparse_blocks(a))
+end
+
+# Base
+function blocksparse_map!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
+  map!(f, blocks(a_dest), blocks.(a_srcs)...)
+  return a_dest
+end
+
+# PermutedDimsArray
+function blocksparse_blocks(a::PermutedDimsArray)
+  blocks_parent = blocksparse_blocks(parent(a))
+  # Lazily permute each block
+  blocks_parent_mapped = mappedarray(
+    Base.Fix2(PermutedDimsArray, perm(a)),
+    Base.Fix2(PermutedDimsArray, iperm(a)),
+    blocks_parent,
+  )
+  return PermutedDimsArray(blocks_parent_mapped, perm(a))
 end

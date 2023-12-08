@@ -86,7 +86,6 @@ function sparse_one!(a::AbstractMatrix)
   return a
 end
 
-# TODO: Make `sparse_one!`?
 function sparse_one(a::AbstractMatrix)
   a = sparse_zero(a)
   sparse_one!(a)
@@ -108,7 +107,7 @@ end
 
 function sparse_reshape!(a_dest::AbstractArray, a_src::AbstractArray, dims)
   @assert length(a_src) == prod(dims)
-  sparse_fill!(a_dest, zero(eltype(a_src)))
+  sparse_zero!(a_dest)
   linear_inds = LinearIndices(a_src)
   dest_cartesian_inds = CartesianIndices(dims)
   for I in stored_indices(a_src)

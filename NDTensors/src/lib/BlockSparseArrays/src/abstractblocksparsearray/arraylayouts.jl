@@ -3,6 +3,7 @@ using BlockArrays: BlockLayout
 using ..SparseArrayInterface: SparseLayout
 using LinearAlgebra: mul!
 
+# TODO: Generalize to `BlockSparseArrayLike`.
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:AbstractBlockSparseArray})
   outer_layout = typeof(MemoryLayout(blockstype(arraytype)))
   inner_layout = typeof(MemoryLayout(blocktype(arraytype)))

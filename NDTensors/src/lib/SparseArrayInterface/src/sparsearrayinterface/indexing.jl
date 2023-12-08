@@ -31,6 +31,10 @@ end
 MaybeStoredIndex(I, I_storage) = StoredIndex(I, StorageIndex(I_storage))
 MaybeStoredIndex(I, I_storage::Nothing) = NotStoredIndex(I)
 
+# Convert the index into an index into the storage.
+# Return `NotStoredIndex(I)` if it isn't in the storage.
+storage_index(a::AbstractArray, I...) = MaybeStoredIndex(a, I...)
+
 function storage_indices(a::AbstractArray)
   return eachindex(sparse_storage(a))
 end
@@ -68,7 +72,7 @@ end
 # Implementation of element access
 function _sparse_getindex(a::AbstractArray{<:Any,N}, I::CartesianIndex{N}) where {N}
   @boundscheck checkbounds(a, I)
-  return sparse_getindex(a, MaybeStoredIndex(a, I))
+  return sparse_getindex(a, storage_index(a, I))
 end
 
 # Handle trailing indices or linear indexing
@@ -99,7 +103,7 @@ end
 # Implementation of element access
 function _sparse_setindex!(a::AbstractArray{<:Any,N}, value, I::CartesianIndex{N}) where {N}
   @boundscheck checkbounds(a, I)
-  sparse_setindex!(a, value, MaybeStoredIndex(a, I))
+  sparse_setindex!(a, value, storage_index(a, I))
   return a
 end
 
@@ -140,6 +144,19 @@ function sparse_setindex!(a::AbstractArray, value, I::NotStoredIndex)
     setindex_notstored!(a, value, index(I))
   end
   return a
+end
+
+# isassigned
+function sparse_isassigned(a::AbstractArray, I::Integer...)
+  return sparse_isassigned(a, CartesianIndex(I))
+end
+sparse_isassigned(a::AbstractArray, I::NotStoredIndex) = true
+sparse_isassigned(a::AbstractArray, I::StoredIndex) = sparse_isassigned(a, StorageIndex(I))
+function sparse_isassigned(a::AbstractArray, I::StorageIndex)
+  return isassigned(sparse_storage(a), index(I))
+end
+function sparse_isassigned(a::AbstractArray, I::CartesianIndex)
+  return sparse_isassigned(a, storage_index(a, I))
 end
 
 # A set of indices into the storage of the sparse array.
