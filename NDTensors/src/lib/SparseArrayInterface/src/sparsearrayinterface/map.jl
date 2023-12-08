@@ -1,9 +1,44 @@
 using Compat: allequal
 
+# Represents a value that isn't stored
+# Used to hijack dispatch
+struct NotStoredValue{Value}
+  value::Value
+end
+value(v::NotStoredValue) = v.value
+nstored(::NotStoredValue) = false
+Base.:*(x::Number, y::NotStoredValue) = false
+Base.:+(::NotStoredValue, ::NotStoredValue...) = false
+Base.:+(x::Number, ::NotStoredValue...) = x
+Base.iszero(::NotStoredValue) = true
+Base.isreal(::NotStoredValue) = true
+Base.conj(x::NotStoredValue) = conj(value(x))
+
+notstored_index(a::AbstractArray) = NotStoredIndex(first(eachindex(a)))
+
+# Get some not-stored value
+function get_notstored(a::AbstractArray)
+  return sparse_getindex(a, notstored_index(a))
+end
+
+function apply_notstored(f, as::Vararg{AbstractArray})
+  return apply(f, NotStoredValue.(get_notstored.(as))...)
+end
+
+function apply(f, xs::Vararg{NotStoredValue})
+  return f(xs...)
+  #return try
+  #  return f(xs...)
+  #catch
+  #  f(value(x))
+  #end
+end
+
 # Test if the function preserves zero values and therefore
 # preserves the sparsity structure.
 function preserves_zero(f, as...)
-  return iszero(f(map(a -> sparse_getindex(a, NotStoredIndex(first(eachindex(a)))), as)...))
+  # return iszero(f(map(get_notstored, as)...))
+  return iszero(apply_notstored(f, as...))
 end
 
 # Map a subset of indices
@@ -61,8 +96,7 @@ end
 # TODO: Define `sparse_mapreducedim!`.
 function sparse_mapreduce(f, op, a::AbstractArray; kwargs...)
   output = mapreduce(f, op, sparse_storage(a); kwargs...)
-  # TODO: Use more general `zero` value.
-  # TODO: Better way to check that zeros don't affect the output?
-  @assert op(output, f(zero(eltype(a)))) == output
+  f_notstored = apply_notstored(f, a)
+  @assert op(output, f_notstored) == output
   return output
 end
