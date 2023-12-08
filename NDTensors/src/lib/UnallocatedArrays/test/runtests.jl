@@ -115,6 +115,21 @@ using .NDTensorsTestUtils: devices_list
     @test F2 isa UnallocatedFill
     @test F2[1, 1, 1] == elt(6.0)
     @test alloctype(F2) == alloctype(F)
+
+    #F2 .+= elt(2.0) ## This is broken
+    F2 = F2 .+ elt(2.0)
+    @test F2 isa UnallocatedFill
+    @test F2[1,1,1] == elt(8.0)
+    @test alloctype(F2) == alloctype(F)
+
+    F = UnallocatedFill(Fill(elt(2.0), (2,3)), dev(Matrix{elt}))
+    R = Z + F
+    @test R isa UnallocatedFill
+    @test alloctype(R) == alloctype(Z)
+
+    R = F + Z
+    @test R isa UnallocatedFill
+    @test alloctype(R) == alloctype(Z)
   end
 
   ## TODO make other kron tests
@@ -146,7 +161,12 @@ using .NDTensorsTestUtils: devices_list
   R = Z + Z
   @test_broken R isa UnallocatedZeros
   @test_broken alloctype(R) == alloctype(Z)
-  R = Z .+ eltype(Z)(2.0)
+  R = Z .+ elt(2.0)
   @test_broken R isa UnallocatedFill
+
+  F = UnallocatedFill(Fill(elt(2),(2,3)), dev(Matrix{elt}))
+  R = F + F
+  @test_broken R isa UnallocatedFill
+
 end
 end
