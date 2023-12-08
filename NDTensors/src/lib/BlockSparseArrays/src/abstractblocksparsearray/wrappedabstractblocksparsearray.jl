@@ -1,7 +1,7 @@
 using Adapt: WrappedArray
 
 const WrappedAbstractBlockSparseArray{T,N,A} = WrappedArray{
-  T,N,<:AbstractBlockSparseArray{T,N}
+  T,N,<:AbstractBlockSparseArray,<:AbstractBlockSparseArray{T,N}
 }
 
 const BlockSparseArrayLike{T,N} = Union{
