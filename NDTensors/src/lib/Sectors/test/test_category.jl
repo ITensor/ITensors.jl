@@ -1,14 +1,20 @@
 import NDTensors.Sectors:
-  Category,
   basename,
+  Category,
+  @CategoryType_str,
+  dynamic,
+  DynamicCategory,
+  fusion_rule,
   groupdim,
+  is_dynamic,
+  is_static,
   level,
   static,
-  dynamic,
-  is_static,
-  is_dynamic,
-  @CategoryType_str,
-  DynamicCategory
+  SU,
+  Ising,
+  Z,
+  str_to_val,
+  val_to_str
 using Test
 
 @testset "Test Category Type" begin
@@ -62,6 +68,30 @@ using Test
     @test test_fn(A1) == "test_fn: got A"
     @test test_fn(B2) == "test_fn: got B"
     @test_throws MethodError test_fn(C3)
+  end
+
+  @testset "Fusion Rule Functions" begin
+    @test fusion_rule(Z(2),0,0) == [0]
+    @test fusion_rule(Z(2),0,1) == [1]
+    @test fusion_rule(Z(2),1,1) == [0]
+
+    @test fusion_rule(Ising,1,1) == [0]
+    @test fusion_rule(Ising,1/2,1/2) == [0,1]
+
+    @test fusion_rule(SU(2),1,1) == [0,1,2]
+    @test fusion_rule(SU(2),1/2,1) == [1/2,3/2]
+  end
+
+  @testset "String to Val and Vice Versa" begin
+    @test val_to_str(Ising,0) == "1"
+    @test val_to_str(Ising,1/2) == "σ"
+    @test val_to_str(Ising,1) == "ψ"
+
+    @test str_to_val(Ising,"1") == 0
+    @test str_to_val(Ising,"σ") == 1/2
+    @test str_to_val(Ising,"ψ") == 1
+
+    @test_throws ErrorException str_to_val(SU(2),"test")
   end
 end
 

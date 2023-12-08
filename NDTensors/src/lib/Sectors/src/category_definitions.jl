@@ -5,7 +5,7 @@
 
 U(N::Int) = Category("U", N)
 
-fusion_rule(::CategoryName"U", n1, n2) = [(n1 + n2)]
+fusion_rule(::CategoryType"U", n1, n2) = [(n1 + n2)]
 
 #
 # Cyclic group Ƶₙ
@@ -13,7 +13,7 @@ fusion_rule(::CategoryName"U", n1, n2) = [(n1 + n2)]
 
 Z(N::Int) = Category("Z", N)
 
-fusion_rule(C::CategoryName"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
+fusion_rule(C::CategoryType"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
 
 #
 # SUd(N)
@@ -23,7 +23,7 @@ fusion_rule(C::CategoryName"Z", n1, n2) = [(n1 + n2) % groupdim(C)]
 
 SUd(N::Int, k=0) = Category("SUd", N, k)
 
-function fusion_rule(C::CategoryName"SUd", d1, d2)
+function fusion_rule(C::CategoryType"SUd", d1, d2)
   if groupdim(C) != 2
     error(
       "Only SUd(2) and SUd(2)_k currently supported [input was SUd($(groupdim(C)),$(level(C)))]",
@@ -43,7 +43,7 @@ end
 
 SU(N::Int, k=0) = Category("SU", N, k)
 
-function fusion_rule(C::CategoryName"SU", j1, j2)
+function fusion_rule(C::CategoryType"SU", j1, j2)
   if groupdim(C) != 2
     error(
       "Only SU(2) and SU(2)_k currently supported [input was SU($(groupdim(C)),$(level(C)))]",
@@ -65,7 +65,7 @@ end
 
 SUz(N::Int) = Category("SUz", N)
 
-function fusion_rule(C::CategoryName"SUz", jm1::Tuple, jm2::Tuple)
+function fusion_rule(C::CategoryType"SUz", jm1::Tuple, jm2::Tuple)
   @assert groupdim(C) == 2
   @assert level(C) == 0
   j1, m1 = jm1
@@ -73,7 +73,7 @@ function fusion_rule(C::CategoryName"SUz", jm1::Tuple, jm2::Tuple)
   return [(J, m1 + m2) for J in abs(m1 + m2):(j1 + j2)]
 end
 
-nvals(C::CategoryName"SUz") = 2
+nvals(C::CategoryType"SUz") = 2
 
 #
 # Fibonacci category
@@ -84,10 +84,10 @@ const Fib = Category("Fib")
 # Fusion rules of subcategory containing
 # {0,1} of A_4 i.e. su(2)₃
 # (see arxiv:2008.08598)
-fusion_rule(::CategoryName"Fib", a1, a2) = fusion_rule(SU(2, 3), a1, a2)
+fusion_rule(::CategoryType"Fib", a1, a2) = fusion_rule(SU(2, 3), a1, a2)
 
-val_to_str(::CategoryName"Fib", a) = ("1", "τ")[a + 1]
-string_to_val(::CategoryName"Fib", a::AbstractString) = (a == "τ") ? 1 : 0
+val_to_str(::CategoryType"Fib", a) = ("1", "τ")[a + 1]
+str_to_val(::CategoryType"Fib", a::AbstractString) = (a == "τ") ? 1 : 0
 
 #
 # Ising category
@@ -103,11 +103,11 @@ const Ising = Category("Ising")
 # i.e. fusion rules are su(2)₂ a.k.a. A_3
 # but with different Frobenius-Schur sign
 # (see arxiv:2008.08598)
-fusion_rule(::CategoryName"Ising", a1, a2) = fusion_rule(SU(2, 2), a1, a2)
+fusion_rule(::CategoryType"Ising", a1, a2) = fusion_rule(SU(2, 2), a1, a2)
 
-val_to_str(::CategoryName"Ising", a) = ("1", "σ", "ψ")[Int(2 * a + 1)]
+val_to_str(::CategoryType"Ising", a) = ("1", "σ", "ψ")[Int(2 * a + 1)]
 
-function string_to_val(::CategoryName"Ising", s::AbstractString)
+function str_to_val(::CategoryType"Ising", s::AbstractString)
   for (a, v) in enumerate(("1", "σ", "ψ"))
     (v == s) && return (a - 1)//2
   end

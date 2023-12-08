@@ -78,6 +78,7 @@ in function arguments allows Val-based dispatch based on
 the name value.
 """
 # TODO: how to avoid using default_category_name_type() here?
+# Maybe always convert to Symbol?
 macro CategoryType_str(s)
   return :(Category{$(Expr(:quote, CategoryName{default_category_name_type()(s)}))})
 end
@@ -92,10 +93,11 @@ const DynamicCategory = Category{<:AbstractString}
 #const StaticCategory = Category{<:CategoryName}
 #Base.convert(::Type{StaticCategory}, D::DynamicCategory) = static(D)
 
-nvals(::Any) = 1
-nvals(C::Category) = nvals(static(C))
+nvals(::Category) = 1
+nvals(C::DynamicCategory) = nvals(static(C))
 
-function fusion_rule(C::Category, a, b)
+fusion_rule(C::Category, a, b) = error("fusion_rule not implemented for category $(basename(C))")
+function fusion_rule(C::DynamicCategory, a, b)
   # TODO: improve... maybe don't use 
   # nvals and just pass a and b?
   if nvals(C) == 1
@@ -103,3 +105,11 @@ function fusion_rule(C::Category, a, b)
   end
   return fusion_rule(static(C), a, b)
 end
+
+function str_to_val(C::Category, s)
+  return error("String values not implemented for category $(basename(C))")
+end
+str_to_val(C::DynamicCategory, s) = str_to_val(static(C), s)
+
+val_to_str(::Category, val) = string(val)
+val_to_str(C::DynamicCategory, val) = val_to_str(static(C),val)

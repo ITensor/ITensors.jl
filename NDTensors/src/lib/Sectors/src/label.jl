@@ -3,19 +3,21 @@ Label of a specific sector or irrep of a category or group.
 A Label also carries a name such as "J" or "Sz" giving the 
 meaning of the symmetry in an application.
 """
-struct Label
-  name::String7
-  val1::Half{Int}
-  val2::Half{Int}
-  cat::Category
+struct Label{Name,Values,Category}
+  name::Name
+  values::Values
+  category::Category
 end
 
 Label() = Label("", 0, 0, Category())
 Label(name::AbstractString, val::Number, cat=U(1)) = Label(name, val, 0, cat)
 function Label(name::AbstractString, val::AbstractString, cat=U(1))
-  return Label(name, string_to_val(cat, val), 0, cat)
+  return Label(name, str_to_val(cat, val), 0, cat)
 end
 Label(name::AbstractString, vals::Tuple, cat=U(1)) = Label(name, vals[1], vals[2], cat)
+
+const Label7 = Label{String7,Tuple{Int,Int},Category7}
+
 
 name(s::Label) = s.name
 function val(s::Label)
@@ -25,18 +27,15 @@ end
 vals(s::Label) = (s.val1, s.val2)
 category(s::Label) = s.cat
 
-function string_to_val(C::CategoryName, v::AbstractString)
-  return error("String values not implemented for category $(name(C))")
-end
-string_to_val(C::Category, v) = string_to_val(CategoryName(C), v)
-
-val_to_str(::Any, val) = string(val)
+# TODO: add tests for this
 function val_to_str(s::Label)
   if nvals(category(s)) == 1
-    return val_to_str(Val(category(s).basename), val(s))
+    return val_to_str(category(s), val(s))
   end
-  return val_to_str(Val(category(s).basename), vals(s))
+  return val_to_str(category(s), vals(s))
 end
+
+fusion_rule(C::DynamicCategory, vals...) = fusion_rule(static(C),vals...)
 
 function ⊗(s1::Label, s2::Label)
   name(s1) == name(s2) ||
