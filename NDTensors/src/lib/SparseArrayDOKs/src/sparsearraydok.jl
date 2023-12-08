@@ -1,3 +1,4 @@
+using Accessors: @set
 using Dictionaries: Dictionary, set!
 using ..SparseArrayInterface:
   SparseArrayInterface, AbstractSparseArray, getindex_zero_function
@@ -74,6 +75,9 @@ end
 Base.size(a::SparseArrayDOK) = a.dims
 
 SparseArrayInterface.getindex_zero_function(a::SparseArrayDOK) = a.zero
+function SparseArrayInterface.set_getindex_zero_function(a::SparseArrayDOK, f)
+  return @set a.zero = f
+end
 
 function SparseArrayInterface.setindex_notstored!(
   a::SparseArrayDOK{<:Any,N}, value, I::CartesianIndex{N}

@@ -1,4 +1,8 @@
 perm(::PermutedDimsArray{<:Any,<:Any,P}) where {P} = P
+iperm(::PermutedDimsArray{<:Any,<:Any,<:Any,IP}) where {IP} = IP
+
+# TODO: Use `Base.PermutedDimsArrays.genperm` or
+# https://github.com/jipolanco/StaticPermutations.jl?
 genperm(v, perm) = map(j -> v[j], perm)
 genperm(v::CartesianIndex, perm) = CartesianIndex(map(j -> Tuple(v)[j], perm))
 
@@ -14,5 +18,3 @@ function index_to_storage_index(
 ) where {N}
   return storage_index_to_index(parent(a), genperm(I, perm(a)))
 end
-
-# TODO: Add `SubArray`, `ReshapedArray`, `Diagonal`, etc.

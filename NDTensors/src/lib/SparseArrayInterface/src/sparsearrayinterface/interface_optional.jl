@@ -1,6 +1,10 @@
 # Optional interface.
-# Access a zero value.
+
+# Function for computing unstored zero values.
 getindex_zero_function(::AbstractArray) = Zero()
+
+# Change the function for computing unstored values
+set_getindex_zero_function(a::AbstractArray, f) = error("Not implemented")
 
 function getindex_notstored(a::AbstractArray, I)
   return getindex_zero_function(a)(a, I)

@@ -102,3 +102,11 @@ BlockArrays.blocks(a::BlockSparseArray) = a.blocks
 
 # TODO: Use `SetParameters`.
 blockstype(::Type{<:BlockSparseArray{<:Any,<:Any,<:Any,B}}) where {B} = B
+
+# Base interface
+function Base.similar(
+  a::AbstractBlockSparseArray, elt::Type, axes::Tuple{Vararg{BlockedUnitRange}}
+)
+  # TODO: Preserve GPU data!
+  return BlockSparseArray{elt}(undef, axes)
+end
