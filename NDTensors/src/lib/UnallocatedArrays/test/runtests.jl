@@ -4,8 +4,6 @@ using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
-## Could potentially need this
-#using GPUArraysCore: @allowscalar
 
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
@@ -33,11 +31,47 @@ using .NDTensorsTestUtils: devices_list
 
   ## Things that are still broken
   R = Zc * Zc'
-  @test_broken R isa UnallocatedZeros
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (2, 2)
+  M = rand(elt, (3, 4))
+  R = Zc * M
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (2, 4)
+  R = M' * Zc'
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (4, 2)
+  R = transpose(M) * transpose(Zc)
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  @test size(R) == (4, 2)
+
+  R = eltype(Zc)(2.0) .* Zc
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+  R = Zc .* eltype(Zc)(2.0)
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+
+  R = Zc .* Zc
+  @test R isa UnallocatedZeros
+  @test alloctype(R) == alloctype(Zc)
+
+  A = UnallocatedZeros(Zeros{elt}(2), Vector{elt})
+  B = UnallocatedZeros(Zeros{elt}(2), Vector{elt})
+  C = kron(A, B)
+  @test C isa UnallocatedZeros
+  @test alloctype(C) == alloctype(B)
+  ## TODO make other kron tests
+
+  ## The following two tests don't work properly yet
   R = Zc + Zc
   @test_broken R isa UnallocatedZeros
-  R = Zc .* Zc
-  @test_broken R isa UnallocatedZeros
+  @test_broken alloctype(R) == alloctype(Zc)
+  R = Zc .+ eltype(Zc)(2.0)
+  @test_broken R isa UnallocatedFill
 
   #########################################
   # UnallocatedFill
@@ -60,6 +94,7 @@ using .NDTensorsTestUtils: devices_list
   @test Fc == F
   Fc = allocate(complex(F))
   @test eltype(Fc) == complex(eltype(F))
+  @test typeof(Fc) == alloctype(complex(F))
   ## This allocates is this correct?
   ## TODO this is broken because it doesn't call allocate
   Fc[2, 3, 4] = 4.0 + 3.0im

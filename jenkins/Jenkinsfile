@@ -30,7 +30,7 @@ pipeline {
               julia -e 'using Pkg; Pkg.add(name="NDTensors", version="0.1"); Pkg.add(name="ITensors"); Pkg.develop(path="./ITensorGPU"); Pkg.instantiate(); Pkg.test("ITensorGPU");'
               '''
             sh '''
-              julia --project=NDTensors -e 'using Pkg; Pkg.develop(path="."); Pkg.test(; test_args=["cuda"])'
+              julia --project=monorepo -e 'using Pkg; Pkg.develop(path="."); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -43,7 +43,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.8'
+              additionalBuildArgs  '--build-arg JULIA=1.9'
               args '--gpus "device=1"'
             }
           }
@@ -57,7 +57,7 @@ pipeline {
               julia -e 'using Pkg; Pkg.add(name="NDTensors", version="0.1"); Pkg.add(name="ITensors"); Pkg.develop(path="./ITensorGPU"); Pkg.instantiate(); Pkg.test("ITensorGPU");'
             '''
             sh '''
-              julia --project=NDTensors -e 'using Pkg; Pkg.develop(path="."); Pkg.test(; test_args=["cuda"])'
+              julia --project=monorepo -e 'using Pkg; Pkg.develop(path="."); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
