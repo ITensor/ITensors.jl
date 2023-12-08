@@ -28,6 +28,12 @@ function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::Block{N}) wh
   return a
 end
 
+# Fix ambiguity error
+function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::Block{1})
+  blocksparse_setindex!(a, value, I)
+  return a
+end
+
 # `BlockArrays` interface
 # TODO: Is this needed if `blocks` is defined?
 function BlockArrays.viewblock(a::BlockSparseArrayLike{<:Any,N}, I::Block{N,Int}) where {N}

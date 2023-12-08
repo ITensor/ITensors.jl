@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using BlockArrays: Block, BlockedUnitRange, blockedrange, blocklength, blocksize
 using LinearAlgebra: mul!
-using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
+using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored, block_reshape
 using NDTensors.SparseArrayInterface: nstored
 using Test: @test, @testset
 include("TestBlockSparseArraysUtils.jl")
@@ -88,6 +88,16 @@ include("TestBlockSparseArraysUtils.jl")
     @test Array(a_dest) ≈ Array(a1) * Array(a2)
     @test a_dest isa BlockSparseArray{elt}
     @test block_nstored(a_dest) == 1
+  end
+  @testset "block_reshape" begin
+    a = BlockSparseArray{elt}(undef, ([3, 4], [2, 3]))
+    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
+    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
+    b = block_reshape(a, [6, 8, 9, 12])
+    @test reshape(a[Block(1, 2)], 9) == b[Block(3)]
+    @test reshape(a[Block(2, 1)], 8) == b[Block(2)]
+    @test block_nstored(b) == 2
+    @test nstored(b) == 17
   end
 end
 end
