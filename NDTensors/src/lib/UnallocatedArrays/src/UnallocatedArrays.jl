@@ -6,9 +6,12 @@ using FillArrays:
   Fill,
   Zeros,
   broadcasted_zeros,
+  broadcasted_fill,
+  fill_add,
   getindex_value,
-  kron_zeros,
+  kron_fill,
   mult_zeros
+
 using NDTensors.SetParameters:
   SetParameters,
   Position,
@@ -17,6 +20,8 @@ using NDTensors.SetParameters:
   nparameters,
   set_parameter,
   set_parameters
+
+  #using Adapt: Adapt
 
 include("abstractfill/abstractfill.jl")
 include("abstractfill/set_types.jl")
