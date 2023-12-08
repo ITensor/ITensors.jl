@@ -50,11 +50,12 @@ function FillArrays.kron_zeros(a::UnallocatedZeros, b::UnallocatedZeros, elt, ax
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end
 
-function FillArrays.kron_zeros(a::UnallocatedZeros, b::UnallocatedFill, elt, ax)
+function FillArrays.kron_fill(a::UnallocatedZeros, b::UnallocatedFill, val, ax)
   @assert alloctype(a) == alloctype(b)
+  elt = typeof(val)
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end
 
-function FillArrays.kron_zeros(a::UnallocatedFill, b::UnallocatedZeros, elt, ax)
-  return kron_zeros(b, a, elt, ax)
+function FillArrays.kron_fill(a::UnallocatedFill, b::UnallocatedZeros, val, ax)
+  return kron_fill(b, a, val, ax)
 end
