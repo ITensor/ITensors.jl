@@ -9,7 +9,7 @@ include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTest
 using .NDTensorsTestUtils: devices_list
 
 @testset "Testing UnallocatedArrays" for dev in devices_list(ARGS),
- elt in (Float64, Float32, ComplexF64, ComplexF32)
+  elt in (Float64, Float32, ComplexF64, ComplexF32)
 
   @testset "Basic funcitonality" begin
     z = Zeros{elt}((2, 3))
@@ -82,15 +82,15 @@ using .NDTensorsTestUtils: devices_list
 
     ###################################
     ## UnallocatedFill
-    f = Fill{elt}(3.0, (2,12))
+    f = Fill{elt}(3.0, (2, 12))
     F = UnallocatedFill(f, dev(Matrix{elt}))
-    p = Fill{elt}(4.0, (12,5))
-    P = UnallocatedFill(p, dev(Array{elt, ndims(p)}))
+    p = Fill{elt}(4.0, (12, 5))
+    P = UnallocatedFill(p, dev(Array{elt,ndims(p)}))
     R = F * P
     @test F isa UnallocatedFill
-    @test R[1,1] == 144
+    @test R[1, 1] == 144
     @test alloctype(R) == alloctype(F)
-    @test size(R) == (2,5)
+    @test size(R) == (2, 5)
   end
 
   @testset "Broadcast" begin
@@ -109,15 +109,15 @@ using .NDTensorsTestUtils: devices_list
 
     ########################
     # UnallocatedFill
-    f = Fill(elt(3.0), (2,3,4))
-    F = UnallocatedFill(f, Array{elt, ndims(f)})
+    f = Fill(elt(3.0), (2, 3, 4))
+    F = UnallocatedFill(f, Array{elt,ndims(f)})
     F2 = F .* 2
     @test F2 isa UnallocatedFill
-    @test F2[1,1,1] == elt(6.0)
+    @test F2[1, 1, 1] == elt(6.0)
     @test alloctype(F2) == alloctype(F)
   end
 
-    ## TODO make other kron tests
+  ## TODO make other kron tests
   @testset "Kron" begin
     A = UnallocatedZeros(Zeros{elt}(2), dev(Vector{elt}))
     B = UnallocatedZeros(Zeros{elt}(2), dev(Vector{elt}))
@@ -133,7 +133,7 @@ using .NDTensorsTestUtils: devices_list
     C = kron(B, A)
     @test C isa UnallocatedZeros
     @test alloctype(C) == alloctype(B)
-    
+
     A = UnallocatedFill(Fill(elt(3.0), (2)), dev(Vector{elt}))
     C = kron(A, B)
     @test C isa UnallocatedFill
@@ -142,12 +142,11 @@ using .NDTensorsTestUtils: devices_list
   end
 
   ## The following two tests don't work properly yet
-  Z = UnallocatedZeros(Zeros{elt}((2,3)), dev(Matrix{elt}))
+  Z = UnallocatedZeros(Zeros{elt}((2, 3)), dev(Matrix{elt}))
   R = Z + Z
   @test_broken R isa UnallocatedZeros
   @test_broken alloctype(R) == alloctype(Z)
   R = Z .+ eltype(Z)(2.0)
   @test_broken R isa UnallocatedFill
-
 end
 end
