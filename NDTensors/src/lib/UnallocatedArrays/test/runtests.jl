@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
-using NDTensors: NDTensors
+using NDTensors: NDTensors, Dense, Tensor, array
 using NDTensors.UnallocatedArrays
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
@@ -30,6 +30,9 @@ using .NDTensorsTestUtils: devices_list
     @test eltype(Zc) == complex(eltype(z))
     @test Zc[1, 2] == 0.0 + 0.0im
 
+    Zs = similar(Z)
+    @test_broken Zs isa UnallocatedZeros
+
     #########################################
     # UnallocatedFill
     f = Fill{elt}(3.0, (2, 3, 4))
@@ -52,8 +55,9 @@ using .NDTensorsTestUtils: devices_list
     Fc = allocate(complex(F))
     @test eltype(Fc) == complex(eltype(F))
     @test typeof(Fc) == alloctype(complex(F))
-    ## This allocates is this correct?
-    ## TODO this is broken because it doesn't call allocate
+
+    ## TODO without prior call to allocate this is broken because it doesn't
+    ## consider how to form Fc i.e. allocate
     Fc[2, 3, 4] = 4.0 + 3.0im
     @test Fc[2, 3, 4] == 4.0 + 3.0im
   end
@@ -61,7 +65,7 @@ using .NDTensorsTestUtils: devices_list
   @testset "Multiplication" begin
     z = Zeros{elt}((2, 3))
     Z = UnallocatedZeros(z, dev(Matrix{eltype(z)}))
-    ## Things that are still broken
+
     R = Z * Z'
     @test R isa UnallocatedZeros
     @test alloctype(R) == alloctype(Z)
@@ -94,20 +98,20 @@ using .NDTensorsTestUtils: devices_list
 
     R = F * F'
     @test R isa UnallocatedFill
-    @test R[1,2] == elt(108)
+    @test R[1, 2] == elt(108)
     @test alloctype(R) == alloctype(F)
-    @test size(R) == (2,2)
+    @test size(R) == (2, 2)
 
     R = transpose(F) * F
     @test R isa UnallocatedFill
-    @test R[12,3] == elt(18)
+    @test R[12, 3] == elt(18)
     @test alloctype(R) == alloctype(F)
-    @test size(R) == (12,12)
+    @test size(R) == (12, 12)
 
     R = transpose(Z) * F
     @test R isa UnallocatedZeros
     @test alloctype(R) == alloctype(Z)
-    @test size(R) == (3,12)
+    @test size(R) == (3, 12)
   end
 
   @testset "Broadcast" begin
@@ -148,18 +152,18 @@ using .NDTensorsTestUtils: devices_list
     @test R isa UnallocatedFill
     @test alloctype(R) == alloctype(Z)
 
-    F = UnallocatedFill(Fill(elt(3.0), (2,12)), dev(Matrix{elt}))
+    F = UnallocatedFill(Fill(elt(3.0), (2, 12)), dev(Matrix{elt}))
     R = F .* F
     @test R isa UnallocatedFill
-    @test R[2,9] == elt(9)
+    @test R[2, 9] == elt(9)
     @test alloctype(R) == alloctype(F)
-    @test size(R) == (2,12)
+    @test size(R) == (2, 12)
 
-    P = UnallocatedFill(Fill(elt(4.0), (2,3)), dev(Matrix{elt}))
+    P = UnallocatedFill(Fill(elt(4.0), (2, 3)), dev(Matrix{elt}))
     R = Z .* P
     @test R isa UnallocatedZeros
     @test alloctype(R) == alloctype(P)
-    @test size(R) == (2,3)
+    @test size(R) == (2, 3)
   end
 
   ## TODO make other kron tests
@@ -184,6 +188,20 @@ using .NDTensorsTestUtils: devices_list
     @test C isa UnallocatedFill
     @test alloctype(C) == alloctype(B)
     @test C[1] == elt(6)
+  end
+
+  @testset "Tensor" begin
+    Z = UnallocatedZeros(Zeros{elt}(6), dev(Vector{elt}))
+    D = Dense(Z)
+    @test D isa Dense{elt,UnallocatedZeros{elt,1,Tuple{Base.OneTo{Int64}},Vector{elt}}}
+    @test D[3] == elt(0)
+    R = D .* D
+    @test_broken R isa
+      Dense{elt,UnallocatedZeros{elt,1,Tuple{Base.OneTo{Int64}},Vector{elt}}}
+
+    T = Tensor(D, (2, 3))
+    @test T[1, 2] == zero(elt)
+    #T * transpose(T)
   end
 
   ## The following two tests don't work properly yet
