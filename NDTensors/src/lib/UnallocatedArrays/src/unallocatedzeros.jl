@@ -21,6 +21,11 @@ set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, allo
 
 Base.parent(Z::UnallocatedZeros) = Z.z
 
+Base.convert(::Type{<:UnallocatedZeros}, A::UnallocatedZeros) = A
+
+#############################################
+# Arithmatic
+
 function FillArrays.mult_zeros(a::UnallocatedZeros, b, elt, ax)
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end

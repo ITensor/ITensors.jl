@@ -22,6 +22,11 @@ set_alloctype(f::Fill, alloc::Type{<:AbstractArray}) = UnallocatedFill(f, alloc)
 
 Base.parent(F::UnallocatedFill) = F.f
 
+Base.convert(::Type{<:UnallocatedFill}, A::UnallocatedFill) = A
+
+#############################################
+# Arithmatic
+
 # mult_fill(a, b, val, ax) = Fill(val, ax)
 function FillArrays.mult_fill(a::UnallocatedFill, b, val, ax)
   return UnallocatedFill(Fill(val, ax), alloctype(a))
