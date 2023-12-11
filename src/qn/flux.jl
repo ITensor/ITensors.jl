@@ -69,7 +69,10 @@ allfluxequal(T::Tensor) = allequal(flux(T, b) for b in nzblocks(T))
 Check that fluxes of all non-zero blocks of a blocked or symmetric Tensor
 are equal. Throws an error if one or more blocks have a different flux.
 """
-checkflux(T::Tensor) = allfluxequal(T) ? nothing : error("Fluxes not all equal")
+function checkflux(T::Tensor) 
+  (!hasqns(T) || isempty(T)) && return nothing
+  allfluxequal(T) ? nothing : error("Fluxes not all equal")
+end
 
 """
     checkflux(T::Tensor, flux)
