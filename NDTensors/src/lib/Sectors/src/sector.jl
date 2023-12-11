@@ -1,50 +1,48 @@
-const default_sector_size = 4
-default_sector_data() = Label
-const SStorage = SmallSet{default_sector_size,default_sector_data()}
-const MSStorage = MSmallSet{default_sector_size,default_sector_data()}
+default_sector_size() = 4
+default_sector_label() = Label{String7,Tuple{Int,Int},Category{String7}}
+default_sector_storage() = SmallSet{default_sector_size(),default_sector_label()}
 
 """
 A Sector is a sorted collection of named
 symmetry Labels such as ("J", 1, SU(2)) or ("N", 2, U(1))
 """
-struct Sector{T,D<:AbstractSmallSet{T}}
-  data::D
+struct Sector{Storage}
+  storage::Storage
+  global _Sector(storage) = new{typeof(storage)}(storage)
 end
 
-function Sector()
-  return Sector{default_sector_data(),SStorage}(SStorage(default_sector_data()[]; by=name))
+function Sector(v::Vector; storage_type=default_sector_storage(),
+                           storage_kwargs=(;by=name))
+  return _Sector(storage_type(v; storage_kwargs...))
 end
 
-Sector{T}(t1::Tuple, ts...) where {T} = Sector([T(t...) for t in (t1, ts...)])
-
-Sector(t1::Tuple, ts...) = Sector{default_sector_data()}(t1, ts...)
-
-Sector(v::Vector) = Sector(SStorage(v; by=name))
-
-# Convenience constructor where extra parenthesis not needed for one label:
-Sector(name::String, val::Union{Number,String}, cat=U(1)) = Sector((name, val, cat))
-function Sector(
-  name::String, val1::Union{Number,String}, val2::Union{Number,String}, cat=U(1)
-)
-  return Sector((name, (val1, val2), cat))
+function Sector(t1::Tuple, ts...; 
+                label_type=default_sector_label(),
+                label_kwargs=(;),
+                kws...)
+  return Sector([label_type(t...;label_kwargs...) for t in (t1, ts...)]; kws...)
 end
 
-# Convenience constructor where name nor extra parenthesis not needed for one label:
-Sector(val::Union{Number,String}, cat=U(1)) = Sector(("", val, cat))
-function Sector(val1::Union{Number,String}, val2::Union{Number,String}, cat=U(1))
-  return Sector(("", (val1, val2), cat))
-end
+# Convenience constructor where extra parenthesis not required for
+# a single label
+Sector(args...; kws...) = Sector((args...); kws...)
 
-data(q::Sector) = q.data
-nactive(q::Sector) = length(data(q))
+storage(q::Sector) = q.storage
+nactive(q::Sector) = length(storage(q))
 isactive(q::Sector) = (nactive(q) != 0)
 
-Base.union(q1::Sector, q2::Sector) = Sector(union(data(q1), data(q2)))
-Base.union(q1::Sector, v::Union{Vector,Tuple}) = Sector(union(data(q1), v))
-Base.symdiff(q1::Sector, q2::Sector) = Sector(symdiff(data(q1), data(q2)))
-Base.setdiff(q1::Sector, q2::Sector) = Sector(setdiff(data(q1), data(q2)))
-Base.intersect(q1::Sector, q2::Sector) = Sector(intersect(data(q1), data(q2)))
-Base.iterate(q::Sector, args...) = iterate(data(q), args...)
+#
+# TODO: update code below to specialize to Sector
+# types only having set behavior?
+# Maybe by defining const SetSector = Sector{<:AbstractSet} ?
+#
+
+Base.union(q1::Sector, q2::Sector) = Sector(union(storage(q1), storage(q2)))
+Base.union(q1::Sector, v::Union{Vector,Tuple}) = Sector(union(storage(q1), v))
+Base.symdiff(q1::Sector, q2::Sector) = Sector(symdiff(storage(q1), storage(q2)))
+Base.setdiff(q1::Sector, q2::Sector) = Sector(setdiff(storage(q1), storage(q2)))
+Base.intersect(q1::Sector, q2::Sector) = Sector(intersect(storage(q1), storage(q2)))
+Base.iterate(q::Sector, args...) = iterate(storage(q), args...)
 
 """
   ⊗(A::Sector,B::Sector)
@@ -80,7 +78,7 @@ end
 function Base.show(io::IO, q::Sector)
   Na = nactive(q)
   print(io, "Sector(")
-  for (n, s) in enumerate(data(q))
+  for (n, s) in enumerate(storage(q))
     n > 1 && print(io, ",")
     Na > 1 && print(io, "(")
     if name(s) != ""
