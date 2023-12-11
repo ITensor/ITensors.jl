@@ -80,6 +80,11 @@ using .NDTensorsTestUtils: devices_list
     @test alloctype(R) == alloctype(Z)
     @test size(R) == (4, 2)
 
+    R = Z .* Z
+    @test R isa UnallocatedZeros
+    @test alloctype(R) == alloctype(Z)
+    @test R[1,2] == elt(0)
+
     ###################################
     ## UnallocatedFill
     f = Fill{elt}(3.0, (2, 12))
@@ -91,6 +96,29 @@ using .NDTensorsTestUtils: devices_list
     @test R[1, 1] == 144
     @test alloctype(R) == alloctype(F)
     @test size(R) == (2, 5)
+
+    R = F * F'
+    @test R isa UnallocatedFill
+    @test R[1,2] == elt(108)
+    @test alloctype(R) == alloctype(F)
+    @test size(R) == (2,2)
+
+    R = transpose(F) * F
+    @test R isa UnallocatedFill
+    @test R[12,3] == elt(18)
+    @test alloctype(R) == alloctype(F)
+    @test size(R) == (12,12)
+
+    R = F .* F
+    @test R isa UnallocatedFill
+    @test R[2,9] == elt(9)
+    @test alloctype(R) == alloctype(F)
+    @test size(R) == (2,12)
+
+    R = transpose(Z) * F
+    @test R isa UnallocatedZeros
+    @test alloctype(R) == alloctype(Z)
+    @test size(R) == (3,12)
   end
 
   @testset "Broadcast" begin
