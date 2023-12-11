@@ -1,5 +1,10 @@
 default_label_name_type() = String7
 default_category() = U(1)
+default_values_type() = Tuple{Int,Int}
+
+# TODO Temporary definition:
+convert_values(::Type{Tuple{Int,Int}},t::Tuple) = t
+convert_values(::Type{Tuple{Int,Int}},i::Int) = (i,0)
 
 """
 Label of a specific sector or irrep of a category or group.
@@ -18,8 +23,9 @@ end
 
 function Label(name="", values=0, category=U(1);
                name_type=default_label_name_type(),
-               default_category=default_category()) #TODO: <-- not used currently
-  return _Label(convert(name_type,name),values,category)
+               values_type=default_values_type(),
+               default_category=default_category())
+  return _Label(convert(name_type,name),convert_values(values_type,values),category)
 end
 
 #function Label(name::AbstractString, val::AbstractString, cat=U(1))
@@ -48,7 +54,7 @@ function ⊗(s1::Label, s2::Label)
   category(s1) == category(s2) ||
     error("Labels with matching name \"$(name(s1))\" cannot have different category types")
   return [
-    Label(name(s1), v, category(s1)) for v in fusion_rule(category(s1), vals(s1), vals(s2))
+    Label(name(s1), v, category(s1)) for v in fusion_rule(category(s1), values(s1), values(s2))
   ]
 end
 Base.:(*)(s1::Label, s2::Label) = ⊗(s1, s2)

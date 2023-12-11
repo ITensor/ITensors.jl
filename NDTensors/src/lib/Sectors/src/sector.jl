@@ -13,19 +13,20 @@ end
 
 function Sector(v::Vector; storage_type=default_sector_storage(),
                            storage_kwargs=(;by=name))
+  #LabelType = isempty(v) ? Label : typeof(first(v))
+  #StorageType = 
   return _Sector(storage_type(v; storage_kwargs...))
 end
 
 function Sector(t1::Tuple, ts...; 
-                label_type=default_sector_label(),
                 label_kwargs=(;),
                 kws...)
-  return Sector([label_type(t...;label_kwargs...) for t in (t1, ts...)]; kws...)
+  return Sector([Label(t...;label_kwargs...) for t in (t1, ts...)]; kws...)
 end
 
 # Convenience constructor where extra parenthesis not required for
 # a single label
-Sector(args...; kws...) = Sector((args...); kws...)
+Sector(args...; kws...) = Sector((args...,); kws...)
 
 storage(q::Sector) = q.storage
 nactive(q::Sector) = length(storage(q))
@@ -37,11 +38,11 @@ isactive(q::Sector) = (nactive(q) != 0)
 # Maybe by defining const SetSector = Sector{<:AbstractSet} ?
 #
 
-Base.union(q1::Sector, q2::Sector) = Sector(union(storage(q1), storage(q2)))
-Base.union(q1::Sector, v::Union{Vector,Tuple}) = Sector(union(storage(q1), v))
-Base.symdiff(q1::Sector, q2::Sector) = Sector(symdiff(storage(q1), storage(q2)))
-Base.setdiff(q1::Sector, q2::Sector) = Sector(setdiff(storage(q1), storage(q2)))
-Base.intersect(q1::Sector, q2::Sector) = Sector(intersect(storage(q1), storage(q2)))
+Base.union(q1::Sector, q2::Sector) = _Sector(union(storage(q1), storage(q2)))
+Base.union(q1::Sector, v::Union{Vector,Tuple}) = _Sector(union(storage(q1), v))
+Base.symdiff(q1::Sector, q2::Sector) = _Sector(symdiff(storage(q1), storage(q2)))
+Base.setdiff(q1::Sector, q2::Sector) = _Sector(setdiff(storage(q1), storage(q2)))
+Base.intersect(q1::Sector, q2::Sector) = _Sector(intersect(storage(q1), storage(q2)))
 Base.iterate(q::Sector, args...) = iterate(storage(q), args...)
 
 """
