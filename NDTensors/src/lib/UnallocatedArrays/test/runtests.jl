@@ -80,11 +80,6 @@ using .NDTensorsTestUtils: devices_list
     @test alloctype(R) == alloctype(Z)
     @test size(R) == (4, 2)
 
-    R = Z .* Z
-    @test R isa UnallocatedZeros
-    @test alloctype(R) == alloctype(Z)
-    @test R[1,2] == elt(0)
-
     ###################################
     ## UnallocatedFill
     f = Fill{elt}(3.0, (2, 12))
@@ -108,12 +103,6 @@ using .NDTensorsTestUtils: devices_list
     @test R[12,3] == elt(18)
     @test alloctype(R) == alloctype(F)
     @test size(R) == (12,12)
-
-    R = F .* F
-    @test R isa UnallocatedFill
-    @test R[2,9] == elt(9)
-    @test alloctype(R) == alloctype(F)
-    @test size(R) == (2,12)
 
     R = transpose(Z) * F
     @test R isa UnallocatedZeros
@@ -158,6 +147,19 @@ using .NDTensorsTestUtils: devices_list
     R = F + Z
     @test R isa UnallocatedFill
     @test alloctype(R) == alloctype(Z)
+
+    F = UnallocatedFill(Fill(elt(3.0), (2,12)), dev(Matrix{elt}))
+    R = F .* F
+    @test R isa UnallocatedFill
+    @test R[2,9] == elt(9)
+    @test alloctype(R) == alloctype(F)
+    @test size(R) == (2,12)
+
+    P = UnallocatedFill(Fill(elt(4.0), (2,3)), dev(Matrix{elt}))
+    R = Z .* P
+    @test R isa UnallocatedZeros
+    @test alloctype(R) == alloctype(P)
+    @test size(R) == (2,3)
   end
 
   ## TODO make other kron tests
