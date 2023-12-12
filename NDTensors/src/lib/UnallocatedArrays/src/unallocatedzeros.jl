@@ -1,4 +1,13 @@
-using FillArrays: FillArrays, AbstractZeros, Fill, Zeros, broadcasted_fill, broadcasted_zeros, kron_fill, kron_zeros, mult_zeros
+using FillArrays:
+  FillArrays,
+  AbstractZeros,
+  Fill,
+  Zeros,
+  broadcasted_fill,
+  broadcasted_zeros,
+  kron_fill,
+  kron_zeros,
+  mult_zeros
 using NDTensors.SetParameters: Position, set_parameters
 ## TODO Should Alloc also be of ElT and N or should there be 
 ## More freedom there?
@@ -8,7 +17,9 @@ end
 
 function UnallocatedZeros(f::Zeros, alloc::Type{<:AbstractArray})
   return set_alloctype(
-    set_axestype(set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))),
+    set_axestype(
+      set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))
+    ),
     alloc,
   )(
     f

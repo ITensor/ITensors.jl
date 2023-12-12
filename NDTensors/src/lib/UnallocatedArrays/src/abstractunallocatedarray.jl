@@ -2,7 +2,9 @@ using FillArrays: FillArrays, getindex_value
 using NDTensors.SetParameters: set_parameters
 using Adapt: adapt
 
-const UnallocatedArray{ElT, N, AxesT, AllocT} = Union{<:UnallocatedFill{ElT, N, AxesT, AllocT},<:UnallocatedZeros{ElT, N, AxesT, AllocT}}
+const UnallocatedArray{ElT,N,AxesT,AllocT} = Union{
+  <:UnallocatedFill{ElT,N,AxesT,AllocT},<:UnallocatedZeros{ElT,N,AxesT,AllocT}
+}
 
 @inline Base.axes(A::UnallocatedArray) = axes(parent(A))
 Base.size(A::UnallocatedArray) = size(parent(A))
@@ -32,10 +34,11 @@ function set_alloctype(T::Type{<:UnallocatedArray}, alloc::Type{<:AbstractArray}
   return set_parameters(T, Position{4}(), alloc)
 end
 
+## This overloads the definition defined in `FillArrays.jl`
 for STYPE in (:AbstractArray, :AbstractFill)
   @eval begin
-      @inline $STYPE{T}(F::UnallocatedArray{T}) where T = F
-      @inline $STYPE{T,N}(F::UnallocatedArray{T,N}) where {T,N} = F
+    @inline $STYPE{T}(F::UnallocatedArray{T}) where {T} = F
+    @inline $STYPE{T,N}(F::UnallocatedArray{T,N}) where {T,N} = F
   end
 end
 

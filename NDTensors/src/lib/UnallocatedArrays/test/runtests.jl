@@ -48,7 +48,7 @@ using .NDTensorsTestUtils: devices_list
     @test norm(Fp) ≈ norm(F)
     Fs = similar(F)
     @test Fs isa alloctype(F)
-    @test Fs[1,1,1] != 3.0
+    @test Fs[1, 1, 1] != 3.0
 
     Fp = set_alloctype(f, dev(Array{elt,ndims(f)}))
     @test allocate(Fp) isa dev(Array{elt,ndims(f)})
@@ -60,6 +60,8 @@ using .NDTensorsTestUtils: devices_list
     @test typeof(Fc) == alloctype(complex(F))
     Fc[2, 3, 4] = 4.0 + 3.0im
     @test Fc[2, 3, 4] == 4.0 + 3.0im
+    ## TODO this isn't working
+    #Fc[2,3,4] = Base.setindex(F, 4.0+3.0im, 2,3,4)
   end
 
   @testset "Multiplication" begin

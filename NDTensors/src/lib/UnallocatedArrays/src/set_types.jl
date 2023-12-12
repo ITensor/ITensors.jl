@@ -28,10 +28,10 @@ end
 
 # ## default parameters
 function SetParameters.default_parameter(::Type{<:UnallocatedFill}, ::Position{4})
-  return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero}, 0}
+  return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero},0}
 end
 function SetParameters.default_parameter(::Type{<:UnallocatedZeros}, ::Position{4})
-  return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero}, 0}
+  return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero},0}
 end
 
 SetParameters.nparameters(::Type{<:UnallocatedFill}) = Val(4)
