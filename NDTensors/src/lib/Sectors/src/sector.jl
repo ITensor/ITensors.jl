@@ -1,5 +1,7 @@
 default_sector_size() = 4
-default_sector_label() = Label{String7,Tuple{Int,Int},Category{String7}}
+function default_sector_label()
+  return Label{default_label_name_type(),default_values_type(),typeof(default_category())}
+end
 default_sector_storage() = SmallSet{default_sector_size(),default_sector_label()}
 
 """
@@ -11,17 +13,16 @@ struct Sector{Storage}
   global _Sector(storage) = new{typeof(storage)}(storage)
 end
 
-function Sector(v::Vector; storage_type=default_sector_storage(),
-                           storage_kwargs=(;by=name))
+function Sector(
+  v::Vector; storage_type=default_sector_storage(), storage_kwargs=(; by=name)
+)
   #LabelType = isempty(v) ? Label : typeof(first(v))
   #StorageType = 
   return _Sector(storage_type(v; storage_kwargs...))
 end
 
-function Sector(t1::Tuple, ts...; 
-                label_kwargs=(;),
-                kws...)
-  return Sector([Label(t...;label_kwargs...) for t in (t1, ts...)]; kws...)
+function Sector(t1::Tuple, ts...; label_kwargs=(;), kws...)
+  return Sector([Label(t...; label_kwargs...) for t in (t1, ts...)]; kws...)
 end
 
 # Convenience constructor where extra parenthesis not required for
@@ -72,7 +73,11 @@ Base.:(*)(a::Sector, b::Sector) = ⊗(a, b)
 function Base.:(==)(A::Sector, B::Sector)
   common_labels = zip(intersect(A, B), intersect(B, A))
   common_labels_match = all(t -> (t[1] == t[2]), common_labels)
-  unique_labels_zero = all(l -> iszero(val(l)), symdiff(A, B))
+  #
+  # TODO: replace with "istrivial" check rather than iszero
+  #       since groups like SUd might use 1 as trivial value
+  #
+  unique_labels_zero = all(l -> istrivial(l), symdiff(A, B))
   return common_labels_match && unique_labels_zero
 end
 

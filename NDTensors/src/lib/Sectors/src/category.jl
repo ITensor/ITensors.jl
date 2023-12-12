@@ -17,14 +17,15 @@ struct Category{Name}
   groupdim::Int
   level::Int
 
-  global function _Category(basename,groupdim,level) 
-    return new{typeof(basename)}(basename,groupdim,level)
+  global function _Category(basename, groupdim, level)
+    return new{typeof(basename)}(basename, groupdim, level)
   end
 end
 
-function Category(basename="", N::Int=0, level::Int=0; 
-                  name_type=default_category_name_type())
-  return _Category(convert(name_type,basename),N,level)
+function Category(
+  basename="", N::Int=0, level::Int=0; name_type=default_category_name_type()
+)
+  return _Category(convert(name_type, basename), N, level)
 end
 
 basename(C::Category) = C.basename
@@ -45,9 +46,7 @@ end
 
 Base.show(io::IO, C::Category) = print(io, name(C))
 
-
-struct CategoryName{Name}
-end
+struct CategoryName{Name} end
 
 CategoryName(S) = CategoryName{S}()
 
@@ -60,14 +59,14 @@ basename(C::CategoryName{Name}) where {Name} = Name
 # May be enough to just make CategoryName's print whatever Name they hold.
 basename(C::Category{CName}) where {CName<:CategoryName} = basename(CName())
 
-function static(C::Category) 
+function static(C::Category)
   CName = CategoryName{basename(C)}
-  return Category(CName(), groupdim(C),level(C); name_type=CName)
+  return Category(CName(), groupdim(C), level(C); name_type=CName)
 end
 
-dynamic(C::Category) = Category(basename(C), groupdim(C),level(C))
+dynamic(C::Category) = Category(basename(C), groupdim(C), level(C))
 
-is_static(C::Category) = (name_type(C)<:CategoryName)
+is_static(C::Category) = (name_type(C) <: CategoryName)
 
 is_dynamic(C::Category) = !is_static(C)
 
@@ -96,7 +95,9 @@ const DynamicCategory = Category{<:AbstractString}
 nvals(::Category) = 1
 nvals(C::DynamicCategory) = nvals(static(C))
 
-fusion_rule(C::Category, a, b) = error("fusion_rule not implemented for category $(basename(C))")
+function fusion_rule(C::Category, a, b)
+  return error("fusion_rule not implemented for category $(basename(C))")
+end
 function fusion_rule(C::DynamicCategory, a, b)
   # TODO: improve... maybe don't use 
   # nvals and just pass a and b?
@@ -112,4 +113,6 @@ end
 str_to_val(C::DynamicCategory, s) = str_to_val(static(C), s)
 
 val_to_str(::Category, val) = string(val)
-val_to_str(C::DynamicCategory, val) = val_to_str(static(C),val)
+val_to_str(C::DynamicCategory, val) = val_to_str(static(C), val)
+
+istrivial(::Category, values) = all(iszero, values)
