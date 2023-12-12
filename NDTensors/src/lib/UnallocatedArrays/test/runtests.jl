@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
-using NDTensors: NDTensors, Dense, Tensor, array
+using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
