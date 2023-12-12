@@ -31,7 +31,7 @@ using .NDTensorsTestUtils: devices_list
     @test Zc[1, 2] == 0.0 + 0.0im
 
     Zs = similar(Z)
-    @test_broken Zs isa UnallocatedZeros
+    @test Zs isa alloctype(Z)
 
     #########################################
     # UnallocatedFill
@@ -46,6 +46,9 @@ using .NDTensorsTestUtils: devices_list
     @test allocate(F) isa Array{elt,3}
     Fp = allocate(F)
     @test norm(Fp) ≈ norm(F)
+    Fs = similar(F)
+    @test Fs isa alloctype(F)
+    @test Fs[1,1,1] != 3.0
 
     Fp = set_alloctype(f, dev(Array{elt,ndims(f)}))
     @test allocate(Fp) isa dev(Array{elt,ndims(f)})
