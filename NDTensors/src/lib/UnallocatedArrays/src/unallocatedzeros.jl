@@ -1,4 +1,4 @@
-using FillArrays: FillArrays, AbstractZeros, Zeros, broadcasted_zeros, kron_fill, kron_zeros, mult_zeros
+using FillArrays: FillArrays, AbstractZeros, Fill, Zeros, broadcasted_fill, broadcasted_zeros, kron_fill, kron_zeros, mult_zeros
 using NDTensors.SetParameters: Position, set_parameters
 ## TODO Should Alloc also be of ElT and N or should there be 
 ## More freedom there?
@@ -50,6 +50,17 @@ function FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, b, elt, ax)
 end
 function FillArrays.broadcasted_zeros(f, a, b::UnallocatedZeros, elt, ax)
   return broadcasted_zeros(f, b, a, elt, ax)
+end
+
+function FillArrays.broadcasted_fill(f, a::UnallocatedZeros, val, ax)
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
+function FillArrays.broadcasted_fill(f, a::UnallocatedZeros, b, val, ax)
+  return UnallocatedFill(Fill(val, ax), alloctype(a))
+end
+
+function FillArrays.broadcasted_fill(f, a, b::UnallocatedZeros, val, ax)
+  return broadcasted_fill(f, b, a, val, ax)
 end
 
 function FillArrays.kron_zeros(a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)

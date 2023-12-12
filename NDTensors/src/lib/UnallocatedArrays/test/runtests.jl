@@ -128,6 +128,9 @@ using .NDTensorsTestUtils: devices_list
     @test R isa UnallocatedZeros
     @test alloctype(R) == alloctype(Z)
 
+    R = Z .+ elt(2.0)
+    @test R isa UnallocatedFill
+    @test alloctype(R) == alloctype(Z)
     ########################
     # UnallocatedFill
     f = Fill(elt(3.0), (2, 3, 4))
@@ -205,12 +208,6 @@ using .NDTensorsTestUtils: devices_list
   end
 
   ## The following two tests don't work properly yet
-  Z = UnallocatedZeros(Zeros{elt}((2, 3)), dev(Matrix{elt}))
-  R = Z + Z
-  @test_broken R isa UnallocatedZeros
-  @test_broken alloctype(R) == alloctype(Z)
-  R = Z .+ elt(2.0)
-  @test_broken R isa UnallocatedFill
 
   F = UnallocatedFill(Fill(elt(2), (2, 3)), dev(Matrix{elt}))
   R = F + F
