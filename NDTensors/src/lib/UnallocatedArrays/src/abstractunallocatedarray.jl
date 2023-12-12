@@ -1,23 +1,31 @@
 using FillArrays: FillArrays, getindex_value
 using NDTensors.SetParameters: set_parameters
-@inline Base.axes(A::Union{<:UnallocatedFill,<:UnallocatedZeros}) = axes(parent(A))
-Base.size(A::Union{<:UnallocatedFill,<:UnallocatedZeros}) = size(parent(A))
-function FillArrays.getindex_value(A::Union{<:UnallocatedFill,<:UnallocatedZeros})
+using Adapt: adapt
+
+const UnallocatedArray{ElT, N, AxesT, AllocT} = Union{<:UnallocatedFill{ElT, N, AxesT, AllocT},<:UnallocatedZeros{ElT, N, AxesT, AllocT}}
+
+@inline Base.axes(A::UnallocatedArray) = axes(parent(A))
+Base.size(A::UnallocatedArray) = size(parent(A))
+function FillArrays.getindex_value(A::UnallocatedArray)
   return getindex_value(parent(A))
 end
 
-function Base.complex(A::Union{<:UnallocatedFill,<:UnallocatedZeros})
+function Base.complex(A::UnallocatedArray)
   return set_alloctype(
     complex(parent(A)), set_parameters(alloctype(A), Position{1}(), complex(eltype(A)))
   )
 end
 
-function Base.transpose(a::Union{<:UnallocatedFill,<:UnallocatedZeros})
+function Base.transpose(a::UnallocatedArray)
   return set_alloctype(transpose(parent(a)), alloctype(a))
 end
 
-function Base.adjoint(a::Union{<:UnallocatedFill,<:UnallocatedZeros})
+function Base.adjoint(a::UnallocatedArray)
   return set_alloctype(adjoint(parent(a)), alloctype(a))
+end
+
+function Base.similar(a::UnallocatedArray)
+  return alloctype(a)(undef, size(a))
 end
 
 ## TODO fix this because reshape loses alloctype
