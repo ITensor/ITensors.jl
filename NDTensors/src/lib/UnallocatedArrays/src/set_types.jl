@@ -27,7 +27,6 @@ function SetParameters.set_parameter(
 end
 
 # ## default parameters
-## TODO add info for eltype and N
 function SetParameters.default_parameter(::Type{<:UnallocatedFill}, ::Position{4})
   return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero}, 0}
 end
