@@ -128,6 +128,11 @@ using .NDTensorsTestUtils: devices_list
     @test R isa UnallocatedZeros
     @test alloctype(R) == alloctype(Z)
 
+    Z = UnallocatedZeros(Zeros{elt}((2, 3)), dev(Matrix{elt}))
+    R = Z + Z
+    @test R isa UnallocatedZeros
+    @test alloctype(R) == alloctype(Z)
+
     R = Z .+ elt(2.0)
     @test R isa UnallocatedFill
     @test alloctype(R) == alloctype(Z)

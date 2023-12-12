@@ -12,4 +12,4 @@ allocate(A::AbstractFill) = alloctype(A)(parent(A))
 
 set_eltype(T::Type{<:AbstractFill}, elt::Type) = set_parameters(T, Position{1}(), elt)
 set_ndims(T::Type{<:AbstractFill}, n) = set_parameters(T, Position{2}(), n)
-set_axes(T::Type{<:AbstractFill}, ax::Type) = set_parameters(T, Position{3}(), ax)
+set_axestype(T::Type{<:AbstractFill}, ax::Type) = set_parameters(T, Position{3}(), ax)

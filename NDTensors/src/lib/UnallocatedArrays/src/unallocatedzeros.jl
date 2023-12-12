@@ -8,15 +8,11 @@ end
 
 function UnallocatedZeros(f::Zeros, alloc::Type{<:AbstractArray})
   return set_alloctype(
-    set_axes(set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))),
+    set_axestype(set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))),
     alloc,
   )(
     f
   )
-end
-
-function set_alloctype(T::Type{<:UnallocatedZeros}, alloc::Type{<:AbstractArray})
-  return set_parameters(T, Position{4}(), alloc)
 end
 
 set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, alloc)
