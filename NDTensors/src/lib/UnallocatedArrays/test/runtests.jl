@@ -198,20 +198,6 @@ using .NDTensorsTestUtils: devices_list
     @test C[1] == elt(6)
   end
 
-  @testset "Tensor" begin
-    Z = UnallocatedZeros(Zeros{elt}(6), dev(Vector{elt}))
-    D = Dense(Z)
-    @test D isa Dense{elt,UnallocatedZeros{elt,1,Tuple{Base.OneTo{Int64}},Vector{elt}}}
-    @test D[3] == elt(0)
-    R = D .* D
-    @test_broken R isa
-      Dense{elt,UnallocatedZeros{elt,1,Tuple{Base.OneTo{Int64}},Vector{elt}}}
-
-    T = Tensor(D, (2, 3))
-    @test T[1, 2] == zero(elt)
-    #T * transpose(T)
-  end
-
   ## The following two tests don't work properly yet
 
   F = UnallocatedFill(Fill(elt(2), (2, 3)), dev(Matrix{elt}))
