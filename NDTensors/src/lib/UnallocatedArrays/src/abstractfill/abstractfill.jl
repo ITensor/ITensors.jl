@@ -3,7 +3,12 @@ using NDTensors.SetParameters: Position, get_parameter, set_parameters
 ## Here are functions specifically defined for UnallocatedArrays
 ## not implemented by FillArrays
 ## TODO determine min number of functions needed to be forwarded
-alloctype(A::AbstractFill) = alloctype(typeof(A))
+function alloctype(A::AbstractFill)
+  al = A.alloc
+  return (al isa Type ? al : typeof(al))
+end
+
+## TODO this fails if the parameter is a type
 function alloctype(Atype::Type{<:AbstractFill})
   return get_parameter(Atype, Position{4}())
 end

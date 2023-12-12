@@ -174,6 +174,10 @@ using .NDTensorsTestUtils: devices_list
     @test R isa UnallocatedZeros
     @test alloctype(R) == alloctype(P)
     @test size(R) == (2, 3)
+
+    F = UnallocatedFill(Fill(elt(2), (2, 3)), dev(Matrix{elt}))
+    R = F + F
+    @test R isa UnallocatedFill
   end
 
   ## TODO make other kron tests
@@ -199,12 +203,5 @@ using .NDTensorsTestUtils: devices_list
     @test alloctype(C) == alloctype(B)
     @test C[1] == elt(6)
   end
-
-  ## The following two tests don't work properly yet
-
-  ### TODO this is broken because +(a::AbstractFill, b::AbstractFill) = Fill(...) 
-  F = UnallocatedFill(Fill(elt(2), (2, 3)), dev(Matrix{elt}))
-  R = F + F
-  @test_broken R isa UnallocatedFill
 end
 end

@@ -11,19 +11,29 @@ using FillArrays:
 using NDTensors.SetParameters: Position, set_parameters
 ## TODO Should Alloc also be of ElT and N or should there be 
 ## More freedom there?
-struct UnallocatedZeros{ElT,N,Axes,Alloc<:AbstractArray{ElT,N}} <: AbstractZeros{ElT,N,Axes}
+struct UnallocatedZeros{ElT,N,Axes,Alloc} <: AbstractZeros{ElT,N,Axes}
   z::Zeros{ElT,N,Axes}
+  alloc::Alloc
 end
 
-function UnallocatedZeros(f::Zeros, alloc::Type{<:AbstractArray})
-  return set_alloctype(
-    set_axestype(
-      set_ndims(set_eltype(UnallocatedZeros, eltype(f)), ndims(f)), typeof(axes(f))
-    ),
-    alloc,
-  )(
-    f
-  )
+function UnallocatedZeros{ElT,N,Axes}(z::Zeros, alloc::Type) where {ElT,N,Axes}
+  return UnallocatedZeros{ElT,N,Axes,Type{alloc}}(z, alloc)
+end
+
+function UnallocatedZeros{ElT,N,Axes}(z::Zeros, alloc) where {ElT,N,Axes}
+  return UnallocatedZeros{ElT,N,Axes,typeof(alloc)}(z, alloc)
+end
+
+function UnallocatedZeros{ElT,N}(z::Zeros, alloc) where {ElT,N}
+  return UnallocatedZeros{ElT,N,typeof(axes(z))}(z, alloc)
+end
+
+function UnallocatedZeros{ElT}(z::Zeros, alloc) where {ElT}
+  return UnallocatedZeros{ElT,ndims(z)}(z, alloc)
+end
+
+function UnallocatedZeros(z::Zeros, alloc)
+  return UnallocatedZeros{eltype(z)}(z, alloc)
 end
 
 set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, alloc)
