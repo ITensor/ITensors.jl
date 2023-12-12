@@ -200,6 +200,7 @@ using .NDTensorsTestUtils: devices_list
 
   ## The following two tests don't work properly yet
 
+  ### TODO this is broken because +(a::AbstractFill, b::AbstractFill) = Fill(...) 
   F = UnallocatedFill(Fill(elt(2), (2, 3)), dev(Matrix{elt}))
   R = F + F
   @test_broken R isa UnallocatedFill
