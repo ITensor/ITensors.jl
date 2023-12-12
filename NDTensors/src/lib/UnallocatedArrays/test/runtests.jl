@@ -58,9 +58,6 @@ using .NDTensorsTestUtils: devices_list
     Fc = allocate(complex(F))
     @test eltype(Fc) == complex(eltype(F))
     @test typeof(Fc) == alloctype(complex(F))
-
-    ## TODO without prior call to allocate this is broken because it doesn't
-    ## consider how to form Fc i.e. allocate
     Fc[2, 3, 4] = 4.0 + 3.0im
     @test Fc[2, 3, 4] == 4.0 + 3.0im
   end
