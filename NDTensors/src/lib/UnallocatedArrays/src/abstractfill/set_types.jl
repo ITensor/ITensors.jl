@@ -1,3 +1,6 @@
+using FillArrays: AbstractFill
+using NDTensors.SetParameters: SetParameters, Position
+using NDTensors.UnspecifiedTypes: UnspecifiedZero
 ## TODO make unit tests for all of these functions
 ## TODO remove P4
 # `SetParameters.jl` overloads.
@@ -32,7 +35,7 @@ end
 ## To quickly specify P1, P2, and P3 
 ## default parameters
 function SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{1})
-  return UnspecifiedTypes.UnallocatedZeros
+  return UnspecifiedTypes.UnspecifiedZero
 end
 SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{2}) = 0
 SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{3}) = Tuple{}

@@ -1,3 +1,5 @@
+using NDTensors.SetParameters: SetParameters, Position
+using NDTensors.UnspecifiedTypes: UnspecifiedArray, UnspecifiedNumber, UnspecifiedZero
 # ## TODO make unit tests for all of these functions
 ## TODO All I need to do is overload AbstractFill functions with 4 parameters
 # `SetParameters.jl` overloads.
@@ -25,11 +27,12 @@ function SetParameters.set_parameter(
 end
 
 # ## default parameters
+## TODO add info for eltype and N
 function SetParameters.default_parameter(::Type{<:UnallocatedFill}, ::Position{4})
-  return UnspecifiedTypes.UnspecifiedArray
+  return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero}, 0}
 end
 function SetParameters.default_parameter(::Type{<:UnallocatedZeros}, ::Position{4})
-  return UnspecifiedTypes.UnspecifiedArray
+  return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero}, 0}
 end
 
 SetParameters.nparameters(::Type{<:UnallocatedFill}) = Val(4)

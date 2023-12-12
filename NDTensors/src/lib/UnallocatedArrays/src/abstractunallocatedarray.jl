@@ -1,3 +1,5 @@
+using FillArrays: FillArrays, getindex_value
+using NDTensors.SetParameters: set_parameters
 @inline Base.axes(A::Union{<:UnallocatedFill,<:UnallocatedZeros}) = axes(parent(A))
 Base.size(A::Union{<:UnallocatedFill,<:UnallocatedZeros}) = size(parent(A))
 function FillArrays.getindex_value(A::Union{<:UnallocatedFill,<:UnallocatedZeros})

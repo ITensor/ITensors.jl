@@ -1,3 +1,5 @@
+using FillArrays: AbstractFill
+using NDTensors.SetParameters: Position, get_parameter, set_parameters
 ## Here are functions specifically defined for UnallocatedArrays
 ## not implemented by FillArrays
 ## TODO determine min number of functions needed to be forwarded
