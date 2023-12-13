@@ -20,7 +20,6 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc} <: AbstractZeros{ElT,N,Axes}
   end
 end
 
-## TODO make this an error until its fully defined
 function UnallocatedZeros{ElT,N}(z::Zeros, alloc) where {ElT,N}
   return UnallocatedZeros{ElT,N,typeof(axes(z))}(z, alloc)
 end
