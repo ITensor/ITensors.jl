@@ -1,6 +1,6 @@
 default_sector_size() = 4
 function default_sector_label()
-  return Label{default_label_name_type(),default_values_type(),typeof(default_category())}
+  return Label{default_label_name_type(),Category{String7},default_values_type()}
 end
 default_sector_storage() = SmallSet{default_sector_size(),default_sector_label()}
 
@@ -16,14 +16,14 @@ end
 function Sector(
   v::Vector; storage_type=default_sector_storage(), storage_kwargs=(; by=name)
 )
-  #LabelType = isempty(v) ? Label : typeof(first(v))
-  #StorageType = 
   return _Sector(storage_type(v; storage_kwargs...))
 end
 
 function Sector(t1::Tuple, ts...; label_kwargs=(;), kws...)
   return Sector([Label(t...; label_kwargs...) for t in (t1, ts...)]; kws...)
 end
+
+Sector() = Sector([])
 
 # Convenience constructor where extra parenthesis not required for
 # a single label
@@ -84,14 +84,13 @@ end
 function Base.show(io::IO, q::Sector)
   Na = nactive(q)
   print(io, "Sector(")
-  for (n, s) in enumerate(storage(q))
+  for (n, l) in enumerate(storage(q))
     n > 1 && print(io, ",")
     Na > 1 && print(io, "(")
-    if name(s) != ""
-      print(io, "\"$(name(s))\",")
+    if name(l) != ""
+      print(io, "\"$(name(l))\",")
     end
-    print(io, "$(val_to_str(s))")
-    print(io, ",$(category(s))")
+    print(io, "$(category(l)),$(val_to_str(l))")
     Na > 1 && print(io, ")")
   end
   return print(io, ")")

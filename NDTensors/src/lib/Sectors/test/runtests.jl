@@ -3,10 +3,10 @@ using Test
 
 @testset "Test Sector System" begin
   @testset "U(1)" begin
-    q0 = Sector(0)
-    q1 = Sector(1)
-    q2 = Sector(2)
-    q3 = Sector(3)
+    q0 = Sector(U(1), 0)
+    q1 = Sector(U(1), 1)
+    q2 = Sector(U(1), 2)
+    q3 = Sector(U(1), 3)
 
     @test q0 ⊗ q0 == [q0]
     @test q0 ⊗ q1 == [q1]
@@ -16,8 +16,8 @@ using Test
   end
 
   @testset "Ƶ_2" begin
-    z0 = Sector(0, Z(2))
-    z1 = Sector(1, Z(2))
+    z0 = Sector(Z(2), 0)
+    z1 = Sector(Z(2), 1)
 
     @test z0 ⊗ z0 == [z0]
     @test z0 ⊗ z1 == [z1]
@@ -26,9 +26,9 @@ using Test
   end
 
   @testset "Ƶ_3" begin
-    z0 = Sector(0, Z(3))
-    z1 = Sector(1, Z(3))
-    z2 = Sector(2, Z(3))
+    z0 = Sector(Z(3), 0)
+    z1 = Sector(Z(3), 1)
+    z2 = Sector(Z(3), 2)
 
     @test z0 ⊗ z0 == [z0]
     @test z0 ⊗ z1 == [z1]
@@ -39,11 +39,11 @@ using Test
   end
 
   @testset "SU(2)" begin
-    j0 = Sector(0, SU(2))
-    j½ = Sector(1 / 2, SU(2))
-    j1 = Sector(1, SU(2))
-    j3_2 = Sector(3 / 2, SU(2))
-    j2 = Sector(2, SU(2))
+    j0 = Sector(SU(2), 0)
+    j½ = Sector(SU(2), 1//2)
+    j1 = Sector(SU(2), 1)
+    j3_2 = Sector(SU(2), 3//2)
+    j2 = Sector(SU(2), 2)
 
     @test j0 ⊗ j0 == [j0]
     @test j0 ⊗ j½ == [j½]
@@ -62,11 +62,11 @@ using Test
   # each representation
   #
   @testset "SUd(2)" begin
-    d1 = Sector(1, SUd(2)) # spin 0
-    d2 = Sector(2, SUd(2)) # spin 1/2
-    d3 = Sector(3, SUd(2)) # spin 1
-    d4 = Sector(4, SUd(2)) # spin 3/2
-    d5 = Sector(5, SUd(2)) # spin 2
+    d1 = Sector(SUd(2), 1) # spin 0
+    d2 = Sector(SUd(2), 2) # spin 1/2
+    d3 = Sector(SUd(2), 3) # spin 1
+    d4 = Sector(SUd(2), 4) # spin 3/2
+    d5 = Sector(SUd(2), 5) # spin 2
 
     @test d1 ⊗ d1 == [d1]
     @test d1 ⊗ d2 == [d2]
@@ -77,45 +77,45 @@ using Test
     @test d3 ⊗ d3 == d1 ⊕ d3 ⊕ d5
   end
 
-  #@testset "Ising" begin
-  #  ı = Sector("1", Ising)
-  #  σ = Sector("σ", Ising)
-  #  ψ = Sector("ψ", Ising)
+  @testset "Ising" begin
+    ı = Sector(Ising, "1")
+    σ = Sector(Ising, "σ")
+    ψ = Sector(Ising, "ψ")
 
-  #  @test ı ⊗ ı == [ı]
-  #  @test ı ⊗ σ == [σ]
-  #  @test ı ⊗ ψ == [ψ]
-  #  @test σ ⊗ σ == ı ⊕ ψ
-  #  @test ψ ⊗ σ == [σ]
-  #  @test ψ ⊗ ψ == [ı]
+    @test ı ⊗ ı == [ı]
+    @test ı ⊗ σ == [σ]
+    @test ı ⊗ ψ == [ψ]
+    @test σ ⊗ σ == ı ⊕ ψ
+    @test ψ ⊗ σ == [σ]
+    @test ψ ⊗ ψ == [ı]
 
-  #  @test Sector(0, Ising) == ı
-  #  @test Sector(1 / 2, Ising) == σ
-  #  @test Sector(1, Ising) == ψ
-  #end
+    @test Sector(Ising, 0) == ı
+    @test Sector(Ising, 1//2) == σ
+    @test Sector(Ising, 1) == ψ
+  end
 
-  #@testset "Fibonacci" begin
-  #  ı = Sector("1", Fib)
-  #  τ = Sector("τ", Fib)
+  @testset "Fibonacci" begin
+    ı = Sector(Fib, "1")
+    τ = Sector(Fib, "τ")
 
-  #  @test ı ⊗ ı == [ı]
-  #  @test ı ⊗ τ == [τ]
-  #  @test τ ⊗ τ == ı ⊕ τ
+    @test ı ⊗ ı == [ı]
+    @test ı ⊗ τ == [τ]
+    @test τ ⊗ τ == ı ⊕ τ
 
-  #  @test Sector(0, Fib) == ı
-  #  @test Sector(1, Fib) == τ
-  #end
+    @test Sector(Fib, 0) == ı
+    @test Sector(Fib, 1) == τ
+  end
 
   @testset "SU(2) with z component" begin
-    q½p = Sector("J", (1 / 2, 1 / 2), SUz(2))
-    q½m = Sector("J", (1 / 2, -1 / 2), SUz(2))
-    q1p = Sector("J", (1, +1), SUz(2))
-    q10 = Sector("J", (1, 0), SUz(2))
-    q1m = Sector("J", (1, -1), SUz(2))
-    q00 = Sector("J", (0, 0), SUz(2))
-    q22 = Sector("J", (2, +2), SUz(2))
-    q21 = Sector("J", (2, +1), SUz(2))
-    q20 = Sector("J", (2, 0), SUz(2))
+    q½p = Sector("J", SUz(2), (1//2, 1//2))
+    q½m = Sector("J", SUz(2), (1//2, -1//2))
+    q1p = Sector("J", SUz(2), (1, +1))
+    q10 = Sector("J", SUz(2), (1, 0))
+    q1m = Sector("J", SUz(2), (1, -1))
+    q00 = Sector("J", SUz(2), (0, 0))
+    q22 = Sector("J", SUz(2), (2, +2))
+    q21 = Sector("J", SUz(2), (2, +1))
+    q20 = Sector("J", SUz(2), (2, 0))
 
     @test q½p ⊗ q½p == [q1p]
     @test q½p ⊗ q½m == q00 ⊕ q10
@@ -128,9 +128,9 @@ using Test
 
   @testset "Multiple U(1)'s" begin
     q00 = Sector()
-    q10 = Sector("A", 1)
-    q01 = Sector("B", 1)
-    q11 = Sector(("A", 1), ("B", 1))
+    q10 = Sector("A", U(1), 1)
+    q01 = Sector("B", U(1), 1)
+    q11 = Sector(("A", U(1), 1), ("B", U(1), 1))
 
     @test q00 ⊗ q00 == [q00]
     @test q01 ⊗ q00 == [q01]
@@ -140,14 +140,14 @@ using Test
 
   @testset "U(1) ⊗ SU(2)" begin
     q0 = Sector()
-    q0h = Sector(("J", 1 / 2, SU(2)))
-    q10 = Sector(("N", 1), ("J", 0, SU(2)))
-    q1h = Sector(("N", 1), ("J", 1 / 2, SU(2)))
-    q11 = Sector(("N", 1), ("J", 1, SU(2)))
-    q20 = Sector(("N", 2))
-    q2h = Sector(("N", 2), ("J", 1 / 2, SU(2)))
-    q21 = Sector(("N", 2), ("J", 1, SU(2)))
-    q22 = Sector(("N", 2), ("J", 2, SU(2)))
+    q0h = Sector(("J", SU(2), 1//2))
+    q10 = Sector(("N", U(1), 1), ("J", SU(2), 0))
+    q1h = Sector(("N", U(1), 1), ("J", SU(2), 1//2))
+    q11 = Sector(("N", U(1), 1), ("J", SU(2), 1))
+    q20 = Sector(("N", U(1), 2))
+    q2h = Sector(("N", U(1), 2), ("J", SU(2), 1//2))
+    q21 = Sector(("N", U(1), 2), ("J", SU(2), 1))
+    q22 = Sector(("N", U(1), 2), ("J", SU(2), 2))
 
     @test q1h ⊗ q1h == q20 ⊕ q21
     @test q10 ⊗ q1h == [q2h]
@@ -156,30 +156,30 @@ using Test
   end
 
   @testset "Set all sectors" begin
-    q = Sector(("A", 1))
+    q = Sector(("A", U(1), 1))
     @test nactive(q) == 1
-    q = Sector(("B", 2), ("A", 1))
+    q = Sector(("B", U(1), 2), ("A", U(1), 1))
     @test nactive(q) == 2
-    q = Sector(("C", 3), ("B", 2), ("A", 1))
+    q = Sector(("C", U(1), 3), ("B", U(1), 2), ("A", U(1), 1))
     @test nactive(q) == 3
-    q = Sector(("D", 4), ("C", 3), ("B", 2), ("A", 1))
+    q = Sector(("D", U(1), 4), ("C", U(1), 3), ("B", U(1), 2), ("A", U(1), 1))
     @test nactive(q) == 4
   end
 
   @testset "Comparison with unspecified labels" begin
-    q2 = Sector("N", 2, U(1))
+    q2 = Sector("N", U(1), 2)
 
-    q20 = Sector(("N", 2, U(1)), ("J", 0, SU(2)))
+    q20 = Sector(("N", U(1), 2), ("J", SU(2), 0))
 
     @test q20 == q2
 
-    q21 = Sector(("N", 2, U(1)), ("J", 1, SU(2)))
+    q21 = Sector(("N", U(1), 2), ("J", SU(2), 1))
     @test q21 != q2
 
-    a = Sector(("A", 0), ("B", 2))
-    b = Sector(("B", 2), ("C", 0))
+    a = Sector(("A", U(1), 0), ("B", U(1), 2))
+    b = Sector(("B", U(1), 2), ("C", U(1), 0))
     @test a == b
-    c = Sector(("B", 2), ("C", 1))
+    c = Sector(("B", U(1), 2), ("C", U(1), 1))
     @test a != c
   end
 end

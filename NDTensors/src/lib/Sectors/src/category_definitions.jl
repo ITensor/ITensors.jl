@@ -86,7 +86,7 @@ const Fib = Category("Fib")
 # (see arxiv:2008.08598)
 fusion_rule(::CategoryType"Fib", a1, a2) = fusion_rule(SU(2, 3), a1, a2)
 
-val_to_str(::CategoryType"Fib", a) = ("1", "τ")[a + 1]
+val_to_str(::CategoryType"Fib", a) = ("1", "τ")[first(a) + 1]
 str_to_val(::CategoryType"Fib", a::AbstractString) = (a == "τ") ? 1 : 0
 
 #

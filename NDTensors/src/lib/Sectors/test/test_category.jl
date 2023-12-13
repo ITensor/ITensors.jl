@@ -71,27 +71,27 @@ using Test
   end
 
   @testset "Fusion Rule Functions" begin
-    @test fusion_rule(Z(2),0,0) == [0]
-    @test fusion_rule(Z(2),0,1) == [1]
-    @test fusion_rule(Z(2),1,1) == [0]
+    @test fusion_rule(Z(2), 0, 0) == [0]
+    @test fusion_rule(Z(2), 0, 1) == [1]
+    @test fusion_rule(Z(2), 1, 1) == [0]
 
-    @test fusion_rule(Ising,1,1) == [0]
-    @test fusion_rule(Ising,1/2,1/2) == [0,1]
+    @test fusion_rule(Ising, 1, 1) == [0]
+    @test fusion_rule(Ising, 1 / 2, 1 / 2) == [0, 1]
 
-    @test fusion_rule(SU(2),1,1) == [0,1,2]
-    @test fusion_rule(SU(2),1/2,1) == [1/2,3/2]
+    @test fusion_rule(SU(2), 1, 1) == [0, 1, 2]
+    @test fusion_rule(SU(2), 1 / 2, 1) == [1 / 2, 3 / 2]
   end
 
   @testset "String to Val and Vice Versa" begin
-    @test val_to_str(Ising,0) == "1"
-    @test val_to_str(Ising,1/2) == "σ"
-    @test val_to_str(Ising,1) == "ψ"
+    @test val_to_str(Ising, 0) == "1"
+    @test val_to_str(Ising, 1 / 2) == "σ"
+    @test val_to_str(Ising, 1) == "ψ"
 
-    @test str_to_val(Ising,"1") == 0
-    @test str_to_val(Ising,"σ") == 1/2
-    @test str_to_val(Ising,"ψ") == 1
+    @test str_to_val(Ising, "1") == 0
+    @test str_to_val(Ising, "σ") == 1 / 2
+    @test str_to_val(Ising, "ψ") == 1
 
-    @test_throws ErrorException str_to_val(SU(2),"test")
+    @test_throws ErrorException str_to_val(SU(2), "test")
   end
 end
 
