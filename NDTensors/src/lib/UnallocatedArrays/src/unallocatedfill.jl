@@ -5,14 +5,10 @@ import Base: +
 struct UnallocatedFill{ElT,N,Axes,Alloc} <: AbstractFill{ElT,N,Axes}
   f::Fill{ElT,N,Axes}
   alloc::Alloc
-end
 
-function UnallocatedFill{ElT,N,Axes}(f::Fill, alloc::Type) where {ElT,N,Axes}
-  return UnallocatedFill{ElT,N,Axes,Type{alloc}}(f, alloc)
-end
-
-function UnallocatedFill{ElT,N,Axes}(f::Fill, alloc) where {ElT,N,Axes}
-  return UnallocatedFill{ElT,N,Axes,typeof(alloc)}(f, alloc)
+  function UnallocatedFill{ElT,N,Axes}(f::Fill, alloc::Type{<:AbstractArray{ElT, N}}) where {ElT,N,Axes}
+    return new{ElT, N, Axes, Type{alloc}}(f, alloc)
+  end
 end
 
 function UnallocatedFill{ElT,N}(f::Fill, alloc) where {ElT,N}
