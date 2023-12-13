@@ -6,8 +6,10 @@ struct UnallocatedFill{ElT,N,Axes,Alloc} <: AbstractFill{ElT,N,Axes}
   f::Fill{ElT,N,Axes}
   alloc::Alloc
 
-  function UnallocatedFill{ElT,N,Axes}(f::Fill, alloc::Type{<:AbstractArray{ElT, N}}) where {ElT,N,Axes}
-    return new{ElT, N, Axes, Type{alloc}}(f, alloc)
+  function UnallocatedFill{ElT,N,Axes}(
+    f::Fill, alloc::Type{<:AbstractArray{ElT,N}}
+  ) where {ElT,N,Axes}
+    return new{ElT,N,Axes,Type{alloc}}(f, alloc)
   end
 end
 

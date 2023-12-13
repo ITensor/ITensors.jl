@@ -15,8 +15,10 @@ struct UnallocatedZeros{ElT,N,Axes,Alloc} <: AbstractZeros{ElT,N,Axes}
   z::Zeros{ElT,N,Axes}
   alloc::Alloc
 
-  function UnallocatedZeros{ElT,N,Axes}(z::Zeros, alloc::Type{<:AbstractArray{ElT, N}}) where {ElT,N,Axes}
-    return new{ElT, N, Axes, Type{alloc}}(z, alloc)
+  function UnallocatedZeros{ElT,N,Axes}(
+    z::Zeros, alloc::Type{<:AbstractArray{ElT,N}}
+  ) where {ElT,N,Axes}
+    return new{ElT,N,Axes,Type{alloc}}(z, alloc)
   end
 end
 
