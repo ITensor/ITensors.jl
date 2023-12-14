@@ -1,3 +1,4 @@
+using NDTensors.SetParameters: Position, set_parameter
 function allocate_output(
   ::typeof(contract),
   alg::Algorithm,
@@ -13,7 +14,10 @@ function allocate_output(
   # TODO: Define `output_type(contract, alg, labels_dest, a1::AbstractArray, labels1, a2::AbstractArray, labels2, α, β)`.
   # TODO: Define `output_structure(contract, alg, labels_dest, a1::AbstractArray, labels1, a2::AbstractArray, labels2, α, β)`.
   # TODO: Define `allocate(type, structure)`.
-  return Array{promote_type(eltype(a1), eltype(a2))}(undef, length.(axes_dest))
+  elt = promote_type(eltype(a1), eltype(a2))
+  @assert typeof(a1) == typeof(a2)
+  array = set_parameter(typeof(a1), Position{1}(), elt)
+  return array(undef, length.(axes_dest))
 end
 
 # TODO: Generalize to `output_structure`.
