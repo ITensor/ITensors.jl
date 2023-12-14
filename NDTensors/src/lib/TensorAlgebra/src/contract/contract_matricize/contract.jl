@@ -1,3 +1,4 @@
+using NDTensors.Unwrap: expose
 function contract!(
   alg::Algorithm"matricize",
   a_dest::AbstractArray,
@@ -12,7 +13,7 @@ function contract!(
   a_dest_matricized = matricize(a_dest, biperm_dest)
   a1_matricized = matricize(a1, biperm1)
   a2_matricized = matricize(a2, biperm2)
-  mul!(a_dest_matricized, a1_matricized, a2_matricized, α, β)
+  mul!(expose(a_dest_matricized), expose(a1_matricized), expose(a2_matricized), α, β)
   perm_dest = flatten(biperm_dest)
   # TODO: Create a function `unmatricize` or `unfusedims`.
   # unmatricize!(a_dest, a_dest_matricized, axes(a_dest), perm_dest)
