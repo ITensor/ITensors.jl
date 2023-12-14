@@ -19,7 +19,7 @@ Label of a specific sector or irrep of a category or group.
 A Label also carries a name such as "J" or "Sz" giving the 
 meaning of the symmetry in an application.
 """
-struct Label{Name,Category,Values}
+struct Label{Name,Category,Values} <: AbstractLabel
   name::Name
   category::Category
   values::Values
@@ -41,13 +41,11 @@ function Label(
   )
 end
 
-function Label(category::Category, values; kws...)
-  return Label("", category, values; kws...)
-end
+Label(category::Category, values; kws...) = Label("", category, values; kws...)
 
 name(s::Label) = s.name
 category(s::Label) = s.category
-values(s::Label) = s.values
+Base.values(s::Label) = s.values
 
 function ⊗(s1::Label, s2::Label)
   name(s1) == name(s2) ||
@@ -59,12 +57,13 @@ function ⊗(s1::Label, s2::Label)
     v in fusion_rule(category(s1), values(s1), values(s2))
   ]
 end
-Base.:(*)(s1::Label, s2::Label) = ⊗(s1, s2)
-
-function Base.show(io::IO, l::Label)
-  return print(io, "Label(\"", name(l), "\",", values(l), ",", category(l), ")")
-end
 
 istrivial(l::Label) = istrivial(category(l), values(l))
 
 val_to_str(l::Label) = val_to_str(category(l), values(l))
+
+function Base.show(io::IO, l::Label)
+  print(io, "Label(")
+  (length(name(l)) > 0) && print(io, "\"", name(l), "\",")
+  return print(io, category(l), ",", val_to_str(l), ")")
+end

@@ -5,10 +5,11 @@ end
 default_sector_storage() = SmallSet{default_sector_size(),default_sector_label()}
 
 """
-A Sector is a sorted collection of named
+A Sector is a collection of named
 symmetry Labels such as ("J", 1, SU(2)) or ("N", 2, U(1))
+sorted by their name.
 """
-struct Sector{Storage}
+struct Sector{Storage} <: AbstractLabel
   storage::Storage
   global _Sector(storage) = new{typeof(storage)}(storage)
 end
@@ -19,11 +20,9 @@ function Sector(
   return _Sector(storage_type(v; storage_kwargs...))
 end
 
-function Sector(t1::Tuple, ts...; label_kwargs=(;), kws...)
-  return Sector([Label(t...; label_kwargs...) for t in (t1, ts...)]; kws...)
+function Sector(ts::Vararg{<:Tuple,N}; label_kwargs=(;), kws...) where {N}
+  return Sector([Label(t...; label_kwargs...) for t in ts]; kws...)
 end
-
-Sector() = Sector([])
 
 # Convenience constructor where extra parenthesis not required for
 # a single label
@@ -63,20 +62,10 @@ function ⊗(A::Sector, B::Sector)
   qs = [union(B, q) for q in qs]
   return qs
 end
-Base.:(*)(a::Sector, b::Sector) = ⊗(a, b)
-
-# Direct sum of Sector and vectors of Sectors
-⊕(a::Sector, b::Sector) = [a, b]
-⊕(v::Vector{<:Sector}, b::Sector) = vcat(v, b)
-⊕(a::Sector, v::Vector{Sector}) = vcat(a, v)
 
 function Base.:(==)(A::Sector, B::Sector)
   common_labels = zip(intersect(A, B), intersect(B, A))
   common_labels_match = all(t -> (t[1] == t[2]), common_labels)
-  #
-  # TODO: replace with "istrivial" check rather than iszero
-  #       since groups like SUd might use 1 as trivial value
-  #
   unique_labels_zero = all(l -> istrivial(l), symdiff(A, B))
   return common_labels_match && unique_labels_zero
 end
@@ -94,13 +83,4 @@ function Base.show(io::IO, q::Sector)
     Na > 1 && print(io, ")")
   end
   return print(io, ")")
-end
-
-function Base.show(io::IO, q::Vector{<:Sector})
-  isempty(q) && return nothing
-  symbol = ""
-  for l in q
-    print(io, symbol, l)
-    symbol = " ⊕ "
-  end
 end

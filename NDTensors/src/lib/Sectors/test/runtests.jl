@@ -1,5 +1,66 @@
-import NDTensors.Sectors: ⊗, ⊕, U, SU, SUd, SUz, Z, Fib, Ising, Sector, nactive
+import NDTensors.Sectors:
+  ⊗,
+  ⊕,
+  U,
+  SU,
+  SUd,
+  SUz,
+  Z,
+  Fib,
+  Ising,
+  Sector,
+  nactive,
+  Label,
+  category,
+  name,
+  istrivial,
+  values
 using Test
+
+@testset "Test Label system" begin
+  @testset "U(1) Labels" begin
+    l0 = Label(U(1), 0)
+    l1 = Label(U(1), 1)
+    l2 = Label(U(1), 2)
+
+    @test name(l1) == ""
+    @test category(l1) == U(1)
+    @test values(l1) == (1, 0)
+
+    @test istrivial(l0)
+    @test !istrivial(l1)
+    @test !istrivial(l2)
+
+    @test l0 ⊗ l0 == [l0]
+    @test l0 ⊗ l1 == [l1]
+    @test l0 ⊗ l2 == [l2]
+    @test l1 ⊗ l1 == [l2]
+  end
+
+  @testset "SU(2) Labels" begin
+    l0 = Label(SU(2), 0)
+    l½ = Label(SU(2), 1//2)
+    l1 = Label(SU(2), 1)
+    l3_2 = Label(SU(2), 3//2)
+
+    @test istrivial(l0)
+    @test !istrivial(l½)
+    @test !istrivial(l1)
+
+    @test l0 ⊗ l½ == [l½]
+    @test l0 ⊗ l1 == [l1]
+    @test l½ ⊗ l½ == l0 ⊕ l1
+    @test l½ ⊗ l1 == l½ ⊕ l3_2
+  end
+
+  @testset "Named Labels" begin
+    n0 = Label("N", U(1), 0)
+    n1 = Label("N", U(1), 1)
+    @test n0 ⊗ n0 == [n0]
+    @test n0 ⊗ n1 == [n1]
+    @test name(first(n0 ⊗ n0)) == "N"
+  end
+end
 
 @testset "Test Sector System" begin
   @testset "U(1)" begin
