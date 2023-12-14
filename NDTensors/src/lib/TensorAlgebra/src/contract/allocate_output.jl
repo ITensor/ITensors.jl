@@ -15,7 +15,9 @@ function allocate_output(
   # TODO: Define `output_structure(contract, alg, labels_dest, a1::AbstractArray, labels1, a2::AbstractArray, labels2, α, β)`.
   # TODO: Define `allocate(type, structure)`.
   elt = promote_type(eltype(a1), eltype(a2))
-  array = set_parameter(set_parameter(typeof(a1), Position{1}(), elt), Position{2}(), length(axes_dest))
+  array = set_parameter(
+    set_parameter(typeof(a1), Position{1}(), elt), Position{2}(), length(axes_dest)
+  )
   return array(undef, length.(axes_dest))
 end
 
