@@ -61,7 +61,7 @@ basename(C::Category{CName}) where {CName<:CategoryName} = basename(CName())
 
 function static(C::Category)
   CName = CategoryName{basename(C)}
-  return Category(CName(), groupdim(C), level(C); name_type=CName)
+  return _Category(CName(), groupdim(C), level(C))
 end
 
 dynamic(C::Category) = Category(basename(C), groupdim(C), level(C))
