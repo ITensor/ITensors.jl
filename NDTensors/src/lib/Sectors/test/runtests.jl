@@ -115,15 +115,15 @@ using Test
   end
 
   @testset "Fibonacci" begin
-    ı = Sector(Fib, "1")
-    τ = Sector(Fib, "τ")
+    ı = Label(Fib, "1")
+    τ = Label(Fib, "τ")
 
     @test ı ⊗ ı == [ı]
     @test ı ⊗ τ == [τ]
     @test τ ⊗ τ == ı ⊕ τ
 
-    @test Sector(Fib, 0) == ı
-    @test Sector(Fib, 1) == τ
+    @test Label(Fib, 0) == ı
+    @test Label(Fib, 1) == τ
   end
 
   @testset "SU(2) with z component" begin
