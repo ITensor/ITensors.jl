@@ -15,7 +15,9 @@ using Test: @test, @test_broken, @testset
       labels1 = map(i -> labels[i], d1s)
       a2 = randn(elt2, map(i -> dims[i], d2s))
       labels2 = map(i -> labels[i], d2s)
-      for perm1 in permutations(1:ndims(a1)), perm2 in permutations(1:ndims(a2))
+      for perm1 in Tuple.(permutations(1:ndims(a1))),
+        perm2 in Tuple.(permutations(1:ndims(a2)))
+
         a1′ = permutedims(a1, perm1)
         a2′ = permutedims(a2, perm2)
         labels1′ = map(i -> labels1[i], perm1)

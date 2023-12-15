@@ -17,6 +17,7 @@ function contract!(
   return a_dest
 end
 
+# TODO: Rewrite this in terms of `contract!`.
 function contract(
   alg::Algorithm"matricize",
   biperm_dest::BlockedPermutation{2},
@@ -26,13 +27,11 @@ function contract(
   biperm2::BlockedPermutation{2},
   α,
 )
-  a1_mat = fusedims(a1, biperm1)
-  a2_mat = fusedims(a2, biperm2)
-  # TODO: Handle `α` lazily.
-  a_dest_mat = α * a1_mat * a2_mat
-
-  error()
-  axes_dest # = ...
-  a_dest = splitdims(a_dest_mat, axes_dest, biperm_dest)
+  # TODO: Wrap in `allocated_output(contract, ...)`.
+  axes_codomain, axes_contracted = blockpermute(axes(a1), biperm1)
+  axes_contracted2, axes_domain = blockpermute(axes(a2), biperm2)
+  axes_dest = (axes_codomain..., axes_domain...)
+  a_dest = similar(a1, promote_type(eltype(a1), eltype(a2)), axes_dest)
+  contract!(alg, a_dest, biperm_dest, a1, biperm1, a2, biperm2, α, false)
   return a_dest
 end

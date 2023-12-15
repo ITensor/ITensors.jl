@@ -50,6 +50,20 @@ function contract!(
   return a_dest
 end
 
+function contract(
+  alg::Algorithm,
+  labels_dest,
+  a1::AbstractArray,
+  labels1,
+  a2::AbstractArray,
+  labels2,
+  α=true;
+  kwargs...,
+)
+  biperm_dest, biperm1, biperm2 = blockedperms(contract, labels_dest, labels1, labels2)
+  return contract(alg, biperm_dest, a1, biperm1, a2, biperm2, α; kwargs...)
+end
+
 function contract!(
   alg::Algorithm,
   a_dest::AbstractArray,
@@ -62,7 +76,8 @@ function contract!(
   β;
   kwargs...,
 )
-  return error("Not implemented")
+  biperm_dest, biperm1, biperm2 = blockedperms(contract, labels_dest, labels1, labels2)
+  return contract!(alg, a_dest, biperm_dest, a1, biperm1, a2, biperm2, α, β; kwargs...)
 end
 
 function contract(
