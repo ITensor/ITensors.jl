@@ -1,27 +1,38 @@
 function contract!(
   alg::Algorithm"matricize",
   a_dest::AbstractArray,
-  biperm_dest::BipartitionedPermutation,
+  biperm_dest::BlockedPermutation{2},
   a1::AbstractArray,
-  biperm1::BipartitionedPermutation,
+  biperm1::BlockedPermutation{2},
   a2::AbstractArray,
-  biperm2::BipartitionedPermutation,
+  biperm2::BlockedPermutation{2},
   α,
   β,
 )
-  a_dest_matricized = matricize(a_dest, biperm_dest)
-  a1_matricized = matricize(a1, biperm1)
-  a2_matricized = matricize(a2, biperm2)
-  mul!(a_dest_matricized, a1_matricized, a2_matricized, α, β)
-  perm_dest = flatten(biperm_dest)
-  # TODO: Create a function `unmatricize` or `unfusedims`.
-  # unmatricize!(a_dest, a_dest_matricized, axes(a_dest), perm_dest)
-  a_dest_copy = reshape(a_dest_matricized, map(i -> axes(a_dest, i), perm_dest))
-  if iszero(ndims(a_dest)) && iszero(ndims(a_dest_copy)) && iszero(length(perm_dest))
-    # TODO: Raise an issue with Base Julia.
-    a_dest[] = a_dest_copy[]
-  else
-    permutedims!(a_dest, a_dest_copy, invperm(perm_dest))
-  end
+  a_dest_mat = fusedims(a_dest, biperm_dest)
+  a1_mat = fusedims(a1, biperm1)
+  a2_mat = fusedims(a2, biperm2)
+  mul!(a_dest_mat, a1_mat, a2_mat, α, β)
+  splitdims!(a_dest, a_dest_mat, biperm_dest)
+  return a_dest
+end
+
+function contract(
+  alg::Algorithm"matricize",
+  biperm_dest::BlockedPermutation{2},
+  a1::AbstractArray,
+  biperm1::BlockedPermutation{2},
+  a2::AbstractArray,
+  biperm2::BlockedPermutation{2},
+  α,
+)
+  a1_mat = fusedims(a1, biperm1)
+  a2_mat = fusedims(a2, biperm2)
+  # TODO: Handle `α` lazily.
+  a_dest_mat = α * a1_mat * a2_mat
+
+  error()
+  axes_dest # = ...
+  a_dest = splitdims(a_dest_mat, axes_dest, biperm_dest)
   return a_dest
 end

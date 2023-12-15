@@ -2,11 +2,8 @@ module LinearAlgebraExtensions
 using LinearAlgebra: LinearAlgebra, qr
 using ..TensorAlgebra:
   TensorAlgebra,
-  BipartitionedPermutation,
-  bipartition,
-  bipartitioned_permutations,
-  matricize,
-  unmatricize
+  BlockedPermutation,
+  blockedperms
 
 include("qr.jl")
 end

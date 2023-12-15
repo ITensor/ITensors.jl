@@ -30,11 +30,11 @@ end
 function output_axes(
   f::typeof(contract),
   alg::Algorithm,
-  biperm_dest::BipartitionedPermutation,
+  biperm_dest::BlockedPermutation{2},
   axes1,
-  biperm1::BipartitionedPermutation,
+  biperm1::BlockedPermutation{2},
   axes2,
-  biperm2::BipartitionedPermutation,
+  biperm2::BlockedPermutation{2},
 )
   perm_dest = flatten(biperm_dest)
   nuncontracted1 = length(biperm1[1])

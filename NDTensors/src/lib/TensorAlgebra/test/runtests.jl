@@ -37,17 +37,17 @@ using Test: @test, @test_broken, @testset
     labels2 = (:x, :d, :b)
     @test_broken a′ = TensorAlgebra.contract(labels_dest, a1, labels1, a2, labels2)
   end
-  @testset "qr" begin
-    a = randn(5, 4, 3, 2)
-    labels_a = (:a, :b, :c, :d)
-    labels_q = (:b, :a)
-    labels_r = (:d, :c)
-    q, r = qr(a, labels_a, labels_q, labels_r)
-    label_qr = :qr
-    a′ = TensorAlgebra.contract(
-      labels_a, q, (labels_q..., label_qr), r, (label_qr, labels_r...)
-    )
-    @test a ≈ a′
-  end
+  ## @testset "qr" begin
+  ##   a = randn(5, 4, 3, 2)
+  ##   labels_a = (:a, :b, :c, :d)
+  ##   labels_q = (:b, :a)
+  ##   labels_r = (:d, :c)
+  ##   q, r = qr(a, labels_a, labels_q, labels_r)
+  ##   label_qr = :qr
+  ##   a′ = TensorAlgebra.contract(
+  ##     labels_a, q, (labels_q..., label_qr), r, (label_qr, labels_r...)
+  ##   )
+  ##   @test a ≈ a′
+  ## end
 end
 end

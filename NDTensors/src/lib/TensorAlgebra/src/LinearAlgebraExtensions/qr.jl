@@ -2,7 +2,7 @@ function LinearAlgebra.qr(a::AbstractArray, labels_a, labels_q, labels_r)
   return qr(a, bipartitioned_permutations(qr, labels_a, labels_q, labels_r)...)
 end
 
-function LinearAlgebra.qr(a::AbstractArray, biperm::BipartitionedPermutation)
+function LinearAlgebra.qr(a::AbstractArray, biperm::BlockedPermutation{2})
   # TODO: Use a thin QR, define `qr_thin`.
   a_matricized = matricize(a, biperm)
   q_matricized, r_matricized = qr(a_matricized)
@@ -13,9 +13,9 @@ function LinearAlgebra.qr(a::AbstractArray, biperm::BipartitionedPermutation)
   return q, r
 end
 
-function TensorAlgebra.bipartitioned_permutations(qr, labels_a, labels_q, labels_r)
+function TensorAlgebra.blockedperms(qr, labels_a, labels_q, labels_r)
   # TODO: Use something like `findall`?
   pos_q = map(l -> findfirst(isequal(l), labels_a), labels_q)
   pos_r = map(l -> findfirst(isequal(l), labels_a), labels_r)
-  return (BipartitionedPermutation(pos_q, pos_r),)
+  return (BlockedPermutation((pos_q, pos_r)),)
 end

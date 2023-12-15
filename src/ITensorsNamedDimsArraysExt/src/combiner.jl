@@ -1,6 +1,6 @@
 # Combiner
 using ..NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, name
-using ..NDTensors.TensorAlgebra: TensorAlgebra, fusedims, splitdims
+using ..NDTensors.TensorAlgebra: TensorAlgebra, fusedims # , splitdims
 using NDTensors: NDTensors, Tensor, Combiner
 
 function ITensors._contract(na::AbstractNamedDimsArray, c::Tensor{<:Any,<:Any,<:Combiner})

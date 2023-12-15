@@ -1,4 +1,4 @@
-using ...NDTensors.TensorAlgebra: fusedims, splitdims
+using ...NDTensors.TensorAlgebra: fusedims #, splitdims
 
 function TensorAlgebra.fusedims(na::AbstractNamedDimsArray, fusions::Pair...)
   # TODO: generalize to multiple fused groups of dimensions
@@ -20,23 +20,23 @@ function TensorAlgebra.fusedims(na::AbstractNamedDimsArray, fusions::Pair...)
   return named(a_fused, names_fused)
 end
 
-function TensorAlgebra.splitdims(na::AbstractNamedDimsArray, splitters::Pair...)
-  fused_names = first.(splitters)
-  split_namedlengths = last.(splitters)
-  splitters_unnamed = map(splitters) do splitter
-    fused_name, split_namedlengths = splitter
-    fused_dim = findfirst(isequal(fused_name), dimnames(na))
-    split_lengths = unname.(split_namedlengths)
-    return fused_dim => split_lengths
-  end
-  a_split = splitdims(unname(na), splitters_unnamed...)
-  names_split = Any[tuple.(dimnames(na))...]
-  for splitter in splitters
-    fused_name, split_namedlengths = splitter
-    fused_dim = findfirst(isequal(fused_name), dimnames(na))
-    split_names = name.(split_namedlengths)
-    names_split[fused_dim] = split_names
-  end
-  names_split = reduce((x, y) -> (x..., y...), names_split)
-  return named(a_split, names_split)
-end
+## function TensorAlgebra.splitdims(na::AbstractNamedDimsArray, splitters::Pair...)
+##   fused_names = first.(splitters)
+##   split_namedlengths = last.(splitters)
+##   splitters_unnamed = map(splitters) do splitter
+##     fused_name, split_namedlengths = splitter
+##     fused_dim = findfirst(isequal(fused_name), dimnames(na))
+##     split_lengths = unname.(split_namedlengths)
+##     return fused_dim => split_lengths
+##   end
+##   a_split = splitdims(unname(na), splitters_unnamed...)
+##   names_split = Any[tuple.(dimnames(na))...]
+##   for splitter in splitters
+##     fused_name, split_namedlengths = splitter
+##     fused_dim = findfirst(isequal(fused_name), dimnames(na))
+##     split_names = name.(split_namedlengths)
+##     names_split[fused_dim] = split_names
+##   end
+##   names_split = reduce((x, y) -> (x..., y...), names_split)
+##   return named(a_split, names_split)
+## end
