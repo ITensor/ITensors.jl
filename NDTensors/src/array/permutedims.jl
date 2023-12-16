@@ -10,11 +10,15 @@ function permutedims(E::Exposed{<:Array}, perm)
 end
 
 function permutedims!(Edest::Exposed{<:Array}, Esrc::Exposed{<:Array}, perm)
-  @strided unexpose(Edest) .= permutedims(Esrc, perm)
-  return unexpose(Edest)
+  a_dest = unexpose(Edest)
+  a_src = unexpose(Esrc)
+  @strided a_dest .= permutedims(a_src, perm)
+  return a_dest
 end
 
 function permutedims!(Edest::Exposed{<:Array}, Esrc::Exposed{<:Array}, perm, f)
-  @strided unexpose(Edest) .= f.(unexpose(Edest), permutedims(Esrc, perm))
-  return unexpose(Edest)
+  a_dest = unexpose(Edest)
+  a_src = unexpose(Esrc)
+  @strided a_dest .= f.(a_dest, permutedims(a_src, perm))
+  return a_dest
 end
