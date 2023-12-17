@@ -23,6 +23,22 @@ function split_adjacent_dims(a::AbstractArray, axes)
   return reshape(a, axes)
 end
 
+function splitdims(
+  a::AbstractArray,
+  axes_dest::Tuple{Vararg{AbstractUnitRange}},
+  blockedperm::BlockedPermutation,
+)
+  # TODO: Pass grouped axes.
+  a_dest_perm = split_adjacent_dims(a, axes_dest)
+  a_dest = permutedims(a_dest_perm, invperm(Tuple(blockedperm)))
+  return a_dest
+end
+
+function splitdims(a::AbstractArray, axes_dest::Tuple{Vararg{AbstractUnitRange}})
+  # TODO: Pass grouped axes.
+  return split_adjacent_dims(a, axes_dest)
+end
+
 function splitdims!(
   a_dest::AbstractArray, a::AbstractArray, blockedperm::BlockedPermutation
 )

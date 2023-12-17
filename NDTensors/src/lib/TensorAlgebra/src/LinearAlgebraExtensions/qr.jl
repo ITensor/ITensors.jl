@@ -1,21 +1,42 @@
-function LinearAlgebra.qr(a::AbstractArray, labels_a, labels_q, labels_r)
-  return qr(a, bipartitioned_permutations(qr, labels_a, labels_q, labels_r)...)
+using LinearAlgebra: LinearAlgebra, qr
+using ..TensorAlgebra:
+  TensorAlgebra, BlockedPermutation, blockedperm, blockpermute, fusedims, splitdims
+
+function LinearAlgebra.qr(a::AbstractArray, biperm::Tuple{Vararg{Any,2}})
+  return qr(a, BlockedPermutation(biperm[1], biperm[2]))
 end
 
 function LinearAlgebra.qr(a::AbstractArray, biperm::BlockedPermutation{2})
-  # TODO: Use a thin QR, define `qr_thin`.
-  a_matricized = matricize(a, biperm)
+  a_matricized = fusedims(a, biperm)
+
+  # TODO: Make this more generic, allow choosing thin or full,
+  # make sure this works on GPU.
   q_matricized, r_matricized = qr(a_matricized)
   q_matricized_thin = typeof(a_matricized)(q_matricized)
-  axes_codomain, axes_domain = bipartition(axes(a), biperm)
-  q = unmatricize(q_matricized_thin, axes_codomain, (axes(q_matricized_thin, 2),))
-  r = unmatricize(r_matricized, (axes(r_matricized, 1),), axes_domain)
+
+  axes_codomain, axes_domain = blockpermute(axes(a), biperm)
+  axes_q = (axes_codomain..., axes(q_matricized_thin, 2))
+  biperm_q = blockedperm(
+    (1:length(axes_codomain), (length(axes_codomain) + 1,)), length(axes_codomain) + 1
+  )
+  axes_r = (axes(r_matricized, 1), axes_domain...)
+  biperm_r = blockedperm(((1,), 2:(length(axes_domain) + 1)), length(axes_domain) + 1)
+  q = splitdims(q_matricized_thin, axes_q)
+  r = splitdims(r_matricized, axes_r)
   return q, r
 end
 
-function TensorAlgebra.blockedperms(qr, labels_a, labels_q, labels_r)
-  # TODO: Use something like `findall`?
+function LinearAlgebra.qr(
+  a::AbstractArray, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
+)
+  return qr(a, blockedperm(qr, labels_a, labels_q, labels_r))
+end
+
+function TensorAlgebra.blockedperm(
+  ::typeof(qr), labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
+)
+  # TODO: Use `indexin`?
   pos_q = map(l -> findfirst(isequal(l), labels_a), labels_q)
   pos_r = map(l -> findfirst(isequal(l), labels_a), labels_r)
-  return (BlockedPermutation((pos_q, pos_r)),)
+  return blockedperm((pos_q, pos_r), length(labels_a))
 end
