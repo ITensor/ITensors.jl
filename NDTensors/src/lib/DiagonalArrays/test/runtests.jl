@@ -15,15 +15,16 @@ using .NDTensorsTestUtils: devices_list
       ),
     ) isa Any
   end
-  @testset "DiagonalArray (eltype=$elt)" for dev in devices_list(ARGS), elt in
-                                             (Float32, Float64, ComplexF32, ComplexF64)
+  @testset "DiagonalArray (eltype=$elt)" for dev in devices_list(ARGS),
+    elt in (Float32, Float64, ComplexF32, ComplexF64)
+
     @testset "Basics" begin
       a = dev(fill(one(elt), 2, 3))
       @test diaglength(a) == 2
       a = dev(fill(one(elt)))
       @test diaglength(a) == 1
     end
-   @testset "Matrix multiplication" begin
+    @testset "Matrix multiplication" begin
       a1 = dev(DiagonalArray{elt}(undef, (2, 3)))
       a2 = dev(DiagonalArray{elt}(undef, (3, 4)))
       @allowscalar begin

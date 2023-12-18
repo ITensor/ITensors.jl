@@ -29,6 +29,8 @@ function NDTensors.adapt_storagetype(
   return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,BufT}, StoreT))
 end
 
-function Adapt.adapt_storage(to::NDTensorsCUDAExt.NDTensorCuArrayAdaptor, x::AbstractDiagonalArray)
-  DiagonalArray(adapt_storage(to, x.diag), size(x), getindex_zero_function(x))
+function Adapt.adapt_storage(
+  to::NDTensorsCUDAExt.NDTensorCuArrayAdaptor, x::AbstractDiagonalArray
+)
+  return DiagonalArray(adapt_storage(to, x.diag), size(x), getindex_zero_function(x))
 end
