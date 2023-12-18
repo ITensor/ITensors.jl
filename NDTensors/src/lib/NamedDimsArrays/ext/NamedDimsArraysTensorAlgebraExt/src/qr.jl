@@ -16,7 +16,9 @@ function LinearAlgebra.qr(na::AbstractNamedDimsArray; positive=nothing)
   return nq, nr
 end
 
-function LinearAlgebra.qr(na::AbstractNamedDimsArray, labels_codomain::Tuple, labels_domain::Tuple; positive=nothing)
+function LinearAlgebra.qr(
+  na::AbstractNamedDimsArray, labels_codomain::Tuple, labels_domain::Tuple; positive=nothing
+)
   @assert isnothing(positive)
   q, r = qr(unname(na), dimnames(na), name.(labels_codomain), name.(labels_domain))
   name_qr = randname(dimnames(na)[1])
