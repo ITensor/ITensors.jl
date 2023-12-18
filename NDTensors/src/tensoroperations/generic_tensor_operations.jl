@@ -9,16 +9,31 @@ end
 # and return the result of the permutation.
 # Similar to `BangBang.jl` notation:
 # https://juliafolds.github.io/BangBang.jl/stable/.
-function permutedims!!(output_tensor::Tensor, tensor::Tensor, perm, f::Function=(r, t) -> t)
+function permutedims!!(output_tensor::Tensor, tensor::Tensor, perm, f::Function)
   Base.checkdims_perm(output_tensor, tensor, perm)
   permutedims!(output_tensor, tensor, perm, f)
   return output_tensor
 end
 
-function permutedims!(output_tensor::Tensor, tensor::Tensor, perm, f::Function=(r, t) -> t)
+# Equivalent to `permutedims!!(output_tensor, tensor, perm, (r, t) -> t)`
+function permutedims!!(output_tensor::Tensor, tensor::Tensor, perm)
+  Base.checkdims_perm(output_tensor, tensor, perm)
+  permutedims!(output_tensor, tensor, perm)
+  return output_tensor
+end
+
+function permutedims!(output_tensor::Tensor, tensor::Tensor, perm, f::Function)
   Base.checkdims_perm(output_tensor, tensor, perm)
   error(
-    "`permutedims!(output_tensor::Tensor, tensor::Tensor, perm, f::Function=(r, t) -> t)` not implemented for `typeof(output_tensor) = $(typeof(output_tensor))`, `typeof(tensor) = $(typeof(tensor))`, `perm = $perm`, and `f = $f`.",
+    "`permutedims!(output_tensor::Tensor, tensor::Tensor, perm, f::Function` not implemented for `typeof(output_tensor) = $(typeof(output_tensor))`, `typeof(tensor) = $(typeof(tensor))`, `perm = $perm`, and `f = $f`.",
+  )
+  return output_tensor
+end
+
+function permutedims!(output_tensor::Tensor, tensor::Tensor, perm)
+  Base.checkdims_perm(output_tensor, tensor, perm)
+  error(
+    "`permutedims!(output_tensor::Tensor, tensor::Tensor, perm` not implemented for `typeof(output_tensor) = $(typeof(output_tensor))`, `typeof(tensor) = $(typeof(tensor))`, and `perm = $perm`.",
   )
   return output_tensor
 end
