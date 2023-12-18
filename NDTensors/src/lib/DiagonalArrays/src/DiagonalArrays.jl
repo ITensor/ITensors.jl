@@ -11,4 +11,5 @@ include("diagonalarray/diagonalarray.jl")
 include("diagonalarray/diagonalmatrix.jl")
 include("diagonalarray/diagonalvector.jl")
 include("diagonalarray/arraylayouts.jl")
+include("diagonalarray/adapt.jl")
 end

@@ -1,3 +1,5 @@
+using Adapt: Adapt, adapt, adapt_storage
+using NDTensors.DiagonalArrays: AbstractDiagonalArray, DiagonalArray, getindex_zero_function
 ## Here we need an NDTensorCuArrayAdaptor because the CuArrayAdaptor provided by CUDA
 ## converts 64 bit numbers to 32 bit.  We cannot write `adapt(CuVector, x)` because this
 ## Will not allow us to properly utilize the buffer preference without changing the value of
@@ -25,4 +27,8 @@ function NDTensors.adapt_storagetype(
 ) where {ElT,StoreT}
   BufT = buffertype(adaptor)
   return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,BufT}, StoreT))
+end
+
+function Adapt.adapt_storage(to::NDTensorsCUDAExt.NDTensorCuArrayAdaptor, x::AbstractDiagonalArray)
+  DiagonalArray(adapt_storage(to, x.diag), size(x), getindex_zero_function(x))
 end
