@@ -1,4 +1,4 @@
-using FillArrays: AbstractFill
+using FillArrays: AbstractFill, Fill, Zeros
 using NDTensors.SetParameters: SetParameters, Position
 using NDTensors.UnspecifiedTypes: UnspecifiedZero
 ## TODO make unit tests for all of these functions
@@ -35,8 +35,8 @@ function SetParameters.set_parameter(
   return strip_parameters(T){P1,P2}
 end
 function SetParameters.set_parameter(
-  T::Type{<:AbstractFill{P1,<:Any}}, ::Position{2}, P2
-) where {P1}
+  T::Type{<:AbstractFill{P1,P}}, ::Position{2}, P2
+) where {P1, P}
   return strip_parameters(T){P1,P2}
 end
 function SetParameters.set_parameter(
@@ -57,8 +57,8 @@ function SetParameters.set_parameter(
   return strip_parameters(T){P1,P2,P3}
 end
 function SetParameters.set_parameter(
-  T::Type{<:AbstractFill{P1,P2,<:Any}}, ::Position{3}, P3
-) where {P1,P2}
+  T::Type{<:AbstractFill{P1,P2,P}}, ::Position{3}, P3
+) where {P1,P2,P}
   return strip_parameters(T){P1,P2,P3}
 end
 
