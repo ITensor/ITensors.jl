@@ -3,7 +3,7 @@ using NDTensors.SetParameters: set_parameters
 using Adapt: adapt
 
 const UnallocatedArray{ElT,N,AxesT,AllocT} = Union{
-  <:UnallocatedFill{ElT,N,AxesT,AllocT},<:UnallocatedZeros{ElT,N,AxesT,AllocT}
+  UnallocatedFill{ElT,N,AxesT,AllocT},UnallocatedZeros{ElT,N,AxesT,AllocT}
 }
 
 @inline Base.axes(A::UnallocatedArray) = axes(parent(A))
