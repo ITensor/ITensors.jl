@@ -31,6 +31,14 @@ Base.parent(F::UnallocatedFill) = F.f
 
 Base.convert(::Type{<:UnallocatedFill}, A::UnallocatedFill) = A
 
+function set_eltype(T::UnallocatedFill, elt::Type)
+  f = parent(T)
+  FT = set_eltype(typeof(f), elt)
+  return set_alloctype(
+    FT(getindex_value(f), axes(f)), set_parameters(alloctype(T), Position{1}(), elt)
+  )
+end
+
 #############################################
 # Arithmatic
 

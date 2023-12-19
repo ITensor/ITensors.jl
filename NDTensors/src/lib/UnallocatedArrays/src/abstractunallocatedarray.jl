@@ -13,9 +13,7 @@ function FillArrays.getindex_value(A::UnallocatedArray)
 end
 
 function Base.complex(A::UnallocatedArray)
-  return set_alloctype(
-    complex(parent(A)), set_parameters(alloctype(A), Position{1}(), complex(eltype(A)))
-  )
+  return set_eltype(A, complex(eltype(A)))
 end
 
 function Base.transpose(a::UnallocatedArray)
