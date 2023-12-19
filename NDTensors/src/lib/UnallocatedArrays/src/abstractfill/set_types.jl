@@ -36,7 +36,7 @@ function SetParameters.set_parameter(
 end
 function SetParameters.set_parameter(
   T::Type{<:AbstractFill{P1,P}}, ::Position{2}, P2
-) where {P1, P}
+) where {P1,P}
   return strip_parameters(T){P1,P2}
 end
 function SetParameters.set_parameter(
