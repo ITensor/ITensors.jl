@@ -1,6 +1,5 @@
 using FillArrays: FillArrays, AbstractFill, Fill, broadcasted_fill, kron_fill, mult_fill
 using NDTensors.SetParameters: Position, set_parameters
-import Base: +
 
 struct UnallocatedFill{ElT,N,Axes,Alloc} <: AbstractFill{ElT,N,Axes}
   f::Fill{ElT,N,Axes}
@@ -72,11 +71,7 @@ function FillArrays.kron_fill(a::UnallocatedFill, b::UnallocatedFill, val, ax)
   return UnallocatedFill(Fill(val, ax), alloctype(a))
 end
 
-function +(A::UnallocatedFill, B::UnallocatedFill)
-  FillArrays.promote_shape(A, B)
-  b = getindex_value(B)
-  return A .+ b
-end
+Base.:+(A::UnallocatedFill, B::UnallocatedFill) = A .+ B
 
 # ####
 # ## TODO use `set_parameters` as constructor to these types
