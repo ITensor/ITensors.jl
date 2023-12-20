@@ -1,5 +1,6 @@
 module NamedDimsArrays
 include("traits.jl")
+include("name.jl")
 include("randname.jl")
 include("abstractnamedint.jl")
 include("abstractnamedunitrange.jl")

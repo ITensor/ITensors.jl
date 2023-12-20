@@ -18,6 +18,11 @@ function blockedperm(permblocks::Tuple, leng)
   return BlockedPermutation(perm, lasts)
 end
 
+# blockedperm(((4, 3), (2, 1)))
+function blockedperm(permblocks::Tuple)
+  return blockedperm(permblocks, sum(length, permblocks))
+end
+
 function Base.Tuple(blockedperm::BlockedPermutation)
   return blockedperm.permutation
 end

@@ -24,6 +24,8 @@ parenttype(::AbstractNamedDimsArray{<:Any,<:Any,Parent}) where {Parent} = Parent
 # This is a constructor
 ## named(a::AbstractArray, names) = error("Not implemented")
 
+dimnames(a::AbstractNamedDimsArray, i::Int) = dimnames(a)[i]
+
 # Traits
 # TODO: Define for `AbstractArray`.
 # TODO: Define a trait type `IsNamed`.

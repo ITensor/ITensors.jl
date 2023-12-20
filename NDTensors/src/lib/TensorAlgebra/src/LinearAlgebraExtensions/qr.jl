@@ -2,11 +2,7 @@ using LinearAlgebra: LinearAlgebra, qr
 using ..TensorAlgebra:
   TensorAlgebra, BlockedPermutation, blockedperm, blockpermute, fusedims, splitdims
 
-function LinearAlgebra.qr(a::AbstractArray, biperm::Tuple{Vararg{Any,2}})
-  return qr(a, BlockedPermutation(biperm[1], biperm[2]))
-end
-
-function LinearAlgebra.qr(a::AbstractArray, biperm::BlockedPermutation{2})
+function _qr(a::AbstractArray, biperm::BlockedPermutation{2})
   a_matricized = fusedims(a, biperm)
 
   # TODO: Make this more generic, allow choosing thin or full,
@@ -26,8 +22,24 @@ function LinearAlgebra.qr(a::AbstractArray, biperm::BlockedPermutation{2})
   return q, r
 end
 
+function LinearAlgebra.qr(a::AbstractArray, biperm::BlockedPermutation{2})
+  return _qr(a, biperm)
+end
+
+# Fix ambiguity error with `LinearAlgebra`.
+function LinearAlgebra.qr(a::AbstractMatrix, biperm::BlockedPermutation{2})
+  return _qr(a, biperm)
+end
+
 function LinearAlgebra.qr(
   a::AbstractArray, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
+)
+  return qr(a, blockedperm(qr, labels_a, labels_q, labels_r))
+end
+
+# Fix ambiguity error with `LinearAlgebra`.
+function LinearAlgebra.qr(
+  a::AbstractMatrix, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
 )
   return qr(a, blockedperm(qr, labels_a, labels_q, labels_r))
 end
