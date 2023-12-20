@@ -19,7 +19,8 @@ elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     i, j, k, l = named.((2, 3, 4, 5), ("i", "j", "k", "l"))
     na = randn(elt, i, j, k, l)
     na_fused = fusedims(na, (k, i) => "a", (j, l) => "b")
-    @test unname(na_fused, ("a", "b")) ≈ reshape(unname(na, (k, i, j, l)), (unname(k) * unname(i), unname(j) * unname(l)))
+    @test unname(na_fused, ("a", "b")) ≈
+      reshape(unname(na, (k, i, j, l)), (unname(k) * unname(i), unname(j) * unname(l)))
   end
   @testset "qr" begin
     dims = (2, 2, 2, 2)

@@ -5,7 +5,7 @@ function TensorAlgebra.blockedperm(na::AbstractNamedDimsArray, nameddim_blocks::
   # Extract names if named dimensions or axes were passed
   dimname_blocks = map(group -> name.(group), nameddim_blocks)
   dimnames_a = dimnames(na)
-  perms =  map(dimname_blocks) do dimname_block
+  perms = map(dimname_blocks) do dimname_block
     return BaseExtensions.indexin(dimname_block, dimnames_a)
   end
   return blockedperm(perms)
