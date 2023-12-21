@@ -1,6 +1,12 @@
 using LinearAlgebra: LinearAlgebra, qr
 using ..TensorAlgebra:
-  TensorAlgebra, BlockedPermutation, blockedperm, blockpermute, fusedims, splitdims
+  TensorAlgebra,
+  BlockedPermutation,
+  blockedperm,
+  blockedperm_indexin,
+  blockpermute,
+  fusedims,
+  splitdims
 
 function _qr(a::AbstractArray, biperm::BlockedPermutation{2})
   a_matricized = fusedims(a, biperm)
@@ -12,11 +18,12 @@ function _qr(a::AbstractArray, biperm::BlockedPermutation{2})
 
   axes_codomain, axes_domain = blockpermute(axes(a), biperm)
   axes_q = (axes_codomain..., axes(q_matricized_thin, 2))
+  # TODO: Use `tuple_oneto(n) = ntuple(identity, n)`, currently in `BlockSparseArrays`.
   biperm_q = blockedperm(
-    (1:length(axes_codomain), (length(axes_codomain) + 1,)), length(axes_codomain) + 1
+    ntuple(identity, length(axes_codomain)), (length(axes_codomain) + 1,)
   )
   axes_r = (axes(r_matricized, 1), axes_domain...)
-  biperm_r = blockedperm(((1,), 2:(length(axes_domain) + 1)), length(axes_domain) + 1)
+  biperm_r = blockedperm((1,), ntuple(identity, length(axes_domain)) .+ 1)
   q = splitdims(q_matricized_thin, axes_q)
   r = splitdims(r_matricized, axes_r)
   return q, r
@@ -34,21 +41,12 @@ end
 function LinearAlgebra.qr(
   a::AbstractArray, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
 )
-  return qr(a, blockedperm(qr, labels_a, labels_q, labels_r))
+  return qr(a, blockedperm_indexin(labels_a, labels_q, labels_r))
 end
 
 # Fix ambiguity error with `LinearAlgebra`.
 function LinearAlgebra.qr(
   a::AbstractMatrix, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
 )
-  return qr(a, blockedperm(qr, labels_a, labels_q, labels_r))
-end
-
-function TensorAlgebra.blockedperm(
-  ::typeof(qr), labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
-)
-  # TODO: Use `indexin`?
-  pos_q = map(l -> findfirst(isequal(l), labels_a), labels_q)
-  pos_r = map(l -> findfirst(isequal(l), labels_a), labels_r)
-  return blockedperm((pos_q, pos_r), length(labels_a))
+  return qr(a, blockedperm_indexin(labels_a, labels_q, labels_r))
 end

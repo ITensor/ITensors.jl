@@ -1,15 +1,116 @@
 @eval module $(gensym())
+using BlockArrays
 using Combinatorics: permutations
+using EllipsisNotation: var".."
 using LinearAlgebra: norm, qr
-using NDTensors.TensorAlgebra: TensorAlgebra
+using NDTensors.TensorAlgebra:
+  TensorAlgebra, blockedperm, blockedperm_indexin, fusedims, splitdims
 using NDTensors: NDTensors
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: default_rtol
 using TensorOperations: TensorOperations
 using Test: @test, @test_broken, @testset
+const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
+@testset "BlockedPermutation" begin
+  p = blockedperm((3, 4, 5), (2, 1))
+  @test Tuple(p) === (3, 4, 5, 2, 1)
+  @test isperm(p)
+  @test length(p) == 5
+  @test blocks(p) == ((3, 4, 5), (2, 1))
+  @test blocklength(p) == 2
+  @test blocklengths(p) == (3, 2)
+  @test blockfirsts(p) == (1, 4)
+  @test blocklasts(p) == (3, 5)
+  @test invperm(p) == blockedperm((5, 4, 1), (2, 3))
 
+  # Split collection into `BlockedPermutation`.
+  p = blockedperm_indexin(("a", "b", "c", "d"), ("c", "a"), ("b", "d"))
+  @test p == blockedperm((3, 1), (2, 4))
+
+  # Singleton dimensions.
+  p = blockedperm((2, 3), 1)
+  @test p == blockedperm((2, 3), (1,))
+
+  # First dimensions are unspecified.
+  p = blockedperm(.., (4, 3))
+  @test p == blockedperm(1, 2, (4, 3))
+  # Specify length
+  p = blockedperm(.., (4, 3); length=Val(6))
+  @test p == blockedperm(1, 2, 5, 6, (4, 3))
+
+  # Last dimensions are unspecified.
+  p = blockedperm((4, 3), ..)
+  @test p == blockedperm((4, 3), 1, 2)
+  # Specify length
+  p = blockedperm((4, 3), ..; length=Val(6))
+  @test p == blockedperm((4, 3), 1, 2, 5, 6)
+
+  # Middle dimensions are unspecified.
+  p = blockedperm((4, 3), .., 1)
+  @test p == blockedperm((4, 3), 2, 1)
+  # Specify length
+  p = blockedperm((4, 3), .., 1; length=Val(6))
+  @test p == blockedperm((4, 3), 2, 5, 6, 1)
+
+  # No dimensions are unspecified.
+  p = blockedperm((3, 2), .., 1)
+  @test p == blockedperm((3, 2), 1)
+end
 @testset "TensorAlgebra" begin
-  elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
+  @testset "fusedims (eltype=$elt)" for elt in elts
+    a = randn(elt, 2, 3, 4, 5)
+    a_fused = fusedims(a, (1, 2), (3, 4))
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(a, 6, 20)
+    a_fused = fusedims(a, (3, 1), (2, 4))
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(permutedims(a, (3, 1, 2, 4)), (8, 15))
+    a_fused = fusedims(a, (3, 1, 2), 4)
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(permutedims(a, (3, 1, 2, 4)), (24, 5))
+    a_fused = fusedims(a, .., (3, 1))
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(permutedims(a, (2, 4, 3, 1)), (3, 5, 8))
+    a_fused = fusedims(a, (3, 1), ..)
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(permutedims(a, (3, 1, 2, 4)), (8, 3, 5))
+    a_fused = fusedims(a, .., (3, 1), 2)
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(permutedims(a, (4, 3, 1, 2)), (5, 8, 3))
+    a_fused = fusedims(a, (3, 1), .., 2)
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(permutedims(a, (3, 1, 4, 2)), (8, 5, 3))
+    a_fused = fusedims(a, (3, 1), ..)
+    @test eltype(a_fused) === elt
+    @test a_fused ≈ reshape(permutedims(a, (3, 1, 2, 4)), (8, 3, 5))
+  end
+  @testset "splitdims (eltype=$elt)" for elt in elts
+    a = randn(elt, 6, 20)
+    a_split = splitdims(a, (2, 3), (5, 4))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (2, 3, 5, 4))
+    a_split = splitdims(a, (1:2, 1:3), (1:5, 1:4))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (2, 3, 5, 4))
+    a_split = splitdims(a, 2 => (5, 4), 1 => (2, 3))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (2, 3, 5, 4))
+    a_split = splitdims(a, 2 => (1:5, 1:4), 1 => (1:2, 1:3))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (2, 3, 5, 4))
+    a_split = splitdims(a, 2 => (5, 4))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (6, 5, 4))
+    a_split = splitdims(a, 2 => (1:5, 1:4))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (6, 5, 4))
+    a_split = splitdims(a, 1 => (2, 3))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (2, 3, 20))
+    a_split = splitdims(a, 1 => (1:2, 1:3))
+    @test eltype(a_split) === elt
+    @test a_split ≈ reshape(a, (2, 3, 20))
+  end
   @testset "contract (eltype1=$elt1, eltype2=$elt2)" for elt1 in elts, elt2 in elts
     dims = (2, 3, 4, 5, 6, 7, 8, 9, 10)
     labels = (:a, :b, :c, :d, :e, :f, :g, :h, :i)
@@ -65,9 +166,8 @@ using Test: @test, @test_broken, @testset
       )
     end
   end
-  @testset "qr" begin
-    # a = randn(5, 4, 3, 2)
-    a = randn(2, 2, 2, 2)
+  @testset "qr (eltype=$elt)" for elt in elts
+    a = randn(elt, 5, 4, 3, 2)
     labels_a = (:a, :b, :c, :d)
     labels_q = (:b, :a)
     labels_r = (:d, :c)
