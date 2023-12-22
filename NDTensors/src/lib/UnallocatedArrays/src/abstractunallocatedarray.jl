@@ -24,10 +24,6 @@ function Base.adjoint(a::UnallocatedArray)
   return set_alloctype(adjoint(parent(a)), alloctype(a))
 end
 
-function Base.similar(a::UnallocatedArray)
-  return alloctype(a)(undef, size(a))
-end
-
 function set_alloctype(T::Type{<:UnallocatedArray}, alloc::Type{<:AbstractArray})
   return set_parameters(T, Position{4}(), alloc)
 end
@@ -38,6 +34,16 @@ for STYPE in (:AbstractArray, :AbstractFill)
     @inline $STYPE{T}(F::UnallocatedArray{T}) where {T} = F
     @inline $STYPE{T,N}(F::UnallocatedArray{T,N}) where {T,N} = F
   end
+end
+
+function allocate(f::UnallocatedArray)
+  a = similar(f)
+  fill!(a, getindex_value(f))
+  return a
+end
+
+function Base.similar(f::UnallocatedArray)
+  return similar(alloctype(f), axes(f))
 end
 
 ## TODO fix this because reshape loses alloctype
