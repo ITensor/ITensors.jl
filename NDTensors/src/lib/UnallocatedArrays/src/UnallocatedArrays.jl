@@ -1,6 +1,5 @@
 module UnallocatedArrays
 include("abstractfill/abstractfill.jl")
-include("abstractfill/set_types.jl")
 
 include("unallocatedfill.jl")
 include("unallocatedzeros.jl")
