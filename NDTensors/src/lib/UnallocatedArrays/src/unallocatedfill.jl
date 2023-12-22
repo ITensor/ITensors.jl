@@ -65,7 +65,9 @@ end
 
 Base.:+(A::UnallocatedFill, B::UnallocatedFill) = A .+ B
 
-function Base.Broadcast.broadcasted(::Base.Broadcast.DefaultArrayStyle, op, r::UnallocatedFill) 
+function Base.Broadcast.broadcasted(
+  ::Base.Broadcast.DefaultArrayStyle, op, r::UnallocatedFill
+)
   f = op.(parent(r))
   return set_alloctype(f, set_parameters(alloctype(r), Position{1}(), eltype(f)))
 end

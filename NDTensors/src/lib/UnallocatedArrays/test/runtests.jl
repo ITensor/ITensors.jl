@@ -205,10 +205,11 @@ end
 
 using FillArrays: Fill, Zeros
 using NDTensors.UnallocatedArrays
-using NDTensors.SetParameters: Position, default_parameter, nparameters, get_parameter, set_parameters
+using NDTensors.SetParameters:
+  Position, default_parameter, nparameters, get_parameter, set_parameters
 using Test: @test, @testset
 
-@testset "SetParameters" begin 
+@testset "SetParameters" begin
   @testset "Tetsing $typ" for (typ) in (:Fill, :Zeros)
     @eval begin
       t1 = default_parameter($typ, Position{1}())
@@ -245,7 +246,7 @@ using Test: @test, @testset
 
       @test get_parameter(ft3, Position{1}()) == t1
       @test get_parameter(ft3, Position{2}()) == t2
-      @test get_parameter(ft3, Position{3}()) == t3 
+      @test get_parameter(ft3, Position{3}()) == t3
 
       @test nparameters(ft3) == Val(3)
     end
@@ -272,7 +273,7 @@ using Test: @test, @testset
 
       @test get_parameter(ft, Position{1}()) == t1
       @test get_parameter(ft, Position{2}()) == t2
-      @test get_parameter(ft, Position{3}()) == t3 
+      @test get_parameter(ft, Position{3}()) == t3
       @test get_parameter(ft, Position{4}()) == t4
 
       @test nparameters(ft) == Val(4)
