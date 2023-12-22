@@ -40,12 +40,6 @@ Base.parent(Z::UnallocatedZeros) = Z.z
 
 Base.convert(::Type{<:UnallocatedZeros}, A::UnallocatedZeros) = A
 
-function set_eltype(T::UnallocatedZeros, elt::Type)
-  z = parent(T)
-  ZT = set_eltype(typeof(z), elt)
-  return set_alloctype(ZT(axes(z)), set_parameters(alloctype(T), Position{1}(), elt))
-end
-
 #############################################
 # Arithmatic
 
