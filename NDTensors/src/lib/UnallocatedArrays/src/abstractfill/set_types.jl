@@ -1,7 +1,7 @@
 using FillArrays: AbstractFill, Fill, Zeros
 using NDTensors.SetParameters: SetParameters, Position
 using NDTensors.UnspecifiedTypes: UnspecifiedZero
-## TODO make unit tests for all of these functions
+
 # `SetParameters.jl` overloads.
 SetParameters.get_parameter(::Type{<:AbstractFill{P1}}, ::Position{1}) where {P1} = P1
 SetParameters.get_parameter(::Type{<:AbstractFill{<:Any,P2}}, ::Position{2}) where {P2} = P2
@@ -12,7 +12,6 @@ function SetParameters.get_parameter(
 end
 
 ## Setting paramaters
-# right now I am just defining the necessary ones for my implementation still working on full implementation
 # Set parameter 1
 function SetParameters.set_parameter(T::Type{<:AbstractFill}, ::Position{1}, P1)
   return unspecify_parameters(T){P1}
@@ -64,7 +63,7 @@ end
 
 ## default parameters
 function SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{1})
-  return UnspecifiedTypes.UnspecifiedZero
+  return UnspecifiedZero
 end
 SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{2}) = 0
 SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{3}) = Tuple{}
