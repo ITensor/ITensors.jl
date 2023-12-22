@@ -201,37 +201,52 @@ using .NDTensorsTestUtils: devices_list
     @test C[1] == elt(6)
   end
 end
-@testset "SetParameters" begin
-  for typ in (:Zeros, :Fill)
-    @eval begin
-      ft1 = $(typ){1}
-      ft2 = $typ{1,2}
-      ft3 = $typ{1,2,3}
+end
 
-      ## check 1 parameter specified
-      ftn1 = set_parameters(ft1, Position{1}(), 4)
-      ftn2 = set_parameters(ft1, Position{2}(), 4)
-      ftn3 = set_parameters(ft1, Position{3}(), 4)
-      @test ftn1 == $typ{4}
-      @test ftn2 == $typ{1,4}
-      @test ftn3 == $typ{1,<:Any,4}
+using FillArrays: Fill, Zeros
+using NDTensors.UnallocatedArrays
+using NDTensors.SetParameters: Position, default_parameter, nparameters, get_parameter, set_parameters
+using Test: @test, @testset
 
-      ## check 2 parameters specified
-      ftn1 = set_parameters(ft2, Position{1}(), 4)
-      ftn2 = set_parameters(ft2, Position{2}(), 4)
-      ftn3 = set_parameters(ft2, Position{3}(), 4)
-      @test ftn1 == $typ{4,2}
-      @test ftn2 == $typ{1,4}
-      @test ftn3 == $typ{1,2,4}
+@testset "SetParameters" for (typ) in (:Fill, :Zeros)
+  @eval begin
+    t1 = default_parameter($typ, Position{1}())
+    t2 = default_parameter($typ, Position{2}())
+    t3 = default_parameter($typ, Position{3}())
+    t4 = Any
+    ft1 = $typ{t1}
+    ft2 = $typ{t1,t2}
+    ft3 = $typ{t1,t2,t3}
 
-      ## check 3 parameters specified
-      ftn1 = set_parameters(ft3, Position{1}(), 4)
-      ftn2 = set_parameters(ft3, Position{2}(), 4)
-      ftn3 = set_parameters(ft3, Position{3}(), 4)
-      @test ftn1 == $typ{4,2,3}
-      @test ftn2 == $typ{1,4,3}
-      @test ftn3 == $typ{1,2,4}
-    end
+    ## check 1 parameter specified
+    ftn1 = set_parameters(ft1, Position{1}(), t4)
+    ftn2 = set_parameters(ft1, Position{2}(), t4)
+    ftn3 = set_parameters(ft1, Position{3}(), t4)
+    @test ftn1 == $typ{t4}
+    @test ftn2 == $typ{t1,t4}
+    @test ftn3 == $typ{t1,<:Any,t4}
+
+    ## check 2 parameters specified
+    ftn1 = set_parameters(ft2, Position{1}(), t4)
+    ftn2 = set_parameters(ft2, Position{2}(), t4)
+    ftn3 = set_parameters(ft2, Position{3}(), t4)
+    @test ftn1 == $typ{t4,t2}
+    @test ftn2 == $typ{t1,t4}
+    @test ftn3 == $typ{t1,t2,t4}
+
+    ## check 3 parameters specified
+    ftn1 = set_parameters(ft3, Position{1}(), t4)
+    ftn2 = set_parameters(ft3, Position{2}(), t4)
+    ftn3 = set_parameters(ft3, Position{3}(), t4)
+    @test ftn1 == $typ{t4,t2,t3}
+    @test ftn2 == $typ{t1,t4,t3}
+    @test ftn3 == $typ{t1,t2,t4}
+
+    @test get_parameter(ft3, Position{1}()) == t1
+    @test get_parameter(ft3, Position{2}()) == t2
+    @test get_parameter(ft3, Position{3}()) == t3 
+
+    @test nparameters(ft3) == Val(3)
   end
 end
 end
