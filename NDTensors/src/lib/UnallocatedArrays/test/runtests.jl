@@ -2,14 +2,13 @@
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
-using NDTensors.SetParameters: Position, set_parameters
 using LinearAlgebra: norm
-using Test: @test, @testset, @test_broken
+using Test: @test, @testset
 
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
 
-@testset "Testing UnallocatedArrays" for dev in devices_list(ARGS),
+@testset "Testing UnallocatedArrays on $dev with eltype $elt" for dev in devices_list(ARGS),
   elt in (Float64, Float32, ComplexF64, ComplexF32)
 
   @testset "Basic funcitonality" begin
