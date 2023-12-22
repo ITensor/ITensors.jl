@@ -1,25 +1,58 @@
+# Workaround for https://github.com/JuliaLang/julia/issues/52615
+function _permutedims!(
+  a_dest::AbstractArray{<:Any,N}, a_src::AbstractArray{<:Any,N}, perm::Tuple{Vararg{Int,N}}
+) where {N}
+  return permutedims!(a_dest, a_src, perm)
+end
+function _permutedims!(
+  a_dest::AbstractArray{<:Any,0}, a_src::AbstractArray{<:Any,0}, perm::Tuple{}
+)
+  a_dest[] = a_src[]
+  return a_dest
+end
+function _permutedims(a::AbstractArray{<:Any,N}, perm::Tuple{Vararg{Int,N}}) where {N}
+  return permutedims(a, perm)
+end
+function _permutedims(a::AbstractArray{<:Any,0}, perm::Tuple{})
+  return copy(a)
+end
+
 ⊗(a::AbstractUnitRange) = a
 function ⊗(a1::AbstractUnitRange, a2::AbstractUnitRange, as::AbstractUnitRange...)
   return ⊗(a1, ⊗(a2, as...))
 end
 ⊗(a1::AbstractUnitRange, a2::AbstractUnitRange) = Base.OneTo(length(a1) * length(a2))
+⊗() = Base.OneTo(1)
 
 function fusedims(a::AbstractArray, permblocks...)
   return fusedims(a, blockedperm(permblocks...; length=Val(ndims(a))))
 end
 
-function fusedims_adjacent(a::AbstractArray, ndims)
-  lasts = cumsum(ndims)
-  firsts = ntuple(i -> isone(i) ? 1 : lasts[i - 1] + 1, length(ndims))
-  ranges = ntuple(i -> firsts[i]:lasts[i], length(ndims))
-  fusedaxes = map(range -> ⊗(map(i -> axes(a, i), range)...), ranges)
-  # TODO: Add `canonicalizedims`.
-  return reshape(a, fusedaxes)
+function fuseaxes(
+  axes::Tuple{Vararg{AbstractUnitRange}}, blockedperm::AbstractBlockedPermutation
+)
+  blockedaxes = blockpermute(axes, blockedperm)
+  return map(block -> ⊗(block...), blockedaxes)
+end
+
+function fuseaxes(a::AbstractArray, blockedperm::AbstractBlockedPermutation)
+  return fuseaxes(axes(a), blockedperm)
+end
+
+function fusedims(a::AbstractArray, blockedperm::Tuple{Vararg{AbstractUnitRange}}...)
+  ## # TODO: Add `canonicalizedims`.
+  return reshape(a, flatten_tuples(blockedperm))
+end
+
+# Fuse adjacent dimensions
+function fusedims(a::AbstractArray, blockedperm::BlockedTrivialPermutation)
+  axes_fused = fuseaxes(a, blockedperm)
+  return fusedims(a, axes_fused)
 end
 
 function fusedims(a::AbstractArray, blockedperm::BlockedPermutation)
-  a_perm = permutedims(a, Tuple(blockedperm))
-  return fusedims_adjacent(a_perm, length.(blocks(blockedperm)))
+  a_perm = _permutedims(a, Tuple(blockedperm))
+  return fusedims(a_perm, trivialperm(blockedperm))
 end
 
 # splitdims(randn(4, 4), (1:2, 1:2), (1:2, 1:2))
@@ -67,7 +100,7 @@ function splitdims(
 )
   # TODO: Pass grouped axes.
   a_dest_perm = splitdims_adjacent(a, axes_dest)
-  a_dest = permutedims(a_dest_perm, invperm(Tuple(blockedperm)))
+  a_dest = _permutedims(a_dest_perm, invperm(Tuple(blockedperm)))
   return a_dest
 end
 
@@ -77,6 +110,6 @@ function splitdims!(
   axes_dest = map(i -> axes(a_dest, i), Tuple(blockedperm))
   # TODO: Pass grouped axes.
   a_dest_perm = splitdims_adjacent(a, axes_dest)
-  permutedims!(a_dest, a_dest_perm, invperm(Tuple(blockedperm)))
+  _permutedims!(a_dest, a_dest_perm, invperm(Tuple(blockedperm)))
   return a_dest
 end

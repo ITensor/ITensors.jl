@@ -9,6 +9,7 @@ _flatten_tuples(t::Tuple) = t
 function _flatten_tuples(t1::Tuple, t2::Tuple, trest::Tuple...)
   return _flatten_tuples((t1..., t2...), trest...)
 end
+_flatten_tuples() = ()
 flatten_tuples(ts::Tuple) = _flatten_tuples(ts...)
 
 _blocklength(blocklengths::Tuple{Vararg{Int}}) = length(blocklengths)
@@ -27,35 +28,78 @@ collect_tuple(t::Tuple) = t
 
 const TupleOfTuples{N} = Tuple{Vararg{Tuple{Vararg{Int}},N}}
 
-struct BlockedPermutation{BlockLength,Length,Blocks<:TupleOfTuples{BlockLength}}
-  blocks::Blocks
-  global function _BlockedPermutation(blocks::TupleOfTuples)
-    len = sum(length, blocks)
-    blocklength = length(blocks)
-    return new{blocklength,len,typeof(blocks)}(blocks)
-  end
-end
+abstract type AbstractBlockedPermutation{BlockLength,Length} end
 
-BlockArrays.blocks(blockedperm::BlockedPermutation) = getfield(blockedperm, :blocks)
+BlockArrays.blocks(blockedperm::AbstractBlockedPermutation) = error("Not implemented")
 
-function Base.Tuple(blockedperm::BlockedPermutation)
+function Base.Tuple(blockedperm::AbstractBlockedPermutation)
   return flatten_tuples(blocks(blockedperm))
 end
 
-function BlockArrays.blocklengths(blockedperm::BlockedPermutation)
+function BlockArrays.blocklengths(blockedperm::AbstractBlockedPermutation)
   return length.(blocks(blockedperm))
 end
 
-function BlockArrays.blockfirsts(blockedperm::BlockedPermutation)
+function BlockArrays.blockfirsts(blockedperm::AbstractBlockedPermutation)
   return _blockfirsts(blocklengths(blockedperm))
 end
 
-function BlockArrays.blocklasts(blockedperm::BlockedPermutation)
+function BlockArrays.blocklasts(blockedperm::AbstractBlockedPermutation)
   return _blocklasts(blocklengths(blockedperm))
 end
 
-Base.iterate(permblocks::BlockedPermutation) = iterate(Tuple(permblocks))
-Base.iterate(permblocks::BlockedPermutation, state) = iterate(Tuple(permblocks), state)
+Base.iterate(permblocks::AbstractBlockedPermutation) = iterate(Tuple(permblocks))
+function Base.iterate(permblocks::AbstractBlockedPermutation, state)
+  return iterate(Tuple(permblocks), state)
+end
+
+# Block a permutation based on the specified lengths.
+# blockperm((4, 3, 2, 1), (2, 2)) == blockedperm((4, 3), (2, 1))
+# TODO: Optimize with StaticNumbers.jl or generated functions, see:
+# https://discourse.julialang.org/t/avoiding-type-instability-when-slicing-a-tuple/38567
+function blockperm(perm::Tuple{Vararg{Int}}, blocklengths::Tuple{Vararg{Int}})
+  starts = _blockfirsts(blocklengths)
+  stops = _blocklasts(blocklengths)
+  return blockedperm(ntuple(i -> perm[starts[i]:stops[i]], length(blocklengths))...)
+end
+
+function Base.invperm(blockedperm::AbstractBlockedPermutation)
+  return blockperm(invperm(Tuple(blockedperm)), blocklengths(blockedperm))
+end
+
+Base.length(blockedperm::AbstractBlockedPermutation) = length(Tuple(blockedperm))
+function BlockArrays.blocklength(blockedperm::AbstractBlockedPermutation)
+  return length(blocks(blockedperm))
+end
+
+function Base.getindex(blockedperm::AbstractBlockedPermutation, i::Int)
+  return Tuple(blockedperm)[i]
+end
+
+function Base.getindex(blockedperm::AbstractBlockedPermutation, I::AbstractUnitRange)
+  perm = Tuple(blockedperm)
+  return [perm[i] for i in I]
+end
+
+function Base.getindex(blockedperm::AbstractBlockedPermutation, b::Block)
+  return blocks(blockedperm)[Int(b)]
+end
+
+# Like `BlockRange`.
+function blockeachindex(blockedperm::AbstractBlockedPermutation)
+  return ntuple(i -> Block(i), blocklength(blockedperm))
+end
+
+#
+# Constructors
+#
+
+# Bipartition a vector according to the
+# bipartitioned permutation.
+# Like `Base.permute!` block out-of-place and blocked.
+function blockpermute(v, blockedperm::AbstractBlockedPermutation)
+  return map(blockperm -> map(i -> v[i], blockperm), blocks(blockedperm))
+end
 
 # blockedperm((4, 3), (2, 1))
 function blockedperm(permblocks::Tuple{Vararg{Int}}...; length::Union{Val,Nothing}=nothing)
@@ -63,14 +107,7 @@ function blockedperm(permblocks::Tuple{Vararg{Int}}...; length::Union{Val,Nothin
 end
 
 function blockedperm(length::Nothing, permblocks::Tuple{Vararg{Int}}...)
-  return blockedperm(Val(sum(Base.length, permblocks)), permblocks...)
-end
-
-function blockedperm(length::Val, permblocks::Tuple{Vararg{Int}}...)
-  @assert value(length) == sum(Base.length, permblocks)
-  blockedperm = _BlockedPermutation(permblocks)
-  @assert isperm(blockedperm)
-  return blockedperm
+  return blockedperm(Val(sum(Base.length, permblocks; init=zero(Bool))), permblocks...)
 end
 
 # blockedperm((3, 2), 1) == blockedperm((3, 2), (1,))
@@ -106,49 +143,52 @@ function blockedperm(
   return blockedperm(permblocks_specified...)
 end
 
-# Block a permutation based on the specified lengths.
-# blockperm((4, 3, 2, 1), (2, 2)) == blockedperm((4, 3), (2, 1))
-# TODO: Optimize with StaticNumbers.jl or generated functions, see:
-# https://discourse.julialang.org/t/avoiding-type-instability-when-slicing-a-tuple/38567
-function blockperm(perm::Tuple{Vararg{Int}}, blocklengths::Tuple{Vararg{Int}})
-  starts = _blockfirsts(blocklengths)
-  stops = _blocklasts(blocklengths)
-  return blockedperm(ntuple(i -> perm[starts[i]:stops[i]], length(blocklengths))...)
-end
-
-function Base.invperm(blockedperm::BlockedPermutation)
-  return blockperm(invperm(Tuple(blockedperm)), blocklengths(blockedperm))
-end
-
-Base.length(blockedperm::BlockedPermutation) = length(Tuple(blockedperm))
-BlockArrays.blocklength(blockedperm::BlockedPermutation) = length(blocks(blockedperm))
-
-function Base.getindex(blockedperm::BlockedPermutation, i::Int)
-  return Tuple(blockedperm)[i]
-end
-
-function Base.getindex(blockedperm::BlockedPermutation, I::AbstractUnitRange)
-  perm = Tuple(blockedperm)
-  return [perm[i] for i in I]
-end
-
-function Base.getindex(blockedperm::BlockedPermutation, b::Block)
-  return blocks(blockedperm)[Int(b)]
-end
-
-# Like `BlockRange`.
-function blockeachindex(blockedperm::BlockedPermutation)
-  return ntuple(i -> Block(i), blocklength(blockedperm))
-end
-
-# Bipartition a vector according to the
-# bipartitioned permutation.
-# Like `Base.permute!` block out-of-place and blocked.
-function blockpermute(v, blockedperm::BlockedPermutation)
-  return map(blockperm -> map(i -> v[i], blockperm), blocks(blockedperm))
-end
-
 # Version of `indexin` that outputs a `blockedperm`.
 function blockedperm_indexin(collection, subs...)
   return blockedperm(map(sub -> BaseExtensions.indexin(sub, collection), subs)...)
 end
+
+struct BlockedPermutation{BlockLength,Length,Blocks<:TupleOfTuples{BlockLength}} <:
+       AbstractBlockedPermutation{BlockLength,Length}
+  blocks::Blocks
+  global function _BlockedPermutation(blocks::TupleOfTuples)
+    len = sum(length, blocks; init=zero(Bool))
+    blocklength = length(blocks)
+    return new{blocklength,len,typeof(blocks)}(blocks)
+  end
+end
+
+BlockArrays.blocks(blockedperm::BlockedPermutation) = getfield(blockedperm, :blocks)
+
+function blockedperm(length::Val, permblocks_maybe_empty::Tuple{Vararg{Int}}...)
+  # Drop empty blocks
+  permblocks = filter(!isempty, permblocks_maybe_empty)
+  @assert value(length) == sum(Base.length, permblocks; init=zero(Bool))
+  blockedperm = _BlockedPermutation(permblocks)
+  @assert isperm(blockedperm)
+  return blockedperm
+end
+
+trivialperm(length::Union{Integer,Val}) = ntuple(identity, length)
+
+struct BlockedTrivialPermutation{BlockLength,Length,Blocks<:TupleOfTuples{BlockLength}} <:
+       AbstractBlockedPermutation{BlockLength,Length}
+  blocks::Blocks
+  global function _BlockedTrivialPermutation(blocklengths::Tuple{Vararg{Int}})
+    len = sum(blocklengths; init=zero(Bool))
+    blocklength = length(blocklengths)
+    permblocks = blocks(blockperm(trivialperm(len), blocklengths))
+    return new{blocklength,len,typeof(permblocks)}(permblocks)
+  end
+end
+
+BlockArrays.blocks(blockedperm::BlockedTrivialPermutation) = getfield(blockedperm, :blocks)
+
+function blockedtrivialperm(blocklengths::Tuple{Vararg{Int}})
+  return _BlockedTrivialPermutation(blocklengths)
+end
+
+function trivialperm(blockedperm::AbstractBlockedPermutation)
+  return blockedtrivialperm(blocklengths(blockedperm))
+end
+Base.invperm(blockedperm::BlockedTrivialPermutation) = blockedperm

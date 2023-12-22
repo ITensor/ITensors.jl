@@ -17,15 +17,33 @@ function output_axes(
   return genperm((axes_codomain..., axes_domain...), invperm(Tuple(biperm_dest)))
 end
 
+# Inner-product contraction.
+# TODO: Use `ArrayLayouts`-like `MulAdd` object,
+# i.e. `ContractAdd`?
+function output_axes(
+  ::typeof(contract),
+  perm_dest::BlockedPermutation{0},
+  a1::AbstractArray,
+  perm1::BlockedPermutation{1},
+  a2::AbstractArray,
+  perm2::BlockedPermutation{1},
+  α::Number=true,
+)
+  axes_contracted = blockpermute(axes(a1), perm1)
+  axes_contracted2 = blockpermute(axes(a2), perm2)
+  @assert axes_contracted == axes_contracted2
+  return ()
+end
+
 # TODO: Use `ArrayLayouts`-like `MulAdd` object,
 # i.e. `ContractAdd`?
 function allocate_output(
   ::typeof(contract),
-  biperm_dest::BlockedPermutation{2},
+  biperm_dest::BlockedPermutation,
   a1::AbstractArray,
-  biperm1::BlockedPermutation{2},
+  biperm1::BlockedPermutation,
   a2::AbstractArray,
-  biperm2::BlockedPermutation{2},
+  biperm2::BlockedPermutation,
   α::Number=true,
 )
   axes_dest = output_axes(contract, biperm_dest, a1, biperm1, a2, biperm2, α)

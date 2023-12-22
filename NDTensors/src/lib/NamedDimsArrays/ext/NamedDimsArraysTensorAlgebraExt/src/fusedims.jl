@@ -8,13 +8,14 @@ function TensorAlgebra.blockedperm(na::AbstractNamedDimsArray, nameddim_blocks::
   perms = map(dimname_blocks) do dimname_block
     return BaseExtensions.indexin(dimname_block, dimnames_a)
   end
-  return blockedperm(perms)
+  return blockedperm(perms...)
 end
 
 # i, j, k, l = named.((2, 2, 2, 2), ("i", "j", "k", "l"))
 # a = randn(i, j, k, l)
 # fusedims(a, (i, k) => "a")
 # fusedims(a, (i, k) => "a", (j, l) => "b")
+# TODO: Rewrite in terms of `fusedims(a, .., (1, 3))` interface.
 function TensorAlgebra.fusedims(na::AbstractNamedDimsArray, fusions::Pair...)
   dimnames_fuse = map(group -> name.(group), first.(fusions))
   dimnames_fused = map(name, last.(fusions))
