@@ -1,18 +1,31 @@
-using NDTensors.NamedDimsArrays: AbstractNamedDimsArray, dimnames, named, unname
-using NDTensors.TensorAlgebra: TensorAlgebra, contract
+using ..NamedDimsArrays: AbstractNamedDimsArray, dimnames, named, unname
+using ...TensorAlgebra: TensorAlgebra, blockedperms, contract, contract!
 
-function TensorAlgebra.contract(
-  na1::AbstractNamedDimsArray, na2::AbstractNamedDimsArray, α, β; kwargs...
+function TensorAlgebra.contract!(
+  na_dest::AbstractNamedDimsArray,
+  na1::AbstractNamedDimsArray,
+  na2::AbstractNamedDimsArray,
+  α::Number=true,
+  β::Number=false,
 )
-  a_dest, names_dest = contract(
-    unname(na1), dimnames(na1), unname(na2), dimnames(na2), α, β; kwargs...
+  contract!(
+    unname(na_dest),
+    dimnames(na_dest),
+    unname(na1),
+    dimnames(na1),
+    unname(na2),
+    dimnames(na2),
+    α,
+    β,
   )
-  # TODO: Automate `Tuple` conversion of names?
-  return named(a_dest, Tuple(names_dest))
+  return na_dest
 end
 
 function TensorAlgebra.contract(
-  na1::AbstractNamedDimsArray, na2::AbstractNamedDimsArray; kwargs...
+  na1::AbstractNamedDimsArray, na2::AbstractNamedDimsArray, α::Number=true
 )
-  return contract(na1, na2, true, false; kwargs...)
+  a_dest, dimnames_dest = contract(
+    unname(na1), dimnames(na1), unname(na2), dimnames(na2), α
+  )
+  return named(a_dest, dimnames_dest)
 end

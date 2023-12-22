@@ -26,6 +26,13 @@ end
 #   return dimnames(first(map_args(bc)))
 # end
 
+function Broadcast.check_broadcast_axes(shp, a::AbstractNamedDimsArray)
+  # Unles we output named axes from `axes(::NamedDimsArray)`,
+  # this check won't make sense since it has to check up
+  # to an unknown permutation.
+  return nothing
+end
+
 # TODO: Use `allocate_output`, share logic with `map`.
 function Base.similar(bc::Broadcasted{<:NamedDimsArrayStyle}, elt::Type)
   return similar(first(map_args(bc)), elt)

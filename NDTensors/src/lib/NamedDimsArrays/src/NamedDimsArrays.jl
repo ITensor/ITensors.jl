@@ -1,9 +1,12 @@
 module NamedDimsArrays
 include("traits.jl")
+include("name.jl")
 include("randname.jl")
 include("abstractnamedint.jl")
 include("abstractnamedunitrange.jl")
 include("abstractnameddimsarray.jl")
+include("abstractnameddimsmatrix.jl")
+include("abstractnameddimsvector.jl")
 include("namedint.jl")
 include("namedunitrange.jl")
 include("nameddimsarray.jl")

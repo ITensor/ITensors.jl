@@ -1,21 +1,52 @@
-function LinearAlgebra.qr(a::AbstractArray, labels_a, labels_q, labels_r)
-  return qr(a, bipartitioned_permutations(qr, labels_a, labels_q, labels_r)...)
-end
+using LinearAlgebra: LinearAlgebra, qr
+using ..TensorAlgebra:
+  TensorAlgebra,
+  BlockedPermutation,
+  blockedperm,
+  blockedperm_indexin,
+  blockpermute,
+  fusedims,
+  splitdims
 
-function LinearAlgebra.qr(a::AbstractArray, biperm::BipartitionedPermutation)
-  # TODO: Use a thin QR, define `qr_thin`.
-  a_matricized = matricize(a, biperm)
+function _qr(a::AbstractArray, biperm::BlockedPermutation{2})
+  a_matricized = fusedims(a, biperm)
+
+  # TODO: Make this more generic, allow choosing thin or full,
+  # make sure this works on GPU.
   q_matricized, r_matricized = qr(a_matricized)
   q_matricized_thin = typeof(a_matricized)(q_matricized)
-  axes_codomain, axes_domain = bipartition(axes(a), biperm)
-  q = unmatricize(q_matricized_thin, axes_codomain, (axes(q_matricized_thin, 2),))
-  r = unmatricize(r_matricized, (axes(r_matricized, 1),), axes_domain)
+
+  axes_codomain, axes_domain = blockpermute(axes(a), biperm)
+  axes_q = (axes_codomain..., axes(q_matricized_thin, 2))
+  # TODO: Use `tuple_oneto(n) = ntuple(identity, n)`, currently in `BlockSparseArrays`.
+  biperm_q = blockedperm(
+    ntuple(identity, length(axes_codomain)), (length(axes_codomain) + 1,)
+  )
+  axes_r = (axes(r_matricized, 1), axes_domain...)
+  biperm_r = blockedperm((1,), ntuple(identity, length(axes_domain)) .+ 1)
+  q = splitdims(q_matricized_thin, axes_q)
+  r = splitdims(r_matricized, axes_r)
   return q, r
 end
 
-function TensorAlgebra.bipartitioned_permutations(qr, labels_a, labels_q, labels_r)
-  # TODO: Use something like `findall`?
-  pos_q = map(l -> findfirst(isequal(l), labels_a), labels_q)
-  pos_r = map(l -> findfirst(isequal(l), labels_a), labels_r)
-  return (BipartitionedPermutation(pos_q, pos_r),)
+function LinearAlgebra.qr(a::AbstractArray, biperm::BlockedPermutation{2})
+  return _qr(a, biperm)
+end
+
+# Fix ambiguity error with `LinearAlgebra`.
+function LinearAlgebra.qr(a::AbstractMatrix, biperm::BlockedPermutation{2})
+  return _qr(a, biperm)
+end
+
+function LinearAlgebra.qr(
+  a::AbstractArray, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
+)
+  return qr(a, blockedperm_indexin(labels_a, labels_q, labels_r))
+end
+
+# Fix ambiguity error with `LinearAlgebra`.
+function LinearAlgebra.qr(
+  a::AbstractMatrix, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
+)
+  return qr(a, blockedperm_indexin(labels_a, labels_q, labels_r))
 end
