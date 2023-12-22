@@ -65,18 +65,7 @@ end
 
 Base.:+(A::UnallocatedFill, B::UnallocatedFill) = A .+ B
 
-# ####
-# ## TODO use `set_parameters` as constructor to these types
-# function UnallocatedFill(f::Fill, alloc::Type{<:AbstractArray})
-#   ## set_axes -> set_axes_type
-#   return set_alloctype(
-#     set_axes(set_ndims(set_eltype(UnallocatedFill, eltype(f)), ndims(f)), typeof(axes(f))),
-#     alloc,
-#   )(
-#     f
-#   )
-# end
-
-## Things to fix
-## in different Change syntax of set_xxx_if_unspecified
-# adapt
+function Base.Broadcast.broadcasted(::Base.Broadcast.DefaultArrayStyle, op, r::UnallocatedFill) 
+  f = op.(parent(r))
+  return set_alloctype(f, set_parameters(alloctype(r), Position{1}(), eltype(f)))
+end
