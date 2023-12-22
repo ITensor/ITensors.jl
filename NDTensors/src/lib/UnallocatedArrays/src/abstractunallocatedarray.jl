@@ -42,8 +42,13 @@ function allocate(f::UnallocatedArray)
   return a
 end
 
+function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes::Tuple)
+  ArrayT = set_parameters(arraytype, Position{1}(), elt)
+  return similar(ArrayT, axes)
+end
+
 function Base.similar(f::UnallocatedArray)
-  return similar(alloctype(f), axes(f))
+  return allocate(alloctype(f), eltype(f), axes(f))
 end
 
 ## TODO fix this because reshape loses alloctype
