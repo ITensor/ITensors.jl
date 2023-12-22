@@ -2,6 +2,7 @@
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
+using NDTensors.SetParameters: Position, set_parameters
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
 
@@ -199,6 +200,39 @@ using .NDTensorsTestUtils: devices_list
     @test C isa UnallocatedFill
     @test alloctype(C) == alloctype(B)
     @test C[1] == elt(6)
+  end
+end
+@testset "SetParameters" begin
+  for typ in (:Zeros, :Fill)
+    @eval begin
+      ft1 = $(typ){1}
+      ft2 = $typ{1,2}
+      ft3 = $typ{1,2,3}
+
+      ## check 1 parameter specified
+      ftn1 = set_parameters(ft1, Position{1}(), 4)
+      ftn2 = set_parameters(ft1, Position{2}(), 4)
+      ftn3 = set_parameters(ft1, Position{3}(), 4)
+      @test ftn1 == $typ{4}
+      @test ftn2 == $typ{1,4}
+      @test ftn3 == $typ{1,<:Any,4}
+
+      ## check 2 parameters specified
+      ftn1 = set_parameters(ft2, Position{1}(), 4)
+      ftn2 = set_parameters(ft2, Position{2}(), 4)
+      ftn3 = set_parameters(ft2, Position{3}(), 4)
+      @test ftn1 == $typ{4,2}
+      @test ftn2 == $typ{1,4}
+      @test ftn3 == $typ{1,2,4}
+
+      ## check 3 parameters specified
+      ftn1 = set_parameters(ft3, Position{1}(), 4)
+      ftn2 = set_parameters(ft3, Position{2}(), 4)
+      ftn3 = set_parameters(ft3, Position{3}(), 4)
+      @test ftn1 == $typ{4,2,3}
+      @test ftn2 == $typ{1,4,3}
+      @test ftn3 == $typ{1,2,4}
+    end
   end
 end
 end
