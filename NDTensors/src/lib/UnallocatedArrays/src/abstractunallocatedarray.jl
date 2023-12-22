@@ -44,6 +44,7 @@ end
 
 function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes::Tuple)
   ArrayT = set_parameters(arraytype, Position{1}(), elt)
+  ArrayT = set_parameters(ArrayT, Position{2}(), length(axes))
   return similar(ArrayT, axes)
 end
 
