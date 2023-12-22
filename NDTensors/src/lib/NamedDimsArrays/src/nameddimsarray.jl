@@ -1,7 +1,7 @@
 function _NamedDimsArray end
 
 struct NamedDimsArray{T,N,Arr<:AbstractArray{T,N},Names} <:
-       AbstractNamedDimsArray{T,N,Names}
+       AbstractNamedDimsArray{T,N,Arr,Names}
   array::Arr
   names::Names
   global @inline function _NamedDimsArray(array::AbstractArray, names)
