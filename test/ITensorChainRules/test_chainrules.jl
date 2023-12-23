@@ -360,14 +360,8 @@ Random.seed!(1234)
     B = randomITensor(s)
 
     f(A, B) = (dag(A) * B)[]
-    args = (A,B)
-    test_rrule(
-      ZygoteRuleConfig(),
-      f,
-      args...;
-      rrule_f=rrule_via_ad,
-      check_inferred=false,
-    )
+    args = (A, B)
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
 end
 
