@@ -352,6 +352,23 @@ Random.seed!(1234)
     args = (A, B)
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
+
+  @testset "issue 1294" begin
+    N = 2
+    s = siteinds("SpinHalf", N; conserve_szparity=true)
+    A = randomITensor(s)
+    B = randomITensor(s)
+
+    f(A, B) = (dag(A) * B)[]
+    args = (A,B)
+    test_rrule(
+      ZygoteRuleConfig(),
+      f,
+      args...;
+      rrule_f=rrule_via_ad,
+      check_inferred=false,
+    )
+  end
 end
 
 @testset "ChainRules rrules: op" begin
