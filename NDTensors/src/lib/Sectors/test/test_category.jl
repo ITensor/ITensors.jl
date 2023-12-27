@@ -1,98 +1,98 @@
 import NDTensors.Sectors:
-  basename,
-  Category,
-  @CategoryType_str,
-  dynamic,
-  DynamicCategory,
+  ⊗,
+  ⊕,
+  dimension,
+  Fib,
   fusion_rule,
-  groupdim,
-  is_dynamic,
-  is_static,
-  level,
-  static,
-  SU,
   Ising,
-  Z,
-  str_to_val,
-  val_to_str
+  level,
+  SU,
+  trivial,
+  U1,
+  Z 
 using Test
 
-@testset "Test Category Type" begin
-  @testset "Constructors" begin
-    C = Category("Ising")
-    @test basename(C) == "Ising"
+@testset "Test Category Types" begin
 
-    C = Category("SU", 2)
-    @test basename(C) == "SU"
-    @test groupdim(C) == 2
-    @test level(C) == 0
+  @testset "U(1)" begin
+    q1 = U1(1)
+    q2 = U1(2)
+    q3 = U1(3)
+
+    @test dimension(q1) == 1
+    @test dimension(q2) == 1
+
+    @test q1 ⊗ q1 == [q2]
+    @test q1 ⊗ q2 == [q3]
+    @test q2 ⊗ q1 == [q3]
+
+    @test trivial(U1) == U1(0)
   end
 
-  @testset "Static and Dynamic Category Types" begin
-    D = Category("C")
-    @test is_dynamic(D)
-    @test !is_static(D)
+  @testset "Z₂" begin
+    z0 = Z{2}(0)
+    z1 = Z{2}(1)
 
-    S = static(D)
-    @test !is_dynamic(S)
-    @test is_static(S)
+    @test trivial(Z{2}) == Z{2}(0)
 
-    # Test that calling static twice is ok
-    S = static(S)
-    @test is_static(S)
+    @test dimension(z0) == 1
+    @test dimension(z1) == 1
 
-    @test basename(S) == basename(D)
-    @test groupdim(S) == groupdim(D)
-    @test level(S) == level(D)
-
-    D2 = dynamic(S)
-    @test is_dynamic(D2)
-    @test D2 == D
-
-    # Test that we can call dynamic twice on a Category
-    D2 = dynamic(D2)
-    @test is_dynamic(D2)
+    @test z0 ⊗ z1 == [z1]
+    @test z1 ⊗ z1 == [z0]
   end
 
-  @testset "Value Dispatch" begin
-    # Define a collection of methods overloaded on
-    # the basename value
-    test_fn(C::CategoryType"A") = "test_fn: got A"
-    test_fn(C::CategoryType"B") = "test_fn: got B"
-    test_fn(C::DynamicCategory) = test_fn(static(C))
+  @testset "SU(2)" begin
+    j1 = SU{2}(1)
+    j2 = SU{2}(2)
+    j3 = SU{2}(3)
+    j4 = SU{2}(4)
+    j5 = SU{2}(5)
 
-    A1 = Category("A", 1)
-    B2 = Category("B", 2)
-    C3 = Category("C", 3)
+    @test trivial(SU{2}) == SU{2}(1)
 
-    @test test_fn(A1) == "test_fn: got A"
-    @test test_fn(B2) == "test_fn: got B"
-    @test_throws MethodError test_fn(C3)
+    @test dimension(j1) == 1
+    @test dimension(j2) == 2
+    @test dimension(j3) == 3
+    @test dimension(j4) == 4
+    
+    @test j1 ⊗ j2 == [j2]
+    @test j2 ⊗ j2 == j1 ⊕ j3
+    @test j2 ⊗ j3 == j2 ⊕ j4
+    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
+
   end
 
-  @testset "Fusion Rule Functions" begin
-    @test fusion_rule(Z(2), 0, 0) == [0]
-    @test fusion_rule(Z(2), 0, 1) == [1]
-    @test fusion_rule(Z(2), 1, 1) == [0]
+  @testset "Fibonacci" begin
+    ı = Fib("1")
+    τ = Fib("τ")
 
-    @test fusion_rule(Ising, 1, 1) == [0]
-    @test fusion_rule(Ising, 1 / 2, 1 / 2) == [0, 1]
+    @test trivial(Fib) == ı
 
-    @test fusion_rule(SU(2), 1, 1) == [0, 1, 2]
-    @test fusion_rule(SU(2), 1 / 2, 1) == [1 / 2, 3 / 2]
+    @test ı ⊗ ı == [ı]
+    @test ı ⊗ τ == [τ]
+    @test τ ⊗ ı == [τ]
+    @test τ ⊗ τ == ı ⊕ τ
   end
 
-  @testset "String to Val and Vice Versa" begin
-    @test val_to_str(Ising, 0) == "1"
-    @test val_to_str(Ising, 1 / 2) == "σ"
-    @test val_to_str(Ising, 1) == "ψ"
+  @testset "Ising" begin
+    ı = Ising("1")
+    σ = Ising("σ")
+    ψ = Ising("ψ")
 
-    @test str_to_val(Ising, "1") == 0
-    @test str_to_val(Ising, "σ") == 1 / 2
-    @test str_to_val(Ising, "ψ") == 1
+    @test trivial(Ising) == ı
 
-    @test_throws ErrorException str_to_val(SU(2), "test")
+    @test ı ⊗ ı == [ı]
+    @test ı ⊗ σ == [σ]
+    @test σ ⊗ ı == [σ]
+    @test ı ⊗ ψ == [ψ]
+    @test ψ ⊗ ı == [ψ]
+    @test σ ⊗ σ == ı ⊕ ψ
+    @test σ ⊗ ψ == [σ]
+    @test ψ ⊗ σ == [σ]
+    @test ψ ⊗ ψ == [ı]
   end
+
 end
 
 nothing
