@@ -1,4 +1,10 @@
 
+# TODO:
+# May want to make this a subtype of AbstractCategory instead
+# and just implement set operations directly rather than
+# through AbstractNamedSet
+#
+
 struct Sector <: AbstractNamedSet
   data::NamedTuple
   Sector(nt::NamedTuple) = new(nt_sort(nt))
