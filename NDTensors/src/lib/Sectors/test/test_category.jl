@@ -67,6 +67,14 @@ using Test
     @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
   end
 
+  @testset "SU(N)" begin
+    @test dimension(SU{3}((2,1,0))) == 8
+    @test dimension(SU{3}((4,2,0))) == 27
+    @test dimension(SU{3}((3,3,0))) == 10
+    @test dimension(SU{3}((3,0,0))) == 10
+    @test dimension(SU{3}((0,0,0))) == 1
+  end
+
   @testset "Fibonacci" begin
     ı = Fib("1")
     τ = Fib("τ")
