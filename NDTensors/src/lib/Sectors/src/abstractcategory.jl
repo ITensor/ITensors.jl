@@ -8,10 +8,6 @@ function dimension(c::AbstractCategory)
   error("method `dimension` not defined for category or group $(typeof(c))")
 end
 
-function trivial(::Type{T}) where {T<:AbstractCategory}
-  error("method `trivial` not defined for category or group $T")
-end
-
 function fusion_rule(::Type{C},l1,l2) where {C<:AbstractCategory}
   error("fusion_rule not defined for type $(C)")
 end
@@ -37,3 +33,8 @@ function Base.show(io::IO, q::Vector{<:AbstractCategory})
     symbol = " ⊕ "
   end
 end
+
+trivial(::Type{C}) where {C<:AbstractCategory} = error("method `trivial` not defined for type $C")
+
+istrivial(C::AbstractCategory) = (C == trivial(typeof(C)))
+

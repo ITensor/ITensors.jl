@@ -5,6 +5,7 @@ import NDTensors.Sectors:
   Fib,
   fusion_rule,
   Ising,
+  istrivial,
   level,
   SU,
   trivial,
@@ -27,6 +28,7 @@ using Test
     @test q2 ⊗ q1 == [q3]
 
     @test trivial(U1) == U1(0)
+    @test istrivial(U1(0))
   end
 
   @testset "Z₂" begin
@@ -34,10 +36,12 @@ using Test
     z1 = Z{2}(1)
 
     @test trivial(Z{2}) == Z{2}(0)
+    @test istrivial(Z{2}(0))
 
     @test dimension(z0) == 1
     @test dimension(z1) == 1
 
+    @test z0 ⊗ z0 == [z0]
     @test z0 ⊗ z1 == [z1]
     @test z1 ⊗ z1 == [z0]
   end
@@ -50,6 +54,7 @@ using Test
     j5 = SU{2}(5)
 
     @test trivial(SU{2}) == SU{2}(1)
+    @test istrivial(SU{2}(1))
 
     @test dimension(j1) == 1
     @test dimension(j2) == 2
@@ -60,7 +65,6 @@ using Test
     @test j2 ⊗ j2 == j1 ⊕ j3
     @test j2 ⊗ j3 == j2 ⊕ j4
     @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
-
   end
 
   @testset "Fibonacci" begin
@@ -68,6 +72,7 @@ using Test
     τ = Fib("τ")
 
     @test trivial(Fib) == ı
+    @test istrivial(ı)
 
     @test ı ⊗ ı == [ı]
     @test ı ⊗ τ == [τ]
@@ -81,6 +86,7 @@ using Test
     ψ = Ising("ψ")
 
     @test trivial(Ising) == ı
+    @test istrivial(ı)
 
     @test ı ⊗ ı == [ı]
     @test ı ⊗ σ == [σ]
@@ -92,7 +98,6 @@ using Test
     @test ψ ⊗ σ == [σ]
     @test ψ ⊗ ψ == [ı]
   end
-
 end
 
 nothing
