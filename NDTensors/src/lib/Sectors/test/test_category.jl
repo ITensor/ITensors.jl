@@ -1,18 +1,7 @@
-import NDTensors.Sectors:
-  ⊗,
-  ⊕,
-  dimension,
-  Fib,
-  Ising,
-  istrivial,
-  SU,
-  trivial,
-  U1,
-  Z 
+import NDTensors.Sectors: ⊗, ⊕, dimension, Fib, Ising, istrivial, SU, trivial, U1, Z
 using Test
 
 @testset "Test Category Types" begin
-
   @testset "U(1)" begin
     q1 = U1(1)
     q2 = U1(2)
@@ -58,7 +47,7 @@ using Test
     @test dimension(j2) == 2
     @test dimension(j3) == 3
     @test dimension(j4) == 4
-    
+
     @test j1 ⊗ j2 == [j2]
     @test j2 ⊗ j2 == j1 ⊕ j3
     @test j2 ⊗ j3 == j2 ⊕ j4
@@ -66,11 +55,11 @@ using Test
   end
 
   @testset "SU(N)" begin
-    @test dimension(SU{3}((2,1,0))) == 8
-    @test dimension(SU{3}((4,2,0))) == 27
-    @test dimension(SU{3}((3,3,0))) == 10
-    @test dimension(SU{3}((3,0,0))) == 10
-    @test dimension(SU{3}((0,0,0))) == 1
+    @test dimension(SU{3}((2, 1, 0))) == 8
+    @test dimension(SU{3}((4, 2, 0))) == 27
+    @test dimension(SU{3}((3, 3, 0))) == 10
+    @test dimension(SU{3}((3, 0, 0))) == 10
+    @test dimension(SU{3}((0, 0, 0))) == 1
   end
 
   @testset "Fibonacci" begin
