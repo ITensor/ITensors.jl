@@ -6,6 +6,13 @@ end
 
 Sector(; kws...) = Sector((; kws...))
 
+function Sector(pairs::Pair...)
+  N = length(pairs)
+  keys = ntuple(n -> Symbol(pairs[n][1]), Val(N))
+  vals = ntuple(n -> pairs[n][2], Val(N))
+  return Sector(NamedTuple{keys}(vals))
+end
+
 data(s::Sector) = s.data
 
 Base.keys(S::Sector) = keys(data(S))
@@ -28,22 +35,13 @@ are treated as if they were present but had the value zero.
 """
 function ⊗(A::Sector, B::Sector)
   qs = [A]
-  #n=1 #DEBUG
   for (la, lb) in zip(intersect(A, B), intersect(B, A))
-    #println()
     @assert la[1] == lb[1]
     fused_vals = ⊗(la[2], lb[2])
-    #@show fused_vals
-    function make_nt(s::Symbol,v) 
-      NamedTuple{(s,)}((v,))
-    end
-    qs = [union(Sector(make_nt(la[1],v)),q) for v in fused_vals for q in qs]
-    #println("Step $n qs = ",qs); n+=1
+    qs = [union(Sector(la[1] => v), q) for v in fused_vals for q in qs]
   end
-  #println("Before last step, qs = ",qs)
   # Include sectors of B not in A
-  qs = [union(q,B) for q in qs]
-  #println("After last step, qs = ",qs)
+  qs = [union(q, B) for q in qs]
   return qs
 end
 
