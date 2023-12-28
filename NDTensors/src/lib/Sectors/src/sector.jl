@@ -11,6 +11,7 @@ data(s::Sector) = s.data
 Base.keys(S::Sector) = keys(data(S))
 Base.values(S::Sector) = values(data(S))
 Base.getindex(S::Sector,args...) = getindex(data(S),args...)
+Base.isempty(S::Sector) = isempty(data(S))
 
 function Base.iterate(S::Sector,state=1)
   (state > length(S)) && (return nothing)
@@ -26,30 +27,51 @@ Any sectors present in B but not in A and vice versa
 are treated as if they were present but had the value zero.
 """
 function ⊗(A::Sector, B::Sector)
-  println()
   qs = [A]
-  @show qs
+  #println("Initial qs = ",qs)
+  #n=1 #DEBUG
   for (la, lb) in zip(intersect(A, B), intersect(B, A))
+    #println()
     @assert la[1] == lb[1]
     fused_vals = ⊗(la[2], lb[2])
-    @show fused_vals
-    @show qs
-    println()
-    qs = [union(q, Sector(la[1]=v)) for ns in ⊗(la, lb) for q in qs]
+    #@show fused_vals
+    function make_nt(s::Symbol,v) 
+      NamedTuple{(s,)}((v,))
+    end
+    qs = [union(Sector(make_nt(la[1],v)),q) for v in fused_vals for q in qs]
+    #println("Step $n qs = ",qs); n+=1
   end
+  #println("Before last step, qs = ",qs)
   # Include sectors of B not in A
-  qs = [union(B, q) for q in qs]
+  qs = [union(q,B) for q in qs]
+  #println("After last step, qs = ",qs)
   return qs
+end
+
+⊕(a::Sector, b::Sector) = [a, b]
+⊕(v::Vector{<:Sector}, b::Sector) = vcat(v, b)
+⊕(a::Sector, v::Vector{<:Sector}) = vcat(a, v)
+
+function Base.show(io::IO, v::Vector{<:Sector})
+  isempty(v) && return nothing
+  symbol = ""
+  for s in v
+    print(io, symbol, s)
+    symbol = " ⊕ "
+  end
 end
 
 function Base.:(==)(A::Sector, B::Sector)
   common_labels = zip(intersect(A, B), intersect(B, A))
   common_labels_match = all(t -> (t[1] == t[2]), common_labels)
-  unique_labels_zero = all(l -> istrivial(l), symdiff(A, B))
+  unique_labels_zero = all(l -> istrivial(l[2]), symdiff(A, B))
   return common_labels_match && unique_labels_zero
 end
 
-function Base.show(io::IO, sd::Sector)
-  print(io, "Sector")
-  print(io,data(sd))
+function Base.show(io::IO, S::Sector)
+  if isempty(S)
+    print(io, "Sector()")
+  else
+    print(io, "Sector",data(S))
+  end
 end

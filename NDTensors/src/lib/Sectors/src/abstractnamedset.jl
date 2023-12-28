@@ -20,6 +20,4 @@ function Base.symdiff(ns1::AbstractNamedSet, ns2::AbstractNamedSet)
   return typeof(ns1)(ndata)
 end
 
-#Base.iterate(ns::AbstractNamedSet,args...) = Base.iterate(data(ns),args...)
-
 Base.length(ns::AbstractNamedSet) = length(data(ns))

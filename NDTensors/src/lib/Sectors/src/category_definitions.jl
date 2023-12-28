@@ -66,11 +66,12 @@ end
 
 #
 # Specializations for the case SU{2}
+# Where irreps specified by dimension "d"
 #
 
 dimension(s::SU{2}) = 1+label(s)[1]
 
-SU{2}(dim::Integer) = SU{2}((dim-1,0))
+SU{2}(d::Integer) = SU{2}((d-1,0))
 
 function fusion_rule(s1::SU{2}, s2::SU{2}) 
   d1, d2 = dimension(s1), dimension(s2)
@@ -81,6 +82,23 @@ function Base.show(io::IO,s::SU{2})
   print(io,"SU{2}(",dimension(s),")")
 end
 
+
+#
+# Conventional SU2 group
+# using "J" labels
+#
+
+struct SU2 <: AbstractGroup
+  j::Half{Int}
+end
+
+label(s::SU2) = s.j
+
+trivial(::Type{SU2}) = SU2(0)
+
+dimension(s::SU2) = 2*label(s)+1
+
+fusion_rule(::Type{SU2},j1,j2) = abs(j1-j2):(j1+j2)
 
 #
 # Quantum group su2ₖ
