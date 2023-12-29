@@ -10,6 +10,8 @@ Base.isempty(os::OrderedSector) = isempty(data(os))
 Base.:(==)(o1::OrderedSector, o2::OrderedSector) = (data(o1) == data(o2))
 
 ×(c1::AbstractCategory, c2::AbstractCategory) = OrderedSector([c1, c2])
+×(o1::OrderedSector, c2::AbstractCategory) = OrderedSector(vcat(data(o1), c2))
+×(c1::AbstractCategory, o2::OrderedSector) = OrderedSector(vcat(c1, data(o2)))
 
 function Base.show(io::IO, os::OrderedSector)
   isempty(os) && return nothing
@@ -31,7 +33,7 @@ end
 
 function ⊗(o1::OrderedSector, o2::OrderedSector)
   N = length(o1)
-  @assert length(o2) == N
+  length(o2) == N || throw(DimensionMismatch("OrderedSectors must have same size in ⊗"))
   os = [o1]
   for n in 1:N
     os = [replace(o, n, f) for f in ⊗(o1[n], o2[n]) for o in os]
