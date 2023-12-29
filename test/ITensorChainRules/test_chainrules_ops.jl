@@ -157,21 +157,23 @@ using Zygote: ZygoteRuleConfig, gradient
     atol=1.0e-7,
   )
 
-  f = function (x)
-    y = ITensor(exp(-x * Op("X", 1) * Op("X", 2)), s)
-    return norm(y)
-  end
-  args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  if VERSION ≥ v"1.8"
+    f = function (x)
+      y = ITensor(exp(-x * Op("X", 1) * Op("X", 2)), s)
+      return norm(y)
+    end
+    args = (x,)
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-  f = function (x)
-    y = exp(-x * Op("X", 1) * Op("X", 2))
-    y *= exp(-x * Op("X", 1) * Op("X", 2))
-    U = ITensor(y, s)
-    return norm(U)
+    f = function (x)
+      y = exp(-x * Op("X", 1) * Op("X", 2))
+      y *= exp(-x * Op("X", 1) * Op("X", 2))
+      U = ITensor(y, s)
+      return norm(U)
+    end
+    args = (x,)
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
-  args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   U1(θ) = Op("Ry", 1; θ)
   U2(θ) = Op("Ry", 2; θ)
@@ -249,30 +251,32 @@ using Zygote: ZygoteRuleConfig, gradient
   args = (x,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-  f = function (x)
-    y = exp(-x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2)); alg=Trotter{1}(1))
-    U = ITensor(y, s)
-    return norm(U * V)
-  end
-  args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  if VERSION ≥ v"1.8"
+    f = function (x)
+      y = exp(-x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2)); alg=Trotter{1}(1))
+      U = ITensor(y, s)
+      return norm(U * V)
+    end
+    args = (x,)
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-  ## XXX: Fix
-  f = function (x)
-    y = exp(-x * Op("X", 1) * Op("X", 2))
-    y *= exp(-x * Op("X", 1) * Op("X", 2))
-    U = Prod{ITensor}(y, s)
-    return norm(U(V))
-  end
-  args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+    ## XXX: Fix
+    f = function (x)
+      y = exp(-x * Op("X", 1) * Op("X", 2))
+      y *= exp(-x * Op("X", 1) * Op("X", 2))
+      U = Prod{ITensor}(y, s)
+      return norm(U(V))
+    end
+    args = (x,)
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-  ## XXX: Fix
-  f = function (x)
-    y = exp(-x * (Op("X", 1) + Op("Z", 1) + Op("Z", 1)); alg=Trotter{1}(1))
-    U = Prod{ITensor}(y, s)
-    return norm(U(V))
+    ## XXX: Fix
+    f = function (x)
+      y = exp(-x * (Op("X", 1) + Op("Z", 1) + Op("Z", 1)); alg=Trotter{1}(1))
+      U = Prod{ITensor}(y, s)
+      return norm(U(V))
+    end
+    args = (x,)
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
-  args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 end

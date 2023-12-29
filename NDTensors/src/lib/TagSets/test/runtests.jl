@@ -1,4 +1,5 @@
-using Test
+@eval module $(gensym())
+using Test: @test, @testset
 using NDTensors.TagSets
 using NDTensors.SortedSets
 using NDTensors.SmallVectors
@@ -30,4 +31,5 @@ using NDTensors.Dictionaries
       ## @test issetequal(delete!(copy(s1), "3"), ["1", "5"])
     end
   end
+end
 end

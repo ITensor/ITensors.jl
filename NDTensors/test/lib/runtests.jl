@@ -2,14 +2,17 @@
 using Test: @testset
 @testset "Test NDTensors lib $lib" for lib in [
   "AlgorithmSelection",
+  "AllocateData",
   "BaseExtensions",
   "BlockSparseArrays",
   "BroadcastMapConversion",
   "DiagonalArrays",
+  "GradedAxes",
   "NamedDimsArrays",
   "SetParameters",
   "SmallVectors",
   "SortedSets",
+  "SparseArrayDOKs",
   "TagSets",
   "TensorAlgebra",
   "Unwrap",

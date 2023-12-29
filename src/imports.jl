@@ -110,6 +110,8 @@ import LinearAlgebra:
   tr,
   transpose
 
+using ITensors.NDTensors.Unwrap: cpu
+
 using ITensors.NDTensors:
   Algorithm,
   @Algorithm_str,
@@ -117,7 +119,6 @@ using ITensors.NDTensors:
   _Tuple,
   _NTuple,
   blas_get_num_threads,
-  cpu,
   cu,
   disable_auto_fermion,
   double_precision,

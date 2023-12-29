@@ -1838,6 +1838,11 @@ end
     n = uniqueindex(N, A)
     @test dim(n) == dim(j) - dim(i)
   end
+
+  @testset "checkflux test" begin
+    # Calling checkflux should not error (issue #1283)
+    @test ITensors.checkflux(randomITensor(Index(2))) == nothing
+  end
 end # End Dense ITensor basic functionality
 
 # Disable debug checking once tests are completed
