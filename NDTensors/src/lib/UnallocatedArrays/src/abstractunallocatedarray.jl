@@ -43,6 +43,9 @@ function allocate(f::UnallocatedArray)
 end
 
 function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes::Tuple)
+  ## TODO rewrite this using set_eltype and set_ndims functions
+  ## currently these functions are defined in `NDTensors`
+  ## In the future they should be defined in `SetParameters`
   ArrayT = set_parameters(arraytype, Position{1}(), elt)
   ArrayT = set_parameters(ArrayT, Position{2}(), length(axes))
   return similar(ArrayT, axes)
