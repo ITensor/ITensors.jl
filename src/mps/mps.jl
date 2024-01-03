@@ -540,6 +540,7 @@ function replacebond!(
   maxdim=nothing,
   cutoff=nothing,
   eigen_perturbation=nothing,
+  # svd kwargs
   svd_alg=nothing,
   use_absolute_cutoff=nothing,
   use_relative_cutoff=nothing,
