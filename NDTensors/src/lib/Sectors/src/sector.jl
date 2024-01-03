@@ -1,19 +1,19 @@
 
 struct Sector{Data} <: AbstractCategory
   data::Data
-  global _Sector(d) = new{typeof(d)}(d)
 end
 
-Sector(nt::NamedTuple) = _Sector(nt_sort(nt))
+Sector(nt::NamedTuple) = Sector{NamedTuple}(nt_sort(nt))
 
 Sector(; kws...) = Sector((; kws...))
 
 function Sector(pairs::Pair...)
-  N = length(pairs)
-  keys = ntuple(n -> Symbol(pairs[n][1]), Val(N))
-  vals = ntuple(n -> pairs[n][2], Val(N))
+  keys = ntuple(n -> Symbol(pairs[n][1]), length(pairs))
+  vals = ntuple(n -> pairs[n][2], length(pairs))
   return Sector(NamedTuple{keys}(vals))
 end
+
+Sector(v::Vector{<:AbstractCategory}) = Sector{Vector}(v)
 
 data(s::Sector) = s.data
 
@@ -25,18 +25,29 @@ Base.getindex(S::Sector, args...) = getindex(data(S), args...)
 # Set-like interface
 #
 
-Base.intersect(s1::Sector, s2::Sector) = Sector(nt_intersect(data(s1), data(s2)))
-Base.symdiff(s1::Sector, s2::Sector) = Sector(nt_symdiff(data(s1), data(s2)))
-Base.union(s1::Sector, s2::Sector) = Sector(nt_union(data(s1), data(s2)))
+const NamedSector = Sector{<:NamedTuple}
+
+Base.intersect(s1::NamedSector, s2::NamedSector) = Sector(nt_intersect(data(s1), data(s2)))
+Base.symdiff(s1::NamedSector, s2::NamedSector) = Sector(nt_symdiff(data(s1), data(s2)))
+Base.union(s1::NamedSector, s2::NamedSector) = Sector(nt_union(data(s1), data(s2)))
+
+×(nt1::NamedTuple, nt2::NamedTuple) = Sector(nt_union(nt1,nt2))
+×(s1::NamedSector, c2::NamedTuple) = Sector(nt_union(data(s1), c2))
+×(c1::NamedTuple, s2::NamedSector) = Sector(nt_union(c1, data(s2)))
+
+const NamedCategory = Pair{<:Any,<:AbstractCategory}
+×(c1::NamedCategory, c2::NamedCategory) = Sector(nt_union(data(Sector(c1)),data(Sector(c2))))
+×(s1::NamedSector, c2::NamedCategory) = Sector(nt_union(data(s1), data(Sector(c2))))
+×(c1::NamedCategory, s2::NamedSector) = Sector(nt_union(data(Sector(c1)), data(s2)))
 
 #
 # Dictionary-like interface
 #
 
-Base.keys(S::Sector{<:NamedTuple}) = keys(data(S))
-Base.values(S::Sector{<:NamedTuple}) = values(data(S))
+Base.keys(S::NamedSector) = keys(data(S))
+Base.values(S::NamedSector) = values(data(S))
 
-function Base.iterate(s::Sector{<:NamedTuple}, state=1)
+function Base.iterate(s::NamedSector, state=1)
   (state > length(s)) && (return nothing)
   return (keys(s)[state] => s[state], state + 1)
 end
@@ -49,7 +60,7 @@ formed by fusing the matching sectors of A and B.
 Any sectors present in B but not in A and vice versa
 are treated as if they were present but had the value zero.
 """
-function ⊗(A::Sector{<:NamedTuple}, B::Sector{<:NamedTuple})
+function ⊗(A::NamedSector, B::NamedSector)
   qs = [A]
   for (la, lb) in zip(intersect(A, B), intersect(B, A))
     @assert la[1] == lb[1]
@@ -61,7 +72,7 @@ function ⊗(A::Sector{<:NamedTuple}, B::Sector{<:NamedTuple})
   return qs
 end
 
-function Base.:(==)(A::Sector{<:NamedTuple}, B::Sector{<:NamedTuple})
+function Base.:(==)(A::NamedSector, B::NamedSector)
   common_labels = zip(intersect(A, B), intersect(B, A))
   common_labels_match = all(nl -> (nl[1] == nl[2]), common_labels)
   unique_labels_zero = all(l -> istrivial(l[2]), symdiff(A, B))
@@ -70,28 +81,28 @@ end
 
 # TODO: make printing more similar to ordered case, 
 #       perhaps using × operator
-Base.show(io::IO, s::Sector) = print(io, "Sector", isempty(s) ? "()" : data(s))
+Base.show(io::IO, s::NamedSector) = print(io, "Sector", isempty(s) ? "()" : data(s))
 
 #
 # Ordered interface
 #
 
-Sector(v::Vector{<:AbstractCategory}) = _Sector(v)
+const OrderedSector = Sector{<:Vector}
 
 ×(c1::AbstractCategory, c2::AbstractCategory) = Sector([c1, c2])
-×(s1::Sector{<:Vector}, c2::AbstractCategory) = Sector(vcat(data(s1), c2))
-×(c1::AbstractCategory, s2::Sector{<:Vector}) = Sector(vcat(c1, data(s2)))
+×(s1::OrderedSector, c2::AbstractCategory) = Sector(vcat(data(s1), c2))
+×(c1::AbstractCategory, s2::OrderedSector) = Sector(vcat(c1, data(s2)))
 
-Base.:(==)(o1::Sector{<:Vector}, o2::Sector{<:Vector}) = (data(o1) == data(o2))
+Base.:(==)(o1::OrderedSector, o2::OrderedSector) = (data(o1) == data(o2))
 
 # Helper function for ⊗
-function replace(o::Sector{<:Vector}, n::Int, val)
+function replace(o::OrderedSector, n::Int, val)
   d = copy(data(o))
   d[n] = val
   return Sector(d)
 end
 
-function ⊗(o1::Sector{<:Vector}, o2::Sector{<:Vector})
+function ⊗(o1::OrderedSector, o2::OrderedSector)
   N = length(o1)
   length(o2) == N || throw(DimensionMismatch("Ordered Sectors must have same size in ⊗"))
   os = [o1]
@@ -101,7 +112,7 @@ function ⊗(o1::Sector{<:Vector}, o2::Sector{<:Vector})
   return os
 end
 
-function Base.show(io::IO, os::Sector{<:Vector})
+function Base.show(io::IO, os::OrderedSector)
   isempty(os) && return nothing
   print(io, "(")
   symbol = ""
