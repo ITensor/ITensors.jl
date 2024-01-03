@@ -13,8 +13,6 @@ function Sector(pairs::Pair...)
   return Sector(NamedTuple{keys}(vals))
 end
 
-Sector(v::Vector{<:AbstractCategory}) = Sector{Vector}(v)
-
 Sector(cats::AbstractCategory...) = Sector([cats...])
 
 data(s::Sector) = s.data
@@ -48,8 +46,8 @@ end
 # Dictionary-like interface
 #
 
-Base.keys(S::NamedSector) = keys(data(S))
-Base.values(S::NamedSector) = values(data(S))
+Base.keys(S::Sector) = keys(data(S))
+Base.values(S::Sector) = values(data(S))
 
 function Base.iterate(s::NamedSector, state=1)
   (state > length(s)) && (return nothing)
@@ -98,6 +96,7 @@ const OrderedSector = Sector{<:Vector}
 ×(s1::OrderedSector, c2::AbstractCategory) = Sector(vcat(data(s1), c2))
 ×(c1::AbstractCategory, s2::OrderedSector) = Sector(vcat(c1, data(s2)))
 
+# TODO: would set version of == also work?
 Base.:(==)(o1::OrderedSector, o2::OrderedSector) = (data(o1) == data(o2))
 
 # Helper function for ⊗
