@@ -33,12 +33,14 @@ Base.intersect(s1::NamedSector, s2::NamedSector) = Sector(nt_intersect(data(s1),
 Base.symdiff(s1::NamedSector, s2::NamedSector) = Sector(nt_symdiff(data(s1), data(s2)))
 Base.union(s1::NamedSector, s2::NamedSector) = Sector(nt_union(data(s1), data(s2)))
 
-×(nt1::NamedTuple, nt2::NamedTuple) = Sector(nt_union(nt1,nt2))
+×(nt1::NamedTuple, nt2::NamedTuple) = Sector(nt_union(nt1, nt2))
 ×(s1::NamedSector, c2::NamedTuple) = Sector(nt_union(data(s1), c2))
 ×(c1::NamedTuple, s2::NamedSector) = Sector(nt_union(c1, data(s2)))
 
 const NamedCategory = Pair{<:Any,<:AbstractCategory}
-×(c1::NamedCategory, c2::NamedCategory) = Sector(nt_union(data(Sector(c1)),data(Sector(c2))))
+function ×(c1::NamedCategory, c2::NamedCategory)
+  return Sector(nt_union(data(Sector(c1)), data(Sector(c2))))
+end
 ×(s1::NamedSector, c2::NamedCategory) = Sector(nt_union(data(s1), data(Sector(c2))))
 ×(c1::NamedCategory, s2::NamedSector) = Sector(nt_union(data(Sector(c1)), data(s2)))
 
