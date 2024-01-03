@@ -101,14 +101,13 @@ using Test
 end
 
 @testset "Test Ordered Sectors" begin
-
   @testset "Ordered Constructor" begin
-    s = Sector(U1(1),U1(2))
+    s = Sector(U1(1), U1(2))
     @test length(s) == 2
     @test s[1] == U1(1)
     @test s[2] == U1(2)
 
-    s = Sector(U1(1),SU2(1//2),U1(3))
+    s = Sector(U1(1), SU2(1//2), U1(3))
     @test length(s) == 3
     @test s[1] == U1(1)
     @test s[2] == SU2(1//2)
