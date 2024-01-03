@@ -57,14 +57,15 @@ function Base.iterate(s::NamedSector, state=1)
 end
 
 """
-  ⊗(A::Sector,B::Sector)
+  fusion_rule(A::NamedSector,B::NamedSector)
+  ⊗(A::NamedSector,B::NamedSector)
 
-Fuse two Sectors producing a vector of Sectors
+Fuse two named Sectors producing a vector of Sectors
 formed by fusing the matching sectors of A and B.
 Any sectors present in B but not in A and vice versa
 are treated as if they were present but had the value zero.
 """
-function ⊗(A::NamedSector, B::NamedSector)
+function fusion_rule(A::NamedSector, B::NamedSector)
   qs = [A]
   for (la, lb) in zip(intersect(A, B), intersect(B, A))
     @assert la[1] == lb[1]
@@ -106,7 +107,7 @@ function replace(o::OrderedSector, n::Int, val)
   return Sector(d)
 end
 
-function ⊗(o1::OrderedSector, o2::OrderedSector)
+function fusion_rule(o1::OrderedSector, o2::OrderedSector)
   N = length(o1)
   length(o2) == N || throw(DimensionMismatch("Ordered Sectors must have same size in ⊗"))
   os = [o1]

@@ -3,7 +3,7 @@ abstract type AbstractCategory end
 label(c::AbstractCategory) = error("method `label` not defined for type $(typeof(c))")
 
 function dimension(c::AbstractCategory)
-  return error("method `dimension` not defined for category or group $(typeof(c))")
+  return error("method `dimension` not defined for type $(typeof(c))")
 end
 
 function label_fusion_rule(::Type{C}, l1, l2) where {C<:AbstractCategory}
