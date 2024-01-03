@@ -1,11 +1,5 @@
 
-# TODO:
-# May want to make this a subtype of AbstractCategory instead
-# and just implement set operations directly rather than
-# through AbstractNamedSet
-#
-
-struct Sector <: AbstractNamedSet
+struct Sector <: AbstractCategory
   data::NamedTuple
   Sector(nt::NamedTuple) = new(nt_sort(nt))
 end
@@ -25,6 +19,11 @@ Base.keys(S::Sector) = keys(data(S))
 Base.values(S::Sector) = values(data(S))
 Base.getindex(S::Sector, args...) = getindex(data(S), args...)
 Base.isempty(S::Sector) = isempty(data(S))
+Base.length(S::Sector) = length(data(S))
+
+Base.intersect(s1::Sector, s2::Sector) = Sector(nt_intersect(data(s1), data(s2)))
+Base.symdiff(s1::Sector, s2::Sector) = Sector(nt_symdiff(data(s1), data(s2)))
+Base.union(s1::Sector, s2::Sector) = Sector(nt_union(data(s1), data(s2)))
 
 function Base.iterate(s::Sector, state=1)
   (state > length(s)) && (return nothing)
@@ -58,23 +57,4 @@ function Base.:(==)(A::Sector, B::Sector)
   return common_labels_match && unique_labels_zero
 end
 
-⊕(a::Sector, b::Sector) = [a, b]
-⊕(v::Vector{<:Sector}, b::Sector) = vcat(v, b)
-⊕(a::Sector, v::Vector{<:Sector}) = vcat(a, v)
-
-function Base.show(io::IO, v::Vector{<:Sector})
-  isempty(v) && return nothing
-  symbol = ""
-  for s in v
-    print(io, symbol, s)
-    symbol = " ⊕ "
-  end
-end
-
-function Base.show(io::IO, s::Sector)
-  if isempty(s)
-    print(io, "Sector()")
-  else
-    print(io, "Sector", data(s))
-  end
-end
+Base.show(io::IO, s::Sector) = print(io, "Sector", isempty(s) ? "()" : data(s))

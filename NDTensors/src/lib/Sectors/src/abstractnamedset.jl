@@ -7,25 +7,10 @@ end
   return :(NamedTuple{$(Tuple(intersect(N1, N2)))}(merge(nt2, nt1)))
 end
 
-abstract type AbstractNamedSet end
+nt_union(ns1::NamedTuple, ns2::NamedTuple) = Base.merge(ns2, ns1)
 
-function Base.union(ns1::AbstractNamedSet, ns2::AbstractNamedSet)
-  return typeof(ns1)(merge(data(ns2), data(ns1)))
+nt_setdiff(ns1::NamedTuple, ns2::NamedTuple) = Base.structdiff(ns1, ns2)
+
+function nt_symdiff(ns1::NamedTuple, ns2::NamedTuple)
+  return merge(Base.structdiff(ns1, ns2), Base.structdiff(ns2, ns1))
 end
-
-function Base.intersect(ns1::AbstractNamedSet, ns2::AbstractNamedSet)
-  return typeof(ns1)(nt_intersect(data(ns1), data(ns2)))
-end
-
-function Base.setdiff(ns1::AbstractNamedSet, ns2::AbstractNamedSet)
-  return typeof(ns1)(Base.structdiff(data(ns1), data(ns2)))
-end
-
-function Base.symdiff(ns1::AbstractNamedSet, ns2::AbstractNamedSet)
-  ndata = merge(
-    Base.structdiff(data(ns1), data(ns2)), Base.structdiff(data(ns2), data(ns1))
-  )
-  return typeof(ns1)(ndata)
-end
-
-Base.length(ns::AbstractNamedSet) = length(data(ns))
