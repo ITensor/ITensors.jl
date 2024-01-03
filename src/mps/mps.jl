@@ -541,6 +541,9 @@ function replacebond!(
   cutoff=nothing,
   eigen_perturbation=nothing,
   svd_alg=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  min_blockdim=nothing
 )
   normalize = NDTensors.replace_nothing(normalize, false)
   swapsites = NDTensors.replace_nothing(swapsites, false)
@@ -563,6 +566,9 @@ function replacebond!(
     eigen_perturbation,
     svd_alg,
     tags=tags(linkind(M, b)),
+    use_absolute_cutoff,
+    use_relative_cutoff,
+    min_blockdim
   )
   M[b] = L
   M[b + 1] = R
