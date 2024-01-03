@@ -10,7 +10,7 @@ function permute(
   for n in 1:length(M)
     lₙ₋₁ = linkind(M, n - 1)
     lₙ = linkind(M, n)
-    s⃗ₙ = sort(Tuple(siteinds(M, n)); by=plev)
+    s⃗ₙ = TupleTools.sort(Tuple(siteinds(M, n)); by=plev)
     M̃[n] = permute(M[n], filter(!isnothing, (lₙ₋₁, s⃗ₙ..., lₙ)))
   end
   set_ortho_lims!(M̃, ortho_lims(M))

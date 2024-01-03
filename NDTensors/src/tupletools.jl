@@ -151,7 +151,7 @@ end
 
 deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
 function deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}})
-  return deleteat_sorted(t, sort(I; rev=true))
+  return deleteat_sorted(t, TupleTools.sort(I; rev=true))
 end
 
 deleteat_sorted(t::Tuple, pos::Int64) = deleteat(t, pos[1])

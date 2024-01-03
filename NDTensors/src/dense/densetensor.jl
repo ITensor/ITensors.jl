@@ -193,10 +193,17 @@ end
 # Maybe allocate output data.
 # TODO: Remove this in favor of `map!`
 # applied to `PermutedDimsArray`.
-function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
+function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function)
   Base.checkdims_perm(R, T, perm)
   RR = convert(promote_type(typeof(R), typeof(T)), R)
   permutedims!(RR, T, perm, f)
+  return RR
+end
+
+function permutedims!!(R::DenseTensor, T::DenseTensor, perm)
+  Base.checkdims_perm(R, T, perm)
+  RR = convert(promote_type(typeof(R), typeof(T)), R)
+  permutedims!(RR, T, perm)
   return RR
 end
 
@@ -216,7 +223,7 @@ function permutedims!(
 ) where {N}
   RA = array(R)
   TA = array(T)
-  RA .= permutedims(expose(TA), perm)
+  permutedims!(expose(RA), expose(TA), perm)
   return R
 end
 

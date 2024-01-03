@@ -19,35 +19,29 @@ using Strided
 using TimerOutputs
 using TupleTools
 
-# TODO: List types, macros, and functions being used.
-include("lib/AlgorithmSelection/src/AlgorithmSelection.jl")
-using .AlgorithmSelection: AlgorithmSelection
-include("lib/BaseExtensions/src/BaseExtensions.jl")
-using .BaseExtensions: BaseExtensions
-include("lib/SetParameters/src/SetParameters.jl")
-using .SetParameters
-include("lib/BroadcastMapConversion/src/BroadcastMapConversion.jl")
-using .BroadcastMapConversion: BroadcastMapConversion
-include("lib/Unwrap/src/Unwrap.jl")
-using .Unwrap
-include("lib/RankFactorization/src/RankFactorization.jl")
-using .RankFactorization: RankFactorization
-include("lib/TensorAlgebra/src/TensorAlgebra.jl")
-using .TensorAlgebra: TensorAlgebra
-include("lib/DiagonalArrays/src/DiagonalArrays.jl")
-using .DiagonalArrays
-include("lib/BlockSparseArrays/src/BlockSparseArrays.jl")
-using .BlockSparseArrays
-include("lib/NamedDimsArrays/src/NamedDimsArrays.jl")
-using .NamedDimsArrays: NamedDimsArrays
-include("lib/SmallVectors/src/SmallVectors.jl")
-using .SmallVectors
-include("lib/SortedSets/src/SortedSets.jl")
-using .SortedSets
-include("lib/TagSets/src/TagSets.jl")
-using .TagSets
-include("lib/Sectors/src/Sectors.jl")
-using .Sectors
+for lib in [
+  :AlgorithmSelection,
+  :AllocateData,
+  :BaseExtensions,
+  :SetParameters,
+  :BroadcastMapConversion,
+  :Unwrap,
+  :RankFactorization,
+  :GradedAxes,
+  :TensorAlgebra,
+  :SparseArrayInterface,
+  :SparseArrayDOKs,
+  :DiagonalArrays,
+  :BlockSparseArrays,
+  :NamedDimsArrays,
+  :SmallVectors,
+  :Sectors,
+  :SortedSets,
+  :TagSets,
+]
+  include("lib/$(lib)/src/$(lib).jl")
+  @eval using .$lib: $lib
+end
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
@@ -144,52 +138,6 @@ include("empty/empty.jl")
 include("empty/EmptyTensor.jl")
 include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
-
-#####################################
-# Array Tensor (experimental)
-#
-
-# TODO: Turn this into a module `CombinerArray`.
-include("arraystorage/combiner/storage/combinerarray.jl")
-
-include("arraystorage/arraystorage/storage/arraystorage.jl")
-include("arraystorage/arraystorage/storage/conj.jl")
-include("arraystorage/arraystorage/storage/permutedims.jl")
-include("arraystorage/arraystorage/storage/contract.jl")
-
-include("arraystorage/arraystorage/tensor/arraystorage.jl")
-include("arraystorage/arraystorage/tensor/zeros.jl")
-include("arraystorage/arraystorage/tensor/indexing.jl")
-include("arraystorage/arraystorage/tensor/permutedims.jl")
-include("arraystorage/arraystorage/tensor/mul.jl")
-include("arraystorage/arraystorage/tensor/contract.jl")
-include("arraystorage/arraystorage/tensor/qr.jl")
-include("arraystorage/arraystorage/tensor/eigen.jl")
-include("arraystorage/arraystorage/tensor/svd.jl")
-
-# DiagonalArray storage
-include("arraystorage/diagonalarray/storage/contract.jl")
-
-include("arraystorage/diagonalarray/tensor/contract.jl")
-
-# BlockSparseArray storage
-include("arraystorage/blocksparsearray/storage/unwrap.jl")
-include("arraystorage/blocksparsearray/storage/contract.jl")
-
-include("arraystorage/blocksparsearray/tensor/contract.jl")
-
-# Combiner storage
-include("arraystorage/combiner/storage/promote_rule.jl")
-include("arraystorage/combiner/storage/contract_utils.jl")
-include("arraystorage/combiner/storage/contract.jl")
-
-include("arraystorage/combiner/tensor/to_arraystorage.jl")
-include("arraystorage/combiner/tensor/contract.jl")
-
-include("arraystorage/blocksparsearray/storage/combiner/contract.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_utils.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_combine.jl")
-include("arraystorage/blocksparsearray/storage/combiner/contract_uncombine.jl")
 
 #####################################
 # Deprecations

@@ -1,103 +1,103 @@
-using Test: @test, @testset, @test_broken
-using BlockArrays: BlockArrays, BlockRange, blocksize
-using Compat: allequal
-using LinearAlgebra: Diagonal, Hermitian, eigen, qr
-using NDTensors: contract
-using NDTensors.BlockSparseArrays:
-  BlockSparseArrays, BlockSparseArray, gradedrange, nonzero_blockkeys, fusedims
-using ITensors: QN
-
+@eval module $(gensym())
+using BlockArrays: Block, BlockedUnitRange, blockedrange, blocklength, blocksize
+using LinearAlgebra: mul!
+using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored, block_reshape
+using NDTensors.SparseArrayInterface: nstored
+using Test: @test, @testset
 include("TestBlockSparseArraysUtils.jl")
+@testset "BlockSparseArrays (eltype=$elt)" for elt in
+                                               (Float32, Float64, ComplexF32, ComplexF64)
+  @testset "Basics" begin
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    @test eltype(a) === elt
+    @test axes(a) == (1:5, 1:5)
+    @test all(aᵢ -> aᵢ isa BlockedUnitRange, axes(a))
+    @test blocklength.(axes(a)) == (2, 2)
+    @test blocksize(a) == (2, 2)
+    @test size(a) == (5, 5)
+    @test block_nstored(a) == 0
+    @test iszero(a)
+    @test all(I -> iszero(a[I]), eachindex(a))
 
-@testset "Test NDTensors.BlockSparseArrays" begin
-  @testset "README" begin
-    @test include(
-      joinpath(
-        pkgdir(BlockSparseArrays),
-        "src",
-        "lib",
-        "BlockSparseArrays",
-        "examples",
-        "README.jl",
-      ),
-    ) isa Any
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[3, 3] = 33
+    @test eltype(a) === elt
+    @test axes(a) == (1:5, 1:5)
+    @test all(aᵢ -> aᵢ isa BlockedUnitRange, axes(a))
+    @test blocklength.(axes(a)) == (2, 2)
+    @test blocksize(a) == (2, 2)
+    @test size(a) == (5, 5)
+    @test block_nstored(a) == 1
+    @test !iszero(a)
+    @test a[3, 3] == 33
+    @test all(eachindex(a)) do I
+      if I == CartesianIndex(3, 3)
+        a[I] == 33
+      else
+        iszero(a[I])
+      end
+    end
   end
-  @testset "exports $s" for s in [:BlockSparseArray]
-    @test Base.isexported(BlockSparseArrays, s)
-  end
-  @testset "Mixed block test" begin
-    blocks = [BlockArrays.Block(1, 1), BlockArrays.Block(2, 2)]
-    block_data = [randn(2, 2)', randn(3, 3)]
-    inds = ([2, 3], [2, 3])
-    A = BlockSparseArray(blocks, block_data, inds)
-    @test A[BlockArrays.Block(1, 1)] == block_data[1]
-    @test A[BlockArrays.Block(1, 2)] == zeros(2, 3)
-  end
-  @testset "fusedims" begin
-    elt = Float64
-    d = [2, 3]
-    sectors = [QN(0, 2), QN(1, 2)]
-    i = gradedrange(d, sectors)
+  @testset "Tensor algebra" begin
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
+    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
+    @test eltype(a) == elt
+    @test block_nstored(a) == 2
+    @test nstored(a) == 2 * 4 + 3 * 3
 
-    B = BlockSparseArray{elt}(i, i, i, i)
-    B[BlockArrays.Block(1, 1, 1, 1)] = randn(2, 2, 2, 2)
-    B[BlockArrays.Block(2, 2, 2, 2)] = randn(3, 3, 3, 3)
-    @test size(B) == (5, 5, 5, 5)
-    @test blocksize(B) == (2, 2, 2, 2)
-    # TODO: Define `nnz`.
-    @test length(nonzero_blockkeys(B)) == 2
+    b = 2 * a
+    @test Array(b) ≈ 2 * Array(a)
+    @test eltype(b) == elt
+    @test block_nstored(b) == 2
+    @test nstored(b) == 2 * 4 + 3 * 3
 
-    B_sub = B[
-      [BlockArrays.Block(2)],
-      [BlockArrays.Block(2)],
-      [BlockArrays.Block(2)],
-      [BlockArrays.Block(2)],
-    ]
-    @test B_sub isa BlockSparseArray{elt,4}
-    @test B[BlockArrays.Block(2, 2, 2, 2)] == B_sub[BlockArrays.Block(1, 1, 1, 1)]
-    @test size(B_sub) == (3, 3, 3, 3)
-    @test blocksize(B_sub) == (1, 1, 1, 1)
-    # TODO: Define `nnz`.
-    @test length(nonzero_blockkeys(B_sub)) == 1
+    b = a + a
+    @test Array(b) ≈ 2 * Array(a)
+    @test eltype(b) == elt
+    @test block_nstored(b) == 2
+    @test nstored(b) == 2 * 4 + 3 * 3
 
-    B_fused = fusedims(B, (1, 2), (3, 4))
-    @test B_fused isa BlockSparseArray{elt,2}
-    @test size(B_fused) == (25, 25)
-    @test blocksize(B_fused) == (2, 2)
-    # TODO: Define `nnz`.
-    # This is broken because it allocates all blocks,
-    # need to fix that.
-    @test_broken length(nonzero_blockkeys(B_fused)) == 2
-  end
-  @testset "contract (eltype=$elt)" for elt in (Float32, ComplexF32, Float64, ComplexF64)
-    d1, d2, d3, d4 = [2, 3], [3, 4], [4, 5], [5, 6]
-    a1 = BlockSparseArray{elt}(d1, d2, d3)
-    TestBlockSparseArraysUtils.set_blocks!(a1, randn, b -> iseven(sum(b.n)))
-    a2 = BlockSparseArray{elt}(d2, d4)
-    TestBlockSparseArraysUtils.set_blocks!(a2, randn, b -> iseven(sum(b.n)))
-    a_dest, labels_dest = contract(a1, (1, -1, 2), a2, (-1, 3))
-    @test labels_dest == (1, 2, 3)
-    @test eltype(a_dest) == elt
-    # TODO: Output `labels_dest` as well.
-    a_dest_dense = contract(Array(a1), (1, -1, 2), Array(a2), (-1, 3))
-    @test a_dest ≈ a_dest_dense
-  end
-  @testset "qr (eltype=$elt, dims=$d)" for elt in
-                                           (Float32, ComplexF32, Float64, ComplexF64),
-    d in (([3, 4], [2, 3]), ([2, 3], [3, 4]), ([2, 3], [3]), ([3, 4], [2]), ([2], [3, 4]))
+    x = BlockSparseArray{elt}(undef, ([3, 4], [2, 3]))
+    x[Block(1, 2)] = randn(elt, size(@view(x[Block(1, 2)])))
+    x[Block(2, 1)] = randn(elt, size(@view(x[Block(2, 1)])))
+    b = a .+ a .+ 3 .* PermutedDimsArray(x, (2, 1))
+    @test Array(b) ≈ 2 * Array(a) + 3 * permutedims(Array(x), (2, 1))
+    @test eltype(b) == elt
+    @test block_nstored(b) == 2
+    @test nstored(b) == 2 * 4 + 3 * 3
 
-    a = BlockSparseArray{elt}(d)
-    TestBlockSparseArraysUtils.set_blocks!(a, randn, b -> iseven(sum(b.n)))
-    q, r = qr(a)
-    @test q * r ≈ a
+    b = permutedims(a, (2, 1))
+    @test Array(b) ≈ permutedims(Array(a), (2, 1))
+    @test eltype(b) == elt
+    @test block_nstored(b) == 2
+    @test nstored(b) == 2 * 4 + 3 * 3
+
+    b = map(x -> 2x, a)
+    @test Array(b) ≈ 2 * Array(a)
+    @test eltype(b) == elt
+    @test block_nstored(b) == 2
+    @test nstored(b) == 2 * 4 + 3 * 3
   end
-  @testset "eigen (eltype=$elt)" for elt in (Float32, ComplexF32, Float64, ComplexF64)
-    d1, d2 = [2, 3], [2, 3]
-    a = BlockSparseArray{elt}(d1, d2)
-    TestBlockSparseArraysUtils.set_blocks!(a, randn, b -> allequal(b.n))
-    d, u = eigen(Hermitian(a))
-    @test eltype(d) == real(elt)
-    @test eltype(u) == elt
-    @test Hermitian(Matrix(a)) * Matrix(u) ≈ Matrix(u) * Diagonal(Vector(d))
+  @testset "LinearAlgebra" begin
+    a1 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a1[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    a2 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a2[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    a_dest = a1 * a2
+    @test Array(a_dest) ≈ Array(a1) * Array(a2)
+    @test a_dest isa BlockSparseArray{elt}
+    @test block_nstored(a_dest) == 1
   end
+  @testset "block_reshape" begin
+    a = BlockSparseArray{elt}(undef, ([3, 4], [2, 3]))
+    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
+    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
+    b = block_reshape(a, [6, 8, 9, 12])
+    @test reshape(a[Block(1, 2)], 9) == b[Block(3)]
+    @test reshape(a[Block(2, 1)], 8) == b[Block(2)]
+    @test block_nstored(b) == 2
+    @test nstored(b) == 17
+  end
+end
 end
