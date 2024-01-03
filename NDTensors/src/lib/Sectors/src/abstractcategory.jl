@@ -1,20 +1,18 @@
 abstract type AbstractCategory end
 
-abstract type AbstractGroup <: AbstractCategory end
-
 label(c::AbstractCategory) = error("method `label` not defined for type $(typeof(c))")
 
 function dimension(c::AbstractCategory)
   return error("method `dimension` not defined for category or group $(typeof(c))")
 end
 
-function fusion_rule(::Type{C}, l1, l2) where {C<:AbstractCategory}
-  return error("fusion_rule not defined for type $(C)")
+function label_fusion_rule(::Type{C}, l1, l2) where {C<:AbstractCategory}
+  return error("label_fusion_rule not defined for type $(C)")
 end
 
 function fusion_rule(c1::AbstractCategory, c2::AbstractCategory)
   C = typeof(c1)
-  return [C(d) for d in fusion_rule(C, label(c1), label(c2))]
+  return [C(d) for d in label_fusion_rule(C, label(c1), label(c2))]
 end
 
 ⊗(c1::AbstractCategory, c2::AbstractCategory) = fusion_rule(c1, c2)

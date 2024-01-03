@@ -1,10 +1,10 @@
 import HalfIntegers: Half
 
 #
-# Group U₁
+# U₁ group (circle group, or particle number, total Sz etc.)
 #
 
-struct U1 <: AbstractGroup
+struct U1 <: AbstractCategory
   n::Half{Int}
 end
 
@@ -14,13 +14,13 @@ dimension(::U1) = 1
 
 trivial(::Type{U1}) = U1(0)
 
-fusion_rule(::Type{U1}, n1, n2) = (n1 + n2,)
+label_fusion_rule(::Type{U1}, n1, n2) = (n1 + n2,)
 
 #
 # Cyclic group Zₙ
 #
 
-struct Z{N} <: AbstractGroup
+struct Z{N} <: AbstractCategory
   m::Half{Int}
   Z{N}(m) where {N} = new{N}(m % N)
 end
@@ -33,13 +33,13 @@ dimension(::Z) = 1
 
 trivial(::Type{Z{N}}) where {N} = Z{N}(0)
 
-fusion_rule(::Type{Z{N}}, n1, n2) where {N} = ((n1 + n2) % N,)
+label_fusion_rule(::Type{Z{N}}, n1, n2) where {N} = ((n1 + n2) % N,)
 
 #
 # Special unitary group SU{N}
 #
 
-struct SU{N} <: AbstractGroup
+struct SU{N} <: AbstractCategory
   # l is the first row of the 
   # Gelfand-Tsetlin (GT) pattern describing
   # an SU(N) irrep
@@ -86,7 +86,7 @@ end
 # using "J" labels
 #
 
-struct SU2 <: AbstractGroup
+struct SU2 <: AbstractCategory
   j::Half{Int}
 end
 
@@ -96,7 +96,7 @@ trivial(::Type{SU2}) = SU2(0)
 
 dimension(s::SU2) = 2 * label(s) + 1
 
-fusion_rule(::Type{SU2}, j1, j2) = abs(j1 - j2):(j1 + j2)
+label_fusion_rule(::Type{SU2}, j1, j2) = abs(j1 - j2):(j1 + j2)
 
 #
 # Quantum group su2ₖ
@@ -112,7 +112,7 @@ level(s::su2{k}) where {k} = k
 
 trivial(::Type{su2{k}}) where {k} = su2{k}(0)
 
-function fusion_rule(::Type{su2{k}}, j1, j2) where {k}
+function label_fusion_rule(::Type{su2{k}}, j1, j2) where {k}
   return abs(j1 - j2):min(k - j1 - j2, j1 + j2)
 end
 
@@ -142,7 +142,7 @@ trivial(::Type{Fib}) = Fib(0)
 dimension(f::Fib) = istrivial(f) ? 1 : ((1 + √5) / 2)
 
 # Fusion rules identical to su2₃
-fusion_rule(::Type{Fib}, l1, l2) = fusion_rule(su2{3}, l1, l2)
+label_fusion_rule(::Type{Fib}, l1, l2) = label_fusion_rule(su2{3}, l1, l2)
 
 label_to_str(f::Fib) = istrivial(f) ? "1" : "τ"
 
@@ -174,7 +174,7 @@ trivial(::Type{Ising}) = Ising(0)
 dimension(i::Ising) = (label(i) == 1//2) ? √2 : 1
 
 # Fusion rules identical to su2₂
-fusion_rule(::Type{Ising}, l1, l2) = fusion_rule(su2{2}, l1, l2)
+label_fusion_rule(::Type{Ising}, l1, l2) = label_fusion_rule(su2{2}, l1, l2)
 
 label_to_str(i::Ising) = ("1", "σ", "ψ")[Int(2 * label(i) + 1)]
 
