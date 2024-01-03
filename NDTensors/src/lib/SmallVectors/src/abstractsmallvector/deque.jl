@@ -311,7 +311,7 @@ function prepend(vec::AbstractSmallVector, item::AbstractVector)
 end
 
 # Don't @inline, makes it slower.
-function Base.vcat(vec1::AbstractSmallVector, vec2::AbstractVector)
+function Base.vcat(vec1::AbstractSmallVector{<:Number}, vec2::AbstractVector{<:Number})
   mvec1 = thaw(vec1)
   append!(mvec1, vec2)
   return convert(similar_type(vec1), mvec1)
