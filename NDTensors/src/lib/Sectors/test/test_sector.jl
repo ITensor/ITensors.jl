@@ -101,6 +101,20 @@ using Test
 end
 
 @testset "Test Ordered Sectors" begin
+
+  @testset "Ordered Constructor" begin
+    s = Sector(U1(1),U1(2))
+    @test length(s) == 2
+    @test s[1] == U1(1)
+    @test s[2] == U1(2)
+
+    s = Sector(U1(1),SU2(1//2),U1(3))
+    @test length(s) == 3
+    @test s[1] == U1(1)
+    @test s[2] == SU2(1//2)
+    @test s[3] == U1(3)
+  end
+
   @testset "Fusion of U1 products" begin
     p11 = U1(1) × U1(1)
     @test p11 ⊗ p11 == [U1(2) × U1(2)]

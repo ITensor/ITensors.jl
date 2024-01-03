@@ -15,6 +15,8 @@ end
 
 Sector(v::Vector{<:AbstractCategory}) = Sector{Vector}(v)
 
+Sector(cats::AbstractCategory...) = Sector([cats...])
+
 data(s::Sector) = s.data
 
 Base.isempty(S::Sector) = isempty(data(S))
@@ -79,7 +81,7 @@ function Base.:(==)(A::NamedSector, B::NamedSector)
   return common_labels_match && unique_labels_zero
 end
 
-# TODO: make printing more similar to ordered case, 
+# TODO: make printing more similar to ordered case?
 #       perhaps using × operator
 Base.show(io::IO, s::NamedSector) = print(io, "Sector", isempty(s) ? "()" : data(s))
 
