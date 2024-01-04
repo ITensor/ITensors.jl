@@ -13,17 +13,6 @@ using Test
     @test s[:C] == Ising("ψ")
   end
 
-  @testset "Construct from × of Pairs" begin
-    s = ("A" => U1(1)) × ("B" => SU2(2))
-    @test length(s) == 2
-    @test s[:A] == U1(1)
-    @test s[:B] == SU2(2)
-
-    s = s × ("C" => Ising("ψ"))
-    @test length(s) == 3
-    @test s[:C] == Ising("ψ")
-  end
-
   @testset "Construct from Pairs" begin
     s = Sector("A" => U1(2))
     @test length(s) == 1

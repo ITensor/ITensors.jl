@@ -3,7 +3,10 @@ struct Sector{Data} <: AbstractCategory
   data::Data
 end
 
-Sector(nt::NamedTuple) = Sector{NamedTuple}(nt_sort(nt))
+function Sector(nt::NamedTuple)
+  data = nt_sort(nt)
+  return Sector{typeof(data)}(data)
+end
 
 Sector(; kws...) = Sector((; kws...))
 
@@ -34,13 +37,6 @@ Base.union(s1::NamedSector, s2::NamedSector) = Sector(nt_union(data(s1), data(s2
 ×(nt1::NamedTuple, nt2::NamedTuple) = Sector(nt_union(nt1, nt2))
 ×(s1::NamedSector, c2::NamedTuple) = Sector(nt_union(data(s1), c2))
 ×(c1::NamedTuple, s2::NamedSector) = Sector(nt_union(c1, data(s2)))
-
-const NamedCategory = Pair{<:Any,<:AbstractCategory}
-function ×(c1::NamedCategory, c2::NamedCategory)
-  return Sector(nt_union(data(Sector(c1)), data(Sector(c2))))
-end
-×(s1::NamedSector, c2::NamedCategory) = Sector(nt_union(data(s1), data(Sector(c2))))
-×(c1::NamedCategory, s2::NamedSector) = Sector(nt_union(data(Sector(c1)), data(s2)))
 
 #
 # Dictionary-like interface
@@ -90,20 +86,22 @@ Base.show(io::IO, s::NamedSector) = print(io, "Sector", isempty(s) ? "()" : data
 # Ordered interface
 #
 
-const OrderedSector = Sector{<:Vector}
+const OrderedSector = Sector{<:Tuple}
 
-×(c1::AbstractCategory, c2::AbstractCategory) = Sector([c1, c2])
-×(s1::OrderedSector, c2::AbstractCategory) = Sector(vcat(data(s1), c2))
-×(c1::AbstractCategory, s2::OrderedSector) = Sector(vcat(c1, data(s2)))
+# TODO: use TupleTools to get vcat for tuples,
+#       or perhaps define and use union here if that's the right concept?
+#       (May not be the right concept since irreps can repeat.)
+×(c1::AbstractCategory, c2::AbstractCategory) = Sector((c1, c2))
+×(s1::OrderedSector, c2::AbstractCategory) = Sector((data(s1)..., c2))
+×(c1::AbstractCategory, s2::OrderedSector) = Sector((c1, data(s2)...))
 
 # TODO: would set version of == also work?
 Base.:(==)(o1::OrderedSector, o2::OrderedSector) = (data(o1) == data(o2))
 
 # Helper function for ⊗
 function replace(o::OrderedSector, n::Int, val)
-  d = copy(data(o))
-  d[n] = val
-  return Sector(d)
+  ndata = ntuple(m -> (m == n) ? val : data(o)[m], length(o))
+  return Sector(ndata)
 end
 
 function fusion_rule(o1::OrderedSector, o2::OrderedSector)
