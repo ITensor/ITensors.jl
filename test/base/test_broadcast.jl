@@ -89,12 +89,12 @@ using ITensors, Test
     @test Bc[2, 1] ≈ B[2, 1] + A[1, 2] / α
     @test Bc[1, 2] ≈ B[1, 2] + A[2, 1] / α
     @test Bc[2, 2] ≈ B[2, 2] + A[2, 2] / α
-    
+
     Bc = copy(B)
     Bc .+= α ./ A
     @test Bc[1, 1] ≈ B[1, 1] + α / A[1, 1]
     @test Bc[2, 1] ≈ B[2, 1] + α / A[1, 2]
-    @test Bc[1, 2] ≈ B[1, 2] + α / A[2, 1] 
+    @test Bc[1, 2] ≈ B[1, 2] + α / A[2, 1]
     @test Bc[2, 2] ≈ B[2, 2] + α / A[2, 2]
   end
 
@@ -105,12 +105,12 @@ using ITensors, Test
     @test Bc[2, 1] ≈ B[2, 1] - A[1, 2] / α
     @test Bc[1, 2] ≈ B[1, 2] - A[2, 1] / α
     @test Bc[2, 2] ≈ B[2, 2] - A[2, 2] / α
-    
+
     Bc = copy(B)
     Bc .-= α ./ A
     @test Bc[1, 1] ≈ B[1, 1] - α / A[1, 1]
     @test Bc[2, 1] ≈ B[2, 1] - α / A[1, 2]
-    @test Bc[1, 2] ≈ B[1, 2] - α / A[2, 1] 
+    @test Bc[1, 2] ≈ B[1, 2] - α / A[2, 1]
     @test Bc[2, 2] ≈ B[2, 2] - α / A[2, 2]
   end
 

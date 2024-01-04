@@ -317,6 +317,8 @@ function smallvector_vcat(vec1::AbstractSmallVector, vec2::AbstractVector)
   return convert(similar_type(vec1), mvec1)
 end
 
-Base.vcat(vec1::AbstractSmallVector{<:Number}, vec2::AbstractVector{<:Number}) = smallvector_vcat(vec1, vec2)
+function Base.vcat(vec1::AbstractSmallVector{<:Number}, vec2::AbstractVector{<:Number})
+  return smallvector_vcat(vec1, vec2)
+end
 
 Base.vcat(vec1::AbstractSmallVector, vec2::AbstractVector) = smallvector_vcat(vec1, vec2)
