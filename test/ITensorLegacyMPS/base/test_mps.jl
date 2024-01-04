@@ -603,10 +603,10 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     replacebond!(psi, 1, phi)
     @test tags(linkind(psi, 1)) == bondindtags
 
-    # check that replacebond! updates llim and rlim properly and works with use_absolute_cutoff
+    # check that replacebond! updates llim and rlim properly
     orthogonalize!(psi, 5)
     phi = psi[5] * psi[6]
-    replacebond!(psi, 5, phi; ortho="left", which_decomp="svd", use_absolute_cutoff=true)
+    replacebond!(psi, 5, phi; ortho="left")
     @test ITensors.leftlim(psi) == 5
     @test ITensors.rightlim(psi) == 7
 
@@ -615,13 +615,19 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test ITensors.leftlim(psi) == 4
     @test ITensors.rightlim(psi) == 6
 
-    # check that replacebond! works with use_absolute_cutoff
     ITensors.setleftlim!(psi, 3)
     ITensors.setrightlim!(psi, 7)
     phi = psi[5] * psi[6]
-    replacebond!(psi, 5, phi; ortho="left", which_decomp="svd", use_relative_cutoff=true)
+    replacebond!(psi, 5, phi; ortho="left")
     @test ITensors.leftlim(psi) == 3
     @test ITensors.rightlim(psi) == 7
+
+    # check that replacebond! runs with svd kwargs
+    psi = randomMPS(sites)
+    phi = psi[1] * psi[2]
+    replacebond!(psi, 1, phi; ortho="left", which_decomp="svd", use_relative_cutoff=true)
+    phi = psi[5] * psi[6]
+    replacebond!(psi, 5, phi; ortho="right", which_decomp="svd", use_absolute_cutoff=true)
   end
 end
 
