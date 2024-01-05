@@ -45,10 +45,20 @@ function block_nstored(a::AbstractArray)
 end
 
 # Base
-function blocksparse_map!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
-  map!(f, blocks(a_dest), blocks.(a_srcs)...)
-  return a_dest
-end
+## function blocksparse_map!(f, a_dest::AbstractArray, a_srcs::AbstractArray...)
+##   map!(f, blocks(a_dest), blocks.(a_srcs)...)
+##   return a_dest
+## end
+
+## function blocksparse_copyto!(a_dest::AbstractArray, a_src::AbstractArray)
+##   blocksparse_map!(identity, a_dest, a_src)
+##   return a_dest
+## end
+## 
+## function blocksparse_permutedims!(a_dest, a_src::AbstractArray, perm)
+##   blocksparse_map!(identity, a_dest, PermutedDimsArray(a_src, perm))
+##   return a_dest
+## end
 
 # PermutedDimsArray
 function blocksparse_blocks(a::PermutedDimsArray)

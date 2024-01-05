@@ -1,4 +1,6 @@
+using Base.Broadcast: BroadcastStyle, combine_styles
 using Compat: allequal
+using LinearAlgebra: LinearAlgebra
 
 # Represents a value that isn't stored
 # Used to hijack dispatch
@@ -9,10 +11,15 @@ value(v::NotStoredValue) = v.value
 nstored(::NotStoredValue) = false
 Base.:*(x::Number, y::NotStoredValue) = false
 Base.:+(::NotStoredValue, ::NotStoredValue...) = false
+Base.:-(::NotStoredValue, ::NotStoredValue...) = false
 Base.:+(x::Number, ::NotStoredValue...) = x
 Base.iszero(::NotStoredValue) = true
 Base.isreal(::NotStoredValue) = true
 Base.conj(x::NotStoredValue) = conj(value(x))
+Base.iterate(x::NotStoredValue) = (x, nothing)
+Base.mapreduce(f, op, x::NotStoredValue) = f(x)
+Base.zero(x::NotStoredValue) = zero(value(x))
+LinearAlgebra.norm(x::NotStoredValue, p::Real=2) = zero(value(x))
 
 notstored_index(a::AbstractArray) = NotStoredIndex(first(eachindex(a)))
 
@@ -81,6 +88,10 @@ function sparse_map_all!(f, a_dest::AbstractArray, as::AbstractArray...)
 end
 
 function sparse_map!(f, a_dest::AbstractArray, as::AbstractArray...)
+  return sparse_map!(combine_styles(as...), f, a_dest, as...)
+end
+
+function sparse_map!(::BroadcastStyle, f, a_dest::AbstractArray, as::AbstractArray...)
   @assert allequal(axes.((a_dest, as...)))
   if preserves_zero(f, as...)
     # Remove aliases to avoid overwriting inputs.

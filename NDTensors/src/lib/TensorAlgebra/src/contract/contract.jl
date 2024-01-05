@@ -1,3 +1,5 @@
+using ..AlgorithmSelection: Algorithm, @Algorithm_str
+
 # TODO: Add `contract!!` definitions as pass-throughs to `contract!`.
 
 default_contract_alg() = Algorithm"matricize"()

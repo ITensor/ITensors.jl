@@ -3,7 +3,8 @@ using BlockArrays: Block, BlockedUnitRange, blockedrange, blocklength, blocksize
 using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored, block_reshape
 using NDTensors.SparseArrayInterface: nstored
-using Test: @test, @testset
+using NDTensors.TensorAlgebra: contract
+using Test: @test, @testset, @test_broken
 include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
@@ -88,6 +89,17 @@ include("TestBlockSparseArraysUtils.jl")
     @test Array(a_dest) ≈ Array(a1) * Array(a2)
     @test a_dest isa BlockSparseArray{elt}
     @test block_nstored(a_dest) == 1
+  end
+  @testset "TensorAlgebra" begin
+    a1 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a1[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    a2 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a2[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    # TODO: Make this work, requires customization of `TensorAlgebra.fusedims` and
+    # `TensorAlgebra.splitdims` in terms of `BlockSparseArrays.block_reshape`,
+    # and customization of `TensorAlgebra.:⊗` in terms of `GradedAxes.tensor_product`.
+    @test_broken contract(a1, (1, -1), a2, (-1, 2))
+    ## @test Array(a_dest) ≈ contract(Array(a1), (1, -1), Array(a2), (-1, 2))
   end
   @testset "block_reshape" begin
     a = BlockSparseArray{elt}(undef, ([3, 4], [2, 3]))

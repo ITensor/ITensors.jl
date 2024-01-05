@@ -1,11 +1,8 @@
 module TensorAlgebra
-# TODO: Move inside `include`.
-using ..AlgorithmSelection: Algorithm, @Algorithm_str
-using LinearAlgebra: mul!
-
 include("blockedpermutation.jl")
 include("BaseExtensions/BaseExtensions.jl")
 include("fusedims.jl")
+include("splitdims.jl")
 include("contract/contract.jl")
 include("contract/output_labels.jl")
 include("contract/blockedperms.jl")
