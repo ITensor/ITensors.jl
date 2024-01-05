@@ -365,7 +365,11 @@ function Base.copyto!(
     f2 = bc_bc.f
 
     if !isnothing(α) && !isnothing(A)
-      map!((r, t) -> f1(r, f2(t, α)), T, T, A)
+      if bc_bc.args[1] isa Number
+        map!((r, t) -> f1(r, f2(α, t)), T, T, A)
+      else
+        map!((r, t) -> f1(r, f2(t, α)), T, T, A)
+      end
     elseif !isnothing(γ) && !isnothing(A) && !isnothing(powf)
       map!((r, t) -> f1(r, f2(powf[], t, γ[])), T, T, A)
     else
