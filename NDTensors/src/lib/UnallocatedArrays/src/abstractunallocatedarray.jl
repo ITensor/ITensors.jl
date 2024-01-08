@@ -42,7 +42,7 @@ function allocate(f::UnallocatedArray)
   return a
 end
 
-function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes::Tuple)
+function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes)
   ## TODO rewrite this using set_eltype and set_ndims functions
   ## currently these functions are defined in `NDTensors`
   ## In the future they should be defined in `SetParameters`
