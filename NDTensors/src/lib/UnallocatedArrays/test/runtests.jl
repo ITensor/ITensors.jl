@@ -48,7 +48,10 @@ using .NDTensorsTestUtils: devices_list
     @test norm(Fp) ≈ norm(F)
     Fs = similar(F)
     @test Fs isa alloctype(F)
-    @test Fs[1, 1, 1] != elt(3)
+    @test length(Fs) == 2 * 3 * 4
+    Fs[1,1,1] = elt(10)
+    @test Fs[1,1,1]  == elt(10)
+
 
     Fp = set_alloctype(f, dev(Array{elt,ndims(f)}))
     @test allocate(Fp) isa dev(Array{elt,ndims(f)})
