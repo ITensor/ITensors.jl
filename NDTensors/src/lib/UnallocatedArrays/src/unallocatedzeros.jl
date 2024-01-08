@@ -34,7 +34,7 @@ function UnallocatedZeros(z::Zeros, alloc)
   return UnallocatedZeros{eltype(z)}(z, alloc)
 end
 
-set_alloctype(f::Zeros, alloc::Type{<:AbstractArray}) = UnallocatedZeros(f, alloc)
+set_alloctype(f::Zeros, alloc::Type) = UnallocatedZeros(f, alloc)
 
 Base.parent(Z::UnallocatedZeros) = Z.z
 

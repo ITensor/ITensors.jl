@@ -24,7 +24,7 @@ function UnallocatedFill(f::Fill, alloc)
   return UnallocatedFill{eltype(f)}(f, alloc)
 end
 
-set_alloctype(f::Fill, alloc::Type{<:AbstractArray}) = UnallocatedFill(f, alloc)
+set_alloctype(f::Fill, alloc::Type) = UnallocatedFill(f, alloc)
 
 Base.parent(F::UnallocatedFill) = F.f
 
