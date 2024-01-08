@@ -50,7 +50,7 @@ function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes)
   return similar(ArrayT, axes)
 end
 
-function Base.similar(f::UnallocatedArray, elt::Type, axes::Tuple{Int64, Vararg{Int64}})
+function Base.similar(f::UnallocatedArray, elt::Type, axes::Tuple{Int64,Vararg{Int64}})
   return allocate(alloctype(f), elt, axes)
 end
 

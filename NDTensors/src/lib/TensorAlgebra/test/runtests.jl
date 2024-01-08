@@ -165,9 +165,8 @@ end
       )
       ## Here we loosened the tolerance because of some floating point roundoff issue.
       ## with Float32 numbers
-      @test a_dest ≈ α * a_dest_tensoroperations + β * a_dest_init rtol = 10 * default_rtol(
-        elt_dest
-      )
+      @test a_dest ≈ α * a_dest_tensoroperations + β * a_dest_init rtol =
+        10 * default_rtol(elt_dest)
     end
   end
   @testset "qr (eltype=$elt)" for elt in elts
