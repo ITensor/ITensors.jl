@@ -48,7 +48,7 @@ function FillArrays.mult_zeros(a::UnallocatedZeros, b, elt, ax)
 end
 FillArrays.mult_zeros(a, b::UnallocatedZeros, elt, ax) = mult_zeros(b, a, elt, ax)
 function FillArrays.mult_zeros(a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)
-  @assert(alloctype(a) == alloctype(b))
+  @assert alloctype(a) == alloctype(b)
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end
 
@@ -56,7 +56,7 @@ function FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, elt, ax)
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end
 function FillArrays.broadcasted_zeros(f, a::UnallocatedZeros, b::UnallocatedZeros, elt, ax)
-  @assert(alloctype(a) == alloctype(b))
+  @assert alloctype(a) == alloctype(b)
   return UnallocatedZeros(Zeros{elt}(ax), alloctype(a))
 end
 
