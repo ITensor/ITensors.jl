@@ -47,12 +47,11 @@ function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes::Tuple)
   ## currently these functions are defined in `NDTensors`
   ## In the future they should be defined in `SetParameters`
   ArrayT = set_parameters(arraytype, Position{1}(), elt)
-  ArrayT = set_parameters(ArrayT, Position{2}(), length(axes))
   return similar(ArrayT, axes)
 end
 
-function Base.similar(f::UnallocatedArray)
-  return allocate(alloctype(f), eltype(f), axes(f))
+function Base.similar(f::UnallocatedArray, elt::Type, axes::Tuple{Int64, Vararg{Int64}})
+  return allocate(alloctype(f), elt, axes)
 end
 
 ## TODO fix this because reshape loses alloctype
