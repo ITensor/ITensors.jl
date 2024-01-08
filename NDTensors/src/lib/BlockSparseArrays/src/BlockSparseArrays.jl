@@ -16,4 +16,5 @@ include("blocksparsearray/defaults.jl")
 include("blocksparsearray/blocksparsearray.jl")
 include("BlockArraysExtensions/BlockArraysExtensions.jl")
 include("BlockArraysSparseArrayInterfaceExt/BlockArraysSparseArrayInterfaceExt.jl")
+include("../ext/BlockSparseArraysTensorAlgebraExt/src/BlockSparseArraysTensorAlgebraExt.jl")
 end

@@ -19,8 +19,11 @@ function fusedims(a::AbstractArray, axesblocks::Tuple{Vararg{AbstractUnitRange}}
   return fusedims(a, flatten_tuples(axesblocks)...)
 end
 
+# Fix ambiguity issue
+fusedims(a::AbstractArray{<:Any,0}, ::Vararg{Tuple{}}) = a
+
 # TODO: Is this needed? Maybe delete.
-function fusedims(a::AbstractArray, permblocks::Tuple{Vararg{Int}}...)
+function fusedims(a::AbstractArray, permblocks...)
   return fusedims(a, blockedperm(permblocks...; length=Val(ndims(a))))
 end
 

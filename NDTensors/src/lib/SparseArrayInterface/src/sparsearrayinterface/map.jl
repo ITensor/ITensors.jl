@@ -103,11 +103,16 @@ function sparse_map!(::BroadcastStyle, f, a_dest::AbstractArray, as::AbstractArr
   return a_dest
 end
 
+# `f::typeof(norm)`, `op::typeof(max)` used by `norm`.
+function reduce_init(f, op, a)
+  return f(zero(eltype(a)))
+end
+
 # TODO: Generalize to multiple arguements.
 # TODO: Define `sparse_mapreducedim!`.
-function sparse_mapreduce(f, op, a::AbstractArray; kwargs...)
-  output = mapreduce(f, op, sparse_storage(a); kwargs...)
+function sparse_mapreduce(f, op, a::AbstractArray; init=reduce_init(f, op, a), kwargs...)
+  output = mapreduce(f, op, sparse_storage(a); init, kwargs...)
   f_notstored = apply_notstored(f, a)
-  @assert op(output, f_notstored) == output
+  @assert op(output, eltype(output)(f_notstored)) == output
   return output
 end
