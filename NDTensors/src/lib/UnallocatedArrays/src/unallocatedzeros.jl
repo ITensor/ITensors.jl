@@ -92,11 +92,3 @@ end
 function FillArrays.kron_fill(a::UnallocatedFill, b::UnallocatedZeros, val, ax)
   return kron_fill(b, a, val, ax)
 end
-
-function Base.Broadcast.broadcasted(
-  ::Base.Broadcast.DefaultArrayStyle, op, r::UnallocatedZeros
-)
-  elt = typeof(op(getindex_value(r)))
-  z = Zeros(elt, axes(r))
-  return set_alloctype(z, set_parameters(alloctype(r), Position{1}(), eltype(z)))
-end
