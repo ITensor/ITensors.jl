@@ -43,7 +43,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.9'
+              additionalBuildArgs  '--build-arg JULIA=1.10'
               args '--gpus "device=1"'
             }
           }
