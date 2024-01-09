@@ -3,8 +3,9 @@
 
 # Minimal interface
 # Data structure of the stored (generally nonzero) values
-# nonzeros(a::AbstractArray) = a
-sparse_storage(a::AbstractArray) = a
+sparse_storage(a::AbstractArray) = error("Not implemented")
+
+sparse_storage(a::Array) = a
 
 # Minimal interface
 # Map an index into the stored data to a CartesianIndex of the
