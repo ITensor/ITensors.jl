@@ -3,7 +3,6 @@
 
 # Minimal interface
 # Data structure of the stored (generally nonzero) values
-# nonzeros(a::AbstractArray) = error("Not implemented")
 sparse_storage(a::AbstractArray) = error("Not implemented")
 
 sparse_storage(a::Array) = a
