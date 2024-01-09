@@ -3,7 +3,7 @@ using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
 using LinearAlgebra: norm
-using Test: @test, @testset
+using Test: @test, @testset, @test_broken
 
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
@@ -32,6 +32,11 @@ using .NDTensorsTestUtils: devices_list
 
     Zs = similar(Z)
     @test Zs isa alloctype(Z)
+
+    Z = UnallocatedZeros(z, dev(Array))
+    Za = allocate(Z)
+    @test Za isa dev(Array{elt,2})
+    @test Za[1, 3] == zero(elt)
 
     #########################################
     # UnallocatedFill
@@ -62,6 +67,15 @@ using .NDTensorsTestUtils: devices_list
     @test typeof(Fc) == alloctype(complex(F))
     Fc[2, 3, 4] = elt(0)
     @test iszero(Fc[2, 3, 4])
+
+    F = UnallocatedFill(f, dev(Array))
+    Fa = allocate(F)
+    @test Fa isa dev(Array{elt,3})
+    @test Fa[2, 1, 4] == elt(3)
+
+    F = UnallocatedFill(f, dev(Vector))
+    ## This is expected to fail because similar(Vector, (2,3,4)) is not defined
+    @test_broken Fa = allocate(F)
   end
 
   @testset "Multiplication" begin
