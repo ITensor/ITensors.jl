@@ -1,4 +1,5 @@
 using BlockArrays: BlockArrays, AbstractBlockArray, Block, BlockIndex, BlockedUnitRange
+using ..SparseArrayInterface: sparse_getindex, sparse_setindex!
 
 # TODO: Delete this. This function was replaced
 # by `nstored` but is still used in `NDTensors`.

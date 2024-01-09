@@ -36,6 +36,6 @@ function Base.copyto!(
 ) where {N}
   # convert to map
   # flatten and only keep the AbstractArray arguments
-  blocksparse_map!(map_function(bc), dest, map_args(bc)...)
+  sparse_map!(map_function(bc), dest, map_args(bc)...)
   return dest
 end

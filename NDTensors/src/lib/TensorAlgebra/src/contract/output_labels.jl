@@ -1,3 +1,5 @@
+using ..AlgorithmSelection: Algorithm
+
 function output_labels(
   f::typeof(contract),
   alg::Algorithm,
