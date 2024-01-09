@@ -14,12 +14,10 @@ using NDTensors.SetParameters: Position, set_parameters
 struct UnallocatedZeros{ElT,N,Axes,Alloc} <: AbstractZeros{ElT,N,Axes}
   z::Zeros{ElT,N,Axes}
   alloc::Alloc
+end
 
-  function UnallocatedZeros{ElT,N,Axes}(
-    z::Zeros, alloc::Type{<:AbstractArray{ElT,N}}
-  ) where {ElT,N,Axes}
-    return new{ElT,N,Axes,Type{alloc}}(z, alloc)
-  end
+function UnallocatedZeros{ElT,N,Axes}(z::Zeros, alloc::Type) where {ElT,N,Axes}
+  return new{ElT,N,Axes,Type{alloc}}(z, alloc)
 end
 
 function UnallocatedZeros{ElT,N}(z::Zeros, alloc) where {ElT,N}
@@ -28,10 +26,6 @@ end
 
 function UnallocatedZeros{ElT}(z::Zeros, alloc) where {ElT}
   return UnallocatedZeros{ElT,ndims(z)}(z, alloc)
-end
-
-function UnallocatedZeros(z::Zeros, alloc)
-  return UnallocatedZeros{eltype(z)}(z, alloc)
 end
 
 set_alloctype(f::Zeros, alloc::Type) = UnallocatedZeros(f, alloc)

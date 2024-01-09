@@ -4,12 +4,10 @@ using NDTensors.SetParameters: Position, set_parameters
 struct UnallocatedFill{ElT,N,Axes,Alloc} <: AbstractFill{ElT,N,Axes}
   f::Fill{ElT,N,Axes}
   alloc::Alloc
+end
 
-  function UnallocatedFill{ElT,N,Axes}(
-    f::Fill, alloc::Type{<:AbstractArray{ElT,N}}
-  ) where {ElT,N,Axes}
-    return new{ElT,N,Axes,Type{alloc}}(f, alloc)
-  end
+function UnallocatedFill{ElT,N,Axes}(f::Fill, alloc::Type) where {ElT,N,Axes}
+  return new{ElT,N,Axes,Type{alloc}}(f, alloc)
 end
 
 function UnallocatedFill{ElT,N}(f::Fill, alloc) where {ElT,N}
@@ -18,10 +16,6 @@ end
 
 function UnallocatedFill{ElT}(f::Fill, alloc) where {ElT}
   return UnallocatedFill{ElT,ndims(f)}(f, alloc)
-end
-
-function UnallocatedFill(f::Fill, alloc)
-  return UnallocatedFill{eltype(f)}(f, alloc)
 end
 
 set_alloctype(f::Fill, alloc::Type) = UnallocatedFill(f, alloc)
