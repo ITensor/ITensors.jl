@@ -621,6 +621,21 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     replacebond!(psi, 5, phi; ortho="left")
     @test ITensors.leftlim(psi) == 3
     @test ITensors.rightlim(psi) == 7
+
+    # check that replacebond! runs with svd kwargs
+    psi = randomMPS(sites)
+    phi = psi[1] * psi[2]
+    replacebond!(psi, 1, phi; ortho="left", which_decomp="svd", use_relative_cutoff=true)
+    phi = psi[5] * psi[6]
+    replacebond!(
+      psi,
+      5,
+      phi;
+      ortho="right",
+      which_decomp="svd",
+      use_absolute_cutoff=true,
+      min_blockdim=2,
+    )
   end
 end
 
