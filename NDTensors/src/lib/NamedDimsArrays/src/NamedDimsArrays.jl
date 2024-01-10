@@ -20,5 +20,8 @@ include("broadcast.jl")
 
 # Extensions
 include("../ext/NamedDimsArraysAdaptExt/src/NamedDimsArraysAdaptExt.jl")
+include(
+  "../ext/NamedDimsArraysSparseArrayInterfaceExt/src/NamedDimsArraysSparseArrayInterfaceExt.jl",
+)
 include("../ext/NamedDimsArraysTensorAlgebraExt/src/NamedDimsArraysTensorAlgebraExt.jl")
 end

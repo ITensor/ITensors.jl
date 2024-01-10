@@ -85,7 +85,9 @@ end
   @test inds(C) == inds(B)
   @test C ≈ B
 
-  @test_broken A + B
+  C = A + B
+  @test inds(C) == inds(A)
+  @test C ≈ B
 end
 
 @testset "blockoffsets" for space in (2, [QN(0) => 1, QN(1) => 1])

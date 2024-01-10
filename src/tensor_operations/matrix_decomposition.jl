@@ -600,6 +600,9 @@ function factorize_svd(
   maxdim=nothing,
   cutoff=nothing,
   tags=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
+  min_blockdim=nothing,
 )
   leftdir, rightdir = dir, dir
   if !isnothing(leftdir)
@@ -619,6 +622,9 @@ function factorize_svd(
     cutoff,
     lefttags=tags,
     righttags=tags,
+    use_absolute_cutoff,
+    use_relative_cutoff,
+    min_blockdim,
   )
   if isnothing(USV)
     return nothing
@@ -651,6 +657,8 @@ function factorize_eigen(
   maxdim=nothing,
   cutoff=nothing,
   tags=nothing,
+  use_absolute_cutoff=nothing,
+  use_relative_cutoff=nothing,
 )
   if ortho == "left"
     Lis = commoninds(A, indices(Linds...))
@@ -669,7 +677,18 @@ function factorize_eigen(
     delta_A2 = noprime(delta_A2)
     A2 += delta_A2
   end
-  F = eigen(A2, Lis, simLis; ishermitian=true, mindim, maxdim, cutoff, tags)
+  F = eigen(
+    A2,
+    Lis,
+    simLis;
+    ishermitian=true,
+    mindim,
+    maxdim,
+    cutoff,
+    tags,
+    use_absolute_cutoff,
+    use_relative_cutoff,
+  )
   D, _, spec = F
   L = F.Vt
   R = dag(L) * A
@@ -780,7 +799,19 @@ function factorize(
   end
   if which_decomp == "svd"
     LR = factorize_svd(
-      A, Linds...; mindim, maxdim, cutoff, tags, ortho, alg=svd_alg, dir, singular_values!
+      A,
+      Linds...;
+      mindim,
+      maxdim,
+      cutoff,
+      tags,
+      ortho,
+      alg=svd_alg,
+      dir,
+      singular_values!,
+      use_absolute_cutoff,
+      use_relative_cutoff,
+      min_blockdim,
     )
     if isnothing(LR)
       return nothing
@@ -788,7 +819,16 @@ function factorize(
     L, R, spec = LR
   elseif which_decomp == "eigen"
     L, R, spec = factorize_eigen(
-      A, Linds...; mindim, maxdim, cutoff, tags, ortho, eigen_perturbation
+      A,
+      Linds...;
+      mindim,
+      maxdim,
+      cutoff,
+      tags,
+      ortho,
+      eigen_perturbation,
+      use_absolute_cutoff,
+      use_relative_cutoff,
     )
   elseif which_decomp == "qr"
     L, R = factorize_qr(A, Linds...; ortho, tags)

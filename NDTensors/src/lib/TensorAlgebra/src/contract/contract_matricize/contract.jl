@@ -1,3 +1,6 @@
+using ..AlgorithmSelection: @Algorithm_str
+using LinearAlgebra: mul!
+
 function contract!(
   alg::Algorithm"matricize",
   a_dest::AbstractArray,
