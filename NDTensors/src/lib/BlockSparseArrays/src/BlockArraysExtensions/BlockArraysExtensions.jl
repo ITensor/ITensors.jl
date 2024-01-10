@@ -24,7 +24,7 @@ end
 
 tuple_oneto(n) = ntuple(identity, n)
 
-function block_reshape(a::AbstractBlockArray, axes::Tuple{Vararg{BlockedUnitRange}})
+function block_reshape(a::AbstractBlockArray, axes::Tuple{Vararg{AbstractUnitRange}})
   reshaped_blocks_a = reshape(blocks(a), blocklength.(axes))
   reshaped_a = similar(a, axes)
   for I in stored_indices(reshaped_blocks_a)
@@ -35,6 +35,6 @@ function block_reshape(a::AbstractBlockArray, axes::Tuple{Vararg{BlockedUnitRang
   return reshaped_a
 end
 
-function block_reshape(a::AbstractBlockArray, axes::Vararg{BlockedUnitRange})
+function block_reshape(a::AbstractBlockArray, axes::Vararg{AbstractUnitRange})
   return block_reshape(a, axes)
 end

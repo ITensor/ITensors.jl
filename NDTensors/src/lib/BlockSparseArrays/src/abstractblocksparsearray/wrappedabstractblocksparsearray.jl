@@ -42,21 +42,21 @@ end
 
 # Needed by `BlockArrays` matrix multiplication interface
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{BlockedUnitRange}}
+  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{AbstractUnitRange}}
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
 
 # Needed by `BlockArrays` matrix multiplication interface
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike}, elt::Type, axes::Tuple{Vararg{BlockedUnitRange}}
+  arraytype::Type{<:BlockSparseArrayLike}, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
   # TODO: Make generic for GPU! Use `blocktype`.
   return BlockSparseArray{elt}(undef, axes)
 end
 
 function Base.similar(
-  a::BlockSparseArrayLike, elt::Type, axes::Tuple{Vararg{BlockedUnitRange}}
+  a::BlockSparseArrayLike, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
   # TODO: Make generic for GPU! Use `blocktype`.
   return BlockSparseArray{eltype(a)}(undef, axes)
