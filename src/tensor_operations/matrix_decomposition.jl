@@ -781,13 +781,19 @@ function factorize(
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
   dL, dR = dim(Lis), dim(Ris)
-  # maxdim is forced to be at most the max given SVD
-  if isnothing(maxdim)
-    maxdim = min(dL, dR)
+  if isnothing(eigen_perturbation)
+    # maxdim is forced to be at most the max given SVD
+    if isnothing(maxdim)
+      maxdim = min(dL, dR)
+    end
+    maxdim = min(maxdim, min(dL, dR))
+  else
+    if isnothing(maxdim)
+      maxdim = max(dL, dR)
+    end
+    maxdim = min(maxdim, max(dL, dR))
   end
-  maxdim = min(maxdim, min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
-
   if isnothing(which_decomp)
     if !might_truncate && ortho != "none"
       which_decomp = "qr"
