@@ -1,4 +1,6 @@
 @eval module $(gensym())
+using Pkg
+Pkg.activate()
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
@@ -13,7 +15,7 @@ using .NDTensorsTestUtils: devices_list
 
   @testset "Basic funcitonality" begin
     z = Zeros{elt}((2, 3))
-    Z = UnallocatedZeros(z, dev(Matrix{eltype(z)}))
+    Z = UnallocatedZeros(z, dev(Matrix{elt}))
 
     @test Z isa AbstractFill
     @test size(Z) == (2, 3)
@@ -29,6 +31,8 @@ using .NDTensorsTestUtils: devices_list
     Zc = complex(Z)
     @test eltype(Zc) == complex(eltype(z))
     @test iszero(Zc[1, 2])
+    @test Zc isa UnallocatedZeros
+    @test alloctype(Zc) == alloctype(Z)
 
     Zs = similar(Z)
     @test Zs isa alloctype(Z)
@@ -74,13 +78,14 @@ using .NDTensorsTestUtils: devices_list
     @test Fa[2, 1, 4] == elt(3)
 
     F = UnallocatedFill(f, dev(Vector))
-    ## This is expected to fail because similar(Vector, (2,3,4)) is not defined
-    @test_broken Fa = allocate(F)
+    Fa = allocate(F)
+    @test ndims(Fa) == 3
+    @test Fa isa dev(Array)
   end
 
   @testset "Multiplication" begin
     z = Zeros{elt}((2, 3))
-    Z = UnallocatedZeros(z, dev(Matrix{eltype(z)}))
+    Z = UnallocatedZeros(z, dev(Matrix{elt}))
 
     R = Z * Z'
     @test R isa UnallocatedZeros
@@ -152,6 +157,16 @@ using .NDTensorsTestUtils: devices_list
     R = Z .+ elt(2)
     @test R isa UnallocatedFill
     @test alloctype(R) == alloctype(Z)
+
+    R = (x -> x .+ 1).(Z)
+    @test R isa UnallocatedFill
+    @test alloctype(R) == alloctype(Z)
+    @test R[1, 1] == elt(1)
+
+    Z .*= 1.0
+    @test Z isa UnallocatedZeros
+    @test alloctype(R) == dev(Matrix{elt})
+    @test Z[2, 1] == zero(elt)
     ########################
     # UnallocatedFill
     f = Fill(elt(3), (2, 3, 4))
@@ -191,6 +206,12 @@ using .NDTensorsTestUtils: devices_list
     F = UnallocatedFill(Fill(elt(2), (2, 3)), dev(Matrix{elt}))
     R = F + F
     @test R isa UnallocatedFill
+    @test R[1, 3] == elt(4)
+
+    R = (x -> x .+ 1).(F)
+    @test R isa UnallocatedFill
+    @test R[2, 1] == elt(3)
+    @test alloctype(R) == alloctype(F)
   end
 
   ## TODO make other kron tests
