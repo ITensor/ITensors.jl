@@ -360,8 +360,9 @@ Random.seed!(1234)
     B = randomITensor(s)
 
     f(A, B) = (dag(A) * B)[]
-    args = (A, B)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+    grad = gradient(f, A, B)
+    @test grad[1] ≈ B
+    @test grad[2] ≈ dag(A)
   end
 end
 
