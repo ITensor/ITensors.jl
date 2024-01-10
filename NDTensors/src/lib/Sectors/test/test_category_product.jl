@@ -40,14 +40,14 @@ using Test
   @testset "U(1) ⊗ SU(2) conventional" begin
     q0 = Sector()
     q0h = Sector(; J=SU2(1//2))
-    q10 = Sector(; N=U1(1), J=SU2(0))
+    q10 = (N=U1(1),) × (J=SU2(0),)
     # Put names in reverse order sometimes:
-    q1h = Sector(; J=SU2(1//2), N=U1(1))
-    q11 = Sector(; N=U1(1), J=SU2(1))
+    q1h = (J=SU2(1//2),) × (N=U1(1),)
+    q11 = (N=U1(1),) × (J=SU2(1),)
     q20 = Sector(; N=U1(2))
-    q2h = Sector(; N=U1(2), J=SU2(1//2))
-    q21 = Sector(; N=U1(2), J=SU2(1))
-    q22 = Sector(; N=U1(2), J=SU2(2))
+    q2h = (N=U1(2),) × (J=SU2(1//2),)
+    q21 = (N=U1(2),) × (J=SU2(1),)
+    q22 = (N=U1(2),) × (J=SU2(2),)
 
     @test q1h ⊗ q1h == q20 ⊕ q21
     @test q10 ⊗ q1h == [q2h]
@@ -58,14 +58,14 @@ using Test
   @testset "U(1) ⊗ SU(2)" begin
     q0 = Sector()
     q0h = Sector(; J=SU{2}(2))
-    q10 = Sector(; N=U1(1), J=SU{2}(1))
+    q10 = (N=U1(1),) × (J=SU{2}(1),)
     # Put names in reverse order sometimes:
-    q1h = Sector(; J=SU{2}(2), N=U1(1))
-    q11 = Sector(; N=U1(1), J=SU{2}(3))
+    q1h = (J=SU{2}(2),) × (N=U1(1),)
+    q11 = (N=U1(1),) × (J=SU{2}(3),)
     q20 = Sector(; N=U1(2))
-    q2h = Sector(; N=U1(2), J=SU{2}(2))
-    q21 = Sector(; N=U1(2), J=SU{2}(3))
-    q22 = Sector(; N=U1(2), J=SU{2}(5))
+    q2h = (N=U1(2),) × (J=SU{2}(2),)
+    q21 = (N=U1(2),) × (J=SU{2}(3),)
+    q22 = (N=U1(2),) × (J=SU{2}(5),)
 
     @test q1h ⊗ q1h == q20 ⊕ q21
     @test q10 ⊗ q1h == [q2h]
@@ -75,16 +75,16 @@ using Test
 
   @testset "Comparisons with unspecified labels" begin
     q2 = Sector(; N=U1(2))
-    q20 = Sector(; N=U1(2), J=SU{2}(1))
+    q20 = (N=U1(2),) × (J=SU{2}(1),)
     @test q20 == q2
 
-    q21 = Sector(; N=U1(2), J=SU{2}(3))
+    q21 = (N=U1(2),) × (J=SU{2}(3),)
     @test q21 != q2
 
-    a = Sector(; A=U1(0), B=U1(2))
-    b = Sector(; B=U1(2), C=U1(0))
+    a = (A=U1(0),) × (B=U1(2),)
+    b = (B=U1(2),) × (C=U1(0),)
     @test a == b
-    c = Sector(; B=U1(2), C=U1(1))
+    c = (B=U1(2),) × (C=U1(1),)
     @test a != c
   end
 end
@@ -96,7 +96,7 @@ end
     @test s[1] == U1(1)
     @test s[2] == U1(2)
 
-    s = Sector(U1(1), SU2(1//2), U1(3))
+    s = U1(1) × SU2(1//2) × U1(3)
     @test length(s) == 3
     @test s[1] == U1(1)
     @test s[2] == SU2(1//2)
