@@ -24,12 +24,13 @@ Base.:(*)(s1::AbstractCategory, s2::AbstractCategory) = ⊗(s1, s2)
 ⊕(a::AbstractCategory, v::Vector{<:AbstractCategory}) = vcat(a, v)
 
 function Base.show(io::IO, q::Vector{<:AbstractCategory})
-  isempty(q) && return nothing
+  (length(q) <= 1) && print(io, "[")
   symbol = ""
   for l in q
     print(io, symbol, l)
     symbol = " ⊕ "
   end
+  return (length(q) <= 1) && print(io, "]")
 end
 
 function trivial(::Type{C}) where {C<:AbstractCategory}
