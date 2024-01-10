@@ -1,18 +1,19 @@
 function _NamedDimsArray end
 
-struct NamedDimsArray{T,N,Arr<:AbstractArray{T,N},Names} <:
+struct NamedDimsArray{T,N,Arr<:AbstractArray{T,N},Names<:Tuple{Vararg{Any,N}}} <:
        AbstractNamedDimsArray{T,N,Arr,Names}
   array::Arr
   names::Names
   global @inline function _NamedDimsArray(array::AbstractArray, names)
     elt = eltype(array)
     n = ndims(array)
+    names_tuple = Tuple{Vararg{Any,n}}(names)
     arraytype = typeof(array)
-    namestype = typeof(names)
-    return new{elt,n,arraytype,namestype}(array, names)
+    namestype = typeof(names_tuple)
+    return new{elt,n,arraytype,namestype}(array, names_tuple)
   end
 
-  # TODO: Delete
+  # TODO: Delete, maybe this aligns according to the new names?
   global @inline function _NamedDimsArray(array::NamedDimsArray, names)
     return error("Not implemented, already named.")
   end
