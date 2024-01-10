@@ -1,4 +1,4 @@
-import NDTensors.Sectors: ⊗, ⊕, ×, Fib, data, Ising, Sector, SU, SU2, U1, Z
+import NDTensors.Sectors: ⊗, ⊕, ×, Fib, labels, Ising, Sector, SU, SU2, U1, Z
 using Test
 
 @testset "Test Named Sectors" begin
