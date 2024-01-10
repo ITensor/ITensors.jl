@@ -1,3 +1,5 @@
+using FillArrays: broadcasted_fill, broadcasted_zeros, getindex_value
+
 abstract type ZeroPreserving end
 struct IsZeroPreserving <: ZeroPreserving end
 struct NotZeroPreserving <: ZeroPreserving end
@@ -15,12 +17,12 @@ function _broadcasted(
   style::Broadcast.DefaultArrayStyle, f, ::IsZeroPreserving, a::UnallocatedZeros
 )
   z = f.(parent(a))
-  return FillArrays.broadcasted_zeros(f, a, eltype(z), axes(z))
+  return broadcasted_zeros(f, a, eltype(z), axes(z))
 end
 
 function _broadcasted(
   style::Broadcast.DefaultArrayStyle, f, ::NotZeroPreserving, a::UnallocatedZeros
 )
   f = f.(parent(a))
-  return FillArrays.broadcasted_fill(f, a, FillArrays.getindex_value(f), axes(f))
+  return broadcasted_fill(f, a, getindex_value(f), axes(f))
 end
