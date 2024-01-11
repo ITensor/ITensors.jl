@@ -23,6 +23,6 @@ end
 function _broadcasted(
   style::Broadcast.DefaultArrayStyle, f, ::NotZeroPreserving, a::UnallocatedZeros
 )
-  f = f.(parent(a))
-  return broadcasted_fill(f, a, getindex_value(f), axes(f))
+  z = f.(parent(a))
+  return broadcasted_fill(f, a, getindex_value(z), axes(z))
 end
