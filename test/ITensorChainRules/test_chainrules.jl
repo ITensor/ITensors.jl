@@ -352,6 +352,22 @@ Random.seed!(1234)
     args = (A, B)
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
+
+  @testset "issue 1294" begin
+    for i in (
+      Index([QN() => 2]),
+      Index([QN(0) => 1, QN(1) => 1]),
+      Index([QN("SzParity", 1, 2) => 1, QN("SzParity", 0, 2) => 1]),
+    )
+      A = randomITensor(i', dag(i))
+      B = randomITensor(i', dag(i))
+
+      f(A, B) = dot(A, B)
+      grad = gradient(f, A, B)
+      @test grad[1] ≈ B
+      @test grad[2] ≈ dag(A)
+    end
+  end
 end
 
 @testset "ChainRules rrules: op" begin
