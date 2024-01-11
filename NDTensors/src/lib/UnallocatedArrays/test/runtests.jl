@@ -69,7 +69,7 @@ using .NDTensorsTestUtils: devices_list
     ## Here we no longer require the eltype of the alloctype to 
     ## Be the same as the eltype of the `UnallocatedArray`. It will be
     ## replaced when the array is allocated
-    @test_broken typeof(Fc) == alloctype(complex(F))
+    # @test_broken typeof(Fc) == alloctype(complex(F))
     Fc[2, 3, 4] = elt(0)
     @test iszero(Fc[2, 3, 4])
 
