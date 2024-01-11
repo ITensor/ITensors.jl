@@ -1,4 +1,4 @@
-using FillArrays: FillArrays, AbstractFill, Fill, broadcasted_fill, kron_fill, mult_fill
+using FillArrays: FillArrays, AbstractFill, Fill, broadcasted_fill, getindex_value, kron_fill, mult_fill
 using NDTensors.SetParameters: Position, set_parameters
 
 struct UnallocatedFill{ElT,N,Axes,Alloc} <: AbstractFill{ElT,N,Axes}
@@ -63,5 +63,5 @@ function Base.Broadcast.broadcasted(
   ::Base.Broadcast.DefaultArrayStyle, op, r::UnallocatedFill
 )
   f = op.(parent(r))
-  return set_alloctype(f, set_parameters(alloctype(r), Position{1}(), eltype(f)))
+  return broadcasted_fill(op, r, getindex_value(f), axes(f))
 end
