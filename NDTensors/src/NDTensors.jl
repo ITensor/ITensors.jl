@@ -35,6 +35,7 @@ for lib in [
   :BlockSparseArrays,
   :NamedDimsArrays,
   :SmallVectors,
+  :Sectors,
   :SortedSets,
   :TagSets,
 ]
