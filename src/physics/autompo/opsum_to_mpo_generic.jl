@@ -161,63 +161,56 @@ end #remove_dups!
 
 function sorteachterm(os::OpSum, sites)
   os = copy(os)
-  isless_site(o1::Op, o2::Op) = site(o1) < site(o2)
-  N = length(sites)
-  for n in eachindex(os)
-    t = os[n]
-    Nt = length(t)
 
+  for (j, t) in enumerate(os)
     if maximum(ITensors.sites(t)) > length(sites)
       error(
         "The OpSum contains a term $t that extends beyond the number of sites $(length(sites)).",
       )
     end
 
-    prevsite = N + 1 #keep track of whether we are switching
-    #to a new site to make sure F string
-    #is only placed at most once for each site
-
-    # Sort operators in t by site order,
-    # and keep the permutation used, perm, for analysis below
+    # Sort operators in t by site order and
+    # save the permutation used, "perm", for analysis below
+    Nt = length(t)
     perm = Vector{Int}(undef, Nt)
-    sortperm!(perm, terms(t); alg=InsertionSort, lt=isless_site)
-
+    sortperm!(perm, terms(t); alg=InsertionSort, lt=(o1, o2) -> (site(o1) < site(o2)))
+    # Apply permutation:
     t = coefficient(t) * Prod(terms(t)[perm])
 
-    # Identify fermionic operators,
-    # zeroing perm for bosonic operators,
-    # and inserting string "F" operators
-    parity = +1
-    for n in Nt:-1:1
-      currsite = site(t[n])
-      fermionic = has_fermion_string(which_op(t[n]), sites[only(site(t[n]))])
-      if !using_auto_fermion() && (parity == -1) && (currsite < prevsite)
-        # Put local piece of Jordan-Wigner string emanating
+    # prevsite keeps track of whether we are switching
+    # to a new site to make sure F string
+    # is only placed at most once for each site
+    prevsite = typemax(Int)
+    t_parity = +1
+    for n in reverse(1:Nt)
+      site_n = only(site(t[n]))
+      if !using_auto_fermion() && (t_parity == -1) && (site_n < prevsite)
+        # Insert local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
-        terms(t)[n] = Op("$(which_op(t[n])) * F", only(site(t[n])))
+        terms(t)[n] = Op("$(which_op(t[n])) * F", site_n)
       end
-      prevsite = currsite
+      prevsite = site_n
 
-      if fermionic
-        parity = -parity
+      if has_fermion_string(which_op(t[n]), sites[site_n])
+        t_parity = -t_parity
       else
         # Ignore bosonic operators in perm
         # by zeroing corresponding entries
         perm[n] = 0
       end
     end
-    if parity == -1
-      error("Parity-odd fermionic terms not yet supported by AutoMPO")
-    end
+
+    (t_parity == -1) && error("Parity-odd fermionic terms not yet supported by AutoMPO")
 
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero, perm)
     # and account for anti-commuting, fermionic operators
     # during above sort; put resulting sign into coef
     t *= parity_sign(perm)
-    terms(os)[n] = t
+    terms(os)[j] = t
   end
+
   return os
 end
 
