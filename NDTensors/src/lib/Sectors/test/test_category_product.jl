@@ -1,7 +1,7 @@
-import NDTensors.Sectors: ⊗, ⊕, ×, Fib, labels, Ising, Sector, SU, SU2, U1, Z
+import NDTensors.Sectors: ⊗, ⊕, ×, Fib, Ising, sector, SU, SU2, U1, Z
 using Test
 
-@testset "Test Named Sectors" begin
+@testset "Test Named Category Products" begin
   @testset "Construct from × of NamedTuples" begin
     s = (A=U1(1),) × (B=SU2(2),)
     @test length(s) == 2
@@ -14,22 +14,22 @@ using Test
   end
 
   @testset "Construct from Pairs" begin
-    s = Sector("A" => U1(2))
+    s = sector("A" => U1(2))
     @test length(s) == 1
     @test s[:A] == U1(2)
-    @test s == Sector(; A=U1(2))
+    @test s == sector(; A=U1(2))
 
-    s = Sector("B" => Ising("ψ"), :C => Z{2}(1))
+    s = sector("B" => Ising("ψ"), :C => Z{2}(1))
     @test length(s) == 2
     @test s[:B] == Ising("ψ")
     @test s[:C] == Z{2}(1)
   end
 
   @testset "Multiple U(1)'s" begin
-    q00 = Sector()
-    q10 = Sector(; A=U1(1))
-    q01 = Sector(; B=U1(1))
-    q11 = Sector(; A=U1(1), B=U1(1))
+    q00 = sector()
+    q10 = sector(; A=U1(1))
+    q01 = sector(; B=U1(1))
+    q11 = sector(; A=U1(1), B=U1(1))
 
     @test q00 ⊗ q00 == [q00]
     @test q01 ⊗ q00 == [q01]
@@ -38,13 +38,13 @@ using Test
   end
 
   @testset "U(1) ⊗ SU(2) conventional" begin
-    q0 = Sector()
-    q0h = Sector(; J=SU2(1//2))
+    q0 = sector()
+    q0h = sector(; J=SU2(1//2))
     q10 = (N=U1(1),) × (J=SU2(0),)
     # Put names in reverse order sometimes:
     q1h = (J=SU2(1//2),) × (N=U1(1),)
     q11 = (N=U1(1),) × (J=SU2(1),)
-    q20 = Sector(; N=U1(2))
+    q20 = sector(; N=U1(2))
     q2h = (N=U1(2),) × (J=SU2(1//2),)
     q21 = (N=U1(2),) × (J=SU2(1),)
     q22 = (N=U1(2),) × (J=SU2(2),)
@@ -56,13 +56,13 @@ using Test
   end
 
   @testset "U(1) ⊗ SU(2)" begin
-    q0 = Sector()
-    q0h = Sector(; J=SU{2}(2))
+    q0 = sector()
+    q0h = sector(; J=SU{2}(2))
     q10 = (N=U1(1),) × (J=SU{2}(1),)
     # Put names in reverse order sometimes:
     q1h = (J=SU{2}(2),) × (N=U1(1),)
     q11 = (N=U1(1),) × (J=SU{2}(3),)
-    q20 = Sector(; N=U1(2))
+    q20 = sector(; N=U1(2))
     q2h = (N=U1(2),) × (J=SU{2}(2),)
     q21 = (N=U1(2),) × (J=SU{2}(3),)
     q22 = (N=U1(2),) × (J=SU{2}(5),)
@@ -74,7 +74,7 @@ using Test
   end
 
   @testset "Comparisons with unspecified labels" begin
-    q2 = Sector(; N=U1(2))
+    q2 = sector(; N=U1(2))
     q20 = (N=U1(2),) × (J=SU{2}(1),)
     @test q20 == q2
 
@@ -89,9 +89,9 @@ using Test
   end
 end
 
-@testset "Test Ordered Sectors" begin
+@testset "Test Ordered Products" begin
   @testset "Ordered Constructor" begin
-    s = Sector(U1(1), U1(2))
+    s = sector(U1(1), U1(2))
     @test length(s) == 2
     @test s[1] == U1(1)
     @test s[2] == U1(2)
