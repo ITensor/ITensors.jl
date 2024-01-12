@@ -15,6 +15,8 @@ using Test: @testset
   "SparseArrayDOKs",
   "TagSets",
   "TensorAlgebra",
+  "UnallocatedArrays",
+  "UnspecifiedTypes",
   "Unwrap",
 ]
   using NDTensors: NDTensors
