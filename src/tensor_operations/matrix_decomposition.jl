@@ -763,6 +763,9 @@ function factorize(
   (singular_values!)=nothing,
   dir=nothing,
 )
+  @debug_check begin
+    checkflux(A)
+  end
   if !isnothing(eigen_perturbation)
     if !(isnothing(which_decomp) || which_decomp == "eigen")
       error("""when passing a non-trivial eigen_perturbation to `factorize`,
