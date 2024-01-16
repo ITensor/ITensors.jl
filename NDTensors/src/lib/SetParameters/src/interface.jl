@@ -29,3 +29,12 @@ Should return a `Val`.
 function nparameters(type::Type)
   return error("The number of type parameters of the type `$(type)` has not been defined.")
 end
+
+"""
+Required for removing all parameters.
+
+Should return a `Type` with no parameters set
+"""
+function unspecify_parameters(type::Type)
+  return error("Unable to unspecify the paramters of type '$(type)' as it has not been defined")
+end

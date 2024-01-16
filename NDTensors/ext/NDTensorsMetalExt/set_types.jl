@@ -43,3 +43,5 @@ nparameters(::Type{<:MtlArray}) = Val(3)
 function set_storagemode(arraytype::Type{<:MtlArray}, storagemode)
   return set_parameter(arraytype, Position(3), storagemode)
 end
+
+SetParameters.unspecify_parameters(::Type{<:MtlArray}) = MtlArray

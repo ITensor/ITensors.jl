@@ -36,3 +36,5 @@ default_parameter(::Type{<:CuArray}, ::Position{2}) = 1
 default_parameter(::Type{<:CuArray}, ::Position{3}) = Mem.DeviceBuffer
 
 nparameters(::Type{<:CuArray}) = Val(3)
+
+SetParameters.unspecify_parameters(::Type{<:CuArray}) = CuArray

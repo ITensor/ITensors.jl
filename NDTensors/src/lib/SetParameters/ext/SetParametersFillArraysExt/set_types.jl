@@ -1,5 +1,5 @@
 using FillArrays: AbstractFill, Fill, Zeros
-using NDTensors.SetParameters: SetParameters, Position
+using NDTensors.SetParameters: SetParameters, Position, unspecify_parameters
 using NDTensors.UnspecifiedTypes: UnspecifiedZero
 
 # `SetParameters.jl` overloads.
@@ -73,5 +73,5 @@ SetParameters.nparameters(::Type{<:AbstractFill}) = Val(3)
 ## These helper functions take a UnallocatedArray type and 
 ## remove all the parameters, this way all parameters can be set
 ## at once in the `set_parameter` functions above.
-unspecify_parameters(::Type{<:Fill}) = Fill
-unspecify_parameters(::Type{<:Zeros}) = Zeros
+SetParameters.unspecify_parameters(::Type{<:Fill}) = Fill
+SetParameters.unspecify_parameters(::Type{<:Zeros}) = Zeros
