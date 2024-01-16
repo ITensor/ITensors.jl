@@ -27,3 +27,12 @@ default_parameter(::Type{<:AbstractArray}, ::Position{2}) = 1
 
 nparameters(::Type{<:AbstractArray}) = Val(2)
 ```
+
+https://github.com/ITensor/ITensors.jl/pull/1213/files#r1431708585
+
+# Create generic set_eltype and set_ndims functions which can be defined on 
+# Array structures and use the `set_parameter` 
+```julia
+set_eltype(T::Type, elt::Type) = Error("set_eltype is not defined for datatype $T")
+set_eltype(T::Type{<:Array}, elt::Type) = set_parameter(T, Position{1}(), elt)
+```
