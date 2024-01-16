@@ -85,8 +85,8 @@ sites = siteinds(&quot;S=3/2&quot;,N)</code></pre><p>to obtain an array of N <co
      0    0  -1/2   0
      0    0    0  -3/2]</code></pre><p>As you can see, the function is passed two objects: an <code>OpName</code> and a <code>SiteType</code>. The strings <code>&quot;Sz&quot;</code> and <code>&quot;S=3/2&quot;</code> are also part of the type of these objects, and  have the meaning of which operator name we are defining and which site type these operators are defined for.</p><p>The body of this overload of <code>ITensors.op</code> constructs and returns a Julia matrix which gives the matrix elements of the operator we are defining.</p><p>Once this function is defined, and if you have an Index such as</p><pre><code class="language-julia hljs">s = Index(4,&quot;S=3/2&quot;)</code></pre><p>then, for example, you can get the <code>&quot;Sz&quot;</code> operator for this Index  and print it out by doing:</p><pre><code class="language-julia hljs">Sz = op(&quot;Sz&quot;,s)
 println(Sz)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ITensor ord=2
-Dim 1: (dim=4|id=848|&quot;S=3/2&quot;)&#39;
-Dim 2: (dim=4|id=848|&quot;S=3/2&quot;)
+Dim 1: (dim=4|id=0|&quot;S=3/2&quot;)&#39;
+Dim 2: (dim=4|id=0|&quot;S=3/2&quot;)
 NDTensors.Dense{Float64, Vector{Float64}}
  4×4
  1.5  0.0   0.0   0.0
