@@ -36,5 +36,7 @@ Required for removing all parameters.
 Should return a `Type` with no parameters set
 """
 function unspecify_parameters(type::Type)
-  return error("Unable to unspecify the paramters of type '$(type)' as it has not been defined")
+  return error(
+    "Unable to unspecify the paramters of type '$(type)' as it has not been defined"
+  )
 end

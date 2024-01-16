@@ -44,9 +44,7 @@ function specify_eltype(
 end
 
 #TODO transition to set_eltype when working for wrapped types
-function specify_eltype(
-  arraytype::Type{<:AbstractArray}, eltype::Type=default_eltype()
-)
+function specify_eltype(arraytype::Type{<:AbstractArray}, eltype::Type=default_eltype())
   return similartype(arraytype, eltype)
 end
 
