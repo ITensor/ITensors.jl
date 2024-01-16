@@ -94,7 +94,7 @@ end
     observer = DMRGObserver(["Z"], s; energy_tol=1e-4, minsweeps=10)
     E, ψ = dmrg(H, ψ0; observer=observer, dmrg_params...)
     @test expect(ψ, "Z") ≈ observer.measurements["Z"][end] rtol =
-      10 * sqrt(eps(real(scalartype(ψ0))))
+      10 * sqrt(eps(real(ITensors.scalartype(ψ0))))
     @test correlation_matrix(ψ, "Z", "Z") ≈ correlation_matrix(cpu(ψ), "Z", "Z")
   end
 
