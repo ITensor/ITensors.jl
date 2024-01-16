@@ -150,7 +150,9 @@ end
     x, y = factorize(a, i; ortho="left", which_decomp="eigen", maxdim)
     l = commonind(x, y)
     @test dim(l) == dj
-    xδ, yδ = factorize(a, i; ortho="left", which_decomp="eigen", eigen_perturbation=δ², maxdim)
+    xδ, yδ = factorize(
+      a, i; ortho="left", which_decomp="eigen", eigen_perturbation=δ², maxdim
+    )
     lδ = commonind(xδ, yδ)
     @test dim(lδ) == maxdim
   end
