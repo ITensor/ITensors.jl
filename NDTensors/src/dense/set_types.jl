@@ -1,20 +1,20 @@
-function set_parameters_if_unspecified(
+function specify_parameters(
   storetype::Type{<:Dense{ElT,DataT}}, datatype::Type{<:AbstractArray}=default_datatype(ElT)
 ) where {ElT,DataT<:AbstractArray{ElT}}
   return storetype
 end
-function set_parameters_if_unspecified(
+function specify_parameters(
   storetype::Type{<:Dense{ElT,DataT}}, datatype::Type{<:AbstractArray}=default_datatype(ElT)
 ) where {ElT,DataT<:AbstractArray}
-  return set_datatype(storetype, set_parameters_if_unspecified(DataT, ElT))
+  return set_datatype(storetype, specify_parameters(DataT, ElT))
 end
-function set_parameters_if_unspecified(
+function specify_parameters(
   storetype::Type{<:Dense{ElT}}, datatype::Type{<:AbstractArray}=default_datatype(ElT)
 ) where {ElT}
-  return default_storagetype(set_parameters_if_unspecified(datatype, ElT), ())
+  return default_storagetype(specify_parameters(datatype, ElT), ())
 end
 
-function set_parameters_if_unspecified(
+function specify_parameters(
   storetype::Type{<:Dense},
   datatype::Type{<:AbstractArray}=default_datatype(default_eltype()),
 )
