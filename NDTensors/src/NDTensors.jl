@@ -23,6 +23,7 @@ for lib in [
   :AlgorithmSelection,
   :AllocateData,
   :BaseExtensions,
+  :UnspecifiedTypes,
   :SetParameters,
   :BroadcastMapConversion,
   :Unwrap,
@@ -35,8 +36,10 @@ for lib in [
   :BlockSparseArrays,
   :NamedDimsArrays,
   :SmallVectors,
+  :Sectors,
   :SortedSets,
   :TagSets,
+  :UnallocatedArrays,
 ]
   include("lib/$(lib)/src/$(lib).jl")
   @eval using .$lib: $lib
