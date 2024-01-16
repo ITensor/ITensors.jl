@@ -136,6 +136,27 @@ end
     )
   end
 
+  @testset "factorize with eigen_perturbation dimensions" begin
+    elt = Float64
+    di = 10
+    dj = 5
+    maxdim = di - 1
+    i = Index(di, "i")
+    j = Index(dj, "j")
+    a = randomITensor(elt, i, j)
+    δ = randomITensor(elt, i, j)
+    δ² = prime(δ, i) * dag(δ)
+    a² = prime(a, i) * dag(a)
+    x, y = factorize(a, i; ortho="left", which_decomp="eigen", maxdim)
+    l = commonind(x, y)
+    @test dim(l) == dj
+    xδ, yδ = factorize(
+      a, i; ortho="left", which_decomp="eigen", eigen_perturbation=δ², maxdim
+    )
+    lδ = commonind(xδ, yδ)
+    @test dim(lδ) == maxdim
+  end
+
   @testset "QR/RQ/QL/LQ decomp on MPS dense $elt tensor with all possible collections on Q/R/L" for ninds in
                                                                                                     [
       0, 1, 2, 3
