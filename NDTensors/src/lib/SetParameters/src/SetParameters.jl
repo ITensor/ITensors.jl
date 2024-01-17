@@ -29,5 +29,5 @@ export DefaultParameter,
   get_parameters,
   nparameters,
   set_parameters,
-  set_unspecified_parameters
+  specify_parameters
 end # module

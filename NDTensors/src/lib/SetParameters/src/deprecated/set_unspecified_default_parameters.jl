@@ -27,14 +27,14 @@ end
 
 ## Set unspecified parameters to their default values
 function set_unspecified_default_parameters(type::Type, start_position::Position)
-  return set_unspecified_parameters(type, start_position, DefaultParameters())
+  return specify_parameters(type, start_position, DefaultParameters())
 end
 
 function set_unspecified_default_parameters(type::Type)
-  return set_unspecified_parameters(type, Position(1), DefaultParameters())
+  return specify_parameters(type, Position(1), DefaultParameters())
 end
 
-function set_unspecified_parameters(
+function specify_parameters(
   type::Type, start_position::Position, parameters::DefaultParameters
 )
   # Needed to get `generic_set_parameters` to loop over all
@@ -47,6 +47,6 @@ function set_unspecified_parameters(
   end
 end
 
-function set_unspecified_parameters(type::Type, parameters::DefaultParameters)
-  return set_unspecified_parameters(type, Position(1), parameters)
+function specify_parameters(type::Type, parameters::DefaultParameters)
+  return specify_parameters(type, Position(1), parameters)
 end
