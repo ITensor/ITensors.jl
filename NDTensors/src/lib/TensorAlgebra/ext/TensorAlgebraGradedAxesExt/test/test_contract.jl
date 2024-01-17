@@ -7,7 +7,7 @@ using NDTensors.TensorAlgebra: contract
 using Test: @test, @testset
 
 function randn_blockdiagonal(elt::Type, axes...)
-  a = BlockSparseArray{elt}(axes...)
+  return a = BlockSparseArray{elt}(axes...)
 end
 
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
