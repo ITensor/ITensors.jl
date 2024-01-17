@@ -4,13 +4,20 @@ using NDTensors.BlockSparseArrays: BlockSparseArray
 using NDTensors.GradedAxes: gradedrange
 using NDTensors.Sectors: U1
 using NDTensors.TensorAlgebra: contract
+using Test: @test, @testset
 
-d = gradedrange([U1(0) => 2, U1(1) => 3])
-# d = [2, 3]
+function randn_blockdiagonal(elt::Type, axes...)
+  a = BlockSparseArray{elt}(axes...)
+end
 
-# TODO: Fix `BlockSparseArray{Float64}(d, d, d)`.
-a = BlockSparseArray{Float64}((d, d, d))
-a[Block(1, 1, 1)] = randn(size(a[Block(1, 1, 1)]))
-a[Block(2, 2, 2)] = randn(size(a[Block(2, 2, 2)]))
+const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
+@testset "`contract` `BlockSparseArray` (eltype=$elt)" for elt in elts
+  d = gradedrange([U1(0) => 2, U1(1) => 3])
 
-a_dest, dimnames_dest = contract(a, (1, -1, -2), a, (-1, -2, 2))
+  a1 = BlockSparseArray{elt}(d, d, d)
+  a1[Block(1, 1, 1)] = randn(size(a1[Block(1, 1, 1)]))
+  a1[Block(2, 2, 2)] = randn(size(a1[Block(2, 2, 2)]))
+
+  a_dest, dimnames_dest = contract(a, (-1, 1, -2), a, (-1, -2, 2))
+end
+end
