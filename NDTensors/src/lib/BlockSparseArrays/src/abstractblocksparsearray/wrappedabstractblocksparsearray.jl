@@ -47,6 +47,13 @@ function Base.similar(
   return similar(arraytype, eltype(arraytype), axes)
 end
 
+# Needed for disambiguation
+function Base.similar(
+  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{BlockedUnitRange}}
+)
+  return similar(arraytype, eltype(arraytype), axes)
+end
+
 # Needed by `BlockArrays` matrix multiplication interface
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike}, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
