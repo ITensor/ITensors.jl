@@ -1,6 +1,6 @@
-import NDTensors.Sectors: ⊗, ⊕, dimension, Fib, Ising, istrivial, SU, trivial, U1, Z
-using Test
-
+@eval module $(gensym())
+using NDTensors.Sectors: Fib, Ising, SU, U1, Z, ⊗, ⊕, dimension, dual, istrivial, trivial
+using Test: @test, @testset
 @testset "Test Category Types" begin
   @testset "U(1)" begin
     q1 = U1(1)
@@ -16,6 +16,10 @@ using Test
 
     @test trivial(U1) == U1(0)
     @test istrivial(U1(0))
+
+    @test dual(U1(2)) == U1(-2)
+    @test isless(U1(1), U1(2))
+    @test !isless(U1(2), U1(1))
   end
 
   @testset "Z₂" begin
@@ -31,6 +35,10 @@ using Test
     @test z0 ⊗ z0 == [z0]
     @test z0 ⊗ z1 == [z1]
     @test z1 ⊗ z1 == [z0]
+
+    @test dual(Z{2}(1)) == Z{2}(1)
+    @test isless(Z{2}(0), Z{2}(1))
+    @test !isless(Z{2}(1), Z{2}(0))
   end
 
   @testset "SU(2)" begin
@@ -94,5 +102,4 @@ using Test
     @test ψ ⊗ ψ == [ı]
   end
 end
-
-nothing
+end
