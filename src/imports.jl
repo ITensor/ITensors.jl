@@ -134,7 +134,7 @@ using ITensors.NDTensors:
   timer,
   using_auto_fermion
 
-using ITensors.NDTensors.SetParameters: get_parameters, set_unspecified_parameters
+using ITensors.NDTensors.SetParameters: get_parameters, specify_parameters
 
 import ITensors.NDTensors:
   # Modules
