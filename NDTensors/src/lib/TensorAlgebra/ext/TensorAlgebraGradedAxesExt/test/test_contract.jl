@@ -1,5 +1,6 @@
 @eval module $(gensym())
 using BlockArrays: Block, blocksize
+using Compat: Returns
 using NDTensors.BlockSparseArrays: BlockSparseArray
 using NDTensors.GradedAxes: gradedrange
 using NDTensors.Sectors: U1
