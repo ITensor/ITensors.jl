@@ -1,3 +1,4 @@
+## TODO verify unecessary and delete
 # function SetParameters.specify_parameters(
 #   storetype::Type{<:Dense{ElT,DataT}}, datatype::Type{<:AbstractArray}=default_datatype(ElT)
 # ) where {ElT,DataT<:AbstractArray{ElT}}
@@ -31,6 +32,7 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray
   )
 end
 
+## TODO move to UnspecifiedArrays
 # function set_eltype(
 #   storagetype::Type{<:Dense{ElT,DataT}}, ElR::Type
 # ) where {ElT,DataT<:AbstractArray}
