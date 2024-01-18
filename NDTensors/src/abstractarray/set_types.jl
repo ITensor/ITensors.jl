@@ -36,4 +36,3 @@ like `OffsetArrays` or named indices
 function set_indstype(arraytype::Type{<:AbstractArray}, dims::Tuple)
   return set_ndims(arraytype, length(dims))
 end
-
