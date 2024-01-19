@@ -58,13 +58,24 @@ end
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike}, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
-  # TODO: Make generic for GPU! Use `blocktype`.
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
   return BlockSparseArray{elt}(undef, axes)
 end
 
 function Base.similar(
   a::BlockSparseArrayLike, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
-  # TODO: Make generic for GPU! Use `blocktype`.
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
+  return BlockSparseArray{eltype(a)}(undef, axes)
+end
+
+# Fixes ambiguity error with `OffsetArrays`.
+function Base.similar(
+  a::BlockSparseArrayLike, elt::Type, axes::Tuple{AbstractUnitRange,Vararg{AbstractUnitRange}}
+)
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
   return BlockSparseArray{eltype(a)}(undef, axes)
 end
