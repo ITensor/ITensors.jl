@@ -9,6 +9,7 @@ include("set_parameters.jl")
 include("specify_parameters.jl")
 include("set_default_parameters.jl")
 include("Base/val.jl")
+include("Base/abstractarray.jl")
 include("Base/array.jl")
 include("Base/subarray.jl")
 
@@ -28,6 +29,8 @@ export DefaultParameter,
   get_parameter,
   get_parameters,
   nparameters,
+  set_eltype,
+  set_ndims,
   set_parameters,
   specify_parameters
 end # module

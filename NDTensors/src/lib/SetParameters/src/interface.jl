@@ -37,6 +37,28 @@ Should return a `Type` with no parameters set
 """
 function unspecify_parameters(type::Type)
   return error(
-    "Unable to unspecify the paramters of type '$(type)' as it has not been defined"
+    "Unable to unspecify the paramters of type '$(type)' as it has not been defined."
+  )
+end
+
+"""
+Optional definitions for types which contain parameter eltype
+
+Should return a `Type`.
+"""
+function set_eltype(type::Type)
+  return error(
+    "Unable to set the element type of type '$(type)' as it has not been defined."
+  )
+end
+
+"""
+Optional definitions for types which contain parameter ndim
+
+Should return a `Type`.
+"""
+function set_ndims(type::Type)
+  return error(
+    "Unable to set the ndim of type '$(type)' as it has not been defined."
   )
 end

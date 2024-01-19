@@ -30,6 +30,13 @@ using NDTensors.SetParameters
     @test @inferred((() -> set_parameters(Array, Position(2), 2))()) == Array{<:Any,2}
   end
 
+  @testset "Set ndim and eltype" begin
+    @test @inferred((() -> set_ndims(Array{<:Any,3}, 2))()) ==
+      Array{<:Any,2}
+      @test @inferred((() -> set_eltype(Array{<:Any,3}, Float16))()) ==
+      Array{Float16,3}
+  end
+
   @testset "Set multiple parameters" begin
     @test @inferred((() -> set_parameters(Array{<:Any,3}, Float16, 2))()) ==
       Array{Float16,2}
