@@ -73,7 +73,9 @@ end
 
 # Fixes ambiguity error with `OffsetArrays`.
 function Base.similar(
-  a::BlockSparseArrayLike, elt::Type, axes::Tuple{AbstractUnitRange,Vararg{AbstractUnitRange}}
+  a::BlockSparseArrayLike,
+  elt::Type,
+  axes::Tuple{AbstractUnitRange,Vararg{AbstractUnitRange}},
 )
   # TODO: Make generic for GPU, maybe using `blocktype`.
   # TODO: For non-block axes this should output `Array`.
