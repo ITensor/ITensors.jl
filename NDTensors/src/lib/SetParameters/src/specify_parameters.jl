@@ -28,6 +28,18 @@ function specify_parameters(type::Type, parameter...)
   return set_parameters(specify_parameters, type, Position(1), parameter...)
 end
 
+function specify_parameters(type::Type, parameters::Tuple)
+  new_type = type
+  for i in 1:(length(parameters) - 1)
+    new_type = set_parameters(new_type, Position(i), parameters[i])
+  end
+  return new_type
+end
+
+function specify_parameters(type::Type)
+  return specify_parameters(type, DefaultParameters())
+end
+
 function specify_parameter(type::Type, Position, parameter)
   return specify_parameters(type, Position, parameter)
 end
