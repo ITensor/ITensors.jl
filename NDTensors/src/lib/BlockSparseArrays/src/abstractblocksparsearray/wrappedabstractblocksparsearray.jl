@@ -42,6 +42,13 @@ end
 
 # Needed by `BlockArrays` matrix multiplication interface
 function Base.similar(
+  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{AbstractUnitRange}}
+)
+  return similar(arraytype, eltype(arraytype), axes)
+end
+
+# Needed for disambiguation
+function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{BlockedUnitRange}}
 )
   return similar(arraytype, eltype(arraytype), axes)
@@ -49,15 +56,28 @@ end
 
 # Needed by `BlockArrays` matrix multiplication interface
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike}, elt::Type, axes::Tuple{Vararg{BlockedUnitRange}}
+  arraytype::Type{<:BlockSparseArrayLike}, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
-  # TODO: Make generic for GPU! Use `blocktype`.
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
   return BlockSparseArray{elt}(undef, axes)
 end
 
 function Base.similar(
-  a::BlockSparseArrayLike, elt::Type, axes::Tuple{Vararg{BlockedUnitRange}}
+  a::BlockSparseArrayLike, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
-  # TODO: Make generic for GPU! Use `blocktype`.
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
+  return BlockSparseArray{eltype(a)}(undef, axes)
+end
+
+# Fixes ambiguity error with `OffsetArrays`.
+function Base.similar(
+  a::BlockSparseArrayLike,
+  elt::Type,
+  axes::Tuple{AbstractUnitRange,Vararg{AbstractUnitRange}},
+)
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
   return BlockSparseArray{eltype(a)}(undef, axes)
 end

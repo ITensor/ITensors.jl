@@ -1,40 +1,3 @@
-import HalfIntegers: Half
-
-#
-# U₁ group (circle group, or particle number, total Sz etc.)
-#
-
-struct U1 <: AbstractCategory
-  n::Half{Int}
-end
-
-label(u::U1) = u.n
-
-dimension(::U1) = 1
-
-trivial(::Type{U1}) = U1(0)
-
-label_fusion_rule(::Type{U1}, n1, n2) = (n1 + n2,)
-
-#
-# Cyclic group Zₙ
-#
-
-struct Z{N} <: AbstractCategory
-  m::Half{Int}
-  Z{N}(m) where {N} = new{N}(m % N)
-end
-
-label(z::Z) = z.m
-
-modulus(::Z{N}) where {N} = N
-
-dimension(::Z) = 1
-
-trivial(::Type{Z{N}}) where {N} = Z{N}(0)
-
-label_fusion_rule(::Type{Z{N}}, n1, n2) where {N} = ((n1 + n2) % N,)
-
 #
 # Special unitary group SU{N}
 #
@@ -80,20 +43,3 @@ end
 function Base.show(io::IO, s::SU{2})
   return print(io, "SU{2}(", dimension(s), ")")
 end
-
-#
-# Conventional SU2 group
-# using "J" labels
-#
-
-struct SU2 <: AbstractCategory
-  j::Half{Int}
-end
-
-label(s::SU2) = s.j
-
-trivial(::Type{SU2}) = SU2(0)
-
-dimension(s::SU2) = 2 * label(s) + 1
-
-label_fusion_rule(::Type{SU2}, j1, j2) = abs(j1 - j2):(j1 + j2)

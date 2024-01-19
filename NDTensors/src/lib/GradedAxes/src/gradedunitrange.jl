@@ -1,4 +1,4 @@
-using BlockArrays: BlockArrays, Block, BlockedUnitRange, blockedrange
+using BlockArrays: BlockArrays, Block, BlockRange, BlockedUnitRange, blockedrange
 
 struct GradedUnitRange{T,S} <: AbstractGradedUnitRange{T,S}
   blockedrange::BlockedUnitRange{T}
@@ -21,4 +21,10 @@ end
 
 function gradedrange(a::BlockedUnitRange, nondual_sectors::Vector, isdual=false)
   return GradedUnitRange(a, nondual_sectors, isdual)
+end
+
+# BlockArrays block axis interface
+# Used in printing
+function Base.getindex(a::GradedUnitRange, I::BlockRange{1,Tuple{Base.OneTo{Int}}})
+  return GradedUnitRange(blockedrange(a)[I], nondual_sectors(a)[only(I.indices)], isdual(a))
 end
