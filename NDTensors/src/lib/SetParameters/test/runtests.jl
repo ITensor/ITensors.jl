@@ -31,9 +31,8 @@ using NDTensors.SetParameters
   end
 
   @testset "Set ndim and eltype" begin
-    @test @inferred((() -> set_ndims(Array{<:Any,3}, 2))()) ==
-      Array{<:Any,2}
-      @test @inferred((() -> set_eltype(Array{<:Any,3}, Float16))()) ==
+    @test set_ndims(Array{<:Any,3}, 4) == Array{<:Any,4}
+    @test @inferred((() -> set_eltype(Array{<:Any,3}, Float16))()) ==
       Array{Float16,3}
   end
 
