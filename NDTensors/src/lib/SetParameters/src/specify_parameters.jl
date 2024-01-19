@@ -31,7 +31,7 @@ end
 function specify_parameters(type::Type, parameters::Tuple)
   new_type = type
   for i in 1:(length(parameters) - 1)
-    new_type = set_parameters(new_type, Position(i), parameters[i])
+    new_type = specify_parameters(new_type, Position(i), parameters[i])
   end
   return new_type
 end
