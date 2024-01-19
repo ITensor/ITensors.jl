@@ -67,6 +67,10 @@ function BlockSparseArray{T}(dims::Vararg{Vector{Int}}) where {T}
   return BlockSparseArray{T}(dims)
 end
 
+function BlockSparseArray{T}(axes::Vararg{AbstractUnitRange}) where {T}
+  return BlockSparseArray{T}(axes)
+end
+
 # undef
 function BlockSparseArray{T,N}(
   ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}

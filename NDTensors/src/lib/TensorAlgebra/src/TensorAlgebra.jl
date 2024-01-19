@@ -10,4 +10,5 @@ include("contract/allocate_output.jl")
 include("contract/contract_matricize/contract.jl")
 # TODO: Rename to `TensorAlgebraLinearAlgebraExt`.
 include("LinearAlgebraExtensions/LinearAlgebraExtensions.jl")
+include("../ext/TensorAlgebraGradedAxesExt/src/TensorAlgebraGradedAxesExt.jl")
 end
