@@ -27,3 +27,7 @@ Set parameters starting from the first one if they are unspecified.
 function specify_parameters(type::Type, parameter...)
   return set_parameters(specify_parameters, type, Position(1), parameter...)
 end
+
+function specify_parameter(type::Type, Position, parameter)
+  return specify_parameters(type, Position, parameter)
+end
