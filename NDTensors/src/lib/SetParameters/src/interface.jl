@@ -58,7 +58,5 @@ Optional definitions for types which contain parameter ndim
 Should return a `Type`.
 """
 function set_ndims(type::Type)
-  return error(
-    "Unable to set the ndim of type '$(type)' as it has not been defined."
-  )
+  return error("Unable to set the ndim of type '$(type)' as it has not been defined.")
 end
