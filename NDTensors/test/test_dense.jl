@@ -235,7 +235,7 @@ using .NDTensorsTestUtils: devices_list
   @testset "Contract with exotic types" begin
     # BigFloat is not supported on GPU
     M = Tensor(BigFloat, (1, 2, 3))
-    fill!(M, BigFloat(randn(elt)))
+    fill!(M, BigFloat(randn(Float64)))
     O = Tensor(M, (2, 3))
     N = Tensor([BigFloat(1.0)], (1,))
   
