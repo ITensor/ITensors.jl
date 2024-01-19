@@ -10,6 +10,7 @@ include("TestBlockSparseArraysUtils.jl")
                                                (Float32, Float64, ComplexF32, ComplexF64)
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
+    @test a == BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
     @test eltype(a) === elt
     @test axes(a) == (1:5, 1:5)
     @test all(aᵢ -> aᵢ isa BlockedUnitRange, axes(a))

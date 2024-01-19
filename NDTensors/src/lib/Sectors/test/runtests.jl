@@ -1,5 +1,5 @@
-using Test
-
+@eval module $(gensym())
+using Test: @test, @testset
 @testset "$(@__DIR__)" begin
   filenames = filter(readdir(@__DIR__)) do f
     startswith("test_")(f) && endswith(".jl")(f)
@@ -9,5 +9,4 @@ using Test
     @time include(filename)
   end
 end
-
-nothing
+end

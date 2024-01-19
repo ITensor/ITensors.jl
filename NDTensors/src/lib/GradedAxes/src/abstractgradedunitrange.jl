@@ -126,6 +126,12 @@ function fuse(
   return blockmergesort(a)
 end
 
+# Broadcasting
+# This removes the block structure when mixing dense and graded blocked arrays,
+# maybe keep the block structure (like `BlockArrays` does).
+Broadcast.axistype(a1::AbstractGradedUnitRange, a2::Base.OneTo) = a2
+Broadcast.axistype(a1::Base.OneTo, a2::AbstractGradedUnitRange) = a1
+
 ## TODO: Add this back.
 ## # Slicing
 ## ## using BlockArrays: BlockRange, _BlockedUnitRange

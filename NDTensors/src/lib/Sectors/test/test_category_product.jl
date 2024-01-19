@@ -1,6 +1,6 @@
-import NDTensors.Sectors: ⊗, ⊕, ×, Fib, Ising, sector, SU, SU2, U1, Z
-using Test
-
+@eval module $(gensym())
+using NDTensors.Sectors: Fib, Ising, SU, SU2, U1, Z, ⊗, ⊕, ×, sector
+using Test: @test, @testset, @test_throws
 @testset "Test Named Category Products" begin
   @testset "Construct from × of NamedTuples" begin
     s = (A=U1(1),) × (B=SU2(2),)
@@ -132,5 +132,4 @@ end
     @test p1h1 ⊗ p1h1 == (U1(2) × SU2(0) × Z{2}(0)) ⊕ (U1(2) × SU2(1) × Z{2}(0))
   end
 end
-
-nothing
+end
