@@ -68,7 +68,6 @@ function _contract_scalar_noperm!(
     if iszero(α)
       fill!(Rᵈ, 0)
     else
-      # Rᵈ .= α .* T₂ᵈ
       Rᵈ .= α .* Tᵈ
     end
   elseif isone(β)
