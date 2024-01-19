@@ -232,6 +232,22 @@ using .NDTensorsTestUtils: devices_list
   end
 
   # Only CPU backend testing
+  @testset "Contract with exotic types" begin
+    # BigFloat is not supported on GPU
+    M = Tensor(BigFloat, (1, 2, 3))
+    fill!(M, BigFloat(randn(elt)))
+    O = Tensor(M, (2, 3))
+    N = Tensor([BigFloat(1.0)], (1,))
+  
+    @test O ≈ contract(M, (-1, 2, 3), N, (-1,))
+    O = similar(M)
+    ## TODO find a way to test the next line, its not possible to access an undefined
+    ## reference
+    NDTensors.contract!!(O, (2, 3), M, (-1, 2, 3), N, (-1,), 0.0, 1.0)
+    NDTensors.contract!!(O, (2, 3), M, (-1, 2, 3), N, (-1,), 0.0, 0.0)
+    @test iszero(O)
+  end
+
   @testset "change backends" begin
     a, b, c = [randn(5, 5) for i in 1:3]
     backend_auto()

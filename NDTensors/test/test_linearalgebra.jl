@@ -88,19 +88,5 @@ end
   end
 end
 
-@testset "Contract with exotic types" begin
-  M = randomTensor(BigFloat, (1, 2, 3))
-  O = Tensor(M, (2, 3))
-  N = Tensor([BigFloat(1.0)], (1,))
-
-  @test O ≈ contract(M, (-1, 2, 3), N, (-1,))
-  O = similar(M)
-  ## TODO find a way to test the next line, its not possible to access an undefined
-  ## reference
-  NDTensors.contract!!(O, (2, 3), M, (-1, 2, 3), N, (-1,), 0.0, 1.0)
-  NDTensors.contract!!(O, (2, 3), M, (-1, 2, 3), N, (-1,), 0.0, 0.0)
-  @test iszero(O)
-end
-
 nothing
 end
