@@ -242,8 +242,20 @@ using .NDTensorsTestUtils: devices_list
 
     @test m ≈ contract(t, (-1, 2, 3), v, (-1,))
     tp = similar(t)
-    NDTensors.contract!(tp, (1, 2, 3), t, (-1, 2, 3), v, (-1,), 0.0, 0.0)
+    NDTensors.contract!(tp, (1, 2, 3), t, (1, 2, 3), v, (1,), false, false)
     @test iszero(tp)
+
+    fill!(tp, one(BigFloat))
+    NDTensors.contract!(tp, (1, 2, 3), t, (1, 2, 3), v, (1,), false, true)
+    for i in tp
+      @test i == one(BigFloat)
+    end
+
+    rand_factor = BigFloat(randn(Float64))
+    NDTensors.contract!(tp, (1, 2, 3), t, (1, 2, 3), v, (1,), false, rand_factor)
+    for i in tp
+      @test i == rand_factor
+    end
   end
 
   @testset "change backends" begin
