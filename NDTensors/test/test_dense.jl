@@ -232,6 +232,32 @@ using .NDTensorsTestUtils: devices_list
   end
 
   # Only CPU backend testing
+  @testset "Contract with exotic types" begin
+    # BigFloat is not supported on GPU
+    ## randn(BigFloat, ...) is not defined in Julia 1.6
+    a = BigFloat.(randn(Float64, 2, 3))
+    t = Tensor(a, (1, 2, 3))
+    m = Tensor(a, (2, 3))
+    v = Tensor([one(BigFloat)], (1,))
+
+    @test m ≈ contract(t, (-1, 2, 3), v, (-1,))
+    tp = similar(t)
+    NDTensors.contract!(tp, (1, 2, 3), t, (1, 2, 3), v, (1,), false, false)
+    @test iszero(tp)
+
+    fill!(tp, one(BigFloat))
+    NDTensors.contract!(tp, (1, 2, 3), t, (1, 2, 3), v, (1,), false, true)
+    for i in tp
+      @test i == one(BigFloat)
+    end
+
+    rand_factor = BigFloat(randn(Float64))
+    NDTensors.contract!(tp, (1, 2, 3), t, (1, 2, 3), v, (1,), false, rand_factor)
+    for i in tp
+      @test i == rand_factor
+    end
+  end
+
   @testset "change backends" begin
     a, b, c = [randn(5, 5) for i in 1:3]
     backend_auto()

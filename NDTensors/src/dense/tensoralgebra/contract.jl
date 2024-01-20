@@ -68,8 +68,7 @@ function _contract_scalar_noperm!(
     if iszero(α)
       fill!(Rᵈ, 0)
     else
-      # Rᵈ .= α .* T₂ᵈ
-      LinearAlgebra.axpby!(α, Tᵈ, β, Rᵈ)
+      Rᵈ .= α .* Tᵈ
     end
   elseif isone(β)
     if iszero(α)
@@ -81,8 +80,7 @@ function _contract_scalar_noperm!(
     end
   else
     if iszero(α)
-      # Rᵈ .= β .* Rᵈ
-      LinearAlgebra.scal!(length(Rᵈ), β, Rᵈ, 1)
+      Rᵈ .= β .* Rᵈ
     else
       # Rᵈ .= α .* Tᵈ .+ β .* Rᵈ
       LinearAlgebra.axpby!(α, Tᵈ, β, Rᵈ)
