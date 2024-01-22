@@ -2,7 +2,9 @@ function SetParameters.set_eltype(storagetype::Type{<:UniformDiag}, eltype::Type
   return Diag{eltype,eltype}
 end
 
-function SetParameters.set_eltype(storagetype::Type{<:NonuniformDiag}, eltype::Type{<:AbstractArray})
+function SetParameters.set_eltype(
+  storagetype::Type{<:NonuniformDiag}, eltype::Type{<:AbstractArray}
+)
   return Diag{eltype,similartype(storagetype, eltype)}
 end
 
