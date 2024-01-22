@@ -1,27 +1,7 @@
-using .SetParameters: Position, get_parameter, set_parameters
-
-"""
-TODO: Use `Accessors.jl` notation:
-```julia
-@set eltype(arraytype) = eltype
-```
-"""
-function set_eltype(arraytype::Type{<:Array}, eltype::Type)
-  return set_parameters(arraytype, Position(1), eltype)
-end
-
-"""
-TODO: Use `Accessors.jl` notation:
-```julia
-@set ndims(arraytype) = ndims
-```
-"""
-function set_ndims(arraytype::Type{<:Array}, ndims)
-  return set_parameters(arraytype, Position(2), ndims)
-end
+using .SetParameters: Position, get_parameter, set_parameters, set_eltype
 
 # SubArray{Float64, 2, Matrix{Float64}, Tuple{UnitRange{Int64}, UnitRange{Int64}}, false}
-function set_eltype(arraytype::Type{<:SubArray}, eltype::Type)
+function SetParameters.set_eltype(arraytype::Type{<:SubArray}, eltype::Type)
   arraytype_1 = set_parameters(arraytype, Position(1), eltype)
   parent_arraytype = get_parameter(arraytype, Position(3))
   parent_arraytype_1 = set_eltype(parent_arraytype, eltype)
