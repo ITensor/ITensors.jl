@@ -129,12 +129,11 @@ using ITensors.NDTensors:
   randn!!,
   permutedims,
   permutedims!,
-  set_eltype,
   single_precision,
   timer,
   using_auto_fermion
 
-using ITensors.NDTensors.SetParameters: get_parameters, specify_parameters
+using ITensors.NDTensors.SetParameters: get_parameters, set_eltype, specify_parameters
 
 import ITensors.NDTensors:
   # Modules
