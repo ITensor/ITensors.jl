@@ -242,7 +242,7 @@ end
 
 @propagate_inbounds function getindex(T::BlockSparseTensor{ElT,0}) where {ElT}
   nnzblocks(T) == 0 && return zero(ElT)
-  return getindex(expose(storage(T)))
+  return expose(storage(T))[]
   #storage(T)[]
 end
 
