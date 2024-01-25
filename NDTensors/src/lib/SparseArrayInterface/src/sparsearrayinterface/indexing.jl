@@ -173,6 +173,16 @@ function sparse_getindex(a::AbstractArray, I::StorageIndices)
   return error("Not implemented")
 end
 
+# Sparse array slicing.
+# TODO: Need to overload `sub_materialize` for `SparseArray`.
+# https://github.com/JuliaArrays/BlockArrays.jl/blob/v0.16.39/src/blocklinalg.jl#L102-L109
+# https://github.com/JuliaLinearAlgebra/ArrayLayouts.jl/blob/v1.5.2/src/ArrayLayouts.jl#L124-L129
+function sparse_getindex(a::AbstractArray, I::AbstractVector...)
+  @show I
+  a_subarray = @view a[I...]
+  return copy(a_subarray)
+end
+
 function sparse_setindex!(a::AbstractArray, value, I::StorageIndices{Colon})
   sparse_storage(a) .= value
   return a

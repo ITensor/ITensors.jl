@@ -4,7 +4,10 @@ using .BaseExtensions: _permutedims, _permutedims!
 function ⊗(a1::AbstractUnitRange, a2::AbstractUnitRange, as::AbstractUnitRange...)
   return ⊗(a1, ⊗(a2, as...))
 end
-⊗(a1::AbstractUnitRange, a2::AbstractUnitRange) = Base.OneTo(length(a1) * length(a2))
+function ⊗(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  @assert isone(first(a1)) && isone(first(a2))
+  return Base.OneTo(length(a1) * length(a2))
+end
 ⊗() = Base.OneTo(1)
 
 # Overload this version for most arrays
