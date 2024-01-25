@@ -72,7 +72,9 @@ function BlockSparse(::UndefInitializer, blockoffsets::BlockOffsets, dim::Intege
   return BlockSparse(Float64, undef, blockoffsets, dim; vargs...)
 end
 
-copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
+copy_keys_values(d::Dictionary) = Dictionary(copy(d.indices), copy(d.values))
+
+copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy_keys_values(blockoffsets(D)))
 
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
 function setdata(storagetype::Type{<:BlockSparse}, data)
