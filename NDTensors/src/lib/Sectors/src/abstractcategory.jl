@@ -39,7 +39,7 @@ end
 istrivial(c::AbstractCategory) = (c == trivial(typeof(c)))
 
 function dual(category_type::Type{<:AbstractCategory})
-    return error("`dual` not defined for type $(category_type).")
+  return error("`dual` not defined for type $(category_type).")
 end
 
 Base.isless(c1::AbstractCategory, c2::AbstractCategory) = isless(label(c1), label(c2))
