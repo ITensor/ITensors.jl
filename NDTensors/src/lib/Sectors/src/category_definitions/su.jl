@@ -33,6 +33,31 @@ function dual(s::SU)
   return SU{N}(nl)
 end
 
+# display SU(N) irrep as a Young tableau with utf8 box char
+function Base.show(io::IO, ::MIME"text/plain", s::SU)
+  l = label(s)
+  if l[1] == 0  # singlet = no box
+    println("●")
+    return nothing
+  end
+
+  println("┌─" * "┬─"^(l[1] - 1) * "┐")
+  i = 1
+  while l[i + 1] != 0
+    println(
+      "├─",
+      "┼─"^(l[i + 1] - 1 + (l[i] > l[i + 1])),
+      "┴─"^max(0, (l[i] - l[i + 1] - 1)),
+      "┤"^(l[i] == l[i + 1]),
+      "┘"^(l[i] > l[i + 1]),
+    )
+    i += 1
+  end
+
+  println("└─", "┴─"^max(0, l[i] - 1), "┘")
+  return nothing
+end
+
 #
 # Specializations for the case SU{2}
 # Where irreps specified by dimension "d"
