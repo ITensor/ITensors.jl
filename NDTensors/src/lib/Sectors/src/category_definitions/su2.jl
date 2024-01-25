@@ -1,4 +1,4 @@
-using HalfIntegers: Half, twice
+using HalfIntegers: Half, half, twice
 
 #
 # Conventional SU2 group
@@ -14,6 +14,8 @@ dual(s::SU2) = s
 label(s::SU2) = s.j
 
 trivial(::Type{SU2}) = SU2(0)
+fundamental(::Type{SU2}) = SU2(half(1))
+adjoint(::Type{SU2}) = SU2(1)
 
 dimension(s::SU2) = twice(label(s)) + 1
 

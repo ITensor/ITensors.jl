@@ -16,6 +16,10 @@ groupdim(::SU{N}) where {N} = N
 
 trivial(::Type{SU{N}}) where {N} = SU{N}(ntuple(_ -> 0, Val(N)))
 
+fundamental(::Type{SU{N}}) where {N} = SU{N}(ntuple(i -> Int(i == 1), Val(N)))
+
+adjoint(::Type{SU{N}}) where {N} = SU{N}((ntuple(i -> Int(i == 1) + Int(i < N), Val(N))))
+
 function dimension(s::SU)
   N = groupdim(s)
   l = label(s)
