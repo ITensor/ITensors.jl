@@ -27,10 +27,9 @@ function dimension(s::SU)
 end
 
 function dual(s::SU)
-  N = groupdim(s)
   l = label(s)
   nl = ((reverse(cumsum(l[begin:(end - 1)] .- l[(begin + 1):end]))..., 0))
-  return SU{N}(nl)
+  return typeof(s)(nl)
 end
 
 # display SU(N) irrep as a Young tableau with utf8 box char
