@@ -8,6 +8,8 @@ struct su2{k} <: AbstractCategory
   j::Half{Int}
 end
 
+dual(s::su2) = s
+
 label(s::su2) = s.j
 
 level(s::su2{k}) where {k} = k
