@@ -24,9 +24,9 @@ for lib in [
   :AllocateData,
   :BaseExtensions,
   :UnspecifiedTypes,
+  :Unwrap,
   :SetParameters,
   :BroadcastMapConversion,
-  :Unwrap,
   :RankFactorization,
   :Sectors,
   :GradedAxes,
@@ -132,6 +132,7 @@ include("blocksparse/diagblocksparse.jl")
 include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
+include("blocksparse/set_types.jl")
 
 #####################################
 # Empty
