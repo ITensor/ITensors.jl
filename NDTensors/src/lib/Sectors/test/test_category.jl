@@ -1,5 +1,19 @@
 @eval module $(gensym())
-using NDTensors.Sectors: Fib, Ising, SU, U1, Z, ⊗, ⊕, dimension, dual, istrivial, trivial
+using NDTensors.Sectors:
+  Fib,
+  Ising,
+  SU,
+  SU2,
+  U1,
+  Z,
+  ⊗,
+  ⊕,
+  dimension,
+  dual,
+  istrivial,
+  trivial,
+  fundamental,
+  adjoint
 using Test: @test, @testset
 @testset "Test Category Types" begin
   @testset "U(1)" begin
@@ -32,6 +46,9 @@ using Test: @test, @testset
     @test dimension(z0) == 1
     @test dimension(z1) == 1
 
+    @test dual(z0) == z0
+    @test dual(z1) == z1
+
     @test z0 ⊗ z0 == [z0]
     @test z0 ⊗ z1 == [z1]
     @test z1 ⊗ z1 == [z0]
@@ -39,6 +56,35 @@ using Test: @test, @testset
     @test dual(Z{2}(1)) == Z{2}(1)
     @test isless(Z{2}(0), Z{2}(1))
     @test !isless(Z{2}(1), Z{2}(0))
+  end
+
+  @testset "SU2" begin
+    j1 = SU2(0)
+    j2 = SU2(1//2)
+    j3 = SU2(1)
+    j4 = SU2(3//2)
+    j5 = SU2(2)
+
+    @test trivial(SU2) == SU2(0)
+    @test istrivial(SU2(0))
+
+    @test fundamental(SU2) == SU2(1//2)
+    @test adjoint(SU2) == SU2(1)
+
+    @test dimension(j1) == 1
+    @test dimension(j2) == 2
+    @test dimension(j3) == 3
+    @test dimension(j4) == 4
+
+    @test dual(j1) == j1
+    @test dual(j2) == j2
+    @test dual(j3) == j3
+    @test dual(j4) == j4
+
+    @test j1 ⊗ j2 == [j2]
+    @test j2 ⊗ j2 == j1 ⊕ j3
+    @test j2 ⊗ j3 == j2 ⊕ j4
+    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
   end
 
   @testset "SU(2)" begin
@@ -51,10 +97,18 @@ using Test: @test, @testset
     @test trivial(SU{2}) == SU{2}(1)
     @test istrivial(SU{2}(1))
 
+    @test fundamental(SU{2}) == SU{2}(2)
+    @test adjoint(SU{2}) == SU{2}(3)
+
     @test dimension(j1) == 1
     @test dimension(j2) == 2
     @test dimension(j3) == 3
     @test dimension(j4) == 4
+
+    @test dual(j1) == j1
+    @test dual(j2) == j2
+    @test dual(j3) == j3
+    @test dual(j4) == j4
 
     @test j1 ⊗ j2 == [j2]
     @test j2 ⊗ j2 == j1 ⊕ j3
@@ -63,7 +117,30 @@ using Test: @test, @testset
   end
 
   @testset "SU(N)" begin
-    @test dimension(SU{3}((2, 1, 0))) == 8
+    f3 = SU{3}((1, 0, 0))
+    f4 = SU{4}((1, 0, 0, 0))
+    ad3 = SU{3}((2, 1, 0))
+    ad4 = SU{4}((2, 1, 1, 0))
+
+    @test trivial(SU{3}) == SU{3}((0, 0, 0))
+    @test istrivial(SU{3}((0, 0, 0)))
+    @test trivial(SU{4}) == SU{4}((0, 0, 0, 0))
+    @test istrivial(SU{4}((0, 0, 0, 0)))
+
+    @test fundamental(SU{3}) == f3
+    @test adjoint(SU{3}) == ad3
+    @test fundamental(SU{4}) == f4
+    @test adjoint(SU{4}) == ad4
+
+    @test dual(f3) == SU{3}((1, 1, 0))
+    @test dual(f4) == SU{4}((1, 1, 1, 0))
+    @test dual(ad3) == ad3
+    @test dual(ad4) == ad4
+
+    @test dimension(f3) == 3
+    @test dimension(f4) == 4
+    @test dimension(ad3) == 8
+    @test dimension(ad4) == 15
     @test dimension(SU{3}((4, 2, 0))) == 27
     @test dimension(SU{3}((3, 3, 0))) == 10
     @test dimension(SU{3}((3, 0, 0))) == 10
@@ -76,6 +153,12 @@ using Test: @test, @testset
 
     @test trivial(Fib) == ı
     @test istrivial(ı)
+
+    @test dual(ı) == ı
+    @test dual(τ) == τ
+
+    @test dimension(ı) == 1
+    @test dimension(τ) == ((1 + √5) / 2)
 
     @test ı ⊗ ı == [ı]
     @test ı ⊗ τ == [τ]
@@ -90,6 +173,10 @@ using Test: @test, @testset
 
     @test trivial(Ising) == ı
     @test istrivial(ı)
+
+    @test dual(ı) == ı
+    @test dual(σ) == σ
+    @test dual(ψ) == ψ
 
     @test ı ⊗ ı == [ı]
     @test ı ⊗ σ == [σ]
