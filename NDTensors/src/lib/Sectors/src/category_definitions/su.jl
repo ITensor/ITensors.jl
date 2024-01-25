@@ -3,7 +3,7 @@
 #
 
 struct SU{N} <: AbstractCategory
-  # l is the first row of the 
+  # l is the first row of the
   # Gelfand-Tsetlin (GT) pattern describing
   # an SU(N) irrep
   #TODO: any way this could be NTuple{N-1,Int} ?
@@ -24,6 +24,13 @@ function dimension(s::SU)
     d *= ((k2 - k1) + (l[k1] - l[k2]))//(k2 - k1)
   end
   return Int(d)
+end
+
+function dual(s::SU)
+  N = groupdim(s)
+  l = label(s)
+  nl = ((reverse(cumsum(l[begin:(end - 1)] .- l[(begin + 1):end]))..., 0))
+  return SU{N}(nl)
 end
 
 #
