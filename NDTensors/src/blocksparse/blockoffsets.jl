@@ -1,3 +1,8 @@
+# Work around https://github.com/andyferris/Dictionaries.jl/issues/98
+# Remove when fixed by https://github.com/andyferris/Dictionaries.jl/pull/101
+copy_keys_values(d::Dictionary) = Dictionary(copy(d.indices), copy(d.values))
+copy_keys(d::Dictionary) = Dictionary(copy(d.indices), d.values)
+
 #
 # BlockOffsets
 #
@@ -9,6 +14,8 @@ const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Dictionary{Block{N},Int}
 
 BlockOffset(block::Block{N}, offset::Int) where {N} = BlockOffset{N}(block, offset)
+
+copy(blockoffsets::BlockOffsets) = copy_keys_values(blockoffsets)
 
 ndims(::Blocks{N}) where {N} = N
 ndims(::BlockOffset{N}) where {N} = N
