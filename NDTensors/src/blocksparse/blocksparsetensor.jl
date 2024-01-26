@@ -261,7 +261,7 @@ function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) wh
   insert!(blockoffsets(T), newblock, newoffset)
   # Insert new block into data
   # TODO: Make GPU-friendly
-  splice!(data(storage(T)), (newoffset + 1):newoffset, zeros(ElT, newdim))
+  splice!(expose(data(storage(T))), (newoffset + 1):newoffset, zeros(ElT, newdim))
   return newoffset
 end
 

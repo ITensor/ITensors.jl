@@ -18,6 +18,7 @@ include("functions/linearalgebra.jl")
 include("functions/mul.jl")
 include("functions/permutedims.jl")
 include("functions/adapt.jl")
+include("functions/splice.jl")
 
 export IsWrappedArray,
   is_wrapped_array, parenttype, unwrap_type, expose, Exposed, unexpose, cpu
