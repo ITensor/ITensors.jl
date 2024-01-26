@@ -132,7 +132,6 @@ include("blocksparse/diagblocksparse.jl")
 include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
-include("blocksparse/set_types.jl")
 
 #####################################
 # Empty
