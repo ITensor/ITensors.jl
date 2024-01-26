@@ -191,24 +191,6 @@ using .NDTensorsTestUtils: devices_list
   permutedims!(expose(y), expose(x), (2, 1))
   @test cpu(y) == transpose(cpu(x))
 
-  y = dev(elt.(1:3))
-  splice!(expose(y), 2)
-  @test length(y) == 2
-  @allowscalar begin
-    @test y[1] == 1
-    @test y[2] == 3
-  end
-
-  y = dev(elt.(1:3))
-  splice!(expose(y), 2, 4:5)
-  @test length(y) == 4
-  @allowscalar begin
-    @test y[1] == 1
-    @test y[2] == 4
-    @test y[3] == 5
-    @test y[4] == 3
-  end
-
   ##########################################
   ### Testing an issue with CUDA&Metal transpose/adjoint mul
   A = dev(randn(elt, (3, 2)))

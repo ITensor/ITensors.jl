@@ -18,6 +18,5 @@ include("copyto.jl")
 include("append.jl")
 include("permutedims.jl")
 include("mul.jl")
-include("splice.jl")
 
 end
