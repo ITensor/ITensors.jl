@@ -1,7 +1,6 @@
 # Work around https://github.com/andyferris/Dictionaries.jl/issues/98
 # Remove when fixed by https://github.com/andyferris/Dictionaries.jl/pull/101
 copy_keys_values(d::Dictionary) = Dictionary(copy(d.indices), copy(d.values))
-copy_keys(d::Dictionary) = Dictionary(copy(d.indices), d.values)
 
 #
 # BlockOffsets
