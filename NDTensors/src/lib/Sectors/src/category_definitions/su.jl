@@ -40,7 +40,7 @@ end
 function Base.show(io::IO, ::MIME"text/plain", s::SU)
   l = label(s)
   if l[1] == 0  # singlet = no box
-    println("●")
+    println(io, "●")
     return nothing
   end
 
@@ -48,6 +48,7 @@ function Base.show(io::IO, ::MIME"text/plain", s::SU)
   i = 1
   while l[i + 1] != 0
     println(
+      io,
       "├─",
       "┼─"^(l[i + 1] - 1 + (l[i] > l[i + 1])),
       "┴─"^max(0, (l[i] - l[i + 1] - 1)),
@@ -57,7 +58,7 @@ function Base.show(io::IO, ::MIME"text/plain", s::SU)
     i += 1
   end
 
-  println("└─", "┴─"^max(0, l[i] - 1), "┘")
+  println(io, "└─", "┴─"^max(0, l[i] - 1), "┘")
   return nothing
 end
 
