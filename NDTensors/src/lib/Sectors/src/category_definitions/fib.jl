@@ -18,6 +18,8 @@ function Fib(s::AbstractString)
   return error("Unrecognized input \"$s\" to Fib constructor")
 end
 
+dual(f::Fib) = f
+
 label(f::Fib) = f.l
 
 trivial(::Type{Fib}) = Fib(0)
