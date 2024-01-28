@@ -1,12 +1,7 @@
 using .SetParameters: Position, get_parameter, set_parameters, set_eltype
 
-# SubArray{Float64, 2, Matrix{Float64}, Tuple{UnitRange{Int64}, UnitRange{Int64}}, false}
-function SetParameters.set_eltype(arraytype::Type{<:SubArray}, eltype::Type)
-  arraytype_1 = set_parameters(arraytype, Position(1), eltype)
-  parent_arraytype = get_parameter(arraytype, Position(3))
-  parent_arraytype_1 = set_eltype(parent_arraytype, eltype)
-  return set_parameters(arraytype_1, Position(3), parent_arraytype_1)
-end
+SetParameters.eltype_position(::Type{<:SubArray}) = Position(1)
+SetParameters.parenttype_position(::Type{<:SubArray}) = Position(3)
 
 # TODO: Figure out how to define this properly.
 # function set_ndims(arraytype::Type{<:SubArray}, ndims)

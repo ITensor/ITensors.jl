@@ -1,7 +1,3 @@
-function SetParameters.set_eltype(arraytype::Type{<:Tensor}, eltype::Type)
-  return set_storagetype(arraytype, set_eltype(storagetype(arraytype), eltype))
-end
-
 function SetParameters.set_ndims(arraytype::Type{<:Tensor}, ndims)
   # TODO: Implement something like:
   # ```julia
