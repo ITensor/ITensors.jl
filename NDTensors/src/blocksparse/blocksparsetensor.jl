@@ -260,8 +260,10 @@ function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) wh
   newoffset = nnz(T)
   insert!(blockoffsets(T), newblock, newoffset)
   # Insert new block into data
-  # TODO: Make GPU-friendly
-  splice!(data(storage(T)), (newoffset + 1):newoffset, zeros(ElT, newdim))
+  new_data = generic_zeros(unwrap_type(T), newdim)
+  # TODO: `append!` is broken on `Metal` since `resize!`
+  # isn't implemented.
+  append!(data(T), new_data)
   return newoffset
 end
 
@@ -698,40 +700,8 @@ function permutedims!!(
   f::Function=(r, t) -> t,
 ) where {ElR,ElT,N}
   RR = convert(promote_type(typeof(R), typeof(T)), R)
-  #@timeit_debug timer "block sparse permutedims!!" begin
-  bofsRR = blockoffsets(RR)
-  bofsT = blockoffsets(T)
-
-  # Determine if bofsRR has been copied
-  copy_bofsRR = false
-
-  new_nnz = nnz(RR)
-  for (blockT, offsetT) in pairs(bofsT)
-    blockTperm = permute(blockT, perm)
-    if !isassigned(bofsRR, blockTperm)
-      if !copy_bofsRR
-        bofsRR = deepcopy(bofsRR)
-        copy_bofsRR = true
-      end
-      insert!(bofsRR, blockTperm, new_nnz)
-      new_nnz += blockdim(T, blockT)
-    end
-  end
-
-  ## RR = BlockSparseTensor(promote_type(ElR,ElT), undef,
-  ##                        bofsRR, inds(R))
-  ## # Directly copy the data since it is the same blocks
-  ## # and offsets
-  ## copyto!(data(RR), data(R))
-
-  if new_nnz > nnz(RR)
-    dataRR = append!!(data(RR), generic_zeros(unwrap_type(R), new_nnz - nnz(RR)))
-    RR = Tensor(BlockSparse(dataRR, bofsRR), inds(RR))
-  end
-
   permutedims!(RR, T, perm, f)
   return RR
-  #end
 end
 
 # <fermions>
@@ -754,26 +724,45 @@ end
 # <fermions>
 permfactor(perm, block, inds) = 1
 
-# Version where it is known that R has the same blocks
-# as T
 function permutedims!(
   R::BlockSparseTensor{<:Number,N},
   T::BlockSparseTensor{<:Number,N},
   perm::NTuple{N,Int},
   f::Function=(r, t) -> t,
 ) where {N}
-  for blockT in keys(blockoffsets(T))
+  blocks_R = keys(blockoffsets(R))
+  perm_blocks_T = map(b -> permute(b, perm), keys(blockoffsets(T)))
+  blocks = union(blocks_R, perm_blocks_T)
+  for block in blocks
+    block_T = permute(block, invperm(perm))
+
     # Loop over non-zero blocks of T/R
-    Tblock = blockview(T, blockT)
-    Rblock = blockview(R, permute(blockT, perm))
+    Rblock = blockview(R, block)
+    Tblock = blockview(T, block_T)
 
     # <fermions>
-    pfac = permfactor(perm, blockT, inds(T))
-    if pfac == 1
-      permutedims!(Rblock, Tblock, perm, f)
-    else
-      fac_f = (r, t) -> f(r, pfac * t)
-      permutedims!(Rblock, Tblock, perm, fac_f)
+    pfac = permfactor(perm, block_T, inds(T))
+    f_fac = isone(pfac) ? f : ((r, t) -> f(r, pfac * t))
+
+    Rblock_exists = !isnothing(Rblock)
+    Tblock_exists = !isnothing(Tblock)
+    if !Rblock_exists
+      # Rblock doesn't exist
+      block_size = permute(size(Tblock), perm)
+      # TODO: Make GPU friendly.
+      Rblock = tensor(Dense(zeros(eltype(R), block_size)), block_size)
+    elseif !Tblock_exists
+      # Tblock doesn't exist
+      block_size = permute(size(Rblock), invperm(perm))
+      # TODO: Make GPU friendly.
+      Tblock = tensor(Dense(zeros(eltype(T), block_size)), block_size)
+    end
+    permutedims!(Rblock, Tblock, perm, f_fac)
+    if !Rblock_exists
+      # Set missing nonzero block
+      if !iszero(Rblock)
+        R[block] = Rblock
+      end
     end
   end
   return R
