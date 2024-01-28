@@ -1,7 +1,5 @@
-function SetParameters.set_eltype(arraytype::Type{<:TensorStorage}, eltype::Type)
-  return set_datatype(arraytype, set_eltype(datatype(arraytype), eltype))
-end
-
+using .SetParameters:
+  SetParameters, Position, get_parameters, specify_parameters, unspecify_parameters
 function SetParameters.set_ndims(arraytype::Type{<:TensorStorage}, ndims::Int)
   # TODO: Change to this once `TensorStorage` types support wrapping
   # non-AbstractVector types.
