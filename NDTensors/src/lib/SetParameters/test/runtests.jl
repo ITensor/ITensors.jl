@@ -144,5 +144,16 @@ using NDTensors.SetParameters
       Array{Float64,3}
     @test @inferred(specify_parameters(Array, DefaultParameters())) == Array{Float64,1}
   end
+
+  @testset "Test unspecifing parameters" begin
+    v = Vector{Float32}
+    m = Matrix{Float64}
+    a = Array{ComplexF32}
+    val = Val{3}
+    @test SetParameters.unspecify_parameters(v) == Array
+    @test SetParameters.unspecify_parameters(m) == Array
+    @test SetParameters.unspecify_parameters(a) == Array
+    @test SetParameters.unspecify_parameters(val) == Val
+  end
 end
 end
