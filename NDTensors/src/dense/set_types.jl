@@ -21,7 +21,13 @@ SetParameters.default_parameter(::Type{<:Dense}, ::Position{1}) = Float64
 SetParameters.default_parameter(::Type{<:Dense}, ::Position{2}) = Vector
 
 SetParameters.set_parameter(::Type{<:Dense}, ::Position{1}, P1) = Dense{P1}
-SetParameters.set_parameter(::Type{<:Dense{<:Any,P2}}, ::Position{1}, P1) where {P2} = Dense{P1,P2}
+function SetParameters.set_parameter(
+  ::Type{<:Dense{<:Any,P2}}, ::Position{1}, P1
+) where {P2}
+  return Dense{P1,P2}
+end
 
 SetParameters.set_parameter(::Type{<:Dense}, ::Position{2}, P2) = Dense{<:Any,P2}
-SetParameters.set_parameter(::Type{<:Dense{P1}}, ::Position{2}, P2) where {P1} = Dense{P1,P2}
+function SetParameters.set_parameter(::Type{<:Dense{P1}}, ::Position{2}, P2) where {P1}
+  return Dense{P1,P2}
+end
