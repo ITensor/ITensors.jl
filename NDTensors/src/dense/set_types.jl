@@ -20,16 +20,8 @@ SetParameters.get_parameter(::Type{<:Dense{<:Any,P2}}, ::Position{2}) where {P2}
 SetParameters.default_parameter(::Type{<:Dense}, ::Position{1}) = Float64
 SetParameters.default_parameter(::Type{<:Dense}, ::Position{2}) = Vector
 
-## ** TODO Note that these functions currently fail if you plug in 
-## an unspecified `Dense` type. The `Position{1}` function fails
-## Because P2 is required to be an `AbstractArray`. The `Position{2}`
-## Function fails because P1 is recursively set to `UnspecifiedParameter`
-## and thus falls into an infinite loops in `specify_parameters`
-function SetParameters.set_parameter(t::Type{<:Dense}, ::Position{1}, P1)
-  return specify_parameters(unspecify_parameters(t){P1}, get_parameters(t))
-end
+SetParameters.set_parameter(::Type{<:Dense}, ::Position{1}, P1) = Dense{P1}
+SetParameters.set_parameter(::Type{<:Dense{<:Any,P2}}, ::Position{1}, P1) where {P2} = Dense{P1,P2}
 
-function SetParameters.set_parameter(t::Type{<:Dense}, ::Position{2}, P2)
-  P1 = get_parameter(t, Position(1))
-  return specify_parameters(unspecify_parameters(t){P1,P2}, get_parameters(t))
-end
+SetParameters.set_parameter(::Type{<:Dense}, ::Position{2}, P2) = Dense{<:Any,P2}
+SetParameters.set_parameter(::Type{<:Dense{P1}}, ::Position{2}, P2) where {P1} = Dense{P1,P2}
