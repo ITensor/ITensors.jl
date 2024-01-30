@@ -89,6 +89,7 @@ function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRang
   return show(io, mimetype, blockedrange(a))
 end
 
+# TODO: Update to use `BlockVector{<:Block}`.
 function blockmerge(a::AbstractGradedUnitRange, grouped_perm::Vector{Vector{Int}})
   merged_nondual_sectors = map(
     group -> nondual_sector(a, Block(first(group))), grouped_perm
@@ -110,7 +111,7 @@ function blockmergesortperm(a::AbstractGradedUnitRange)
   # If it is dual, reverse the sorting so the sectors
   # end up sorted in the same way whether or not the space
   # is dual.
-  return groupsortperm(nondual_sectors(a); rev=isdual(a))
+  return Block.(groupsortperm(nondual_sectors(a); rev=isdual(a)))
 end
 
 function sub_axis(a::AbstractGradedUnitRange, blocks)

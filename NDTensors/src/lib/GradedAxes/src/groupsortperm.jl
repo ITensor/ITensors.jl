@@ -11,5 +11,5 @@ function groupsortperm(v; kwargs...)
   perm = sortperm(v; kwargs...)
   v_sorted = @view v[perm]
   group_lengths = groupsorted(v_sorted)
-  return blocks(BlockVector(perm, collect(group_lengths)))
+  return BlockVector(perm, collect(group_lengths))
 end
