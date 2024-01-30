@@ -5,7 +5,7 @@
 ##   end
 ##   return ov
 ## end
-## 
+##
 ## function (o::Prod{ITensor})(v::Union{MPS,MPO}; kwargs...)
 ##   return apply(o, v; kwargs...)
 ## end
@@ -17,11 +17,11 @@
 ## function SiteOp(o::Op)
 ##   return SiteOp(Ops.which_op(o), Ops.sites(o), Ops.params(o))
 ## end
-## 
+##
 ## function MPOTerm(o::Scaled{C,Prod{Op}}) where {C}
 ##   return MPOTerm(coefficient(o), [SiteOp(oₙ) for oₙ in argument(o)])
 ## end
-## 
+##
 ## function OpSum(o::Sum{Scaled{C,Prod{Op}}}) where {C}
 ##   return OpSum([MPOTerm(oₙ) for oₙ in o])
 ## end
@@ -36,7 +36,7 @@
 ##   os = Sum{Scaled{Float64,Prod{Op}}}() + o
 ##   return OpSum(os)
 ## end
-## 
+##
 ## # Conversions from other formats
 ## function MPO(o::Union{Op,Applied}, s::Vector{<:Index}; kwargs...)
 ##   return MPO(OpSum(o), s; kwargs...)

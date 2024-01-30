@@ -1820,7 +1820,7 @@ Random.seed!(1234)
     A[1, 1] = 1.0
 
     @test length(ITensors.blockoffsets(ITensors.tensor(A))) == 1
-    B = -A # there was a bug where doing -A would 
+    B = -A # there was a bug where doing -A would
     # increase the number of blocks of A's storage
     @test length(ITensors.blockoffsets(ITensors.tensor(A))) == 1
   end

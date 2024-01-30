@@ -134,13 +134,13 @@ function NDTensors.similartype(
 end
 
 ## # This is to help with some generic programming in the Tensor
-## # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
+## # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the
 ## # only known thing for dispatch is a concrete type such
 ## # as IndexSet{4})
-## 
+##
 ## #NDTensors.similartype(::Type{<:IndexSet},
 ## #                      ::Val{N}) where {N} = IndexSet
-## 
+##
 ## #NDTensors.similartype(::Type{<:IndexSet},
 ## #                      ::Type{Val{N}}) where {N} = IndexSet
 
@@ -199,7 +199,7 @@ Return a TagSet of the tags that are common to all of the indices.
 """
 commontags(is::Indices) = commontags(is...)
 
-# 
+#
 # Set operations
 #
 
@@ -257,7 +257,7 @@ fmatch(::Nothing) = ftrue
                       plev = nothing,
                       id = nothing) -> Function
 
-An internal function that returns a function 
+An internal function that returns a function
 that accepts an Index that checks if the
 Index matches the provided conditions.
 """
@@ -300,7 +300,7 @@ getfirst(is::Indices, args...; kwargs...) = getfirst(fmatch(args...; kwargs...),
 
 Base.findall(is::Indices, args...; kwargs...) = findall(fmatch(args...; kwargs...), is)
 
-# In general this isn't defined for Tuple but is 
+# In general this isn't defined for Tuple but is
 # defined for Vector
 """
     indexin(ais::Indices, bis::Indices)

@@ -49,7 +49,7 @@ using .NDTensorsTestUtils: devices_list
         end
 
         ## TODO Currently this fails with scalar indexing on CUDA
-        ## Because A + B calls 
+        ## Because A + B calls
         ## +(A::DenseTensor{Float64, 2, Tuple{Int64, Int64}, Dense{Float64, CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}}}, B::DenseTensor{Float64, 2, Tuple{Int64, Int64}, Dense{Float64, CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}}})
         ## @ Base ./arraymath.jl:8
         #C = A + B

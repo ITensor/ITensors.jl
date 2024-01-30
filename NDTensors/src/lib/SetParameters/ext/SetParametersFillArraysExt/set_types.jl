@@ -70,7 +70,7 @@ SetParameters.default_parameter(::Type{<:AbstractFill}, ::Position{3}) = Tuple{}
 
 SetParameters.nparameters(::Type{<:AbstractFill}) = Val(3)
 
-## These helper functions take a UnallocatedArray type and 
+## These helper functions take a UnallocatedArray type and
 ## remove all the parameters, this way all parameters can be set
 ## at once in the `set_parameter` functions above.
 unspecify_parameters(::Type{<:Fill}) = Fill

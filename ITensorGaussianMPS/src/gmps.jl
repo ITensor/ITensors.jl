@@ -198,7 +198,7 @@ function quadratic_operator(os::OpSum)
     sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
     nsites = max(nsites, maximum(sites[n]))
   end
-  # detect coefficient type 
+  # detect coefficient type
   coef_type = mapreduce(typeof, promote_type, coefs)
   ElT = isreal(coefs) ? real(coef_type) : coef_type
   # fill Hamiltonian matrix with elements
@@ -338,7 +338,7 @@ givens_rotations(v::ConservesNf) = return givens_rotations(v.data)
 
 """
   givens_rotations(_v0::ConservesNfParity)
-  
+
   For a vector
   ```julia
   v=_v0.data
@@ -833,8 +833,8 @@ end
 """
     slater_determinant_to_mps(s::Vector{<:Index}, Φ::AbstractMatrix; kwargs...)
 
-Given indices and matrix of orbitals representing a Slater determinant, 
-compute a matrix product state (MPS) approximately having the same correlation 
+Given indices and matrix of orbitals representing a Slater determinant,
+compute a matrix product state (MPS) approximately having the same correlation
 matrices as this Slater determinant.
 
 Optional keyword arguments:

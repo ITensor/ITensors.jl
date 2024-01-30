@@ -5,7 +5,7 @@ a = Index(2, "a")
 b = Index(2, "b")
 c = Index(2, "c")
 
-# Note that Index tags don't have 
+# Note that Index tags don't have
 # to match variable names
 i = Index(3, "Red,Link")
 

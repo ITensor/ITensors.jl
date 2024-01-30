@@ -406,7 +406,7 @@ op(name::AbstractString; kwargs...) = error("Must input indices when creating an
     op(X::AbstractArray, s::Index...)
     op(M::Matrix, s::Index...)
 
-Given a matrix M and a set of indices s,t,... 
+Given a matrix M and a set of indices s,t,...
 return an operator ITensor with matrix elements given
 by M and indices s, s', t, t'
 

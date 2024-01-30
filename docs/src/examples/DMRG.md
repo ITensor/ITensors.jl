@@ -1,6 +1,6 @@
 # DMRG Code Examples
 
-## Perform a basic DMRG calculation 
+## Perform a basic DMRG calculation
 
 Because tensor indices in ITensor have unique identities, before we can make a Hamiltonian
 or a wavefunction we need to construct a "site set" which will hold the site indices defining
@@ -15,8 +15,8 @@ Here we have chosen to create a Hilbert space of N spin 1 sites. The string "S=1
 denotes a special Index tag which hooks into a system that knows "S=1" indices have
 a dimension of 3 and how to create common physics operators like "Sz" for them.
 
-Next we'll make our Hamiltonian matrix product operator (MPO). A very 
-convenient way to do this is to use the OpSum helper type which lets 
+Next we'll make our Hamiltonian matrix product operator (MPO). A very
+convenient way to do this is to use the OpSum helper type which lets
 us input a Hamiltonian (or any sum of local operators) in similar notation
 to pencil-and-paper notation:
 
@@ -51,7 +51,7 @@ psi0 = randomMPS(sites,2)
 
 Here we have made a random MPS of bond dimension 2. We could have used a random product
 state instead, but choosing a slightly larger bond dimension can help DMRG avoid getting
-stuck in local minima. We could also set psi to some specific initial state using the 
+stuck in local minima. We could also set psi to some specific initial state using the
 `MPS` constructor, which is actually required if we were conserving QNs.
 
 Finally, we are ready to call DMRG:
@@ -60,7 +60,7 @@ Finally, we are ready to call DMRG:
 energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 ```
 
-When the algorithm is done, it returns the ground state energy as the variable `energy` and an MPS 
+When the algorithm is done, it returns the ground state energy as the variable `energy` and an MPS
 approximation to the ground state as the variable `psi`.
 
 Below you can find a complete working code that includes all of these steps:
@@ -106,7 +106,7 @@ section of the documentation.
 ## DMRG Calculation with Mixed Local Hilbert Space Types
 
 The following fully-working example shows how to set up a calculation
-mixing S=1/2 and S=1 spins on every other site of a 1D system. The 
+mixing S=1/2 and S=1 spins on every other site of a 1D system. The
 Hamiltonian involves Heisenberg spin interactions with adjustable
 couplings between sites of the same spin or different spin.
 
@@ -125,7 +125,7 @@ let
 
   # Make an array of N Index objects with alternating
   # "S=1/2" and "S=1" tags on odd versus even sites
-  # (The first argument n->isodd(n) ... is an 
+  # (The first argument n->isodd(n) ... is an
   # on-the-fly function mapping integers to strings)
   sites = siteinds(n->isodd(n) ? "S=1/2" : "S=1",N)
 
@@ -170,11 +170,11 @@ end
 One version of the ITensor `dmrg` function accepts an array of MPOs
 `[H1,H2,H3]` (or any number of MPOs you want). This version of DMRG
 will find the ground state of `H1+H2+H3`. Internally it does not
-actually sum these MPOs, but loops over them during each step of 
+actually sum these MPOs, but loops over them during each step of
 the "eigensolver" at the core of the DMRG algorithm, so it is usually
 more efficient than if the MPOs had been summed together into a single MPO.
 
-To use this version of DMRG, say you have MPOs `H1`, `H2`, and `H3`. 
+To use this version of DMRG, say you have MPOs `H1`, `H2`, and `H3`.
 Then call DMRG like this:
 ```julia
 energy,psi = dmrg([H1,H2,H3],psi0; nsweeps, maxdim, cutoff)
@@ -185,7 +185,7 @@ energy,psi = dmrg([H1,H2,H3],psi0; nsweeps, maxdim, cutoff)
 You can use the OpSum system to make 2D Hamiltonians
 much in the same way you make 1D Hamiltonians: by looping over
 all of the bonds and adding the interactions on these bonds to
-the OpSum. 
+the OpSum.
 
 To help with the logic of 2D lattices, ITensor pre-defines
 some helper functions which
@@ -194,7 +194,7 @@ return an array of bonds. Each bond object has an
 the two sites the bond connects.
 (You can view the source for these functions at [this link](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/lattices.jl).)
 
-The two provided functions currently are `square_lattice` and 
+The two provided functions currently are `square_lattice` and
 `triangular_lattice`. It is not hard to write your own similar lattice
 functions as all they have to do is define an array of `ITensors.LatticeBond`
 structs or even a custom struct type you wish to define. We welcome any
@@ -249,19 +249,19 @@ let
 end
 ```
 
-## Compute excited states with DMRG 
+## Compute excited states with DMRG
 
 ITensor DMRG accepts additional MPS wavefunctions as a optional, extra argument.
-These additional 'penalty states' are provided as an array of MPS just 
+These additional 'penalty states' are provided as an array of MPS just
 after the Hamiltonian, like this:
 
 ```julia
 energy,psi3 = dmrg(H,[psi0,psi1,psi2],psi3_init; nsweeps, maxdim, cutoff)
 ```
 
-Here the penalty states are `[psi0,psi1,psi2]`. 
+Here the penalty states are `[psi0,psi1,psi2]`.
 When these are provided, the DMRG code minimizes the
-energy of the current MPS while also reducing its overlap 
+energy of the current MPS while also reducing its overlap
 (inner product) with the previously provided MPS. If these overlaps become sufficiently small,
 then the computed MPS is an excited state. So by finding the ground
 state, then providing it to DMRG as a "penalty state" or previous state
@@ -269,7 +269,7 @@ one can compute the first excited state. Then providing both of these, one can
 get the second excited state, etc.
 
 A  keyword argument called `weight` can also be provided to
-the `dmrg` function when penalizing overlaps to previous states. The 
+the `dmrg` function when penalizing overlaps to previous states. The
 `weight` parameter is multiplied by the overlap with the previous states,
 so sets the size of the penalty. It should be chosen at least as large
 as the (estimated) gap between the ground and first excited states.
@@ -281,7 +281,7 @@ to find excited states can be to find ground states of quantum number (or symmet
 sectors other than the one containing the absolute ground state. In that
 context, the penalty method used below is a way to find higher excited states
 within the same quantum number sector.
-  
+
 **Full Example code:**
 
 ```julia
@@ -293,7 +293,7 @@ let
   sites = siteinds("S=1/2",N)
 
   h = 4.0
-  
+
   weight = 20*h # use a large weight
                 # since gap is expected to be large
 
@@ -392,7 +392,7 @@ function ITensors.measure!(o::EntanglementObserver; bond, psi, half_sweep, kwarg
 end
 ```
 
-The `measure!` function grabs certain helpful keywords passed to it by DMRG, such as what bond DMRG 
+The `measure!` function grabs certain helpful keywords passed to it by DMRG, such as what bond DMRG
 has just finished optimizing.
 
 Here is a complete sample code including constructing the observer and passing it to DMRG:
@@ -466,7 +466,7 @@ object that saves the maximum value encountered so far and keep overwriting this
 
 To monitor how much memory (RAM) a DMRG calculation is using while it is running,
 you can use the [Observer](@ref observer) system to make a custom observer object that prints out
-this information. Also the `Base.summarysize` function, which returns the size 
+this information. Also the `Base.summarysize` function, which returns the size
 in bytes of any Julia object is very helpful here.
 
 First we define our custom observer type, `SizeObserver`, and overload the `measure!` function
@@ -485,7 +485,7 @@ function ITensors.measure!(o::SizeObserver; bond, half_sweep, psi, projected_ope
 end
 ```
 
-The `measure!` function grabs certain helpful keywords passed to it by DMRG, checking 
+The `measure!` function grabs certain helpful keywords passed to it by DMRG, checking
 `if bond==1 && half_sweep==2` so that it only runs when at the end of a full sweep.
 
 When it runs, it calls `Base.summarysize` on the wavefunction `psi` object and the `projected_operator` object. The `projected_operator`, which is the matrix (Hamiltonian) wrapped into the current MPS basis, is usually the largest-sized object in a DMRG calculation. The code also uses `Base.format_bytes` to turn an integer representing bytes into a human-readable string.

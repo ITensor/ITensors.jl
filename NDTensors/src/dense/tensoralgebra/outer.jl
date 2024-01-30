@@ -21,7 +21,7 @@ function outer!(
   v1 = data(T1)
   v2 = data(T2)
   RM = reshape(R, length(v1), length(v2))
-  ## There is no _gemm! defined for CUDA or Metal so it calls 
+  ## There is no _gemm! defined for CUDA or Metal so it calls
   ## generic matmul. Replace with mul!! to call correct mul! (ger)
   mul!!(array(RM), v1, transpose(v2), one(ElR), zero(ElR))
   return R

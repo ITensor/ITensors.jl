@@ -40,14 +40,14 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
       @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
 
-      ## TODO Currently this permutedims requires scalar indexing on GPU. 
+      ## TODO Currently this permutedims requires scalar indexing on GPU.
       Da = permutedims(D, (2, 1))
       @test Da == D
     end
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
     S = dev(tensor(Diag(randn(elt, 2)), (2, 2)))
-    ## This was creating a `Dense{ReshapedArray{Adjoint{Matrix}}}` which, in mul!, was 
+    ## This was creating a `Dense{ReshapedArray{Adjoint{Matrix}}}` which, in mul!, was
     ## becoming a Transpose{ReshapedArray{Adjoint{Matrix}}} which was causing issues on
     ## dispatching GPU mul!
     V = dev(tensor(Dense(randn(elt, 12, 2)'), (3, 4, 2)))

@@ -5,7 +5,7 @@ algorithm, to allow measurements to be performed throughout
 the DMRG calculation and to set conditions for early stopping
 of DMRG.
 
-The only requirement of an observer is that it is a subtype 
+The only requirement of an observer is that it is a subtype
 of `AbstractObserver`. But to do something interesting, it
 should also overload at least one the methods `measure!`
 or `checkdone!`.
@@ -17,7 +17,7 @@ local operators to be measured at each step of DMRG, with
 the results saved for later analysis. It also accepts an
 optional energy precision, and stops a DMRG calculation early
 if the energy no longer changes to this precision. For more
-details about the [`DMRGObserver`](@ref) type, see 
+details about the [`DMRGObserver`](@ref) type, see
 the [DMRGObserver](@ref) documentation page.
 
 ## Defining a Custom Observer
@@ -39,7 +39,7 @@ end
 
 ```
 
-In this minimal example, our `DemoObserver` 
+In this minimal example, our `DemoObserver`
 contains a field `energy_tol` which we can use to set
 an early-stopping condition for DMRG, and an field
 `last_energy` which our observer will use internally
@@ -47,12 +47,12 @@ to keep track of changes to the energy after each sweep.
 
 Now to give our `DemoObserver` type a useful behavior
 we need to define overloads of the methods `measure!`
-and `checkdone!`. 
+and `checkdone!`.
 
 ### Overloading the `checkdone!` method
 
 Let's start with the `checkdone!` method. After
-each sweep of DMRG, the `checkdone!` method is 
+each sweep of DMRG, the `checkdone!` method is
 passed the observer object, as well as a set of keyword
 arguments which currently include:
   - energy: the current energy
@@ -61,7 +61,7 @@ arguments which currently include:
   - outputlevel: an integer stating the desired level of output
 
 If the `checkdone!` function returns `true`, then the DMRG
-routine stops (recall that `checkdone!` is called only at the 
+routine stops (recall that `checkdone!` is called only at the
 end of a sweep).
 
 In our example, we will just compare the `energy` keyword
@@ -89,12 +89,12 @@ or preceded with `ITensors.`)
 ### Overloading the `measure!` method
 
 The other method that an observer can overload is `measure!`.
-This method is called at every step of DMRG, so at every 
+This method is called at every step of DMRG, so at every
 site and for every sweep. The `measure!` method is passed
 the current observer object and a set of keyword arguments
 which include:
    - energy: the energy after the current step of DMRG
-   - psi: the current wavefunction MPS 
+   - psi: the current wavefunction MPS
    - bond: the bond `b` that was just optimized, corresponding to sites `(b,b+1)` in the two-site DMRG algorithm
    - sweep: the current sweep number
    - sweep\_is\_done: true if at the end of the current sweep, otherwise false
@@ -104,7 +104,7 @@ which include:
    - projected_operator: projection of the linear operator into the current MPS basis
 
 For our minimal `DemoObserver` example here, we will just make a `measure!` function
-that prints out some of the information above, but in a more realistic setting one 
+that prints out some of the information above, but in a more realistic setting one
 could use the MPS `psi` to perform essentially arbitrary measurements.
 
 ```julia
@@ -122,7 +122,7 @@ end
 
 ## Calling DMRG with the Custom Observer
 
-After defining an observer type and overloading at least one of the 
+After defining an observer type and overloading at least one of the
 methods `checkdone!` or `measure!` for it, one can construct an
 object of this type and pass it to the ITensor [`dmrg`](@ref) function
 using the `observer` keyword argument.

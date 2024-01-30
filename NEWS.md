@@ -243,7 +243,7 @@ Enhancements:
   - `convert_leaf_eltype(T, [[A, B], C])` - convert the element types of ITensors `A`, `B`, `C` in a nested data structure (useful for layered gate structures used in PastaQ).
   - `contract(A::MPS)` - contract the ITensors of an MPS/MPO into an ITensor (previously we used `prod` for that but I think using ` contract` is clearer).
   - `array(A::ITensor, i::Index, j::Index, ...)` - convert the ITensor to an Array, first permuting into the Index ordering `i, j, ...`. Previously I used `array(permute(A, i, j, ...))` for this but this is more convenient.
-  - `A(x)` as a simpler syntax for `apply(A::ITensor, x::ITensor)`, treating `A` as an operator from unprimed to primed indices. I've already defined this syntax for `MPO` and `MPS` and I think it is pretty nice. I was holding off on doing this for a while to see if there might be a better meaning for `A(B)` but 
+  - `A(x)` as a simpler syntax for `apply(A::ITensor, x::ITensor)`, treating `A` as an operator from unprimed to primed indices. I've already defined this syntax for `MPO` and `MPS` and I think it is pretty nice. I was holding off on doing this for a while to see if there might be a better meaning for `A(B)` but
   - Define `complex`, `real`, `imag`, and `conj` for MPS/MPO by applying them to the ITensors of the MPS/MPO. Maybe there is a better meaning for these, as in the MPS that is the real part of the MPS defined as a state?
 
 ITensors v0.3.3 Release Notes
@@ -401,7 +401,7 @@ ITensors v0.2.7 Release Notes
 
 - Fix bug in threaded block sparse contraction, add CI tests for threading (#746)
 - Limit `maxdim` in default ("densitymatrix") contract `MPO * MPS` code (#744)
-- Add highlighting to ITensor paper bibtex in README (#738) 
+- Add highlighting to ITensor paper bibtex in README (#738)
 - Generalize `Array` -> `ITensor` constructor to allow `AbstractArray` (#737)
 - Fix dispatch issue when indices input into ITensor constructor had abstract element types like `Vector{Index}` (#737)
 - Pass kwargs in MPO contract (#733)
@@ -412,7 +412,7 @@ ITensors v0.2.7 Release Notes
 ITensors v0.2.6 Release Notes
 ==============================
 
-- Add Qudit site type with QNs as well as Boson alias (#727) 
+- Add Qudit site type with QNs as well as Boson alias (#727)
 - Tighten accuracy cutoff for OpSum/AutoMPO (#726)
 - Add support for complex data written by C++ ITensor for block sparse tensors (#724)
 
@@ -421,7 +421,7 @@ ITensors v0.2.5 Release Notes
 
 - Fixed bug involving missing default case for state function (#719)
 - Add support for reading complex ITensors written from C++ (#720)
-- Fix HDF5 read compatilibity between ITensors v0.1 and v0.2 (#715) (@tschneider) 
+- Fix HDF5 read compatilibity between ITensors v0.1 and v0.2 (#715) (@tschneider)
 - Improve inference in NDTensors contraction and start writing a new precompile file (off by default) (#655)
 
 ITensors v0.2.4 Release Notes
@@ -434,7 +434,7 @@ ITensors v0.2.4 Release Notes
 - Prepend site type functions with ITensors to make it clearer to users how they should write their own overloads (#704)
 - Fix issue with Index arrow for QN case of `correlation_matrix` (#702)
 - Add `sim(::Pair{<:Index})` (#701)
-- Add `norm(::EmptyStorage)` (#699) 
+- Add `norm(::EmptyStorage)` (#699)
 
 ITensors v0.2.3 Release Notes
 ==============================
@@ -531,7 +531,7 @@ ITensors v0.1.39 Release Notes
 - Add Pauli X,Y,Z to S=1/2 site type (PR #576) (@emstoudenmire).
 - Add truncation error output to DMRG (PR #577) (@emstoudenmire).
 - Bump StaticArrays version to v1.0 (PR #578) (@mtfishman).
-- Fix orthogonalize when there are missing MPS link indices (PR #579) (@mtfishman). 
+- Fix orthogonalize when there are missing MPS link indices (PR #579) (@mtfishman).
 - Simplify MPO * MPO contraction and make more robust for MPOs with multiple site indices per tensor (PR #585) (@mtfishman).
 
 ITensors v0.1.38 Release Notes

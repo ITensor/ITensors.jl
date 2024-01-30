@@ -909,7 +909,7 @@ end
     #
     # Repeat similar test but
     # with Electron sites
-    # 
+    #
 
     s = siteinds("Electron", N; conserve_qns=true)
 
