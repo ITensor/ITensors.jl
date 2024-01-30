@@ -17,6 +17,8 @@ SetParameters.parenttype_position(::Type{<:Dense}) = Position(2)
 SetParameters.nparameters(::Type{<:Dense}) = Val(2)
 SetParameters.get_parameter(::Type{<:Dense{P1}}, ::Position{1}) where {P1} = P1
 SetParameters.get_parameter(::Type{<:Dense{<:Any,P2}}, ::Position{2}) where {P2} = P2
+SetParameters.default_parameter(::Type{<:Dense}, ::Position{1}) = Float64
+SetParameters.default_parameter(::Type{<:Dense}, ::Position{2}) = Vector
 
 function SetParameters.set_parameter(t::Type{<:Dense}, ::Position{1}, P1)
   return specify_parameters(unspecify_parameters(t){P1}, get_parameters(t))
