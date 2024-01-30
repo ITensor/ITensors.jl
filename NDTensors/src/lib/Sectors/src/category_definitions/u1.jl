@@ -8,6 +8,8 @@ struct U1 <: AbstractCategory
   n::Half{Int}
 end
 
+dual(u::U1) = U1(-u.n)
+
 label(u::U1) = u.n
 
 dimension(::U1) = 1

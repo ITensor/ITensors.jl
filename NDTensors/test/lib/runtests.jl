@@ -9,6 +9,7 @@ using Test: @testset
   "DiagonalArrays",
   "GradedAxes",
   "NamedDimsArrays",
+  "Sectors",
   "SetParameters",
   "SmallVectors",
   "SortedSets",

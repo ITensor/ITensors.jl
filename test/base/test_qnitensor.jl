@@ -103,6 +103,27 @@ Random.seed!(1234)
     @test ITensor(zeros(3, 3), i', dag(i)) isa ITensor
   end
 
+  @testset "Regression test for in-place operations with mismatched block structure (eltype=$elt)" for elt in
+                                                                                                       (
+    Float32, Float64, Complex{Float32}, Complex{Float64}
+  )
+    # Regression test for https://github.com/ITensor/ITensors.jl/pull/1318
+    i = Index([QN(0) => 1, QN(1) => 1])
+    src = ITensor(i', dag(i))
+    x12 = randn(elt)
+    src[1, 2] = x12
+    dest = ITensor(i', dag(i))
+    x21 = randn(elt)
+    dest[2, 1] = x21
+    α = elt(2)
+    dest .= α .* src
+    @test nnz(src) == 1
+    @test src[1, 2] == x12
+    @test nnz(dest) == 2
+    @test dest[1, 2] == α * x12
+    @test dest[2, 1] == zero(elt)
+  end
+
   @testset "similartype regression test" begin
     # Regression test for issue seen in:
     # https://github.com/ITensor/ITensorInfiniteMPS.jl/pull/77
