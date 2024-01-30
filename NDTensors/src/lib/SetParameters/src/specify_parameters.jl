@@ -28,12 +28,6 @@ function specify_parameters(type::Type, parameter...)
   return set_parameters(specify_parameters, type, Position(1), parameter...)
 end
 
-function specify_parameters(
-  type::Type, parameters::Tuple, starting_position::Position=Position(1)
-)
-  return set_parameters(specify_parameters, type, starting_position, parameters)
-end
-
 function specify_parameters(type::Type)
   return specify_parameters(type, DefaultParameters())
 end
