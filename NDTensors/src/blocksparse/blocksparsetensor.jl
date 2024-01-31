@@ -242,7 +242,7 @@ end
 
 @propagate_inbounds function getindex(T::BlockSparseTensor{ElT,0}) where {ElT}
   nnzblocks(T) == 0 && return zero(ElT)
-  return storage(T)[]
+  return expose(storage(T))[]
 end
 
 # These may not be valid if the Tensor has no blocks

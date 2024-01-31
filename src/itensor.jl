@@ -695,11 +695,11 @@ zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 # Helper functions for different view behaviors
 # TODO: Move to NDTensors.jl
 function (arraytype::Type{<:AbstractArray})(::NeverAlias, A::AbstractArray)
-  return set_unspecified_parameters(arraytype, get_parameters(A))(A)
+  return specify_parameters(arraytype, get_parameters(A))(A)
 end
 
 function (arraytype::Type{<:AbstractArray})(::AllowAlias, A::AbstractArray)
-  return convert(set_unspecified_parameters(arraytype, get_parameters(A)), A)
+  return convert(specify_parameters(arraytype, get_parameters(A)), A)
 end
 
 """

@@ -63,3 +63,5 @@ end
 # TODO: Define `default_parameter`.
 
 nparameters(::Type{<:SubArray}) = Val(5)
+
+unspecify_parameters(::Type{<:SubArray}) = SubArray
