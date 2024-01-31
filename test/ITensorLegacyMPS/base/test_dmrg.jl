@@ -112,7 +112,11 @@ using ITensors: nsite, set_nsite!
     @test eltype(PH) == Float64
     ## TODO sometimes randomMPS gives a linkdim value of 3 
     ## which causes an error in `size = 3^2 * 4^2`
-    size = linkdim(psi, n - 1) * linkdim(psi, n + 1) * dim(siteind(psi, n)) * dim(siteind(psi, n + 1))
+    size =
+      linkdim(psi, n - 1) *
+      linkdim(psi, n + 1) *
+      dim(siteind(psi, n)) *
+      dim(siteind(psi, n + 1))
     @test size(PH) == (size, size)
     @test PH.lpos == n - 1
     @test PH.rpos == n + 2
