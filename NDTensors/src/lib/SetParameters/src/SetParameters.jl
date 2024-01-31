@@ -12,7 +12,7 @@ include("Base/val.jl")
 include("Base/array.jl")
 include("Base/subarray.jl")
 
-## TODO when this is a full package utilize this function to 
+## TODO when this is a full package utilize this function to
 # # enable extensions
 # using PackageExtensionCompat
 # function __init__()

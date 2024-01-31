@@ -39,7 +39,7 @@ parenttype(::Type{<:StridedView{<:Any,<:Any,P}}) where {P} = P
 # `SimpleTraits.jl` traits dispatch.
 parenttype(array::AbstractArray) = parenttype(typeof(array))
 
-## These functions will be used in place of unwrap_type but will be 
+## These functions will be used in place of unwrap_type but will be
 ## call indirectly through the expose function.
 @traitfn function unwrap_type(
   arraytype::Type{ArrayT}

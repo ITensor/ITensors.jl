@@ -1,6 +1,6 @@
 
 """
-inspectQNITensor is a developer-level debugging tool 
+inspectQNITensor is a developer-level debugging tool
 to look at internals or properties of QNITensors
 """
 function inspectQNITensor(T::ITensor, is::QNIndexSet)

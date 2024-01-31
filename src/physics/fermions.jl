@@ -161,7 +161,7 @@ end
   nlabelsT2 = TupleTools.sort(labelsT2)
 
   # Make orig_labelsR from the order of
-  # indices that would result by just 
+  # indices that would result by just
   # taking the uncontracted indices of
   # T1 and T2 in their input order:
   NR = length(labelsR)
@@ -304,7 +304,7 @@ function NDTensors.before_combiner_signs(
     #
     # Note: other permutation of labelsT which
     # relates to two treatments of isconj==true/false
-    # in combining case above is handled as a 
+    # in combining case above is handled as a
     # post-processing step in NDTensors.after_combiner_signs
     # implemented below
     #

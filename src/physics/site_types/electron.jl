@@ -1,5 +1,5 @@
 """
-    space(::SiteType"Electron"; 
+    space(::SiteType"Electron";
           conserve_qns = false,
           conserve_sz = conserve_qns,
           conserve_nf = conserve_qns,

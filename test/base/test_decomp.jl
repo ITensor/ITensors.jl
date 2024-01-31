@@ -19,7 +19,7 @@ function is_upper(At::NDTensors.Tensor)::Bool
   #
   #  Debug code:  Make some noise if At is not a vector and we still found no zeros.
   #
-  # if nzeros==0 && nr>1 && nc>1 
+  # if nzeros==0 && nr>1 && nc>1
   #   @show nr nc dc At
   # end
   return true
@@ -95,7 +95,7 @@ end
       (1e-13, (0.01 + 1e-13) / 2)
     @test length(a) == 2
 
-    # Negative definite spectrum treated by taking 
+    # Negative definite spectrum treated by taking
     # square (if singular values) or absolute values
     a = [-0.12, -0.1]
     @test NDTensors.truncate!(a) == (0.0, 0.0)

@@ -31,26 +31,26 @@ end
 
 ## ## TODO: Determine if the methods below are needed.
 ## similar(D::DiagBlockSparse, n::Int) = setdata(D, similar(data(D), n))
-## 
+##
 ## function similar(D::DiagBlockSparse, ::Type{ElR}, n::Int) where {ElR}
 ##   return setdata(D, similar(data(D), ElR, n))
 ## end
-## 
+##
 ## # TODO: write in terms of ::Int, not inds
 ## similar(D::NonuniformDiagBlockSparse) = setdata(D, similar(data(D)))
-## 
+##
 ## similar(D::NonuniformDiagBlockSparse, ::Type{S}) where {S} = setdata(D, similar(data(D), S))
 ## #similar(D::NonuniformDiagBlockSparse,inds) = DiagBlockSparse(similar(data(D),minimum(dims(inds))), diagblockoffsets(D))
 ## #function similar(D::Type{<:NonuniformDiagBlockSparse{ElT,VecT}},inds) where {ElT,VecT}
 ## #  return DiagBlockSparse(similar(VecT,diaglength(inds)), diagblockoffsets(D))
 ## #end
-## 
+##
 ## similar(D::UniformDiagBlockSparse) = setdata(D, zero(eltype(D)))
 ## similar(D::UniformDiagBlockSparse, inds) = similar(D)
 ## function similar(::Type{<:UniformDiagBlockSparse{ElT}}, inds) where {ElT}
 ##   return DiagBlockSparse(zero(ElT), diagblockoffsets(D))
 ## end
-## 
+##
 ## # Needed to get slice of DiagBlockSparseTensor like T[1:3,1:3]
 ## function similar(
 ##   T::DiagBlockSparseTensor{<:Number,N}, ::Type{ElR}, inds::Dims{N}

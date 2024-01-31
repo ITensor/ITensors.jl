@@ -2,19 +2,19 @@ Checklist for Tagging a New Release
 ----------------------------------------------------------
 - Update the version = "x.y.z" line near the top of Project.toml
   to be the new version number and commit this change
-- On the Github website for ITensors.jl, click on Code tab, 
-  then the link to the individual commits (showing total 
+- On the Github website for ITensors.jl, click on Code tab,
+  then the link to the individual commits (showing total
   number of commits) then click on a commit occurring on
   or after the change to Project.toml
 - In the comments under this commit, add the comment:
   @JuliaRegistrator register
 - Wait an hour or so for the JuliaRegistrator bot to
-  update the official Julia registry 
+  update the official Julia registry
 - The TagBot bot should also create a new tag and version on Github
   automatically (if you see a notice about "Trigger TagBot Issue"
-  it does not mean that TagBot isn't working or has an issue, it 
+  it does not mean that TagBot isn't working or has an issue, it
   is just literally a Github issue used to trigger TagBot to run)
-- TagBot helpfully explains the differences from the previous 
+- TagBot helpfully explains the differences from the previous
   versions in the Github version entry. This can be useful for
   updating the NEWS.md file.
 
@@ -22,7 +22,7 @@ Checklist for Updating the Version of Documenter.jl Used
 ----------------------------------------------------------
 - Edit the docs/Project.toml file, changing only the version
   number for Documenter (under the [compat] section).
-- Create a new PR to confirm that the docs build correctly 
+- Create a new PR to confirm that the docs build correctly
   with the new version.
 
 Checklist for Updating the Benchmark CI for New Dependencies

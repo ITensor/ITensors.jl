@@ -17,28 +17,28 @@ We list some of these with the most fundamental and important ones first:
   the density profile has similar features).
 
 * Make sure to check a **wide range of properties** - not just the energy. See if these
-  look plausible by plotting and visually inspecting them. For example: if your system has 
-  left-right reflection symmetry, does the density or magnetization also have this symmetry? 
-  If the ground  state of your system is expected to have a total ``S^z`` of zero, does your 
+  look plausible by plotting and visually inspecting them. For example: if your system has
+  left-right reflection symmetry, does the density or magnetization also have this symmetry?
+  If the ground  state of your system is expected to have a total ``S^z`` of zero, does your
   ground state have this property?
 
-* Make sure to run your DMRG calculation for **different numbers of sweeps** to see if 
+* Make sure to run your DMRG calculation for **different numbers of sweeps** to see if
   the results change. For example, if you run DMRG for 5 sweeps but are unsure of convergence,
   try running it for 10 sweeps: is the energy the same or has it significantly decreased?
   If 10 sweeps made a difference, try 20 sweeps.
 
 * Try setting the `eigsolve_krylovdim` keyword argument to a higher value (the default is 3).
   This can be particularily helpful when the Hamiltonian is close to a critical point.
-  This may make slowly-converging calculations converge in fewer sweeps, but setting it 
+  This may make slowly-converging calculations converge in fewer sweeps, but setting it
   too high can make each sweep run slowly.
 
-* Inspect the the **DMRG output**. 
+* Inspect the the **DMRG output**.
   The ITensor DMRG code reports the maximum bond or link dimension and maximum truncation error
   after each sweep. (The maximums here mean over each DMRG substep making up one sweep.)
-  Is the maximum dimension or "maxlinkdim" reported by the DMRG output quickly reaching 
-  and saturating the maxdim value you set for each sweep? Is the maximum truncation error 
-  "maxerr" consistently reaching large values, larger than 1E-5? 
-  Then it you may need to raise the maxdim parameter for your later sweeps, 
+  Is the maximum dimension or "maxlinkdim" reported by the DMRG output quickly reaching
+  and saturating the maxdim value you set for each sweep? Is the maximum truncation error
+  "maxerr" consistently reaching large values, larger than 1E-5?
+  Then it you may need to raise the maxdim parameter for your later sweeps,
   so that DMRG is allowed to use a larger bond dimension and thus reach a better accuracy.
 
 * Compute the **energy variance** of an MPS to check whether it is an eigenstate. To do this
@@ -51,10 +51,10 @@ We list some of these with the most fundamental and important ones first:
   var = H2-E^2
   @show var
   ```
-  
+
   Here `var` is the quantity ``\langle H^2 \rangle - \langle H \rangle^2``.
   The closer `var` is to zero, the more precisely `psi` is an eigenstate of `H`. Note
-  that this check does not ensure that `psi` is the ground state, but only one of the 
+  that this check does not ensure that `psi` is the ground state, but only one of the
   eigenstates.
 
 
@@ -73,7 +73,7 @@ When DMRG is failing to converge, here are some of the steps you can take to imp
 * _The most important and useful technique_ is to turn on the **noise term** feature of DMRG.
   To do this, just set the `noise` parameter of each sweep to a small, non-zero value, making
   this value very small (1E-11, say) or zero by the last sweep. (Experiment with different
-  values on small systems to see which noise magnitudes help.) Here is an example of 
+  values on small systems to see which noise magnitudes help.) Here is an example of
   defining DMRG accuracy or sweep parameters with a non-zero noise set for the first three sweeps:
 
   ```julia
@@ -101,8 +101,8 @@ When DMRG is failing to converge, here are some of the steps you can take to imp
   output of this first calculation and use it as input for DMRG with the full Hamiltonian.
 
 * In stubborn cases, try other methods for finding the ground state which are slower, but
-  have a better chance of succeeding. A key example is imaginary time evolution, which 
-  always reaches the ground state if (a) performed accurately on (b) a state which is 
+  have a better chance of succeeding. A key example is imaginary time evolution, which
+  always reaches the ground state if (a) performed accurately on (b) a state which is
   not orthogonal to the ground state. After doing some amount of imaginary time evolution,
   use the resulting MPS as an initial state for DMRG obtain a higher-accuracy solution.
 
@@ -111,7 +111,7 @@ When DMRG is failing to converge, here are some of the steps you can take to imp
 The short answer to how to do fully periodic boundary condition DMRG in ITensor is that
 you simply input a **periodic Hamiltonian** into our OpSum system and make the MPO
 form of your Hamiltonian in the usual way. For example, for a chain of N sites with nearest-neighbor
-interactions, you include a term that connects site 1 to site N. For a one-dimensional Ising model 
+interactions, you include a term that connects site 1 to site N. For a one-dimensional Ising model
 chain Hamiltonian this would look like:
 
 ```
@@ -126,20 +126,20 @@ hterms += "Sz",1,"Sz",N  # term 'wrapping' around the ring
 H = MPO(hterms,sites)
 ```
 
-For two-dimensional DMRG calculations, where the most common approach is to use 
-periodic boundary conditions in the y-direction only, and not in the x-direction, 
-you do a similar step in making your OpSum input to ITensor DMRG: you include 
+For two-dimensional DMRG calculations, where the most common approach is to use
+periodic boundary conditions in the y-direction only, and not in the x-direction,
+you do a similar step in making your OpSum input to ITensor DMRG: you include
 terms wrapping around the periodic cylinder in the y direction but not in the x direction.
 
-However, fully periodic boundary conditions are only recommended for small systems 
-when absolutely needed, and in general are not recommended. For a longer discussion 
+However, fully periodic boundary conditions are only recommended for small systems
+when absolutely needed, and in general are not recommended. For a longer discussion
 of alternatives to using fully periodic boundaries, see the next section below.
 
-The reason fully periodic boundary conditions (periodic in x in 1D, and periodic in both x 
+The reason fully periodic boundary conditions (periodic in x in 1D, and periodic in both x
 and y in 2D) are not recommended in general is that the DMRG algorithm, as we are defining it
 here, optimizes an **open-boundary MPS**. So if you input a periodic-boundary Hamiltonian, there
-is a kind of "mismatch" that happens where you can still get the correct answer, but it 
-requires much more resources (a larger bond dimension and more sweeps) to get good 
+is a kind of "mismatch" that happens where you can still get the correct answer, but it
+requires much more resources (a larger bond dimension and more sweeps) to get good
 accuracy. There has been some research into "truly" periodic DMRG, [^Pippan] that is DMRG that
 optimizes an MPS with a ring-like topology, but it is not widely used, is still an
 open area of algorithm development, and is not currently available in ITensor.
@@ -153,10 +153,10 @@ But this begs the question, when are periodic boundary conditions (PBC) really n
 some compelling alternatives to PBC:
 
 * Use open boundary conditions (OBC). Though this introduces edge effects, the number of states needed
-  to reach a given accuracy is _significantly_ lower than with PBC (see next section below). 
+  to reach a given accuracy is _significantly_ lower than with PBC (see next section below).
   For gapped systems DMRG scales linearly with system size, meaning often one can study systems with many hundreds or even thousands of sites. Last but not least, open boundaries are often more natural. For studying systems which spontaneously break symmetry, adding "pinning" fields on the edge is often a very nice way to tip the balance toward a certain symmetry broken state while leaving the bulk unmodified.
 
-* Use smooth boundary conditions. The basic idea is to use OBC but 
+* Use smooth boundary conditions. The basic idea is to use OBC but
   send the Hamiltonian parameters smoothly to zero at the boundary so that the system can not "feel"
   the boundary. For certain systems this can significantly reduce edge effects.[^Smooth1][^Smooth2][^Smooth3]
 
@@ -164,8 +164,8 @@ some compelling alternatives to PBC:
 
 [^Smooth2]: [Hubbard model with smooth boundary conditions](http://dx.doi.org/10.1103/PhysRevB.53.14552), M. Vekic and Steven R. White, _Phys. Rev. B_ **53**, [14552](http://dx.doi.org/10.1103/PhysRevB.53.14552) (1996) cond-mat/[9601009](http://arxiv.org/abs/cond-mat/9601009)
 
-[^Smooth3]: [Grand canonical finite-size numerical approaches: A route to measuring bulk properties in an applied field](http://link.aps.org/doi/10.1103/PhysRevB.86.041108), Chisa Hotta and Naokazu Shibata, _Phys. Rev. B_ **86**, [041108](http://link.aps.org/doi/10.1103/PhysRevB.86.041108) (2012) 
- 
+[^Smooth3]: [Grand canonical finite-size numerical approaches: A route to measuring bulk properties in an applied field](http://link.aps.org/doi/10.1103/PhysRevB.86.041108), Chisa Hotta and Naokazu Shibata, _Phys. Rev. B_ **86**, [041108](http://link.aps.org/doi/10.1103/PhysRevB.86.041108) (2012)
+
 
 
 * Use "infinite boundary conditions", that is, use infinite DMRG in the form of an algorithm like iDMRG or VUMPS. This has a cost that can be even less than with OBC yet is completely free of finite-size effects.
@@ -188,7 +188,7 @@ Below I discuss more about the problems with using PBC, as well as some misconce
 
 #### Drawbacks of Periodic Boundary Conditions
 
-Periodic boundary conditions are straightforward to implement in conventional DMRG. The simplest approach is to include a "long bond" directly connecting site 1 to site N in the Hamiltonian. However this 
+Periodic boundary conditions are straightforward to implement in conventional DMRG. The simplest approach is to include a "long bond" directly connecting site 1 to site N in the Hamiltonian. However this
 naive approach has a major drawback: if open-boundary DMRG achieves a given accuracy when keeping ``m`` states (bond dimension of size ``m``), then to reach the same accuracy with PBC one must keep closer to ``m^2`` states! The reason is that now every bond of the MPS not only carries local entanglement as with OBC, but also the entanglement between the first and last sites. (There is an alternative DMRG algorithm[^Pippan] for periodic systems which may have better scaling than the above approach but has not been widely applied and tested, as far as I am aware, especially for
  2D or critical systems .)
 
@@ -199,8 +199,8 @@ For example, many gapped one-dimensional systems only require about ``m=100`` to
 (truncation errors of less than 1E-9 or so). To reach the same accuracy with naive PBC would then
 require using 10,000 states, which can easily fill the RAM of a typical desktop computer for a large enough system, not to mention the extra time needed to work with larger matrices.
 
-But poor scaling is not the only drawback of PBC. Systems that exhibit spontaneous symmetry breaking 
-are simple to work with under OBC, where one has the additional freedom of applying edge pinning terms 
+But poor scaling is not the only drawback of PBC. Systems that exhibit spontaneous symmetry breaking
+are simple to work with under OBC, where one has the additional freedom of applying edge pinning terms
 to drive the bulk into a specific symmetry sector. Using edge pinning reduces the bulk entanglement and makes measuring order parameters straightforward. Similarly one can use infinite DMRG to directly observe symmetry breaking effects.
 
 But under PBC, order parameters remain equal to zero and can only be accessed through correlation functions. Though using correlation functions is often presented as the "standard" or "correct" approach, such reasoning pre-supposes that PBC is the best choice. Recent work in the quantum Monte Carlo community demonstrates that open boundaries with pinning fields can actually be a superior approach.[^Assaad]
@@ -210,8 +210,8 @@ But under PBC, order parameters remain equal to zero and can only be accessed th
 
 #### Cases Where Periodic BC Seems Necessary, But Open/Infinite BC Can be Better
 
-Below are some cases where periodic boundary conditions seem to be necessary at a first glance. 
-But in many of these cases, not only can open or infinite boundaries be just as successful, they 
+Below are some cases where periodic boundary conditions seem to be necessary at a first glance.
+But in many of these cases, not only can open or infinite boundaries be just as successful, they
 can even be the better choice.
 
 * _Measuring asymptotic properties of correlation functions_: much of our understanding of gapless one-dimensional systems comes from field-theoretic approaches which make specific predictions about asymptotic decays of various correlators. To test these predictions numerically, one must  work with large, translationally invariant systems with minimal edge effects. Using fully periodic boundary conditions satisfies these criteria. However, a superior choice is to use infinite DMRG, which combines the much better scaling of open-boundary DMRG with the ability to  measure correlators at _arbitrarily long_ distances by repeating the unit cell of the MPS wavefunction. Although truncating to a finite number of states imposes an effective correlation length on the system, this correlation length can reach many thousands of sites for quite moderate MPS bond dimensions. Karrasch and Moore took advantage of this fact to convincingly check the predictions of Luttinger liquid theory for one-dimensional systems of gapless fermions.[^Karrasch]
@@ -224,11 +224,11 @@ can even be the better choice.
 
 [^Cincio]: [Characterizing Topological Order by Studying the Ground States on an Infinite Cylinder](http://link.aps.org/doi/10.1103/PhysRevLett.110.067208), L. Cincio and G. Vidal, _Phys. Rev. Lett._ **110**, [067208](http://link.aps.org/doi/10.1103/PhysRevLett.110.067208)
 
-* _Obtaining bulk gaps_: 
+* _Obtaining bulk gaps_:
   DMRG has the ability to "target" low-lying excited states or to obtain such
-  states by constraining them to be orthogonal to the ground state. However, with OBC, 
-  localized excitations can get stuck to the edges and not reveal the true bulk gap behavior. 
-  Thus one may conclude that PBC is necessary. But using open or infinite boundaries remains 
+  states by constraining them to be orthogonal to the ground state. However, with OBC,
+  localized excitations can get stuck to the edges and not reveal the true bulk gap behavior.
+  Thus one may conclude that PBC is necessary. But using open or infinite boundaries remains
   the better choice because they allow much higher accuracy.
 
   To deal with the presence of edges in OBC, one can use "restricted sweeping". Here one sweeps across the full system to obtain the ground state. Then, to obtain the first excited state one only sweeps through the full system to obtain the ground state. Then, to obtain the first excited state one only sweeps through the near the edges. This traps the particle in a "soft box" which still lets its wavefunction mix with the basis that describes the ground state outside the restricted sweeping region.

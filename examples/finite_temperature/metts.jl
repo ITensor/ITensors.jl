@@ -83,7 +83,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
       normalize!(psi)
     end
 
-    # Measure properties after >= Nwarm 
+    # Measure properties after >= Nwarm
     # METTS have been made
     if step > Nwarm
       energy = inner(psi', H, psi)

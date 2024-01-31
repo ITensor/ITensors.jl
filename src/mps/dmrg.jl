@@ -247,7 +247,7 @@ function dmrg(
         end
 
         energy = vals[1]
-        ## Right now there is a conversion problem in CUDA.jl where `UnifiedMemory` Arrays are being converted 
+        ## Right now there is a conversion problem in CUDA.jl where `UnifiedMemory` Arrays are being converted
         ## into `DeviceMemory`. This conversion line is here temporarily to fix that problem when it arises
         ## Adapt is only called when using CUDA backend. CPU will work as implemented previously.
         phi::ITensor = if NDTensors.iscu(phi) && NDTensors.iscu(vecs[1])

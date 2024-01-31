@@ -1,7 +1,7 @@
 # # BlockSparseArrays.jl
-# 
+#
 # A Julia `BlockSparseArray` type based on the `BlockArrays.jl` interface.
-# 
+#
 # It wraps an elementwise `SparseArray` type that uses a dictionary-of-keys
 # to store non-zero values, specifically a `Dictionary` from `Dictionaries.jl`.
 # `BlockArrays` reinterprets the `SparseArray` as a blocked data structure.

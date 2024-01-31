@@ -53,7 +53,7 @@ After sweep 3 energy=-138.940075984826 maxlinkdim=91 maxerr=9.99E-11 time=2.263
 After sweep 4 energy=-138.940086063995 maxlinkdim=99 maxerr=1.00E-10 time=2.938
 After sweep 5 energy=-138.940086076330 maxlinkdim=95 maxerr=9.97E-11 time=2.988
 Final energy = -138.940086076330
-``` 
+```
 A window will pop up with a "flame graph", where the width of a bar corresponds to the percentage of time the function call took, and as you go up in the graph you see timings for more and more nested functions. The graph will still look quite complicated for this case, but at larger bond dimensions you should see that certain functions like matrix multiplications and decompositions will start to dominate.
 
 ## TimerOutputs.jl
@@ -67,9 +67,9 @@ timeit_debug_enabled (generic function with 1 method)
 
 julia> ITensors.TimerOutputs.reset_timer!(ITensors.NDTensors.timer)
  ──────────────────────────────────────────────────────────────────
-                           Time                   Allocations      
+                           Time                   Allocations
                    ──────────────────────   ───────────────────────
- Tot / % measured:     59.4μs / 0.00%              992B / 0.00%    
+ Tot / % measured:     59.4μs / 0.00%              992B / 0.00%
 
  Section   ncalls     time   %tot     avg     alloc   %tot      avg
  ──────────────────────────────────────────────────────────────────
@@ -85,9 +85,9 @@ Final energy = -138.940086076330
 
 julia> ITensors.NDTensors.timer
  ────────────────────────────────────────────────────────────────────────────────
-                                         Time                   Allocations      
+                                         Time                   Allocations
                                  ──────────────────────   ───────────────────────
-        Tot / % measured:             14.4s / 45.0%           9.59GiB / 95.1%    
+        Tot / % measured:             14.4s / 45.0%           9.59GiB / 95.1%
 
  Section                 ncalls     time   %tot     avg     alloc   %tot      avg
  ────────────────────────────────────────────────────────────────────────────────

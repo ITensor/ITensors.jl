@@ -1,12 +1,12 @@
 # DMRGObserver
 
 A DMRGObserver is a type of [observer](@ref observer) which
-offers certain useful, general purpose capabilities 
-for DMRG calculations such as measuring custom 
+offers certain useful, general purpose capabilities
+for DMRG calculations such as measuring custom
 local observables at each step and stopping DMRG
 early if certain energy convergence conditions are met.
 
-In addition to the example code below, more detailed 
+In addition to the example code below, more detailed
 example code showing sample usage of DMRGObserver is included
 in the ITensor source, in the file `1d_ising_with_observer.jl`
 under the folder `examples/dmrg`.
@@ -15,7 +15,7 @@ under the folder `examples/dmrg`.
 
 In the following example, we have already made a Hamiltonian MPO `H`
 and initial MPS `psi0` for a system of spins whose sites
-have an associated "Sz" operator defined. We construct a 
+have an associated "Sz" operator defined. We construct a
 `DMRGObserver` which measures "Sz" on each site at each
 step of DMRG, and also stops the calculation early if
 the energy no longer changes to a relative precision of 1E-7.

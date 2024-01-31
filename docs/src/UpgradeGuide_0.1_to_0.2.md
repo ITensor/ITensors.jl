@@ -72,7 +72,7 @@ function mynorm2(A::ITensor)
   return norm(A)^2
 end
 
-function mynorm(A::ITensor) 
+function mynorm(A::ITensor)
   return if order(A) == 1
     mynorm1(A)
   elseif order(A) == 2

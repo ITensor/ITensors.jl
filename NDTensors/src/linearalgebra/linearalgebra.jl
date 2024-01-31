@@ -231,10 +231,10 @@ function random_unitary(rng::AbstractRNG, DataT::Type{<:AbstractArray}, n::Int, 
   end
   F = qr(randn(rng, ElT, n, m))
   Q = DataT(F.Q)
-  # The upper triangle of F.factors 
+  # The upper triangle of F.factors
   # are the elements of R.
   # Multiply cols of Q by the signs
-  # that would make diagonal of R 
+  # that would make diagonal of R
   # non-negative:
   for c in 1:size(Q, 2)
     Q[:, c] .*= sign(F.factors[c, c])
@@ -415,7 +415,7 @@ end
 
 #
 #  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
-#  before letting lapack overwirte it. 
+#  before letting lapack overwirte it.
 #
 function ql(A::AbstractMatrix)
   Base.require_one_based_indexing(A)

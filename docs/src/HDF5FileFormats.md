@@ -1,12 +1,12 @@
 # HDF5 File Formats
 
-This page lists the formats for the HDF5 representations of 
-various types in the `ITensors` module. 
+This page lists the formats for the HDF5 representations of
+various types in the `ITensors` module.
 
-HDF5 is a portable file format which has a directory structure similar 
+HDF5 is a portable file format which has a directory structure similar
 to a file system. In addition to containing "groups" (= directories)
 and "datasets" (= files), groups can have "attributes"
-appended to them, which are similar to 'tags' or 'keywords'. 
+appended to them, which are similar to 'tags' or 'keywords'.
 Unless otherwise specified, integers are 64 bit and are signed
 (H5T\_STD\_I64LE) unless explicitly stated. (For example, the "id"
 field of the `Index` type is stored as an unsigned 64 bit integer
@@ -14,17 +14,17 @@ field of the `Index` type is stored as an unsigned 64 bit integer
 
 Each type in ITensor which is writeable to HDF5 is written
 to its own group, with the name of the group either specified
-by the user or specified to some default value when it is 
+by the user or specified to some default value when it is
 a subgroup of another ITensor type (for example, the `Index`
 type saves its `TagSet` in a subgroup named "tags").
 
 Each group corresponding to an ITensors type always carries
 the following attributes:
-* "type" --- a string such as `Index` or `TagSet` specifying the information 
+* "type" --- a string such as `Index` or `TagSet` specifying the information
   necessary to determine the type of the object saved to the HDF5 group
 * "version" --- an integer specifying the file format version used to
   store the data. This version is in general different from the release
-  version of ITensors.jl. The purpose of the version number is to aid 
+  version of ITensors.jl. The purpose of the version number is to aid
   in maintaining backwards compatibility, while allowing the format
   to be occasionally changed.
 
@@ -55,7 +55,7 @@ Attributes:
 
 Datasets and Subgroups:
 * "names" [group] = array of strings (length 4) of names of quantum numbers
-* "vals" [group] = array of integers (length 4) of quantum number values 
+* "vals" [group] = array of integers (length 4) of quantum number values
 * "mods" [group] = array of integers (length 4) of moduli of quantum numbers
 
 
@@ -82,7 +82,7 @@ HDF5 file format for the `ITensors.Index` type.
 Attributes:
 * "version" = 1
 * "type" = "Index"
-* "space_type" = "Int" if the Index is a regular, dense Index or "QNBlocks" if the Index 
+* "space_type" = "Int" if the Index is a regular, dense Index or "QNBlocks" if the Index
   is a QNIndex (carries QN subspace information)
 
 Datasets and Subgroups:

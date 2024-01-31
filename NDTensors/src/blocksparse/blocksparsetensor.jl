@@ -229,7 +229,7 @@ end
 
 # TODO: Add a checkbounds
 # TODO: write this nicer in terms of blockview?
-#       Could write: 
+#       Could write:
 #       block,index_within_block = blockindex(T,i...)
 #       return blockview(T,block)[index_within_block]
 @propagate_inbounds function getindex(

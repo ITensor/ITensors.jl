@@ -25,7 +25,7 @@ end
 ##   CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites - 1)]
 ##   return [RY_layer; CX_layer]
 ## end
-## 
+##
 ## # The variational circuit we want to optimize
 ## function variational_circuit(nsites, nlayers, θ⃗)
 ##   range = 1:nsites

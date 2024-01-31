@@ -29,7 +29,7 @@ Diag(::Type{ElT}, n::Integer) where {ElT<:Number} = Diag(zeros(ElT, n))
 
 Diag(x::ElT, n::Integer) where {ElT<:Number} = Diag(fill(x, n))
 
-# End Diag constructors 
+# End Diag constructors
 
 datatype(::Type{<:Diag{<:Any,DataT}}) where {DataT} = DataT
 

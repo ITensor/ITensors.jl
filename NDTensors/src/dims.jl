@@ -2,7 +2,7 @@ using .DiagonalArrays: DiagonalArrays
 
 export dense, dims, dim, mindim, diaglength
 
-# dim and dims are used in the Tensor interface, overload 
+# dim and dims are used in the Tensor interface, overload
 # base Dims here
 dims(ds::Dims) = ds
 
@@ -49,7 +49,7 @@ This is unexported, call with NDTensors.stride.
 dim_to_stride(ds, k::Int) = dim_to_strides(ds)[k]
 
 # This is to help with some generic programming in the Tensor
-# code (it helps to construct a Tuple(::NTuple{N,Int}) where the 
+# code (it helps to construct a Tuple(::NTuple{N,Int}) where the
 # only known thing for dispatch is a concrete type such
 # as Dims{4})
 similartype(::Type{<:Dims}, ::Type{Val{N}}) where {N} = Dims{N}
