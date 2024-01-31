@@ -111,7 +111,7 @@ function svd(
   nnzblocksT = length(nzblocksT)
 
   #
-  # Make indices of U and V 
+  # Make indices of U and V
   # that connect to S
   #
   i1 = ind(T, 1)
@@ -131,7 +131,7 @@ function svd(
 
   #
   # Put the blocks into U,S,V
-  # 
+  #
 
   nzblocksU = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksS = Vector{Block{2}}(undef, nnzblocksT)
@@ -339,8 +339,8 @@ Unwrap.ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #
 #  Generic function to implelement blocks sparse qr/ql decomposition.  It calls
-#  the dense qr or ql for each block. The X tensor = R or L. 
-#  This code thanks to Niklas Tausendpfund 
+#  the dense qr or ql for each block. The X tensor = R or L.
+#  This code thanks to Niklas Tausendpfund
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
 function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; positive=nothing)
@@ -366,7 +366,7 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; positive=nothing)
   end
 
   #
-  # Make the new index connecting Q and R  
+  # Make the new index connecting Q and R
   #
   itl = ind(T, 1) #left index of T
   iq = dag(sim(itl)) #start with similar to the left index of T

@@ -54,7 +54,7 @@ Random.seed!(1234)
     args = (ψ,)
     @test_throws ErrorException gradient(f, args...)
 
-    # apply on MPS 
+    # apply on MPS
     s = siteinds("S=1/2", n)
     ϕ = randomMPS(ElType, s)
     ψ = randomMPS(ElType, s)
@@ -111,12 +111,12 @@ Random.seed!(1234)
   #@testset "MPO rules" begin
   #  Random.seed!(1234)
   #  s = siteinds("S=1/2", 2)
-  #  
+  #
   #  #ρ = randomMPO(s)
   #  #ρtensors = ITensors.data(ρ)
   #  #ϕ = randomMPS(ComplexF64, s)
   #  #f = function (x)
-  #  #  ρ̃tensors  = [2 * x * ρtensors[1],  log(x) * ρtensors[2]] 
+  #  #  ρ̃tensors  = [2 * x * ρtensors[1],  log(x) * ρtensors[2]]
   #  #  ρ̃ = MPO(ρ̃tensors)
   #  #  #@show typeof(ρ̃)
   #  #  return real(inner(ϕ', ρ̃, ϕ))
@@ -125,18 +125,18 @@ Random.seed!(1234)
   #  #ϵ = 1e-8
   #  #@show (f(x+ϵ) - f(x)) / ϵ
   #  #@show f'(x)
-  #  ##@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6 
+  #  ##@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6
   #  #
   #
   #  #ϕ = randomMPO(s)
   #  #f = function (x)
-  #  #  ψ̃tensors  = [2 * x * ψtensors[1],  log(x) * ψtensors[2]] 
+  #  #  ψ̃tensors  = [2 * x * ψtensors[1],  log(x) * ψtensors[2]]
   #  #  ψ̃ = MPS(ψ̃tensors)
   #  #  return abs2(inner(ϕ, ψ̃))
   #  #end
   #  #x = 3.0
   #  #ϵ = 1e-8
-  #  #@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6 
+  #  #@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6
   #
   #  #ρ = randomMPO(s)
   #end
@@ -193,7 +193,7 @@ Random.seed!(1234)
     ∇num = (f(θ + ϵ) - f(θ)) / ϵ
     @test ∇f ≈ ∇num atol = 1e-5
 
-    # trace(MPO) 
+    # trace(MPO)
     V1 = randomMPO(s)
     V2 = randomMPO(s)
     f = function (x)

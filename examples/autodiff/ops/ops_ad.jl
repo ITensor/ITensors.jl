@@ -135,20 +135,20 @@ end
 ##   U = ITensor(y, s)
 ##   return norm(U * V)
 ## end
-## 
+##
 ## @show x = 2.0
-## 
+##
 ## @show f13(x)
 ## @show f13'(x)
-## 
+##
 ## ## XXX: Error in vcat!
 ## function f14(x)
 ##   y = exp(-x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2)); alg=Trotter{1}(1))
 ##   U = ITensor(y, s)
 ##   return norm(U * V)
 ## end
-## 
+##
 ## @show x = 2.0
-## 
+##
 ## @show f14(x)
 ## @show f14'(x)

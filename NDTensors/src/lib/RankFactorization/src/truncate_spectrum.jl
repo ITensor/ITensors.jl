@@ -78,7 +78,7 @@ function truncate!(
       (scale == zero(eltype(P))) && (scale = one(eltype(P)))
     end
 
-    #Continue truncating until *sum* of discarded probability 
+    #Continue truncating until *sum* of discarded probability
     #weight reaches cutoff reached (or m==mindim)
     while (truncerr + P[n] <= cutoff * scale) && (n > mindim)
       truncerr += P[n]

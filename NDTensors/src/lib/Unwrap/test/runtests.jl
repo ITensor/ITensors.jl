@@ -131,7 +131,7 @@ using .NDTensorsTestUtils: devices_list
   @test cpu(copy(expose(x))) == cpu(x)
 
   ## Tests for Metal because permutedims with ReshapedArray does not work properly
-  ## transpose(ReshapedArray(MtlArray)) fails with scalar indexing so calling copy to 
+  ## transpose(ReshapedArray(MtlArray)) fails with scalar indexing so calling copy to
   ## evaluate tests in the following tests
   y = dev(rand(elt, 4, 4))
   @test permutedims(expose(y), (2, 1)) == transpose(y)
@@ -161,7 +161,7 @@ using .NDTensorsTestUtils: devices_list
   end
   permutedims!(expose(x), expose(y), (1, 2), *)
   ## I copy x here because it is a ReshapedArray{SubArray} which causes `≈`
-  ## to throw an error 
+  ## to throw an error
   @test z ≈ copy(expose(x))
 
   y = dev(rand(elt, 4, 4))
@@ -211,7 +211,7 @@ using .NDTensorsTestUtils: devices_list
   @test transpose(Cpt) ≈ C
 
   Cp = zero(C)
-  ## This fails with scalar indexing 
+  ## This fails with scalar indexing
   if dev != cpu
     @test_broken mul!(C', A', B, true, false)
   end

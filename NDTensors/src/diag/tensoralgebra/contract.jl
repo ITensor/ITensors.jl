@@ -96,7 +96,7 @@ function contract!(
   β::Number=zero(ElC);
   convert_to_dense::Bool=true,
 ) where {ElA,NA,ElB,NB,ElC,NC}
-  #@timeit_debug timer "diag-dense contract!" begin 
+  #@timeit_debug timer "diag-dense contract!" begin
   if all(i -> i < 0, Blabels)
     # If all of B is contracted
     # TODO: can also check NC+NB==NA

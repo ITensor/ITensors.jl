@@ -230,7 +230,7 @@ import ITensors: Out, In
     #
     # These commute by carrying additional
     # g-indices (Grassman indices)
-    # 
+    #
 
     g = Index(QN("Nf", 1, -1) => 1; tags="g")
 

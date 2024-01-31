@@ -56,7 +56,7 @@ function main()
 
   #Use Zygote to take the gradient of the four tensors on GPU
   #Currently this code fails with CUDA.allowscalar(false)
-  # Because of outer calling the _gemm! function which calls a 
+  # Because of outer calling the _gemm! function which calls a
   # generic implementation
   grad = gradient(f, cA, cB, cC, cD)
   @test cpu(cB * cC * cD) ≈ cpu(grad[1])

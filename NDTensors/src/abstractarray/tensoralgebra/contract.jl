@@ -152,13 +152,13 @@ function _contract!(
   # TODO: this logic may be wrong
   if props.permuteC
     # if we are computing C = α * A B + β * C
-    # we need to make sure C is permuted to the same 
+    # we need to make sure C is permuted to the same
     # ordering as A B which is the inverse of props.PC
     if β ≠ 0
       CM = reshape(permutedims(expose(CT), invperm(props.PC)), (props.dleft, props.dright))
     else
       # Need to copy here since we will be permuting
-      # into C later  
+      # into C later
       CM = reshape(copy(CT), (props.dleft, props.dright))
     end
   else
@@ -176,7 +176,7 @@ function _contract!(
   if props.permuteC
     Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
-    #@timeit_debug timer "_contract!: permutedims C" begin 
+    #@timeit_debug timer "_contract!: permutedims C" begin
     CT .= permutedims(expose(Cr), props.PC)
     #end # @timeit
   end

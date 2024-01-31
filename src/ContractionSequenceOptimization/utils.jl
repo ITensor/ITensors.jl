@@ -38,7 +38,7 @@ function deepmap(f, tree; filter=(x -> x isa AbstractArray))
   return filter(tree) ? map(t -> deepmap(f, t; filter=filter), tree) : f(tree)
 end
 
-# 
+#
 # Contracting index sets and getting costs
 #
 

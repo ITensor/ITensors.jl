@@ -37,7 +37,7 @@ function svd(
   return U, S, V, spec
 end
 
-# qr decomposition of an order-n tensor according to 
+# qr decomposition of an order-n tensor according to
 # positions Lpos and Rpos
 function qr(
   T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...

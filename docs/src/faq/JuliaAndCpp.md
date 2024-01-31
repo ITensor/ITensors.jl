@@ -18,25 +18,25 @@ However, some good reasons to use the C++ version of ITensor are:
 
 ## Which is faster: Julia or C++ ?
 
-Julia and C++ offer about the same performance. 
+Julia and C++ offer about the same performance.
 
 Each language gets compiled to optimized assembly code and offer arrays and containers
 which can efficiently stored and iterated. Well-written Julia code can be even faster
 than comparable C++ codes in many cases.
 
 The longer answer is of course that _it depends_:
-* Julia is a more productive language than C++, with many highly-optimized libraries for 
-  numerical computing tasks, and excellent tools for profiling and benchmarking. 
+* Julia is a more productive language than C++, with many highly-optimized libraries for
+  numerical computing tasks, and excellent tools for profiling and benchmarking.
   These features help significantly to tune Julia codes for optimal performance.
 * C++ offers much more fine-grained control over memory management, which can enhance
   performance in certain applications and control memory usage.
 * Julia codes can slow down significantly during refactoring or when introducing new
-  code if certain [best practices](https://docs.julialang.org/en/v1/manual/performance-tips/) 
+  code if certain [best practices](https://docs.julialang.org/en/v1/manual/performance-tips/)
   are not followed. The most important of these is writing type-stable code. For more details
   see the [Performance Tips](https://docs.julialang.org/en/v1/manual/performance-tips/) section
   of the Julia documentation.
 * C++ applications start instantly, while Julia codes can be slow to start.
-  However, if this start-up time is subtracted, the rest of the time of running a 
+  However, if this start-up time is subtracted, the rest of the time of running a
   Julia application is similar to C++.
 
 ## Why did you choose Julia over Python for ITensor?
@@ -44,13 +44,13 @@ The longer answer is of course that _it depends_:
 Julia offers much better performance than Python,
 while still having nearly all of Python's benefits. One consequence is that
 ITensor can be written purely in Julia, whereas to write high-performance
-Python libraries it is necessary to implement many parts in C or C++ 
+Python libraries it is necessary to implement many parts in C or C++
 (the "two-language problem").
 
 The main reasons Julia codes can easily outperform Python codes are:
 1. Julia is a (just-in-time) compiled language with functions specialized
    for the types of the arguments passed to them
-2. Julia arrays and containers are specialized to the types they contain, 
+2. Julia arrays and containers are specialized to the types they contain,
    and perform similarly to C or C++ arrays when all elements have the same type
 3. Julia has sophisticated support for multithreading while Python has significant
    problems with multithreading

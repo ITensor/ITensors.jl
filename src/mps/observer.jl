@@ -67,7 +67,7 @@ function DMRGObserver(; energy_tol=0.0, minsweeps=2, energy_type=Float64)
 end
 
 """
-    DMRGObserver(ops::Vector{String}, 
+    DMRGObserver(ops::Vector{String},
                  sites::Vector{<:Index};
                  energy_tol=0.0,
                  minsweeps=2,

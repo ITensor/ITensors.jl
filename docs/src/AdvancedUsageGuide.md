@@ -4,7 +4,7 @@
 
 The ITensors package can be installed with the Julia package manager.
 Assuming you have already downloaded Julia, which you can get
-[here](https://julialang.org/downloads/), from the Julia REPL, 
+[here](https://julialang.org/downloads/), from the Julia REPL,
 type `]` to enter the Pkg REPL mode and run:
 ```
 $ julia
@@ -21,15 +21,15 @@ Or, equivalently, via the `Pkg` API:
 julia> import Pkg; Pkg.add("ITensors")
 ```
 
-We recommend using ITensors.jl with Intel MKL in order to get the 
-best possible performance. If you have not done so already, you can 
-replace the current BLAS and LAPACK implementation used by Julia with 
-MKL by using the MKL.jl package. Please follow the instructions 
+We recommend using ITensors.jl with Intel MKL in order to get the
+best possible performance. If you have not done so already, you can
+replace the current BLAS and LAPACK implementation used by Julia with
+MKL by using the MKL.jl package. Please follow the instructions
 [here](https://github.com/JuliaComputing/MKL.jl).
 
 To use the latest registered (stable) version of ITensors.jl, use `update ITensors`
 in `Pkg` mode or `import Pkg; Pkg.update("ITensors")`.
-We will commonly release new patch versions (such as updating from `v0.1.12` to 
+We will commonly release new patch versions (such as updating from `v0.1.12` to
 `v0.1.13`) with bug fixes and improvements. However, make sure to double check before
 updating between minor versions (such as from `v0.1.41` to `v0.2.0`) because new minor
 releases may be breaking.
@@ -38,16 +38,16 @@ Remember that if you are compiling system images of ITensors.jl, such as with th
 `ITensors.compile()` command, you will need to rerurn this command to compile
 the new version of ITensor after an update.
 
-To try the "development branch" of ITensors.jl (for example, if 
-there is a feature or fix we added that hasn't been released yet), 
+To try the "development branch" of ITensors.jl (for example, if
+there is a feature or fix we added that hasn't been released yet),
 you can do `add ITensors#main`. You can switch back to the latest
 released version with `add ITensors`. Using the development/main
 branch is generally not encouraged unless you know what you are doing.
 
 ## Using ITensors.jl in the REPL
 
-There are many ways you can write code based on ITensors.jl, ranging 
-from using it in the REPL to writing a small script to making a 
+There are many ways you can write code based on ITensors.jl, ranging
+from using it in the REPL to writing a small script to making a
 package that depends on it.
 
 For example, you can just start the REPL from your command line like:
@@ -193,11 +193,11 @@ search: ITensor ITensors itensor emptyITensor randomITensor
 
   julia> i = Index(2, "i")
   (dim=2|id=287|"i")
-  
+
   julia> A = randomITensor(i', i)
   ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
   NDTensors.Dense{Float64,Array{Float64,1}}
-  
+
   julia> @show A;
   A = ITensor ord=2
   Dim 1: (dim=2|id=287|"i")'
@@ -206,9 +206,9 @@ search: ITensor ITensors itensor emptyITensor randomITensor
    2×2
    0.28358594718392427   1.4342219756446355
    1.6620103556283987   -0.40952231269251566
-  
+
   julia> @show inds(A);
-  inds(A) = IndexSet{2} (dim=2|id=287|"i")' (dim=2|id=287|"i") 
+  inds(A) = IndexSet{2} (dim=2|id=287|"i")' (dim=2|id=287|"i")
 [...]
 ```
 (the specific output may be different for different versions of ITensors.jl as we update the docs). You can use the help prompt (which you get by typing `?` at the REPL) to print out documentation for types and methods.
@@ -436,7 +436,7 @@ julia> t = Template(; user="your_github_username", plugins=[Git(; ssh=true),])
 julia> t("MyITensorsPkg")
 ```
 You should put your Github account name instead of `"your_github_username"`,
-if you want to use Github to host your package. 
+if you want to use Github to host your package.
 The option `plugins=[Git(; ssh=true),]` sets the Github authentication to use
 ssh, which is generally more convenient. You can switch to https (where you
 have to type your username and password to push changes) by setting `ssh=false`
@@ -457,7 +457,7 @@ then you can do:
 ```julia
 julia> using MyITensorsPkg
 ```
-from any directory to use your new package. However, it doesn't 
+from any directory to use your new package. However, it doesn't
 have any functions available yet. Additionally, there should be
 an empty test file already set up here:
 ```
@@ -474,7 +474,7 @@ It should show something like:
 [...]
 Test Summary:    |
 MyITensorsPkg.jl | No tests
-    Testing MyITensorsPkg tests passed 
+    Testing MyITensorsPkg tests passed
 ```
 since there are no tests yet.
 
@@ -505,7 +505,7 @@ Now, if you or someone else uses the package, it will automatically
 install ITensors.jl for you.
 
 Now your package is set up to develop! Try editing the file
-`~/.julia/dev/MyITensorsPkg/src/MyITensorsPkg.jl` and add the 
+`~/.julia/dev/MyITensorsPkg/src/MyITensorsPkg.jl` and add the
 `norm2` function, which calculates the squared norm of an ITensor:
 ```julia
 module MyITensorsPkg
@@ -519,7 +519,7 @@ norm2(A::ITensor) = (A*dag(A))[]
 end
 ```
 The export command makes `norm2` available in the namespace without
-needing to type `MyITensorsPkg.norm2` when you do 
+needing to type `MyITensorsPkg.norm2` when you do
 `using MyITensorsPkg`. Now in a new Julia session you can do:
 ```julia
 julia> using ITensors
@@ -546,7 +546,7 @@ julia> norm2(A)
 Unfortunately, if you continue to edit the file `MyITensorsPkg.jl`,
 even if you type `using MyITensorsPkg` again, if you are in the
 same Julia session the changes will not be reflected, and
-you will have to restart your Julia session. The 
+you will have to restart your Julia session. The
 [Revise](https://timholy.github.io/Revise.jl/stable/) package
 will allow you to edit your package files and have the changes
 reflected in real time in your current Julia session, so you
@@ -572,10 +572,10 @@ pkg> test MyITensorsPkg
 [...]
 Test Summary:    | Pass  Total
 MyITensorsPkg.jl |    1      1
-    Testing MyITensorsPkg tests passed 
+    Testing MyITensorsPkg tests passed
 ```
 
-Your package should already be set up as a git repository by 
+Your package should already be set up as a git repository by
 the `PkgTemplates` commands we started with.
 We recommend using Github or similar versions control systems
 for your packages, especially if you plan to make them public
@@ -593,7 +593,7 @@ as described [here](https://help.github.com/en/github/using-git/changing-a-remot
 if you didn't choose your preferred authentication protocol with
 PkgTemplates.
 
-There are many more features you can add to your package through 
+There are many more features you can add to your package through
 various Julia packages and Github, for example:
  - Control of precompilation with tools like [SnoopCompile](https://timholy.github.io/SnoopCompile.jl/stable/).
  - Automatic testing of your package at every pull request/commit with Github Actions, Travis, or similar services.
@@ -602,7 +602,7 @@ various Julia packages and Github, for example:
  - Compiling your package with [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/).
  - Automatically check what parts of your code your tests check with code coverage.
  - Officially register your Julia package so that others can easily install it and follow along with updated versions using the [Registrator](https://juliaregistries.github.io/Registrator.jl/stable/).
-You can take a look at the [ITensors](https://github.com/ITensor/ITensors.jl) 
+You can take a look at the [ITensors](https://github.com/ITensor/ITensors.jl)
 Github page for inspiration on setting up some of these services
 and ideas for organizing your package.
 
@@ -674,7 +674,7 @@ A way around this issue is the [Revise](https://timholy.github.io/Revise.jl/stab
 We highly recommend using the [Revise](https://timholy.github.io/Revise.jl/stable/) package
 when you are developing packages, which automatically detects changes you are making to
 a package you have checked out for development and edit code and not have to restart your Julia session.
-In short, if you have `Revise.jl` loaded, you can edit the code in `~/.julia/dev/ITensors` 
+In short, if you have `Revise.jl` loaded, you can edit the code in `~/.julia/dev/ITensors`
 or `~/.julia/dev/ITensors/NDTensors` and the changes you make will be reflected on the fly as
 you use the package (there are some limitations, for example you will need to restart Julia
 if you change the definitions of types).
@@ -763,8 +763,8 @@ as well as making pull requests to existing Julia packages by the irreplacable C
 
 ## Compiling ITensors.jl
 
-You might notice that the time to load ITensors.jl (with `using 
-ITensors`) and the time to run your first few ITensor commands is 
+You might notice that the time to load ITensors.jl (with `using
+ITensors`) and the time to run your first few ITensor commands is
 slow. This is due to Julia's just-in-time (JIT) compilation.
 Julia is compiling special versions of each function that is
 being called based on the inputs that it gets at runtime. This
@@ -862,9 +862,9 @@ julia> @time svd(A, i');
 julia> @time svd(A, i');
   0.000135 seconds (350 allocations: 29.984 KiB)
 ```
-which is much better. 
+which is much better.
 
-Note that you will have to recompile ITensors with the command 
+Note that you will have to recompile ITensors with the command
 `ITensors.compile()` any time that you update the version of ITensors
 in order to keep the system image updated. We hope to make this
 process more automated in the future.
@@ -887,14 +887,14 @@ julia> @btime 2*$A;
   4.279 μs (8 allocations: 78.73 KiB)
 ```
 
-We recommend packages like [ProfileView](https://github.com/timholy/ProfileView.jl) 
-to get detailed profiles of your code, in order to pinpoint functions 
+We recommend packages like [ProfileView](https://github.com/timholy/ProfileView.jl)
+to get detailed profiles of your code, in order to pinpoint functions
 or lines of code that are slower than they should be.
 
 ## ITensor type design and writing performant code
 
 Advanced users might notice something strange about the definition
-of the ITensor type, that it is often not "type stable". Some of 
+of the ITensor type, that it is often not "type stable". Some of
 this is by design. The definition for ITensor is:
 ```julia
 mutable struct ITensor
@@ -902,10 +902,10 @@ mutable struct ITensor
   store::TensorStorage
 end
 ```
-These are both abstract types, which is something that is generally 
+These are both abstract types, which is something that is generally
 discouraged for peformance.
 
-This has a few disadvantages. Some code that you might expect to be 
+This has a few disadvantages. Some code that you might expect to be
 type stable, like `getindex`, is not, for example:
 ```julia
 julia> i = Index(2, "i");
@@ -938,11 +938,11 @@ Body::Number
 julia> typeof(A[i=>1, i'=>2])
 Float64
 ```
-Uh oh, that doesn't look good! Julia can't know ahead of time, based on 
+Uh oh, that doesn't look good! Julia can't know ahead of time, based on
 the inputs, what the type of the output is, besides that it will be a
 `Number` (though at runtime, the output has a concrete type, `Float64`).
 
-So why is it designed this way? The main reason is to allow more 
+So why is it designed this way? The main reason is to allow more
 generic and dynamic code than traditional, statically-typed Arrays.
 This allows us to have code like:
 ```julia
@@ -972,11 +972,11 @@ NDTensors.Dense{Float64,Array{Float64,1}}
  0.0  0.0
 ```
 Here, the type of the storage of A is changed in-place. It starts as an `Empty` storage, a special trivial storage. When we set an element, we then allocate the appropriate storage. Allocations are performed only when needed, so if another element is set then no allocation is performed.
-More generally, this allows ITensors to have more generic in-place 
+More generally, this allows ITensors to have more generic in-place
 functionality, so you can write code where you don't know what the
 storage is until runtime.
 
-This can lead to certain types of code having perfomance problems, 
+This can lead to certain types of code having perfomance problems,
 for example looping through ITensors with many elements can be slow:
 ```julia
 julia> function myscale!(A::ITensor, x::Number)
@@ -1009,19 +1009,19 @@ myscale2! (generic function with 1 method)
 julia> @btime myscale2!(A, 2) setup = (A = randomITensor(i));
   3.571 μs (2 allocations: 112 bytes)
 ```
-How does this work? It relies on a "function barrier" technique. 
-Julia compiles functions "just-in-time", so that calls to an inner 
+How does this work? It relies on a "function barrier" technique.
+Julia compiles functions "just-in-time", so that calls to an inner
 function written in terms of a type-stable type are still fast.
 That inner function is compiled to very fast code.
-The main overhead is that Julia has to determine which function 
+The main overhead is that Julia has to determine which function
 to call at runtime.
 
-Therefore, users should keep this in mind when they are writing 
-ITensors.jl code, and we warn that explicitly looping over large 
-ITensors by individual elements should be done with caution in 
-performance critical sections of your code. 
-However, be sure to benchmark and profile your code before 
-prematurely optimizing, since you may be surprised about 
+Therefore, users should keep this in mind when they are writing
+ITensors.jl code, and we warn that explicitly looping over large
+ITensors by individual elements should be done with caution in
+performance critical sections of your code.
+However, be sure to benchmark and profile your code before
+prematurely optimizing, since you may be surprised about
 what are the fast and slow parts of your code.
 
 Some strategies for avoiding ITensor loops are:
@@ -1044,7 +1044,7 @@ A .+= 2 .* B
 Internally, this is rewritten by Julia as a call to `broadcast!`.
 ITensors.jl overloads this call (or more specifically, a lower
 level function `copyto!` written in terms of a special lazy type
-that saves all of the objects and operations). Then, this call is 
+that saves all of the objects and operations). Then, this call is
 rewritten as
 ```julia
 map!((x,y) -> x+2*y, A, A, B)
@@ -1074,12 +1074,12 @@ may be surprised by what is actually slow).
 
 ## NDTensors and ITensors
 
-ITensors.jl is built on top of another, more traditional tensor 
-library called NDTensors. NDTensors implements AbstractArrays with 
+ITensors.jl is built on top of another, more traditional tensor
+library called NDTensors. NDTensors implements AbstractArrays with
 a variety of sparse storage types, with more to come in the future.
 
-NDTensors implements functionality like permutation of dimensions, 
-fast get and set index, broadcasting, and tensor contraction (where 
+NDTensors implements functionality like permutation of dimensions,
+fast get and set index, broadcasting, and tensor contraction (where
 labels of the dimensions must be specified).
 
 For example:
@@ -1094,9 +1094,9 @@ i = Index(2)
 T = Tensor((i,i',i'))  # The identifiers are ignored, just interpreted as above
 T[1,2,1] = 1.3
 ```
-To make performant ITensor code (refer to the the previous section 
-on type stability and function barriers), ITensor storage data and 
-indices are passed by reference into Tensors, where the performance 
+To make performant ITensor code (refer to the the previous section
+on type stability and function barriers), ITensor storage data and
+indices are passed by reference into Tensors, where the performance
 critical operations are performed.
 
 An example of a function barrier using NDTensors is the following:

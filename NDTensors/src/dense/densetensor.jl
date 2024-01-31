@@ -80,7 +80,7 @@ end
 # Single index
 #
 
-## TODO replace this with Exposed 
+## TODO replace this with Exposed
 @propagate_inbounds function getindex(T::DenseTensor{<:Number})
   return getindex(expose(data(T)))
 end
@@ -139,7 +139,7 @@ end
 ##   indsR = Tuple(I[end] - I[1] + CartesianIndex(ntuple(_ -> 1, Val(N))))
 ##   return tensor(storeR, indsR)
 ## end
-## 
+##
 ## @propagate_inbounds function getindex(T::DenseTensor{ElT,N}, I...) where {ElT,N}
 ##   return _getindex(T, CartesianIndices(I))
 ## end

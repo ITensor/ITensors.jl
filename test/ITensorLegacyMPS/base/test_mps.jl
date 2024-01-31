@@ -587,7 +587,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   @test ITensors.leftlim(psi) == 1
   @test ITensors.rightlim(psi) == 3
   psi = randomMPS(sites)
-  ITensors.setrightlim!(psi, length(psi) + 1) # do this to test qr 
+  ITensors.setrightlim!(psi, length(psi) + 1) # do this to test qr
   # from rightmost tensor
   orthogonalize!(psi, div(length(psi), 2))
   @test ITensors.leftlim(psi) == div(length(psi), 2) - 1
@@ -968,7 +968,7 @@ end
         ("S+", "S-"),
       ],
     )
-    # can't test ,("Cdn","Cdn") yet, because AutoMPO thinks this is antisymmetric 
+    # can't test ,("Cdn","Cdn") yet, because AutoMPO thinks this is antisymmetric
 
     #trigger unsupported error
     let err = nothing
@@ -1270,7 +1270,7 @@ end
 
     #
     # Construct from regular Julia tensor
-    # 
+    #
     Ajt = randn(2, 2, 2, 2, 2) # Julia tensor
     ψ = MPS(Ajt, s)
     @test prod(ψ) ≈ ITensor(Ajt, s...)

@@ -17,9 +17,9 @@ only very small changes to a DMRG code. The main changes are:
 1. using tensor indices (`Index` objects) which carry quantum number (QN) information to build your Hamiltonian and  initial state
 2. initializing your MPS to have well-defined total quantum numbers
 
-Importantly, _the total QN of your state throughout the calculation will 
+Importantly, _the total QN of your state throughout the calculation will
 remain the same as the initial state passed to DMRG_.
-The total QN of your state is not set separately, but determined 
+The total QN of your state is not set separately, but determined
 implicitly from the initial QN of the state when it is first constructed.
 
 Of course, your Hamiltonian should conserve all of the QN's that you would
@@ -28,8 +28,8 @@ it out of the QN-enabled tensor indices.
 
 #### Making the Changes
 
-Let's see how to make these two changes to the 
-[DMRG Tutorial](@ref dmrg_tutorial) code from the previous section. 
+Let's see how to make these two changes to the
+[DMRG Tutorial](@ref dmrg_tutorial) code from the previous section.
 At the end, we will put together these changes for a complete, working code.
 
 **Change 1: QN Site Indices**
@@ -50,7 +50,7 @@ Setting `conserve_qns=true` tells the `siteinds` function to conserve
 every possible quantum number associated to the site
 type (which is `"S=1"` in this example). For ``S=1`` spins, this will turn on
 total-``S^z`` conservation.
-(For other site types that conserve multiple QNs, there are specific keyword 
+(For other site types that conserve multiple QNs, there are specific keyword
 arguments available to track just a subset of conservable QNs.)
 We can check this by printing out some of the site indices, and seeing that the
 subspaces of each `Index` are labeled by QN values:
@@ -77,7 +77,7 @@ In the sample output above, note that in addition to the dimension of these indi
 
 **Change 2: Initial State**
 
-To make change (2), instead of constructing the initial MPS `psi0` to be an arbitrary, random MPS, we will make it a specific state with a well-defined total ``S^z``. 
+To make change (2), instead of constructing the initial MPS `psi0` to be an arbitrary, random MPS, we will make it a specific state with a well-defined total ``S^z``.
 So we will replace the line
 
 ```julia
@@ -91,14 +91,14 @@ state = [isodd(n) ? "Up" : "Dn" for n=1:N]
 psi0 = MPS(sites,state)
 ```
 
-The first line of the new code above makes an array of strings which 
+The first line of the new code above makes an array of strings which
 alternate between `"Up"` and `"Dn"` on odd and even numbered sites.
-These names `"Up"` and `"Dn"` are special values associated to the `"S=1"` 
+These names `"Up"` and `"Dn"` are special values associated to the `"S=1"`
 site type which indicate up and down spin values. The second line takes
 the array of site Index objects `sites` and the array of strings `state`
 and returns an MPS which is a product state (classical, unentangled state)
 with each site's state given by the strings in the `state` array.
-In this example, `psi0` will be a Neel state with alternating up and down 
+In this example, `psi0` will be a Neel state with alternating up and down
 spins, so it will have a total ``S^z`` of zero. We could check this by
 computing the quantum-number flux of `psi0`
 
@@ -112,14 +112,14 @@ computing the quantum-number flux of `psi0`
     The above example shows the case of setting a total "Sz" quantum
     number of zero, since the initial state alternates between "Up"
     and "Dn" on every site with an even number of sites.
-    
+
     To obtain other total QN values, just set the initial state to
     be one which has the total QN you want. To be concrete
-    let's take the example of a system with `N=10` sites of 
+    let's take the example of a system with `N=10` sites of
     ``S=1`` spins.
 
     For example if you want a total "Sz" of +20 (= `QN("Sz",20)`) in ITensor units,
-    or ``S^z=10`` in physical units, for a system with 10 sites, 
+    or ``S^z=10`` in physical units, for a system with 10 sites,
     use the initial state:
     ```julia
     state = ["Up" for n=1:N]
@@ -148,8 +148,8 @@ computing the quantum-number flux of `psi0`
 #### Putting it All Together
 
 Let's take the [DMRG Tutorial](@ref dmrg_tutorial) code
-from the previous section and make the changes discussed above, 
-to turn it into a code which conserves the total ``S^z`` quantum 
+from the previous section and make the changes discussed above,
+to turn it into a code which conserves the total ``S^z`` quantum
 number throughout the DMRG calculation. The resulting code is:
 
 ```julia

@@ -53,7 +53,7 @@ such as on a cluster.
 
 ## Running Interactively
 
-However, sometimes you want to do rapid development when first writing and 
+However, sometimes you want to do rapid development when first writing and
 testing a code. For this kind of work, the long startup and compilation times
 currently incurred by the Julia compiler can be a nuisance. Fortunately
 a nice solution is to alternate between modifying your code then running it
@@ -69,7 +69,7 @@ To set up this kind of session, take the following steps:
    ```
    Note that you must be in the same folder as `code.jl` for this to work; otherwise input the entire path to the `code.jl` file. The code will run and you will see its output in the REPL.
 
-3. Now say you want to modify and re-run the code. To do this, just edit the file in an editor in another window, without closing your Julia session. Now run the command 
+3. Now say you want to modify and re-run the code. To do this, just edit the file in an editor in another window, without closing your Julia session. Now run the command
    ```
    julia> include("code.jl")
    ```
@@ -113,7 +113,7 @@ installkernel("julia_ITensors","--sysimage=~/.julia/sysimages/sys_itensors.so")
 in the Julia REPL (Julia console).
 
 
-To load the ITensor sysimage in VS Code, you can add 
+To load the ITensor sysimage in VS Code, you can add
 ```
 "--sysimage ~/.julia/sysimages/sys_itensors.so"
 ```
