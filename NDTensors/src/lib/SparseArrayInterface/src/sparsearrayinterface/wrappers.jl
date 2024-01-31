@@ -37,9 +37,7 @@ function storage_index_to_index(a::SubArray, I)
   return storage_index_to_index(parent(a), I)
 end
 
-function index_to_storage_index(
-  a::SubArray{<:Any,N}, I::CartesianIndex{N}
-) where {N}
+function index_to_storage_index(a::SubArray{<:Any,N}, I::CartesianIndex{N}) where {N}
   return index_to_storage_index(parent(a), I)
 end
 
