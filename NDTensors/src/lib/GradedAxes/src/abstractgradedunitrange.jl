@@ -1,5 +1,6 @@
 using BlockArrays:
   BlockArrays,
+  AbstractBlockVector,
   Block,
   BlockRange,
   BlockedUnitRange,
@@ -7,6 +8,7 @@ using BlockArrays:
   blockedrange,
   blockfirsts,
   blocklasts,
+  blocklength,
   blocklengths,
   findblock
 using Dictionaries: Dictionary
@@ -90,12 +92,15 @@ function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRang
 end
 
 # TODO: Update to use `BlockVector{<:Block}`.
-function blockmerge(a::AbstractGradedUnitRange, grouped_perm::Vector{Vector{Int}})
-  merged_nondual_sectors = map(
-    group -> nondual_sector(a, Block(first(group))), grouped_perm
-  )
-  lengths = blocklengths(a)
-  merged_lengths = map(group -> sum(@view(lengths[group])), grouped_perm)
+function blockmerge(a::AbstractGradedUnitRange, grouped_perm::AbstractBlockVector{<:Block})
+  merged_nondual_sectors = map(blocks(grouped_perm)) do group
+    return nondual_sector(a, first(group))
+  end
+  # Length of each block
+  lengths = Dictionary(BlockRange(Base.OneTo(blocklength(a))), blocklengths(a))
+  merged_lengths = map(blocks(grouped_perm)) do group
+    return sum(b -> lengths[b], group)
+  end
   return gradedrange(merged_nondual_sectors, merged_lengths, isdual(a))
 end
 
