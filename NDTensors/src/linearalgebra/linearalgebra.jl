@@ -105,7 +105,7 @@ function svd(
     end
   elseif alg == "recursive"
     MUSV = svd_recursive(matrix(T))
-  elseif alg == "qr_algorithm" || alg == "jacobi_algorithm"
+  elseif alg == "qr_algorithm" || alg == "jacobi_algorithm" || alg == "roc_to_cpu_svd"
     MUSV = svd_catch_error(matrix(T); alg)
   else
     error(

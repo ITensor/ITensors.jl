@@ -8,6 +8,8 @@ Unwrap.cpu(x) = fmap(x -> adapt(Array, x), x)
 # Implemented in `ITensorGPU` and NDTensorCUDA
 function cu end
 
+function roc end
+
 function mtl end
 
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))

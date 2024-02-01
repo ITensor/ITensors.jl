@@ -1,0 +1,1 @@
+isroc(::Type{<:ROCArray}) = true
