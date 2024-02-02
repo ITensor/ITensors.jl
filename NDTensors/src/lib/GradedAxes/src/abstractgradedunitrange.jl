@@ -118,7 +118,9 @@ function Base.getindex(a::AbstractGradedUnitRange, I::AbstractVector{<:Block})
   return gradedrange(nondual_sectors_sub, blocklengths_sub, isdual(a))
 end
 
-function Base.getindex(a::AbstractGradedUnitRange, grouped_perm::AbstractBlockVector{<:Block})
+function Base.getindex(
+  a::AbstractGradedUnitRange, grouped_perm::AbstractBlockVector{<:Block}
+)
   merged_nondual_sectors = map(blocks(grouped_perm)) do group
     return nondual_sector(a, first(group))
   end
