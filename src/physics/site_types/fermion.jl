@@ -1,6 +1,6 @@
 
 """
-    space(::SiteType"Fermion"; 
+    space(::SiteType"Fermion";
           conserve_qns=false,
           conserve_nf=conserve_qns,
           conserve_nfparity=conserve_qns,

@@ -12,13 +12,13 @@ you set for your initial wavefunction.
 
 If you have two physically distinct types of sites, such as "Qudit" sites, but
 which carry identically named QNs called "Number", and you want the qudit number
-to be separately conserved within each type of site, 
+to be separately conserved within each type of site,
 you must make the QN names different for the two types of sites.
 
 For example, the following line of code will make an array of site indices with the qudit number QN having the name "Number\_odd" on odd sites and "Number\_even" on even sites:
 ```
-sites = [isodd(n) ? siteind("Qudit", n; dim=10, conserve_qns=true, qnname_number="Number_odd") 
-                  : siteind("Qudit", n; dim=2, conserve_qns=true, qnname_number="Number_even") 
+sites = [isodd(n) ? siteind("Qudit", n; dim=10, conserve_qns=true, qnname_number="Number_odd")
+                  : siteind("Qudit", n; dim=2, conserve_qns=true, qnname_number="Number_even")
                   for n in 1:2*L]
 ```
 (You may have to collapse the above code into a single line for it to run properly.)

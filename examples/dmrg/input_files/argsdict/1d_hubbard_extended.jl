@@ -114,7 +114,7 @@ for i in N:-1:1
     p[] -= 1
   end
 end
-# Initialize wavefunction to be bond 
+# Initialize wavefunction to be bond
 # dimension 10 random MPS with number
 # of particles the same as `state`
 psi0 = randomMPS(sites, state, 10)

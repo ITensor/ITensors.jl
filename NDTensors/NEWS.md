@@ -11,7 +11,7 @@ NDTensors v0.1.45 Release Notes
 
 Bugs:
 
--  HDF5 Support for Diag Storage (#976) 
+-  HDF5 Support for Diag Storage (#976)
 
 Enhancements:
 
@@ -122,7 +122,7 @@ Bugs:
 
 Enhancements:
 
-- Define `diag(::Tensor)`, `diag(::ITensor)` (#837) 
+- Define `diag(::Tensor)`, `diag(::ITensor)` (#837)
 
 NDTensors v0.1.34 Release Notes
 ===============================

@@ -10,7 +10,7 @@ const warn_order = Ref{Union{Int,Nothing}}(default_warn_order)
 """
     ITensors.get_warn_order()
 
-Return the threshold for the order of an ITensor above which 
+Return the threshold for the order of an ITensor above which
 ITensors will emit a warning.
 
 You can set the threshold with the function `set_warn_order!(N::Int)`.
@@ -39,7 +39,7 @@ end
     ITensors.reset_warn_order()
 
 After this is called, ITensor will warn about ITensor contractions
-that result in ITensors above the default order 
+that result in ITensors above the default order
 $default_warn_order.
 
 This function returns the initial warning threshold (what it was

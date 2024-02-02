@@ -161,7 +161,7 @@ end
 end
 
 @testset "Electron - Pairing (currently inactive)" begin
-  # Keep this testset for when the Electron-sites + pairing bug is fixed  
+  # Keep this testset for when the Electron-sites + pairing bug is fixed
   # But skip the tests for now.
   is_implemented = false
   if !is_implemented

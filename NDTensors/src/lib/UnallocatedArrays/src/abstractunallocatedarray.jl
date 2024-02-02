@@ -1,5 +1,5 @@
 using FillArrays: FillArrays, getindex_value
-using NDTensors.SetParameters: set_parameters
+using NDTensors.SetParameters: set_eltype, set_ndims
 using Adapt: adapt
 
 const UnallocatedArray{ElT,N,AxesT,AllocT} = Union{
@@ -43,11 +43,7 @@ function allocate(f::UnallocatedArray)
 end
 
 function allocate(arraytype::Type{<:AbstractArray}, elt::Type, axes)
-  ## TODO rewrite this using set_eltype and set_ndims functions
-  ## currently these functions are defined in `NDTensors`
-  ## In the future they should be defined in `SetParameters`
-  ArrayT = set_parameters(arraytype, Position{1}(), elt)
-  ArrayT = set_parameters(ArrayT, Position{2}(), length(axes))
+  ArrayT = set_ndims(set_eltype(arraytype, elt), length(axes))
   return similar(ArrayT, axes)
 end
 

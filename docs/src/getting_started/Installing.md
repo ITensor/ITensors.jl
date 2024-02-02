@@ -15,7 +15,7 @@ To install the Julia language, visit [https://julialang.org/downloads/](https://
 
 **Cluster Install of Julia and ITensor**
 
-If you would like to use Julia on a remote cluster, 
+If you would like to use Julia on a remote cluster,
 such as at many labs or universities, but Julia is
 not available system-wide, you can still easily install your own
 local version of Julia. A local install will offer the same performance and
@@ -47,16 +47,16 @@ going to [the Julia Downloads page](https://julialang.org/downloads/).
 We also don't recommend using versions of Julia below 1.6, which are no longer compatible
 with ITensors.jl as of ITensors 0.3.
 
-After these steps, you should be able to type `julia` from your terminal to run Julia 
+After these steps, you should be able to type `julia` from your terminal to run Julia
 in interactive mode. If that works, then you have the Julia language and can run it in
 all the usual ways. If it does not work, you may need to log out and back in, and check
 that the `bin` directory is in your program execution path (PATH environment variable).
 
 Explanation of the sample commands above:
- - The first command `cd` goes to your home directory. 
- - The second command makes a new folder `bin/` under your home directory if it does not already exist. 
- - The third command downloads the Julia language as a compressed tar.gz file. (You may want to do this step and the follwing steps in a different folder of your choosing.) 
- - The fourth command uncompresses the tar.gz file into a folder called (in this example) `julia-1.7.2`. 
+ - The first command `cd` goes to your home directory.
+ - The second command makes a new folder `bin/` under your home directory if it does not already exist.
+ - The third command downloads the Julia language as a compressed tar.gz file. (You may want to do this step and the follwing steps in a different folder of your choosing.)
+ - The fourth command uncompresses the tar.gz file into a folder called (in this example) `julia-1.7.2`.
  - The last command makes a soft link called `julia` in your `bin` directory which links to the Julia language binary within the folder you just unpacked containing the Julia language.
 
 ## Installing ITensor (ITensors.jl Package)

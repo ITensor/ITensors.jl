@@ -48,7 +48,7 @@ function truncate!(P::CuVector{T}; kwargs...)::Tuple{T,T,CuVector{T}} where {T<:
           scale = scale > zero(T) ? scale : one(T)
         end
       end
-      #Truncating until *sum* of discarded probability 
+      #Truncating until *sum* of discarded probability
       #weight reaches cutoff reached (or m==mindim)
       csum_rp = Float64.(CUDA.reverse(CUDA.cumsum(CUDA.reverse(rP))))
       sub_arr = csum_rp .- Float64(cutoff * scale)

@@ -3,7 +3,7 @@ using Printf
 
 #=
 
-This example code implements the purification or "ancilla" method for 
+This example code implements the purification or "ancilla" method for
 finite temperature quantum systems.
 
 For more information see the following references:

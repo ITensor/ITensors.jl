@@ -11,8 +11,8 @@ to work with [matrix product state (MPS)](http://tensornetwork.org/mps/)
 A matrix product state (MPS) made of N tensors, each with
 one site or physical index, is a way of representing a single
 tensor with N indices. One way of obtaining the MPS form of an
-N-index tensor `T` is by repeatedly factorizing `T` into N 
-separate tensors using a factorization such as the [Singular Value Decomposition](@ref) (SVD). 
+N-index tensor `T` is by repeatedly factorizing `T` into N
+separate tensors using a factorization such as the [Singular Value Decomposition](@ref) (SVD).
 This algorithm for obtaining an MPS is known in the mathematics
 literature as the "tensor train SVD" or "TT-SVD" algorithm.
 
@@ -106,8 +106,8 @@ end # hide
 ```
 
 The call to `state(s[j],el[j])` in the code above makes a single-index ITensor
-with the Index `s[j]` and the entry at location `el[j]` set to 1.0, with all other 
-entries set to 0.0. Contracting this tensor with the MPS tensor at site `j` 
+with the Index `s[j]` and the entry at location `el[j]` set to 1.0, with all other
+entries set to 0.0. Contracting this tensor with the MPS tensor at site `j`
 can be viewed as "clamping" or "fixing" the index to a set value. The resulting
 tensors are contracted sequentially, overwriting the ITensor `V`, and the final
 scalar value of `V` is the tensor element we seek.
@@ -128,7 +128,7 @@ Avals = expect(psi,"A")
 ```
 
 where `"A"` must be an operator associated with the physical site type, or site tags, of
-the sites of the MPS `psi`. For example, the operator name could be 
+the sites of the MPS `psi`. For example, the operator name could be
 `"Sz"` for spin sites or `"Ntot"` for electron sites.
 (For more information about defining such operators yourself,
 see the section on [Extending op Function Definitions](@ref custom_op).)
@@ -184,13 +184,13 @@ using the [`correlation_matrix`](@ref) function:
 C = correlation_matrix(psi,"A","B")
 ```
 
-where `"A"` and `"B"` must be an operator names associated with the physical site type, 
-or site tags, of the sites of the MPS `psi`. For example, these strings could be 
+where `"A"` and `"B"` must be an operator names associated with the physical site type,
+or site tags, of the sites of the MPS `psi`. For example, these strings could be
 `"Sz"`, `"S+"`, or `"S-"` for spin sites, or `"Cdagup"` and `"Cup"` for electron sites.
 (For more information about defining such operators yourself,
 see the section on [Extending op Function Definitions](@ref custom_op).)
 
-As a concrete example, say we have an MPS `psi` for a system of spins and 
+As a concrete example, say we have an MPS `psi` for a system of spins and
 want to compute the correlator ``\langle\psi|S^z_i S^z_j|\psi\rangle``.
 We can compute this as:
 
@@ -205,8 +205,8 @@ to this function.
 
 ## Applying a Single-site Operator to an MPS
 
-In many applications one needs to modify a matrix product 
-state (MPS) by multiplying it with an operator that acts 
+In many applications one needs to modify a matrix product
+state (MPS) by multiplying it with an operator that acts
 only on a single site. This is actually a very straightforward
 operation and this formula shows you how to do it in ITensor.
 
@@ -237,20 +237,20 @@ Afterward, we can visualize the modified MPS as:
 ![](mps_onesite_figures/updated_mps.png)
 
 As a technical note, if you are working in a context where gauge or orthogonality
-properties of the MPS are important, such as in time evolution using two-site gates, 
+properties of the MPS are important, such as in time evolution using two-site gates,
 then you may want to call `orthogonalize!(psi,3)`
-before modifying the tensor at site 3, which will ensure that the MPS remains in a 
+before modifying the tensor at site 3, which will ensure that the MPS remains in a
 well-defined orthogonal gauge centered on site 3. Modifying a tensor which is left- or right-orthogonal
-(i.e. not the "center" tensor of the gauge) will destroy the gauge condition and 
+(i.e. not the "center" tensor of the gauge) will destroy the gauge condition and
 require extra operations to restore it. (Calling `orthogonalize!` method will automatically
 fix this but will have to do extra work to do so.)
 
 
 ## Applying a Two-site Operator to an MPS
 
-A very common operation with matrix product states (MPS) is 
-multiplication by a two-site operator or "gate" which modifies 
-the MPS. This procedure can be carried out in an efficient, 
+A very common operation with matrix product states (MPS) is
+multiplication by a two-site operator or "gate" which modifies
+the MPS. This procedure can be carried out in an efficient,
 controlled way which is adaptive in the MPS bond dimension.
 
 Say we have an operator ``G^{s'_3 s'_4}_{s_3 s_4}`` which
@@ -294,11 +294,11 @@ psi[3] = U
 psi[4] = S*V
 ```
 
-The call to `uniqueinds(psi[3])` analyzes the indices of `psi[3]` and `psi[4]` 
+The call to `uniqueinds(psi[3])` analyzes the indices of `psi[3]` and `psi[4]`
 and finds any which are unique to just `psi[3]`, saving this collection of indices as `inds3`.
-Passing this collection of indices to the `svd` function tells it to treat any indices 
+Passing this collection of indices to the `svd` function tells it to treat any indices
 that are unique to `psi[3]` as the indices which should go onto the `U` tensor afterward.
-We also set a truncation error cutoff of 1E-8 in the call to `svd` to truncate 
+We also set a truncation error cutoff of 1E-8 in the call to `svd` to truncate
 the smallest singular values and control the size of the resulting MPS.
 Other cutoff values can be used, depending on the desired accuracy,
 as well as limits on the maximum bond dimension (`maxdim` keyword argument).
@@ -334,9 +334,9 @@ for n=1:dim(S, 1)
   SvN -= p * log(p)
 end
 ```
-    
+
 As a brief explanation of the code above, the call to `orthogonalize!(psi,b)`
-shifts the orthogonality center to site `b` of the MPS. 
+shifts the orthogonality center to site `b` of the MPS.
 
 The call to the `svd` routine says to treat the link (virtual or bond) Index connecting the b'th MPS tensor `psi[b]` and the b'th physical Index as "row" indices for the purposes of the SVD (these indices will end up on `U`, along with the Index connecting `U` to `S`).
 
@@ -344,12 +344,12 @@ The code in the `for` loop iterates over the diagonal elements of the `S` tensor
 
 ## Sampling from an MPS
 
-A matrix product state (MPS) can be viewed as defining a probability distribution 
-through the Born rule, as is the case when the MPS represents a quantum wavefunction. 
+A matrix product state (MPS) can be viewed as defining a probability distribution
+through the Born rule, as is the case when the MPS represents a quantum wavefunction.
 To sample from the distribution defined by an MPS, you can use the function `sample`
 provided in ITensor. For an MPS `psi` call to `sample(psi)` returns a random
 sample from the distribution defined by `psi`. (Note that each sample is drawn anew
-and not from a Markov chain seeded by a previous sample; this is possible because 
+and not from a Markov chain seeded by a previous sample; this is possible because
 the algorithm for sampling MPS is a `perfect' sampling algorithm with no autocorrelation.)
 
 In more detail, say we have a set of `N` site indices `s` and define a random MPS
@@ -438,7 +438,7 @@ energy_psi = inner(psi',H,psi)
 
 
 Note the `MPS` argument to the read function, which tells Julia which read function
-to call and how to interpret the data stored in the HDF5 dataset named "psi". In the 
+to call and how to interpret the data stored in the HDF5 dataset named "psi". In the
 future we might lift the requirement of providing the type and have it be detected
 automatically from the data stored in the file.
 

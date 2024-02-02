@@ -21,7 +21,7 @@ contract
 
 ## Examples
 
-In the following example we show how to compute the contraction sequence cost of a 
+In the following example we show how to compute the contraction sequence cost of a
 ```@julia
 using ITensors
 using Symbolics

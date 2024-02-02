@@ -76,7 +76,7 @@ end
 #  for i1 ∈ 1:N1
 #    if T1labels[i1] > 0
 #      Ris[u] = T1is[i1]
-#      u += 1 
+#      u += 1
 #    else
 #      # This is to check that T1is and T2is
 #      # can contract
@@ -87,7 +87,7 @@ end
 #  for i2 ∈ 1:N2
 #    if T2labels[i2] > 0
 #      Ris[u] = T2is[i2]
-#      u += 1 
+#      u += 1
 #    end
 #  end
 #  return nothing
@@ -335,7 +335,7 @@ function compute_contraction_properties!(
   if !is_trivial_permutation(props.PC)
     props.permuteC = true
     if checkBCsameord(props) && checkACsameord(props)
-      #Can avoid permuting C by 
+      #Can avoid permuting C by
       #computing Bt*At = Ct
       props.ctrans = true
       props.permuteC = false
@@ -345,8 +345,8 @@ function compute_contraction_properties!(
   #Check if A can be treated as a matrix without permuting
   props.permuteA = false
   if !(contractedA(props, 1) || contractedA(props, NA))
-    #If contracted indices are not all at front or back, 
-    #will have to permute A 
+    #If contracted indices are not all at front or back,
+    #will have to permute A
     props.permuteA = true
   else
     #Contracted ind start at front or back, check if contiguous
@@ -363,7 +363,7 @@ function compute_contraction_properties!(
   #Check if B is matrix-like
   props.permuteB = false
   if !(contractedB(props, 1) || contractedB(props, NB))
-    #If contracted indices are not all at front or back, 
+    #If contracted indices are not all at front or back,
     #will have to permute B
     props.permuteB = true
   else
@@ -382,7 +382,7 @@ function compute_contraction_properties!(
     #TODO: check these limits are correct
     for i in 1:(props.ncont)
       if props.AtoB[props.Acstart + i - 1] != (props.Bcstart + i - 1)
-        #If not in same order, 
+        #If not in same order,
         #must permute one of A or B
         #so permute the smaller one
         props.dleft < props.dright ? (props.permuteA = true) : (props.permuteB = true)
@@ -591,7 +591,7 @@ function compute_contraction_properties!(
       props.permuteC = true
       #Here we already know since pc_triv = false that
       #at best indices from B precede those from A (on result C)
-      #so if both sets remain in same order on C 
+      #so if both sets remain in same order on C
       #just need to transpose C, not permute it
       if checkBCsameord(props) && checkACsameord(props)
         props.ctrans = true

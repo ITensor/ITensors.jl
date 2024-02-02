@@ -71,30 +71,30 @@ end
 ##   c::C
 ## end
 ## (f::LeftMul)(x) = f.c * x
-## 
+##
 ## struct RightMul{C}
 ##   c::C
 ## end
 ## (f::RightMul)(x) = x * f.c
-## 
+##
 ## # 2 .* a
 ## function Base.copy(bc::Broadcasted{<:BlockSparseStyle,<:Any,typeof(*),<:Tuple{<:Number,<:AbstractArray}})
 ##   # TODO: Use `map_nonzeros`.
 ##   return map(LeftMul(bc.args[1]), bc.args[2])
 ## end
-## 
+##
 ## # a .* 2
 ## function Base.copy(bc::Broadcasted{<:BlockSparseStyle,<:Any,typeof(*),<:Tuple{<:AbstractArray,<:Number}})
 ##   # TODO: Use `map_nonzeros`.
 ##   return map(RightMul(bc.args[2]), bc.args[1])
 ## end
-## 
+##
 ## # a ./ 2
 ## function Base.copy(bc::Broadcasted{<:BlockSparseStyle,<:Any,typeof(/),<:Tuple{<:AbstractArray,<:Number}})
 ##   # TODO: Use `map_nonzeros`.
 ##   return map(RightMul(inv(bc.args[2])), bc.args[1])
 ## end
-## 
+##
 ## # a .+ b
 ## function Base.copy(bc::Broadcasted{<:BlockSparseStyle,<:Any,<:Union{typeof(+),typeof(-)},<:Tuple{<:AbstractArray,<:AbstractArray}})
 ##   # TODO: Use `map_nonzeros`.

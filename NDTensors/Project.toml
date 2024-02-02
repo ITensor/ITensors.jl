@@ -1,7 +1,7 @@
 name = "NDTensors"
 uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>"]
-version = "0.2.25"
+version = "0.2.27"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -53,7 +53,7 @@ Adapt = "3.7, 4"
 ArrayLayouts = "1.4"
 BlockArrays = "0.16"
 Compat = "4.9"
-Dictionaries = "0.3.5"
+Dictionaries = "0.4"
 EllipsisNotation = "1.8"
 FLoops = "0.2.1"
 FillArrays = "1"

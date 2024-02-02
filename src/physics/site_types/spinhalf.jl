@@ -32,7 +32,7 @@ function ITensors.space(
   return 2
 end
 
-# Use Qubit  definition of any operator/state 
+# Use Qubit  definition of any operator/state
 # called using S=1/2 SiteType
 function ITensors.val(vn::ValName, ::SiteType"S=1/2"; kwargs...)
   return val(vn, SiteType("Qubit"); kwargs...)

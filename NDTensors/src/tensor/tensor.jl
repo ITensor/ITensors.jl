@@ -11,7 +11,7 @@ struct Tensor{ElT,N,StoreT,IndsT} <: AbstractArray{ElT,N}
   """
       Tensor{ElT,N,StoreT,IndsT}(inds, store::StorageType)
 
-  Internal constructor for creating a Tensor from the 
+  Internal constructor for creating a Tensor from the
   storage and indices.
 
   The Tensor is a view of the tensor storage.

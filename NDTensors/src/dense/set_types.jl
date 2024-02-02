@@ -1,25 +1,5 @@
-function set_parameters_if_unspecified(
-  storetype::Type{<:Dense{ElT,DataT}}, datatype::Type{<:AbstractArray}=default_datatype(ElT)
-) where {ElT,DataT<:AbstractArray{ElT}}
-  return storetype
-end
-function set_parameters_if_unspecified(
-  storetype::Type{<:Dense{ElT,DataT}}, datatype::Type{<:AbstractArray}=default_datatype(ElT)
-) where {ElT,DataT<:AbstractArray}
-  return set_datatype(storetype, set_parameters_if_unspecified(DataT, ElT))
-end
-function set_parameters_if_unspecified(
-  storetype::Type{<:Dense{ElT}}, datatype::Type{<:AbstractArray}=default_datatype(ElT)
-) where {ElT}
-  return default_storagetype(set_parameters_if_unspecified(datatype, ElT), ())
-end
-
-function set_parameters_if_unspecified(
-  storetype::Type{<:Dense},
-  datatype::Type{<:AbstractArray}=default_datatype(default_eltype()),
-)
-  return default_storagetype(datatype, ())
-end
+using .SetParameters:
+  SetParameters, Position, get_parameters, specify_parameters, unspecify_parameters
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
   return Dense{eltype(datatype),datatype}
@@ -31,8 +11,23 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray
   )
 end
 
-function set_eltype(
-  storagetype::Type{<:Dense{ElT,DataT}}, ElR::Type
-) where {ElT,DataT<:AbstractArray}
-  return Dense{ElR,similartype(DataT, ElR)}
+SetParameters.unspecify_parameters(::Type{<:Dense}) = Dense
+
+SetParameters.parenttype_position(::Type{<:Dense}) = Position(2)
+SetParameters.nparameters(::Type{<:Dense}) = Val(2)
+SetParameters.get_parameter(::Type{<:Dense{P1}}, ::Position{1}) where {P1} = P1
+SetParameters.get_parameter(::Type{<:Dense{<:Any,P2}}, ::Position{2}) where {P2} = P2
+SetParameters.default_parameter(::Type{<:Dense}, ::Position{1}) = Float64
+SetParameters.default_parameter(::Type{<:Dense}, ::Position{2}) = Vector
+
+SetParameters.set_parameter(::Type{<:Dense}, ::Position{1}, P1) = Dense{P1}
+function SetParameters.set_parameter(
+  ::Type{<:Dense{<:Any,P2}}, ::Position{1}, P1
+) where {P2}
+  return Dense{P1,P2}
+end
+
+SetParameters.set_parameter(::Type{<:Dense}, ::Position{2}, P2) = Dense{<:Any,P2}
+function SetParameters.set_parameter(::Type{<:Dense{P1}}, ::Position{2}, P2) where {P1}
+  return Dense{P1,P2}
 end

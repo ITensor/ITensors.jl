@@ -23,7 +23,7 @@ function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:Abstrac
   return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
 end
 
-function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
+function SetParameters.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
   return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
 end
 
@@ -74,7 +74,7 @@ end
 
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
-setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
+setdata(B::BlockSparse, ndata) = BlockSparse(ndata, copy(blockoffsets(B)))
 function setdata(storagetype::Type{<:BlockSparse}, data)
   return error("Not implemented, must specify block offsets as well")
 end

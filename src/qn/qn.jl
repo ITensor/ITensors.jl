@@ -238,7 +238,7 @@ function (a::QN + b::QN)
   !isactive(b[1]) && return a
 
   ma = MQNStorage(data(a))
-  for nb in 1:maxQNs
+  @inbounds for nb in 1:maxQNs
     !isactive(b[nb]) && break
     bname = name(b[nb])
     for na in 1:maxQNs
@@ -293,6 +293,7 @@ function fillqns_from(qn1::QN, qn2::QN)
   # If qn1 has no non-trivial qns, fill
   # with qn2
   !isactive(qn1) && return zero(qn2)
+  !isactive(qn2) && return qn1
   for qv2 in qn2
     if !hasname(qn1, qv2)
       qn1 = addqnval(qn1, zero(qv2))

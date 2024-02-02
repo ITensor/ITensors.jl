@@ -48,7 +48,7 @@ let
   end
   H = ITensors.MPO(os_h + os_p, sites)
 
-  #Get Ground state 
+  #Get Ground state
   @assert ishermitian(h)
   e = eigvals(Hermitian(h))
   @show e

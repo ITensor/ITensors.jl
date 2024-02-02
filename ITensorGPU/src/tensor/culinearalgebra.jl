@@ -52,7 +52,7 @@ function LinearAlgebra.svd(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,
     # TODO: Fix this in a more robust way.
     MV = copy(MV)
   end
-  # for consistency with cpu version, 
+  # for consistency with cpu version,
   # ITensors.jl/NDTensors/src/linearalgebra.jl/svd
   # need conj!(MV)
   conj!(MV)

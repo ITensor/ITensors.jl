@@ -118,7 +118,7 @@ using ITensors,
       @test cpu(U_gpu) * cpu(S_gpu) * cpu(V_gpu) ≈ U_cpu * S_cpu * V_cpu
     end
 
-    #=@testset "Test SVD truncation" begin 
+    #=@testset "Test SVD truncation" begin
         M = randn(4,4)
         (U,s,V) = svd(M)
         ii = Index(4)

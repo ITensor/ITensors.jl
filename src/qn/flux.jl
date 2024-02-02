@@ -33,7 +33,7 @@ checkflux(T::ITensor) = checkflux(tensor(T))
 """
     flux(T::Tensor, block::Block)
 
-Compute the flux of a specific block of a Tensor, 
+Compute the flux of a specific block of a Tensor,
 regardless of whether this block is present or not in the storage.
 """
 flux(T::Tensor, block::Block) = flux(inds(T), block)
@@ -41,7 +41,7 @@ flux(T::Tensor, block::Block) = flux(inds(T), block)
 """
     flux(T::Tensor, i::Integer, is::Integer...)
 
-Compute the flux of a specific element of a Tensor, 
+Compute the flux of a specific element of a Tensor,
 regardless of whether this element is zero or non-zero.
 """
 flux(T::Tensor, i::Integer, is::Integer...) = flux(inds(T), i, is...)
@@ -51,7 +51,7 @@ flux(T::Tensor, i::Integer, is::Integer...) = flux(inds(T), i, is...)
 
 Return the flux of a Tensor, based on what non-zero blocks it
 has. If the Tensor is not blocked or has no non-zero blocks,
-this function returns `nothing`. 
+this function returns `nothing`.
 """
 function flux(T::Tensor)
   (!hasqns(T) || isempty(T)) && return nothing

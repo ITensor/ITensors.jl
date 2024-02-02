@@ -67,7 +67,7 @@ println("The (i,j,k) = (2,1,3) element of T is ",el)
 To initialize all of the elements of an ITensor at once, you
 can pass a Julia array into the ITensor constructor.
 
-For example, if we want to construct an ITensor `A` with indices 
+For example, if we want to construct an ITensor `A` with indices
 `i,j` we can initialize it from a matrix as follows:
 
 ```julia
@@ -130,7 +130,7 @@ Note that for efficiency reasons, the array returned by the `array` function wil
 sometimes be a *view* of the ITensor, such that changing an element of `A` would
 also change the corresponding element of `T`. This is not always the case though:
 for example if the indices are passed in a different order from how the internal
-ITensor storage is arranged, or if  `T` is a block-sparse ITensor, since the 
+ITensor storage is arranged, or if  `T` is a block-sparse ITensor, since the
 (not stored) zero blocks will need to be filled in.
 
 
@@ -222,16 +222,16 @@ T .= myf.(T)
 ## Making an ITensor with a Single Non-Zero Element
 
 It is often useful to make ITensors with all elements zero
-except for a specific element that is equal to 1.0. 
+except for a specific element that is equal to 1.0.
 Use cases can include making product-state quantum wavefunctions
 or contracting single-element ITensors with other ITensors to
 set their indices to a fixed value.
 
 To make such an ITensor, use the [`onehot`](@ref) function. Borrowing terminology from engineering,
 a "one hot" vector or tensor has a single element equal to 1.0 and
-the rest zero. (In previous versions of ITensor this function was called `setelt`.) 
+the rest zero. (In previous versions of ITensor this function was called `setelt`.)
 
-The ITensor function [`onehot`](@ref) takes one or more 
+The ITensor function [`onehot`](@ref) takes one or more
 Index-value Pairs such as `i=>2` and `j=>1` and returns an ITensor
 with a 1.0 in the location specified by the Index values:
 
@@ -241,7 +241,7 @@ i = Index(2)
 O1 = onehot(i=>1)
 println(O1)
 ```
-    
+
 ```@example onehot_2
 using ITensors # hide
 i = Index(2) # hide
@@ -294,8 +294,8 @@ trA = A * delta(i,l)
 The ITensor approach to tensor factorizations emphasizes the structure
 of the factorization, and does not require knowing the index ordering.
 
-ITensor offers various tensor factorizations, such as the 
-singular value decomposition (SVD) and the QR factorization. 
+ITensor offers various tensor factorizations, such as the
+singular value decomposition (SVD) and the QR factorization.
 These are extended to the case of tensors by treating some of the indices
 as the "row" indices and the rest of the indices as the "column" indices,
 reshaping the tensor into a matrix to carry out the factorization, then
@@ -313,13 +313,13 @@ M = U S V^\dagger
 ```
 with U and V having the property ``U^\dagger U = 1`` and ``V^\dagger V = 1``.
 The matrix S is diagonal and has real, non-negative entries known as the singular
-values, which are typically ordered from largest to smallest. 
+values, which are typically ordered from largest to smallest.
 The SVD is well-defined for any matrix, including rectangular matrices. It also
 leads to a controlled approximation, where the error due to discarding columns of U and V
 is small if the corresponding singular values discarded are small.
 
-To compute the SVD of an ITensor, you only need to specify which indices are (collectively) 
-the "row" indices (thinking of the ITensor as a matrix), with the rest assumed to be the "column" 
+To compute the SVD of an ITensor, you only need to specify which indices are (collectively)
+the "row" indices (thinking of the ITensor as a matrix), with the rest assumed to be the "column"
 indices.
 
 Say we have an ITensor with indices i,j, and k
@@ -340,7 +340,7 @@ Diagrammatically the SVD operation above looks like:
 
 ![](itensor_factorization_figures/SVD_Ex1.png)
 
-The guarantee of the `svd` function is that the ITensor 
+The guarantee of the `svd` function is that the ITensor
 product `U*S*V` gives us back an ITensor identical to T:
 
 ```julia
@@ -444,7 +444,7 @@ is *unique*, which can be useful in certain cases.
 
 ## Combining Multiple Indices into One Index
 
-It can be very useful to combine or merge multiple indices of an ITensor into a 
+It can be very useful to combine or merge multiple indices of an ITensor into a
 single Index. Say we have an ITensor with indices `i,j,k` and we want to combine
 Index `i` and Index `k` into a new Index. This new Index (call it `c`) will have
 a dimension whose size is the dimension of `i` times the dimension of `k`.
@@ -472,7 +472,7 @@ CT = C * T
 nothing # hide
 ```
 
-Printing out the indices of the new ITensor `CT` we can see that it 
+Printing out the indices of the new ITensor `CT` we can see that it
 has only two indices:
 ```@example combiner
 @show inds(CT)
@@ -492,7 +492,7 @@ Combining is not limited to two indices and you can
 combine any number of indices, in any order, using a combiner.
 
 To undo the combining process and uncombine the Index `c` back into `i,k`,
-just contract with the conjugate of the combiner ITensor `dag(C)`. 
+just contract with the conjugate of the combiner ITensor `dag(C)`.
 ```@example combiner
 UT = dag(C) * CT
 @show inds(UT)

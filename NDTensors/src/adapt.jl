@@ -33,9 +33,9 @@ double_precision(x) = fmap(x -> adapt(double_precision(eltype(x)), x), x)
 #
 
 function adapt_storagetype(to::Type{<:AbstractVector}, x::Type{<:TensorStorage})
-  return set_datatype(x, set_eltype_if_unspecified(to, eltype(x)))
+  return set_datatype(x, specify_parameters(to, eltype(x)))
 end
 
 function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
-  return set_datatype(x, set_eltype_if_unspecified(set_ndims(to, 1), eltype(x)))
+  return set_datatype(x, specify_parameters(set_ndims(to, 1), eltype(x)))
 end

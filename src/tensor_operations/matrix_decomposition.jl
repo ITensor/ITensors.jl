@@ -483,7 +483,7 @@ function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs
   return xq(qr, A, Linds, Rinds; tags, kwargs...)
 end
 #
-#  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
+#  Generic function implementing both qr and ql decomposition. The X tensor = R or L.
 #
 function qx(
   qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qx", positive=false
@@ -520,7 +520,7 @@ function qx(
   Q, X = remove_trivial_index(Q, X, vαl, vαr)
   #
   # fix up the tag name for the index between Q and X.
-  #  
+  #
   q = commonind(Q, X)
   Q = settags(Q, tags, q)
   X = settags(X, tags, q)
@@ -530,8 +530,8 @@ function qx(
 end
 
 #
-#  Generic function implementing both rq and lq decomposition. Implemented using qr/ql 
-#  with swapping the left and right indices.  The X tensor = R or L. 
+#  Generic function implementing both rq and lq decomposition. Implemented using qr/ql
+#  with swapping the left and right indices.  The X tensor = R or L.
 #
 function xq(
   qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,xq", positive=false
@@ -539,7 +539,7 @@ function xq(
   Q, X, q = qx(A, Rinds, Linds; positive)
   #
   # fix up the tag name for the index between Q and L.
-  #  
+  #
   Q = settags(Q, tags, q)
   X = settags(X, tags, q)
   q = settags(q, tags)
@@ -763,6 +763,7 @@ function factorize(
   (singular_values!)=nothing,
   dir=nothing,
 )
+  @debug_check checkflux(A)
   if !isnothing(eigen_perturbation)
     if !(isnothing(which_decomp) || which_decomp == "eigen")
       error("""when passing a non-trivial eigen_perturbation to `factorize`,

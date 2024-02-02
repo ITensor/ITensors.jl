@@ -5,7 +5,7 @@ using ITensors
 # ground state wavefunction, and spin densities
 #
 
-# Usage: 
+# Usage:
 #
 # First install `ArgParse.jl`:
 #
@@ -64,7 +64,7 @@ cutoff = args["cutoff"]
 noise = args["noise"]
 
 #
-# Alternatively, define all of the 
+# Alternatively, define all of the
 # variables for all of the inputs
 # programatically. You can use the
 # keyword argument `as_symbols = true`
@@ -114,7 +114,7 @@ for i in N:-1:1
     p[] -= 1
   end
 end
-# Initialize wavefunction to be bond 
+# Initialize wavefunction to be bond
 # dimension 10 random MPS with number
 # of particles the same as `state`
 psi0 = randomMPS(sites, state, 10)

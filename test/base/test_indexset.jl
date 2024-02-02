@@ -99,7 +99,7 @@ using Compat
     Iijk = IndexSet(i, j, k)
 
     #
-    # setdiff 
+    # setdiff
     # intersect
     # symdiff
     # union

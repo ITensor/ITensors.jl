@@ -109,10 +109,10 @@ Two-qubit gates:
 - `"CRy"` (aliases: `"CRY"`) (takes arguments: θ)
 - `"CRz"` (aliases: `"CRZ"`) (takes arguments: θ)
 - `"CRn"` (aliases: `"CRn̂"`) (takes arguments: θ, ϕ, λ)
-- `"SWAP"` (aliases: `"Swap"`) 
-- `"√SWAP"` (aliases: `"√Swap"`) 
-- `"iSWAP"` (aliases: `"iSwap"`) 
-- `"√iSWAP"` (aliases: `"√iSwap"`) 
+- `"SWAP"` (aliases: `"Swap"`)
+- `"√SWAP"` (aliases: `"√Swap"`)
+- `"iSWAP"` (aliases: `"iSwap"`)
+- `"√iSWAP"` (aliases: `"√iSwap"`)
 - `"Rxx"` (aliases: `"RXX"`) (takes arguments: ϕ) Ising (XX) coupling gate
 - `"Ryy"` (aliases: `"RYY"`) (takes arguments: ϕ) Ising (YY) coupling gate
 - `"Rzz"` (aliases: `"RZZ"`) (takes arguments: ϕ) Ising (ZZ) coupling gate
@@ -217,7 +217,7 @@ Two-qudit operators:
 
 ## "Fermion" SiteType
 
-Site indices with the "Fermion" SiteType represent 
+Site indices with the "Fermion" SiteType represent
 spinless fermion sites with the states
 ``|0\rangle``, ``|1\rangle``, corresponding to zero fermions or one fermion.
 
@@ -308,10 +308,10 @@ Single-fermion operators:
 - `"Cdn"` (aliases: `"c↓"`) Down-spin annihilation operator
 - `"Cdagup"` (aliases: `"c†↑"`) Up-spin creation operator
 - `"Cdagdn"` (aliases: `"c†↓"`) Down-spin creation operator
-- `"Sz"` (aliases: `"Sᶻ"`) 
-- `"Sx"` (aliases: `"Sˣ"`) 
-- `"S+"` (aliases: `"Sp"`, `"S⁺"`,`"Splus"`) 
-- `"S-"` (aliases: `"Sm"`, `"S⁻"`, `"Sminus"`) 
+- `"Sz"` (aliases: `"Sᶻ"`)
+- `"Sx"` (aliases: `"Sˣ"`)
+- `"S+"` (aliases: `"Sp"`, `"S⁺"`,`"Splus"`)
+- `"S-"` (aliases: `"Sm"`, `"S⁻"`, `"Sminus"`)
 - `"F"` Jordan-Wigner string operator
 - `"Fup"` (aliases: `"F↑"`) Up-spin Jordan-Wigner string operator
 - `"Fdn"` (aliases: `"F↓"`) Down-spin Jordan-Wigner string operator
@@ -371,10 +371,10 @@ Single-fermion operators:
 - `"Cdn"` (aliases: `"c↓"`) Down-spin annihilation operator
 - `"Cdagup"` (aliases: `"c†↑"`) Up-spin creation operator
 - `"Cdagdn"` (aliases: `"c†↓"`) Down-spin creation operator
-- `"Sz"` (aliases: `"Sᶻ"`) 
-- `"Sx"` (aliases: `"Sˣ"`) 
-- `"S+"` (aliases: `"Sp"`, `"S⁺"`,`"Splus"`) 
-- `"S-"` (aliases: `"Sm"`, `"S⁻"`, `"Sminus"`) 
+- `"Sz"` (aliases: `"Sᶻ"`)
+- `"Sx"` (aliases: `"Sˣ"`)
+- `"S+"` (aliases: `"Sp"`, `"S⁺"`,`"Splus"`)
+- `"S-"` (aliases: `"Sm"`, `"S⁻"`, `"Sminus"`)
 - `"F"` Jordan-Wigner string operator
 - `"Fup"` (aliases: `"F↑"`) Up-spin Jordan-Wigner string operator
 - `"Fdn"` (aliases: `"F↓"`) Down-spin Jordan-Wigner string operator

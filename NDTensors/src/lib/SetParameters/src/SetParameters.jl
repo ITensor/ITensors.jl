@@ -6,13 +6,14 @@ include("interface.jl")
 include("get_parameter.jl")
 include("set_parameters_generic.jl")
 include("set_parameters.jl")
-include("set_unspecified_parameters.jl")
+include("specify_parameters.jl")
 include("set_default_parameters.jl")
 include("Base/val.jl")
+include("Base/abstractarray.jl")
 include("Base/array.jl")
 include("Base/subarray.jl")
 
-## TODO when this is a full package utilize this function to 
+## TODO when this is a full package utilize this function to
 # # enable extensions
 # using PackageExtensionCompat
 # function __init__()
@@ -28,6 +29,8 @@ export DefaultParameter,
   get_parameter,
   get_parameters,
   nparameters,
+  set_eltype,
+  set_ndims,
   set_parameters,
-  set_unspecified_parameters
+  specify_parameters
 end # module

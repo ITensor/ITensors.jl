@@ -5,14 +5,14 @@
 Sometimes you may find that doing `] update ITensors` or equivalently doing `] up ITensors` within
 Julia package manager mode doesn't result in the ITensors package
 actually being upgraded. You may see that the current version
-you have remains stuck to a version that is lower than the latest one which you 
+you have remains stuck to a version that is lower than the latest one which you
 can [check here](https://github.com/ITensor/ITensors.jl).
 
 What is most likely going on is that you have other packages installed which
 are blocking ITensors from being updated.
 
 To get more information into which packages may be doing this, and what versions
-they are requiring, you can do the following. First [look up the latest version of ITensors.jl](https://github.com/ITensor/ITensors.jl). Let's say for this example that it is `v0.3.0`. 
+they are requiring, you can do the following. First [look up the latest version of ITensors.jl](https://github.com/ITensor/ITensors.jl). Let's say for this example that it is `v0.3.0`.
 
 Next, input the following command while in package manager mode:
 

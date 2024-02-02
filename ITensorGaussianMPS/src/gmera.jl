@@ -54,7 +54,7 @@ function correlation_matrix_to_gmps_brickwall_tailed(
   return Λ, V, indsnext, relinds
 end
 
-# shift givens rotation indexes according to the inds 
+# shift givens rotation indexes according to the inds
 function shiftByInds!(G::Circuit, inds::Vector{Int})
   for (n, g) in enumerate(G.rotations)
     G.rotations[n] = Givens(inds[g.i1], inds[g.i2], g.c, g.s)
