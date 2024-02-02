@@ -18,6 +18,10 @@ using SafeTestsets: @safetestset
     using NDTensors: NDTensors
     include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
   end
+  if "rocm" in ARGS || "all" in ARGS
+    using NDTensors: NDTensors
+    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorROCm.jl"))
+  end
   if "metal" in ARGS || "all" in ARGS
     using NDTensors: NDTensors
     include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
