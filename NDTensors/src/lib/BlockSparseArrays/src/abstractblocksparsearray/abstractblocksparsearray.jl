@@ -31,7 +31,7 @@ end
 
 # Specialized in order to fix ambiguity error with `BlockArrays`.
 function Base.setindex!(
-  a::AbstractBlockSparseArray{<:Any,N}, value, I::Vararg{Any,N}
+  a::AbstractBlockSparseArray{<:Any,N}, value, I::Vararg{Int,N}
 ) where {N}
   blocksparse_setindex!(a, value, I...)
   return a
