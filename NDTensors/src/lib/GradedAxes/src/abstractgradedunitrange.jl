@@ -91,15 +91,19 @@ function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRang
   return show(io, mimetype, blockedrange(a))
 end
 
-# TODO: Update to use `BlockVector{<:Block}`.
+# TODO: This is not part of the `BlockArrays` interface, should
+# we give this a different name?
+function Base.length(a::AbstractGradedUnitRange, b::Block{1})
+  return blocklengths(a)[Int(b)]
+end
+
 function blockmerge(a::AbstractGradedUnitRange, grouped_perm::AbstractBlockVector{<:Block})
   merged_nondual_sectors = map(blocks(grouped_perm)) do group
     return nondual_sector(a, first(group))
   end
   # Length of each block
-  lengths = Dictionary(BlockRange(Base.OneTo(blocklength(a))), blocklengths(a))
   merged_lengths = map(blocks(grouped_perm)) do group
-    return sum(b -> lengths[b], group)
+    return sum(b -> length(a, b), group)
   end
   return gradedrange(merged_nondual_sectors, merged_lengths, isdual(a))
 end
@@ -116,13 +120,14 @@ function blockmergesortperm(a::AbstractGradedUnitRange)
   # If it is dual, reverse the sorting so the sectors
   # end up sorted in the same way whether or not the space
   # is dual.
+  # TODO: This may not be correct for symmetries beyond `U(1)`.
   return Block.(groupsortperm(nondual_sectors(a); rev=isdual(a)))
 end
 
-function sub_axis(a::AbstractGradedUnitRange, blocks)
-  a_sub = sub_axis(blockedrange(a), blocks)
-  sectors_sub = map(b -> sector(a, b), Indices(blocks))
-  return AbstractGradedUnitRange(a_sub, sectors_sub)
+function Base.getindex(a::AbstractGradedUnitRange, I::AbstractVector{<:Block})
+  nondual_sectors_sub = map(b -> nondual_sector(a, b), I)
+  blocklengths_sub = map(b -> length(a, b), I)
+  return gradedrange(nondual_sectors_sub, blocklengths_sub, isdual(a))
 end
 
 function fuse(
@@ -137,20 +142,3 @@ end
 # maybe keep the block structure (like `BlockArrays` does).
 Broadcast.axistype(a1::AbstractGradedUnitRange, a2::Base.OneTo) = a2
 Broadcast.axistype(a1::Base.OneTo, a2::AbstractGradedUnitRange) = a1
-
-## TODO: Add this back.
-## # Slicing
-## ## using BlockArrays: BlockRange, _BlockedUnitRange
-## Base.@propagate_inbounds function Base.getindex(
-##   b::AbstractGradedUnitRange, KR::BlockRange{1}
-## )
-##   cs = blocklasts(b)
-##   isempty(KR) && return _BlockedUnitRange(1, cs[1:0])
-##   K, J = first(KR), last(KR)
-##   k, j = Integer(K), Integer(J)
-##   bax = blockaxes(b, 1)
-##   @boundscheck K in bax || throw(BlockBoundsError(b, K))
-##   @boundscheck J in bax || throw(BlockBoundsError(b, J))
-##   K == first(bax) && return _BlockedUnitRange(first(b), cs[k:j])
-##   return _BlockedUnitRange(cs[k - 1] + 1, cs[k:j])
-## end

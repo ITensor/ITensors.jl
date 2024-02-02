@@ -14,11 +14,16 @@ function blockedaxes(a::AbstractArray, sizeblocks::Pair...)
 end
 
 # splitdims(randn(4, 4), 1:2, 1:2, 1:2, 1:2)
-function splitdims(a::AbstractArray, axes::AbstractUnitRange...)
+function splitdims(::ReshapeFusion, a::AbstractArray, axes::AbstractUnitRange...)
   # TODO: Add `uncanonicalizedims`.
   # TODO: Need `length` since `reshape` doesn't accept `axes`,
   # maybe make a `reshape_axes` function.
   return reshape(a, length.(axes)...)
+end
+
+# splitdims(randn(4, 4), 1:2, 1:2, 1:2, 1:2)
+function splitdims(a::AbstractArray, axes::AbstractUnitRange...)
+  return splitdims(FusionStyle(a), a, axes)
 end
 
 # splitdims(randn(4, 4), (1:2, 1:2), (1:2, 1:2))

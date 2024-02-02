@@ -1,4 +1,12 @@
-using BlockArrays: Block, BlockIndex, block, blocks, blockcheckbounds, findblockindex
+using BlockArrays:
+  AbstractBlockVector,
+  Block,
+  BlockIndex,
+  block,
+  blockcheckbounds,
+  blocks,
+  blocklengths,
+  findblockindex
 using ..SparseArrayInterface: perm, iperm, nstored
 using MappedArrays: mappedarray
 
@@ -9,6 +17,40 @@ end
 function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where {N}
   @boundscheck checkbounds(a, I...)
   return a[findblockindex.(axes(a), I)...]
+end
+
+# TODO: Implement as `copy(@view a[I...])`, which is then implemented
+# through `ArrayLayouts.sub_materialize`.
+function blocksparse_getindex(
+  a::AbstractArray{<:Any,N}, I::Vararg{AbstractVector{<:Block{1}},N}
+) where {N}
+  blocks_a = blocks(a)
+  # Convert to cartesian indices of the underlying sparse array of blocks.
+  CI = map(i -> Int.(i), I)
+  subblocks_a = blocks_a[CI...]
+  subaxes = ntuple(ndims(a)) do i
+    return axes(a, i)[I[i]]
+  end
+  return typeof(a)(subblocks_a, subaxes)
+end
+
+# Slice by block and merge according to the blocking structure of the indices.
+function blocksparse_getindex(
+  a::AbstractArray{<:Any,N}, I::Vararg{AbstractBlockVector{<:Block{1}},N}
+) where {N}
+  a_sub = a[Vector.(I)...]
+  # TODO: Define `blocklengths(::AbstractBlockVector)`? Maybe make a PR
+  # to `BlockArrays`.
+  blockmergers = blockedrange.(blocklengths.(only.(axes.(I))))
+  # TODO: Need to implement this!
+  a_merged = block_merge(a_sub, blockmergers...)
+  return a_merged
+end
+
+# TODO: Need to implement this!
+function block_merge(a::AbstractArray{<:Any,N}, I::Vararg{BlockedUnitRange,N}) where {N}
+  # Need to `block_merge` each axis.
+  return a
 end
 
 function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Vararg{Int,N}) where {N}
