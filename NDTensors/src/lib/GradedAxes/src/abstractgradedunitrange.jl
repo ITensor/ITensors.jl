@@ -97,21 +97,9 @@ function Base.length(a::AbstractGradedUnitRange, b::Block{1})
   return blocklengths(a)[Int(b)]
 end
 
-function blockmerge(a::AbstractGradedUnitRange, grouped_perm::AbstractBlockVector{<:Block})
-  merged_nondual_sectors = map(blocks(grouped_perm)) do group
-    return nondual_sector(a, first(group))
-  end
-  # Length of each block
-  merged_lengths = map(blocks(grouped_perm)) do group
-    return sum(b -> length(a, b), group)
-  end
-  return gradedrange(merged_nondual_sectors, merged_lengths, isdual(a))
-end
-
 # Sort and merge by the grade of the blocks.
 function blockmergesort(a::AbstractGradedUnitRange)
-  grouped_perm = blockmergesortperm(a)
-  return blockmerge(a, grouped_perm)
+  return a[blockmergesortperm(a)]
 end
 
 # Get the permutation for sorting, then group by common elements.
@@ -128,6 +116,17 @@ function Base.getindex(a::AbstractGradedUnitRange, I::AbstractVector{<:Block})
   nondual_sectors_sub = map(b -> nondual_sector(a, b), I)
   blocklengths_sub = map(b -> length(a, b), I)
   return gradedrange(nondual_sectors_sub, blocklengths_sub, isdual(a))
+end
+
+function Base.getindex(a::AbstractGradedUnitRange, grouped_perm::AbstractBlockVector{<:Block})
+  merged_nondual_sectors = map(blocks(grouped_perm)) do group
+    return nondual_sector(a, first(group))
+  end
+  # Length of each block
+  merged_lengths = map(blocks(grouped_perm)) do group
+    return sum(b -> length(a, b), group)
+  end
+  return gradedrange(merged_nondual_sectors, merged_lengths, isdual(a))
 end
 
 function fuse(
