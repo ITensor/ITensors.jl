@@ -12,3 +12,22 @@ function Base.copy(
 )
   return copy(@view copy(expose(parent(src)))[parentindices(unexpose(src))...])
 end
+
+function Base.copyto!(dest::Exposed{<:ROCArray}, src::Exposed{<:ROCArray,<:SubArray})
+  copyto!(dest, expose(copy(src)))
+  return unexpose(dest)
+end
+
+function Base.copyto!(
+  dest::Exposed{<:ROCArray}, src::Exposed{<:ROCArray,<:Base.ReshapedArray}
+)
+  copyto!(dest, expose(parent(src)))
+  return unexpose(dest)
+end
+
+function Base.copyto!(
+  dest::Exposed{<:ROCArray}, src::Exposed{<:ROCArray,<:LinearAlgebra.Transpose}
+)
+  copyto!(expose(transpose(dest)), expose(parent(src)))
+  return unexpose(dest)
+end
