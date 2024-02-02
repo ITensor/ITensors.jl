@@ -1,6 +1,7 @@
 using BlockArrays:
   AbstractBlockVector,
   Block,
+  BlockedUnitRange,
   BlockIndex,
   block,
   blockcheckbounds,
