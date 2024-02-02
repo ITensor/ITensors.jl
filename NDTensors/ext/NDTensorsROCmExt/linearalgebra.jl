@@ -34,14 +34,20 @@ function NDTensors.svd_catch_error(A::ROCMatrix, ::JacobiAlgorithm)
     println("GPU free memory less than 1GB, trying to free before running SVD")
     GC.gc()
     AMDGPU.HIP.hipMemPoolTrimTo(pool, 0)
-    println("after GC and pool trim: main free memory = ", AMDGPU.Mem.free() / 1e9, "GB, pool used mem = ", AMDGPU.HIP.used_memory(pool) / 1e9, "GB")
+    println(
+      "after GC and pool trim: main free memory = ",
+      AMDGPU.Mem.free() / 1e9,
+      "GB, pool used mem = ",
+      AMDGPU.HIP.used_memory(pool) / 1e9,
+      "GB",
+    )
   end
 
   float_type = real(eltype(A))
   U, S, V, residual, n_sweeps, info = try
-      # second parameter is the absolute tolerance, setting to <= 0 means
-      # setting it to machine precision
-      AMDGPU.rocSOLVER.gesvdj!(A, float_type(-1.0), Int32(JACOBI_MAX_ITERATIONS))
+    # second parameter is the absolute tolerance, setting to <= 0 means
+    # setting it to machine precision
+    AMDGPU.rocSOLVER.gesvdj!(A, float_type(-1.0), Int32(JACOBI_MAX_ITERATIONS))
   catch
     println("caught error running rocSOLVER Jacobi Algorithm (gesvdj!)")
     return nothing

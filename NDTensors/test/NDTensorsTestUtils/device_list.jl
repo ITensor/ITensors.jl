@@ -30,7 +30,7 @@ function devices_list(test_args)
       push!(devs, NDTensors.roc)
     else
       println(
-        "Warning: AMDGPU.jl is not functional on this architecture and tests will be skipped."
+        "Warning: AMDGPU.jl is not functional on this architecture and tests will be skipped.",
       )
     end
   end

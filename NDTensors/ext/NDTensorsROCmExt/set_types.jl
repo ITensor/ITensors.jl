@@ -29,7 +29,9 @@ set_parameter(::Type{<:ROCArray{P1}}, ::Position{3}, P3) where {P1} = ROCArray{P
 function set_parameter(::Type{<:ROCArray{<:Any,P2}}, ::Position{3}, P3) where {P2}
   return ROCArray{<:Any,P2,P3}
 end
-set_parameter(::Type{<:ROCArray{P1,P2}}, ::Position{3}, P3) where {P1,P2} = ROCArray{P1,P2,P3}
+function set_parameter(::Type{<:ROCArray{P1,P2}}, ::Position{3}, P3) where {P1,P2}
+  return ROCArray{P1,P2,P3}
+end
 
 default_parameter(::Type{<:ROCArray}, ::Position{1}) = Float64
 default_parameter(::Type{<:ROCArray}, ::Position{2}) = 1
