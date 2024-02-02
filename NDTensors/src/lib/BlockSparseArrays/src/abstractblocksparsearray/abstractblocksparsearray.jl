@@ -25,6 +25,11 @@ function Base.getindex(a::AbstractBlockSparseArray{<:Any,N}, I::Block{N}) where 
 end
 
 # Fix ambiguity error with `BlockArrays`.
+function Base.getindex(a::AbstractBlockSparseArray{<:Any,1}, I::Block{1})
+  return ArrayLayouts.layout_getindex(a, I)
+end
+
+# Fix ambiguity error with `BlockArrays`.
 function Base.getindex(a::AbstractBlockSparseArray, I::Vararg{AbstractVector})
   return blocksparse_getindex(a, I...)
 end

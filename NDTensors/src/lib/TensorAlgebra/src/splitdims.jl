@@ -23,7 +23,7 @@ end
 
 # splitdims(randn(4, 4), 1:2, 1:2, 1:2, 1:2)
 function splitdims(a::AbstractArray, axes::AbstractUnitRange...)
-  return splitdims(FusionStyle(a), a, axes)
+  return splitdims(FusionStyle(a), a, axes...)
 end
 
 # splitdims(randn(4, 4), (1:2, 1:2), (1:2, 1:2))
