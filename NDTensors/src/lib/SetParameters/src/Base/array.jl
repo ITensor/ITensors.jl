@@ -11,3 +11,5 @@ default_parameter(::Type{<:Array}, ::Position{1}) = Float64
 default_parameter(::Type{<:Array}, ::Position{2}) = 1
 
 nparameters(::Type{<:Array}) = Val(2)
+
+unspecify_parameters(::Type{<:Array}) = Array

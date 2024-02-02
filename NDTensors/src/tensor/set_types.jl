@@ -1,8 +1,4 @@
-function set_eltype(arraytype::Type{<:Tensor}, eltype::Type)
-  return set_storagetype(arraytype, set_eltype(storagetype(arraytype), eltype))
-end
-
-function set_ndims(arraytype::Type{<:Tensor}, ndims)
+function SetParameters.set_ndims(arraytype::Type{<:Tensor}, ndims)
   # TODO: Implement something like:
   # ```julia
   # return set_storagetype(arraytype, set_ndims(storagetype(arraytype), ndims))
