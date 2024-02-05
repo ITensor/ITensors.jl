@@ -23,6 +23,11 @@ function length(A::AbstractSum)
   return length(first(terms(A)))
 end
 
+function site_range(A::AbstractSum)
+  @assert allequal(Iterators.map(site_range, terms(A)))
+  return site_range(first(terms(A)))
+end
+
 """
     product(P::ProjMPOSum,v::ITensor)
 
@@ -38,6 +43,8 @@ as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
 product(A::AbstractSum, v::ITensor) = sum(t -> product(t, v), terms(A))
+
+contract(A::AbstractSum, v::ITensor) = sum(t -> contract(t, v), terms(A))
 
 """
     eltype(P::ProjMPOSum)
@@ -109,6 +116,11 @@ saving of cached data to hard disk.
 """
 function disk(sum::AbstractSum; disk_kwargs...)
   return set_terms(sum, map(t -> disk(t; disk_kwargs...), terms(sum)))
+end
+
+function checkflux(sum::AbstractSum)
+  foreach(checkflux, terms(sum))
+  return nothing
 end
 
 #

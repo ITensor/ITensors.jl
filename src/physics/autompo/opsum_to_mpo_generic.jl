@@ -304,26 +304,33 @@ function MPO(eltype::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; kwargs..
 end
 
 # Conversion from other formats
-function MPO(o::Op, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Float64}() + o, s; kwargs...)
+function MPO(eltype::Type{<:Number}, o::Op, s::Vector{<:Index}; kwargs...)
+  return MPO(eltype, OpSum{Float64}() + o, s; kwargs...)
 end
 
-function MPO(o::Scaled{C,Op}, s::Vector{<:Index}; kwargs...) where {C}
-  return MPO(OpSum{C}() + o, s; kwargs...)
+function MPO(eltype::Type{<:Number}, o::Scaled{C,Op}, s::Vector{<:Index}; kwargs...) where {C}
+  return MPO(eltype, OpSum{C}() + o, s; kwargs...)
 end
 
-function MPO(o::Sum{Op}, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Float64}() + o, s; kwargs...)
+function MPO(eltype::Type{<:Number}, o::Sum{Op}, s::Vector{<:Index}; kwargs...)
+  return MPO(eltype, OpSum{Float64}() + o, s; kwargs...)
 end
 
-function MPO(o::Prod{Op}, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum{Float64}() + o, s; kwargs...)
+function MPO(eltype::Type{<:Number}, o::Prod{Op}, s::Vector{<:Index}; kwargs...)
+  return MPO(eltype, OpSum{Float64}() + o, s; kwargs...)
 end
 
-function MPO(o::Scaled{C,Prod{Op}}, s::Vector{<:Index}; kwargs...) where {C}
-  return MPO(OpSum{C}() + o, s; kwargs...)
+function MPO(eltype::Type{<:Number}, o::Scaled{C,Prod{Op}}, s::Vector{<:Index}; kwargs...) where {C}
+  return MPO(eltype, OpSum{C}() + o, s; kwargs...)
 end
 
-function MPO(o::Sum{Scaled{C,Op}}, s::Vector{<:Index}; kwargs...) where {C}
-  return MPO(OpSum{C}() + o, s; kwargs...)
+function MPO(eltype::Type{<:Number}, o::Sum{Scaled{C,Op}}, s::Vector{<:Index}; kwargs...) where {C}
+  return MPO(eltype, OpSum{C}() + o, s; kwargs...)
+end
+
+# Like `Ops.OpSumLike` but without `OpSum` included.
+const OpSumLikeWithoutOpSum{C} = Union{Op,Scaled{C,Op},Sum{Op},Prod{Op},Scaled{C,Prod{Op}},Sum{Scaled{C,Op}}}
+
+function MPO(o::OpSumLikeWithoutOpSum, s::Vector{<:Index}; kwargs...)
+  return MPO(Float64, o, s; kwargs...)
 end
