@@ -1,3 +1,4 @@
+## TODO This needs to be redone with new system
 """
 Get the default parameter of an object at a specified position.
 """
@@ -68,6 +69,7 @@ function set_nparameters(
   parameters::DefaultParameters{Any}, nparameters::Val, position::Position
 )
   ndefault_parameters = Val(get_parameter(nparameters) - get_parameter(position) + 1)
+
   return set_parameter(typeof(parameters), ndefault_parameters)()
 end
 
