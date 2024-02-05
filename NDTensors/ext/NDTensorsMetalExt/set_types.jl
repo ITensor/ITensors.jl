@@ -1,4 +1,4 @@
-# # `TypeParameterAccessor.jl` overloads.
+# # `TypeParameterAccessors.jl` overloads.
 # get_parameter(::Type{<:MtlArray{P1}}, ::Position{1}) where {P1} = P1
 # get_parameter(::Type{<:MtlArray{<:Any,P2}}, ::Position{2}) where {P2} = P2
 # get_parameter(::Type{<:MtlArray{<:Any,<:Any,P3}}, ::Position{3}) where {P3} = P3
@@ -44,4 +44,4 @@
 #   return set_parameter(arraytype, Position(3), storagemode)
 # end
 
-# TypeParameterAccessor.unspecify_parameters(::Type{<:MtlArray}) = MtlArray
+# TypeParameterAccessors.unspecify_parameters(::Type{<:MtlArray}) = MtlArray

@@ -21,7 +21,7 @@ is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
 # By default, the `parentype` of an array type is itself
 parenttype(arraytype::Type{<:AbstractArray}) = arraytype
 
-# TODO: Use `TypeParameterAccessor` here.
+# TODO: Use `TypeParameterAccessors` here.
 parenttype(::Type{<:ReshapedArray{<:Any,<:Any,P}}) where {P} = P
 parenttype(::Type{<:Transpose{<:Any,P}}) where {P} = P
 parenttype(::Type{<:Adjoint{<:Any,P}}) where {P} = P

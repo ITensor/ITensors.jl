@@ -10,7 +10,7 @@ using Test: @testset
   "GradedAxes",
   "NamedDimsArrays",
   "Sectors",
-  "TypeParameterAccessor",
+  "TypeParameterAccessors",
   "SmallVectors",
   "SortedSets",
   "SparseArrayDOKs",

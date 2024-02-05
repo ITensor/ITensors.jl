@@ -104,7 +104,7 @@ Base.axes(a::BlockSparseArray) = a.axes
 # BlockArrays `AbstractBlockArray` interface
 BlockArrays.blocks(a::BlockSparseArray) = a.blocks
 
-# TODO: Use `TypeParameterAccessor`.
+# TODO: Use `TypeParameterAccessors`.
 blockstype(::Type{<:BlockSparseArray{<:Any,<:Any,<:Any,B}}) where {B} = B
 
 # Base interface

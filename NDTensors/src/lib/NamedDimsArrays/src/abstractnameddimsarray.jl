@@ -16,7 +16,7 @@ dimnames(a::AbstractNamedDimsArray) = error("Not implemented")
 Base.parent(::AbstractNamedDimsArray) = error("Not implemented")
 
 # TODO: Use `Unwrap`.
-# TODO: Use `TypeParameterAccessor`.
+# TODO: Use `TypeParameterAccessors`.
 parenttype(::AbstractNamedDimsArray{<:Any,<:Any,Parent}) where {Parent} = Parent
 
 # Set the names of an unnamed AbstractArray

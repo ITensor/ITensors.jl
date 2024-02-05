@@ -1,4 +1,4 @@
-# # `TypeParameterAccessor.jl` overloads.
+# # `TypeParameterAccessors.jl` overloads.
 # get_parameter(::Type{<:CuArray{P1}}, ::Position{1}) where {P1} = P1
 # get_parameter(::Type{<:CuArray{<:Any,P2}}, ::Position{2}) where {P2} = P2
 # get_parameter(::Type{<:CuArray{<:Any,<:Any,P3}}, ::Position{3}) where {P3} = P3
@@ -37,4 +37,4 @@
 
 # nparameters(::Type{<:CuArray}) = Val(3)
 
-# TypeParameterAccessor.unspecify_parameters(::Type{<:CuArray}) = CuArray
+# TypeParameterAccessors.unspecify_parameters(::Type{<:CuArray}) = CuArray

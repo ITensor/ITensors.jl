@@ -1,7 +1,7 @@
 module NDTensorsCUDAExt
 
 using NDTensors
-using NDTensors.TypeParameterAccessor
+using NDTensors.TypeParameterAccessors
 using NDTensors.Unwrap
 using Adapt
 using Functors

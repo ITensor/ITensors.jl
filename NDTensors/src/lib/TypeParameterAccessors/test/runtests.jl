@@ -1,8 +1,8 @@
 @eval module $(gensym())
 using Test: @inferred, @test, @testset
-using NDTensors.TypeParameterAccessor
+using NDTensors.TypeParameterAccessors
 
-@testset "Test NDTensors.TypeParameterAccessor" begin
+@testset "Test NDTensors.TypeParameterAccessors" begin
   @testset "Get parameters" begin
     @test @inferred(parameters(Array{Float32,3})) == (Float32, 3)
     @test @inferred(parameter(Array{Float32,3}, Position(1))) == Float32
@@ -151,10 +151,10 @@ using NDTensors.TypeParameterAccessor
     m = Matrix{Float64}
     a = Array{ComplexF32}
     val = Val{3}
-    @test TypeParameterAccessor.unspecify_parameters(v) == Array
-    @test TypeParameterAccessor.unspecify_parameters(m) == Array
-    @test TypeParameterAccessor.unspecify_parameters(a) == Array
-    @test TypeParameterAccessor.unspecify_parameters(val) == Val
+    @test TypeParameterAccessors.unspecify_parameters(v) == Array
+    @test TypeParameterAccessors.unspecify_parameters(m) == Array
+    @test TypeParameterAccessors.unspecify_parameters(a) == Array
+    @test TypeParameterAccessors.unspecify_parameters(val) == Val
   end
 end
 end

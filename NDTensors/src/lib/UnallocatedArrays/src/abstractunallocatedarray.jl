@@ -1,5 +1,5 @@
 using FillArrays: FillArrays, getindex_value
-using NDTensors.TypeParameterAccessor: set_eltype, set_ndims
+using NDTensors.TypeParameterAccessors: set_eltype, set_ndims
 using Adapt: adapt
 
 const UnallocatedArray{ElT,N,AxesT,AllocT} = Union{

@@ -1,4 +1,4 @@
-module TypeParameterAccessor
+module TypeParameterAccessors
 include("position.jl")
 include("unspecifiedparameter.jl")
 include("default_parameter.jl")

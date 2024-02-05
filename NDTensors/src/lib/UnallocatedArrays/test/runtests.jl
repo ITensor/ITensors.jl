@@ -243,11 +243,11 @@ end
 
 using FillArrays: Fill, Zeros
 using NDTensors.UnallocatedArrays
-using NDTensors.TypeParameterAccessor:
+using NDTensors.TypeParameterAccessors:
   Position, default_parameter, nparameters, get_parameter, set_parameters
 using Test: @test, @testset
 
-@testset "TypeParameterAccessor" begin
+@testset "TypeParameterAccessors" begin
   @testset "Tetsing $typ" for (typ) in (:Fill, :Zeros)
     @eval begin
       t1 = default_parameter($typ, Position{1}())

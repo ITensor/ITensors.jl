@@ -1,6 +1,6 @@
 using FillArrays:
   FillArrays, AbstractFill, Fill, broadcasted_fill, getindex_value, kron_fill, mult_fill
-using NDTensors.TypeParameterAccessor: Position, set_parameters
+using NDTensors.TypeParameterAccessors: Position, set_parameters
 
 struct UnallocatedFill{ElT,N,Axes,Alloc} <: AbstractFill{ElT,N,Axes}
   f::Fill{ElT,N,Axes}
