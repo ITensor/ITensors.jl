@@ -15,10 +15,10 @@ end
 
 Base.axes(block_arr::BlockSparseArray) = block_arr.axes
 BlockArrays.blocks(a::BlockSparseArray) = a.blocks
-# TODO: Use `SetParameters`.
+# TODO: Use `TypeParameterAccessor`.
 blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 
-# TODO: Use `SetParameters`.
+# TODO: Use `TypeParameterAccessor`.
 set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
 
 # TODO: Move to `AbstractArray` file.

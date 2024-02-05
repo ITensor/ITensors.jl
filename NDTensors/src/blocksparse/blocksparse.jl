@@ -23,7 +23,7 @@ function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:Abstrac
   return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
 end
 
-function SetParameters.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
+function TypeParameterAccessor.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
   return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
 end
 

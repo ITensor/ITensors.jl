@@ -19,7 +19,7 @@ Algorithm(s; kwargs...) = Algorithm{Symbol(s)}(NamedTuple(kwargs))
 
 Algorithm(alg::Algorithm) = alg
 
-# TODO: Use `SetParameters`.
+# TODO: Use `TypeParameterAccessor`.
 algorithm_string(::Algorithm{Alg}) where {Alg} = string(Alg)
 
 function Base.show(io::IO, alg::Algorithm)

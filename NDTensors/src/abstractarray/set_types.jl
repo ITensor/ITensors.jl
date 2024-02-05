@@ -1,4 +1,4 @@
-using .SetParameters: set_ndims
+using .TypeParameterAccessor: set_ndims
 """
 # Do we still want to define things like this?
 TODO: Use `Accessors.jl` notation:
@@ -11,7 +11,7 @@ TODO: Use `Accessors.jl` notation:
 # TODO: Delete this when we change to using a
 # `FillArray` instead. This is a stand-in
 # to make things work with the current design.
-function SetParameters.set_ndims(numbertype::Type{<:Number}, ndims)
+function TypeParameterAccessor.set_ndims(numbertype::Type{<:Number}, ndims)
   return numbertype
 end
 

@@ -1,4 +1,4 @@
-module SetParameters
+module TypeParameterAccessor
 include("position.jl")
 include("unspecifiedparameter.jl")
 include("default_parameter.jl")
@@ -16,7 +16,7 @@ include("Base/abstractarray.jl")
 # end
 
 # This implementation relies on Julia Base internals
-include("typeparameteraccessor.jl")
+include("typeparamaccessor.jl")
 
 export DefaultParameter,
   DefaultParameters,

@@ -8,7 +8,6 @@ using FillArrays:
   kron_fill,
   kron_zeros,
   mult_zeros
-using NDTensors.SetParameters: Position, set_parameters
 ## TODO Should Alloc also be of ElT and N or should there be
 ## More freedom there?
 struct UnallocatedZeros{ElT,N,Axes,Alloc} <: AbstractZeros{ElT,N,Axes}
