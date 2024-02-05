@@ -1,6 +1,6 @@
 using ITensors, Test, Random
 
-using ITensors: nsite, set_nsite!
+using ITensors: nsite, set_nsite!, checkflux
 
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
@@ -127,6 +127,35 @@ using ITensors: nsite, set_nsite!
     @test PHdisk.LR[PHdisk.rpos] ≈ PHdisk.Rcache
     position!(PH, psi, N)
     @test PH.lpos == N - 1
+  end
+
+  @testset "ProjMPOSum Tests" begin
+    N = 10
+    sites = siteinds("S=1", N; conserve_qns=true)
+
+    osA = OpSum()
+    for j in 1:(N - 1)
+      osA += "Sz", j, "Sz", j + 1
+    end
+    HA = MPO(osA, sites)
+
+    osB = OpSum()
+    for j in 1:(N - 1)
+      osB += 0.5, "S+", j, "S-", j + 1
+      osB += 0.5, "S-", j, "S+", j + 1
+    end
+    HB = MPO(osB, sites)
+
+    ps = ProjMPOSum([HA,HB])
+    @test isnothing(checkflux(ps))
+
+    # Test error thrown when non-qn conserving MPO included
+    osC = OpSum()
+    osC += "S+",1,"S+",2
+    HC = MPO(osC, sites)
+    ps = ProjMPOSum([HA,HB,HC])
+    @test_throws ErrorException isnothing(checkflux(ps))
+
   end
 
   @testset "ProjMPOSum DMRG with disk caching" begin

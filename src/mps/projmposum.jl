@@ -111,6 +111,12 @@ function disk(sum::AbstractSum; disk_kwargs...)
   return set_terms(sum, map(t -> disk(t; disk_kwargs...), terms(sum)))
 end
 
+function checkflux(sum::AbstractSum)
+  for t in terms(sum)
+    checkflux(t)
+  end
+end
+
 #
 # Definition of concrete, generic SequentialSum type
 #
