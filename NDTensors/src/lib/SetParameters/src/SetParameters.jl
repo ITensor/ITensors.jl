@@ -2,16 +2,10 @@ module SetParameters
 include("position.jl")
 include("unspecifiedparameter.jl")
 include("default_parameter.jl")
-# include("interface.jl")
 include("get_parameter.jl")
-# include("set_parameters_generic.jl")
-# include("set_parameters.jl")
 include("specify_parameters.jl")
 # include("set_default_parameters.jl")
-# include("Base/val.jl")
 include("Base/abstractarray.jl")
-# include("Base/array.jl")
-# include("Base/subarray.jl")
 
 ## TODO when this is a full package utilize this function to
 # # enable extensions
@@ -20,7 +14,7 @@ include("Base/abstractarray.jl")
 #   @require_extensions
 # end
 
-# include("../ext/SetParametersFillArraysExt/SetParametersFillArraysExt.jl")
+# This implementation relies on Julia Base internals
 include("typeparameteraccessor.jl")
 
 export DefaultParameter,
