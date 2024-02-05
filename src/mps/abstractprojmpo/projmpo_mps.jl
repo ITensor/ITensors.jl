@@ -24,6 +24,12 @@ end
 
 Base.length(P::ProjMPO_MPS) = length(P.PH)
 
+function site_range(P::ProjMPO_MPS)
+  r = site_range(P.PH)
+  @assert all(m -> site_range(m) == r, P.pm)
+  return r
+end
+
 function product(P::ProjMPO_MPS, v::ITensor)::ITensor
   Pv = product(P.PH, v)
   for p in P.pm
@@ -53,3 +59,9 @@ function position!(P::ProjMPO_MPS, psi::MPS, pos::Int)
 end
 
 noiseterm(P::ProjMPO_MPS, phi::ITensor, dir::String) = noiseterm(P.PH, phi, dir)
+
+function checkflux(P::ProjMPO_MPS)
+  checkflux(P.PH)
+  foreach(checkflux, P.pm)
+  return nothing
+end
