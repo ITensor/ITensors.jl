@@ -22,6 +22,17 @@ eltype_position(::Type{<:AbstractArray}) = Position(1)
 ## This will fail for some wrapped types so potentially set for array and other types?
 ndims_position(::Type{<:AbstractArray}) = Position(2)
 
+"""
+Optional definitions for types which are considered `Wrappers` and have a `parenttype`
+
+  Should return a `Position`.
+"""
+function parenttype_position(type::Type)
+  return error(
+    "Unable to find the parenttype position of type '$(type)' as it has not been defined."
+  )
+end
+
 @traitfn function set_ndims(
   type::Type{ArrayT}, ndim::Int
 ) where {ArrayT <: AbstractArray; !IsWrappedArray{ArrayT}}
