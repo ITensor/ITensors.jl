@@ -294,26 +294,26 @@ end
     H1 = MPO(elt, O1, sites)
     H2 = MPO(elt, O2, sites)
     H = H1 + 2 * H2
-    @test scalartype(H1) == elt
-    @test scalartype(H2) == elt
-    @test scalartype(H) == elt
+    @test ITensors.scalartype(H1) == elt
+    @test ITensors.scalartype(H2) == elt
+    @test ITensors.scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
 
-    @test scalartype(MPO(elt, Op("Sz", 1), s)) == elt
-    @test scalartype(MPO(elt, Op("Sz", 1) + Op("Sz", 2), s)) == elt
-    @test scalartype(MPO(elt, 2 * Op("Sz", 1) + 3 * Op("Sz", 2), s)) == elt
-    @test scalartype(MPO(elt, 2 * Op("Sz", 1), s)) == elt
-    @test scalartype(MPO(elt, Op("Sz", 1) * Op("Sz", 2), s)) == elt
-    @test scalartype(MPO(elt, 2 * Op("Sz", 1) * Op("Sz", 2), s)) == elt
+    @test ITensors.scalartype(MPO(elt, Op("Sz", 1), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, Op("Sz", 1) + Op("Sz", 2), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1) + 3 * Op("Sz", 2), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, Op("Sz", 1) * Op("Sz", 2), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1) * Op("Sz", 2), sites)) == elt
 
     O = O1 - 2 * O2
     @test length(O) == 2 * n - 1
     H1 = MPO(elt, O1, sites)
     H2 = MPO(elt, O2, sites)
     H = H1 - 2 * H2
-    @test scalartype(H1) == elt
-    @test scalartype(H2) == elt
-    @test scalartype(H) == elt
+    @test ITensors.scalartype(H1) == elt
+    @test ITensors.scalartype(H2) == elt
+    @test ITensors.scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
 
     O = O1 - O2 / 2
@@ -321,9 +321,9 @@ end
     H1 = MPO(elt, O1, sites)
     H2 = MPO(elt, O2, sites)
     H = H1 - H2 / 2
-    @test scalartype(H1) == elt
-    @test scalartype(H2) == elt
-    @test scalartype(H) == elt
+    @test ITensors.scalartype(H1) == elt
+    @test ITensors.scalartype(H2) == elt
+    @test ITensors.scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
   end
 
