@@ -9,7 +9,7 @@ end
 
 ## TODO this fails if the parameter is a type
 function alloctype(Atype::Type{<:AbstractFill})
-  return get_parameter(Atype, Position{4}())
+  return parameter(Atype, 4)
 end
 
 set_axestype(T::Type{<:AbstractFill}, ax::Type) = set_parameters(T, Position{3}(), ax)
