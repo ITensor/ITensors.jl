@@ -146,16 +146,15 @@ using ITensors: nsite, set_nsite!, checkflux
     end
     HB = MPO(osB, sites)
 
-    ps = ProjMPOSum([HA,HB])
+    ps = ProjMPOSum([HA, HB])
     @test isnothing(checkflux(ps))
 
     # Test error thrown when non-qn conserving MPO included
     osC = OpSum()
-    osC += "S+",1,"S+",2
+    osC += "S+", 1, "S+", 2
     HC = MPO(osC, sites)
-    ps = ProjMPOSum([HA,HB,HC])
+    ps = ProjMPOSum([HA, HB, HC])
     @test_throws ErrorException isnothing(checkflux(ps))
-
   end
 
   @testset "ProjMPOSum DMRG with disk caching" begin
