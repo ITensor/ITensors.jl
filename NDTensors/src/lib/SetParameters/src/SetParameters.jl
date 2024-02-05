@@ -2,7 +2,7 @@ module SetParameters
 include("position.jl")
 include("unspecifiedparameter.jl")
 include("default_parameter.jl")
-include("get_parameter.jl")
+include("parameters.jl")
 include("specify_parameters.jl")
 # include("set_default_parameters.jl")
 include("Base/abstractarray.jl")
