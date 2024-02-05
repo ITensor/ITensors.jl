@@ -313,12 +313,12 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test psi²[] ≈ psi ⋅ psi
     @test sqrt(psi²[]) ≈ norm(psi)
 
-    psi = randomMPS(sites; linkdims=10)
+    psi = randomMPS(elt, sites; linkdims=10)
     psi .*= 1:length(psi)
     @test norm(psi) ≈ factorial(length(psi))
-    @test norm(psi) isa elt
+    @test norm(psi) isa real(elt)
 
-    psi = randomMPS(sites; linkdims=10)
+    psi = randomMPS(elt, sites; linkdims=10)
     for j in 1:length(psi)
       psi[j] .*= j
     end
@@ -328,17 +328,16 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     reset_ortho_lims!(psi)
     @test norm(psi) ≈ factorial(length(psi))
 
-    # Test complex
-    ## psi = randomMPS(ComplexF64, sites; linkdims=10)
+    psi = randomMPS(elt, sites; linkdims=10)
 
     norm_psi = norm(psi)
     @test norm_psi ≈ 1
-    @test norm_psi isa elt
+    @test norm_psi isa real(elt)
     @test isreal(norm_psi)
 
     lognorm_psi = lognorm(psi)
-    @test lognorm_psi isa elt
-    @test lognorm_psi ≈ 0 atol = 1e-15
+    @test lognorm_psi isa real(elt)
+    @test lognorm_psi ≈ 0 atol = eps(real(elt)) * 10
     @test isreal(lognorm_psi)
 
     psi = psi .* 2
