@@ -3,6 +3,7 @@ include("position.jl")
 include("unspecifiedparameter.jl")
 include("default_parameter.jl")
 include("parameters.jl")
+include("set_parameters.jl")
 include("specify_parameters.jl")
 # include("set_default_parameters.jl")
 include("Base/abstractarray.jl")
@@ -26,6 +27,7 @@ export DefaultParameter,
   nparameters,
   set_eltype,
   set_ndims,
+  set_parameter,
   set_parameters,
   specify_parameters
 end # module
