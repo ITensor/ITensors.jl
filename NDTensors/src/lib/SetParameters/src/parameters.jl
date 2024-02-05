@@ -19,8 +19,7 @@ get_parameter(type, position::Int) = parameters(type)[position]
 
 Get a type parameter of the object `object` at the position `position`.
 """
-get_parameter(object::Type, position::Position) =
-  get_parameter(object, parameter(position))
+get_parameter(object::Type, position::Position) = get_parameter(object, parameter(position))
 
 """
     get_parameter(type::Type)
