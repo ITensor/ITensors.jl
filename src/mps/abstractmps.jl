@@ -1252,7 +1252,7 @@ function lognorm(M::AbstractMPS)
     @warn "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance " *
       "of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
-  return 0.5 * real(lognorm2_M)
+  return real(lognorm2_M) / 2
 end
 
 function isapprox(
