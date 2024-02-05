@@ -1,5 +1,4 @@
-using .TypeParameterAccessor:
-TypeParameterAccessor
+using .TypeParameterAccessor: TypeParameterAccessor
 function TypeParameterAccessor.set_ndims(arraytype::Type{<:TensorStorage}, ndims::Int)
   # TODO: Change to this once `TensorStorage` types support wrapping
   # non-AbstractVector types.
