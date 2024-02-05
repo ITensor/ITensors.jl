@@ -301,8 +301,10 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test psipsi[] ≈ inner(psi, psi)
   end
 
-  @testset "norm MPS" begin
-    psi = randomMPS(sites; linkdims=10)
+  @testset "norm MPS (eltype=$elt)" for elt in (
+    Float32, Float64, Complex{Float32}, Complex{Float64}
+  )
+    psi = randomMPS(elt, sites; linkdims=10)
     psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
     for j in 1:length(psi)
@@ -314,6 +316,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     psi = randomMPS(sites; linkdims=10)
     psi .*= 1:length(psi)
     @test norm(psi) ≈ factorial(length(psi))
+    @test norm(psi) isa elt
 
     psi = randomMPS(sites; linkdims=10)
     for j in 1:length(psi)
@@ -326,13 +329,15 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test norm(psi) ≈ factorial(length(psi))
 
     # Test complex
-    psi = randomMPS(ComplexF64, sites; linkdims=10)
+    ## psi = randomMPS(ComplexF64, sites; linkdims=10)
 
     norm_psi = norm(psi)
     @test norm_psi ≈ 1
+    @test norm_psi isa elt
     @test isreal(norm_psi)
 
     lognorm_psi = lognorm(psi)
+    @test lognorm_psi isa elt
     @test lognorm_psi ≈ 0 atol = 1e-15
     @test isreal(lognorm_psi)
 

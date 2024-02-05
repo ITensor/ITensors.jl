@@ -2,7 +2,11 @@ using ITensors
 using Random
 using Test
 
-@testset "AbstractProjMPO (eltype=$elt, conserve_qns=$conserve_qns)" for elt in (Float32, Float64, Complex{Float32}, Complex{Float64}), conserve_qns in [false, true]
+@testset "AbstractProjMPO (eltype=$elt, conserve_qns=$conserve_qns)" for elt in (
+    Float32, Float64, Complex{Float32}, Complex{Float64}
+  ),
+  conserve_qns in [false, true]
+
   n = 4
   s = siteinds("S=1/2", n; conserve_qns)
   o = MPO(elt, s, "I")
