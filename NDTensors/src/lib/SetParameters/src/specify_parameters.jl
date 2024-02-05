@@ -32,6 +32,6 @@ function specify_parameters(type::Type)
   return specify_parameters(type, DefaultParameters())
 end
 
-function specify_parameter(type::Type, Position, parameter)
+function specify_parameter(type::Type, Position::Position, parameter)
   return specify_parameters(type, Position, parameter)
 end

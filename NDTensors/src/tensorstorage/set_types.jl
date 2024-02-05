@@ -1,5 +1,5 @@
 using .SetParameters:
-  SetParameters, Position, get_parameters, specify_parameters, unspecify_parameters
+  SetParameters, Position, parameters, specify_parameters, unspecify_parameters
 function SetParameters.set_ndims(arraytype::Type{<:TensorStorage}, ndims::Int)
   # TODO: Change to this once `TensorStorage` types support wrapping
   # non-AbstractVector types.
