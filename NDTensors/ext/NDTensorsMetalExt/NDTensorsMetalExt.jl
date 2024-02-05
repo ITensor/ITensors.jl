@@ -11,7 +11,7 @@ using Metal
 
 include("imports.jl")
 include("adapt.jl")
-include("set_types.jl")
+# include("set_types.jl")
 include("indexing.jl")
 include("linearalgebra.jl")
 include("copyto.jl")

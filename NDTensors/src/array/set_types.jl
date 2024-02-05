@@ -1,4 +1,4 @@
-using .SetParameters: Position, get_parameter, set_parameters, set_eltype
+using .SetParameters: Position
 
 SetParameters.eltype_position(::Type{<:SubArray}) = Position(1)
 SetParameters.parenttype_position(::Type{<:SubArray}) = Position(3)

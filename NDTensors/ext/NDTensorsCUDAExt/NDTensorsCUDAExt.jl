@@ -13,7 +13,6 @@ using CUDA.CUSOLVER
 include("imports.jl")
 include("default_kwargs.jl")
 include("copyto.jl")
-include("set_types.jl")
 include("iscu.jl")
 include("adapt.jl")
 include("indexing.jl")
