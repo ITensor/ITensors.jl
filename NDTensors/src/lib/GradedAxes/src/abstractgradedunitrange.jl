@@ -102,13 +102,18 @@ function blockmergesort(a::AbstractGradedUnitRange)
   return a[blockmergesortperm(a)]
 end
 
+function blocksortperm(a::AbstractGradedUnitRange)
+  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
+  return Block.(sortperm(nondual_sectors(a); rev=isdual(a)))
+end
+
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
 function blockmergesortperm(a::AbstractGradedUnitRange)
   # If it is dual, reverse the sorting so the sectors
   # end up sorted in the same way whether or not the space
   # is dual.
-  # TODO: This may not be correct for symmetries beyond `U(1)`.
+  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
   return Block.(groupsortperm(nondual_sectors(a); rev=isdual(a)))
 end
 
