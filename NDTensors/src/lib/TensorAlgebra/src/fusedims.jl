@@ -1,5 +1,26 @@
 using .BaseExtensions: _permutedims, _permutedims!
 
+abstract type FusionStyle end
+
+struct ReshapeFusion <: FusionStyle end
+struct BlockReshapeFusion <: FusionStyle end
+struct SectorFusion <: FusionStyle end
+
+# Defaults to a simple reshape
+combine_fusion_styles(style1::Style, style2::Style) where {Style<:FusionStyle} = Style()
+combine_fusion_styles(style1::FusionStyle, style2::FusionStyle) = ReshapeFusion()
+combine_fusion_styles(styles::FusionStyle...) = foldl(combine_fusion_styles, styles)
+FusionStyle(axis::AbstractUnitRange) = ReshapeFusion()
+function FusionStyle(axes::Tuple{Vararg{AbstractUnitRange}})
+  return combine_fusion_styles(FusionStyle.(axes)...)
+end
+FusionStyle(a::AbstractArray) = FusionStyle(axes(a))
+
+# Overload this version for most arrays
+function fusedims(::ReshapeFusion, a::AbstractArray, axes::AbstractUnitRange...)
+  return reshape(a, axes)
+end
+
 ⊗(a::AbstractUnitRange) = a
 function ⊗(a1::AbstractUnitRange, a2::AbstractUnitRange, as::AbstractUnitRange...)
   return ⊗(a1, ⊗(a2, as...))
@@ -9,8 +30,7 @@ end
 
 # Overload this version for most arrays
 function fusedims(a::AbstractArray, axes::AbstractUnitRange...)
-  # TODO: Add `canonicalizedims`.
-  return reshape(a, axes)
+  return fusedims(FusionStyle(a), a, axes...)
 end
 
 # Overload this version for fusion tensors, array maps, etc.
