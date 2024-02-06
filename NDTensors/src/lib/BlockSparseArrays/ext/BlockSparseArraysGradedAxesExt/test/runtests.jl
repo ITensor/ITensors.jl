@@ -3,8 +3,8 @@ using Test: @test, @testset, @test_broken
 using BlockArrays: Block, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray
 using NDTensors.GradedAxes: gradedrange
-using NDTensors.Sectors: U1, Z
-using NDTensors.TensorAlgebra: fusedims
+using NDTensors.Sectors: U1
+using NDTensors.TensorAlgebra: fusedims, splitdims
 using Random: randn!
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 @testset "BlockSparseArraysGradedAxesExt (eltype=$elt)" for elt in elts
@@ -21,5 +21,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   # TODO: Current `fusedims` doesn't merge
   # common sectors, need to fix.
   @test_broken blocksize(m) == (3, 3)
+  @test a == splitdims(m, (d1, d2), (d1, d2))
 end
 end
