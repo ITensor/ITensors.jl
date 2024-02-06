@@ -5,10 +5,11 @@ using NDTensors.TypeParameterAccessors
 @testset "Test NDTensors.TypeParameterAccessors" begin
   @testset "Get parameters" begin
     @test @inferred(parameters(Array{Float32,3})) == (Float32, 3)
+    @test @inferred((() -> parameter(Array{Float32, 3}, 1))()) == Float32
+    @test @inferred((() -> parameter(Array{Float32,3}, 2))()) == 3
+    
     @test @inferred(parameter(Array{Float32,3}, Position(1))) == Float32
-    @test parameter(Array{Float32,3}, 1) == Float32
     @test @inferred(parameter(Array{Float32,3}, Position(2))) == 3
-    @test parameter(Array{Float32,3}, 2) == 3
   end
 
   @testset "Set parameter at position" begin
