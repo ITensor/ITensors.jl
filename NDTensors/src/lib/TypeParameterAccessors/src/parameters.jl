@@ -31,7 +31,7 @@ parameter(type::Type, position::Int) = parameters(type)[position]
 
 Get a type parameter of the type `type` at the position `position`.
 """
-parameter(type::Type, position::Position) = parameter(object, parameter(position))
+parameter(type::Type, position::Position) = parameter(type, parameter(position))
 
 """
     parameter(type::Type)
