@@ -10,3 +10,5 @@ Position(x) = Position{x}()
 Get a type parameter of the type `type` at the position `position`.
 """
 parameter(type::Type, position::Position) = parameter(type, parameter(position))
+
+Int(p::Position) = parameter(p)
