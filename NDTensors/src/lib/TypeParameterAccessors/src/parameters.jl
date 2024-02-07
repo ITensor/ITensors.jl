@@ -27,13 +27,6 @@ Get a type parameter of the type `type` at the position `position`.
 parameter(type::Type, position::Int) = parameters(type)[position]
 
 """
-    parameter(type::Type, position::Position)
-
-Get a type parameter of the type `type` at the position `position`.
-"""
-parameter(type::Type, position::Position) = parameter(type, parameter(position))
-
-"""
     parameter(type::Type)
 
 Gets the single parameter of the Type `type`. Will throw an error if `type` has more than one parameter.
