@@ -276,7 +276,9 @@ end
     @test length(sprint(show, os)) > 1
   end
 
-  @testset "OpSum algebra" begin
+  @testset "OpSum algebra (eltype=$elt)" for elt in (
+    Float32, Float64, Complex{Float32}, Complex{Float64}
+  )
     n = 5
     sites = siteinds("S=1/2", n)
     O1 = OpSum()
@@ -289,23 +291,39 @@ end
     end
     O = O1 + 2 * O2
     @test length(O) == 2 * n - 1
-    H1 = MPO(O1, sites)
-    H2 = MPO(O2, sites)
+    H1 = MPO(elt, O1, sites)
+    H2 = MPO(elt, O2, sites)
     H = H1 + 2 * H2
+    @test ITensors.scalartype(H1) == elt
+    @test ITensors.scalartype(H2) == elt
+    @test ITensors.scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
+
+    @test ITensors.scalartype(MPO(elt, Op("Sz", 1), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, Op("Sz", 1) + Op("Sz", 2), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1) + 3 * Op("Sz", 2), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, Op("Sz", 1) * Op("Sz", 2), sites)) == elt
+    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1) * Op("Sz", 2), sites)) == elt
 
     O = O1 - 2 * O2
     @test length(O) == 2 * n - 1
-    H1 = MPO(O1, sites)
-    H2 = MPO(O2, sites)
+    H1 = MPO(elt, O1, sites)
+    H2 = MPO(elt, O2, sites)
     H = H1 - 2 * H2
+    @test ITensors.scalartype(H1) == elt
+    @test ITensors.scalartype(H2) == elt
+    @test ITensors.scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
 
     O = O1 - O2 / 2
     @test length(O) == 2 * n - 1
-    H1 = MPO(O1, sites)
-    H2 = MPO(O2, sites)
+    H1 = MPO(elt, O1, sites)
+    H2 = MPO(elt, O2, sites)
     H = H1 - H2 / 2
+    @test ITensors.scalartype(H1) == elt
+    @test ITensors.scalartype(H2) == elt
+    @test ITensors.scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
   end
 

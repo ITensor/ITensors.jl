@@ -12,6 +12,10 @@ copy(P::ProjMPS) = ProjMPS(P.lpos, P.rpos, P.nsite, copy(P.M), copy(P.LR))
 
 nsite(P::ProjMPS) = P.nsite
 
+# The range of center sites
+# TODO: Use the `AbstractProjMPO` version.
+site_range(P::ProjMPS) = (P.lpos + 1):(P.rpos - 1)
+
 function set_nsite!(P::ProjMPS, nsite)
   P.nsite = nsite
   return P
@@ -115,4 +119,12 @@ function position!(P::ProjMPS, psi::MPS, pos::Int)
   P.lpos = pos - 1
   P.rpos = pos + nsite(P)
   return P
+end
+
+function checkflux(P::ProjMPS)
+  checkflux(P.M)
+  foreach(eachindex(P.LR)) do i
+    isassigned(P.LR, i) && checkflux(P.LR[i])
+  end
+  return nothing
 end

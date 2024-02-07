@@ -1,3 +1,5 @@
+using ArrayLayouts: ArrayLayouts
+
 # An index into the storage of the sparse array.
 struct StorageIndex{I}
   i::I
@@ -92,6 +94,17 @@ function sparse_getindex(a::AbstractArray, I::CartesianIndex)
   I′ = ntuple(i -> t[i], ndims(a))
   @assert all(i -> isone(I[i]), (ndims(a) + 1):length(I))
   return _sparse_getindex(a, CartesianIndex(I′))
+end
+
+# Slicing
+function sparse_getindex(a::AbstractArray, I::AbstractVector...)
+  return copy(@view a[I...])
+end
+
+function ArrayLayouts.sub_materialize(::SparseLayout, a::AbstractArray, axes)
+  a_dest = similar(a, axes)
+  a_dest .= a
+  return a_dest
 end
 
 # Update a nonzero value
