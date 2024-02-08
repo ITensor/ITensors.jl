@@ -32,6 +32,9 @@ using NDTensors.TypeParameterAccessors
     @test @inferred ((() -> set_parameter(Array{Float32}, Position(2), 2))()) ==
       Array{Float32,2}
     @test @inferred((()->set_parameter(Array{Float32}, Float16))()) == Array{Float16}
+
+    ## TODO issue with type stability and UnionAll here
+    @test_broken @inferred((() -> set_parameter(Array{<:Any, 2}, 2, 3))()) == Array{<:Any, 3}
   end
 
   @testset "Set ndim and eltype" begin
