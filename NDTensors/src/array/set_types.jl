@@ -1,7 +1,6 @@
 using .TypeParameterAccessors: Position
 
 TypeParameterAccessors.eltype_position(::Type{<:SubArray}) = Position(1)
-TypeParameterAccessors.parenttype_position(::Type{<:SubArray}) = Position(3)
 
 # TODO: Figure out how to define this properly.
 # function set_ndims(arraytype::Type{<:SubArray}, ndims)
