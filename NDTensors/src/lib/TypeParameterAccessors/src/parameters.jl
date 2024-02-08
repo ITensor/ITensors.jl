@@ -10,7 +10,7 @@ parameters(type::DataType) = Tuple(type.parameters)
 
 Gets all the type parameters of the UnionAll `type`.
 """
-parameters(type::UnionAll) = parameters(unionall_to_datatype(type))
+parameters(type::UnionAll) = parameters(to_datatype(type))
 
 """
     parameters(object, position::Int)
@@ -40,3 +40,9 @@ Gets the single parameter of the object `object`. Will throw an error if `object
 """
 parameter(x) = parameter(typeof(x))
  
+"""
+    nparameter(type::Type)
+
+Gets the number of parameters for the Type `type`.
+"""
+nparameters(type::Type) = length(parameters(type))
