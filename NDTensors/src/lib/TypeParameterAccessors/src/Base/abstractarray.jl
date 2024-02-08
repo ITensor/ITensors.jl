@@ -1,4 +1,4 @@
-using SimpleTraits: SimpleTraits, @traitfn
+using SimpleTraits
 
 @traitfn function set_eltype(
   type::Type{ArrayT}, elt::Type
@@ -17,9 +17,9 @@ function set_parenttype(t::Type, parent_type)
   return set_parameter(t, parenttype_position(t), parent_type)
 end
 
-eltype_position(::Type{<:AbstractArray}) = Position(1)
+eltype_position(::Type{<:AbstractArray}) = 1
 ## This will fail for some wrapped types so potentially set for array and other types?
-ndims_position(::Type{<:AbstractArray}) = Position(2)
+ndims_position(::Type{<:AbstractArray}) = 2
 
 @traitfn function set_ndims(
   type::Type{ArrayT}, ndim::Int
