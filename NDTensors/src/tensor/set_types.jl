@@ -20,5 +20,7 @@ function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
   return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
 end
 
-Unwrap.parenttype(tensortype::Type{<:Tensor}) = storagetype(tensortype)
-Unwrap.parenttype(storagetype::Type{<:TensorStorage}) = datatype(storagetype)
+TypeParameterAccessors.parenttype_position(::Type{<:Tensor}) = 3
+#TypeParameterAccessors.parenttype_position(::Type{<:TensorStorage}) = 
+#Unwrap.parenttype(tensortype::Type{<:Tensor}) = storagetype(tensortype)
+#Unwrap.parenttype(storagetype::Type{<:TensorStorage}) = datatype(storagetype)

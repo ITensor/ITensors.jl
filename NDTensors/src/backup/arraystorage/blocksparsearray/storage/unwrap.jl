@@ -1,1 +1,1 @@
-Unwrap.parenttype(::Type{<:BlockSparseArray{<:Any,<:Any,P}}) where {P} = P
+TypeParameterAccessors.parenttype_position(::Type{<:BlockSparseArray}) = 3

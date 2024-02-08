@@ -2,7 +2,7 @@ using .SparseArrayInterface: densearray
 using .DiagonalArrays: DiagIndex, diaglength
 
 # TODO: Move to a different file.
-Unwrap.parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
+TypeParameterAccessors.parenttype_position(::Type{<:DiagonalArray}) = 3
 
 # TODO: Move to a different file.
 function promote_rule(

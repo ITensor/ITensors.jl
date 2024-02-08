@@ -17,7 +17,7 @@ Base.parent(::AbstractNamedDimsArray) = error("Not implemented")
 
 # TODO: Use `Unwrap`.
 # TODO: Use `TypeParameterAccessors`.
-parenttype(::AbstractNamedDimsArray{<:Any,<:Any,Parent}) where {Parent} = Parent
+TypeParameterAccessors.parenttype_position(::Type{<:AbstractNamedDimsArray}) = 3
 
 # Set the names of an unnamed AbstractArray
 # `ndims(a) == length(names)`
