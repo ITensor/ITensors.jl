@@ -1,12 +1,8 @@
 module Unwrap
-using SimpleTraits
-using LinearAlgebra
-using Base: ReshapedArray
-using StridedViews
 using Adapt: Adapt, adapt, adapt_structure
 
 include("expose.jl")
-include("iswrappedarray.jl")
+include("unwraptype.jl")
 
 include("import.jl")
 ## TODO Create functions which take the `Expose` type and launch functions

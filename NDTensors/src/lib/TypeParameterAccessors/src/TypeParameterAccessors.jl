@@ -6,6 +6,8 @@ include("default_parameter.jl")
 include("set_parameters.jl")
 include("specify_parameters.jl")
 # include("set_default_parameters.jl")
+include("Base/parenttype.jl")
+include("Base/iswrappedarray.jl")
 include("Base/abstractarray.jl")
 
 ## TODO when this is a full package utilize this function to
@@ -29,5 +31,5 @@ export DefaultParameter,
   set_ndims,
   set_parameter,
   set_parameters,
-  specify_parameters
+  specify_parameter
 end # module
