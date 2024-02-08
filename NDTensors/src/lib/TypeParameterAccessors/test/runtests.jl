@@ -1,6 +1,7 @@
 @eval module $(gensym())
-using Test: @inferred, @test, @testset
+using Test: @inferred, @test, @test_broken, @testset
 using NDTensors.TypeParameterAccessors
+using LinearAlgebra: Transpose
 
 @testset "Test NDTensors.TypeParameterAccessors" begin
   @testset "Get parameters" begin
@@ -38,9 +39,18 @@ using NDTensors.TypeParameterAccessors
   end
 
   @testset "Set ndim and eltype" begin
-    @test set_ndims(Array{<:Any,3}, 4) == Array{<:Any,4}
-    @test set_eltype(Array{<:Any,3}, Float16) == Array{Float16,3}
-    #@test @inferred((() -> set_eltype(Array{<:Any,3}, Float16))()) == Array{Float16,3}
+    @test @inferred((()->set_ndims(Array{Float32, 2}, 3))()) == Array{Float32, 3}
+    @test @inferred((()->set_eltype(Array{Float32, 2}, Float16))()) == Array{Float16, 2}
+    @test @inferred((()->set_ndims(Array, 2))()) == Matrix
+    @test @inferred(((()->set_eltype(Array, Float32))())) == Array{Float32}
+    m = Transpose(Matrix{Float32}(undef, (2,3)))
+    @test (() -> set_eltype(typeof(m), Float16))() == Transpose{Float16, Matrix{Float16}}
+    ## TODO This code does not infer the correct type but there aren't any allocations
+    ## When it is called so I believe its actually working properly
+    ## In a wrapped function on the command line this does however show the correct
+    ## value when using code_warntype.
+    @test ((()->set_ndims(Array{<:Any,3}, 4))()) == Array{<:Any, 4}
+    @test ((()->set_eltype(Array{<:Any, 3}, Float16))()) == Array{Float16, 3}
   end
 
   @testset "Set multiple parameters" begin
