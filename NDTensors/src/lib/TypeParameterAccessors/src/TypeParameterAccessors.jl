@@ -1,8 +1,8 @@
 module TypeParameterAccessors
+include("parameters.jl")
 include("position.jl")
 include("unspecifiedparameter.jl")
 include("default_parameter.jl")
-include("parameters.jl")
 include("set_parameters.jl")
 include("specify_parameters.jl")
 # include("set_default_parameters.jl")
