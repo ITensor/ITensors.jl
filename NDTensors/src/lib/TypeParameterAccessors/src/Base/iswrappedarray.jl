@@ -1,5 +1,14 @@
 using SimpleTraits
-using LinearAlgebra: Adjoint, Diagonal, Hermitian, LowerTriangular, Symmetric, Transpose, UnitLowerTriangular, UnitUpperTriangular, UpperTriangular
+using LinearAlgebra:
+  Adjoint,
+  Diagonal,
+  Hermitian,
+  LowerTriangular,
+  Symmetric,
+  Transpose,
+  UnitLowerTriangular,
+  UnitUpperTriangular,
+  UpperTriangular
 using Base: ReshapedArray, SubArray
 using StridedViews: StridedView
 # Trait indicating if the AbstractArray type is an array wrapper.
@@ -19,7 +28,17 @@ function parenttype_position(type::Type)
   return 0
 end
 
-for wrap in (:Transpose, :Adjoint, :Symmetric, :Hermitian, :UpperTriangular, :LowerTriangular, :UnitUpperTriangular, :UnitLowerTriangular, :Diagonal)
+for wrap in (
+  :Transpose,
+  :Adjoint,
+  :Symmetric,
+  :Hermitian,
+  :UpperTriangular,
+  :LowerTriangular,
+  :UnitUpperTriangular,
+  :UnitLowerTriangular,
+  :Diagonal,
+)
   @eval parenttype_position(type::Type{<:$wrap}) = 2
 end
 for wrap in (:ReshapedArray, :SubArray, :StridedView)
@@ -32,9 +51,8 @@ parenttype(arraytype::Type{<:AbstractArray}) = arraytype
 ## TODO I am not sure why this is throwing a Warning
 @traitfn parenttype(
   wrapper::Type{ArrayT}
-) where {ArrayT <: AbstractArray; IsWrappedArray{ArrayT}} = 
+) where {ArrayT <: AbstractArray; IsWrappedArray{ArrayT}} =
   parameter(wrapper, parenttype_position(wrapper))
-
 
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.

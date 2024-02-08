@@ -39,7 +39,7 @@ parameter(type::Type) = only(parameters(type))
 Gets the single parameter of the object `object`. Will throw an error if `object` has more than one parameter.
 """
 parameter(x) = parameter(typeof(x))
- 
+
 """
     nparameter(type::Type)
 

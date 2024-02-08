@@ -39,4 +39,4 @@ end
 
 Set the parameter of the Type `type` in the first position with the value `val`. Note, this function is for types which only have a single parameter.
 """
-set_parameter(type::Type, val)  = set_parameters(type, tuple(val))
+set_parameter(type::Type, val) = set_parameters(type, tuple(val))

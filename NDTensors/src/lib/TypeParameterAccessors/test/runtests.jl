@@ -6,10 +6,10 @@ using LinearAlgebra: Transpose
 @testset "Test NDTensors.TypeParameterAccessors" begin
   @testset "Get parameters" begin
     @test @inferred(parameters(Array{Float32,3})) == (Float32, 3)
-    @test @inferred(parameters(Array{Float32, 2}(undef, (2,3)))) == (Float32, 2)
-    @test @inferred((() -> parameter(Array{Float32, 3}, 1))()) == Float32
+    @test @inferred(parameters(Array{Float32,2}(undef, (2, 3)))) == (Float32, 2)
+    @test @inferred((() -> parameter(Array{Float32,3}, 1))()) == Float32
     @test @inferred((() -> parameter(Array{Float32,3}, 2))()) == 3
-    
+
     @test @inferred(parameter(Array{Float32,3}, Position(1))) == Float32
     @test @inferred(parameter(Array{Float32,3}, Position(2))) == 3
     @test nparameters(Array) == 2
@@ -17,11 +17,13 @@ using LinearAlgebra: Transpose
   end
 
   @testset "Set parameter at position" begin
-    @test @inferred((() -> set_parameters(Array{Float32, 3}, (Float16, 2)))()) == Array{Float16,2}
-    @test @inferred((() -> set_parameters(Array, (Float32, 3)))()) == Array{Float32, 3}
-    @test @inferred(set_parameters(Array{Float32, 2})) == Array{Float32, 2}
+    @test @inferred((() -> set_parameters(Array{Float32,3}, (Float16, 2)))()) ==
+      Array{Float16,2}
+    @test @inferred((() -> set_parameters(Array, (Float32, 3)))()) == Array{Float32,3}
+    @test @inferred(set_parameters(Array{Float32,2})) == Array{Float32,2}
 
-    @test @inferred((() -> set_parameter(Array{Float32,3}, 1, Float16))()) == Array{Float16,3}
+    @test @inferred((() -> set_parameter(Array{Float32,3}, 1, Float16))()) ==
+      Array{Float16,3}
     @test @inferred((() -> set_parameter(Array{Float32,3}, 2, 2))()) == Array{Float32,2}
     @test @inferred((() -> set_parameter(Array{Float32}, 1, Float16))()) == Array{Float16}
     @test @inferred((() -> set_parameter(Array{Float32}, 2, 2))()) == Array{Float32,2}
@@ -32,25 +34,25 @@ using LinearAlgebra: Transpose
 
     @test @inferred ((() -> set_parameter(Array{Float32}, Position(2), 2))()) ==
       Array{Float32,2}
-    @test @inferred((()->set_parameter(Array{Float32}, Float16))()) == Array{Float16}
+    @test @inferred((() -> set_parameter(Array{Float32}, Float16))()) == Array{Float16}
 
     ## TODO issue with type stability and UnionAll here
-    @test_broken @inferred((() -> set_parameter(Array{<:Any, 2}, 2, 3))()) == Array{<:Any, 3}
+    @test_broken @inferred((() -> set_parameter(Array{<:Any,2}, 2, 3))()) == Array{<:Any,3}
   end
 
   @testset "Set ndim and eltype" begin
-    @test @inferred((()->set_ndims(Array{Float32, 2}, 3))()) == Array{Float32, 3}
-    @test @inferred((()->set_eltype(Array{Float32, 2}, Float16))()) == Array{Float16, 2}
-    @test @inferred((()->set_ndims(Array, 2))()) == Matrix
-    @test @inferred(((()->set_eltype(Array, Float32))())) == Array{Float32}
-    m = Transpose(Matrix{Float32}(undef, (2,3)))
-    @test (() -> set_eltype(typeof(m), Float16))() == Transpose{Float16, Matrix{Float16}}
+    @test @inferred((() -> set_ndims(Array{Float32,2}, 3))()) == Array{Float32,3}
+    @test @inferred((() -> set_eltype(Array{Float32,2}, Float16))()) == Array{Float16,2}
+    @test @inferred((() -> set_ndims(Array, 2))()) == Matrix
+    @test @inferred(((() -> set_eltype(Array, Float32))())) == Array{Float32}
+    m = Transpose(Matrix{Float32}(undef, (2, 3)))
+    @test (() -> set_eltype(typeof(m), Float16))() == Transpose{Float16,Matrix{Float16}}
     ## TODO This code does not infer the correct type but there aren't any allocations
     ## When it is called so I believe its actually working properly
     ## In a wrapped function on the command line this does however show the correct
     ## value when using code_warntype.
-    @test ((()->set_ndims(Array{<:Any,3}, 4))()) == Array{<:Any, 4}
-    @test ((()->set_eltype(Array{<:Any, 3}, Float16))()) == Array{Float16, 3}
+    @test ((() -> set_ndims(Array{<:Any,3}, 4))()) == Array{<:Any,4}
+    @test ((() -> set_eltype(Array{<:Any,3}, Float16))()) == Array{Float16,3}
   end
 
   @testset "Set multiple parameters" begin

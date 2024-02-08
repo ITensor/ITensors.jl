@@ -30,6 +30,7 @@ export DefaultParameter,
   set_ndims,
   set_parameter,
   set_parameters,
-  is_wrapped_array, 
+  specify_parameter,
+  is_wrapped_array,
   parenttype
 end # module

@@ -15,7 +15,6 @@ include("functions/mul.jl")
 include("functions/permutedims.jl")
 include("functions/adapt.jl")
 
-export IsWrappedArray,
-  unwrap_type, expose, Exposed, unexpose, cpu
+export IsWrappedArray, unwrap_type, expose, Exposed, unexpose, cpu
 
 end

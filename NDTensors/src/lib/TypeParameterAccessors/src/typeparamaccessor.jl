@@ -1,6 +1,9 @@
 # Relies on Julia internals
-Base.@assume_effects :terminates_globally to_datatype(type::UnionAll) = Base.unwrap_unionall(type)
-Base.@assume_effects :terminates_globally to_unionall(type::DataType, unionall_reference::Type) = Base.rewrap_unionall(type, unionall_reference)
+Base.@assume_effects :terminates_globally to_datatype(type::UnionAll) =
+  Base.unwrap_unionall(type)
+Base.@assume_effects :terminates_globally to_unionall(
+  type::DataType, unionall_reference::Type
+) = Base.rewrap_unionall(type, unionall_reference)
 
 # `TypeParameterAccessor` functionality.
 to_datatype(type::DataType) = type
