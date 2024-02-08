@@ -18,9 +18,6 @@ BlockArrays.blocks(a::BlockSparseArray) = a.blocks
 # TODO: Use `TypeParameterAccessors`.
 blocktype(a::BlockSparseArray{<:Any,<:Any,A}) where {A} = A
 
-# TODO: Use `TypeParameterAccessors`.
-set_ndims(::Type{<:Array{T}}, n) where {T} = Array{T,n}
-
 # TODO: Move to `AbstractArray` file.
 function nonzero_blockkeys(a::AbstractArray)
   return map(Block ∘ Tuple, collect(nonzero_keys(blocks(a))))
