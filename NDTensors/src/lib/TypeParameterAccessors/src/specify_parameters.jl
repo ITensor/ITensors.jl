@@ -1,37 +1,45 @@
-# Base case, set the type parameter at the position if it is unspecified.
-function specify_parameters(type::Type, position::Position, parameter)
-  current_parameter = get_parameter(type, position)
-  return replace_unspecified_parameters(type, position, current_parameter, parameter)
+## TODO still working on this
+function specify_parameter(type::Type, pos::Int, val)
+  is_parameter_specified(type, pos) && return type
+  return set_parameter(type, pos, val)
 end
 
-function replace_unspecified_parameters(
-  type::Type, position::Position, current_parameter::Type{<:UnspecifiedParameter}, parameter
-)
-  return set_parameters(type, position, parameter)
-end
+specify_parameter(type::Type, pos::Position, val) = specify_parameter(type, Int(pos), val)
 
-function replace_unspecified_parameters(
-  type::Type, position::Position, current_parameter, parameter
-)
-  return type
-end
+# # Base case, set the type parameter at the position if it is unspecified.
+# function specify_parameters(type::Type, position::Position, parameter)
+#   current_parameter = get_parameter(type, position)
+#   return replace_unspecified_parameters(type, position, current_parameter, parameter)
+# end
 
-# Implementation in terms of generic version.
-function specify_parameters(type::Type, position::Position, parameters...)
-  return set_parameters(specify_parameters, type, position, parameters...)
-end
+# function replace_unspecified_parameters(
+#   type::Type, position::Position, current_parameter::Type{<:UnspecifiedParameter}, parameter
+# )
+#   return set_parameters(type, position, parameter)
+# end
 
-"""
-Set parameters starting from the first one if they are unspecified.
-"""
+# function replace_unspecified_parameters(
+#   type::Type, position::Position, current_parameter, parameter
+# )
+#   return type
+# end
+
+# # Implementation in terms of generic version.
+# function specify_parameters(type::Type, position::Position, parameters...)
+#   return set_parameters(specify_parameters, type, position, parameters...)
+# end
+
+# """
+# Set parameters starting from the first one if they are unspecified.
+# """
 function specify_parameters(type::Type, parameter...)
   return set_parameters(specify_parameters, type, Position(1), parameter...)
 end
 
-function specify_parameters(type::Type)
-  return specify_parameters(type, DefaultParameters())
-end
+# function specify_parameters(type::Type)
+#   return specify_parameters(type, DefaultParameters())
+# end
 
-function specify_parameter(type::Type, Position::Position, parameter)
-  return specify_parameters(type, Position, parameter)
-end
+# function specify_parameter(type::Type, Position::Position, parameter)
+#   return specify_parameters(type, Position, parameter)
+# end
