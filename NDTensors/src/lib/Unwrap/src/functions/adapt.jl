@@ -1,3 +1,4 @@
+using LinearAlgebra: Hermitian
 Adapt.adapt(to, x::Exposed) = adapt_structure(to, x)
 Adapt.adapt_structure(to, x::Exposed) = adapt_structure(to, unexpose(x))
 
