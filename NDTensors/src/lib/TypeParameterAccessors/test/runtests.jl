@@ -16,23 +16,22 @@ using NDTensors.TypeParameterAccessors
   end
 
   @testset "Set parameter at position" begin
-    @test @inferred(set_parameter(Array{Float32,3}, 1, Float16)) == Array{Float16,3}
-    @test @inferred(set_parameter(Array{Float32,3}, Position(1), Float16)) ==
-      Array{Float16,3}
-    @test @inferred((() -> set_parameter(Array{Float32,3}, Position(2), 2))()) ==
+    @test @inferred((() -> set_parameters(Array{Float32, 3}, (Float16, 2)))()) == Array{Float16,2}
+    @test @inferred((() -> set_parameters(Array, (Float32, 3)))()) == Array{Float32, 3}
+    @test @inferred(set_parameters(Array{Float32, 2})) == Array{Float32, 2}
+
+    @test @inferred((() -> set_parameter(Array{Float32,3}, 1, Float16))()) == Array{Float16,3}
+    @test @inferred((() -> set_parameter(Array{Float32,3}, 2, 2))()) == Array{Float32,2}
+    @test @inferred((() -> set_parameter(Array{Float32}, 1, Float16))()) == Array{Float16}
+    @test @inferred((() -> set_parameter(Array{Float32}, 2, 2))()) == Array{Float32,2}
+    @test @inferred((() -> set_parameter(Vector, 1, Float16))()) == Array{Float16,1}
+    @test @inferred((() -> set_parameter(Vector, 2, 2))()) == Matrix
+    @test @inferred((() -> set_parameter(Array, 1, Float16))()) == Array{Float16}
+    @test @inferred((() -> set_parameter(Array, 2, 2))()) == Matrix
+
+    @test @inferred ((() -> set_parameter(Array{Float32}, Position(2), 2))()) ==
       Array{Float32,2}
-    @test @inferred(set_parameter(Array{Float32}, Float16)) == Array{Float16}
-    @test @inferred(set_parameter(Array{Float32}, Position(1), Float16)) == Array{Float16}
-    @test @inferred((() -> set_parameter(Array{Float32}, Position(2), 2))()) ==
-      Array{Float32,2}
-    @test @inferred(set_parameter(Array{<:Any,3}, Float16)) == Array{Float16,3}
-    @test @inferred(set_parameter(Array{<:Any,3}, Position(1), Float16)) == Array{Float16,3}
-    # TODO: Inferrence is broken for this case
-    @test @inferred(Any, (() -> set_parameter(Array{<:Any,3}, Position(2), 2))()) ==
-      Array{<:Any,2}
-    @test @inferred(set_parameter(Array, Float16)) == Array{Float16}
-    @test @inferred(set_parameter(Array, Position(1), Float16)) == Array{Float16}
-    @test @inferred((() -> set_parameter(Array, Position(2), 2))()) == Array{<:Any,2}
+    @test @inferred((()->set_parameter(Array{Float32}, Float16))()) == Array{Float16}
   end
 
   @testset "Set ndim and eltype" begin
