@@ -1,5 +1,5 @@
 using .TypeParameterAccessors:
-  TypeParameterAccessors, Position, parameters, specify_parameters, unspecify_parameters
+  TypeParameterAccessors, Position
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
   return Dense{eltype(datatype),datatype}
@@ -13,6 +13,6 @@ end
 
 # TypeParameterAccessors.unspecify_parameters(::Type{<:Dense}) = Dense
 
-TypeParameterAccessors.parenttype_position(::Type{<:Dense}) = Position(2)
+TypeParameterAccessors.parenttype_position(::Type{<:Dense}) = 2
 TypeParameterAccessors.default_parameter(::Type{<:Dense}, ::Position{1}) = Float64
 TypeParameterAccessors.default_parameter(::Type{<:Dense}, ::Position{2}) = Vector
