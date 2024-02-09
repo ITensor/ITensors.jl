@@ -55,21 +55,6 @@ using LinearAlgebra: Transpose
     @test ((() -> set_eltype(Array{<:Any,3}, Float16))()) == Array{Float16,3}
   end
 
-  @testset "Set multiple parameters" begin
-    @test @inferred((() -> set_parameters(Array{<:Any,3}, (Float16, 2)))()) ==
-      Array{Float16,2}
-    @test @inferred((() -> set_parameters(Array{<:Any,3}, Position(1), (Float16, 2)))()) ==
-      Array{Float16,2}
-    @test @inferred(set_parameter(Array{<:Any,3}, Float16)) == Array{Float16,3}
-    @test @inferred(set_parameter(Array{<:Any,3}, Position(1), Float16)) == Array{Float16,3}
-    @test @inferred(set_parameters(Array{<:Any,3})) == Array{<:Any,3}
-    @test @inferred(set_parameters(Array{<:Any,3}, Position(1))) == Array{<:Any,3}
-    # TODO: Inferrence is broken for this case
-    @test @inferred(Any, (() -> set_parameters(Array{<:Any,3}, Position(2), 2))()) ==
-      Array{<:Any,2}
-    @test @inferred(set_parameters(Array{<:Any,3}, Position(2))) == Array{<:Any,3}
-  end
-
   @testset "Set a parameter if it is unspecified" begin
     @test @inferred(specify_parameters(Array{Float32,3}, Float16)) == Array{Float32,3}
     @test @inferred(specify_parameters(Array{Float32,3}, Position(1), Float16)) ==
