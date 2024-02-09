@@ -1,8 +1,7 @@
 @eval module $(gensym())
-using BlockArrays: Block, blocklength, blocklengths, findblock
+using BlockArrays: Block, BlockVector, blocklength, blocklengths, findblock
 using NDTensors.GradedAxes:
   GradedAxes,
-  blockmerge,
   blockmergesortperm,
   dual,
   fuse,
@@ -78,8 +77,8 @@ GradedAxes.dual(l::U1) = U1(-l.dim)
   # and merge an unsorted graded space
   a = gradedrange([U1(0), U1(1)], [2, 3])
   perm_a = blockmergesortperm(tensor_product(a, a))
-  @test perm_a == [[1], [2, 3], [4]]
-  @test blockmerge(tensor_product(a, a), perm_a) == fuse(a, a)
+  @test perm_a == BlockVector([Block(1), Block(2), Block(3), Block(4)], [1, 2, 1])
+  @test tensor_product(a, a)[perm_a] == fuse(a, a)
 
   a = gradedrange([U1(0), U1(1)], [2, 3])
   @test !isdual(a)
@@ -88,6 +87,13 @@ GradedAxes.dual(l::U1) = U1(-l.dim)
   @test sectors(a) == [U1(0), U1(-1)]
   @test sector(a, Block(1)) == U1(0)
   @test sector(a, Block(2)) == U1(-1)
+
+  # Permute blocks
+  a = gradedrange([U1(0), U1(1), U1(2)], [2, 3, 4])
+  perm_a = a[[Block(3), Block(1), Block(2)]]
+  @test perm_a == gradedrange([U1(2), U1(0), U1(1)], [4, 2, 3])
+  @test sectors(perm_a) == [U1(2), U1(0), U1(1)]
+  @test blocklengths(perm_a) == [4, 2, 3]
 
   # Test fusion with dual spaces
   a = gradedrange([U1(0), U1(1)], [2, 3])
