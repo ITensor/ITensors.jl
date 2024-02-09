@@ -244,7 +244,7 @@ end
 using FillArrays: Fill, Zeros
 using NDTensors.UnallocatedArrays
 using NDTensors.TypeParameterAccessors:
-  Position, default_parameter, nparameters, get_parameter, set_parameters
+  Position, default_parameter, nparameters, parameter, set_parameter
 using Test: @test, @testset
 
 @testset "TypeParameterAccessors" begin
@@ -259,32 +259,32 @@ using Test: @test, @testset
       ft3 = $typ{t1,t2,t3}
 
       ## check 1 parameter specified
-      ftn1 = set_parameters(ft1, Position{1}(), t4)
-      ftn2 = set_parameters(ft1, Position{2}(), t4)
-      ftn3 = set_parameters(ft1, Position{3}(), t4)
+      ftn1 = set_parameter(ft1, 1, t4)
+      ftn2 = set_parameter(ft1, 2, t4)
+      ftn3 = set_parameter(ft1, 3, t4)
       @test ftn1 == $typ{t4}
       @test ftn2 == $typ{t1,t4}
       @test ftn3 == $typ{t1,<:Any,t4}
 
       ## check 2 parameters specified
-      ftn1 = set_parameters(ft2, Position{1}(), t4)
-      ftn2 = set_parameters(ft2, Position{2}(), t4)
-      ftn3 = set_parameters(ft2, Position{3}(), t4)
+      ftn1 = set_parameter(ft2, 1, t4)
+      ftn2 = set_parameter(ft2, 2, t4)
+      ftn3 = set_parameter(ft2, 3, t4)
       @test ftn1 == $typ{t4,t2}
       @test ftn2 == $typ{t1,t4}
       @test ftn3 == $typ{t1,t2,t4}
 
       ## check 3 parameters specified
-      ftn1 = set_parameters(ft3, Position{1}(), t4)
-      ftn2 = set_parameters(ft3, Position{2}(), t4)
-      ftn3 = set_parameters(ft3, Position{3}(), t4)
+      ftn1 = set_parameter(ft3, 1, t4)
+      ftn2 = set_parameter(ft3, 2, t4)
+      ftn3 = set_parameter(ft3, 3, t4)
       @test ftn1 == $typ{t4,t2,t3}
       @test ftn2 == $typ{t1,t4,t3}
       @test ftn3 == $typ{t1,t2,t4}
 
-      @test get_parameter(ft3, Position{1}()) == t1
-      @test get_parameter(ft3, Position{2}()) == t2
-      @test get_parameter(ft3, Position{3}()) == t3
+      @test parameter(ft3, 1) == t1
+      @test parameter(ft3, 2) == t2
+      @test parameter(ft3, 3) == t3
 
       @test nparameters(ft3) == Val(3)
     end
@@ -300,19 +300,19 @@ using Test: @test, @testset
       ft = $typ{t1,t2,t3,t4}
 
       ## check 4 parameters specified
-      ftn1 = set_parameters(ft, Position{1}(), t5)
-      ftn2 = set_parameters(ft, Position{2}(), t5)
-      ftn3 = set_parameters(ft, Position{3}(), t5)
-      ftn4 = set_parameters(ft, Position{4}(), t5)
+      ftn1 = set_parameter(ft, 1, t5)
+      ftn2 = set_parameter(ft, 2, t5)
+      ftn3 = set_parameter(ft, 3, t5)
+      ftn4 = set_parameter(ft, 4, t5)
       @test ftn1 == $typ{t5,t2,t3,t4}
       @test ftn2 == $typ{t1,t5,t3,t4}
       @test ftn3 == $typ{t1,t2,t5,t4}
       @test ftn4 == $typ{t1,t2,t3,t5}
 
-      @test get_parameter(ft, Position{1}()) == t1
-      @test get_parameter(ft, Position{2}()) == t2
-      @test get_parameter(ft, Position{3}()) == t3
-      @test get_parameter(ft, Position{4}()) == t4
+      @test parameter(ft, 1) == t1
+      @test parameter(ft, 2) == t2
+      @test parameter(ft, 3) == t3
+      @test parameter(ft, 4) == t4
 
       @test nparameters(ft) == Val(4)
     end

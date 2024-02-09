@@ -19,4 +19,5 @@ include("indexing.jl")
 include("linearalgebra.jl")
 include("mul.jl")
 include("permutedims.jl")
+include("typeparameteraccessors.jl")
 end
