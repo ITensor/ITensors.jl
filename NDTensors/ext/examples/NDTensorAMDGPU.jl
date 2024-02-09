@@ -20,7 +20,7 @@ function main()
   dim1 = (i, j, l)
   dim2 = (j, k)
 
-  # Create 2 ITensors with ROCm backends
+  # Create 2 ITensors with AMDGPU backends
   A = ITensor(randomTensor(ROCArray, dim1))
   B = ITensor(randomTensor(ROCArray, dim2))
 

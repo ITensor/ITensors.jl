@@ -20,7 +20,7 @@ using SafeTestsets: @safetestset
   end
   if "rocm" in ARGS || "all" in ARGS
     using NDTensors: NDTensors
-    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorROCm.jl"))
+    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorAMDGPU.jl"))
   end
   if "metal" in ARGS || "all" in ARGS
     using NDTensors: NDTensors

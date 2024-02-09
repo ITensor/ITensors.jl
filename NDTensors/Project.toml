@@ -45,7 +45,7 @@ NDTensorsCUDAExt = "CUDA"
 NDTensorsMetalExt = "Metal"
 NDTensorsOctavianExt = "Octavian"
 NDTensorsTBLISExt = "TBLIS"
-NDTensorsROCmExt = "AMDGPU"
+NDTensorsAMDGPUExt = "AMDGPU"
 
 [compat]
 Accessors = "0.1.33"

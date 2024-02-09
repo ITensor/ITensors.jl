@@ -1,4 +1,4 @@
-module NDTensorsROCmExt
+module NDTensorsAMDGPUExt
 
 using NDTensors
 using NDTensors.SetParameters
