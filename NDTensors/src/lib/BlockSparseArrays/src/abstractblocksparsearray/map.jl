@@ -19,9 +19,7 @@ function SparseArrayInterface.sparse_map!(
     # map based on the blocks.
     map!(f, blocks(a_dest), blocks.(a_srcs)...)
   else
-    # Else, loop over all sparse elements naively.
-    # TODO: Make sure this is optimized, taking advantage of sparsity.
-    sparse_map!(SparseArrayStyle(Val(ndims(a_dest))), f, a_dest, a_srcs...)
+    map_mismatched_blocking!(f, a_dest, a_srcs...)
   end
   return a_dest
 end
