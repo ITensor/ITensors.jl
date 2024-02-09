@@ -45,27 +45,36 @@ for wrapper in (:ReshapedArray, :SubArray, :StridedView)
   @eval parenttype_position(type::Type{<:$wrapper}) = 3
 end
 
-# By default, the `parentype` of an array type is itself
-parenttype(arraytype::Type{<:AbstractArray}) = arraytype
-
-## TODO I am not sure why this is throwing a Warning
-@traitfn parenttype(
-  wrapper::Type{ArrayT}
-) where {ArrayT <: AbstractArray; IsWrappedArray{ArrayT}} =
-  parameter(wrapper, parenttype_position(wrapper))
-
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
-# parenttype(array::AbstractArray) = parenttype(typeof(array))
-
-is_wrapped_array(arraytype::Type{<:AbstractArray}) = (parenttype_position(arraytype) ≠ UndefPosition())
-
-# TODO: This is only defined because the current design
-# of `Diag` using a `Number` as the data type if it
-# is a uniform diagonal type. Delete this when it is
-# replaced by `DiagonalArray`.
-is_wrapped_array(arraytype::Type{<:Number}) = false
+function is_wrapped_array(arraytype::Type{<:AbstractArray})
+  return (parenttype_position(arraytype) ≠ UndefPosition())
+end
 
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
 is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
+
+function set_parenttype(t::Type, parent_type)
+  return set_parameter(t, parenttype_position(t), parent_type)
+end
+
+# By default, the `parentype` of an array type is itself
+## TODO when both of these functions are defined as `parenttype`
+## a warning is thrown by the compiler
+@traitfn parenttype(
+  arraytype::Type{ArrayT}
+) where {ArrayT <: AbstractArray; !IsWrappedArray{ArrayT}} = arraytype
+
+## TODO I am not sure why this is throwing a Warning
+@traitfn parenttype(
+  wrapper::Type{WrapperT}
+) where {WrapperT <: AbstractArray; IsWrappedArray{WrapperT}} =
+  parameter(wrapper, parenttype_position(wrapper))
+
+@traitfn function set_eltype(
+  type::Type{ArrayT}, elt::Type
+) where {ArrayT <: AbstractArray; IsWrappedArray{ArrayT}}
+  new_parenttype = set_eltype(parenttype(type), elt)
+  return set_parenttype(set_parameter(type, eltype_position(type), elt), new_parenttype)
+end
