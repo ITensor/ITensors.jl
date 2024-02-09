@@ -30,6 +30,7 @@ export DefaultParameter,
   set_parameter,
   set_parameters,
   specify_parameter,
+  specify_parameters,
   is_wrapped_array,
   parenttype
 end # module
