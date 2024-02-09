@@ -1,4 +1,5 @@
-using BlockArrays: Block, BlockedUnitRange, block, blockindex, blocks, blocksize, findblock, findblockindex
+using BlockArrays:
+  Block, BlockedUnitRange, block, blockindex, blocks, blocksize, findblock, findblockindex
 using ..SparseArrayInterface: stored_indices
 
 function blockdiagonal(f!, elt::Type, axes::Tuple)
@@ -61,9 +62,11 @@ function map_mismatched_blocking!(f, a_dest::AbstractArray, a_src::AbstractArray
   for b in block_stored_indices(a_src)
     # Get the subblocks of the matching axes
     # TODO: `union` all `subblocks` of all `a_src` and `a_dest`.
-    subblocks = BlockRange(ntuple(ndims(a_dest)) do dim
-      findblocks(matching_axes[dim], axes(a_src, dim)[Tuple(b)[dim]])
-    end)
+    subblocks = BlockRange(
+      ntuple(ndims(a_dest)) do dim
+        findblocks(matching_axes[dim], axes(a_src, dim)[Tuple(b)[dim]])
+      end,
+    )
     for subblock in subblocks
       I = cartesianindices(matching_axes, subblock)
       I_dest = blockindexrange(a_dest, I)
