@@ -6,6 +6,7 @@ include("default_parameter.jl")
 include("set_parameters.jl")
 include("specify_parameters.jl")
 # include("set_default_parameters.jl")
+include("undefpositon.jl")
 include("Base/iswrappedarray.jl")
 include("Base/abstractarray.jl")
 

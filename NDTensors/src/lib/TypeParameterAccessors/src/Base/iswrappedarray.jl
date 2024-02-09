@@ -22,13 +22,13 @@ using StridedViews: StridedView
 """
 Optional definitions for types which are considered `Wrappers` and have a `parenttype`
 
-  Should return a `Position`.
+  Should return an `Int`.
 """
 function parenttype_position(type::Type)
-  return 0
+  return UndefPosition()
 end
 
-for wrap in (
+for wrapper in (
   :Transpose,
   :Adjoint,
   :Symmetric,
@@ -39,10 +39,10 @@ for wrap in (
   :UnitLowerTriangular,
   :Diagonal,
 )
-  @eval parenttype_position(type::Type{<:$wrap}) = 2
+  @eval parenttype_position(type::Type{<:$wrapper}) = 2
 end
-for wrap in (:ReshapedArray, :SubArray, :StridedView)
-  @eval parenttype_position(type::Type{<:$wrap}) = 3
+for wrapper in (:ReshapedArray, :SubArray, :StridedView)
+  @eval parenttype_position(type::Type{<:$wrapper}) = 3
 end
 
 # By default, the `parentype` of an array type is itself
@@ -58,7 +58,7 @@ parenttype(arraytype::Type{<:AbstractArray}) = arraytype
 # `SimpleTraits.jl` traits dispatch.
 # parenttype(array::AbstractArray) = parenttype(typeof(array))
 
-is_wrapped_array(arraytype::Type{<:AbstractArray}) = (parenttype_position(arraytype) ≠ 0)
+is_wrapped_array(arraytype::Type{<:AbstractArray}) = (parenttype_position(arraytype) ≠ UndefPosition())
 
 # TODO: This is only defined because the current design
 # of `Diag` using a `Number` as the data type if it
