@@ -32,11 +32,15 @@ using LinearAlgebra: Transpose
     @test @inferred((() -> set_parameter(Array, 1, Float16))()) == Array{Float16}
     @test @inferred((() -> set_parameter(Array, 2, 2))()) == Matrix
 
-    @test @inferred((() -> set_parameter(Vector, Position(1), Float32))()) == Vector{Float32}
-    @test @inferred ((() -> set_parameter(Array{Float32}, Position(2), TypeParameter(2)))()) ==
-      Array{Float32,2}
+    @test @inferred((() -> set_parameter(Vector, Position(1), Float32))()) ==
+      Vector{Float32}
+    @test @inferred ((
+      () -> set_parameter(Array{Float32}, Position(2), TypeParameter(2))
+    )()) == Array{Float32,2}
     @test @inferred((() -> set_parameter(Array{Float32}, Float16))()) == Array{Float16}
-    @test @inferred((() -> set_parameter(Array{<:Any,2}, Position(2), TypeParameter(3)))()) == Array{<:Any,3}
+    @test @inferred(
+      (() -> set_parameter(Array{<:Any,2}, Position(2), TypeParameter(3)))()
+    ) == Array{<:Any,3}
   end
 
   @testset "Set ndim and eltype" begin
@@ -57,22 +61,20 @@ using LinearAlgebra: Transpose
   @testset "Set a parameter if it is unspecified" begin
     @test @inferred(specify_parameters(Array{Float32,3}, Float16)) == Array{Float32,3}
     @test @inferred((() -> specify_parameters(Array{Float32}, Float16))()) == Array{Float32}
-    @test @inferred((()->specify_parameters(Array, Float16))()) == Array{Float16}
-    @test @inferred(specify_parameter(Array{Float32,3}, 1, Float16)) ==
-      Array{Float32,3}
-    @test @inferred(specify_parameter(Array{Float32,3}, 2, 2)) ==
-      Array{Float32,3}
+    @test @inferred((() -> specify_parameters(Array, Float16))()) == Array{Float16}
+    @test @inferred(specify_parameter(Array{Float32,3}, 1, Float16)) == Array{Float32,3}
+    @test @inferred(specify_parameter(Array{Float32,3}, 2, 2)) == Array{Float32,3}
     @test @inferred((() -> specify_parameter(Array{Float32}, 1, Float16))()) ==
       Array{Float32}
-    @test @inferred((() -> specify_parameter(Array{Float32}, 2, 2))()) ==
-      Array{Float32,2}
+    @test @inferred((() -> specify_parameter(Array{Float32}, 2, 2))()) == Array{Float32,2}
     @test @inferred((() -> specify_parameter(Array, 1, Float16))()) == Array{Float16}
     @test @inferred((() -> specify_parameter(Array, 2, 2))()) == Array{<:Any,2}
 
-     ## TODO this is broken because of a type stability issue in Julia `Base`
-    @test_broken @inferred((() -> specify_parameters(Array{<:Any,3}, Float16))()) == Array{Float16,3}
+    ## TODO this is broken because of a type stability issue in Julia `Base`
+    @test_broken @inferred((() -> specify_parameters(Array{<:Any,3}, Float16))()) ==
+      Array{Float16,3}
     @test specify_parameter(Array{<:Any,3}, 1, Float16) == Array{Float16,3}
-    @test specify_parameter(Array{<:Any,3}, 2, 2) == Array{<:Any, 3}
+    @test specify_parameter(Array{<:Any,3}, 2, 2) == Array{<:Any,3}
     @test_broken @inferred(specify_parameter(Array{<:Any,3}, 1, Float16)) ==
       Array{Float16,3}
     @test_broken @inferred(specify_parameters(Array{<:Any,3}, 2, 2)) == Array{<:Any,3}
@@ -82,13 +84,16 @@ using LinearAlgebra: Transpose
     @test @inferred(specify_parameters(Array{Float32,3}, Float16, 2)) == Array{Float32,3}
     @test_broken @inferred((() -> specify_parameters(Array{Float32}, Float16, 2))()) ==
       Array{Float32,2}
-    @test specify_parameters(Array{Float32}, Float16, 2) == Array{Float32, 2}
-    @test_broken @inferred(specify_parameters(Array{<:Any,3}, Float16, 2)) == Array{Float16,3}
+    @test specify_parameters(Array{Float32}, Float16, 2) == Array{Float32,2}
+    @test_broken @inferred(specify_parameters(Array{<:Any,3}, Float16, 2)) ==
+      Array{Float16,3}
     @test specify_parameters(Array{<:Any,3}, Float16, 2) == Array{Float16,3}
-    @test_broken @inferred((() -> specify_parameters(Array, Float16, 2))()) == Array{Float16,2}
-    @test (() -> specify_parameters(Array, Float16, 2))() == Array{Float16, 2}
+    @test_broken @inferred((() -> specify_parameters(Array, Float16, 2))()) ==
+      Array{Float16,2}
+    @test (() -> specify_parameters(Array, Float16, 2))() == Array{Float16,2}
   end
 
+  ## TODO Still working on the Default parameters system
   @testset "Default parameters" begin
     @test @inferred(default_parameter(Array{Float32,3}, Position(1))) == Float64
     @test @inferred(default_parameter(Array{Float32,3}, Position(2))) == 1
