@@ -1,6 +1,6 @@
-using .TypeParameterAccessors: TypeParameterAccessors
+using .TypeParameterAccessors: TypeParameterAccessors, Position
 
-TypeParameterAccessors.eltype_position(::Type{<:SubArray}) = 1
+TypeParameterAccessors.position(::Type{<:SubArray}, ::typeof(eltype)) = Position(1)
 
 # TODO: Figure out how to define this properly.
 # function set_ndims(arraytype::Type{<:SubArray}, ndims)

@@ -41,3 +41,12 @@ end
 Set the parameter of the Type `type` in the first position with the value `val`. Note, this function is for types which only have a single parameter.
 """
 set_parameter(type::Type, val) = set_parameters(type, tuple(val))
+
+"""
+    set_parameter(type::Type, pos::Function, parameter)
+
+Set the parameter of the Type `type` 
+"""
+set_parameter(type::Type, pos::Function, parameter::Type) = set_parameter(type, position(type, pos), parameter)
+
+set_parameter(type::Type, pos::Function, parameter) = set_parameter(type, position(type, pos), TypeParameter(parameter))
