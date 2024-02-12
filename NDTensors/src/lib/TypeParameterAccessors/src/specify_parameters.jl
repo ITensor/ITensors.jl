@@ -1,10 +1,25 @@
 ## TODO still working on this
-function specify_parameter(type::Type, pos::Int, val)
+function specify_parameter(type::Type, pos::Int, param::Type)
   is_parameter_specified(type, pos) && return type
-  return set_parameter(type, pos, val)
+  return set_parameter(type, Position(pos), param)
 end
 
-specify_parameter(type::Type, pos::Position, val) = specify_parameter(type, Int(pos), val)
+function specify_parameter(type::Type, pos::Int, param)
+  is_parameter_specified(type, pos) && return type
+  return set_parameter(type, Position(pos), TypeParameter(param))
+end
+
+"""
+Set parameters starting from the first one if they are unspecified.
+"""
+## TODO This is not a type stable definition because of an issue in `Julia` see if there is a better way to do this.
+function specify_parameters(type::Type, parameter...)
+  params = tuple(parameter...)
+  for i in 1:length(params)
+    type = specify_parameter(type, i, params[i])
+  end
+  return type
+end
 
 # # Base case, set the type parameter at the position if it is unspecified.
 # function specify_parameters(type::Type, position::Position, parameter)
@@ -28,18 +43,6 @@ specify_parameter(type::Type, pos::Position, val) = specify_parameter(type, Int(
 # function specify_parameters(type::Type, position::Position, parameters...)
 #   return set_parameters(specify_parameters, type, position, parameters...)
 # end
-
-"""
-Set parameters starting from the first one if they are unspecified.
-"""
-## TODO This is not a type stable definition because of an issue in `Julia` see if there is a better way to do this.
-function specify_parameters(type::Type, parameter...)
-  params = tuple(parameter...)
-  for i in 1:length(params)
-    type = specify_parameter(type, i, params[i])
-  end
-  return type
-end
 
 # function specify_parameters(type::Type)
 #   return specify_parameters(type, DefaultParameters())

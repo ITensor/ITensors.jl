@@ -39,3 +39,5 @@ This function is necessary to ensure type stability.
 end
 
 int(p::Position) = parameter(p)
+
+@generated specify_parameter(type::Type, pos::Position, param) = specify_parameter(type, Int(pos), param)
