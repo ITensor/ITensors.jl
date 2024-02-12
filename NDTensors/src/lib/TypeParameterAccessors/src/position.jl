@@ -40,4 +40,5 @@ end
 
 int(p::Position) = parameter(p)
 
-@generated specify_parameter(type::Type, pos::Position, param) = specify_parameter(type, Int(pos), param)
+@generated specify_parameter(type::Type, pos::Position, param) =
+  specify_parameter(type, Int(pos), param)
