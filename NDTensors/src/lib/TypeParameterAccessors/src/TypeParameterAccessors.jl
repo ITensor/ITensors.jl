@@ -1,8 +1,8 @@
 module TypeParameterAccessors
 include("parameters.jl")
+include("set_parameters.jl")
 include("position.jl")
 include("default_parameter.jl")
-include("set_parameters.jl")
 include("specify_parameters.jl")
 include("undefpositon.jl")
 include("Base/iswrappedarray.jl")
@@ -21,6 +21,7 @@ include("typeparamaccessor.jl")
 export DefaultParameter,
   DefaultParameters,
   Position,
+  TypeParameter,
   default_parameter,
   parameter,
   parameters,

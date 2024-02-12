@@ -28,10 +28,11 @@ set_parameters(type) = type
 
 Set the parameter of the Type `type` in the position `pos` with the value `val`
 """
-function set_parameter(type::Type, pos::Int, val)
-  params = parameters(type)
-  new_params = Base.setindex(params, val, pos)
-  return set_parameters(type, new_params)
+Base.@assume_effects :foldable function set_parameter(type::Type, pos::Int, val)
+  params = Base.unwrap_unionall(type).parameters
+  return Base.rewrap_unionall(
+    Base.typename(type).wrapper{params[1:(pos - 1)]...,val,params[(pos + 1):end]...}, type
+  )
 end
 
 """
