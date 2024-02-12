@@ -1,10 +1,15 @@
 module TypeParameterAccessors
 include("parameters.jl")
-include("set_parameters.jl")
-include("position.jl")
-include("default_parameter.jl")
-include("specify_parameters.jl")
+
 include("undefpositon.jl")
+include("position.jl")
+include("interface.jl")
+
+include("set_parameters.jl")
+
+include("specify_parameters.jl")
+include("default_parameter.jl")
+
 include("Base/iswrappedarray.jl")
 include("Base/abstractarray.jl")
 
