@@ -12,6 +12,6 @@ end
 
 # TypeParameterAccessors.unspecify_parameters(::Type{<:Dense}) = Dense
 
-TypeParameterAccessors.parenttype_position(::Type{<:Dense}) = 2
+TypeParameterAccessors.position(::Type{<:Dense}, ::typeof(TypeParameterAccessors.parenttype)) = Position(2)
 TypeParameterAccessors.default_parameter(::Type{<:Dense}, ::Position{1}) = Float64
 TypeParameterAccessors.default_parameter(::Type{<:Dense}, ::Position{2}) = Vector

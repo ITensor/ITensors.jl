@@ -1,1 +1,1 @@
-TypeParameterAccessors.parenttype_position(::Type{<:BlockSparseArray}) = 3
+TypeParameterAccessors.position(::Type{<:BlockSparseArray}, ::typeof(TypeParameterAccessors.parenttype)) = Position(3)
