@@ -20,4 +20,8 @@ function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
   return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
 end
 
-TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(TypeParameterAccessors.parenttype)) = Position(3)
+function TypeParameterAccessors.position(
+  ::Type{<:Tensor}, ::typeof(TypeParameterAccessors.parenttype)
+)
+  return Position(3)
+end

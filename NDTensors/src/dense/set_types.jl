@@ -10,6 +10,14 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray
   )
 end
 
-TypeParameterAccessors.position(::Type{<:Dense}, ::typeof(TypeParameterAccessors.parenttype)) = Position(2)
+function TypeParameterAccessors.position(
+  ::Type{<:Dense}, ::typeof(TypeParameterAccessors.parenttype)
+)
+  return Position(2)
+end
 TypeParameterAccessors.default_parameter(::Type{<:Dense}, ::typeof(eltype)) = Float64
-TypeParameterAccessors.default_parameter(::Type{<:Dense}, ::typeof(TypeParameterAccessors.parenttype)) = Vector
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:Dense}, ::typeof(TypeParameterAccessors.parenttype)
+)
+  return Vector
+end
