@@ -19,7 +19,7 @@ using StridedViews: StridedView
 @traitimpl IsWrappedArray{ArrayT} <- is_wrapped_array(ArrayT)
 #! format: on
 
-parenttype(::Type{<:AbstractArray}) = nothing
+parenttype(::Type) = nothing
 
 for wrapper in (
   :Transpose,
