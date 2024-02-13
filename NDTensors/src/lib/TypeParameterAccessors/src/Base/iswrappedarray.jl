@@ -35,7 +35,7 @@ for wrapper in (
   @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = 2
 end
 for wrapper in (:ReshapedArray, :SubArray, :StridedView)
-  @eval position(type::Type{<:$wrapper},::typeof(parenttype)) = 3
+  @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = 3
 end
 
 # For working with instances, not used by

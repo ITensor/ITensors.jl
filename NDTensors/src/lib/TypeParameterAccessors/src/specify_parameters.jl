@@ -10,7 +10,7 @@ end
 
 @generated specify_parameter(type::Type, pos::Position, param) =
   specify_parameter(type, Int(pos), param)
-  
+
 function specify_parameters(type::Type, t...)
   return type
 end
