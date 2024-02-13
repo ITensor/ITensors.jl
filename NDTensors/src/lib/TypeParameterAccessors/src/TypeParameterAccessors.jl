@@ -1,7 +1,7 @@
 module TypeParameterAccessors
 include("parameters.jl")
 
-include("undefpositon.jl")
+include("undefinedposition.jl")
 include("position.jl")
 include("interface.jl")
 
