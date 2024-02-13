@@ -36,13 +36,6 @@ Base.@assume_effects :foldable function set_parameter(type::Type, pos::Int, val)
 end
 
 """
-    set_parameter(type::Type, pos::UndefinedPosition, val)
-
-If one is trying to modify a type with an UndefinedPosition (most likely from a function not being defined) return `type`
-"""
-Base.@assume_effects :foldable set_parameter(type::Type, pos::UndefinedPosition, val) = type
-
-"""
     set_parameter(type::Type, val)
 
 Set the parameter of the Type `type` in the first position with the value `val`. Note, this function is for types which only have a single parameter.
@@ -50,10 +43,10 @@ Set the parameter of the Type `type` in the first position with the value `val`.
 set_parameter(type::Type, val) = set_parameters(type, tuple(val))
 
 """
-    set_parameter(type::Type, pos::Function, parameter)
+    set_parameter(type::Type, fun::Function, parameter)
 
-Set the parameter of the Type `type` 
+Set the parameter with the function tag `fun` to `parameter` for the Type `type` 
 """
-set_parameter(type::Type, pos::Function, parameter::Type) = set_parameter(type, position(type, pos), parameter)
+set_parameter(type::Type, fun::Function, parameter::Type) = set_parameter(type, position(type, fun), parameter)
 
-set_parameter(type::Type, pos::Function, parameter) = set_parameter(type, position(type, pos), TypeParameter(parameter))
+set_parameter(type::Type, fun::Function, parameter) = set_parameter(type, position(type, fun), TypeParameter(parameter))
