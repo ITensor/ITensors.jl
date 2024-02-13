@@ -1,5 +1,6 @@
 using FillArrays: AbstractFill
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position, parameter, set_parameter
+using NDTensors.TypeParameterAccessors:
+  TypeParameterAccessors, Position, parameter, set_parameter
 ## Here are functions specifically defined for UnallocatedArrays
 ## not implemented by FillArrays
 ## TODO this might need a more generic name maybe like compute unit

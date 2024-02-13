@@ -47,6 +47,9 @@ set_parameter(type::Type, val) = set_parameters(type, tuple(val))
 
 Set the parameter with the function tag `fun` to `parameter` for the Type `type` 
 """
-set_parameter(type::Type, fun::Function, parameter::Type) = set_parameter(type, position(type, fun), parameter)
+set_parameter(type::Type, fun::Function, parameter::Type) =
+  set_parameter(type, position(type, fun), parameter)
 
-set_parameter(type::Type, fun::Function, parameter) = set_parameter(type, position(type, fun), TypeParameter(parameter))
+function set_parameter(type::Type, fun::Function, parameter)
+  return set_parameter(type, position(type, fun), TypeParameter(parameter))
+end
