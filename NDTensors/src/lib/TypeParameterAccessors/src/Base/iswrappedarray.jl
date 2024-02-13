@@ -25,7 +25,7 @@ Optional definitions for types which are considered `Wrappers` and have a `paren
   Should return an `Int`.
 """
 function parenttype_position(type::Type)
-  return UndefPosition()
+  return UndefinedPosition()
 end
 
 for wrapper in (
@@ -48,7 +48,7 @@ end
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
 function is_wrapped_array(arraytype::Type{<:AbstractArray})
-  return (parenttype_position(arraytype) ≠ UndefPosition())
+  return (parenttype_position(arraytype) ≠ UndefinedPosition())
 end
 
 # For working with instances, not used by
