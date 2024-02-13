@@ -1,5 +1,6 @@
 module TypeParameterAccessors
 include("parameters.jl")
+include("unspecify_parameters.jl")
 
 include("undefinedposition.jl")
 include("position.jl")
@@ -36,6 +37,7 @@ export DefaultParameter,
   set_parameter,
   set_parameters,
   specify_parameter,
+  unspecify_parameters,
   is_wrapped_array,
   parenttype
 end # module
