@@ -3,11 +3,6 @@ using NDTensors.UnspecifiedTypes: UnspecifiedArray, UnspecifiedNumber, Unspecifi
 
 ## TODO set ndims position.
 # ## default parameters
-function TypeParameterAccessors.default_parameter(::Type{<:UnallocatedArray}, ::Position{4})
+function TypeParameterAccessors.default_parameter(::Type{<:UnallocatedArray}, ::typeof(alloctype))
   return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero},0}
 end
-
-TypeParameterAccessors.nparameters(::Type{<:UnallocatedArray}) = Val(4)
-
-unspecify_parameters(::Type{<:UnallocatedFill}) = UnallocatedFill
-unspecify_parameters(::Type{<:UnallocatedZeros}) = UnallocatedZeros
