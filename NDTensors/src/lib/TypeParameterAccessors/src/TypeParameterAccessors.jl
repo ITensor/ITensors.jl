@@ -21,9 +21,6 @@ include("Base/abstractarray.jl")
 #   @require_extensions
 # end
 
-# This implementation relies on Julia Base internals
-include("typeparamaccessor.jl")
-
 export DefaultParameter,
   DefaultParameters,
   Position,

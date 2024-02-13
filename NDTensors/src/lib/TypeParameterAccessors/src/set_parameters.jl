@@ -12,8 +12,8 @@ end
 
 Set the parameters of UnionAll `type` to `paramters`.
 """
-function set_parameters(type::UnionAll, parameters::Tuple)
-  return to_unionall(set_parameters(to_datatype(type), parameters), type)
+Base.@assume_effects :foldable function set_parameters(type::UnionAll, parameters::Tuple)
+  return Base.rewrap_unionall(set_parameters(Base.unwrap_unionall(type), parameters), type)
 end
 
 """

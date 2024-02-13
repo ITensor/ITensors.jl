@@ -10,7 +10,7 @@ parameters(type::DataType) = Tuple(type.parameters)
 
 Gets all the type parameters of the UnionAll `type`.
 """
-parameters(type::UnionAll) = parameters(to_datatype(type))
+parameters(type::UnionAll) = parameters(Base.unwrap_unionall(type))
 
 """
     parameters(object, position::Int)
