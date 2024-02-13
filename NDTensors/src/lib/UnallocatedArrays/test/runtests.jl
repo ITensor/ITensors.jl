@@ -2,6 +2,7 @@
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
+using NDTensors.TypeParameterAccessors: nparameters, parameter
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
 
@@ -286,7 +287,7 @@ using Test: @test, @testset
       @test parameter(ft3, 2) == t2
       @test parameter(ft3, 3) == t3
 
-      @test nparameters(ft3) == Val(3)
+      @test nparameters(ft3) == 3
     end
   end
 
@@ -314,7 +315,7 @@ using Test: @test, @testset
       @test parameter(ft, 3) == t3
       @test parameter(ft, 4) == t4
 
-      @test nparameters(ft) == Val(4)
+      @test nparameters(ft) == 4
     end
   end
 end
