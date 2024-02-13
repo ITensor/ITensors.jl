@@ -19,14 +19,7 @@ using StridedViews: StridedView
 @traitimpl IsWrappedArray{ArrayT} <- is_wrapped_array(ArrayT)
 #! format: on
 
-"""
-Optional definitions for types which are considered `Wrappers` and have a `parenttype`
-
-  Should return an `Int`.
-"""
-function parenttype_position(type::Type)
-  return UndefinedPosition()
-end
+parenttype(::Type{<:AbstractArray}) = nothing
 
 for wrapper in (
   :Transpose,
@@ -39,16 +32,16 @@ for wrapper in (
   :UnitLowerTriangular,
   :Diagonal,
 )
-  @eval parenttype_position(type::Type{<:$wrapper}) = 2
+  @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = 2
 end
 for wrapper in (:ReshapedArray, :SubArray, :StridedView)
-  @eval parenttype_position(type::Type{<:$wrapper}) = 3
+  @eval position(type::Type{<:$wrapper},::typeof(parenttype)) = 3
 end
 
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
 function is_wrapped_array(arraytype::Type{<:AbstractArray})
-  return (parenttype_position(arraytype) ≠ UndefinedPosition())
+  return (position(arraytype, parenttype) ≠ UndefinedPosition())
 end
 
 # For working with instances, not used by
@@ -56,7 +49,7 @@ end
 is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
 
 function set_parenttype(t::Type, parent_type)
-  return set_parameter(t, parenttype_position(t), parent_type)
+  return set_parameter(t, parenttype, parent_type)
 end
 
 # By default, the `parentype` of an array type is itself
@@ -70,11 +63,11 @@ end
 @traitfn parenttype(
   wrapper::Type{WrapperT}
 ) where {WrapperT <: AbstractArray; IsWrappedArray{WrapperT}} =
-  parameter(wrapper, parenttype_position(wrapper))
+  parameter(wrapper, position(wrapper, parenttype))
 
 @traitfn function set_eltype(
   type::Type{ArrayT}, elt::Type
 ) where {ArrayT <: AbstractArray; IsWrappedArray{ArrayT}}
   new_parenttype = set_eltype(parenttype(type), elt)
-  return set_parenttype(set_parameter(type, eltype_position(type), elt), new_parenttype)
+  return set_parenttype(set_parameter(type, eltype, elt), new_parenttype)
 end
