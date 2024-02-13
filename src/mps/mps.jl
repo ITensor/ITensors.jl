@@ -423,7 +423,7 @@ function MPS(eltype::Type{<:Number}, sites::Vector{<:Index}, states_)
     end
     links = Vector{QNIndex}(undef, N - 1)
     for j in (N - 1):-1:1
-      links[j] = dag(Index(lflux => 1; tags="Link,l=$j"))
+      links[j] = Index(lflux => 1; tags="Link,l=$j")
       lflux -= flux(states[j])
     end
   else
