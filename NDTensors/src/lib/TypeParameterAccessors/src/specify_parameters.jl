@@ -16,6 +16,13 @@ end
   return Typ
 end
 
+Base.@assume_effects :foldable function specify_parameter(type::Type, fun::Function, param)
+  pos = position(type, fun)
+ _specify_parameter(parameter(type, pos), type, pos, param)
+end
+
+## TODO make a `specify_parameters(type::Type, functions, vals)`
+# for (fun, val) in (functions, vals) specify_parameter(type, fun, val)
 function specify_parameters(type::Type, t...)
   return type
 end
