@@ -21,8 +21,21 @@ Base.@assume_effects :foldable function specify_parameter(type::Type, fun::Funct
   return _specify_parameter(parameter(type, pos), type, pos, param)
 end
 
-## TODO make a `specify_parameters(type::Type, functions, vals)`
-# for (fun, val) in (functions, vals) specify_parameter(type, fun, val)
-# function specify_parameters(type::Type, t...)
+Base.@assume_effects :foldable function specify_parameters(type::Type, functions::Tuple)
+  for func in functions
+    type = specify_parameter(type, func, default_parameter(type, func))
+  end
+  return type
+end
+
+# Base.@assume_effects :foldable function specify_parameters(type::Type, functions::Tuple, vals::Tuple)
+#   @assert length(functions) == length(vals)
+#   for l in 1:length(vals)
+#     @show functions[l]
+#     @show vals[l]
+#     type = specify_parameter(type, functions[l], vals[l])
+#   end
 #   return type
 # end
+
+specify_defaults(type::Type) = specify_parameters(type, default_parameters(type))

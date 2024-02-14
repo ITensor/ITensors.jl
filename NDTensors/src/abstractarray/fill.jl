@@ -1,16 +1,16 @@
-using .TypeParameterAccessors: DefaultParameters #specify_parameters
+using .TypeParameterAccessors: specify_defaults
 using .Unwrap: unwrap_array_type
 
 function generic_randn(
   arraytype::Type{<:AbstractArray}, dim::Integer=0; rng=Random.default_rng()
 )
-  arraytype_specified = nothing#specify_parameters(unwrap_array_type(arraytype), DefaultParameters())
+  arraytype_specified = specify_defaults(unwrap_array_type(arraytype))
   data = similar(arraytype_specified, dim)
   return randn!(rng, data)
 end
 
 function generic_zeros(arraytype::Type{<:AbstractArray}, dims...)
-  arraytype_specified = nothing#specify_parameters(unwrap_array_type(arraytype), DefaultParameters())
+  arraytype_specified = specify_defaults(unwrap_array_type(arraytype))
   ElT = eltype(arraytype_specified)
   return fill!(similar(arraytype_specified, dims...), zero(ElT))
 end

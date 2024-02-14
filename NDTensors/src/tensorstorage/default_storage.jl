@@ -6,10 +6,7 @@ default_eltype() = Float64
 ## TODO use multiple dispace to make this pick between dense and blocksparse
 function default_storagetype(datatype::Type{<:AbstractArray}, inds::Tuple)
   ## TODO This needs to be changed
-  #datatype = specify_parameters(datatype)
-  ## TODO add a `default_parameters` function that gives something like (eltype, ndims, alloctype)
-  ## For a GPUArray and `(eltype, ndims)` for a !WrappedArray
-  # datatype = specify_parameters(datatype, default_parameters(datatype), parameters(datatype))
+  datatype = specify_defaults(datatype)
   return Dense{eltype(datatype),datatype}
 end
 

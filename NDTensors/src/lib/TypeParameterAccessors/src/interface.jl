@@ -4,3 +4,5 @@
 
 # Required overloads, generic fallback
 position(::Type, ::Function) = UndefinedPosition()
+
+default_parameter(type::Type, fun::Function) = error("The default parameter of function $(fun) is not defined for type $(type)")

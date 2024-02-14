@@ -21,11 +21,11 @@ include("Base/abstractarray.jl")
 #   @require_extensions
 # end
 
-export DefaultParameter,
-  DefaultParameters,
+export
   Position,
   TypeParameter,
   default_parameter,
+  default_parameters,
   parameter,
   parameters,
   nparameters,
@@ -33,6 +33,7 @@ export DefaultParameter,
   set_ndims,
   set_parameter,
   set_parameters,
+  specify_defaults,
   specify_parameter,
   unspecify_parameters,
   is_wrapped_array,
