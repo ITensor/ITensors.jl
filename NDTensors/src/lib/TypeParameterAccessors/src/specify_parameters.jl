@@ -1,15 +1,19 @@
-function specify_parameter(type::Type, pos::Int, param::Type)
-  is_parameter_specified(type, pos) && return type
-  return set_parameter(type, Position(pos), param)
+Base.@assume_effects :foldable function specify_parameter(type::Type, pos::Int, param)
+  return _specify_parameter(parameter(type, pos), type, Position(pos), param)
 end
 
-function specify_parameter(type::Type, pos::Int, param)
-  is_parameter_specified(type, pos) && return type
-  return set_parameter(type, Position(pos), TypeParameter(param))
+function _specify_parameter(::TypeVar, type::Type, pos::Position, param)
+  return set_parameter(type, pos, TypeParameter(param))
 end
 
-@generated specify_parameter(type::Type, pos::Position, param) =
-  specify_parameter(type, Int(pos), param)
+function _specify_parameter(::TypeVar, type::Type, pos::Position, param::Type)
+  return set_parameter(type, pos, param)
+end
+
+@generated function _specify_parameter(::Union{<:Int,<:DataType}, ::Type{Typ}, pos, param) where {Typ}
+  return Typ
+end
+
 
 function specify_parameters(type::Type, t...)
   return type
