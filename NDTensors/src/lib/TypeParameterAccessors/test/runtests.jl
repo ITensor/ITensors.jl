@@ -75,6 +75,9 @@ using LinearAlgebra: Transpose
     @test @inferred((() -> specify_parameter(Vector, 1, Float64))()) == Array{Float64,1}
     @test @inferred((() -> specify_parameter(Vector, 2, 2))()) == Array{<:Any,1}
 
+    @test @inferred((() -> specify_parameter(Array, eltype, Float32))()) == Array{Float32}
+    @test @inferred((() -> specify_parameter(Array, ndims, 2))()) == Array{<:Any, 2}
+
     @test specify_parameter(Array{<:Any,3}, 1, Float16) == Array{Float16,3}
     @test specify_parameter(Array{<:Any,3}, 2, 2) == Array{<:Any,3}
     ## TODO Do we want to support type stable this behavior, it does not seem suppported by julia.
