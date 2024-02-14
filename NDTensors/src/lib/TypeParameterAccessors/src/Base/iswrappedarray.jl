@@ -1,4 +1,4 @@
-using SimpleTraits
+using SimpleTraits: SimpleTraits, @traitdef, @traitimpl, @traitfn, Not
 using LinearAlgebra:
   Adjoint,
   Diagonal,

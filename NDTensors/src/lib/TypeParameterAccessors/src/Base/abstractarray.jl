@@ -1,4 +1,4 @@
-using SimpleTraits
+using SimpleTraits: SimpleTraits, @traitfn
 
 # Required overload implementation
 position(::Type{<:AbstractArray}, ::typeof(eltype)) = Position(1)
