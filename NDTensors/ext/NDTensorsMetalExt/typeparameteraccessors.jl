@@ -6,13 +6,13 @@ storagemode(T::Type{<:MtlArray}) = parameter(T, 3)
 ## TODO this seems like a `GPUArrays` generic function
 TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(storagemode)) = Position(3)
 
-function NDTensors.TypeParameterAccessors.default_parameter(
+function TypeParameterAccessors.default_parameter(
   ::Type{<:MtlArray}, ::typeof{eltype}
 )
   return Float32
 end
-NDTensors.TypeParameterAccessors.default_parameter(::Type{<:MtlArray}, ::typeof{ndims}) = 1
-function NDTensors.TypeParameterAccessors.default_parameter(
+TypeParameterAccessors.default_parameter(::Type{<:MtlArray}, ::typeof{ndims}) = 1
+function TypeParameterAccessors.default_parameter(
   ::Type{<:MtlArray}, ::typeof{storagemode}
 )
   return Metal.DefaultStorageMode
