@@ -109,7 +109,7 @@ end
 
 # convert to Dense
 function dense(T::DiagTensor)
-  return dense(unwrap_type(T), T)
+  return dense(unwrap_array_type(T), T)
 end
 
 # CPU version
@@ -124,7 +124,7 @@ end
 # GPU version
 function dense(::Type{<:AbstractArray}, T::DiagTensor)
   D_cpu = dense(Array, cpu(T))
-  return adapt(unwrap_type(T), D_cpu)
+  return adapt(unwrap_array_type(T), D_cpu)
 end
 
 # UniformDiag version

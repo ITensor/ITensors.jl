@@ -94,7 +94,7 @@ function permutedims_combine(
     a_dest_b = @view a_dest_b_total[subind...]
     a_dest_b = reshape(a_dest_b, permute(size(a_src_b), perm))
     # TODO: Make this `convert` call more general
-    # for GPUs using `unwrap_type`.
+    # for GPUs using `unwrap_array_type`.
     a_src_bₐ = convert(Array, a_src_b)
     # TODO: Use `expose` to make more efficient and robust.
     permutedims!(a_dest_b, a_src_bₐ, perm)
@@ -137,6 +137,6 @@ function permutedims_combine_output(
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
   T = eltype(a_src)
   N = length(axes_dest)
-  B = set_ndims(unwrap_type(a_src), length(axes_dest))
+  B = set_ndims(unwrap_array_type(a_src), length(axes_dest))
   return BlockSparseArray{T,N,B}(undef, blocks_perm_comb, axes_dest)
 end

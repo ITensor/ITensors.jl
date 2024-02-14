@@ -2,7 +2,7 @@ module Unwrap
 using Adapt: Adapt, adapt, adapt_structure
 
 include("expose.jl")
-include("unwraptype.jl")
+include("unwraparraytype.jl")
 
 include("import.jl")
 ## TODO Create functions which take the `Expose` type and launch functions
@@ -15,6 +15,6 @@ include("functions/mul.jl")
 include("functions/permutedims.jl")
 include("functions/adapt.jl")
 
-export IsWrappedArray, unwrap_type, expose, Exposed, unexpose, cpu
+export IsWrappedArray, unwrap_array_type, expose, Exposed, unexpose, cpu
 
 end

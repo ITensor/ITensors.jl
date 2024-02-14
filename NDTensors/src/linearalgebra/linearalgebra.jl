@@ -178,7 +178,7 @@ function LinearAlgebra.eigen(
   DM, VM = eigen(expose(matrixT))
 
   # Sort by largest to smallest eigenvalues
-  # TODO: Replace `cpu` with `unwrap_type` dispatch.
+  # TODO: Replace `cpu` with `unwrap_array_type` dispatch.
   p = sortperm(cpu(DM); rev=true, by=abs)
   DM = DM[p]
   VM = VM[:, p]
@@ -390,7 +390,7 @@ function ql_positive(M::AbstractMatrix)
   # like `qr_positive`.
   iscuda = iscu(M)
   if iscuda
-    cutype = unwrap_type(M)
+    cutype = unwrap_array_type(M)
     M = NDTensors.cpu(M)
   end
   sparseQ, L = ql(M)
@@ -424,7 +424,7 @@ function ql(A::AbstractMatrix)
   copyto!(expose(AA), expose(A))
   iscuda = iscu(AA)
   if iscuda
-    cutype = unwrap_type(AA)
+    cutype = unwrap_array_type(AA)
     AA = NDTensors.cpu(AA)
   end
   Q, L = ql!(AA)

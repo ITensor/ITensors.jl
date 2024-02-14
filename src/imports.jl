@@ -190,7 +190,7 @@ import ITensors.NDTensors:
   addblock!,
   store
 
-using NDTensors.Unwrap: unwrap_type
+using NDTensors.Unwrap: unwrap_array_type
 
 import ITensors.Ops: Prod, Sum, terms
 

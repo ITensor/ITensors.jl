@@ -118,7 +118,7 @@ function uncombine(
         # `GPUArraysCore.jl` as a dependency, or use `expose`.
         a_dest_b[] = cpu(a_src_b)[]
       else
-        # TODO: Use `unspecify_parameters(unwrap_type(a_src))` intead of `Array`.
+        # TODO: Use `unspecify_parameters(unwrap_array_type(a_src))` intead of `Array`.
         a_dest_bₐ = convert(Array, a_dest_b)
         a_dest_bₐᵣ = reshape(a_dest_bₐ, size(a_src_b))
         copyto!(expose(a_dest_bₐᵣ), expose(a_src_b))
@@ -149,7 +149,7 @@ function uncombine_output(
   # TODO: Should this be zero data instead of undef?
   T = eltype(a_src)
   N = length(axes_uncomb_perm)
-  B = unwrap_type(a_src)
+  B = unwrap_array_type(a_src)
   a_uncomb_perm = BlockSparseArray{T,N,B}(undef, blocks_uncomb_perm, axes_uncomb_perm)
   return reshape(a_uncomb_perm, axes_dest)
 end
