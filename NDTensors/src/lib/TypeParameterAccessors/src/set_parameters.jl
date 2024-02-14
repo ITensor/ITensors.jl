@@ -66,7 +66,7 @@ This function is necessary to ensure type stability.
   return set_parameter(Typ, Pos, Param)
 end
 
-@generated set_parameter(type::Type{Typ}, ::UndefinedPosition, val) where {Typ} = type
+set_parameter(type::Type{Typ}, ::UndefinedPosition, val) where {Typ} = type
 
 """
     set_parameter(type::Type, fun::Function, parameter)
