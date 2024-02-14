@@ -66,9 +66,7 @@ This function is necessary to ensure type stability.
   return set_parameter(Typ, Pos, Param)
 end
 
-function set_parameter(
-  type::Type, pos::Position, param::Int
-) 
+function set_parameter(type::Type, pos::Position, param::Int)
   return set_parameter(type, pos, TypeParameter(param))
 end
 
@@ -89,7 +87,9 @@ end
 ## Functions is a little confusing, You can actually
 ## put `Functions``, `Position``, or `Int`
 ## or a mixture of any like (eltype, Position(2), 3)
-Base.@assume_effects :foldable function set_parameters(type::Type, functions::Tuple, params::Tuple)
+Base.@assume_effects :foldable function set_parameters(
+  type::Type, functions::Tuple, params::Tuple
+)
   @assert length(functions) == length(params)
   for l in 1:length(params)
     type = set_parameter(type, functions[l], params[l])

@@ -28,7 +28,9 @@ end
 ## Functions is a little confusing, You can actually
 ## put `Functions``, `Position``, or `Int`
 ## or a mixture of any like (eltype, Position(2), 3)
-Base.@assume_effects :foldable function specify_parameters(type::Type, functions::Tuple, params::Tuple)
+Base.@assume_effects :foldable function specify_parameters(
+  type::Type, functions::Tuple, params::Tuple
+)
   @assert length(functions) == length(params)
   for l in 1:length(params)
     type = specify_parameter(type, functions[l], params[l])

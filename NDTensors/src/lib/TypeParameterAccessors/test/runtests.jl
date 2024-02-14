@@ -118,7 +118,13 @@ using LinearAlgebra: Transpose
     @test @inferred((() -> specify_defaults(Array{Float32}))()) == Vector{Float32}
     ## TODO working on this version where you can put in the functions and 
     ## The variables you want to set
-    @test @inferred((() -> TypeParameterAccessors.specify_parameters(Array, default_parameters(Array), (Float32, 2)))()) == Matrix{Float32}
+    @test @inferred(
+      (
+        () -> TypeParameterAccessors.specify_parameters(
+          Array, default_parameters(Array), (Float32, 2)
+        )
+      )()
+    ) == Matrix{Float32}
   end
 
   ## TODO Add more tests for the default parameters like
