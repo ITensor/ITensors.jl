@@ -15,5 +15,5 @@ end
 end
 
 # For working with instances.
-unwrap_array_type(array::AbstractArray) = uunwrap_array_typenwrap_type(typeof(array))
+unwrap_array_type(array::AbstractArray) = unwrap_array_type(typeof(array))
 unwrap_array_type(E::Exposed) = unwrap_array_type(unexpose(E))
