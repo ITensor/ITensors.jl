@@ -66,6 +66,12 @@ This function is necessary to ensure type stability.
   return set_parameter(Typ, Pos, Param)
 end
 
+function set_parameter(
+  type::Type, pos::Position, param::Int
+) 
+  return set_parameter(type, pos, TypeParameter(param))
+end
+
 set_parameter(type::Type{Typ}, ::UndefinedPosition, val) where {Typ} = type
 
 """
@@ -80,6 +86,8 @@ function set_parameter(type::Type, fun::Function, parameter)
   return set_parameter(type, position(type, fun), TypeParameter(parameter))
 end
 
+## Functions is a little confusing, You can actually
+## put `Functions``, `Position``, or `Int`
 Base.@assume_effects :foldable function set_parameters(type::Type, functions::Tuple, params::Tuple)
   @assert length(functions) == length(params)
   for l in 1:length(params)
