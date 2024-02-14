@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using Test: @inferred, @test, @test_broken, @testset
 using NDTensors.TypeParameterAccessors
+using NDTensors.TypeParameterAccessors: specify_parameters
 using LinearAlgebra: Transpose
 
 @testset "Test NDTensors.TypeParameterAccessors" begin
@@ -104,6 +105,15 @@ using LinearAlgebra: Transpose
     @test @inferred(
       (() -> specify_parameter(specify_parameter(Vector, 1, Float32), 2, 3))()
     ) == Array{Float32,1}
+    @test @inferred((() -> specify_parameter(specify_parameter(Array, eltype, Float32), ndims, 2))()) == Matrix{Float32}
+    @test @inferred((() -> specify_parameter(specify_parameter(Array, ndims, 2), eltype, Float32))()) == Matrix{Float32}
+    @test @inferred((() -> specify_parameters(Array, default_parameters(Array)))()) == Vector{Float64}
+    @test @inferred((() -> specify_defaults(Array))()) == Vector{Float64}
+    @test @inferred((() -> specify_defaults(Matrix))()) == Matrix{Float64}
+    @test @inferred((() -> specify_defaults(Array{Float32}))()) == Vector{Float32}
+    ## TODO working on this version where you can put in the functions and 
+    ## The variables you want to set
+    #@test @inferred((() -> TypeParameterAccessors.specify_parameters(Array, default_parameters(Array), (Float32, 2)))()) == Matrix{Float32}
   end
 
   ## TODO Still working on the Default parameters system
