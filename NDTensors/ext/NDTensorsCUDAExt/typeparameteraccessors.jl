@@ -6,15 +6,11 @@ function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(storagemode
   return Position(3)
 end
 
-function TypeParameterAccessors.default_parameter(
-  ::Type{<:CuArray}, ::typeof(eltype)
-)
+function TypeParameterAccessors.default_parameter(::Type{<:CuArray}, ::typeof(eltype))
   return Float64
 end
 TypeParameterAccessors.default_parameter(::Type{<:CuArray}, ::typeof(ndims)) = 1
-function TypeParameterAccessors.default_parameter(
-  ::Type{<:CuArray}, ::typeof(storagemode)
-)
+function TypeParameterAccessors.default_parameter(::Type{<:CuArray}, ::typeof(storagemode))
   return Mem.DeviceBuffer
 end
 

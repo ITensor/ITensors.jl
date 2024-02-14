@@ -10,10 +10,11 @@ function _specify_parameter(::TypeVar, type::Type, pos::Position, param::Type)
   return set_parameter(type, pos, param)
 end
 
-@generated function _specify_parameter(::Union{<:Int,<:DataType}, ::Type{Typ}, pos, param) where {Typ}
+@generated function _specify_parameter(
+  ::Union{<:Int,<:DataType}, ::Type{Typ}, pos, param
+) where {Typ}
   return Typ
 end
-
 
 function specify_parameters(type::Type, t...)
   return type
