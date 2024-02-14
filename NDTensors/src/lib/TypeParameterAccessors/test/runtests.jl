@@ -52,8 +52,8 @@ using LinearAlgebra: Transpose
     @test (() -> set_eltype(typeof(m), Float16))() == Transpose{Float16,Matrix{Float16}}
     @test @inferred((() -> set_eltype(typeof(m), Float16))()) ==
       Transpose{Float16,Matrix{Float16}}
-    @test_broken @inferred((() -> set_parameter(typeof(m), eltype, Float16))()) ==
-      Transpose{Float16,Matrix{Float16}}
+    @test @inferred((() -> set_parameter(typeof(m), eltype, Float16))()) ==
+      Transpose{Float16,Matrix{Float32}}
     ## TODO This code does not infer the correct type but there aren't any allocations
     ## When it is called so I believe its actually working properly
     ## In a wrapped function on the command line this does however show the correct
