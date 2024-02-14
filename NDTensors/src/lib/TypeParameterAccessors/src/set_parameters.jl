@@ -79,3 +79,11 @@ set_parameter(type::Type, fun::Function, parameter::Type) =
 function set_parameter(type::Type, fun::Function, parameter)
   return set_parameter(type, position(type, fun), TypeParameter(parameter))
 end
+
+Base.@assume_effects :foldable function set_parameters(type::Type, functions::Tuple, params::Tuple)
+  @assert length(functions) == length(params)
+  for l in 1:length(params)
+    type = set_parameter(type, functions[l], params[l])
+  end
+  return type
+end
