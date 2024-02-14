@@ -21,8 +21,7 @@ include("Base/abstractarray.jl")
 #   @require_extensions
 # end
 
-export
-  Position,
+export Position,
   TypeParameter,
   default_parameter,
   default_parameters,

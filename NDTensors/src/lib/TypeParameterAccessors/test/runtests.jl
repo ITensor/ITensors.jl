@@ -77,7 +77,7 @@ using LinearAlgebra: Transpose
     @test @inferred((() -> specify_parameter(Vector, 2, 2))()) == Array{<:Any,1}
 
     @test @inferred((() -> specify_parameter(Array, eltype, Float32))()) == Array{Float32}
-    @test @inferred((() -> specify_parameter(Array, ndims, 2))()) == Array{<:Any, 2}
+    @test @inferred((() -> specify_parameter(Array, ndims, 2))()) == Array{<:Any,2}
 
     @test specify_parameter(Array{<:Any,3}, 1, Float16) == Array{Float16,3}
     @test specify_parameter(Array{<:Any,3}, 2, 2) == Array{<:Any,3}
@@ -105,9 +105,14 @@ using LinearAlgebra: Transpose
     @test @inferred(
       (() -> specify_parameter(specify_parameter(Vector, 1, Float32), 2, 3))()
     ) == Array{Float32,1}
-    @test @inferred((() -> specify_parameter(specify_parameter(Array, eltype, Float32), ndims, 2))()) == Matrix{Float32}
-    @test @inferred((() -> specify_parameter(specify_parameter(Array, ndims, 2), eltype, Float32))()) == Matrix{Float32}
-    @test @inferred((() -> specify_parameters(Array, default_parameters(Array)))()) == Vector{Float64}
+    @test @inferred(
+      (() -> specify_parameter(specify_parameter(Array, eltype, Float32), ndims, 2))()
+    ) == Matrix{Float32}
+    @test @inferred(
+      (() -> specify_parameter(specify_parameter(Array, ndims, 2), eltype, Float32))()
+    ) == Matrix{Float32}
+    @test @inferred((() -> specify_parameters(Array, default_parameters(Array)))()) ==
+      Vector{Float64}
     @test @inferred((() -> specify_defaults(Array))()) == Vector{Float64}
     @test @inferred((() -> specify_defaults(Matrix))()) == Matrix{Float64}
     @test @inferred((() -> specify_defaults(Array{Float32}))()) == Vector{Float32}
