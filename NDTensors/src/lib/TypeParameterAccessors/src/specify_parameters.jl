@@ -38,4 +38,7 @@ Base.@assume_effects :foldable function specify_parameters(
   return type
 end
 
-specify_defaults(type::Type) = specify_parameters(type, default_parameters(type))
+function specify_defaults(type::Type) 
+  params = default_parameter.(type, default_parameters(type))
+  specify_parameters(type, default_parameters(type), params)
+end
