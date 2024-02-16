@@ -27,6 +27,15 @@ Get a type parameter of the type `type` at the position `position`.
 parameter(type::Type, position::Int) = parameters(type)[position]
 
 """
+    parameter(type::Type, position::Int)
+
+Get a type parameter of the type `type` at the position `position`.
+"""
+parameter(type::Type, func::Function) = parameter(type, position(type, func))
+
+parameter(type::Type, position::UndefinedPosition) = error("Undable to recover the parameter of an UndefinedPosition. If you are trying to access a position through a function, please register the function `position(::Type{<:$(type)}, ::Function)`.")
+
+"""
     parameter(type::Type)
 
 Gets the single parameter of the Type `type`. Will throw an error if `type` has more than one parameter.
