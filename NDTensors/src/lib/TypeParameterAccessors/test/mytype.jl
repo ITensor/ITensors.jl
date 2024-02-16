@@ -14,7 +14,7 @@ struct MyTypeDefaults{V, T, N}
 end
 
 ## TODO change this to use names
-TypeParameterAccessors.parameter_function() = (Position(1), Position(2), Position(3))
+TypeParameterAccessors.default_parameters() = (Position(1), Position(2), Position(3))
 TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::Position{1}) = "3"
 TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::Position{2}) = Float32
 TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::Position{3}) = 2
