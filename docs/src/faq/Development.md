@@ -10,7 +10,13 @@
    the chances we will merge your pull request.
 
 2. Fork the [ITensors.jl](https://github.com/ITensor/ITensors.jl) Github repo,
-   create a new branch and make changes (commits) on that branch.
+   create a new branch and make changes (commits) on that branch. ITensor
+   imposes code formatting for contributions. Please run
+   `using JuliaFormatter; format(".")` in the project directory to ensure
+   formatting. As an alternative you may also use
+   [pre-commit](https://pre-commit.com/). Install `pre-commit` with e.g.
+   `pip install pre-commit`, then run `pre-commit install` in the project
+   directory in order for pre-commit to run automatically before any commit.
 
 3. Run the ITensor unit tests by going into the test/ folder and running
    `julia runtests.jl`. To run individual test scripts, start a Julia
