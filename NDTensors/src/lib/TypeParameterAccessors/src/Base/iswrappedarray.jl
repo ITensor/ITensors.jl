@@ -32,10 +32,10 @@ for wrapper in (
   :UnitLowerTriangular,
   :Diagonal,
 )
-  @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = 2
+  @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = Position(2)
 end
 for wrapper in (:ReshapedArray, :SubArray, :StridedView)
-  @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = 3
+  @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = Position(3)
 end
 
 # For working with instances, not used by
