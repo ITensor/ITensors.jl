@@ -207,6 +207,28 @@ Random.seed!(1234)
     ∇f = f'(θ)
     ∇num = (f(θ + ϵ) - f(θ)) / ϵ
     @test ∇f ≈ ∇num atol = 1e-5
+
+    # add(MPO, MPO)
+    f = function (x, y)
+      z = x + y
+      return inner(z, z)
+    end
+    V1 = randomMPO(s)
+    V2 = randomMPO(s)
+    g1, g2 = gradient(f, V1, V2)
+    @test g1 ≈ 2 * (V1 + V2)
+    @test g2 ≈ 2 * (V1 + V2)
+
+    # subtract(MPO, MPO)
+    f = function (x, y)
+      z = x - y
+      return inner(z, z)
+    end
+    V1 = randomMPO(s)
+    V2 = randomMPO(s)
+    g1, g2 = gradient(f, V1, V2)
+    @test g1 ≈ 2 * (V1 - V2)
+    @test g2 ≈ -2 * (V1 - V2)
   end
 
   @testset "contract/apply MPOs" begin
