@@ -696,11 +696,11 @@ zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 # TODO: Move to NDTensors.jl
 ## TODO need to fix this
 function (arraytype::Type{<:AbstractArray})(::NeverAlias, A::AbstractArray)
-  return specify_defaults(arraytype)(A)
+  return specify_default_parameters(arraytype)(A)
 end
 
 function (arraytype::Type{<:AbstractArray})(::AllowAlias, A::AbstractArray)
-  return convert(specify_defaults(arraytype), A)
+  return convert(specify_default_parameters(arraytype), A)
 end
 
 """

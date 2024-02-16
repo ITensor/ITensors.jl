@@ -84,15 +84,12 @@ function set_parameter(type::Type, fun::Function, parameter)
   return set_parameter(type, position(type, fun), TypeParameter(parameter))
 end
 
-## Functions is a little confusing, You can actually
-## put `Functions``, `Position``, or `Int`
-## or a mixture of any like (eltype, Position(2), 3)
 Base.@assume_effects :foldable function set_parameters(
-  type::Type, functions::Tuple, params::Tuple
+  type::Type, position::Tuple, params::Tuple
 )
-  @assert length(functions) == length(params)
+  @assert length(position) == length(params)
   for l in 1:length(params)
-    type = set_parameter(type, functions[l], params[l])
+    type = set_parameter(type, position[l], params[l])
   end
   return type
 end

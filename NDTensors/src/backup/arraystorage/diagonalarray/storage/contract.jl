@@ -1,9 +1,10 @@
 using .SparseArrayInterface: densearray
 using .DiagonalArrays: DiagIndex, diaglength
+using .TypeParameterAccessors: parenttype
 
 # TODO: Move to a different file.
 function TypeParameterAccessors.position(
-  ::Type{<:DiagonalArray}, ::typeof(TypeParameterAccessors.parenttype)
+  ::Type{<:DiagonalArray}, ::typeof(parenttype)
 )
   return Position(3)
 end

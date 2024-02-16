@@ -25,20 +25,19 @@ Base.@assume_effects :foldable function specify_parameter(type::Type, fun::Funct
   return _specify_parameter(parameter(type, pos), type, pos, param)
 end
 
-## Functions is a little confusing, You can actually
-## put `Functions``, `Position``, or `Int`
-## or a mixture of any like (eltype, Position(2), 3)
+## TODO document this. You are able to put any type of position,
+## meaning Int, Position, or Function
 Base.@assume_effects :foldable function specify_parameters(
-  type::Type, functions::Tuple, params::Tuple
+  type::Type, position::Tuple, params::Tuple
 )
-  @assert length(functions) == length(params)
+  @assert length(position) == length(params)
   for l in 1:length(params)
-    type = specify_parameter(type, functions[l], params[l])
+    type = specify_parameter(type, position[l], params[l])
   end
   return type
 end
 
-function specify_defaults(type::Type) 
-  params = default_parameter.(type, default_parameters(type))
-  specify_parameters(type, default_parameters(type), params)
+function specify_default_parameters(type::Type) 
+  params = default_parameter.(type, parameter_function(type))
+  specify_parameters(type, parameter_function(type), params)
 end

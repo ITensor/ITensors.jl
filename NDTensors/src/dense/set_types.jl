@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: TypeParameterAccessors, Position
+using .TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
   return Dense{eltype(datatype),datatype}
@@ -11,13 +11,13 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray
 end
 
 function TypeParameterAccessors.position(
-  ::Type{<:Dense}, ::typeof(TypeParameterAccessors.parenttype)
+  ::Type{<:Dense}, ::typeof(parenttype)
 )
   return Position(2)
 end
 TypeParameterAccessors.default_parameter(::Type{<:Dense}, ::typeof(eltype)) = Float64
 function TypeParameterAccessors.default_parameter(
-  ::Type{<:Dense}, ::typeof(TypeParameterAccessors.parenttype)
+  ::Type{<:Dense}, ::typeof(parenttype)
 )
   return Vector
 end
