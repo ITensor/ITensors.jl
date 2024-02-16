@@ -155,9 +155,10 @@ Random.seed!(1234)
       return os
     end
     H = MPO(ising(n, 1.0), s)
-
-    # apply on MPO with apply_dag=true
+    A = randomMPO(s)
     ϕ = randomMPS(ComplexF64, s; linkdims=10)
+
+    # apply on mpo with apply_dag=true
     f = function (x)
       U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
       Hθ = apply(U, H; apply_dag=true)
@@ -168,11 +169,33 @@ Random.seed!(1234)
     ∇num = (f(θ + ϵ) - f(θ)) / ϵ
     @test ∇f ≈ ∇num atol = 1e-5
 
-    # apply on MPO with apply_dag=false
+    # test that apply on non-Hermitian mpo with apply_dag=true
+    # throws an error.
+    # TODO: Fix the `rrule` so this works.
+    f = function (x)
+      U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+      Aθ = apply(U, A; apply_dag=true)
+      return real(inner(ϕ', Aθ, ϕ))
+    end
+    θ = 0.5
+    @test_throws ErrorException f'(θ)
+
+    # apply on Hermitian MPO with apply_dag=false
     f = function (x)
       U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
       Hθ = apply(U, H; apply_dag=false)
       return real(inner(ϕ', Hθ, ϕ))
+    end
+    θ = 0.5
+    ∇f = f'(θ)
+    ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+    @test ∇f ≈ ∇num atol = 1e-5
+
+    # apply on non-Hermitian MPO with apply_dag=false
+    f = function (x)
+      U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+      Aθ = apply(U, A; apply_dag=false)
+      return real(inner(ϕ', Aθ, ϕ))
     end
     θ = 0.5
     ∇f = f'(θ)
