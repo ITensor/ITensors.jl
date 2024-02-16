@@ -259,35 +259,65 @@ println(T)
 
 ## Tracing an ITensor
 
-An important operation involving a single tensor is tracing out certain
-pairs of indices. Say we have an ITensor `A` with indices `i,j,l`:
+A common operation involving a single tensor is tracing out certain
+pairs of indices. We can consider two cases:
 
-```julia
-i = Index(4,"i")
-j = Index(3,"j")
-l = Index(4,"l")
+1. An important case is when an ITensor has two indices that are 
+   mathematically the "same" (representing identical vector spaces). In the ITensor
+   system, such indices have the same id number but different prime levels or tags.
 
-A = randomITensor(i,j,l)
-```
+   For this case you can use the function `tr`.
 
-and we want to trace `A` by summing over the indices `i` and `l` locked together,
-in other words: ``\sum_{i} A^{iji}``.
+   Consider the tensor `T` having the indices `s` and `s'`.
+   ```julia
+   s = Index(2,"index s")
+   T = randomITensor(s,s')
+   ```
 
-To do this in ITensor, we can use a `delta` tensor, which you can think of as
-an identity operator or more generally a Kronecker delta or "hyper-edge":
+   We can use the `tr` function provided by ITensor to trace over the `s` indices:
+   ```julia
+   @show tr(T)
+   ```
+   By default, the `tr` function will sum over pairs of indices that have prime levels
+   0 and 1 and are otherwise the same. To trace over a different pairing of prime levels,
+   you can provide a keyword argument `plev` specifying which pair of prime levels is to 
+   be traced.
 
-![](itensor_trace_figures/delta_itensor.png)
+   If the ITensor `T` being traced over has three or more indices, then the `tr` function
+   will leave the additional unpaired indices alone and the result will be a tensor rather
+   than a scalar.
 
-Viewed as an array, a delta tensor has all diagonal elements equal to 1.0 and
-zero otherwise.
+2. A more general case is when an ITensor has indices that are not known to be
+   related (do not necessarily represent the same vector space or have the same id)
+   but which one wants to identify and trace over.
 
-Now we can compute the trace by contracting `A` with the delta tensor:
+   Say we have an ITensor `A` with indices `i,j,l`:
 
-```julia
-trA = A * delta(i,l)
-```
+   ```julia
+   i = Index(4,"i")
+   j = Index(3,"j")
+   l = Index(4,"l")
 
-![](itensor_trace_figures/trace_A.png)
+   A = randomITensor(i,j,l)
+   ```
+   and we want to trace `A` by summing over the indices `i` and `l` locked together,
+   in other words: ``\sum_{i} A^{iji}``.
+
+   To do this in ITensor, we can use a `delta` tensor, which you can think of as
+   an identity operator or more generally a Kronecker delta or "hyper-edge":
+
+   ![](itensor_trace_figures/delta_itensor.png)
+
+   Viewed as an array, a delta tensor has all diagonal elements equal to 1.0 and
+   zero otherwise.
+
+   Now we can compute the trace by contracting `A` with the delta tensor:
+
+   ```julia
+   trA = A * delta(i,l)
+   ```
+
+   ![](itensor_trace_figures/trace_A.png)
 
 ## Factoring ITensors (SVD, QR, etc.)
 

@@ -531,6 +531,11 @@ function logdot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   return _log_or_not_dot(M1, M2, true; make_inds_match=make_inds_match)
 end
 
+"""
+    tr(M::MPO; kwargs...)
+
+Compute the trace of the MPO `M`.
+"""
 function tr(M::MPO; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   N = length(M)
   #

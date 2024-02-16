@@ -13,9 +13,14 @@ function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   return Tᶜ
 end
 
-# Trace an ITensor over pairs of indices determined by
-# the prime levels and tags. Indices that are not in pairs
-# are not traced over, corresponding to a "batched" trace.
+"""
+    tr(T::ITensor; kwargs...)
+
+Trace an ITensor over pairs of indices determined by
+the optional prime levels and tags passed as keyword arguments. 
+Indices that are not in pairs are not traced over, corresponding 
+to a "batched" trace.
+"""
 function tr(T::ITensor; kwargs...)
   return _tr(T; kwargs...)
 end
