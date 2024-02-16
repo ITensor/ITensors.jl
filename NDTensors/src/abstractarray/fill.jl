@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: specify_defaults
+using .TypeParameterAccessors: specify_default_parameters
 using .Unwrap: unwrap_array_type
 
 function generic_randn(
