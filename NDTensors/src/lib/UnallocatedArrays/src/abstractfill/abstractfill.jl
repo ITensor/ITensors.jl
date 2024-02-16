@@ -10,7 +10,7 @@ end
 
 ## TODO this fails if the parameter is a type
 function alloctype(Atype::Type{<:AbstractFill})
-  return parameter(Atype, 4)
+  return parameter(Atype, alloctype)
 end
 
 axestype(t::Type{<:AbstractFill}) = parameter(t, axestype)
