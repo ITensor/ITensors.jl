@@ -133,7 +133,8 @@ using ITensors.NDTensors:
   timer,
   using_auto_fermion
 
-using ITensors.NDTensors.TypeParameterAccessors: parameters, set_eltype, specify_default_parameters
+using ITensors.NDTensors.TypeParameterAccessors:
+  parameters, set_eltype, specify_default_parameters
 
 import ITensors.NDTensors:
   # Modules

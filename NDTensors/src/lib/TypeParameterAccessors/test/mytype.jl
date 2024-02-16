@@ -1,17 +1,16 @@
-struct MyType{T, N}
-end
+struct MyType{T,N} end
 
-struct MyTypeNamedParams{N,T,V}
-end
+struct MyTypeNamedParams{N,T,V} end
 
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 TypeParameterAccessors.position(::Type{<:MyTypeNamedParams}, ::typeof(eltype)) = Position(2)
 TypeParameterAccessors.position(::Type{<:MyTypeNamedParams}, ::typeof(ndims)) = Position(1)
 third_type(type::Type{<:MyTypeNamedParams}) = parameter(type, position(type, third_type))
-TypeParameterAccessors.position(::Type{<:MyTypeNamedParams}, ::typeof(third_type)) = Position(3)
-
-struct MyTypeDefaults{V, T, N}
+function TypeParameterAccessors.position(::Type{<:MyTypeNamedParams}, ::typeof(third_type))
+  return Position(3)
 end
+
+struct MyTypeDefaults{V,T,N} end
 
 ## TODO change this to use names
 TypeParameterAccessors.default_parameters() = (Position(1), Position(2), Position(3))

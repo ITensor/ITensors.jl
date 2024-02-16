@@ -3,9 +3,7 @@ using .DiagonalArrays: DiagIndex, diaglength
 using .TypeParameterAccessors: parenttype
 
 # TODO: Move to a different file.
-function TypeParameterAccessors.position(
-  ::Type{<:DiagonalArray}, ::typeof(parenttype)
-)
+function TypeParameterAccessors.position(::Type{<:DiagonalArray}, ::typeof(parenttype))
   return Position(3)
 end
 

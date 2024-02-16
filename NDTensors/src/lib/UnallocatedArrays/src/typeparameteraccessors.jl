@@ -9,4 +9,6 @@ function TypeParameterAccessors.default_parameter(
 end
 
 # ## default parameters
-TypeParameterAccessors.default_parameters(::Type{<:UnallocatedArray}) = (eltype, ndims, axestype, alloctype)
+function TypeParameterAccessors.default_parameters(::Type{<:UnallocatedArray})
+  return (eltype, ndims, axestype, alloctype)
+end
