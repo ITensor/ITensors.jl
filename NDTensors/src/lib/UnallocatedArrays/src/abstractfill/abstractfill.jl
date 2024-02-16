@@ -13,7 +13,7 @@ function alloctype(Atype::Type{<:AbstractFill})
   return parameter(Atype, 4)
 end
 
-axestype(t::Type{<:AbstractFill}) = parameter(t, 3)
+axestype(t::Type{<:AbstractFill}) = parameter(t, axestype)
 
 TypeParameterAccessors.position(::Type{<:AbstractFill}, ::typeof(axestype)) = Position(3)
 TypeParameterAccessors.position(::Type{<:AbstractFill}, ::typeof(alloctype)) = Position(4)
