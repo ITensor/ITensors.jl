@@ -245,15 +245,15 @@ end
 using FillArrays: Fill, Zeros
 using NDTensors.UnallocatedArrays
 using NDTensors.TypeParameterAccessors:
-  Position, default_parameter, nparameters, parameter, set_parameter
+  Position, default_parameter, nparameters, parameter, parameter_function, set_parameter
 using Test: @test, @testset
 
 @testset "TypeParameterAccessors" begin
   @testset "Tetsing $typ" for (typ) in (:Fill, :Zeros)
     @eval begin
-      t1 = default_parameter($typ, Position{1}())
-      t2 = default_parameter($typ, Position{2}())
-      t3 = default_parameter($typ, Position{3}())
+      t1 = default_parameter($typ, parameter_function($typ, Position{1}()))
+      t2 = default_parameter($typ, parameter_function($typ, Position{2}()))
+      t3 = default_parameter($typ, parameter_function($typ, Position{3}()))
       t4 = Any
       ft1 = $typ{t1}
       ft2 = $typ{t1,t2}
@@ -293,10 +293,10 @@ using Test: @test, @testset
 
   @testset "Tetsing $typ" for (typ) in (:UnallocatedFill, :UnallocatedZeros)
     @eval begin
-      t1 = default_parameter($typ, Position{1}())
-      t2 = default_parameter($typ, Position{2}())
-      t3 = default_parameter($typ, Position{3}())
-      t4 = default_parameter($typ, Position{4}())
+      t1 = default_parameter($typ, parameter_function($typ, Position{1}()))
+      t2 = default_parameter($typ, parameter_function($typ, Position{2}()))
+      t3 = default_parameter($typ, parameter_function($typ, Position{3}()))
+      t4 = default_parameter($typ, parameter_function($typ, Position{4}()))
       t5 = Any
       ft = $typ{t1,t2,t3,t4}
 

@@ -1,3 +1,4 @@
+using .TypeParameterAccessors: specify_parameter
 adapt_structure(to, x::TensorStorage) = setdata(x, adapt(to, data(x)))
 adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 

@@ -9,10 +9,15 @@ function TypeParameterAccessors.default_parameter(
   return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero},0}
 end
 
-function TypeParameterAccessors.default_parameter(::Type{<:AbstractFill}, ::typeof(axestype))
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:AbstractFill}, ::typeof(axestype)
+)
   return Tuple{}
 end
 
 TypeParameterAccessors.parameter_function(::Type{<:AbstractFill}, ::Position{3}) = axestype
-TypeParameterAccessors.parameter_function(::Type{<:UnallocatedArray}, ::Position{4}) = alloctype
-
+function TypeParameterAccessors.parameter_function(
+  ::Type{<:UnallocatedArray}, ::Position{4}
+)
+  return alloctype
+end
