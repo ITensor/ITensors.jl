@@ -1,4 +1,5 @@
 using .Unwrap: IsWrappedArray
+using .TypeParameterAccessors: set_eltype
 
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.

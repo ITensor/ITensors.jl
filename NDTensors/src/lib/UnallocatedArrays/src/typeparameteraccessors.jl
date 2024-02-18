@@ -1,3 +1,4 @@
+using FillArrays: AbstractFill
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors
 using NDTensors.UnspecifiedTypes: UnspecifiedArray, UnspecifiedNumber, UnspecifiedZero
 
@@ -8,7 +9,10 @@ function TypeParameterAccessors.default_parameter(
   return UnspecifiedArray{UnspecifiedNumber{UnspecifiedZero},0}
 end
 
-# ## default parameters
-function TypeParameterAccessors.default_parameters(::Type{<:UnallocatedArray})
-  return (eltype, ndims, axestype, alloctype)
+function TypeParameterAccessors.default_parameter(::Type{<:AbstractFill}, ::typeof(axestype))
+  return Tuple{}
 end
+
+TypeParameterAccessors.parameter_function(::Type{<:AbstractFill}, ::Position{3}) = axestype
+TypeParameterAccessors.parameter_function(::Type{<:UnallocatedArray}, ::Position{4}) = alloctype
+
