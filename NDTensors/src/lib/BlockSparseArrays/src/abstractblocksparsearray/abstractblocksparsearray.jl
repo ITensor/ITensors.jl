@@ -19,20 +19,21 @@ function Base.getindex(a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}) w
   return blocksparse_getindex(a, I...)
 end
 
-# Fix ambiguity error with `BlockArrays`.
-function Base.getindex(a::AbstractBlockSparseArray{<:Any,N}, I::Block{N}) where {N}
-  return ArrayLayouts.layout_getindex(a, I)
-end
-
-# Fix ambiguity error with `BlockArrays`.
-function Base.getindex(a::AbstractBlockSparseArray{<:Any,1}, I::Block{1})
-  return ArrayLayouts.layout_getindex(a, I)
-end
-
-# Fix ambiguity error with `BlockArrays`.
-function Base.getindex(a::AbstractBlockSparseArray, I::Vararg{AbstractVector})
-  return blocksparse_getindex(a, I...)
-end
+## # Fix ambiguity error with `BlockArrays`.
+## function Base.getindex(a::AbstractBlockSparseArray{<:Any,N}, I::Block{N}) where {N}
+##   return ArrayLayouts.layout_getindex(a, I)
+## end
+##
+## # Fix ambiguity error with `BlockArrays`.
+## function Base.getindex(a::AbstractBlockSparseArray{<:Any,1}, I::Block{1})
+##   return ArrayLayouts.layout_getindex(a, I)
+## end
+##
+## # Fix ambiguity error with `BlockArrays`.
+## function Base.getindex(a::AbstractBlockSparseArray, I::Vararg{AbstractVector})
+##   ## return blocksparse_getindex(a, I...)
+##   return ArrayLayouts.layout_getindex(a, I...)
+## end
 
 # Specialized in order to fix ambiguity error with `BlockArrays`.
 function Base.setindex!(

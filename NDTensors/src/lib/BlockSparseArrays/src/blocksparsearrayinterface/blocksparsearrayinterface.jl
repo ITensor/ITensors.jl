@@ -11,48 +11,49 @@ using BlockArrays:
 using ..SparseArrayInterface: perm, iperm, nstored
 using MappedArrays: mappedarray
 
-function blocksparse_blocks(a::AbstractArray)
-  return blocks(a)
-end
+blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
 function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where {N}
   @boundscheck checkbounds(a, I...)
   return a[findblockindex.(axes(a), I)...]
 end
 
-# TODO: Implement as `copy(@view a[I...])`, which is then implemented
-# through `ArrayLayouts.sub_materialize`.
-function blocksparse_getindex(
-  a::AbstractArray{<:Any,N}, I::Vararg{AbstractVector{<:Block{1}},N}
-) where {N}
-  blocks_a = blocks(a)
-  # Convert to cartesian indices of the underlying sparse array of blocks.
-  CI = map(i -> Int.(i), I)
-  subblocks_a = blocks_a[CI...]
-  subaxes = ntuple(ndims(a)) do i
-    return axes(a, i)[I[i]]
-  end
-  return typeof(a)(subblocks_a, subaxes)
-end
-
-# Slice by block and merge according to the blocking structure of the indices.
-function blocksparse_getindex(
-  a::AbstractArray{<:Any,N}, I::Vararg{AbstractBlockVector{<:Block{1}},N}
-) where {N}
-  a_sub = a[Vector.(I)...]
-  # TODO: Define `blocklengths(::AbstractBlockVector)`? Maybe make a PR
-  # to `BlockArrays`.
-  blockmergers = blockedrange.(blocklengths.(only.(axes.(I))))
-  # TODO: Need to implement this!
-  a_merged = block_merge(a_sub, blockmergers...)
-  return a_merged
-end
+## # TODO: Implement as `copy(@view a[I...])`, which is then implemented
+## # through `ArrayLayouts.sub_materialize`.
+## function blocksparse_getindex(
+##   a::AbstractArray{<:Any,N}, I::Vararg{AbstractVector{<:Block{1}},N}
+## ) where {N}
+##   blocks_a = blocks(a)
+##   # Convert to cartesian indices of the underlying sparse array of blocks.
+##   CI = map(i -> Int.(i), I)
+##   subblocks_a = blocks_a[CI...]
+##   subaxes = ntuple(ndims(a)) do i
+##     return axes(a, i)[I[i]]
+##   end
+##   return typeof(a)(subblocks_a, subaxes)
+## end
+##
+## # Slice by block and merge according to the blocking structure of the indices.
+## function blocksparse_getindex(
+##   a::AbstractArray{<:Any,N}, I::Vararg{AbstractBlockVector{<:Block{1}},N}
+## ) where {N}
+##   a_sub = a[Vector.(I)...]
+##   # TODO: Define `blocklengths(::AbstractBlockVector)`? Maybe make a PR
+##   # to `BlockArrays`.
+##   blockmergers = blockedrange.(blocklengths.(only.(axes.(I))))
+##   # TODO: Need to implement this!
+##   a_merged = block_merge(a_sub, blockmergers...)
+##   return a_merged
+## end
+##
+## # TODO: Need to implement this!
+## function block_merge(a::AbstractArray{<:Any,N}, I::Vararg{BlockedUnitRange,N}) where {N}
+##   # Need to `block_merge` each axis.
+##   return a
+## end
 
 # TODO: Need to implement this!
-function block_merge(a::AbstractArray{<:Any,N}, I::Vararg{BlockedUnitRange,N}) where {N}
-  # Need to `block_merge` each axis.
-  return a
-end
+function block_merge end
 
 function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Vararg{Int,N}) where {N}
   @boundscheck checkbounds(a, I...)
@@ -72,7 +73,7 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Block{N}) wh
   # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
   i = I.n
   @boundscheck blockcheckbounds(a, i...)
-  blocksparse_blocks(a)[i...] = value
+  blocks(a)[i...] = value
   return a
 end
 
@@ -80,18 +81,17 @@ function blocksparse_viewblock(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
   # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
   i = I.n
   @boundscheck blockcheckbounds(a, i...)
-  return blocksparse_blocks(a)[i...]
+  return blocks(a)[i...]
 end
 
 function block_nstored(a::AbstractArray)
-  return nstored(blocksparse_blocks(a))
+  return nstored(blocks(a))
 end
 
-# Base
+# BlockArrays
 
-# PermutedDimsArray
 function blocksparse_blocks(a::PermutedDimsArray)
-  blocks_parent = blocksparse_blocks(parent(a))
+  blocks_parent = blocks(parent(a))
   # Lazily permute each block
   blocks_parent_mapped = mappedarray(
     Base.Fix2(PermutedDimsArray, perm(a)),
@@ -99,4 +99,15 @@ function blocksparse_blocks(a::PermutedDimsArray)
     blocks_parent,
   )
   return PermutedDimsArray(blocks_parent_mapped, perm(a))
+end
+
+function blocksparse_blocks(a::SubArray)
+  parent_blocks = blocks(parent(a))
+  indices = sort.(a.indices)
+  @show parent_blocks
+  @show indices
+
+  @show [findblockindex(axes(parent(a), 1), i) for i in indices[1]]
+
+  return error("`blocksparse_blocks(::SubArray)` not implemented yet.")
 end

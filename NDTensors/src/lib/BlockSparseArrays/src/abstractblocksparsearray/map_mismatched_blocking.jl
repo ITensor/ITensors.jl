@@ -15,6 +15,7 @@ function cartesianindices(axes::Tuple, b::Block)
   return CartesianIndices(ntuple(dim -> axes[dim][Tuple(b)[dim]], length(axes)))
 end
 
+# Get the range within a block.
 function blockindexrange(axis::BlockedUnitRange, r::UnitRange)
   bi1 = findblockindex(axis, first(r))
   bi2 = findblockindex(axis, last(r))
@@ -26,11 +27,25 @@ function blockindexrange(axis::BlockedUnitRange, r::UnitRange)
   return b[i1:i2]
 end
 
-function blockindexrange(axes::Tuple, I::CartesianIndices)
+# Fallback for non-blocked ranges.
+function blockindexrange(axis::AbstractUnitRange, r::UnitRange)
+  return r
+end
+
+function blockindexrange(
+  axes::Tuple{Vararg{BlockedUnitRange,N}}, I::CartesianIndices{N}
+) where {N}
   brs = blockindexrange.(axes, I.indices)
   b = Block(block.(brs))
   rs = map(br -> only(br.indices), brs)
   return b[rs...]
+end
+
+# Fallback for non-blocked ranges.
+function blockindexrange(
+  axes::Tuple{Vararg{AbstractUnitRange,N}}, I::CartesianIndices{N}
+) where {N}
+  return I
 end
 
 function blockindexrange(a::AbstractArray, I::CartesianIndices)
@@ -59,6 +74,7 @@ function map_mismatched_blocking!(f, a_dest::AbstractArray, a_src::AbstractArray
   # Create a common set of axes with a blocking that includes the
   # blocking of `a_dest` and `a_src`.
   matching_axes = BlockArrays.combine_blockaxes.(axes(a_dest), axes(a_src))
+  # TODO: Also include `block_stored_indices(a_dest)`!
   for b in block_stored_indices(a_src)
     # Get the subblocks of the matching axes
     # TODO: `union` all `subblocks` of all `a_src` and `a_dest`.

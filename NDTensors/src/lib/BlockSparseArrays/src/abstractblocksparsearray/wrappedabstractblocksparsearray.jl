@@ -1,4 +1,13 @@
-using Adapt: WrappedArray
+using BlockArrays: BlockedUnitRange, blockedrange
+using SplitApplyCombine: groupcount
+# TODO: Write a specialized version for `indices::AbstractUnitRange`.
+# TODO: Write a generic version for blocked unit ranges (like `GradedAxes`).
+function sub_unitrange(a::BlockedUnitRange, indices)
+  indices = sort(indices)
+  return blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
+end
+
+using Adapt: Adapt, WrappedArray
 
 const WrappedAbstractBlockSparseArray{T,N,A} = WrappedArray{
   T,N,<:AbstractBlockSparseArray,<:AbstractBlockSparseArray{T,N}
@@ -8,14 +17,20 @@ const BlockSparseArrayLike{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
 
+# AbstractArray interface
+function Base.axes(a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray})
+  return ntuple(i -> sub_unitrange(axes(parent(a), i), a.indices[i]), ndims(a))
+end
+
 # BlockArrays `AbstractBlockArray` interface
 BlockArrays.blocks(a::BlockSparseArrayLike) = blocksparse_blocks(a)
 
+# TODO: Use `TypeParameterAccessors`.
+function blockstype(arraytype::Type{<:WrappedAbstractBlockSparseArray})
+  return blockstype(Adapt.parent_type(arraytype))
+end
+
 blocktype(a::BlockSparseArrayLike) = eltype(blocks(a))
-
-# TODO: Use `parenttype` from `Unwrap`.
-blockstype(arraytype::Type{<:WrappedAbstractBlockSparseArray}) = parenttype(arraytype)
-
 blocktype(arraytype::Type{<:BlockSparseArrayLike}) = eltype(blockstype(arraytype))
 
 function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N}) where {N}
