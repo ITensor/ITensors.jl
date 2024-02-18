@@ -9,4 +9,8 @@ function default_parameter(type::Type, fun::Function)
   return error("The default parameter of function $(fun) is not defined for type $(type)")
 end
 
-default_parameters(::Type)::Tuple = ()
+UnspecifiedFunction() = nothing
+
+parameter_function(::Type, ::Position) = UnspecifiedFunction
+
+parameter_function(type::Type, pos::Int) = parameter_function(type, Position(pos))

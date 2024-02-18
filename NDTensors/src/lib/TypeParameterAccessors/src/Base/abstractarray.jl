@@ -8,6 +8,9 @@ position(::Type{<:AbstractArray}, ::typeof(ndims)) = Position(2)
 default_parameter(::Type{<:AbstractArray}, ::typeof(eltype)) = Float64
 default_parameter(::Type{<:AbstractArray}, ::typeof(ndims)) = 1
 
+parameter_function(::Type{<:AbstractArray}, ::Position{1}) = eltype
+parameter_function(::Type{<:AbstractArray}, ::Position{2}) = ndims
+
 @traitfn function set_eltype(
   type::Type{ArrayT}, elt::Type
 ) where {ArrayT <: AbstractArray; !IsWrappedArray{ArrayT}}
