@@ -5,6 +5,7 @@ using NDTensors.TypeParameterAccessors:
 storagemode(T::Type{<:MtlArray}) = parameter(T, storagemode)
 ## TODO this seems like a `GPUArrays` generic function
 TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(storagemode)) = Position(3)
+TypeParameterAccessors.parameter_function(::Type{<:MtlArray}, ::Position{3}) = storagemode
 
 function TypeParameterAccessors.default_parameter(::Type{<:MtlArray}, ::typeof{storagemode})
   return Metal.DefaultStorageMode
