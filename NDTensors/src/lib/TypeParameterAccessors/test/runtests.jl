@@ -119,7 +119,7 @@ using LinearAlgebra: Transpose
     @test @inferred(
       (
         () -> TypeParameterAccessors.specify_parameters(
-          Array, default_parameters(Array), (Float32, 2)
+          Array, parameter_names(Array), (Float32, 2)
         )
       )()
     ) == Matrix{Float32}
@@ -165,6 +165,7 @@ using LinearAlgebra: Transpose
       MyType{Float32,2}
   end
 
+  ## TODO working here still
   @testset "Testing MyTypeNamedParams" begin
     m = MyType{'T','N'}
     @test parameters(m) == ('T', 'N')

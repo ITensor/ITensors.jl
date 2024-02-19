@@ -1,3 +1,7 @@
+# Relies on Julia internals
+@generated to_datatype(::Type{type}) where {type} = Base.unwrap_unionall(type)
+to_datatype(type::DataType) = type
+
 """
     parameters(type::DataType)
 
@@ -10,7 +14,7 @@ parameters(type::DataType) = Tuple(type.parameters)
 
 Gets all the type parameters of the UnionAll `type`.
 """
-parameters(type::UnionAll) = parameters(Base.unwrap_unionall(type))
+parameters(type::UnionAll) = parameters(to_datatype(type))
 
 """
     parameters(object, position::Int)

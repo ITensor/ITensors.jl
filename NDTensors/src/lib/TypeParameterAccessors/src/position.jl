@@ -15,3 +15,8 @@ struct TypeParameter{P} end
 TypeParameter(x) = TypeParameter{x}()
 
 int(p::Position) = parameter(p)
+
+eachposition(type::Type) = ntuple(Position, nparameters(type))
+
+parameter_name(type::Type) = Base.Fix1(parameter_name, type)
+parameter_names(type::Type) = map(parameter_name(type), eachposition(type))

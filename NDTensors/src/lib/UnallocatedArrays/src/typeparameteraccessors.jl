@@ -15,8 +15,8 @@ function TypeParameterAccessors.default_parameter(
   return Tuple{}
 end
 
-TypeParameterAccessors.parameter_function(::Type{<:AbstractFill}, ::Position{3}) = axestype
-function TypeParameterAccessors.parameter_function(
+TypeParameterAccessors.parameter_name(::Type{<:AbstractFill}, ::Position{3}) = axestype
+function TypeParameterAccessors.parameter_name(
   ::Type{<:UnallocatedArray}, ::Position{4}
 )
   return alloctype

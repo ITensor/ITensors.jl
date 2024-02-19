@@ -5,7 +5,7 @@ storagemode(t::Type{<:CuArray}) = parameter(t, storagemode)
 function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(storagemode))
   return Position(3)
 end
-TypeParameterAccessors.parameter_function(::Type{<:CuArray}, ::Position{3}) = storagemode
+TypeParameterAccessors.parameter_name(::Type{<:CuArray}, ::Position{3}) = storagemode
 
 function TypeParameterAccessors.default_parameter(::Type{<:CuArray}, ::typeof(storagemode))
   return Mem.DeviceBuffer

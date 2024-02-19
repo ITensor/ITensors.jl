@@ -11,4 +11,4 @@ end
 TypeParameterAccessors.default_parameter(::Type{<:AbstractFill}, ::typeof(ndims)) = 0
 #TypeParameterAccessors.default_parameter(::Type{<:AbstractFill}, ::typeof(axestype)) = Tuple{}
 
-#TypeParameterAccessors.parameter_function(::Type{<:AbstractFill}, ::Position{3}) = axestype
+#TypeParameterAccessors.parameter_name(::Type{<:AbstractFill}, ::Position{3}) = axestype

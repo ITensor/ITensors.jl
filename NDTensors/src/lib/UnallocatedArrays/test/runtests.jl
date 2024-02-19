@@ -2,7 +2,7 @@
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
-using NDTensors.TypeParameterAccessors: nparameters, parameter
+using NDTensors.TypeParameterAccessors: nparameters, default_parameter, parameter, parameter_name, set_parameter
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
 
@@ -251,9 +251,9 @@ using Test: @test, @testset
 @testset "TypeParameterAccessors" begin
   @testset "Tetsing $typ" for (typ) in (:Fill, :Zeros)
     @eval begin
-      t1 = default_parameter($typ, parameter_function($typ, Position{1}()))
-      t2 = default_parameter($typ, parameter_function($typ, Position{2}()))
-      t3 = default_parameter($typ, parameter_function($typ, Position{3}()))
+      t1 = default_parameter($typ, parameter_name($typ, Position{1}()))
+      t2 = default_parameter($typ, parameter_name($typ, Position{2}()))
+      t3 = default_parameter($typ, parameter_name($typ, Position{3}()))
       t4 = Any
       ft1 = $typ{t1}
       ft2 = $typ{t1,t2}
@@ -293,10 +293,10 @@ using Test: @test, @testset
 
   @testset "Tetsing $typ" for (typ) in (:UnallocatedFill, :UnallocatedZeros)
     @eval begin
-      t1 = default_parameter($typ, parameter_function($typ, Position{1}()))
-      t2 = default_parameter($typ, parameter_function($typ, Position{2}()))
-      t3 = default_parameter($typ, parameter_function($typ, Position{3}()))
-      t4 = default_parameter($typ, parameter_function($typ, Position{4}()))
+      t1 = default_parameter($typ, parameter_name($typ, Position{1}()))
+      t2 = default_parameter($typ, parameter_name($typ, Position{2}()))
+      t3 = default_parameter($typ, parameter_name($typ, Position{3}()))
+      t4 = default_parameter($typ, parameter_name($typ, Position{4}()))
       t5 = Any
       ft = $typ{t1,t2,t3,t4}
 
