@@ -1,8 +1,12 @@
-Base.@assume_effects :foldable function specify_parameter(type::Type, pos::Int, param)
+using Compat: Compat
+
+Compat.@assume_effects :foldable function specify_parameter(type::Type, pos::Int, param)
   return _specify_parameter(parameter(type, pos), type, Position(pos), param)
 end
 
-Base.@assume_effects :foldable function specify_parameter(type::Type, pos::Position, param)
+Compat.@assume_effects :foldable function specify_parameter(
+  type::Type, pos::Position, param
+)
   return _specify_parameter(parameter(type, pos), type, pos, param)
 end
 
@@ -20,14 +24,16 @@ end
   return Typ
 end
 
-Base.@assume_effects :foldable function specify_parameter(type::Type, fun::Function, param)
+Compat.@assume_effects :foldable function specify_parameter(
+  type::Type, fun::Function, param
+)
   pos = position(type, fun)
   return _specify_parameter(parameter(type, pos), type, pos, param)
 end
 
 ## TODO document this. You are able to put any type of position,
 ## meaning Int, Position, or Function
-Base.@assume_effects :foldable function specify_parameters(
+Compat.@assume_effects :foldable function specify_parameters(
   type::Type, position::Tuple, params::Tuple
 )
   @assert length(position) == length(params)
@@ -37,6 +43,6 @@ Base.@assume_effects :foldable function specify_parameters(
   return type
 end
 
-function specify_default_parameters(type::Type) 
-  specify_parameters(type, parameter_names(type), default_parameters(type))
+function specify_default_parameters(type::Type)
+  return specify_parameters(type, parameter_names(type), default_parameters(type))
 end

@@ -1,3 +1,4 @@
+using Compat: Compat
 """
     set_parameters(type::DataType, parameters::Tuple)
 
@@ -12,7 +13,7 @@ end
 
 Set the parameters of UnionAll `type` to `paramters`.
 """
-Base.@assume_effects :foldable function set_parameters(type::UnionAll, parameters::Tuple)
+Compat.@assume_effects :foldable function set_parameters(type::UnionAll, parameters::Tuple)
   return Base.rewrap_unionall(set_parameters(Base.unwrap_unionall(type), parameters), type)
 end
 
@@ -28,7 +29,7 @@ set_parameters(type) = type
 
 Set the parameter of the Type `type` in the position `pos` with the value `val`
 """
-Base.@assume_effects :foldable function set_parameter(type::Type, pos::Int, val)
+Compat.@assume_effects :foldable function set_parameter(type::Type, pos::Int, val)
   params = Base.unwrap_unionall(type).parameters
   return Base.rewrap_unionall(
     Base.typename(type).wrapper{params[1:(pos - 1)]...,val,params[(pos + 1):end]...}, type
@@ -84,7 +85,7 @@ function set_parameter(type::Type, fun::Function, parameter)
   return set_parameter(type, position(type, fun), TypeParameter(parameter))
 end
 
-Base.@assume_effects :foldable function set_parameters(
+Compat.@assume_effects :foldable function set_parameters(
   type::Type, position::Tuple, params::Tuple
 )
   @assert length(position) == length(params)
