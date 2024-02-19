@@ -3,12 +3,27 @@
 ## Will not allow us to properly utilize the buffer preference without changing the value of
 ## default_buffertype. Also `adapt(CuVector{<:Any, <:Any, Buffertype})` fails to work properly
 struct NDTensorCuArrayAdaptor{B} end
-## TODO make this work for unified. This works but overwrites CUDA's adapt_storage. This fails for emptystorage...
-function cu(xs; unified::Bool=false)
-  return fmap(
-    x -> adapt(NDTensorCuArrayAdaptor{unified ? Mem.UnifiedBuffer : Mem.DeviceBuffer}(), x),
-    xs,
+
+"""
+cu(xs; Buffer::String="Device")
+
+NDTensors version of `cu` function which preserves the number percision in the input.
+The array will use the buffer type Buffer which has option of `Device` = DeviceBuffer
+`Unified` = UnifiedBuffer and `Host` = HostBuffer
+"""
+function cu(xs; Buffer::String="Device")
+  buf = (
+    if Buffer == "Device"
+      Mem.DeviceBuffer
+    elseif Buffer == "Unified"
+      Mem.UnifiedBuffer
+    elseif Buffer == "Host"
+      Mem.HostBuffer
+    else
+      error("Buffer $(Buffer) is undefined")
+    end
   )
+  return fmap(x -> adapt(NDTensorCuArrayAdaptor{buf}(), x), xs)
 end
 
 buffertype(::NDTensorCuArrayAdaptor{B}) where {B} = B
