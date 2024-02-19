@@ -17,4 +17,8 @@ function set_storagemode(arraytype::Type{<:MtlArray}, param)
 end
 
 ## TODO Working on this
-TypeParameterAccessors._specify_parameter(::Metal.MTL.MTLResourceOptions, type::Type, t...) = type
+function TypeParameterAccessors._specify_parameter(
+  ::Metal.MTL.MTLResourceOptions, type::Type, t...
+)
+  return type
+end

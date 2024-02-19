@@ -75,8 +75,5 @@ function similartype(storagetype::Type{<:TensorStorage}, dims::Tuple)
   # more general data types beyond `AbstractVector` are supported.
   # `similartype` unwraps any wrapped data.
   similartype_parent = similartype(parenttype(storagetype), length(dims))
-  return set_ndims(
-    set_parenttype(storagetype, similartype_parent),
-    length(dims),
-  )
+  return set_ndims(set_parenttype(storagetype, similartype_parent), length(dims))
 end

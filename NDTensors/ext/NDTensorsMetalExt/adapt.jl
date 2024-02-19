@@ -1,4 +1,5 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors, parameters, parameter_names, specify_parameters
+using NDTensors.TypeParameterAccessors:
+  TypeParameterAccessors, parameters, parameter_names, specify_parameters
 NDTensors.cpu(e::Exposed{<:MtlArray}) = adapt(Array, e)
 
 function mtl(xs; storage=DefaultStorageMode)
