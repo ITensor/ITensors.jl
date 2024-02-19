@@ -74,13 +74,9 @@ function similartype(storagetype::Type{<:TensorStorage}, dims::Tuple)
   # TODO: In the future, set the dimensions of the data type based on `dims`, once
   # more general data types beyond `AbstractVector` are supported.
   # `similartype` unwraps any wrapped data.
+  similartype_parent = similartype(parenttype(storagetype), length(dims))
   return set_ndims(
-    set_parenttype(storagetype, set_ndims(parenttype(storagetype), length(dims))),
+    set_parenttype(storagetype, similartype_parent),
     length(dims),
   )
-
-  # set_ndims(
-  #   set_datatype(storagetype, set_ndims(similartype(datatype(storagetype)), 1)),
-  #   length(dims),
-  # )
 end

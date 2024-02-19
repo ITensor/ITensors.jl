@@ -88,7 +88,7 @@ end
 Compat.@assume_effects :foldable function set_parameters(
   type::Type, position::Tuple, params::Tuple
 )
-  @assert length(position) == length(params)
+  @assert length(position) ≥ length(params)
   for l in 1:length(params)
     type = set_parameter(type, position[l], params[l])
   end
