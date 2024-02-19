@@ -8,6 +8,7 @@ using NDTensors.Unwrap: qr_positive, ql_positive, ql
 
 using Metal
 
+include("typeparameteraccessors.jl")
 include("imports.jl")
 include("adapt.jl")
 include("indexing.jl")
@@ -16,6 +17,5 @@ include("copyto.jl")
 include("append.jl")
 include("permutedims.jl")
 include("mul.jl")
-include("typeparameteraccessors.jl")
 
 end

@@ -1,3 +1,4 @@
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, parameters, parameter_names, specify_parameters
 NDTensors.cpu(e::Exposed{<:MtlArray}) = adapt(Array, e)
 
 function mtl(xs; storage=DefaultStorageMode)
@@ -7,7 +8,7 @@ end
 # More general than the version in Metal.jl
 function Adapt.adapt_storage(arraytype::Type{<:MtlArray}, xs::AbstractArray)
   arraytype_specified = specify_parameters(
-    arraytype, default_parameters(arraytype), parameters(xs)
+    arraytype, parameter_names(arraytype), parameters(xs)
   )
   return isbitstype(typeof(xs)) ? xs : convert(arraytype_specified, xs)
 end

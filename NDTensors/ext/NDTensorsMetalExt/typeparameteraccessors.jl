@@ -7,7 +7,7 @@ storagemode(T::Type{<:MtlArray}) = parameter(T, storagemode)
 TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(storagemode)) = Position(3)
 TypeParameterAccessors.parameter_name(::Type{<:MtlArray}, ::Position{3}) = storagemode
 
-function TypeParameterAccessors.default_parameter(::Type{<:MtlArray}, ::typeof{storagemode})
+function TypeParameterAccessors.default_parameter(::Type{<:MtlArray}, ::typeof(storagemode))
   return Metal.DefaultStorageMode
 end
 
@@ -15,3 +15,6 @@ end
 function set_storagemode(arraytype::Type{<:MtlArray}, param)
   return set_parameter(arraytype, storagemode, param)
 end
+
+## TODO Working on this
+TypeParameterAccessors._specify_parameter(::Metal.MTL.MTLResourceOptions, type::Type, t...) = type
