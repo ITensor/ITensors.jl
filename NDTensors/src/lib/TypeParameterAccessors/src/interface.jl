@@ -11,6 +11,8 @@ end
 
 UnspecifiedFunction() = nothing
 
-parameter_name(type::Type, p::Position) = error("There does not yet exist a name for the type $(type) at position $(int(p))")
+function parameter_name(type::Type, p::Position)
+  return error("There does not yet exist a name for the type $(type) at position $(int(p))")
+end
 
 parameter_name(type::Type, pos::Int) = parameter_name(type, Position(pos))

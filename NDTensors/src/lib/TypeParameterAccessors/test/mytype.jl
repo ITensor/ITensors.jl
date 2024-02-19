@@ -14,14 +14,24 @@ end
 struct MyTypeDefaults{V,T,N} end
 
 ## TODO change this to use names
-TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::typeof(third_type)) = "3"
-TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::typeof(eltype)) = Float32
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaults}, ::typeof(third_type)
+)
+  return "3"
+end
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaults}, ::typeof(eltype)
+)
+  return Float32
+end
 TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::typeof(ndims)) = 2
 
 TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{1}) = third_type
 TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{2}) = eltype
 TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{3}) = ndims
 
-TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(third_type)) = Position(1)
+function TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(third_type))
+  return Position(1)
+end
 TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(eltype)) = Position(2)
 TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(ndims)) = Position(3)

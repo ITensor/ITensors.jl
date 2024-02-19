@@ -2,7 +2,8 @@
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
 using NDTensors.UnallocatedArrays
-using NDTensors.TypeParameterAccessors: nparameters, default_parameter, parameter, parameter_name, set_parameter
+using NDTensors.TypeParameterAccessors:
+  nparameters, default_parameter, parameter, parameter_name, set_parameter
 using LinearAlgebra: norm
 using Test: @test, @testset, @test_broken
 
