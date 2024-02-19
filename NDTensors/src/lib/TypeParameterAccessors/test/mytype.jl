@@ -14,14 +14,14 @@ end
 struct MyTypeDefaults{V,T,N} end
 
 ## TODO change this to use names
-TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::Position{1}) = "3"
-TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::Position{2}) = Float32
-TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::Position{3}) = 2
+TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::typeof(third_type)) = "3"
+TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::typeof(eltype)) = Float32
+TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaults}, ::typeof(ndims)) = 2
 
-TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{1}) = ndims
+TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{1}) = third_type
 TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{2}) = eltype
-TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{3}) = third_type
+TypeParameterAccessors.parameter_name(::Type{<:MyTypeDefaults}, ::Position{3}) = ndims
 
-TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(ndims)) = Position(1)
+TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(third_type)) = Position(1)
 TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(eltype)) = Position(2)
-TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(third_type)) = Position(3)
+TypeParameterAccessors.position(::Type{<:MyTypeDefaults}, ::typeof(ndims)) = Position(3)
