@@ -1,8 +1,11 @@
+using .TypeParameterAccessors: TypeParameterAccessors, parameter, parenttype
+
 abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
 data(S::TensorStorage) = S.data
 
-datatype(::Type{<:TensorStorage}) = error("Not implemented")
+datatype(type::Type{<:TensorStorage}) = parenttype(type)
+TypeParameterAccessors.parenttype(type::Type{<:TensorStorage}) = parameter(type, parenttype)
 
 datatype(S::TensorStorage) = typeof(data(S))
 

@@ -1,4 +1,5 @@
 # NDTensors.similar
+using .TypeParameterAccessors: TypeParameterAccessors, set_ndims, set_parameters, set_parenttype
 similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(data(storage)))
 
 # NDTensors.similar
@@ -72,8 +73,10 @@ function similartype(storagetype::Type{<:TensorStorage}, dims::Tuple)
   # TODO: In the future, set the dimensions of the data type based on `dims`, once
   # more general data types beyond `AbstractVector` are supported.
   # `similartype` unwraps any wrapped data.
-  return set_ndims(
-    set_datatype(storagetype, set_ndims(similartype(datatype(storagetype)), 1)),
-    length(dims),
-  )
+  return set_ndims(set_parenttype(storagetype, set_ndims(parenttype(storagetype), length(dims))), length(dims))
+  
+  # set_ndims(
+  #   set_datatype(storagetype, set_ndims(similartype(datatype(storagetype)), 1)),
+  #   length(dims),
+  # )
 end

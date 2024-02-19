@@ -1,6 +1,7 @@
+using .TypeParameterAccessors: TypeParameterAccessors, parenttype
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, blockoffsets::BlockOffsets, dims::Tuple)
-  data = similar(datatype(storagetype), nnz(blockoffsets, dims))
+  data = similar(parenttype(storagetype), nnz(blockoffsets, dims))
   return BlockSparse(data, blockoffsets)
 end
 

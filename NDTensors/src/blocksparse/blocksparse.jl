@@ -1,6 +1,7 @@
 #
 # BlockSparse storage
 #
+using .TypeParameterAccessors: TypeParameterAccessors, Position, default_parameter, parameter, parenttype, set_parameter
 
 struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
@@ -12,20 +13,20 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
-# TODO: Implement as `fieldtype(storagetype, :data)`.
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
-# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
 # TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
 blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
 
-function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
-  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
+TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(TypeParameterAccessors.parenttype)) = Position(2)
+TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(Base.ndims)) = Position(3)
+TypeParameterAccessors.parameter_name(::Type{<:BlockSparse}, ::Position{2}) = parenttype
+TypeParameterAccessors.parameter_name(::Type{<:BlockSparse}, ::Position{3}) = Base.ndims
+TypeParameterAccessors.default_parameter(type::Type{<:BlockSparse}, ::typeof(TypeParameterAccessors.parenttype)) = Vector{default_parameter(type, eltype)}
+
+function TypeParameterAccessors.set_ndims(storagetype::Type{<:BlockSparse}, param::Int)
+  return set_parameter(storagetype, Base.ndims, param)
 end
 
-function TypeParameterAccessors.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
-  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
-end
+Base.ndims(type::Type{<:BlockSparse}) = parameter(type, Base.ndims)
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
 BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
