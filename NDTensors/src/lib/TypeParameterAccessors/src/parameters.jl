@@ -39,7 +39,7 @@ parameter(type::Type, func::Function) = parameter(type, position(type, func))
 
 function parameter(type::Type, position::UndefinedPosition)
   return error(
-    "Undable to recover the parameter of an UndefinedPosition. If you are trying to access a position through a function, please register the function `position(::Type{<:$(type)}, ::Function)`.",
+    "Unable to recover the parameter of an UndefinedPosition. If you are trying to access a position through a function, please register the function `position(::Type{<:$(type)}, ::Function)`.",
   )
 end
 
