@@ -8,22 +8,11 @@ struct NDTensorCuArrayAdaptor{B} end
 cu(xs; Buffer::String="Device")
 
 NDTensors version of `cu` function which preserves the number percision in the input.
-The array will use the buffer type Buffer which has option of `Device` = DeviceBuffer
-`Unified` = UnifiedBuffer and `Host` = HostBuffer
+The array will use the buffer type Buffer which has option of CUDA.Mem.DeviceBuffer
+CUDA.Mem.UnifiedBuffer and CUDA.Mem.HostBuffer
 """
-function cu(xs; Buffer::String="Device")
-  buf = (
-    if Buffer == "Device"
-      Mem.DeviceBuffer
-    elseif Buffer == "Unified"
-      Mem.UnifiedBuffer
-    elseif Buffer == "Host"
-      Mem.HostBuffer
-    else
-      error("Buffer $(Buffer) is undefined")
-    end
-  )
-  return fmap(x -> adapt(NDTensorCuArrayAdaptor{buf}(), x), xs)
+function cu(xs; buffer=Mem.DeviceBuffer)
+  return fmap(x -> adapt(NDTensorCuArrayAdaptor{buffer}(), x), xs)
 end
 
 buffertype(::NDTensorCuArrayAdaptor{B}) where {B} = B
