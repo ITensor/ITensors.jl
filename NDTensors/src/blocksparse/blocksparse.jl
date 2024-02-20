@@ -22,9 +22,9 @@ function TypeParameterAccessors.position(
 )
   return Position(2)
 end
-TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(Base.ndims)) = Position(3)
+TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(ndims)) = Position(3)
 TypeParameterAccessors.parameter_name(::Type{<:BlockSparse}, ::Position{2}) = parenttype
-TypeParameterAccessors.parameter_name(::Type{<:BlockSparse}, ::Position{3}) = Base.ndims
+TypeParameterAccessors.parameter_name(::Type{<:BlockSparse}, ::Position{3}) = ndims
 function TypeParameterAccessors.default_parameter(
   type::Type{<:BlockSparse}, ::typeof(parenttype)
 )
@@ -34,8 +34,6 @@ end
 function TypeParameterAccessors.set_ndims(storagetype::Type{<:BlockSparse}, param::Int)
   return set_parameter(storagetype, ndims, param)
 end
-
-Base.ndims(type::Type{<:BlockSparse}) = parameter(type, ndims)
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
 BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
@@ -122,13 +120,6 @@ Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
 
 complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
 
-ndims(::BlockSparse{T,V,N}) where {T,V,N} = N
-
-eltype(::BlockSparse{T}) where {T} = eltype(T)
-# This is necessary since for some reason inference doesn't work
-# with the more general definition (eltype(Nothing) === Any)
-eltype(::BlockSparse{Nothing}) = Nothing
-eltype(::Type{BlockSparse{T}}) where {T} = eltype(T)
 
 dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
 
