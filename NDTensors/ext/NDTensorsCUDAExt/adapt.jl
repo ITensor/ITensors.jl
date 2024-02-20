@@ -11,11 +11,11 @@ NDTensors version of `cu` function which preserves the number percision in the i
 The array will use the buffer type Buffer which has option of CUDA.Mem.DeviceBuffer
 CUDA.Mem.UnifiedBuffer and CUDA.Mem.HostBuffer
 """
-function cu(xs; buffer=Mem.DeviceBuffer)
-  return fmap(x -> adapt(NDTensorCuArrayAdaptor{buffer}(), x), xs)
+function cu(xs; buffertype=Mem.DeviceBuffer)
+  return fmap(x -> adapt(NDTensorCuArrayAdaptor{buffertype}(), x), xs)
 end
 
-buffertype(::NDTensorCuArrayAdaptor{B}) where {B} = B
+buffertype(buffer::NDTensorCuArrayAdaptor) = parameter(buffer)
 
 function Adapt.adapt_storage(adaptor::NDTensorCuArrayAdaptor, xs::AbstractArray)
   ElT = eltype(xs)

@@ -18,7 +18,7 @@ end
 blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
 
 function TypeParameterAccessors.position(
-  ::Type{<:BlockSparse}, ::typeof(TypeParameterAccessors.parenttype)
+  ::Type{<:BlockSparse}, ::typeof(parenttype)
 )
   return Position(2)
 end
@@ -26,16 +26,16 @@ TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(Base.ndims)) = P
 TypeParameterAccessors.parameter_name(::Type{<:BlockSparse}, ::Position{2}) = parenttype
 TypeParameterAccessors.parameter_name(::Type{<:BlockSparse}, ::Position{3}) = Base.ndims
 function TypeParameterAccessors.default_parameter(
-  type::Type{<:BlockSparse}, ::typeof(TypeParameterAccessors.parenttype)
+  type::Type{<:BlockSparse}, ::typeof(parenttype)
 )
   return Vector{default_parameter(type, eltype)}
 end
 
 function TypeParameterAccessors.set_ndims(storagetype::Type{<:BlockSparse}, param::Int)
-  return set_parameter(storagetype, Base.ndims, param)
+  return set_parameter(storagetype, ndims, param)
 end
 
-Base.ndims(type::Type{<:BlockSparse}) = parameter(type, Base.ndims)
+Base.ndims(type::Type{<:BlockSparse}) = parameter(type, ndims)
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
 BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())

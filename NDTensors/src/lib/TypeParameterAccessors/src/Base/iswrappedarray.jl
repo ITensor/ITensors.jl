@@ -19,7 +19,15 @@ using StridedViews: StridedView
 @traitimpl IsWrappedArray{ArrayT} <- is_wrapped_array(ArrayT)
 #! format: on
 
-parenttype(::Type) = nothing
+parenttype(type::Type{<:AbstractArray}) = parameter(type, parenttype)
+
+struct Self 
+end
+
+position(::Type{<:AbstractArray}, ::typeof(parenttype)) = Self()
+parameter(type::Type, ::Self) = type
+
+is_wrapped_array(arraytype::Type{<:AbstractArray}) = parenttype(arraytype) ≠ arraytype
 
 for wrapper in (
   :Transpose,
@@ -40,9 +48,9 @@ end
 
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
-function is_wrapped_array(arraytype::Type{<:AbstractArray})
-  return (position(arraytype, parenttype) ≠ UndefinedPosition())
-end
+# function is_wrapped_array(arraytype::Type{<:AbstractArray})
+#   return parenttype(arraytype) == arraytype
+# end
 
 # For working with instances, not used by
 # `SimpleTraits.jl` traits dispatch.
@@ -51,19 +59,6 @@ is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
 function set_parenttype(t::Type, parent_type)
   return set_parameter(t, parenttype, parent_type)
 end
-
-# By default, the `parentype` of an array type is itself
-## TODO when both of these functions are defined as `parenttype`
-## a warning is thrown by the compiler
-@traitfn parenttype(
-  arraytype::Type{ArrayT}
-) where {ArrayT <: AbstractArray; !IsWrappedArray{ArrayT}} = arraytype
-
-## TODO I am not sure why this is throwing a Warning
-@traitfn parenttype(
-  wrapper::Type{WrapperT}
-) where {WrapperT <: AbstractArray; IsWrappedArray{WrapperT}} =
-  parameter(wrapper, position(wrapper, parenttype))
 
 @traitfn function set_eltype(
   type::Type{ArrayT}, elt::Type

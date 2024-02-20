@@ -21,7 +21,7 @@ function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
 end
 
 function TypeParameterAccessors.position(
-  ::Type{<:Tensor}, ::typeof(TypeParameterAccessors.parenttype)
+  ::Type{<:Tensor}, ::typeof(parenttype)
 )
   return Position(3)
 end
