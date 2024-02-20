@@ -21,8 +21,7 @@ using StridedViews: StridedView
 
 parenttype(type::Type{<:AbstractArray}) = parameter(type, parenttype)
 
-struct Self 
-end
+struct Self end
 
 position(::Type{<:AbstractArray}, ::typeof(parenttype)) = Self()
 parameter(type::Type, ::Self) = type

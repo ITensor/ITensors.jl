@@ -17,9 +17,7 @@ end
 # TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
 blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
 
-function TypeParameterAccessors.position(
-  ::Type{<:BlockSparse}, ::typeof(parenttype)
-)
+function TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(parenttype))
   return Position(2)
 end
 TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(ndims)) = Position(3)
@@ -119,7 +117,6 @@ end
 Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
 
 complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
-
 
 dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
 
