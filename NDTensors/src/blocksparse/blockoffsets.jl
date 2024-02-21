@@ -1,6 +1,7 @@
 #
 # BlockOffsets
 #
+using .TypeParameterAccessors: TypeParameterAccessors, Position, ndims
 
 const Blocks{N} = Vector{Block{N}}
 const BlockOffset{N} = Pair{Block{N},Int}
@@ -10,9 +11,8 @@ const BlockOffsets{N} = Dictionary{Block{N},Int}
 
 BlockOffset(block::Block{N}, offset::Int) where {N} = BlockOffset{N}(block, offset)
 
-ndims(::Blocks{N}) where {N} = N
-ndims(::BlockOffset{N}) where {N} = N
-ndims(::BlockOffsets{N}) where {N} = N
+TypeParameterAccessors.position(::Type{<:BlockOffset}, ::typeof(ndims)) = Position(1)
+TypeParameterAccessors.position(::Type{<:BlockOffsets}, ::typeof(ndims)) = Position(1)
 
 blocktype(bofs::BlockOffsets) = keytype(bofs)
 

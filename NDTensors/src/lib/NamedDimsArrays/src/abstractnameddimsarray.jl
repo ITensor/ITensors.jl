@@ -1,5 +1,5 @@
 using ..BaseExtensions: BaseExtensions
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 
 # Some of the interface is inspired by:
 # https://github.com/invenia/NamedDims.jl

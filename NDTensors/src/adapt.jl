@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: specify_parameter
+using .TypeParameterAccessors: set_parenttype, specify_parameter 
 adapt_structure(to, x::TensorStorage) = setdata(x, adapt(to, data(x)))
 adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 
@@ -32,9 +32,9 @@ double_precision(x) = fmap(x -> adapt(double_precision(eltype(x)), x), x)
 #
 
 function adapt_storagetype(to::Type{<:AbstractVector}, x::Type{<:TensorStorage})
-  return set_datatype(x, specify_parameter(to, eltype, eltype(x)))
+  return set_parenttype(x, specify_parameter(to, eltype, eltype(x)))
 end
 
 function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
-  return set_datatype(x, specify_parameter(set_ndims(to, 1), eltype, eltype(x)))
+  return set_parenttype(x, specify_parameter(set_ndims(to, 1), eltype, eltype(x)))
 end

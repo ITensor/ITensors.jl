@@ -1,4 +1,4 @@
-using LinearAlgebra: LinearAlgebra
+using LinearAlgebra: LinearAlgebra, eigen
 function qr(E::Exposed)
   return qr(unexpose(E))
 end

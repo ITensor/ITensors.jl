@@ -130,8 +130,6 @@ function randomTensor(StoreT::Type{<:TensorStorage}, inds::Tuple)
 end
 ## End Random Tensor
 
-ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
-
 # Like `Base.to_shape` but more general, can return
 # `Index`, etc. Customize for an array/tensor
 # with custom index types.

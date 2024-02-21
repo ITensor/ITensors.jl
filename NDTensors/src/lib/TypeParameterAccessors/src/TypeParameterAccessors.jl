@@ -11,6 +11,7 @@ include("set_parameters.jl")
 include("specify_parameters.jl")
 include("default_parameter.jl")
 
+include("Base/ndims.jl")
 include("Base/iswrappedarray.jl")
 include("Base/abstractarray.jl")
 

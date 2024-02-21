@@ -1,3 +1,4 @@
+using .TypeParameterAccessors: TypeParameterAccessors,ndims
 function contract_blockoffsets(
   ::Algorithm"sequential",
   boffs1::BlockOffsets,
@@ -18,7 +19,7 @@ function contract_blockoffsets(
   )
   blockoffsetsR = BlockOffsets{NR}()
   nnzR = 0
-  contraction_plan = Tuple{Block{N1},Block{N2},Block{NR}}[]
+  contraction_plan = Tuple{N1,N2,Block{NR}}[]
   # Reserve some capacity
   # In theory the maximum is length(boffs1) * length(boffs2)
   # but in practice that is too much

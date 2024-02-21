@@ -2,6 +2,8 @@
 # EmptyTensor (Tensor using EmptyStorage storage)
 #
 
+using .TypeParameterAccessors: TypeParameterAccessors, Position, ndims, parenttype 
+
 const EmptyTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:EmptyStorage}
 
@@ -28,8 +30,10 @@ fulltype(T::Tensor) = fulltype(typeof(T))
 # Needed for correct `NDTensors.ndims` definitions, for
 # example `EmptyStorage` that wraps a `BlockSparse` which
 # can have non-unity dimensions.
-function ndims(storagetype::Type{<:EmptyStorage})
-  return ndims(fulltype(storagetype))
+
+position(::Type{<:EmptyStorage}, ::typeof(parenttype)) = Position(3)
+function TypeParameterAccessors.ndims(storagetype::Type{<:EmptyStorage})
+  return ndims(parenttype(storagetype))
 end
 
 # From an EmptyTensor, return the closest Tensor type
