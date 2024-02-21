@@ -38,3 +38,69 @@ end
 function block_reshape(a::AbstractArray, axes::Vararg{AbstractUnitRange})
   return block_reshape(a, axes)
 end
+
+##################################################################################
+using BlockArrays:
+  Block, BlockedUnitRange, block, blockindex, blocks, findblock, findblockindex
+using ..SparseArrayInterface: stored_indices
+
+function cartesianindices(axes::Tuple, b::Block)
+  return CartesianIndices(ntuple(dim -> axes[dim][Tuple(b)[dim]], length(axes)))
+end
+
+# Get the range within a block.
+function blockindexrange(axis::BlockedUnitRange, r::UnitRange)
+  bi1 = findblockindex(axis, first(r))
+  bi2 = findblockindex(axis, last(r))
+  b = block(bi1)
+  # Range must fall within a single block.
+  @assert b == block(bi2)
+  i1 = blockindex(bi1)
+  i2 = blockindex(bi2)
+  return b[i1:i2]
+end
+
+# Fallback for non-blocked ranges.
+function blockindexrange(axis::AbstractUnitRange, r::UnitRange)
+  return r
+end
+
+function blockindexrange(
+  axes::Tuple{Vararg{BlockedUnitRange,N}}, I::CartesianIndices{N}
+) where {N}
+  brs = blockindexrange.(axes, I.indices)
+  b = Block(block.(brs))
+  rs = map(br -> only(br.indices), brs)
+  return b[rs...]
+end
+
+# Fallback for non-blocked ranges.
+function blockindexrange(
+  axes::Tuple{Vararg{AbstractUnitRange,N}}, I::CartesianIndices{N}
+) where {N}
+  return I
+end
+
+function blockindexrange(a::AbstractArray, I::CartesianIndices)
+  return blockindexrange(axes(a), I)
+end
+
+# Get the blocks the range spans across.
+function blockrange(axis::BlockedUnitRange, r::UnitRange)
+  return findblock(axis, first(r)):findblock(axis, last(r))
+end
+
+function cartesianindices(a::AbstractArray, b::Block)
+  return cartesianindices(axes(a), b)
+end
+
+# Output which blocks of `axis` are contained within the unit range `range`.
+# The start and end points must match.
+function findblocks(axis::AbstractUnitRange, range::AbstractUnitRange)
+  # TODO: Add a test that the start and end points of the ranges match.
+  return findblock(axis, first(range)):findblock(axis, last(range))
+end
+
+function block_stored_indices(a::AbstractArray)
+  return Block.(Tuple.(stored_indices(blocks(a))))
+end

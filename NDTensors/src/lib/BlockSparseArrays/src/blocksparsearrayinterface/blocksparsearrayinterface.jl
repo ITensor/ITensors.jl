@@ -101,13 +101,38 @@ function blocksparse_blocks(a::PermutedDimsArray)
   return PermutedDimsArray(blocks_parent_mapped, perm(a))
 end
 
+function blockindices(a::AbstractArray, block::Block, indices::Tuple)
+  return blockindices(axes(a), block, indices)
+end
+
+function blockindices(axes::Tuple, block::Block, indices::Tuple)
+  return blockindices.(axes, Tuple(block), indices)
+end
+
+function blockindices(axis::AbstractUnitRange, block::Block, indices)
+  indices_within_block = intersect(indices, axis[block])
+  if iszero(length(indices_within_block))
+    # Falls outside of block
+    return 1:0
+  end
+  return only(blockindexrange(axis, indices_within_block).indices)
+end
+
 function blocksparse_blocks(a::SubArray)
-  parent_blocks = blocks(parent(a))
-  indices = sort.(a.indices)
-  @show parent_blocks
-  @show indices
-
-  @show [findblockindex(axes(parent(a), 1), i) for i in indices[1]]
-
-  return error("`blocksparse_blocks(::SubArray)` not implemented yet.")
+  # First slice blockwise.
+  blockranges = blockrange.(axes(parent(a)), a.indices)
+  # Then slice the blocks.
+  sliced_blocks = map(stored_indices(blocks(parent(a)))) do index
+    tuple_index = Tuple(index)
+    block = Block(tuple_index)
+    return view(
+      blocks(parent(a))[tuple_index...], blockindices(parent(a), block, a.indices)...
+    )
+  end
+  # TODO: Use a `set_data` function, or some kind of `similar` or `zero` method?
+  blocks_a_sub = SparseArrayDOK(
+    sliced_blocks, size(blocks(parent(a))), blocks(parent(a)).zero
+  )
+  # TODO: Avoid copying, use a view?
+  return blocks_a_sub[map(blockrange -> Int.(blockrange), blockranges)...]
 end

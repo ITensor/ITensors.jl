@@ -10,6 +10,8 @@ end
 value(v::NotStoredValue) = v.value
 nstored(::NotStoredValue) = false
 Base.:*(x::Number, y::NotStoredValue) = false
+Base.:*(x::NotStoredValue, y::Number) = false
+Base.:/(x::NotStoredValue, y::Number) = false
 Base.:+(::NotStoredValue, ::NotStoredValue...) = false
 Base.:-(::NotStoredValue, ::NotStoredValue...) = false
 Base.:+(x::Number, ::NotStoredValue...) = x
