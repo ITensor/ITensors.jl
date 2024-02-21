@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using Test: @inferred, @test, @test_broken, @testset
 using NDTensors.TypeParameterAccessors
-using NDTensors.TypeParameterAccessors: specify_parameters
+using NDTensors.TypeParameterAccessors: specify_parameters, ndims
 using LinearAlgebra: Transpose
 
 @testset "Test NDTensors.TypeParameterAccessors" begin

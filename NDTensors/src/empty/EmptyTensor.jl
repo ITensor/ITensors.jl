@@ -2,7 +2,7 @@
 # EmptyTensor (Tensor using EmptyStorage storage)
 #
 
-using .TypeParameterAccessors: TypeParameterAccessors, Position, ndims, parenttype 
+using .TypeParameterAccessors: TypeParameterAccessors, Position, ndims, parenttype
 
 const EmptyTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:EmptyStorage}

@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: TypeParameterAccessors,ndims
+using .TypeParameterAccessors: TypeParameterAccessors, ndims
 function contract_blockoffsets(
   ::Algorithm"sequential",
   boffs1::BlockOffsets,

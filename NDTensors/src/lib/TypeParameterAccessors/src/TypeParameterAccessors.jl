@@ -3,6 +3,7 @@ include("undefinedposition.jl")
 include("parameters.jl")
 include("unspecify_parameters.jl")
 
+include("Base/ndims.jl")
 include("position.jl")
 include("interface.jl")
 
@@ -11,7 +12,6 @@ include("set_parameters.jl")
 include("specify_parameters.jl")
 include("default_parameter.jl")
 
-include("Base/ndims.jl")
 include("Base/iswrappedarray.jl")
 include("Base/abstractarray.jl")
 

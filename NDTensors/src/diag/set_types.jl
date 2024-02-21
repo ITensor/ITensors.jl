@@ -4,7 +4,9 @@ function TypeParameterAccessors.set_eltype(storagetype::Type{<:UniformDiag}, elt
   return Diag{eltype,eltype}
 end
 
-TypeParameterAccessors.position(::Type{<:NonuniformDiag}, ::typeof(parenttype)) = Position(2)
+function TypeParameterAccessors.position(::Type{<:NonuniformDiag}, ::typeof(parenttype))
+  return Position(2)
+end
 
 # function TypeParameterAccessors.set_eltype(
 #   storagetype::Type{<:NonuniformDiag}, eltype::Type{<:AbstractArray}
