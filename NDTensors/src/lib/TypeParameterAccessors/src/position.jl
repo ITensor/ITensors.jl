@@ -9,12 +9,12 @@ Position(x) = Position{x}()
 
 Get a type parameter of the type `type` at the position `position`.
 """
-parameter(type::Type, position::Position) = parameter(type, int(position))
+parameter(type::Type, position::Position) = parameter(type, Int(position))
 
 struct TypeParameter{P} end
 TypeParameter(x) = TypeParameter{x}()
 
-int(p::Position) = parameter(p)
+Base.Int(p::Position) = parameter(p)
 
 eachposition(type::Type) = ntuple(Position, nparameters(type))
 

@@ -1,5 +1,6 @@
 module TypeParameterAccessors
 include("undefinedposition.jl")
+include("Base/internals.jl")
 include("parameters.jl")
 include("unspecify_parameters.jl")
 

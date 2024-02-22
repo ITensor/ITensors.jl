@@ -5,8 +5,8 @@ position(::Type{<:AbstractArray}, ::typeof(eltype)) = Position(1)
 position(::Type{<:AbstractArray}, ::typeof(ndims)) = Position(2)
 
 ## TODO I don't think this is the right place for this but define it here for now
-default_parameter(::Type{<:AbstractArray}, ::typeof(eltype)) = Float64
-default_parameter(::Type{<:AbstractArray}, ::typeof(ndims)) = 1
+default_parameter(::Type{<:AbstractArray}, ::Position{1}) = Float64
+default_parameter(::Type{<:AbstractArray}, ::Position{2}) = 1
 
 parameter_name(::Type{<:AbstractArray}, ::Position{1}) = eltype
 parameter_name(::Type{<:AbstractArray}, ::Position{2}) = ndims

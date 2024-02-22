@@ -4,7 +4,7 @@ using Compat: Compat
 
 Set the parameters of DataType `type` to the tuple `paramters`.
 """
-function set_parameters(type::DataType, parameters::Tuple)
+Compat.@assume_effects :foldable function set_parameters(type::DataType, parameters::Tuple)
   return unspecify_parameters(type){parameters...}
 end
 

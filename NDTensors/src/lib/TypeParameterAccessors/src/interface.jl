@@ -5,8 +5,8 @@
 # Required overloads, generic fallback
 position(::Type, ::Function) = UndefinedPosition()
 
-function default_parameter(type::Type, fun::Function)
-  return error("The default parameter of function $(fun) is not defined for type $(type)")
+function default_parameter(type::Type, name)
+  return error("The default parameter of $(name) is not defined for type $(type)")
 end
 
 UnspecifiedFunction() = nothing

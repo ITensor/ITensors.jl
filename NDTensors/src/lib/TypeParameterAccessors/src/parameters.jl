@@ -1,14 +1,3 @@
-# Relies on Julia internals
-@generated to_datatype(::Type{type}) where {type} = Base.unwrap_unionall(type)
-to_datatype(type::DataType) = type
-
-"""
-    parameters(type::DataType)
-
-Gets all the type parameters of the DataType `type`.
-"""
-parameters(type::DataType) = Tuple(type.parameters)
-
 """
     parameters(type::UnionAll, position::Int)
 
@@ -22,6 +11,13 @@ parameters(type::UnionAll) = parameters(to_datatype(type))
 Gets all the type parameters of the object `object`.
 """
 parameters(object) = parameters(typeof(object))
+
+struct SpecifiedParameter{N} end
+SpecifiedParameter(val) = SpecifiedParameter{is_specified_parameter(val)}()
+
+is_specified_parameter(param)::Bool = true
+is_specified_parameter(param::TypeVar)::Bool = false
+is_parameter_specified(type::Type, pos) = is_specified_parameter(parameter(type, pos))
 
 """
     parameter(type::Type, position::Int)
@@ -63,3 +59,16 @@ parameter(x) = parameter(typeof(x))
 Gets the number of parameters for the Type `type`.
 """
 nparameters(type::Type) = length(parameters(type))
+
+function get_parameter(type::Type, pos)
+  param = parameter(type, pos)
+  return _get_parameter(SpecifiedParameter(param), param)
+end
+
+function _get_parameter(::SpecifiedParameter{true}, parameter)
+  return parameter
+end
+
+function _get_parameter(::SpecifiedParameter{false}, parameter)
+  return error("The requested type parameter isn't specified.")
+end

@@ -1,25 +1,23 @@
 using Compat: Compat
 
 Compat.@assume_effects :foldable function specify_parameter(type::Type, pos::Int, param)
-  return _specify_parameter(parameter(type, pos), type, Position(pos), param)
+  return _specify_parameter(
+    SpecifiedParameter(parameter(type, pos)), type, Position(pos), param
+  )
 end
 
 Compat.@assume_effects :foldable function specify_parameter(
   type::Type, pos::Position, param
 )
-  return _specify_parameter(parameter(type, pos), type, pos, param)
+  return _specify_parameter(SpecifiedParameter(parameter(type, pos)), type, pos, param)
 end
 
-function _specify_parameter(::TypeVar, type::Type, pos::Position, param)
-  return set_parameter(type, pos, TypeParameter(param))
-end
-
-function _specify_parameter(::TypeVar, type::Type, pos::Position, param::Type)
+function _specify_parameter(::SpecifiedParameter{false}, type::Type, pos::Position, param)
   return set_parameter(type, pos, param)
 end
 
 @generated function _specify_parameter(
-  ::Union{<:Int,<:DataType}, ::Type{Typ}, pos, param
+  ::SpecifiedParameter{true}, ::Type{Typ}, pos, param
 ) where {Typ}
   return Typ
 end
@@ -28,7 +26,7 @@ Compat.@assume_effects :foldable function specify_parameter(
   type::Type, fun::Function, param
 )
   pos = position(type, fun)
-  return _specify_parameter(parameter(type, pos), type, pos, param)
+  return _specify_parameter(SpecifiedParameter(parameter(type, pos)), type, pos, param)
 end
 
 ## TODO document this. You are able to put any type of position,
