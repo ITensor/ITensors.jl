@@ -31,7 +31,11 @@ function rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
 end
 
 function rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
-  return rrule(+, x1, -x2; kwargs...)
+  y = -(x1, x2; kwargs...)
+  function subtract_pullback(ȳ)
+    return (NoTangent(), ȳ, -ȳ)
+  end
+  return y, subtract_pullback
 end
 
 function rrule(::typeof(tr), x::MPO; plev=(0 => 1), kwargs...)
