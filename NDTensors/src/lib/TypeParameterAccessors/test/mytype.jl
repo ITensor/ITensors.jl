@@ -3,27 +3,67 @@ struct MyType{T,N} end
 
 struct MyTypeNamedPositions{N,T,V} end
 
-  third(type::Type{<:MyTypeNamedPositions}) = parameter(type, third)
+third(type::Type{<:MyTypeNamedPositions}) = parameter(type, third)
 
-  TypeParameterAccessors.position(::Type{<:MyTypeNamedPositions}, ::typeof(ndims)) = Position(1)
-  TypeParameterAccessors.position(::Type{<:MyTypeNamedPositions}, ::typeof(eltype)) = Position(2)
-  TypeParameterAccessors.position(::Type{<:MyTypeNamedPositions}, ::typeof(third)) = Position(3)
+function TypeParameterAccessors.position(::Type{<:MyTypeNamedPositions}, ::typeof(ndims))
+  return Position(1)
+end
+function TypeParameterAccessors.position(::Type{<:MyTypeNamedPositions}, ::typeof(eltype))
+  return Position(2)
+end
+function TypeParameterAccessors.position(::Type{<:MyTypeNamedPositions}, ::typeof(third))
+  return Position(3)
+end
 
 struct MyTypeDefaultPositions{N,T,V} end
 
-  TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaultPositions}, ::Position{1}) = 2
-  TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaultPositions}, ::Position{2}) = Float16
-  TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaultPositions}, ::Position{3}) = 'S'
-
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaultPositions}, ::Position{1}
+)
+  return 2
+end
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaultPositions}, ::Position{2}
+)
+  return Float16
+end
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaultPositions}, ::Position{3}
+)
+  return 'S'
+end
 
 struct MyTypeDefaultNamedPosition{V,T,N} end
-  third(::Type{<:MyTypeDefaultNamedPosition}) = parameter(type, third)
+third(::Type{<:MyTypeDefaultNamedPosition}) = parameter(type, third)
 
-  TypeParameterAccessors.position(::Type{<:MyTypeDefaultNamedPosition}, ::typeof(ndims)) = Position(1)
-  TypeParameterAccessors.position(::Type{<:MyTypeDefaultNamedPosition}, ::typeof(eltype)) = Position(2)
-  TypeParameterAccessors.position(::Type{<:MyTypeDefaultNamedPosition}, ::typeof(third)) = Position(3)
+function TypeParameterAccessors.position(
+  ::Type{<:MyTypeDefaultNamedPosition}, ::typeof(ndims)
+)
+  return Position(1)
+end
+function TypeParameterAccessors.position(
+  ::Type{<:MyTypeDefaultNamedPosition}, ::typeof(eltype)
+)
+  return Position(2)
+end
+function TypeParameterAccessors.position(
+  ::Type{<:MyTypeDefaultNamedPosition}, ::typeof(third)
+)
+  return Position(3)
+end
 
-  TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaultNamedPosition}, ::typeof(ndims)) = 3
-  TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaultNamedPosition}, ::typeof(eltype)) = Float32
-  TypeParameterAccessors.default_parameter(::Type{<:MyTypeDefaultNamedPosition}, ::typeof(third)) = 'P'
-
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaultNamedPosition}, ::typeof(ndims)
+)
+  return 3
+end
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaultNamedPosition}, ::typeof(eltype)
+)
+  return Float32
+end
+function TypeParameterAccessors.default_parameter(
+  ::Type{<:MyTypeDefaultNamedPosition}, ::typeof(third)
+)
+  return 'P'
+end

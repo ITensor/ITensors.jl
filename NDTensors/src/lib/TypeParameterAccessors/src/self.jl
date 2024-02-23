@@ -1,4 +1,3 @@
-struct Self
-end
+struct Self end
 
 parameter(type::Type, ::Self) = type
