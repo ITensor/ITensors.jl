@@ -24,6 +24,7 @@ for lib in [
   :AllocateData,
   :BaseExtensions,
   :UnspecifiedTypes,
+  :TypeParameterAccessors,
   :Unwrap,
   :SetParameters,
   :BroadcastMapConversion,
