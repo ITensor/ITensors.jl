@@ -9,3 +9,27 @@ function _set_parameter(type::Type, pos, param)
 end
 # Convert a function type to an instance.
 function_instance(ftype) = ftype.instance
+
+function to_unionall(type::Type)
+  params = Base.unwrap_unionall(type).parameters
+  for i in reverse(eachindex(params))
+    param = params[i]
+    if param isa TypeVar
+      type = UnionAll(param, type)
+    end
+  end
+  return type
+end
+
+function unspecify_parameter(type::Type, pos::Int)
+  params = Base.unwrap_unionall(type).parameters
+  if !(params[pos] isa TypeVar)
+    unspecified_param = Base.unwrap_unionall(Base.typename(type).wrapper).parameters[pos]
+    return to_unionall(
+      Base.typename(type).wrapper{
+        params[1:(pos - 1)]...,unspecified_param,params[(pos + 1):end]...
+      },
+    )
+  end
+  return type
+end
