@@ -6,6 +6,7 @@ import ITensors: nactive
   @testset "QNVal Basics" begin
     qv = ITensors.QNVal()
     @test !isactive(qv)
+    @test qv == zero(ITensors.QNVal)
 
     qv = ITensors.QNVal("Sz", 0)
     @test ITensors.name(qv) == ITensors.SmallString("Sz")
@@ -24,6 +25,12 @@ import ITensors: nactive
     @test val(qv) == 1
     @test modulus(qv) == -1
     @test isfermionic(qv)
+
+    qv = zero(ITensors.QNVal("Sz", 5))
+    @test ITensors.name(qv) == ITensors.SmallString("Sz")
+    @test val(qv) == 0
+    @test modulus(qv) == 1
+    @test isactive(qv)
   end
 
   @testset "QN Basics" begin
