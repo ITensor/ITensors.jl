@@ -26,6 +26,7 @@ for lib in [
   :UnspecifiedTypes,
   :Unwrap,
   :SetParameters,
+  :TypeParameterAccessors,
   :BroadcastMapConversion,
   :RankFactorization,
   :Sectors,
