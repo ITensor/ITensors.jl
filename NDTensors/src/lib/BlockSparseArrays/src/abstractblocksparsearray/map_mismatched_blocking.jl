@@ -1,6 +1,8 @@
 using BlockArrays: BlockArrays, BlockRange
 
 function map_mismatched_blocking!(f, a_dest::AbstractArray, a_src::AbstractArray)
+  ## @show typeof(a_src)
+
   # Create a common set of axes with a blocking that includes the
   # blocking of `a_dest` and `a_src`.
   matching_axes = BlockArrays.combine_blockaxes.(axes(a_dest), axes(a_src))

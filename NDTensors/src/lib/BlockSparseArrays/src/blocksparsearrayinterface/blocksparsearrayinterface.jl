@@ -101,14 +101,17 @@ function blocksparse_blocks(a::PermutedDimsArray)
   return PermutedDimsArray(blocks_parent_mapped, perm(a))
 end
 
+# TODO: Move to `BlockArraysExtensions`.
 function blockindices(a::AbstractArray, block::Block, indices::Tuple)
   return blockindices(axes(a), block, indices)
 end
 
+# TODO: Move to `BlockArraysExtensions`.
 function blockindices(axes::Tuple, block::Block, indices::Tuple)
   return blockindices.(axes, Tuple(block), indices)
 end
 
+# TODO: Move to `BlockArraysExtensions`.
 function blockindices(axis::AbstractUnitRange, block::Block, indices)
   indices_within_block = intersect(indices, axis[block])
   if iszero(length(indices_within_block))
@@ -118,7 +121,33 @@ function blockindices(axis::AbstractUnitRange, block::Block, indices)
   return only(blockindexrange(axis, indices_within_block).indices)
 end
 
+using ..SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
+
+# Represents the array of arrays of a `SubArray`
+# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
+struct SubBlocks{T,N,Array<:SubArray{T,N}} <: AbstractSparseArray{T,N}
+  array::Array
+end
+function Base.axes(a::SubBlocks)
+  blockranges = blockrange.(axes(parent(a.array)), a.array.indices)
+  return map(blockrange -> Int.(blockrange), blockranges)
+end
+function SparseArrayInterface.stored_indices(a::SubBlocks)
+  return stored_indices(view(blocks(parent(a.array)), axes(a)...))
+end
+function Base.getindex(a::SubBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
+  parent_blocks = view(blocks(parent(a.array)), axes(a)...)
+  return parent_blocks[blockindices(parent(a.array), Block(Tuple(I)), a.array.indices)...]
+end
+function SparseArrayInterface.sparse_storage(a::SubBlocks)
+  error()
+  # TODO: This also needs to slice the blocks!
+  return view(blocks(parent(a.array)), axes(a)...)
+end
+
 function blocksparse_blocks(a::SubArray)
+  return SubBlocks(a)
+  error()
   # First slice blockwise.
   blockranges = blockrange.(axes(parent(a)), a.indices)
   # Then slice the blocks.
