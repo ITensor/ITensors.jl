@@ -1,8 +1,8 @@
 module TypeParameterAccessors
-include("abstractposition.jl")
-include("abstracttypeparameter.jl")
 include("to_unionall.jl")
 include("parameters.jl")
+include("abstractposition.jl")
+include("abstracttypeparameter.jl")
 include("type_parameters.jl")
 include("position.jl")
 include("parameter.jl")

@@ -1,3 +1,7 @@
+# JULIA_INTERNALS: Warning! This code relies on undocumented
+# internal details of the Julia language.
+# It could break from version to version of Julia.
+
 # The signature `parameters(::Type{type}) where {type}`
 # doesn't work if `type` is a `DataType` with `TypeVar`s.
 function _parameters(type::Type)
