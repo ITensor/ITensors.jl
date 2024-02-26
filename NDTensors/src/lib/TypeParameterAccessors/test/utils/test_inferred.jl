@@ -9,18 +9,19 @@ macro test_inferred(ex, kws...)
   wrappeds = [kw.args[2] for kw in kws if kw.args[1] === :wrapped]
   wrapped = isempty(wrappeds) ? false : only(wrappeds)
   kws = filter(kw -> kw.args[1] ∉ (:inferred, :wrapped), kws)
-  for i in 2:length(ex.args)
-    arg = ex.args[i]
-    if inferred
-      if wrapped
-        arg = :(@inferred((() -> $arg)()))
+  @assert length(ex.args[2:end]) == 2
+  arg1 = ex.args[2]
+  arg1 = quote
+    if $inferred
+      if $wrapped
+        @inferred((() -> $arg1)())
       else
-        if arg isa Expr && arg.head === :call
-          arg = :(@inferred($arg))
-        end
+        @inferred($arg1)
       end
+    else
+      $arg1
     end
-    ex.args[i] = arg
   end
+  ex.args[2] = arg1
   return Expr(:macrocall, Symbol("@test"), :(), esc(ex), kws...)
 end

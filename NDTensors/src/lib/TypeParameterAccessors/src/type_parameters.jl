@@ -3,7 +3,7 @@ function type_parameter(param::UnspecifiedTypeParameter)
   return error("The requested type parameter isn't specified.")
 end
 function type_parameter(type::Type, pos)
-  return type_parameter(AbstractTypeParameter(type, pos))
+  return type_parameter(wrapped_type_parameter(type, pos))
 end
 function type_parameter(object, pos)
   return type_parameter(typeof(object), pos)

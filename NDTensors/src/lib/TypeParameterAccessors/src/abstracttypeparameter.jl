@@ -6,6 +6,8 @@ TypeParameter(param::TypeParameter) = param
 AbstractTypeParameter(param::AbstractTypeParameter) = param
 AbstractTypeParameter(param) = TypeParameter(param)
 AbstractTypeParameter(param::TypeVar) = UnspecifiedTypeParameter()
-AbstractTypeParameter(type::Type, pos) = AbstractTypeParameter(parameter(type, pos))
+
+wrapped_type_parameter(param) = AbstractTypeParameter(param)
+wrapped_type_parameter(type::Type, pos) = AbstractTypeParameter(parameter(type, pos))
 
 struct UnspecifiedTypeParameter <: AbstractTypeParameter end

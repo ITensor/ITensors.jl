@@ -1,8 +1,4 @@
 position(::Type{<:Array}, ::typeof(eltype)) = Position(1)
 position(::Type{<:Array}, ::typeof(ndims)) = Position(2)
 
-position_name(::Type{<:Array}, ::Position{1}) = eltype
-position_name(::Type{<:Array}, ::Position{2}) = ndims
-
-default_type_parameter(::Type{<:Array}, ::typeof(eltype)) = Float64
-default_type_parameter(::Type{<:Array}, ::typeof(ndims)) = 1
+default_type_parameters(::Type{<:Array}) = (Float64, 1)
