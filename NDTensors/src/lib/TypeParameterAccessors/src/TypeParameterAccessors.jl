@@ -1,4 +1,5 @@
 module TypeParameterAccessors
+include("interface.jl")
 include("to_unionall.jl")
 include("parameters.jl")
 include("abstractposition.jl")
