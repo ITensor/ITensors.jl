@@ -5,9 +5,6 @@ function set_parameter(type::Type, pos::Self, param)
   return error("Can't set the parent type of an unwrapped array type.")
 end
 
-function set_eltype(type::Type{<:AbstractArray}, param)
-  return error("Not implemented")
-end
 function set_eltype(array::AbstractArray, param)
   return convert(set_eltype(typeof(array), param), array)
 end
@@ -58,8 +55,9 @@ end
   type::Type{ArrayType}, param
 ) where {ArrayType <: AbstractArray; IsWrappedArray{ArrayType}}
   new_parenttype = set_eltype(parenttype(type), param)
-  ## return set_parenttype(set_parameter(type, eltype, param), new_parenttype)
-  return set_parameter(set_parenttype(type, new_parenttype), eltype, param)
+  # Need to set both in one `set_parameters` call to avoid
+  # conflicts in type parameter constraints of certain wrapper types.
+  return set_parameters(type, (eltype, parenttype), (param, new_parenttype))
 end
 
 @traitfn function set_eltype(

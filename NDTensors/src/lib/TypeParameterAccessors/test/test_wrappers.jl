@@ -67,11 +67,10 @@ include("utils/test_inferred.jl")
       @test_inferred unwrap_array_type(wrapped_array_type) == Matrix{Float64}
       @test_inferred set_parenttype(wrapped_array_type, wrapped_array_type) ==
         wrapper{eltype(wrapped_array_type),wrapped_array_type}
-      if wrapper in (Transpose, Adjoint)
-        # TODO: The other wrappers have an issue with setting
-        # the element type and parent type one at a time
-        # since the temporary type has type mismatches.
-        @test_inferred set_eltype(wrapped_array_type, Float32) ==
+      @test_inferred set_eltype(wrapped_array_type, Float32) ==
+        wrapper{Float32,Matrix{Float32}}
+      if wrapper ∉ (UnitUpperTriangular, UnitLowerTriangular)
+        @test_inferred set_eltype(wrapped_array, Float32) isa
           wrapper{Float32,Matrix{Float32}}
       end
     end
@@ -83,6 +82,9 @@ include("utils/test_inferred.jl")
     @test_inferred is_wrapped_array(wrapped_array) == true
     @test_inferred parenttype(wrapped_array) == Vector{Float64}
     @test_inferred unwrap_array_type(wrapped_array_type) == Vector{Float64}
+    @test_inferred set_eltype(wrapped_array_type, Float32) ==
+      Diagonal{Float32,Vector{Float32}}
+    @test_inferred set_eltype(wrapped_array, Float32) isa Diagonal{Float32,Vector{Float32}}
   end
   @testset "LinearAlgebra nested wrappers" begin
     array = randn(2, 2)

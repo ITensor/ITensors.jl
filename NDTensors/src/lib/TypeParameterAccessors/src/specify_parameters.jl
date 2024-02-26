@@ -3,32 +3,28 @@ function specify_parameter(type::Type, pos, param)
   return set_parameter(type, pos, param)
 end
 
-for f in [:set_parameter, :specify_parameter]
-  fs = Symbol(f, :s)
-  _fs = Symbol(:_, f, :s)
-  @eval begin
-    function $_fs(type::Type, positions::Tuple{Vararg{Int}}, params::Tuple)
-      @assert length(positions) == length(params)
-      for i in 1:length(positions)
-        type = $f(type, positions[i], params[i])
-      end
-      return type
-    end
-    @generated function $fs(
-      type_type::Type,
-      positions_type::Tuple{Vararg{Position}},
-      params_type::Tuple{Vararg{TypeParameter}},
-    )
-      type = parameter(type_type)
-      positions = parameter.(parameters(positions_type))
-      params = parameter.(parameters(params_type))
-      return $_fs(type, positions, params)
-    end
-    function $fs(type::Type, positions::Tuple, params::Tuple)
-      return $fs(type, position.(type, positions), TypeParameter.(params))
-    end
-    function $fs(type::Type, params::Tuple)
-      return $fs(type, eachposition(type), params)
+function _specify_parameters(type::Type, positions::Tuple{Vararg{Int}}, params::Tuple)
+  new_params = parameters(type)
+  for i in 1:length(positions)
+    if !is_parameter_specified(type, positions[i])
+      new_params = Base.setindex(new_params, params[i], positions[i])
     end
   end
+  return new_parameters(type, new_params)
+end
+@generated function specify_parameters(
+  type_type::Type,
+  positions_type::Tuple{Vararg{Position}},
+  params_type::Tuple{Vararg{TypeParameter}},
+)
+  type = parameter(type_type)
+  positions = parameter.(parameters(positions_type))
+  params = parameter.(parameters(params_type))
+  return _specify_parameters(type, positions, params)
+end
+function specify_parameters(type::Type, positions::Tuple, params::Tuple)
+  return specify_parameters(type, position.(type, positions), TypeParameter.(params))
+end
+function specify_parameters(type::Type, params::Tuple)
+  return specify_parameters(type, eachposition(type), params)
 end
