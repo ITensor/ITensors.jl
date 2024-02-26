@@ -66,6 +66,12 @@ end
   return set_parameter(type, eltype, param)
 end
 
+for wrapper in [:PermutedDimsArray, :(Base.ReshapedArray), :SubArray]
+  @eval begin
+    position(type::Type{<:$wrapper}, ::typeof(eltype)) = Position(1)
+    position(type::Type{<:$wrapper}, ::typeof(ndims)) = Position(2)
+  end
+end
 for wrapper in [:(Base.ReshapedArray), :SubArray]
   @eval position(type::Type{<:$wrapper}, ::typeof(parenttype)) = Position(3)
 end

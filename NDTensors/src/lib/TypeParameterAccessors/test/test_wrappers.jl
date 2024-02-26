@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using Test: @testset
+using Test: @test_broken, @testset
 using LinearAlgebra:
   Adjoint,
   Diagonal,
@@ -17,6 +17,8 @@ using NDTensors.TypeParameterAccessors:
   set_eltype,
   set_ndims,
   set_parenttype,
+  type_parameter,
+  unspecify_parameters,
   unwrap_array_type
 using StridedViews: StridedView
 include("utils/test_inferred.jl")
@@ -42,10 +44,15 @@ include("utils/test_inferred.jl")
       PermutedDimsArray(randn(2, 2), (1, 2)),
     )
       wrapped_array_type = typeof(wrapped_array)
-      @test parenttype(wrapped_array) == Matrix{Float64}
-      @test is_wrapped_array(wrapped_array)
-      @test unwrap_array_type(wrapped_array_type) == Matrix{Float64}
-      # TODO: Test `set_eltype`.
+      @test_inferred parenttype(wrapped_array) == Matrix{Float64}
+      @test_inferred type_parameter(wrapped_array, eltype) == Float64
+      @test_inferred is_wrapped_array(wrapped_array) == true
+      @test_inferred unwrap_array_type(wrapped_array_type) == Matrix{Float64}
+      @test_inferred set_eltype(wrapped_array_type, Float32) <:
+        unspecify_parameters(wrapped_array_type){Float32}
+      # Julia doesn't have the necessary conversions defined for this to work.
+      @test_broken set_eltype(wrapped_array, Float32) isa
+        unspecify_parameters(wrapped_array_type){Float32}
     end
   end
   @testset "LinearAlgebra wrappers" begin
