@@ -84,7 +84,12 @@ include("utils/test_inferred.jl")
     @test_inferred unwrap_array_type(wrapped_array_type) == Vector{Float64}
     @test_inferred set_eltype(wrapped_array_type, Float32) ==
       Diagonal{Float32,Vector{Float32}}
-    @test_inferred set_eltype(wrapped_array, Float32) isa Diagonal{Float32,Vector{Float32}}
+    if VERSION ≥ v"1.8"
+      # `Diagonal{T,Vector{T}}(diag::Diagonal)` not define in Julia 1.7
+      # and below.
+      @test_inferred set_eltype(wrapped_array, Float32) isa
+        Diagonal{Float32,Vector{Float32}}
+    end
   end
   @testset "LinearAlgebra nested wrappers" begin
     array = randn(2, 2)
