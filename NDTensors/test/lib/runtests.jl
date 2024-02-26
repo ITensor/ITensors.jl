@@ -1,4 +1,5 @@
 @eval module $(gensym())
+using NDTensors: NDTensors
 using Test: @testset
 @testset "Test NDTensors lib $lib" for lib in [
   "AlgorithmSelection",
@@ -16,11 +17,11 @@ using Test: @testset
   "SparseArrayDOKs",
   "TagSets",
   "TensorAlgebra",
+  "TypeParameterAccessors",
   "UnallocatedArrays",
   "UnspecifiedTypes",
   "Unwrap",
 ]
-  using NDTensors: NDTensors
   include(joinpath(pkgdir(NDTensors), "src", "lib", lib, "test", "runtests.jl"))
 end
 end
