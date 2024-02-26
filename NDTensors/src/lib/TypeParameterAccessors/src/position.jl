@@ -9,7 +9,3 @@ function position(type::Type, pos)
     "Type parameter position not defined for type `$(type)` and position name `$(pos)`."
   )
 end
-
-function position_name(type::Type, pos::Position)
-  return UndefinedPosition()
-end
