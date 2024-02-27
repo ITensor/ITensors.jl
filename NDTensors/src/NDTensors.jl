@@ -4,7 +4,6 @@ using Adapt
 using Base.Threads
 using Compat
 using Dictionaries
-using FLoops
 using Folds
 using GPUArraysCore
 using InlineStrings
