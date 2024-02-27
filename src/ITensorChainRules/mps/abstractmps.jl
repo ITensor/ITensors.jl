@@ -75,12 +75,11 @@ function rrule(
   ::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; apply_dag=false, kwargs...
 )
   #if apply_dag && !_is_mps_or_hermitian_mpo(x2)
-    #error(
-      #"For now, we only support taking derivatives of MPO gate application with `apply_dag=true` for Hermitian MPOs. As an alternative, you can manually apply the gate once on each side of the MPO.",
-    #)
+  #error(
+  #"For now, we only support taking derivatives of MPO gate application with `apply_dag=true` for Hermitian MPOs. As an alternative, you can manually apply the gate once on each side of the MPO.",
+  #)
   #end
-  
-  
+
   N = length(x1) + 1
 
   # Apply circuit and store intermediates in the forward direction
@@ -116,7 +115,6 @@ function rrule(
         else
           # apply U on one side of the MPO
           if apply_dag
-
             ishermitian = _is_mps_or_hermitian_mpo(x2)
 
             if ishermitian
@@ -135,7 +133,7 @@ function rrule(
               ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
               ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
               ξ̃ = mapprime(x1dag_ȳ[n + 1], 0 => 2)
-              x̄1[n] = _contract(ITensor, ξ̃, ϕ̃; kwargs...) 
+              x̄1[n] = _contract(ITensor, ξ̃, ϕ̃; kwargs...)
 
               # prepare contribution from taking the derivative w.r.t. Q†
               # M = Qx1, MQ† -> W̄†M = W̄†Qx1 
@@ -143,7 +141,7 @@ function rrule(
               ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
               ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
               ξ̃ = dag(x1dag_ȳ[n + 1])'
-              x̄1[n] += _contract(ITensor, ξ̃, ϕ̃; kwargs...) 
+              x̄1[n] += _contract(ITensor, ξ̃, ϕ̃; kwargs...)
             end
           else
             ϕ̃ = mapprime(x1x2dag[n], 0 => 2)
