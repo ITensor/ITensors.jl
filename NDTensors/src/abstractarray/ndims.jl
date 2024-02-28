@@ -5,7 +5,7 @@ ndims((array::AbstractArray)) = ndims(typeof(array))
 ndims(arraytype::Type{<:AbstractArray}) = type_parameter(arraytype, Base.ndims)
 
 ## TODO for now have `NDTensors.set_ndims` call `TypeParameterAccessors.set_ndims`
-set_ndims(type::Type, length) = TypeParameterAccessors.set_ndims(type, length)
+NDTensors.set_ndims(type::Type, length) = TypeParameterAccessors.set_ndims(type, length)
 
 TypeParameterAccessors.position(::Type{<:Number}, ::typeof(ndims)) = Self()
 

@@ -1,6 +1,5 @@
 ## todo working on this still
-using .TypeParameterAccessors: set_eltype
-using .Unwrap: IsWrappedArray
+using .TypeParameterAccessors: IsWrappedArray, set_eltype, specify_default_parameters, unwrap_array_type
 
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.
@@ -16,6 +15,8 @@ end
 # Catches conversions of dimensions specified by ranges
 # dimensions specified by integers with `Base.to_shape`.
 # NDTensors.similar
+## TODO this fails when types are partially specified. Should we modify the
+## behavior?
 function similar(arraytype::Type{<:AbstractArray}, dims::Dims)
   return similartype(arraytype, dims)(undef, dims)
 end
@@ -105,16 +106,11 @@ function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, dims::Tuple
   return similartype(similartype(arraytype, eltype), dims)
 end
 
-@traitfn function similartype(
-  arraytype::Type{ArrayT}, eltype::Type
-) where {ArrayT; !IsWrappedArray{ArrayT}}
+## Set eltype captures WrappedArray types as long as `position(::Type, ::typeof(parenttype))` is defined
+function similartype(
+  arraytype::Type{<:AbstractArray}, eltype::Type
+)
   return set_eltype(arraytype, eltype)
-end
-
-@traitfn function similartype(
-  arraytype::Type{ArrayT}, dims::Tuple
-) where {ArrayT; !IsWrappedArray{ArrayT}}
-  return set_indstype(arraytype, dims)
 end
 
 function similartype(arraytype::Type{<:AbstractArray}, dims::DimOrInd...)
@@ -125,17 +121,16 @@ function similartype(arraytype::Type{<:AbstractArray})
   return similartype(arraytype, eltype(arraytype))
 end
 
-## Wrapped arrays
 @traitfn function similartype(
-  arraytype::Type{ArrayT}, eltype::Type
-) where {ArrayT; IsWrappedArray{ArrayT}}
-  return similartype(unwrap_type(arraytype), eltype)
+  arraytype::Type{ArrayT}, dims::Tuple
+) where {ArrayT; !IsWrappedArray{ArrayT}}
+  return set_indstype(arraytype, dims)
 end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, dims::Tuple
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return similartype(unwrap_type(arraytype), dims)
+  return set_parenttype(arraytype, similartype(unwrap_array_type(arraytype), dims))
 end
 
 # This is for uniform `Diag` storage which uses
