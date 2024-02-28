@@ -9,6 +9,16 @@ set_ndims(type::Type, length) = TypeParameterAccessors.set_ndims(type, length)
 
 TypeParameterAccessors.position(::Type{<:Number}, ::typeof(ndims)) = Self()
 
+"""
+`set_indstype` should be overloaded for
+types with structured dimensions,
+like `OffsetArrays` or named indices
+(such as ITensors).
+"""
+function set_indstype(arraytype::Type{<:AbstractArray}, dims::Tuple)
+  return set_ndims(arraytype, length(dims))
+end
+
 # ndims(array::AbstractArray) = Base.ndims(array)
 # ndims(arraytype::Type{<:AbstractArray}) = Base.ndims(arraytype)
 

@@ -62,7 +62,6 @@ include("exports.jl")
 #
 include("default_kwargs.jl")
 include("aliasstyle.jl")
-include("abstractarray/set_types.jl")
 include("abstractarray/to_shape.jl")
 include("abstractarray/iscu.jl")
 include("abstractarray/similar.jl")
