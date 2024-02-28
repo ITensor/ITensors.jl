@@ -1,4 +1,8 @@
-default_type_parameters(type::Type) = error("The default parameters of $(type) is not defined. Please specify the parameters manually.")
+function default_type_parameters(type::Type)
+  return error(
+    "The default parameters of $(type) is not defined. Please specify the parameters manually.",
+  )
+end
 function default_type_parameters(type::Type, positions::Tuple)
   return default_type_parameter.(type, positions)
 end
