@@ -1,20 +1,13 @@
 ## NDTensors.ndims (not imported from Base)
-using .TypeParameterAccessors: set_parameter
+using .TypeParameterAccessors: TypeParameterAccessors, Self, type_parameter, set_ndims, set_parameter
 
 ndims((array::AbstractArray)) = ndims(typeof(array))
-ndims(arraytype::Type{<:AbstractArray}) = parameter(arraytype, Base.ndims)
+ndims(arraytype::Type{<:AbstractArray}) = type_parameter(arraytype, Base.ndims)
 
 ## TODO for now have `NDTensors.set_ndims` call `TypeParameterAccessors.set_ndims`
 set_ndims(type::Type, length) = TypeParameterAccessors.set_ndims(type, length)
 
-# This is for uniform `Diag` storage which uses
-# a Number as the data type.
-# TODO: Delete this when we change to using a
-# `FillArray` instead. This is a stand-in
-# to make things work with the current design.
-function set_ndims(numbertype::Type{<:Number}, ndims)
-  return numbertype
-end
+TypeParameterAccessors.position(::Type{<:Number}, ::typeof(ndims)) = Self()
 
 # ndims(array::AbstractArray) = Base.ndims(array)
 # ndims(arraytype::Type{<:AbstractArray}) = Base.ndims(arraytype)
