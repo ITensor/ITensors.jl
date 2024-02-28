@@ -1,10 +1,26 @@
 ## NDTensors.ndims (not imported from Base)
+using .TypeParameterAccessors: set_parameter
 
-ndims(array::AbstractArray) = Base.ndims(array)
-ndims(arraytype::Type{<:AbstractArray}) = Base.ndims(arraytype)
+ndims((array::AbstractArray)) = ndims(typeof(array))
+ndims(arraytype::Type{<:AbstractArray}) = parameter(arraytype, Base.ndims)
 
-## In house patch to deal issue of calling ndims with an Array of unspecified eltype
-## https://github.com/JuliaLang/julia/pull/40682
-if VERSION < v"1.7"
-  ndims(::Type{<:AbstractArray{<:Any,N}}) where {N} = N
+## TODO for now have `NDTensors.set_ndims` call `TypeParameterAccessors.set_ndims`
+set_ndims(type::Type, length) = TypeParameterAccessors.set_ndims(type, length)
+
+# This is for uniform `Diag` storage which uses
+# a Number as the data type.
+# TODO: Delete this when we change to using a
+# `FillArray` instead. This is a stand-in
+# to make things work with the current design.
+function set_ndims(numbertype::Type{<:Number}, ndims)
+  return numbertype
 end
+
+# ndims(array::AbstractArray) = Base.ndims(array)
+# ndims(arraytype::Type{<:AbstractArray}) = Base.ndims(arraytype)
+
+# ## In house patch to deal issue of calling ndims with an Array of unspecified eltype
+# ## https://github.com/JuliaLang/julia/pull/40682
+# if VERSION < v"1.7"
+#   ndims(::Type{<:AbstractArray{<:Any,N}}) where {N} = N
+# end

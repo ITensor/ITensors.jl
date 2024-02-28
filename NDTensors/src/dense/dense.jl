@@ -105,19 +105,8 @@ function copy(D::Dense)
   return Dense(copy(expose(data(D))))
 end
 
-function Base.real(T::Type{<:Dense})
-  return set_datatype(T, similartype(datatype(T), real(eltype(T))))
-end
-
-function complex(T::Type{<:Dense})
-  return set_datatype(T, similartype(datatype(T), complex(eltype(T))))
-end
-
 # TODO: Define a generic `dense` for `Tensor`, `TensorStorage`.
 dense(storagetype::Type{<:Dense}) = storagetype
-
-# TODO: make these more general, move to tensorstorage.jl
-datatype(storetype::Type{<:Dense{<:Any,DataT}}) where {DataT} = DataT
 
 function promote_rule(
   ::Type{<:Dense{ElT1,DataT1}}, ::Type{<:Dense{ElT2,DataT2}}
@@ -137,7 +126,8 @@ function promote_rule(
   return Dense{ElR,DataR}
 end
 
-function convert(::Type{<:Dense{ElR,DataT}}, D::Dense) where {ElR,DataT}
+function convert(densetype::Type{<:Dense}, D::Dense)
+  DataT = parenttype(densetype)
   return Dense(convert(DataT, data(D)))
 end
 
