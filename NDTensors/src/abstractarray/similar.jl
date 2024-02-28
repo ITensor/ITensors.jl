@@ -1,5 +1,6 @@
 ## todo working on this still
-using .TypeParameterAccessors: IsWrappedArray, set_eltype, specify_default_parameters, unwrap_array_type
+using .TypeParameterAccessors:
+  IsWrappedArray, set_eltype, specify_default_parameters, unwrap_array_type
 
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.
@@ -107,9 +108,7 @@ function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, dims::Tuple
 end
 
 ## Set eltype captures WrappedArray types as long as `position(::Type, ::typeof(parenttype))` is defined
-function similartype(
-  arraytype::Type{<:AbstractArray}, eltype::Type
-)
+function similartype(arraytype::Type{<:AbstractArray}, eltype::Type)
   return set_eltype(arraytype, eltype)
 end
 

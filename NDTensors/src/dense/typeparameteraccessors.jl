@@ -1,5 +1,11 @@
 using .TypeParameterAccessors:
-  TypeParameterAccessors, default_type_parameter, default_type_parameters, parenttype, position, unwrap_array_type, set_parenttype
+  TypeParameterAccessors,
+  default_type_parameter,
+  default_type_parameters,
+  parenttype,
+  position,
+  unwrap_array_type,
+  set_parenttype
 
 ## Dense
 datatype(storetype::Type{<:Dense}) = parenttype(storetype)
@@ -29,4 +35,16 @@ function TypeParameterAccessors.position(::Type{<:Dense}, ::typeof(parenttype))
   return TypeParameterAccessors.Position(2)
 end
 
-TypeParameterAccessors.default_type_parameters(::Type{<:Dense}) = (default_type_parameter(Vector, eltype), Vector{default_type_parameter(Vector, eltype)})
+function TypeParameterAccessors.default_type_parameters(::Type{<:Dense})
+  return (
+    default_type_parameter(Vector, eltype), Vector{default_type_parameter(Vector, eltype)}
+  )
+end
+
+function TypeParameterAccessors.position(::Type{<:DenseTensor}, ::typeof(Base.ndims))
+  return TypeParameterAccessors.Position(2)
+end
+
+function TypeParameterAccessors.set_ndims(type::Type{<:DenseTensor}, N)
+  return set_parameter(type, Base.ndims, N)
+end
