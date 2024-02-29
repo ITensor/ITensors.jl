@@ -18,8 +18,8 @@ using Test: @testset
       specify_type_parameters,
       type_parameter,
       type_parameters,
-      unspecify_parameter,
-      unspecify_parameters
+      unspecify_type_parameter,
+      unspecify_type_parameters
     include("utils/test_inferred.jl")
     @testset "TypeParameterAccessors, named positions and defaults" begin
       struct MyType{P1,P2} end

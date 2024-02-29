@@ -18,7 +18,7 @@ using NDTensors.TypeParameterAccessors:
   set_ndims,
   set_parenttype,
   type_parameter,
-  unspecify_parameters,
+  unspecify_type_parameters,
   unwrap_array_type
 using StridedViews: StridedView
 include("utils/test_inferred.jl")
@@ -49,10 +49,10 @@ include("utils/test_inferred.jl")
       @test_inferred is_wrapped_array(wrapped_array) == true
       @test_inferred unwrap_array_type(wrapped_array_type) == Matrix{Float64}
       @test_inferred set_eltype(wrapped_array_type, Float32) <:
-        unspecify_parameters(wrapped_array_type){Float32}
+        unspecify_type_parameters(wrapped_array_type){Float32}
       # Julia doesn't have the necessary conversions defined for this to work.
       @test_broken set_eltype(wrapped_array, Float32) isa
-        unspecify_parameters(wrapped_array_type){Float32}
+        unspecify_type_parameters(wrapped_array_type){Float32}
     end
   end
   @testset "LinearAlgebra wrappers" begin

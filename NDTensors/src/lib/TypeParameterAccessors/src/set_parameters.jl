@@ -17,7 +17,7 @@ function set_type_parameter(type::Type, pos::Position, param)
   return set_type_parameter(type, pos, TypeParameter(param))
 end
 function set_type_parameter(type::Type, pos::Position, param::UnspecifiedTypeParameter)
-  return unspecify_parameter(type, pos)
+  return unspecify_type_parameter(type, pos)
 end
 
 function _set_parameters(type::Type, positions::Tuple{Vararg{Int}}, params::Tuple)

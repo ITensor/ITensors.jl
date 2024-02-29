@@ -10,8 +10,8 @@ using NDTensors.TypeParameterAccessors:
   specify_type_parameters,
   type_parameter,
   type_parameters,
-  unspecify_parameter,
-  unspecify_parameters
+  unspecify_type_parameter,
+  unspecify_type_parameters
 include("utils/test_inferred.jl")
 @testset "TypeParameterAccessors basics" begin
   @testset "Get parameters" begin
@@ -55,13 +55,13 @@ include("utils/test_inferred.jl")
       Array{Float32,3} wrapped = true
   end
   @testset "Unspecify parameters" begin
-    @test_inferred unspecify_parameter(Vector, 2) == Array wrapped = true
-    @test_inferred unspecify_parameter(Vector, Position(2)) == Array
-    @test_inferred unspecify_parameter(Vector{Float64}, eltype) == Vector
-    @test_inferred unspecify_parameters(Vector{Float64}) == Array
-    @test_inferred unspecify_parameters(Vector{Float64}, (eltype, 2)) == Array wrapped =
+    @test_inferred unspecify_type_parameter(Vector, 2) == Array wrapped = true
+    @test_inferred unspecify_type_parameter(Vector, Position(2)) == Array
+    @test_inferred unspecify_type_parameter(Vector{Float64}, eltype) == Vector
+    @test_inferred unspecify_type_parameters(Vector{Float64}) == Array
+    @test_inferred unspecify_type_parameters(Vector{Float64}, (eltype, 2)) == Array wrapped =
       true
-    @test_inferred unspecify_parameters(Vector{Float64}, (eltype, Position(2))) == Array
+    @test_inferred unspecify_type_parameters(Vector{Float64}, (eltype, Position(2))) == Array
   end
   @testset "On objects" begin
     @test_inferred type_parameter(Val{3}()) == 3
