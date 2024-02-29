@@ -37,9 +37,11 @@ using Test: @testset
       @test_inferred default_type_parameter(MyType{<:Any,2}, 1) == :P1 inferred = false
       @test_inferred default_type_parameter(MyType{<:Any,2}, 2) == :P2 inferred = false
 
-      @test_inferred set_default_type_parameter(MyType{1,2}, 1) == MyType{:P1,2} wrapped = true
+      @test_inferred set_default_type_parameter(MyType{1,2}, 1) == MyType{:P1,2} wrapped =
+        true
       @test_inferred set_default_type_parameter(MyType{1,2}, Position(1)) == MyType{:P1,2}
-      @test_inferred set_default_type_parameter(MyType{<:Any,2}, Position(1)) == MyType{:P1,2}
+      @test_inferred set_default_type_parameter(MyType{<:Any,2}, Position(1)) ==
+        MyType{:P1,2}
       @test_inferred set_default_type_parameter(MyType{<:Any,2}, Position(2)) ==
         MyType{<:Any,:P2}
       @test_inferred set_default_type_parameters(MyType{<:Any,2}) == MyType{:P1,:P2}

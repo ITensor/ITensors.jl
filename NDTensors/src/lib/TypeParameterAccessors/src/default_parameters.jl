@@ -44,7 +44,9 @@ function set_default_type_parameters(type::Type)
   return set_type_parameters(type, wrapped_default_type_parameters(type))
 end
 function set_default_type_parameters(type::Type, positions::Tuple)
-  return set_type_parameters(type, positions, wrapped_default_type_parameters(type, positions))
+  return set_type_parameters(
+    type, positions, wrapped_default_type_parameters(type, positions)
+  )
 end
 
 function specify_default_type_parameter(type::Type, pos)

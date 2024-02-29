@@ -24,14 +24,16 @@ include("utils/test_inferred.jl")
     @test_inferred default_type_parameters(Array, (ndims, eltype)) == (1, Float64)
   end
   @testset "Set defaults" begin
-    @test_inferred set_default_type_parameter(Array{Float32}, 1) == Array{Float64} wrapped = true
+    @test_inferred set_default_type_parameter(Array{Float32}, 1) == Array{Float64} wrapped =
+      true
     @test_inferred set_default_type_parameter(Array{Float32}, Position(1)) == Array{Float64}
     @test_inferred set_default_type_parameter(Array{Float32}, eltype) == Array{Float64}
     @test_inferred set_default_type_parameters(Array{Float32}) == Vector{Float64}
     @test_inferred set_default_type_parameters(Array{Float32}, (1, 2)) == Vector{Float64} wrapped =
       true
-    @test_inferred set_default_type_parameters(Array{Float32}, (Position(1), Position(2))) ==
-      Vector{Float64}
+    @test_inferred set_default_type_parameters(
+      Array{Float32}, (Position(1), Position(2))
+    ) == Vector{Float64}
     @test_inferred set_default_type_parameters(Array{Float32}, (eltype, ndims)) ==
       Vector{Float64}
     @test_inferred set_default_type_parameters(Array) == Vector{Float64} wrapped = true
@@ -47,7 +49,8 @@ include("utils/test_inferred.jl")
     @test_inferred specify_default_type_parameter(Array, Position(2)) == Vector
     @test_inferred specify_default_type_parameter(Array, ndims) == Vector
     @test_inferred specify_default_type_parameters(Array) == Vector{Float64}
-    @test_inferred specify_default_type_parameters(Array, (1,)) == Array{Float64} wrapped = true
+    @test_inferred specify_default_type_parameters(Array, (1,)) == Array{Float64} wrapped =
+      true
     @test_inferred specify_default_type_parameters(Array, (Position(1),)) == Array{Float64}
     @test_inferred specify_default_type_parameters(Array, (eltype,)) == Array{Float64}
     @test_inferred specify_default_type_parameters(Array, (2,)) == Vector wrapped = true
@@ -57,7 +60,8 @@ include("utils/test_inferred.jl")
       true
     @test_inferred specify_default_type_parameters(Array, (Position(1), Position(2))) ==
       Vector{Float64}
-    @test_inferred specify_default_type_parameters(Array, (eltype, ndims)) == Vector{Float64}
+    @test_inferred specify_default_type_parameters(Array, (eltype, ndims)) ==
+      Vector{Float64}
   end
   @testset "On objects" begin
     a = randn(Float32, (2, 2, 2))
