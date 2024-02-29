@@ -1,7 +1,7 @@
 struct Self end
 
 parameter(type::Type, pos::Self) = type
-function set_parameter(type::Type, pos::Self, param)
+function set_type_parameter(type::Type, pos::Self, param)
   return error("Can't set the parent type of an unwrapped array type.")
 end
 
@@ -48,22 +48,22 @@ end
 unwrap_array_type(array::AbstractArray) = unwrap_array_type(typeof(array))
 
 function set_parenttype(t::Type, param)
-  return set_parameter(t, parenttype, param)
+  return set_type_parameter(t, parenttype, param)
 end
 
 @traitfn function set_eltype(
   type::Type{ArrayType}, param
 ) where {ArrayType <: AbstractArray; IsWrappedArray{ArrayType}}
   new_parenttype = set_eltype(parenttype(type), param)
-  # Need to set both in one `set_parameters` call to avoid
+  # Need to set both in one `set_type_parameters` call to avoid
   # conflicts in type parameter constraints of certain wrapper types.
-  return set_parameters(type, (eltype, parenttype), (param, new_parenttype))
+  return set_type_parameters(type, (eltype, parenttype), (param, new_parenttype))
 end
 
 @traitfn function set_eltype(
   type::Type{ArrayType}, param
 ) where {ArrayType <: AbstractArray; !IsWrappedArray{ArrayType}}
-  return set_parameter(type, eltype, param)
+  return set_type_parameter(type, eltype, param)
 end
 
 for wrapper in [:PermutedDimsArray, :(Base.ReshapedArray), :SubArray]
