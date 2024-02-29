@@ -1,4 +1,4 @@
-function _set_parameter(type::Type, pos::Int, param)
+function _set_type_parameter(type::Type, pos::Int, param)
   params = Base.setindex(parameters(type), param, pos)
   return new_parameters(type, params)
 end
@@ -8,7 +8,7 @@ end
   type = parameter(type_type)
   pos = parameter(pos_type)
   param = parameter(param_type)
-  return _set_parameter(type, pos, param)
+  return _set_type_parameter(type, pos, param)
 end
 function set_type_parameter(type::Type, pos, param)
   return set_type_parameter(type, position(type, pos), param)
@@ -20,7 +20,7 @@ function set_type_parameter(type::Type, pos::Position, param::UnspecifiedTypePar
   return unspecify_type_parameter(type, pos)
 end
 
-function _set_parameters(type::Type, positions::Tuple{Vararg{Int}}, params::Tuple)
+function _set_type_parameters(type::Type, positions::Tuple{Vararg{Int}}, params::Tuple)
   @assert length(positions) == length(params)
   new_params = parameters(type)
   for i in 1:length(positions)
@@ -36,7 +36,7 @@ end
   type = parameter(type_type)
   positions = parameter.(parameters(positions_type))
   params = parameter.(parameters(params_type))
-  return _set_parameters(type, positions, params)
+  return _set_type_parameters(type, positions, params)
 end
 function set_type_parameters(type::Type, positions::Tuple, params::Tuple)
   return set_type_parameters(type, position.(type, positions), TypeParameter.(params))
