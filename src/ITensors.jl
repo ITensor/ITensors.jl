@@ -50,6 +50,10 @@ Documentation: https://itensor.github.io/ITensors.jl/stable/
 """
 module ITensors
 
+if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optlevel"))
+  @eval Base.Experimental.@optlevel 1
+end
+
 #####################################
 # External packages
 #
