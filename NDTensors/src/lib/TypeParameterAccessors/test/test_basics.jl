@@ -61,7 +61,8 @@ include("utils/test_inferred.jl")
     @test_inferred unspecify_type_parameters(Vector{Float64}) == Array
     @test_inferred unspecify_type_parameters(Vector{Float64}, (eltype, 2)) == Array wrapped =
       true
-    @test_inferred unspecify_type_parameters(Vector{Float64}, (eltype, Position(2))) == Array
+    @test_inferred unspecify_type_parameters(Vector{Float64}, (eltype, Position(2))) ==
+      Array
   end
   @testset "On objects" begin
     @test_inferred type_parameter(Val{3}()) == 3
