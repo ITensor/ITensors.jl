@@ -8,18 +8,18 @@ using Test: @testset
       Position,
       default_type_parameter,
       default_type_parameters,
-      set_default_parameter,
-      set_default_parameters,
-      set_parameter,
-      set_parameters,
-      specify_default_parameter,
-      specify_default_parameters,
-      specify_parameter,
-      specify_parameters,
+      set_default_type_parameter,
+      set_default_type_parameters,
+      set_type_parameter,
+      set_type_parameters,
+      specify_default_type_parameter,
+      specify_default_type_parameters,
+      specify_type_parameter,
+      specify_type_parameters,
       type_parameter,
       type_parameters,
-      unspecify_parameter,
-      unspecify_parameters
+      unspecify_type_parameter,
+      unspecify_type_parameters
     include("utils/test_inferred.jl")
     @testset "TypeParameterAccessors, named positions and defaults" begin
       struct MyType{P1,P2} end
@@ -37,26 +37,28 @@ using Test: @testset
       @test_inferred default_type_parameter(MyType{<:Any,2}, 1) == :P1 inferred = false
       @test_inferred default_type_parameter(MyType{<:Any,2}, 2) == :P2 inferred = false
 
-      @test_inferred set_default_parameter(MyType{1,2}, 1) == MyType{:P1,2} wrapped = true
-      @test_inferred set_default_parameter(MyType{1,2}, Position(1)) == MyType{:P1,2}
-      @test_inferred set_default_parameter(MyType{<:Any,2}, Position(1)) == MyType{:P1,2}
-      @test_inferred set_default_parameter(MyType{<:Any,2}, Position(2)) ==
+      @test_inferred set_default_type_parameter(MyType{1,2}, 1) == MyType{:P1,2} wrapped =
+        true
+      @test_inferred set_default_type_parameter(MyType{1,2}, Position(1)) == MyType{:P1,2}
+      @test_inferred set_default_type_parameter(MyType{<:Any,2}, Position(1)) ==
+        MyType{:P1,2}
+      @test_inferred set_default_type_parameter(MyType{<:Any,2}, Position(2)) ==
         MyType{<:Any,:P2}
-      @test_inferred set_default_parameters(MyType{<:Any,2}) == MyType{:P1,:P2}
+      @test_inferred set_default_type_parameters(MyType{<:Any,2}) == MyType{:P1,:P2}
       # TODO: These don't infer, need to investigate.
-      @test_inferred set_default_parameter(MyType{<:Any,2}, 1) == MyType{:P1,2} inferred =
+      @test_inferred set_default_type_parameter(MyType{<:Any,2}, 1) == MyType{:P1,2} inferred =
         false
-      @test_inferred set_default_parameter(MyType{<:Any,2}, 2) == MyType{<:Any,:P2} inferred =
+      @test_inferred set_default_type_parameter(MyType{<:Any,2}, 2) == MyType{<:Any,:P2} inferred =
         false
 
-      @test_inferred specify_default_parameter(MyType{<:Any,2}, Position(1)) ==
+      @test_inferred specify_default_type_parameter(MyType{<:Any,2}, Position(1)) ==
         MyType{:P1,2}
-      @test_inferred specify_default_parameters(MyType{<:Any,2}) == MyType{:P1,2}
-      @test_inferred specify_default_parameter(MyType{<:Any,2}, Position(2)) ==
+      @test_inferred specify_default_type_parameters(MyType{<:Any,2}) == MyType{:P1,2}
+      @test_inferred specify_default_type_parameter(MyType{<:Any,2}, Position(2)) ==
         MyType{<:Any,2}
-      @test_inferred specify_default_parameters(MyType) == MyType{:P1,:P2}
+      @test_inferred specify_default_type_parameters(MyType) == MyType{:P1,:P2}
       # TODO: These don't infer, need to investigate.
-      @test_inferred specify_default_parameter(MyType{<:Any,2}, 2) == MyType{<:Any,2} inferred =
+      @test_inferred specify_default_type_parameter(MyType{<:Any,2}, 2) == MyType{<:Any,2} inferred =
         false
 
       # Named positions
