@@ -12,6 +12,9 @@ isdual(s::GradedUnitRange) = s.isdual
 dual(s::GradedUnitRange) = GradedUnitRange(blockedrange(s), nondual_sectors(s), !isdual(s))
 
 function gradedrange(nondual_sectors::Vector, blocklengths::Vector{Int}, isdual=false)
+  if length(nondual_sectors) != length(blocklengths)
+    throw(DomainError("Sector and block lengths do not match"))
+  end
   return GradedUnitRange(blockedrange(blocklengths), nondual_sectors, isdual)
 end
 
@@ -20,6 +23,9 @@ function gradedrange(sectors_lengths::Vector{<:Pair{<:Any,Int}}, isdual=false)
 end
 
 function gradedrange(a::BlockedUnitRange, nondual_sectors::Vector, isdual=false)
+  if length(nondual_sectors) != length(blocks(a))
+    throw(DomainError("BlockedUnitRange and sectors lengths do not match"))
+  end
   return GradedUnitRange(a, nondual_sectors, isdual)
 end
 
