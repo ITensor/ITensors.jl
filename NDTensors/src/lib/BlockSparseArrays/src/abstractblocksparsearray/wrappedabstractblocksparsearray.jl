@@ -1,11 +1,12 @@
 using BlockArrays: BlockedUnitRange, blockedrange
 using SplitApplyCombine: groupcount
-# TODO: Write a specialized version for `indices::AbstractUnitRange`.
-# TODO: Write a generic version for blocked unit ranges (like `GradedAxes`).
-function sub_unitrange(a::BlockedUnitRange, indices)
-  indices = sort(indices)
-  return blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
-end
+
+## # TODO: Write a specialized version for `indices::AbstractUnitRange`.
+## # TODO: Write a generic version for blocked unit ranges (like `GradedAxes`).
+## function sub_unitrange(a::BlockedUnitRange, indices)
+##   indices = sort(indices)
+##   return blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
+## end
 
 using Adapt: Adapt, WrappedArray
 
@@ -18,6 +19,8 @@ const BlockSparseArrayLike{T,N} = Union{
 }
 
 # AbstractArray interface
+# TODO: Use `BlockSparseArrayLike`.
+# TODO: Need to handle block indexing.
 function Base.axes(a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray})
   return ntuple(i -> sub_unitrange(axes(parent(a), i), a.indices[i]), ndims(a))
 end
@@ -32,6 +35,23 @@ end
 
 blocktype(a::BlockSparseArrayLike) = eltype(blocks(a))
 blocktype(arraytype::Type{<:BlockSparseArrayLike}) = eltype(blockstype(arraytype))
+
+using ArrayLayouts: ArrayLayouts
+## function Base.getindex(a::BlockSparseArrayLike{<:Any,N}, I::Vararg{Int,N}) where {N}
+##   return ArrayLayouts.layout_getindex(a, I...)
+## end
+function Base.getindex(a::BlockSparseArrayLike{<:Any,N}, I::CartesianIndices{N}) where {N}
+  return ArrayLayouts.layout_getindex(a, I)
+end
+function Base.getindex(
+  a::BlockSparseArrayLike{<:Any,N}, I::Vararg{AbstractUnitRange,N}
+) where {N}
+  return ArrayLayouts.layout_getindex(a, I...)
+end
+# TODO: Define `AnyBlockSparseMatrix`.
+function Base.getindex(a::BlockSparseArrayLike{<:Any,2}, I::Vararg{AbstractUnitRange,2})
+  return ArrayLayouts.layout_getindex(a, I...)
+end
 
 function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N}) where {N}
   blocksparse_setindex!(a, value, I)
@@ -70,6 +90,7 @@ function Base.similar(
 end
 
 # Needed by `BlockArrays` matrix multiplication interface
+# TODO: Define a `blocksparse_similar` function.
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike}, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
@@ -78,14 +99,26 @@ function Base.similar(
   return BlockSparseArray{elt}(undef, axes)
 end
 
+# TODO: Define a `blocksparse_similar` function.
 function Base.similar(
   a::BlockSparseArrayLike, elt::Type, axes::Tuple{Vararg{AbstractUnitRange}}
 )
   # TODO: Make generic for GPU, maybe using `blocktype`.
   # TODO: For non-block axes this should output `Array`.
-  return BlockSparseArray{eltype(a)}(undef, axes)
+  return BlockSparseArray{elt}(undef, axes)
 end
 
+# TODO: Define a `blocksparse_similar` function.
+# Fixes ambiguity error with `BlockArrays`.
+function Base.similar(
+  a::BlockSparseArrayLike, elt::Type, axes::Tuple{BlockedUnitRange,Vararg{BlockedUnitRange}}
+)
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
+  return BlockSparseArray{elt}(undef, axes)
+end
+
+# TODO: Define a `blocksparse_similar` function.
 # Fixes ambiguity error with `OffsetArrays`.
 function Base.similar(
   a::BlockSparseArrayLike,
@@ -94,5 +127,15 @@ function Base.similar(
 )
   # TODO: Make generic for GPU, maybe using `blocktype`.
   # TODO: For non-block axes this should output `Array`.
-  return BlockSparseArray{eltype(a)}(undef, axes)
+  return BlockSparseArray{elt}(undef, axes)
+end
+
+# TODO: Define a `blocksparse_similar` function.
+# Fixes ambiguity error with `StaticArrays`.
+function Base.similar(
+  a::BlockSparseArrayLike, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
+)
+  # TODO: Make generic for GPU, maybe using `blocktype`.
+  # TODO: For non-block axes this should output `Array`.
+  return BlockSparseArray{elt}(undef, axes)
 end

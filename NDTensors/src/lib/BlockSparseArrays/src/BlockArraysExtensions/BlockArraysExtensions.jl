@@ -1,6 +1,51 @@
-using BlockArrays: AbstractBlockArray, AbstractBlockVector, Block, blockedrange
+using BlockArrays:
+  BlockArrays,
+  AbstractBlockArray,
+  AbstractBlockVector,
+  Block,
+  BlockRange,
+  BlockedUnitRange,
+  BlockVector,
+  block,
+  blockedrange,
+  blockindex,
+  blocks,
+  findblock,
+  findblockindex
 using Dictionaries: Dictionary, Indices
 using ..SparseArrayInterface: stored_indices
+
+# Outputs a `BlockUnitRange`.
+function sub_unitrange(a::AbstractUnitRange, indices)
+  @show indices
+  @show typeof(indices)
+  return error("Not implemented")
+end
+
+# TODO: Write a specialized version for `indices::AbstractUnitRange`.
+# TODO: Write a generic version for blocked unit ranges (like `GradedAxes`).
+# Outputs a `BlockUnitRange`.
+function sub_unitrange(a::AbstractUnitRange, indices::AbstractUnitRange)
+  @show typeof(indices)
+  indices = sort(indices)
+  br = blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
+  @show typeof(br)
+  return br
+end
+
+# Outputs a `BlockUnitRange`.
+function sub_unitrange(a::AbstractUnitRange, indices::Vector{<:Block})
+  @show indices
+  @show [a[index] for index in indices]
+  return error("Not implemented")
+end
+
+function sub_unitrange(a::AbstractUnitRange, indices::BlockVector{<:Block})
+  println("TEST")
+  @show indices
+  @show [a[index] for index in indices]
+  return blockedrange([length(a[index]) for index in indices])
+end
 
 # TODO: Use `Tuple` conversion once
 # BlockArrays.jl PR is merged.
@@ -38,11 +83,6 @@ end
 function block_reshape(a::AbstractArray, axes::Vararg{AbstractUnitRange})
   return block_reshape(a, axes)
 end
-
-##################################################################################
-using BlockArrays:
-  Block, BlockedUnitRange, block, blockindex, blocks, findblock, findblockindex
-using ..SparseArrayInterface: stored_indices
 
 function cartesianindices(axes::Tuple, b::Block)
   return CartesianIndices(ntuple(dim -> axes[dim][Tuple(b)[dim]], length(axes)))
@@ -86,8 +126,19 @@ function blockindexrange(a::AbstractArray, I::CartesianIndices)
 end
 
 # Get the blocks the range spans across.
-function blockrange(axis::BlockedUnitRange, r::UnitRange)
+function blockrange(axis::AbstractUnitRange, r::UnitRange)
   return findblock(axis, first(r)):findblock(axis, last(r))
+end
+
+function blockrange(axis::AbstractUnitRange, r::Int)
+  error("Slicing with integer values isn't supported.")
+  return findblock(axis, r)
+end
+
+function blockrange(axis::AbstractUnitRange, r)
+  @show r
+  @show typeof(r)
+  return error("Not implemented")
 end
 
 function cartesianindices(a::AbstractArray, b::Block)
@@ -103,4 +154,41 @@ end
 
 function block_stored_indices(a::AbstractArray)
   return Block.(Tuple.(stored_indices(blocks(a))))
+end
+
+_block(indices) = block(indices)
+_block(indices::CartesianIndices) = Block(ntuple(Returns(1), ndims(indices)))
+
+function combine_axes(as::Vararg{Tuple})
+  @assert allequal(length.(as))
+  ndims = length(first(as))
+  return ntuple(ndims) do dim
+    dim_axes = map(a -> a[dim], as)
+    return reduce(BlockArrays.combine_blockaxes, dim_axes)
+  end
+end
+
+# Returns `BlockRange`
+# Convert the block of the axes to blocks of the subaxes.
+function subblocks(axes::Tuple, subaxes::Tuple, block::Block)
+  @assert length(axes) == length(subaxes)
+  return BlockRange(
+    ntuple(length(axes)) do dim
+      findblocks(subaxes[dim], axes[dim][Tuple(block)[dim]])
+    end,
+  )
+end
+
+# Returns `Vector{<:Block}`
+function subblocks(axes::Tuple, subaxes::Tuple, blocks)
+  return mapreduce(vcat, blocks; init=eltype(blocks)[]) do block
+    return vec(subblocks(axes, subaxes, block))
+  end
+end
+
+# Returns `Vector{<:CartesianIndices}`
+function blocked_cartesianindices(axes::Tuple, subaxes::Tuple, blocks)
+  return map(subblocks(axes, subaxes, blocks)) do block
+    return cartesianindices(subaxes, block)
+  end
 end

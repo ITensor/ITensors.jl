@@ -14,7 +14,7 @@ Base.axes(::AbstractBlockSparseArray) = error("Not implemented")
 
 blockstype(::Type{<:AbstractBlockSparseArray}) = error("Not implemented")
 
-# Specialized in order to fix ambiguity error with `BlockArrays`.
+## # Specialized in order to fix ambiguity error with `BlockArrays`.
 function Base.getindex(a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}) where {N}
   return blocksparse_getindex(a, I...)
 end

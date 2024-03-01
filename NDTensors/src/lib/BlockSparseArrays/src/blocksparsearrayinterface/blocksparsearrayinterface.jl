@@ -9,7 +9,7 @@ using BlockArrays:
   blocklengths,
   findblockindex
 using ..SparseArrayInterface: perm, iperm, nstored
-using MappedArrays: mappedarray
+## using MappedArrays: mappedarray
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
@@ -90,15 +90,33 @@ end
 
 # BlockArrays
 
+using ..SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
+
+# Represents the array of arrays of a `SubArray`
+# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
+struct SparsePermutedDimsArrayBlocks{T,N,Array<:PermutedDimsArray{T,N}} <:
+       AbstractSparseArray{T,N}
+  array::Array
+end
 function blocksparse_blocks(a::PermutedDimsArray)
-  blocks_parent = blocks(parent(a))
-  # Lazily permute each block
-  blocks_parent_mapped = mappedarray(
-    Base.Fix2(PermutedDimsArray, perm(a)),
-    Base.Fix2(PermutedDimsArray, iperm(a)),
-    blocks_parent,
+  return SparsePermutedDimsArrayBlocks(a)
+end
+_perm(::PermutedDimsArray{<:Any,<:Any,P}) where {P} = P
+_getindices(t::Tuple, indices) = map(i -> t[i], indices)
+_getindices(i::CartesianIndex, indices) = CartesianIndex(_getindices(Tuple(i), indices))
+function SparseArrayInterface.stored_indices(a::SparsePermutedDimsArrayBlocks)
+  return map(I -> _getindices(I, _perm(a.array)), stored_indices(blocks(parent(a.array))))
+end
+function Base.size(a::SparsePermutedDimsArrayBlocks)
+  return _getindices(size(blocks(parent(a.array))), _perm(a.array))
+end
+function Base.getindex(a::SparsePermutedDimsArrayBlocks, index::Vararg{Int})
+  return PermutedDimsArray(
+    blocks(parent(a.array))[_getindices(index, _perm(a.array))...], _perm(a.array)
   )
-  return PermutedDimsArray(blocks_parent_mapped, perm(a))
+end
+function SparseArrayInterface.sparse_storage(a::SparsePermutedDimsArrayBlocks)
+  return error("Not implemented")
 end
 
 # TODO: Move to `BlockArraysExtensions`.
@@ -121,47 +139,48 @@ function blockindices(axis::AbstractUnitRange, block::Block, indices)
   return only(blockindexrange(axis, indices_within_block).indices)
 end
 
-using ..SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
-
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
-struct SubBlocks{T,N,Array<:SubArray{T,N}} <: AbstractSparseArray{T,N}
+struct SparseSubArrayBlocks{T,N,Array<:SubArray{T,N}} <: AbstractSparseArray{T,N}
   array::Array
 end
-function Base.axes(a::SubBlocks)
+# TODO: Define this as `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
+function blockrange(a::SparseSubArrayBlocks)
   blockranges = blockrange.(axes(parent(a.array)), a.array.indices)
   return map(blockrange -> Int.(blockrange), blockranges)
 end
-function SparseArrayInterface.stored_indices(a::SubBlocks)
+function Base.axes(a::SparseSubArrayBlocks)
+  return Base.OneTo.(length.(blockrange(a)))
+end
+function Base.size(a::SparseSubArrayBlocks)
+  return length.(axes(a))
+end
+function SparseArrayInterface.stored_indices(a::SparseSubArrayBlocks)
   return stored_indices(view(blocks(parent(a.array)), axes(a)...))
 end
-function Base.getindex(a::SubBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
-  parent_blocks = view(blocks(parent(a.array)), axes(a)...)
-  return parent_blocks[blockindices(parent(a.array), Block(Tuple(I)), a.array.indices)...]
+function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
+  return a[Tuple(I)...]
 end
-function SparseArrayInterface.sparse_storage(a::SubBlocks)
-  error()
-  # TODO: This also needs to slice the blocks!
-  return view(blocks(parent(a.array)), axes(a)...)
+function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
+  parent_blocks = @view blocks(parent(a.array))[axes(a)...]
+  parent_block = parent_blocks[I...]
+  # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
+  block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
+  return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
+end
+function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N}) where {N}
+  parent_blocks = view(blocks(parent(a.array)), axes(a)...)
+  return parent_blocks[I...][blockindices(parent(a.array), Block(I), a.array.indices)...] =
+    value
+end
+function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
+  # TODO: Implement this properly.
+  return true
+end
+function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
+  return error("Not implemented")
 end
 
 function blocksparse_blocks(a::SubArray)
-  return SubBlocks(a)
-  error()
-  # First slice blockwise.
-  blockranges = blockrange.(axes(parent(a)), a.indices)
-  # Then slice the blocks.
-  sliced_blocks = map(stored_indices(blocks(parent(a)))) do index
-    tuple_index = Tuple(index)
-    block = Block(tuple_index)
-    return view(
-      blocks(parent(a))[tuple_index...], blockindices(parent(a), block, a.indices)...
-    )
-  end
-  # TODO: Use a `set_data` function, or some kind of `similar` or `zero` method?
-  blocks_a_sub = SparseArrayDOK(
-    sliced_blocks, size(blocks(parent(a))), blocks(parent(a)).zero
-  )
-  # TODO: Avoid copying, use a view?
-  return blocks_a_sub[map(blockrange -> Int.(blockrange), blockranges)...]
+  return SparseSubArrayBlocks(a)
 end

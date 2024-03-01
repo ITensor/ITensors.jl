@@ -10,6 +10,11 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 @testset "BlockSparseArraysGradedAxesExt (eltype=$elt)" for elt in elts
   d1 = gradedrange([U1(0) => 1, U1(1) => 1])
   d2 = gradedrange([U1(1) => 1, U1(0) => 1])
+
+  ## using BlockArrays: blockedrange
+  ## d1 = blockedrange([1, 1])
+  ## d2 = blockedrange([2, 2])
+
   a = BlockSparseArray{elt}(d1, d2, d1, d2)
   for i in 1:minimum(blocksize(a))
     b = Block(i, i, i, i)
