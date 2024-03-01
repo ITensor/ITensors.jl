@@ -17,8 +17,6 @@ using ..SparseArrayInterface: stored_indices
 
 # Outputs a `BlockUnitRange`.
 function sub_unitrange(a::AbstractUnitRange, indices)
-  @show indices
-  @show typeof(indices)
   return error("Not implemented")
 end
 
@@ -26,24 +24,16 @@ end
 # TODO: Write a generic version for blocked unit ranges (like `GradedAxes`).
 # Outputs a `BlockUnitRange`.
 function sub_unitrange(a::AbstractUnitRange, indices::AbstractUnitRange)
-  @show typeof(indices)
   indices = sort(indices)
-  br = blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
-  @show typeof(br)
-  return br
+  return blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
 end
 
 # Outputs a `BlockUnitRange`.
 function sub_unitrange(a::AbstractUnitRange, indices::Vector{<:Block})
-  @show indices
-  @show [a[index] for index in indices]
   return error("Not implemented")
 end
 
 function sub_unitrange(a::AbstractUnitRange, indices::BlockVector{<:Block})
-  println("TEST")
-  @show indices
-  @show [a[index] for index in indices]
   return blockedrange([length(a[index]) for index in indices])
 end
 
@@ -136,8 +126,6 @@ function blockrange(axis::AbstractUnitRange, r::Int)
 end
 
 function blockrange(axis::AbstractUnitRange, r)
-  @show r
-  @show typeof(r)
   return error("Not implemented")
 end
 
