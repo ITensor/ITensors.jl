@@ -22,9 +22,9 @@ function gradedrange(sectors_lengths::Vector{<:Pair{<:Any,Int}}, isdual=false)
   return gradedrange(first.(sectors_lengths), last.(sectors_lengths), isdual)
 end
 
-function gradedrange(a::BlockedUnitRange, nondual_sectors::Vector, isdual=false)
-  if length(nondual_sectors) != length(blocks(a))
-    throw(DomainError("BlockedUnitRange and sectors lengths do not match"))
+function gradedrange(nondual_sectors::Vector, a::BlockedUnitRange, isdual=false)
+  if length(nondual_sectors) != length(blocks(a)) != length(nondual_sectors)
+    throw(DomainError("Number of sectors and number of blocks do not match"))
   end
   return GradedUnitRange(a, nondual_sectors, isdual)
 end
