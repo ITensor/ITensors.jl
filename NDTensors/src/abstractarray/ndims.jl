@@ -1,6 +1,6 @@
 ## NDTensors.ndims (not imported from Base)
 using .TypeParameterAccessors:
-  TypeParameterAccessors, Self, type_parameter, set_ndims, set_parameter
+  TypeParameterAccessors, Self, type_parameter, set_ndims, set_type_parameter
 
 ndims((array::AbstractArray)) = ndims(typeof(array))
 ndims(arraytype::Type{<:AbstractArray}) = type_parameter(arraytype, Base.ndims)

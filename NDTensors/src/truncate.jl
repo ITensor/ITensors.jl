@@ -1,6 +1,7 @@
+using .TypeParameterAccessors: unwrap_array_type
 ## TODO write Exposed version of truncate
 function truncate!!(P::AbstractArray; kwargs...)
-  return truncate!!(unwrap_type(P), P; kwargs...)
+  return truncate!!(unwrap_array_type(P), P; kwargs...)
 end
 
 # CPU version.
@@ -13,7 +14,7 @@ end
 function truncate!!(::Type{<:AbstractArray}, P::AbstractArray; kwargs...)
   P_cpu = cpu(P)
   truncerr, docut = truncate!(P_cpu; kwargs...)
-  P = adapt(unwrap_type(P), P_cpu)
+  P = adapt(unwrap_array_type(P), P_cpu)
   return P, truncerr, docut
 end
 

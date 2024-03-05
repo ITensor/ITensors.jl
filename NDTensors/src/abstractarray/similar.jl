@@ -1,6 +1,6 @@
 ## todo working on this still
 using .TypeParameterAccessors:
-  IsWrappedArray, set_eltype, specify_default_parameters, unwrap_array_type
+  IsWrappedArray, set_eltype, unwrap_array_type
 
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.

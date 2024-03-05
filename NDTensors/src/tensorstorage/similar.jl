@@ -1,3 +1,4 @@
+using .TypeParameterAccessors: TypeParameterAccessors, set_parenttype
 # NDTensors.similar
 similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(data(storage)))
 
@@ -77,3 +78,5 @@ function similartype(storagetype::Type{<:TensorStorage}, dims::Tuple)
     length(dims),
   )
 end
+
+set_datatype(storagetype::Type{<:TensorStorage}, param) = set_parenttype(storagetype, param)
