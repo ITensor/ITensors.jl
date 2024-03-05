@@ -1,4 +1,5 @@
-using .TypeParameterAccessors: TypeParameterAccessors, Position, parameter, parenttype, set_type_parameter
+using .TypeParameterAccessors:
+  TypeParameterAccessors, Position, parameter, parenttype, set_type_parameter
 
 TypeParameterAccessors.position(::Type{<:Block}, ::typeof(Base.ndims)) = Position(1);
 NDTensors.ndims(type::Type{<:Block}) = parameter(type, Base.ndims)

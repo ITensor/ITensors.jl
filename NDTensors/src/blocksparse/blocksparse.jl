@@ -109,7 +109,9 @@ Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
 
 complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
 
-dense(type::Type{<:BlockSparse}) = Dense{type_parameter(type, eltype),type_parameter(type, parenttype)}
+function dense(type::Type{<:BlockSparse})
+  return Dense{type_parameter(type, eltype),type_parameter(type, parenttype)}
+end
 
 can_contract(T1::Type{<:Dense}, T2::Type{<:BlockSparse}) = false
 can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
