@@ -1,6 +1,7 @@
 #
 # BlockSparseTensor (Tensor using BlockSparse storage)
 #
+using .TypeParameterAccessors: unwrap_array_type
 
 const BlockSparseTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
@@ -260,7 +261,7 @@ function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) wh
   newoffset = nnz(T)
   insert!(blockoffsets(T), newblock, newoffset)
   # Insert new block into data
-  new_data = generic_zeros(unwrap_type(T), newdim)
+  new_data = generic_zeros(unwrap_array_type(T), newdim)
   # TODO: `append!` is broken on `Metal` since `resize!`
   # isn't implemented.
   append!(data(T), new_data)
@@ -465,7 +466,7 @@ function permutedims_combine_output(
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb, comb_ind_loc, blockcomb)
 
-  return BlockSparseTensor(unwrap_type(T), blocks_perm_comb, is)
+  return BlockSparseTensor(unwrap_array_type(T), blocks_perm_comb, is)
 end
 
 function permutedims_combine(
@@ -606,7 +607,7 @@ function uncombine_output(
   blocks_uncomb_perm = perm_blocks(blocks_uncomb, combdim, invperm(blockperm))
   boffs_uncomb_perm, nnz_uncomb_perm = blockoffsets(blocks_uncomb_perm, inds_uncomb_perm)
   T_uncomb_perm = tensor(
-    BlockSparse(unwrap_type(T), boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
+    BlockSparse(unwrap_array_type(T), boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
   )
   R = reshape(T_uncomb_perm, is)
   return R

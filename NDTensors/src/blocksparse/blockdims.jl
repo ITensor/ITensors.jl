@@ -1,3 +1,4 @@
+using .TypeParameterAccessors: TypeParameterAccessors, Position
 """
     BlockDim
 
@@ -17,6 +18,8 @@ Each entry lists the block sizes in each dimension.
 const BlockDims{N} = NTuple{N,BlockDim}
 
 Base.ndims(ds::Type{<:BlockDims{N}}) where {N} = N
+NDTensors.ndims(ds::Type{<:BlockDims}) = Base.ndims(ds)
+NDTensors.ndims(ds::BlockDims) = Base.ndims(typeof(ds))
 
 similartype(::Type{<:BlockDims}, ::Type{Val{N}}) where {N} = BlockDims{N}
 

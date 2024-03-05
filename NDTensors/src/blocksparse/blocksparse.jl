@@ -1,6 +1,7 @@
 #
 # BlockSparse storage
 #
+using .TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
 
 struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
@@ -15,17 +16,9 @@ end
 # TODO: Implement as `fieldtype(storagetype, :data)`.
 datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
 # TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+
 # TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
 blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
-
-function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
-  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
-end
-
-function SetParameters.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
-  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
-end
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
 BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
@@ -82,7 +75,8 @@ end
 #
 # Random
 #
-
+## TODO can this be migrated to `generic_randn` ? I think that would require some 
+## Index analysis.
 function randn(
   StorageT::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
 ) where {ElT<:Number}
@@ -108,19 +102,14 @@ function copyto!(D1::BlockSparse, D2::BlockSparse)
   return D1
 end
 
+## TODO use set_eltype
+## how does this work properly if we aren't converting the eltype of 
+## the parenttype
 Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
 
 complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
 
-ndims(::BlockSparse{T,V,N}) where {T,V,N} = N
-
-eltype(::BlockSparse{T}) where {T} = eltype(T)
-# This is necessary since for some reason inference doesn't work
-# with the more general definition (eltype(Nothing) === Any)
-eltype(::BlockSparse{Nothing}) = Nothing
-eltype(::Type{BlockSparse{T}}) where {T} = eltype(T)
-
-dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
+dense(type::Type{<:BlockSparse}) = Dense{type_parameter(type, eltype),type_parameter(type, parenttype)}
 
 can_contract(T1::Type{<:Dense}, T2::Type{<:BlockSparse}) = false
 can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
