@@ -4,7 +4,9 @@ using NDTensors.UnspecifiedTypes: UnspecifiedArray, UnspecifiedNumber, Unspecifi
 TypeParameterAccessors.parameter(::Type{<:AbstractFill}, ::typeof(axestype)) = Position(3)
 TypeParameterAccessors.parameter(::Type{<:AbstractFill}, ::typeof(alloctype)) = Position(4)
 ## TODO this is broken and need to define for UnallocatedArray
-TypeParameterAccessors.default_type_parameters(::Type{<:AbstractFill}) = (Float64, 0, Tuple{})
+function TypeParameterAccessors.default_type_parameters(::Type{<:AbstractFill})
+  return (Float64, 0, Tuple{})
+end
 
 # ## default parameters
 # function SetParameters.default_parameter(::Type{<:UnallocatedArray}, ::Position{4})
