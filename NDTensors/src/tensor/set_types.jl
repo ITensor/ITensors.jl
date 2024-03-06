@@ -5,7 +5,7 @@ using .TypeParameterAccessors:
   set_parenttype,
   set_type_parameter,
   set_type_parameters
-function SetParameters.set_ndims(arraytype::Type{<:Tensor}, ndims)
+function TypeParameterAccessors.set_ndims(arraytype::Type{<:Tensor}, ndims)
   # TODO: Implement something like:
   # ```julia
   # return set_storagetype(arraytype, set_ndims(storagetype(arraytype), ndims))
