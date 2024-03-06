@@ -9,8 +9,6 @@ end
 
 alloctype(Atype::Type{<:AbstractFill}) = type_parameter(Atype, alloctype)
 axestype(Atype::Type{<:AbstractFill}) = type_parameter(Atype, axestype)
-TypeParameterAccessors.parameter(::Type{<:AbstractFill}, ::typeof(axestype)) = Position(3)
-TypeParameterAccessors.parameter(::Type{<:AbstractFill}, ::typeof(alloctype)) = Position(4)
 ## TODO this fails if the parameter is a type
 
 set_axestype(T::Type{<:AbstractFill}, ax::Type) = set_type_parameters(T,  axestype, ax)
