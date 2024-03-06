@@ -46,5 +46,5 @@ function TypeParameterAccessors.position(::Type{<:DenseTensor}, ::typeof(Base.nd
 end
 
 function TypeParameterAccessors.set_ndims(type::Type{<:DenseTensor}, N)
-  return set_parameter(type, Base.ndims, N)
+  return set_type_parameter(type, Base.ndims, N)
 end
