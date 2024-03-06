@@ -1,5 +1,5 @@
 using FillArrays: FillArrays, getindex_value
-using NDTensors.SetParameters: set_eltype, set_ndims
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position, set_eltype, set_ndims, set_type_parameter
 using Adapt: adapt
 
 const UnallocatedArray{ElT,N,AxesT,AllocT} = Union{
@@ -24,8 +24,9 @@ function Base.adjoint(a::UnallocatedArray)
   return set_alloctype(adjoint(parent(a)), alloctype(a))
 end
 
+## TODO name Position{4}() alloc
 function set_alloctype(T::Type{<:UnallocatedArray}, alloc::Type{<:AbstractArray})
-  return set_parameters(T, Position{4}(), alloc)
+  return set_type_parameter(T, alloctype, alloc)
 end
 
 ## This overloads the definition defined in `FillArrays.jl`

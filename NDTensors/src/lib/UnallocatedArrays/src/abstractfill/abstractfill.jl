@@ -1,5 +1,5 @@
 using FillArrays: AbstractFill
-using NDTensors.SetParameters: Position, get_parameter, set_parameters
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position, type_parameter, set_type_parameters
 ## Here are functions specifically defined for UnallocatedArrays
 ## not implemented by FillArrays
 ## TODO this might need a more generic name maybe like compute unit
@@ -7,9 +7,10 @@ function alloctype(A::AbstractFill)
   return A.alloc
 end
 
+alloctype(Atype::Type{<:AbstractFill}) = type_parameter(Atype, alloctype)
+axestype(Atype::Type{<:AbstractFill}) = type_parameter(Atype, axestype)
+TypeParameterAccessors.parameter(::Type{<:AbstractFill}, ::typeof(axestype)) = Position(3)
+TypeParameterAccessors.parameter(::Type{<:AbstractFill}, ::typeof(alloctype)) = Position(4)
 ## TODO this fails if the parameter is a type
-function alloctype(Atype::Type{<:AbstractFill})
-  return get_parameter(Atype, Position{4}())
-end
 
-set_axestype(T::Type{<:AbstractFill}, ax::Type) = set_parameters(T, Position{3}(), ax)
+set_axestype(T::Type{<:AbstractFill}, ax::Type) = set_type_parameters(T,  axestype, ax)
