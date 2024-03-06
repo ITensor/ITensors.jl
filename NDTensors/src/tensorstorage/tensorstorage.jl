@@ -2,14 +2,7 @@ abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
 data(S::TensorStorage) = S.data
 
-datatype(::Type{<:TensorStorage}) = error("Not implemented")
-
-datatype(S::TensorStorage) = typeof(data(S))
-
-Base.eltype(::TensorStorage{ElT}) where {ElT} = ElT
 scalartype(T::TensorStorage) = eltype(T)
-
-Base.eltype(::Type{<:TensorStorage{ElT}}) where {ElT} = ElT
 
 Base.iterate(S::TensorStorage, args...) = iterate(data(S), args...)
 
@@ -65,6 +58,7 @@ function copyto!(S1::TensorStorage, S2::TensorStorage)
   return S1
 end
 
+## TODO Should this use generic_randn?
 Random.randn!(S::TensorStorage) = randn!(Random.default_rng(), S)
 Random.randn!(rng::AbstractRNG, S::TensorStorage) = (randn!(rng, data(S)); S)
 
