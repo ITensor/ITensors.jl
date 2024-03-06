@@ -1,3 +1,4 @@
+using .TypeParameterAccessors: TypeParameterAccessors, Position, parenttype, set_parenttype, set_type_parameter, set_type_parameters
 function SetParameters.set_ndims(arraytype::Type{<:Tensor}, ndims)
   # TODO: Implement something like:
   # ```julia
@@ -17,8 +18,11 @@ end
 # TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
 # TODO: Make a version that accepts `indstype::Type`?
 function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
-  return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
+  N = length(inds)
+  return set_type_parameters(tensortype, (Base.ndims, indstype), (N, typeof(inds)))
 end
 
-Unwrap.parenttype(tensortype::Type{<:Tensor}) = storagetype(tensortype)
-Unwrap.parenttype(storagetype::Type{<:TensorStorage}) = datatype(storagetype)
+TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(eltype)) = Position(1)
+TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(Base.ndims)) = Position(2)
+TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(parenttype)) = Position(3)
+TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(indstype)) = Position(4)
