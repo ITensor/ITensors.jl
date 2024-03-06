@@ -13,12 +13,7 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
-# TODO: Implement as `fieldtype(storagetype, :data)`.
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
-# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-
-# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
-blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
+## BlockSparse constructors
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
 BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
@@ -67,6 +62,8 @@ end
 
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
+## End blocksparse constructors
+
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, copy(blockoffsets(B)))
 function setdata(storagetype::Type{<:BlockSparse}, data)
   return error("Not implemented, must specify block offsets as well")
@@ -101,13 +98,6 @@ function copyto!(D1::BlockSparse, D2::BlockSparse)
   copyto!(expose(data(D1)), expose(data(D2)))
   return D1
 end
-
-## TODO use set_eltype
-## how does this work properly if we aren't converting the eltype of 
-## the parenttype
-Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
-
-complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
 
 function dense(type::Type{<:BlockSparse})
   return Dense{type_parameter(type, eltype),type_parameter(type, parenttype)}

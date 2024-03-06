@@ -9,6 +9,8 @@ const BlockSparseTensor{ElT,N,StoreT,IndsT} =
 
 nonzeros(T::Tensor) = data(T)
 
+## BlockSparseTensor constructors
+
 function BlockSparseTensor(
   ::Type{ElT}, ::UndefInitializer, boffs::BlockOffsets, inds
 ) where {ElT<:Number}
@@ -128,21 +130,23 @@ function BlockSparseTensor(
   return tensor(storage, inds)
 end
 
-#complex(::Type{BlockSparseTensor{ElT,N,StoreT,IndsT}}) where {ElT<:Number,N,StoreT<:BlockSparse
-#  = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
+"""
+BlockSparseTensor(blocks::Vector{Block{N}},
+                  inds::BlockDims...)
 
-function randn(
-  TensorT::Type{<:BlockSparseTensor{ElT,N}}, blocks::Vector{<:BlockT}, inds
-) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
-  return randn(Random.default_rng(), TensorT, blocks, inds)
+Construct a block sparse tensor with the specified blocks.
+Defaults to setting structurally non-zero blocks to zero.
+"""
+function BlockSparseTensor(
+  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
+) where {BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
+  return BlockSparseTensor(blocks, inds)
 end
 
-function randn(
-  rng::AbstractRNG, ::Type{<:BlockSparseTensor{ElT,N}}, blocks::Vector{<:BlockT}, inds
-) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
-  boffs, nnz = blockoffsets(blocks, inds)
-  storage = randn(rng, BlockSparse{ElT}, boffs, nnz)
-  return tensor(storage, inds)
+function BlockSparseTensor{ElT}(
+  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
+) where {ElT<:Number,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
+  return BlockSparseTensor(ElT, blocks, inds)
 end
 
 function randomBlockSparseTensor(
@@ -165,42 +169,10 @@ function randomBlockSparseTensor(rng::AbstractRNG, blocks::Vector, inds)
   return randomBlockSparseTensor(rng, default_eltype(), blocks, inds)
 end
 
-"""
-BlockSparseTensor(blocks::Vector{Block{N}},
-                  inds::BlockDims...)
+## End BlockSparseTensor constructors
 
-Construct a block sparse tensor with the specified blocks.
-Defaults to setting structurally non-zero blocks to zero.
-"""
-function BlockSparseTensor(
-  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
-) where {BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
-  return BlockSparseTensor(blocks, inds)
-end
-
-function BlockSparseTensor{ElT}(
-  blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
-) where {ElT<:Number,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
-  return BlockSparseTensor(ElT, blocks, inds)
-end
-
-function zeros(
-  tensor::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
-) where {ElT,N}
-  return BlockSparseTensor(datatype(tensor), blockoffsets, inds)
-end
-
-function zeros(
-  tensortype::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
-) where {ElT,N}
-  return BlockSparseTensor(datatype(tensortype), blockoffsets, inds)
-end
-
-function zeros(tensortype::Type{<:BlockSparseTensor}, inds)
-  return BlockSparseTensor(datatype(tensortype), inds)
-end
-
-zeros(tensor::BlockSparseTensor, inds) = zeros(typeof(tensor), inds)
+#complex(::Type{BlockSparseTensor{ElT,N,StoreT,IndsT}}) where {ElT<:Number,N,StoreT<:BlockSparse
+#  = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
 # Basic functionality for AbstractArray interface
 IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
