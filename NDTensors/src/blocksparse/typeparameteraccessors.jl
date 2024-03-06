@@ -14,6 +14,10 @@ NDTensors.ndims(boffs::BlockOffsets) = ndims(typeof(boffs))
 TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(eltype)) = Position(1)
 TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(parenttype)) = Position(2)
 TypeParameterAccessors.position(::Type{<:BlockSparse}, ::typeof(Base.ndims)) = Position(3)
+
+TypeParameterAccessors.position(::Type{<:DiagBlockSparse}, ::typeof(eltype)) = Position(1)
+TypeParameterAccessors.position(::Type{<:DiagBlockSparse}, ::typeof(parenttype)) = Position(2)
+TypeParameterAccessors.position(::Type{<:DiagBlockSparse}, ::typeof(Base.ndims)) = Position(3)
 function NDTensors.set_ndims(storagetype::Type{<:BlockSparse}, param::Int)
   return set_type_parameter(storagetype, Base.ndims, param)
 end
