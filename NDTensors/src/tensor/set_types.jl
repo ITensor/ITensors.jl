@@ -1,4 +1,10 @@
-using .TypeParameterAccessors: TypeParameterAccessors, Position, parenttype, set_parenttype, set_type_parameter, set_type_parameters
+using .TypeParameterAccessors:
+  TypeParameterAccessors,
+  Position,
+  parenttype,
+  set_parenttype,
+  set_type_parameter,
+  set_type_parameters
 function SetParameters.set_ndims(arraytype::Type{<:Tensor}, ndims)
   # TODO: Implement something like:
   # ```julia
