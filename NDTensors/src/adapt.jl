@@ -36,6 +36,6 @@ function adapt_storagetype(to::Type{<:AbstractVector}, x::Type{<:TensorStorage})
 end
 
 ## TODO refactor this
-function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
-  return set_datatype(x, specify_parameters(set_ndims(to, 1), eltype(x)))
-end
+# function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
+#   return set_datatype(x, specify_parameters(set_ndims(to, 1), eltype(x)))
+# end
