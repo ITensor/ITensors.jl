@@ -96,6 +96,9 @@ fill!!(T::EmptyTensor{EmptyNumber}, α::Number) = _fill!!(eltype(α), T, α)
 
 isempty(::EmptyTensor) = true
 
+zero(type::Type{<:EmptyTensor}) = type
+zero(empty::EmptyTensor) = empty
+
 function zeros(T::TensorT) where {TensorT<:EmptyTensor}
   TensorR = fulltype(TensorT)
   return zeros(TensorR, inds(T))

@@ -54,6 +54,7 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; weight=true, k
   return dmrg(PMM, psi0, sweeps; kwargs...)
 end
 
+using NDTensors.TypeParameterAccessors: unwrap_array_type
 """
     dmrg(H::MPO, psi0::MPS; kwargs...)
     dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
@@ -251,7 +252,7 @@ function dmrg(
         ## into `DeviceMemory`. This conversion line is here temporarily to fix that problem when it arises
         ## Adapt is only called when using CUDA backend. CPU will work as implemented previously.
         phi::ITensor = if NDTensors.iscu(phi) && NDTensors.iscu(vecs[1])
-          adapt(set_eltype(unwrap_type(phi), eltype(vecs[1])), vecs[1])
+          adapt(set_eltype(unwrap_array_type(phi), eltype(vecs[1])), vecs[1])
         else
           vecs[1]
         end

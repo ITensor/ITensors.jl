@@ -1,4 +1,4 @@
-
+using .TypeParameterAccessors: unwrap_array_type
 const BlockSparseMatrix{ElT,StoreT,IndsT} = BlockSparseTensor{ElT,2,StoreT,IndsT}
 const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,StoreT,IndsT}
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
@@ -156,9 +156,9 @@ function svd(
   indsS = setindex(inds(T), dag(uind), 1)
   indsS = setindex(indsS, dag(vind), 2)
 
-  U = BlockSparseTensor(unwrap_type(T), undef, nzblocksU, indsU)
-  S = DiagBlockSparseTensor(set_eltype(unwrap_type(T), real(ElT)), undef, nzblocksS, indsS)
-  V = BlockSparseTensor(unwrap_type(T), undef, nzblocksV, indsV)
+  U = BlockSparseTensor(unwrap_array_type(T), undef, nzblocksU, indsU)
+  S = DiagBlockSparseTensor(set_eltype(unwrap_array_type(T), real(ElT)), undef, nzblocksS, indsS)
+  V = BlockSparseTensor(unwrap_array_type(T), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Ub, Sb, Vb = Us[n], Ss[n], Vs[n]
@@ -316,9 +316,9 @@ function LinearAlgebra.eigen(
   end
 
   D = DiagBlockSparseTensor(
-    set_ndims(set_eltype(unwrap_type(T), ElD), 1), undef, nzblocksD, indsD
+    set_ndims(set_eltype(unwrap_array_type(T), ElD), 1), undef, nzblocksD, indsD
   )
-  V = BlockSparseTensor(set_eltype(unwrap_type(T), ElV), undef, nzblocksV, indsV)
+  V = BlockSparseTensor(set_eltype(unwrap_array_type(T), ElV), undef, nzblocksV, indsV)
 
   for n in 1:nnzblocksT
     Db, Vb = Ds[n], Vs[n]
@@ -389,16 +389,16 @@ function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; positive=nothing)
     nzblocksX[n] = (UInt(n), blockT[2])
   end
 
-  Q = BlockSparseTensor(unwrap_type(T), undef, nzblocksQ, indsQ)
-  X = BlockSparseTensor(unwrap_type(T), undef, nzblocksX, indsX)
+  Q = BlockSparseTensor(unwrap_array_type(T), undef, nzblocksQ, indsQ)
+  X = BlockSparseTensor(unwrap_array_type(T), undef, nzblocksX, indsX)
 
   for n in 1:nnzblocksT
     copyto!(blockview(Q, nzblocksQ[n]), Qs[n])
     copyto!(blockview(X, nzblocksX[n]), Xs[n])
   end
 
-  Q = adapt(unwrap_type(T), Q)
-  X = adapt(unwrap_type(T), X)
+  Q = adapt(unwrap_array_type(T), Q)
+  X = adapt(unwrap_array_type(T), X)
   return Q, X
 end
 

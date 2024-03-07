@@ -190,8 +190,6 @@ import ITensors.NDTensors:
   addblock!,
   store
 
-using NDTensors.Unwrap: unwrap_type
-
 import ITensors.Ops: Prod, Sum, terms
 
 import Random: randn!

@@ -1,4 +1,5 @@
 using ..BaseExtensions: BaseExtensions
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, parenttype
 
 # Some of the interface is inspired by:
 # https://github.com/invenia/NamedDims.jl
@@ -15,9 +16,9 @@ dimnames(a::AbstractNamedDimsArray) = error("Not implemented")
 # Unwrapping the names
 Base.parent(::AbstractNamedDimsArray) = error("Not implemented")
 
-# TODO: Use `Unwrap`.
 # TODO: Use `SetParameters`.
-parenttype(::AbstractNamedDimsArray{<:Any,<:Any,Parent}) where {Parent} = Parent
+#parenttype(::AbstractNamedDimsArray{<:Any,<:Any,Parent}) where {Parent} = Parent
+TypeParameterAccessors.position(::Type{<:AbstractNamedDimsArray}, ::typeof(parenttype)) = TypeParameterAccessors.Position(3)
 
 # Set the names of an unnamed AbstractArray
 # `ndims(a) == length(names)`

@@ -1,5 +1,6 @@
 using .SetParameters:
   SetParameters, Position, get_parameters, specify_parameters, unspecify_parameters
+using .TypeParameterAccessors: TypeParameterAccessors, parenttype
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
   return Dense{eltype(datatype),datatype}
@@ -31,3 +32,5 @@ SetParameters.set_parameter(::Type{<:Dense}, ::Position{2}, P2) = Dense{<:Any,P2
 function SetParameters.set_parameter(::Type{<:Dense{P1}}, ::Position{2}, P2) where {P1}
   return Dense{P1,P2}
 end
+TypeParameterAccessors.position(::Type{<:Dense}, ::typeof(parenttype)) = TypeParameterAccessors.Position(2)
+TypeParameterAccessors.default_type_parameters(::Type{<:Dense}) = (Float64, Vector)
