@@ -1,5 +1,6 @@
 using SafeTestsets: @safetestset
 
+##TODO there is an issue with Metal and BlockSparse
 @safetestset "Downstream tests for ITensor DMRG" begin
   using Test: @testset
   include("TestITensorDMRG/TestITensorDMRG.jl")
