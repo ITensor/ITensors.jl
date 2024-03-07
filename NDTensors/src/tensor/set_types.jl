@@ -22,6 +22,10 @@ function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
 end
 
 TypeParameterAccessors.parenttype(tensortype::Type{<:Tensor}) = storagetype(tensortype)
-TypeParameterAccessors.parenttype(storagetype::Type{<:TensorStorage}) = datatype(storagetype)
+function TypeParameterAccessors.parenttype(storagetype::Type{<:TensorStorage})
+  return datatype(storagetype)
+end
 
-TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(parenttype)) = TypeParameterAccessors.Position(3)
+function TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(parenttype))
+  return TypeParameterAccessors.Position(3)
+end
