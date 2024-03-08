@@ -7,6 +7,7 @@ using BlockArrays:
   BlockedUnitRange,
   BlockVector,
   block,
+  blockaxes,
   blockedrange,
   blockindex,
   blocks,
@@ -29,8 +30,8 @@ function sub_unitrange(a::AbstractUnitRange, indices::AbstractUnitRange)
 end
 
 # Outputs a `BlockUnitRange`.
-function sub_unitrange(a::AbstractUnitRange, indices::Vector{<:Block})
-  return error("Not implemented")
+function sub_unitrange(a::AbstractUnitRange, indices::AbstractVector{<:Block})
+  return blockedrange([length(a[index]) for index in indices])
 end
 
 function sub_unitrange(a::AbstractUnitRange, indices::BlockVector{<:Block})
@@ -111,6 +112,18 @@ end
 function blockrange(axis::AbstractUnitRange, r::Int)
   error("Slicing with integer values isn't supported.")
   return findblock(axis, r)
+end
+
+function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Block{1}})
+  for b in r
+    @assert b ∈ blockaxes(axis, 1)
+  end
+  return r
+end
+
+using BlockArrays: BlockSlice
+function blockrange(axis::AbstractUnitRange, r::BlockSlice)
+  return blockrange(axis, r.block)
 end
 
 function blockrange(axis::AbstractUnitRange, r)

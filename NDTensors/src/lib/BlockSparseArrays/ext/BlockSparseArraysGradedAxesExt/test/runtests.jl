@@ -24,6 +24,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test Array(a) == a
     @test 2 * Array(a) == 2a
   end
+  # TODO: Add tests for various slicing operations.
   @testset "fusedims" begin
     d1 = gradedrange([U1(0) => 1, U1(1) => 1])
     d2 = gradedrange([U1(1) => 1, U1(0) => 1])

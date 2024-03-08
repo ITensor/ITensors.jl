@@ -120,6 +120,8 @@ function SparseArrayInterface.sparse_storage(a::SparsePermutedDimsArrayBlocks)
 end
 
 # TODO: Move to `BlockArraysExtensions`.
+# This takes a range of indices `indices` of array `a`
+# and maps it to the range of indices within block `block`.
 function blockindices(a::AbstractArray, block::Block, indices::Tuple)
   return blockindices(axes(a), block, indices)
 end
@@ -130,13 +132,30 @@ function blockindices(axes::Tuple, block::Block, indices::Tuple)
 end
 
 # TODO: Move to `BlockArraysExtensions`.
-function blockindices(axis::AbstractUnitRange, block::Block, indices)
+function blockindices(axis::AbstractUnitRange, block::Block, indices::AbstractUnitRange)
+  @show indices
+  error()
   indices_within_block = intersect(indices, axis[block])
   if iszero(length(indices_within_block))
     # Falls outside of block
     return 1:0
   end
   return only(blockindexrange(axis, indices_within_block).indices)
+end
+
+# This catches the case of `Vector{<:Block{1}}`.
+# `BlockRange` gets wrapped in a `BlockSlice`, which is handled properly
+#  by the version with `indices::AbstractUnitRange`.
+#  TODO: This should get fixed in a better way inside of `BlockArrays`.
+function blockindices(
+  axis::AbstractUnitRange, block::Block, indices::AbstractVector{<:Block{1}}
+)
+  error()
+  if block ∉ indices
+    # Falls outside of block
+    return 1:0
+  end
+  return Base.OneTo(length(axis[block]))
 end
 
 # Represents the array of arrays of a `SubArray`
@@ -162,7 +181,7 @@ function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) w
   return a[Tuple(I)...]
 end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
-  parent_blocks = @view blocks(parent(a.array))[axes(a)...]
+  parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
   parent_block = parent_blocks[I...]
   # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
   block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
@@ -174,6 +193,9 @@ function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N
     value
 end
 function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
+  if CartesianIndex(I) ∉ CartesianIndices(a)
+    return false
+  end
   # TODO: Implement this properly.
   return true
 end

@@ -14,6 +14,7 @@ const WrappedAbstractBlockSparseArray{T,N,A} = WrappedArray{
   T,N,<:AbstractBlockSparseArray,<:AbstractBlockSparseArray{T,N}
 }
 
+# TODO: Rename `AnyBlockSparseArray`.
 const BlockSparseArrayLike{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
@@ -27,6 +28,14 @@ end
 
 # BlockArrays `AbstractBlockArray` interface
 BlockArrays.blocks(a::BlockSparseArrayLike) = blocksparse_blocks(a)
+
+# Fix ambiguity error with `BlockArrays`
+using BlockArrays: BlockSlice
+function BlockArrays.blocks(
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{BlockSlice}}}
+)
+  return blocksparse_blocks(a)
+end
 
 # TODO: Use `TypeParameterAccessors`.
 function blockstype(arraytype::Type{<:WrappedAbstractBlockSparseArray})
@@ -51,6 +60,10 @@ end
 # TODO: Define `AnyBlockSparseMatrix`.
 function Base.getindex(a::BlockSparseArrayLike{<:Any,2}, I::Vararg{AbstractUnitRange,2})
   return ArrayLayouts.layout_getindex(a, I...)
+end
+
+function Base.isassigned(a::BlockSparseArrayLike, index::Vararg{Block})
+  return isassigned(blocks(a), Int.(index)...)
 end
 
 function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N}) where {N}
