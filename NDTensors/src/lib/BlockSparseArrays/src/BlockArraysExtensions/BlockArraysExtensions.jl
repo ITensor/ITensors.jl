@@ -79,7 +79,7 @@ function cartesianindices(axes::Tuple, b::Block)
 end
 
 # Get the range within a block.
-function blockindexrange(axis::BlockedUnitRange, r::UnitRange)
+function blockindexrange(axis::AbstractUnitRange, r::UnitRange)
   bi1 = findblockindex(axis, first(r))
   bi2 = findblockindex(axis, last(r))
   b = block(bi1)
@@ -90,25 +90,13 @@ function blockindexrange(axis::BlockedUnitRange, r::UnitRange)
   return b[i1:i2]
 end
 
-# Fallback for non-blocked ranges.
-function blockindexrange(axis::AbstractUnitRange, r::UnitRange)
-  return r
-end
-
 function blockindexrange(
-  axes::Tuple{Vararg{BlockedUnitRange,N}}, I::CartesianIndices{N}
+  axes::Tuple{Vararg{AbstractUnitRange,N}}, I::CartesianIndices{N}
 ) where {N}
   brs = blockindexrange.(axes, I.indices)
   b = Block(block.(brs))
   rs = map(br -> only(br.indices), brs)
   return b[rs...]
-end
-
-# Fallback for non-blocked ranges.
-function blockindexrange(
-  axes::Tuple{Vararg{AbstractUnitRange,N}}, I::CartesianIndices{N}
-) where {N}
-  return I
 end
 
 function blockindexrange(a::AbstractArray, I::CartesianIndices)
@@ -126,7 +114,7 @@ function blockrange(axis::AbstractUnitRange, r::Int)
 end
 
 function blockrange(axis::AbstractUnitRange, r)
-  return error("Not implemented")
+  return error("Slicing not implemented for range of type `$(typeof(r))`.")
 end
 
 function cartesianindices(a::AbstractArray, b::Block)

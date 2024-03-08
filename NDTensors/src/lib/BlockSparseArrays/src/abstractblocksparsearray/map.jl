@@ -60,6 +60,10 @@ function union_stored_blocked_cartesianindices(as::Vararg{AbstractArray})
   return ∪(stored_blocked_cartesianindices_as...)
 end
 
+# This is used by `map` to get the output axes.
+# This is type piracy, try to avoid this, maybe requires defining `map`.
+## Base.promote_shape(a1::Tuple{Vararg{BlockedUnitRange}}, a2::Tuple{Vararg{BlockedUnitRange}}) = combine_axes(a1, a2)
+
 function SparseArrayInterface.sparse_map!(
   ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
 )
@@ -83,10 +87,13 @@ end
 # function SparseArrayInterface.sparse_mapreduce(::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray})
 # end
 
-# Map
 function Base.map!(f, a_dest::AbstractArray, a_srcs::Vararg{BlockSparseArrayLike})
   sparse_map!(f, a_dest, a_srcs...)
   return a_dest
+end
+
+function Base.map(f, as::Vararg{BlockSparseArrayLike})
+  return f.(as...)
 end
 
 function Base.copy!(a_dest::AbstractArray, a_src::BlockSparseArrayLike)
