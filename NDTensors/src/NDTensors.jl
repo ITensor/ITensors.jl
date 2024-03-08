@@ -4,7 +4,6 @@ using Adapt
 using Base.Threads
 using Compat
 using Dictionaries
-using FLoops
 using Folds
 using GPUArraysCore
 using InlineStrings
@@ -26,6 +25,7 @@ for lib in [
   :UnspecifiedTypes,
   :Unwrap,
   :SetParameters,
+  :TypeParameterAccessors,
   :BroadcastMapConversion,
   :RankFactorization,
   :Sectors,

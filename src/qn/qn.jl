@@ -31,6 +31,8 @@ function -(qv::QNVal)
   return QNVal(name(qv), qn_mod(-val(qv), modulus(qv)), modulus(qv))
 end
 
+Base.zero(::Type{QNVal}) = QNVal()
+
 zero(qv::QNVal) = QNVal(name(qv), 0, modulus(qv))
 
 (dir::Arrow * qv::QNVal) = QNVal(name(qv), Int(dir) * val(qv), modulus(qv))
@@ -89,17 +91,15 @@ end
 QN(mqn::MQNStorage) = QN(QNStorage(mqn))
 QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
 
-function hash(obj::QN, h::UInt)
-  # TODO: use an MVector or SVector
-  # for performance here; put non-zero QNVals
-  # to front and slice when passing to hash
-  nzqv = QNVal[]
+function Base.hash(obj::QN, h::UInt)
+  out = h
   for qv in obj.data
     if val(qv) != 0
-      push!(nzqv, qv)
+      out = hash(qv, out)
     end
   end
-  return hash(nzqv, h)
+
+  return out
 end
 
 """
