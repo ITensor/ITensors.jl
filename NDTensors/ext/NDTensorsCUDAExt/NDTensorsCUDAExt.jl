@@ -2,7 +2,7 @@ module NDTensorsCUDAExt
 
 using NDTensors
 using NDTensors.SetParameters
-using NDTensors.Unwrap
+using NDTensors.Expose
 using Adapt
 using Functors
 using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!, svd

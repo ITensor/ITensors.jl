@@ -20,7 +20,7 @@ using Test: @testset
   "TypeParameterAccessors",
   "UnallocatedArrays",
   "UnspecifiedTypes",
-  "Unwrap",
+  "Expose",
 ]
   include(joinpath(pkgdir(NDTensors), "src", "lib", lib, "test", "runtests.jl"))
 end

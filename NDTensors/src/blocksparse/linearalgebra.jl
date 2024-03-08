@@ -337,7 +337,7 @@ function LinearAlgebra.eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-Unwrap.ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
+Expose.ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
 qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #
 #  Generic function to implelement blocks sparse qr/ql decomposition.  It calls

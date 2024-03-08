@@ -3,7 +3,7 @@ using .DiagonalArrays: DiagIndex, diaglength
 using .TypeParameterAccessors: unwrap_array_type
 
 # TODO: Move to a different file.
-Unwrap.parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
+Expose.parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
 
 # TODO: Move to a different file.
 function promote_rule(

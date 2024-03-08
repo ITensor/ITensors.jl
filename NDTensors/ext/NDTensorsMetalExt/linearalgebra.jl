@@ -5,16 +5,16 @@ function LinearAlgebra.qr(A::Exposed{<:MtlMatrix})
   return adapt(unwrap_array_type(A), Matrix(Q)), adapt(unwrap_array_type(A), R)
 end
 
-function NDTensors.Unwrap.qr_positive(A::Exposed{<:MtlMatrix})
+function NDTensors.Expose.qr_positive(A::Exposed{<:MtlMatrix})
   Q, R = qr_positive(expose(NDTensors.cpu(A)))
   return adapt(unwrap_array_type(A), Matrix(Q)), adapt(unwrap_array_type(A), R)
 end
 
-function NDTensors.Unwrap.ql(A::Exposed{<:MtlMatrix})
+function NDTensors.Expose.ql(A::Exposed{<:MtlMatrix})
   Q, L = ql(expose(NDTensors.cpu(A)))
   return adapt(unwrap_array_type(A), Matrix(Q)), adapt(unwrap_array_type(A), L)
 end
-function NDTensors.Unwrap.ql_positive(A::Exposed{<:MtlMatrix})
+function NDTensors.Expose.ql_positive(A::Exposed{<:MtlMatrix})
   Q, L = ql_positive(expose(NDTensors.cpu(A)))
   return adapt(unwrap_array_type(A), Matrix(Q)), adapt(unwrap_array_type(A), L)
 end

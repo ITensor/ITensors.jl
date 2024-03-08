@@ -1,6 +1,6 @@
-using .Unwrap: Exposed, unexpose
+using .Expose: Exposed, unexpose
 
-# TODO: Move to `Unwrap` module.
+# TODO: Move to `Expose` module.
 # Create the Exposed version of Base.permutedims
 function permutedims(E::Exposed{<:Array}, perm)
   ## Creating Mperm here to evaluate the permutation and

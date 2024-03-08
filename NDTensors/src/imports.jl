@@ -3,7 +3,7 @@
 # similar to:
 # https://github.com/JuliaGPU/KernelAbstractions.jl
 # https://github.com/oschulz/HeterogeneousComputing.jl
-using .Unwrap: cpu
+using .Expose: cpu
 
 import Base:
   # Types

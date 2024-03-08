@@ -6,7 +6,7 @@ using .RankFactorization: Spectrum
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
-import .Unwrap: qr_positive, ql, ql_positive
+import .Expose: qr_positive, ql, ql_positive
 
 function (
   T1::Tensor{ElT1,2,StoreT1} * T2::Tensor{ElT2,2,StoreT2}
@@ -318,7 +318,7 @@ function qr(T::DenseTensor{<:Any,2}; positive=false)
   return qx(qxf, T)
 end
 
-# NDTensors.Unwrap.ql
+# NDTensors.Expose.ql
 function ql(T::DenseTensor{<:Any,2}; positive=false)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T)
@@ -356,7 +356,7 @@ end
 #
 # Just flip signs between Q and R to get all the diagonals of R >=0.
 # For rectangular M the indexing for "diagonal" is non-trivial.
-# NDTensors.Unwrap.qr_positive and # NDTensors.Unwrap.ql_positive
+# NDTensors.Expose.qr_positive and # NDTensors.Expose.ql_positive
 #
 """
     qr_positive(M::AbstractMatrix)
