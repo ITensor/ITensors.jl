@@ -93,7 +93,6 @@ end
 
 using .TypeParameterAccessors: TypeParameterAccessors
 TypeParameterAccessors.parenttype(empty::Type{<:EmptyStorage}) = storagetype(empty)
-zero(type::Type{<:EmptyStorage}) = type
 zero(empty::EmptyStorage) = empty
 # XXX: this seems a bit strange and fragile?
 # Takes the type very literally.
