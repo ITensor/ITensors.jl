@@ -1,4 +1,5 @@
-using BlockArrays: BlockArrays, Block, BlockRange, BlockedUnitRange, blockedrange
+using BlockArrays:
+  BlockArrays, Block, BlockRange, BlockedUnitRange, blockedrange, blocklength
 
 struct GradedUnitRange{T,S} <: AbstractGradedUnitRange{T,S}
   blockedrange::BlockedUnitRange{T}
@@ -23,7 +24,7 @@ function gradedrange(sectors_lengths::Vector{<:Pair{<:Any,Int}}, isdual=false)
 end
 
 function gradedrange(nondual_sectors::Vector, a::BlockedUnitRange, isdual=false)
-  if length(nondual_sectors) != length(blocks(a)) != length(nondual_sectors)
+  if length(nondual_sectors) != blocklength(a)
     throw(DomainError("Number of sectors and number of blocks do not match"))
   end
   return GradedUnitRange(a, nondual_sectors, isdual)
