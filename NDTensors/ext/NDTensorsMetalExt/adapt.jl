@@ -7,6 +7,6 @@ end
 # More general than the version in Metal.jl
 function Adapt.adapt_storage(arraytype::Type{<:MtlArray}, xs::AbstractArray)
   params = get_parameters(xs)
-  arraytype_specified = specify_parameters(arraytype, params[1], params[2], params[3:end])
+  arraytype_specified = specify_parameters(arraytype, params...)
   return isbitstype(typeof(xs)) ? xs : convert(arraytype_specified, xs)
 end
