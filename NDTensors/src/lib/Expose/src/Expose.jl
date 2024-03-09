@@ -5,7 +5,7 @@ using Base: ReshapedArray
 using StridedViews
 using Adapt: Adapt, adapt, adapt_structure
 
-include("expose.jl")
+include("exposed.jl")
 
 include("import.jl")
 ## TODO Create functions which take the `Expose` type and launch functions
