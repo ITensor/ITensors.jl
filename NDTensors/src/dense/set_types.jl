@@ -32,7 +32,3 @@ SetParameters.set_parameter(::Type{<:Dense}, ::Position{2}, P2) = Dense{<:Any,P2
 function SetParameters.set_parameter(::Type{<:Dense{P1}}, ::Position{2}, P2) where {P1}
   return Dense{P1,P2}
 end
-function TypeParameterAccessors.position(::Type{<:Dense}, ::typeof(parenttype))
-  return TypeParameterAccessors.Position(2)
-end
-TypeParameterAccessors.default_type_parameters(::Type{<:Dense}) = (Float64, Vector)
