@@ -3,9 +3,6 @@ using .DiagonalArrays: DiagIndex, diaglength
 using .TypeParameterAccessors: unwrap_array_type
 
 # TODO: Move to a different file.
-Expose.parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
-
-# TODO: Move to a different file.
 function promote_rule(
   storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:DiagonalArray}
 )

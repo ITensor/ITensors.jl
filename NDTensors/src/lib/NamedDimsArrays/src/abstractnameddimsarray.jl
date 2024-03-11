@@ -16,8 +16,6 @@ dimnames(a::AbstractNamedDimsArray) = error("Not implemented")
 # Unwrapping the names
 Base.parent(::AbstractNamedDimsArray) = error("Not implemented")
 
-# TODO: Use `SetParameters`.
-#parenttype(::AbstractNamedDimsArray{<:Any,<:Any,Parent}) where {Parent} = Parent
 function TypeParameterAccessors.position(
   ::Type{<:AbstractNamedDimsArray}, ::typeof(parenttype)
 )
