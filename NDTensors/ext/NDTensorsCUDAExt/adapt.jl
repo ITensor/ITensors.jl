@@ -1,4 +1,5 @@
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using NDTensors: storagemode
 ## Here we need an NDTensorCuArrayAdaptor because the CuArrayAdaptor provided by CUDA
 ## converts 64 bit numbers to 32 bit.  We cannot write `adapt(CuVector, x)` because this
 ## Will not allow us to properly utilize the buffer preference without changing the value of
