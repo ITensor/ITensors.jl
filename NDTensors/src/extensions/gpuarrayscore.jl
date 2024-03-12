@@ -4,9 +4,9 @@ using Adapt: Adapt
 
 TypeParameterAccessors.default_type_parameters(::Type{<:AbstractGPUArray}) = (Float32, 1)
 
-function storagemode(array::AbstractGPUArray)
-  return storagemode(typeof(array))
+function storagemode(object)
+  return storagemode(typeof(object))
 end
-function storagemode(type::Type{<:AbstractGPUArray})
+function storagemode(type::Type)
   return type_parameter(type, storagemode)
 end
