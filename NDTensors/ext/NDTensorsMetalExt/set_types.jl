@@ -58,3 +58,5 @@ function TypeParameterAccessors.position(
 )
   return TypeParameterAccessors.Position(3)
 end
+
+TypeParameterAccessors.default_type_parameters(::Type{<:MtlArray}) = (Float32, 1, Metal.DefaultStorageMode)
