@@ -6,7 +6,7 @@ using .RankFactorization: Spectrum
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
-import .Unwrap: qr_positive, ql, ql_positive
+import .Expose: qr_positive, ql, ql_positive
 
 function (
   T1::Tensor{ElT1,2,StoreT1} * T2::Tensor{ElT2,2,StoreT2}
@@ -178,7 +178,7 @@ function LinearAlgebra.eigen(
   DM, VM = eigen(expose(matrixT))
 
   # Sort by largest to smallest eigenvalues
-  # TODO: Replace `cpu` with `unwrap_type` dispatch.
+  # TODO: Replace `cpu` with `unwrap_array_type` dispatch.
   p = sortperm(cpu(DM); rev=true, by=abs)
   DM = DM[p]
   VM = VM[:, p]
@@ -318,7 +318,7 @@ function qr(T::DenseTensor{<:Any,2}; positive=false)
   return qx(qxf, T)
 end
 
-# NDTensors.Unwrap.ql
+# NDTensors.Expose.ql
 function ql(T::DenseTensor{<:Any,2}; positive=false)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T)
@@ -356,7 +356,7 @@ end
 #
 # Just flip signs between Q and R to get all the diagonals of R >=0.
 # For rectangular M the indexing for "diagonal" is non-trivial.
-# NDTensors.Unwrap.qr_positive and # NDTensors.Unwrap.ql_positive
+# NDTensors.Expose.qr_positive and # NDTensors.Expose.ql_positive
 #
 """
     qr_positive(M::AbstractMatrix)
@@ -376,6 +376,7 @@ function qr_positive(M::AbstractMatrix)
   return (Q, R)
 end
 
+using .TypeParameterAccessors: unwrap_array_type
 """
     ql_positive(M::AbstractMatrix)
 
@@ -390,7 +391,7 @@ function ql_positive(M::AbstractMatrix)
   # like `qr_positive`.
   iscuda = iscu(M)
   if iscuda
-    cutype = unwrap_type(M)
+    cutype = unwrap_array_type(M)
     M = NDTensors.cpu(M)
   end
   sparseQ, L = ql(M)
@@ -424,7 +425,7 @@ function ql(A::AbstractMatrix)
   copyto!(expose(AA), expose(A))
   iscuda = iscu(AA)
   if iscuda
-    cutype = unwrap_type(AA)
+    cutype = unwrap_array_type(AA)
     AA = NDTensors.cpu(AA)
   end
   Q, L = ql!(AA)

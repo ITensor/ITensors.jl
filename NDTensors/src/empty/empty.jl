@@ -91,6 +91,9 @@ function Base.show(io::IO, mime::MIME"text/plain", S::EmptyStorage)
   return println(io, typeof(S))
 end
 
+using .TypeParameterAccessors: TypeParameterAccessors
+TypeParameterAccessors.parenttype(empty::Type{<:EmptyStorage}) = storagetype(empty)
+zero(empty::EmptyStorage) = empty
 # XXX: this seems a bit strange and fragile?
 # Takes the type very literally.
 function HDF5.read(

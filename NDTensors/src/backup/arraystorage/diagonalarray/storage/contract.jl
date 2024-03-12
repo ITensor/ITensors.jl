@@ -1,17 +1,15 @@
 using .SparseArrayInterface: densearray
 using .DiagonalArrays: DiagIndex, diaglength
-
-# TODO: Move to a different file.
-Unwrap.parenttype(::Type{<:DiagonalArray{<:Any,<:Any,P}}) where {P} = P
+using .TypeParameterAccessors: unwrap_array_type
 
 # TODO: Move to a different file.
 function promote_rule(
   storagetype1::Type{<:ArrayStorage}, storagetype2::Type{<:DiagonalArray}
 )
-  # TODO: Replace with `unwrap_type` once
+  # TODO: Replace with `unwrap_array_type` once
   # https://github.com/ITensor/ITensors.jl/pull/1220
   # is merged.
-  return promote_type(storagetype1, unwrap_type(storagetype2))
+  return promote_type(storagetype1, unwrap_array_type(storagetype2))
 end
 
 # TODO: Move to a different file.

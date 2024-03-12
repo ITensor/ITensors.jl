@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using Test: @testset, @test, @test_broken
-using NDTensors.Unwrap
+using NDTensors.Expose
 using NDTensors: NDTensors, mul!!
 using LinearAlgebra:
   LinearAlgebra,
@@ -18,7 +18,7 @@ using GPUArraysCore: @allowscalar
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
 
-@testset "Testing Unwrap $dev, $elt" for dev in devices_list(ARGS),
+@testset "Testing Expose $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
 
   v = dev(randn(elt, 10))
@@ -69,7 +69,7 @@ using .NDTensorsTestUtils: devices_list
   q, r = qr(expose(mp))
   @test q * r ≈ mp
 
-  q, r = Unwrap.qr_positive(expose(mp))
+  q, r = Expose.qr_positive(expose(mp))
   @test q * r ≈ mp
 
   square = dev(rand(real(elt), (10, 10)))
