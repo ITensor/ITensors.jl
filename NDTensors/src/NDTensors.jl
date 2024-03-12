@@ -30,6 +30,8 @@ for lib in [
   :RankFactorization,
   :Sectors,
   :GradedAxes,
+  :LabelledNumbers,
+  :GradedAxesNext,
   :TensorAlgebra,
   :SparseArrayInterface,
   :SparseArrayDOKs,

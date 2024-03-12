@@ -9,6 +9,8 @@ using Test: @testset
   "BroadcastMapConversion",
   "DiagonalArrays",
   "GradedAxes",
+  "LabelledNumbers",
+  "GradedAxesNext",
   "NamedDimsArrays",
   "Sectors",
   "SetParameters",
