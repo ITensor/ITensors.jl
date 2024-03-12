@@ -1,5 +1,5 @@
 module CUDAExtensions
-  include("cuda.jl")
+include("cuda.jl")
 
-  export cu
+export cu
 end

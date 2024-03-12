@@ -1,5 +1,5 @@
 module GPUArraysCoreExtensions
-  include("gpuarrayscore.jl")
+include("gpuarrayscore.jl")
 
-  export storagemode
+export storagemode
 end

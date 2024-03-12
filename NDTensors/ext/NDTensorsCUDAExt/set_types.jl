@@ -50,4 +50,6 @@ function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(NDTensors.s
   return TypeParameterAccessors.Position(3)
 end
 
-TypeParameterAccessors.default_type_parameters(::Type{<:CuArray}) = (Float64, 1, CUDA.Mem.DeviceBuffer)
+function TypeParameterAccessors.default_type_parameters(::Type{<:CuArray})
+  return (Float64, 1, CUDA.Mem.DeviceBuffer)
+end
