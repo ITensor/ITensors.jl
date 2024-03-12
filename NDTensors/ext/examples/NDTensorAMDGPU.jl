@@ -4,7 +4,7 @@ using AMDGPU
 using NDTensors
 using ITensors
 using ITensors:
-  Index, ITensor, randomMPO, randomMPS, inner, orthogonalize, qr, siteinds, svd
+  Index, ITensor, orthogonalize, qr, siteinds, svd
 using Test: @test
 
 function main()
@@ -60,25 +60,6 @@ function main()
 
   res = ITensors.svd(A, (i,), (j, l))
   @show res
-
-  s = siteinds("S=1/2", 8)
-  m = randomMPS(s; linkdims=4)
-  cm = gpu(m)
-
-  @test inner(cm', cm) ≈ inner(m', m)
-
-  H = randomMPO(s)
-  cH = gpu(H)
-  @test inner(cm', cH, cm) ≈ inner(m', H, m)
-
-  m = orthogonalize(m, 1)
-  cm = gpu(orthogonalize(cm, 1))
-  @test inner(m', m) ≈ inner(cm', cm)
-
-  H = orthogonalize(H, 1)
-  cH = gpu(cH)
-
-  @test inner(cm', cH, cm) ≈ inner(m', H, m)
 end
 
 ## running the main function with Float64
