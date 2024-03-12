@@ -1,6 +1,5 @@
 using .TypeParameterAccessors: TypeParameterAccessors, type_parameter
 using GPUArraysCore: AbstractGPUArray
-using Adapt: Adapt
 
 TypeParameterAccessors.default_type_parameters(::Type{<:AbstractGPUArray}) = (Float32, 1)
 
