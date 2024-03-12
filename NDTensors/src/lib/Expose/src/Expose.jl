@@ -1,12 +1,11 @@
-module Unwrap
+module Expose
 using SimpleTraits
 using LinearAlgebra
 using Base: ReshapedArray
 using StridedViews
 using Adapt: Adapt, adapt, adapt_structure
 
-include("expose.jl")
-include("iswrappedarray.jl")
+include("exposed.jl")
 
 include("import.jl")
 ## TODO Create functions which take the `Expose` type and launch functions
@@ -19,7 +18,6 @@ include("functions/mul.jl")
 include("functions/permutedims.jl")
 include("functions/adapt.jl")
 
-export IsWrappedArray,
-  is_wrapped_array, parenttype, unwrap_type, expose, Exposed, unexpose, cpu
+export IsWrappedArray, expose, Exposed, unexpose, cpu
 
 end

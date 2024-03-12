@@ -1,9 +1,9 @@
 adapt_structure(to, x::TensorStorage) = setdata(x, adapt(to, data(x)))
 adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 
-## use unwrap cpu here because Unwrap is included before NDTensors
-Unwrap.cpu(eltype::Type{<:Number}, x) = fmap(x -> adapt(Array{eltype}, x), x)
-Unwrap.cpu(x) = fmap(x -> adapt(Array, x), x)
+## use unwrap cpu here because Expose is included before NDTensors
+Expose.cpu(eltype::Type{<:Number}, x) = fmap(x -> adapt(Array{eltype}, x), x)
+Expose.cpu(x) = fmap(x -> adapt(Array, x), x)
 
 # Implemented in `ITensorGPU` and NDTensorCUDA
 function cu end

@@ -1,4 +1,4 @@
-using .Unwrap: IsWrappedArray
+using .TypeParameterAccessors: IsWrappedArray, unwrap_array_type
 
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.
@@ -127,13 +127,13 @@ end
 @traitfn function similartype(
   arraytype::Type{ArrayT}, eltype::Type
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return similartype(unwrap_type(arraytype), eltype)
+  return similartype(unwrap_array_type(arraytype), eltype)
 end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, dims::Tuple
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return similartype(unwrap_type(arraytype), dims)
+  return similartype(unwrap_array_type(arraytype), dims)
 end
 
 # This is for uniform `Diag` storage which uses
