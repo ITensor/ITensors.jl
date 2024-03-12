@@ -1,3 +1,4 @@
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors
 ## Here we need an NDTensorCuArrayAdaptor because the CuArrayAdaptor provided by CUDA
 ## converts 64 bit numbers to 32 bit.  We cannot write `adapt(CuVector, x)` because this
 ## Will not allow us to properly utilize the buffer preference without changing the value of
@@ -11,11 +12,11 @@ function cu(xs; unified::Bool=false)
   )
 end
 
-buffertype(::NDTensorCuArrayAdaptor{B}) where {B} = B
+TypeParameterAccessors.position(::Type{<:NDTensorCuArrayAdaptor}, ::typeof(NDTensors.storagemode)) = TypeParameterAccessors.Position(1)
 
 function Adapt.adapt_storage(adaptor::NDTensorCuArrayAdaptor, xs::AbstractArray)
   ElT = eltype(xs)
-  BufT = buffertype(adaptor)
+  BufT = storagemode(adaptor)
   N = ndims(xs)
   return isbits(xs) ? xs : adapt(CuArray{ElT,N,BufT}, xs)
 end
@@ -23,6 +24,6 @@ end
 function NDTensors.adapt_storagetype(
   adaptor::NDTensorCuArrayAdaptor, xs::Type{EmptyStorage{ElT,StoreT}}
 ) where {ElT,StoreT}
-  BufT = buffertype(adaptor)
+  BufT = storagemode(adaptor)
   return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,BufT}, StoreT))
 end

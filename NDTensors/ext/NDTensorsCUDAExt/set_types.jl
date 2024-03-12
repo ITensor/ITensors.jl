@@ -38,3 +38,8 @@ default_parameter(::Type{<:CuArray}, ::Position{3}) = Mem.DeviceBuffer
 nparameters(::Type{<:CuArray}) = Val(3)
 
 SetParameters.unspecify_parameters(::Type{<:CuArray}) = CuArray
+
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(eltype)) = TypeParameterAccessors.Position(1)
+TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(Base.ndims)) = TypeParameterAccessors.Position(2)
+TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(NDTensors.storagemode)) = TypeParameterAccessors.Position(3)
