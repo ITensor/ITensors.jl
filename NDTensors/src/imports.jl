@@ -5,6 +5,10 @@
 # https://github.com/oschulz/HeterogeneousComputing.jl
 using .Expose: cpu
 
+import .CUDAExtensions: cu
+import .GPUArraysCoreExtensions: storagemode
+import .MetalExtensions: mtl
+
 import Base:
   # Types
   AbstractFloat,
