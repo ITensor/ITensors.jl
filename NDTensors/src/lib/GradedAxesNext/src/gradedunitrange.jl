@@ -1,10 +1,15 @@
 using BlockArrays:
-  BlockArrays, Block, BlockedUnitRange, blockedrange, blocklasts, blocklengths, findblock
+  BlockArrays,
+  Block,
+  BlockedUnitRange,
+  blockedrange,
+  blockfirsts,
+  blocklasts,
+  blocklengths,
+  findblock
 using ..LabelledNumbers: LabelledNumbers, LabelledInteger, label, labelled, unlabel
 
-const GradedUnitRange{BlockLasts<:AbstractVector{<:LabelledInteger}} = BlockedUnitRange{
-  BlockLasts
-}
+const GradedUnitRange{BlockLasts<:Vector{<:LabelledInteger}} = BlockedUnitRange{BlockLasts}
 
 function BlockArrays.blockedrange(lblocklengths::AbstractVector{<:LabelledInteger})
   brange = blockedrange(unlabel.(lblocklengths))
@@ -20,13 +25,29 @@ function BlockArrays.blockedrange(lblocklengths::AbstractVector{<:Pair{<:Any,<:I
   return blockedrange(labelled.(last.(lblocklengths), first.(lblocklengths)))
 end
 
-# TODO: Call this `ungrade`, `unlabel_blocks`?
-# Also, define `set_grades`, `set_sector_labels`, `set_labels`.
-function LabelledNumbers.unlabel(a::GradedUnitRange)
-  # More general, but relies on internals:
-  # return BlockArrays._BlockedUnitRange(unlabel(first(a)), unlabel.(blocklasts(a)))
-  @assert isone(first(a))
-  return blockedrange(unlabel.(blocklengths(a)))
+function blocklabels(a::GradedUnitRange)
+  # Using `blocklasts` here since that is what is stored
+  # inside of `BlockedUnitRange`, maybe change that.
+  return label.(blocklasts(a))
+end
+
+# TODO: This relies on internals of `BlockArrays`, maybe redesign
+# to try to avoid that.
+# TODO: Define `set_grades`, `set_sector_labels`, `set_labels`.
+function unlabel_blocks(a::GradedUnitRange)
+  return BlockArrays._BlockedUnitRange(a.first, unlabel.(blocklasts(a)))
+end
+
+function BlockArrays.blocklengths(a::GradedUnitRange)
+  return labelled.(blocklengths(unlabel_blocks(a)), blocklabels(a))
+end
+
+function Base.first(a::GradedUnitRange)
+  return labelled(first(unlabel_blocks(a)), label(a, Block(1)))
+end
+
+function BlockArrays.blockfirsts(a::GradedUnitRange)
+  return labelled.(blockfirsts(unlabel_blocks(a)), blocklabels(a))
 end
 
 function LabelledNumbers.label(a::GradedUnitRange, index::Block{1})
@@ -40,7 +61,7 @@ end
 # TODO: Define `blocklabels` as `Vector` of `label` for each block.
 
 function gradedunitrange_getindex(a, index)
-  return labelled(unlabel(a)[index], label(a, index))
+  return labelled(unlabel_blocks(a)[index], label(a, index))
 end
 
 function Base.getindex(a::GradedUnitRange, index::Integer)

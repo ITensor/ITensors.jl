@@ -1,5 +1,6 @@
 @eval module $(gensym())
 using BlockArrays: Block, blockedrange, blockfirsts, blocklasts, blocklengths
+using NDTensors.GradedAxesNext: blocklabels
 using NDTensors.LabelledNumbers: LabelledUnitRange, label, unlabel
 using Test: @test, @test_broken, @testset
 @testset "GradedAxes" begin
@@ -11,14 +12,12 @@ using Test: @test, @test_broken, @testset
   @test label(a[4]) == "y"
   @test unlabel(a[4]) == 4
   @test blocklengths(a) == [2, 3]
-  # TODO: Preserve labels.
-  @test_broken label.(blocklengths(a)) == ["x", "y"]
+  @test blocklabels(a) == ["x", "y"]
+  @test label.(blocklengths(a)) == ["x", "y"]
   @test blockfirsts(a) == [1, 3]
-  # TODO: Preserve labels.
-  @test_broken label.(blockfirsts(a)) == ["x", "y"]
+  @test label.(blockfirsts(a)) == ["x", "y"]
   @test first(a) == 1
-  # TODO: Preserve labels.
-  @test_broken label(first(a)) == "x"
+  @test label(first(a)) == "x"
   @test blocklasts(a) == [2, 5]
   @test label.(blocklasts(a)) == ["x", "y"]
   @test last(a) == 5
@@ -28,8 +27,6 @@ using Test: @test, @test_broken, @testset
   @test length(a[Block(2)]) == 3
   @test label(a, Block(2)) == "y"
   @show label(a, 4) == "y"
-  # TODO: Define this.
-  @test_broken blocklabels(a) == ["x", "y"]
 
   # Slicing operations
   # a[2:4]
