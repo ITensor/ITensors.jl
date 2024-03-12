@@ -1,5 +1,5 @@
 using SimpleTraits: SimpleTraits, @traitfn
-using NDTensors.Unwrap: IsWrappedArray, parenttype
+using NDTensors.TypeParameterAccessors: IsWrappedArray, parenttype
 
 @traitfn function set_eltype(
   type::Type{ArrayT}, elt::Type

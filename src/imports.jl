@@ -110,7 +110,7 @@ import LinearAlgebra:
   tr,
   transpose
 
-using ITensors.NDTensors.Unwrap: cpu
+using ITensors.NDTensors.Expose: cpu
 
 using ITensors.NDTensors:
   Algorithm,
@@ -189,8 +189,6 @@ import ITensors.NDTensors:
   # Deprecated
   addblock!,
   store
-
-using NDTensors.Unwrap: unwrap_type
 
 import ITensors.Ops: Prod, Sum, terms
 

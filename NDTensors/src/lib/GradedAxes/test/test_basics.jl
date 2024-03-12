@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using BlockArrays: Block, BlockVector, blocklength, blocklengths, findblock
+using BlockArrays: Block, BlockVector, blockedrange, blocklength, blocklengths, findblock
 using NDTensors.GradedAxes:
   GradedAxes,
   blockmergesortperm,
@@ -10,7 +10,7 @@ using NDTensors.GradedAxes:
   sector,
   sectors,
   tensor_product
-using Test: @test, @testset
+using Test: @test, @testset, @test_throws
 
 struct U1
   dim::Int
@@ -23,6 +23,7 @@ GradedAxes.dual(l::U1) = U1(-l.dim)
   a = gradedrange([U1(0), U1(1)], [2, 3])
   @test a isa GradedAxes.GradedUnitRange
   @test a == gradedrange([U1(0) => 2, U1(1) => 3])
+  @test a == gradedrange([U1(0), U1(1)], blockedrange([2, 3]))
   @test length(a) == 5
   @test a == 1:5
   @test a[Block(1)] == 1:2
@@ -43,6 +44,10 @@ GradedAxes.dual(l::U1) = U1(-l.dim)
   @test sector(a, 3) == U1(1)
   @test sector(a, 4) == U1(1)
   @test sector(a, 5) == U1(1)
+
+  # test error for invalid input
+  @test_throws DomainError gradedrange([U1(0), U1(1)], [2, 3, 4])
+  @test_throws DomainError gradedrange([U1(0), U1(1)], blockedrange([2, 3, 4]))
 
   # Naive tensor product, no sorting and merging
   a = gradedrange([U1(0), U1(1)], [2, 3])

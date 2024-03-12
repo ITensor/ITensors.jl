@@ -81,7 +81,7 @@ function tensor_product(
       return fuse(isdual ? dual(l1) : l1, isdual ? dual(l2) : l2)
     end,
   )
-  return gradedrange(a, nondual_sectors_a, isdual)
+  return gradedrange(nondual_sectors_a, a, isdual)
 end
 
 function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRange)
