@@ -12,7 +12,11 @@ function cu(xs; unified::Bool=false)
   )
 end
 
-TypeParameterAccessors.position(::Type{<:NDTensorCuArrayAdaptor}, ::typeof(NDTensors.storagemode)) = TypeParameterAccessors.Position(1)
+function TypeParameterAccessors.position(
+  ::Type{<:NDTensorCuArrayAdaptor}, ::typeof(NDTensors.storagemode)
+)
+  return TypeParameterAccessors.Position(1)
+end
 
 function Adapt.adapt_storage(adaptor::NDTensorCuArrayAdaptor, xs::AbstractArray)
   ElT = eltype(xs)
