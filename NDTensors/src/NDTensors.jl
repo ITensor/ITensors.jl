@@ -40,6 +40,9 @@ for lib in [
   :SortedSets,
   :TagSets,
   :UnallocatedArrays,
+  :GPUArraysCoreExtensions,
+  :CUDAExtensions,
+  :MetalExtensions,
 ]
   include("lib/$(lib)/src/$(lib).jl")
   @eval using .$lib: $lib
@@ -85,9 +88,6 @@ include("tensor/tensor.jl")
 include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
-include("lib/GPUArraysCoreExtensions/gpuarrayscore.jl")
-include("lib/CUDAExtensions/cuda.jl")
-include("lib/MetalExtensions/metal.jl")
 include("adapt.jl")
 include("tensoroperations/generic_tensor_operations.jl")
 include("tensoroperations/contraction_logic.jl")
