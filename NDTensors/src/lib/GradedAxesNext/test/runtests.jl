@@ -89,11 +89,23 @@ using Test: @test, @test_broken, @testset
   @test a isa BlockVector
   @test length(a) == 7
   @test blocklength(a) == 2
-  # `BlockArrays` doesn't define `blocklengths`
+  # TODO: `BlockArrays` doesn't define `blocklengths`
   # for `BlockVector`, should it?
   @test_broken blocklengths(a) == [4, 3]
   @test blocklabels(a) == ["z", "y"]
   @test a[Block(1)] == 6:9
   @test a[Block(2)] == 3:5
+
+  x = gradedrange(["x" => 2, "y" => 3, "z" => 4])
+  a = x[[Block(3)[2:3], Block(2)[2:3]]]
+  @test a isa BlockVector
+  @test length(a) == 4
+  @test blocklength(a) == 2
+  # TODO: `BlockArrays` doesn't define `blocklengths`
+  # for `BlockVector`, should it?
+  @test_broken blocklengths(a) == [2, 2]
+  @test blocklabels(a) == ["z", "y"]
+  @test a[Block(1)] == 7:8
+  @test a[Block(2)] == 4:5
 end
 end

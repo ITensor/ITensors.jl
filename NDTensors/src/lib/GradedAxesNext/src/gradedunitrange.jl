@@ -179,7 +179,9 @@ function blockedunitrange_getindices(a::BlockedUnitRange, indices::Vector{<:Inte
   return map(index -> a[index], indices)
 end
 
-function blockedunitrange_getindices(a::BlockedUnitRange, indices::Vector{<:Block{1}})
+function blockedunitrange_getindices(
+  a::BlockedUnitRange, indices::Vector{<:Union{Block{1},BlockIndexRange{1}}}
+)
   return mortar(map(index -> a[index], indices))
 end
 
