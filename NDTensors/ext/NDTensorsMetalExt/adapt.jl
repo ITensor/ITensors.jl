@@ -1,4 +1,3 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors
 using NDTensors.MetalExtensions: MetalExtensions
 using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions
 

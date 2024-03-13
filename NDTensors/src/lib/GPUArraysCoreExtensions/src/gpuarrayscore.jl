@@ -1,5 +1,4 @@
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors, type_parameter
-using GPUArraysCore: AbstractGPUArray
 
 function storagemode(object)
   return storagemode(typeof(object))
