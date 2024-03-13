@@ -3,7 +3,9 @@ adapt_structure(to, x::TensorStorage) = setdata(x, adapt(to, data(x)))
 adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 
 ## use unwrap cpu here because Expose is included before NDTensors
-GPUArraysCoreExtensions.cpu(eltype::Type{<:Number}, x) = fmap(x -> adapt(Array{eltype}, x), x)
+function GPUArraysCoreExtensions.cpu(eltype::Type{<:Number}, x)
+  return fmap(x -> adapt(Array{eltype}, x), x)
+end
 GPUArraysCoreExtensions.cpu(x) = fmap(x -> adapt(Array, x), x)
 
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))
