@@ -7,3 +7,5 @@ end
 function storagemode(type::Type)
   return type_parameter(type, storagemode)
 end
+
+function cpu end
