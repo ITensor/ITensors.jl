@@ -14,7 +14,7 @@ function devices_list(test_args)
 
   if "cuda" in test_args || "all" in test_args
     if CUDA.functional()
-      push!(devs, NDTensors.cu)
+      push!(devs, NDTensors.CUDAExtensions.cu)
     else
       println(
         "Warning: CUDA.jl is not functional on this architecture and tests will be skipped."
@@ -23,7 +23,7 @@ function devices_list(test_args)
   end
 
   if "metal" in test_args || "all" in test_args
-    push!(devs, NDTensors.mtl)
+    push!(devs, NDTensors.MetalExtensions.mtl)
   end
   return devs
 end

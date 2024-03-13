@@ -40,13 +40,14 @@ nparameters(::Type{<:CuArray}) = Val(3)
 SetParameters.unspecify_parameters(::Type{<:CuArray}) = CuArray
 
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using NDTensors.GPUArraysCoreExtensions: storagemode
 function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(eltype))
   return TypeParameterAccessors.Position(1)
 end
 function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(Base.ndims))
   return TypeParameterAccessors.Position(2)
 end
-function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(NDTensors.storagemode))
+function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(storagemode))
   return TypeParameterAccessors.Position(3)
 end
 

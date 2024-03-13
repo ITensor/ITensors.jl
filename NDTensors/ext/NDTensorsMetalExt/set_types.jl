@@ -40,9 +40,10 @@ default_parameter(::Type{<:MtlArray}, ::Position{3}) = Metal.DefaultStorageMode
 nparameters(::Type{<:MtlArray}) = Val(3)
 
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using NDTensors.GPUArraysCoreExtensions: storagemode
 # Metal-specific type parameter setting
 function set_storagemode(arraytype::Type{<:MtlArray}, param)
-  return TypeParameterAccessors.set_type_parameter(arraytype, NDTensors.storagemode, param)
+  return TypeParameterAccessors.set_type_parameter(arraytype, storagemode, param)
 end
 
 SetParameters.unspecify_parameters(::Type{<:MtlArray}) = MtlArray
@@ -53,9 +54,7 @@ end
 function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(Base.ndims))
   return TypeParameterAccessors.Position(2)
 end
-function TypeParameterAccessors.position(
-  ::Type{<:MtlArray}, ::typeof(NDTensors.storagemode)
-)
+function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(storagemode))
   return TypeParameterAccessors.Position(3)
 end
 

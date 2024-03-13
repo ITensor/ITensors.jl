@@ -119,7 +119,6 @@ using ITensors.NDTensors:
   _Tuple,
   _NTuple,
   blas_get_num_threads,
-  cu,
   disable_auto_fermion,
   double_precision,
   eachblock,
@@ -134,6 +133,8 @@ using ITensors.NDTensors:
   using_auto_fermion
 
 using ITensors.NDTensors.SetParameters: get_parameters, set_eltype, specify_parameters
+
+using NDTensors.CUDAExtensions: cu
 
 import ITensors.NDTensors:
   # Modules

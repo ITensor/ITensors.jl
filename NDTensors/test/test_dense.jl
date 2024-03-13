@@ -1,5 +1,6 @@
 @eval module $(gensym())
 using NDTensors
+using NDTensors.MetalExtensions: mtl
 using Test: @testset, @test, @test_throws, @test_broken
 using GPUArraysCore: @allowscalar
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
@@ -12,7 +13,7 @@ NDTensors.dim(i::MyInd) = i.dim
 
 @testset "Dense Tensors" begin
   @testset "test device: $dev" for dev in devices_list(copy(ARGS))
-    elt = dev == NDTensors.mtl ? Float32 : Float64
+    elt = dev == mtl ? Float32 : Float64
     # Testing with GPU and CPU backends
     @testset "DenseTensor basic functionality" begin
       A = dev(Tensor(elt, (3, 4)))
