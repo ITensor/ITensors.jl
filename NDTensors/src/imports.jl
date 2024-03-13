@@ -3,7 +3,64 @@
 # similar to:
 # https://github.com/JuliaGPU/KernelAbstractions.jl
 # https://github.com/oschulz/HeterogeneousComputing.jl
-using .Expose: cpu
+
+using Adapt
+using Base.Threads
+using Compat
+using Dictionaries
+using Folds
+using GPUArraysCore
+using InlineStrings
+using Random
+using LinearAlgebra
+using StaticArrays
+using Functors
+using HDF5
+using SimpleTraits
+using SplitApplyCombine
+using Strided
+using TimerOutputs
+using TupleTools
+
+for lib in [
+  :AlgorithmSelection,
+  :AllocateData,
+  :BaseExtensions,
+  :UnspecifiedTypes,
+  :TypeParameterAccessors,
+  :GPUArraysCoreExtensions,
+  :CUDAExtensions,
+  :MetalExtensions,
+  :Expose,
+  :SetParameters,
+  :BroadcastMapConversion,
+  :RankFactorization,
+  :Sectors,
+  :GradedAxes,
+  :TensorAlgebra,
+  :SparseArrayInterface,
+  :SparseArrayDOKs,
+  :DiagonalArrays,
+  :BlockSparseArrays,
+  :NamedDimsArrays,
+  :SmallVectors,
+  :SortedSets,
+  :TagSets,
+  :UnallocatedArrays,
+]
+  include("lib/$(lib)/src/$(lib).jl")
+  @eval using .$lib: $lib
+end
+
+using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
+
+using Base.Cartesian: @nexprs
+
+using Base.Threads: @spawn
+
+using .CUDAExtensions: cu
+using .MetalExtensions: mtl
+using .GPUArraysCoreExtensions: cpu
 
 import Base:
   # Types
