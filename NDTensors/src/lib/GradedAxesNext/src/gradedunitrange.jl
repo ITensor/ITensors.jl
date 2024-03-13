@@ -2,13 +2,16 @@ using BlockArrays:
   BlockArrays,
   Block,
   BlockedUnitRange,
+  BlockRange,
+  BlockVector,
   blockedrange,
   BlockIndexRange,
   blockfirsts,
   blocklasts,
   blocklengths,
   findblock,
-  findblockindex
+  findblockindex,
+  mortar
 using ..LabelledNumbers: LabelledNumbers, LabelledInteger, label, labelled, unlabel
 
 # Custom `BlockedUnitRange` constructor that takes a unit range
@@ -76,17 +79,31 @@ end
 
 ## Block label interface
 
+# TODO: Maybe delete this in favor of `label(a[index])`.
 function LabelledNumbers.label(a::BlockedUnitRange, index::Block{1})
   return label(blocklasts(a)[Int(index)])
 end
 
+# TODO: Maybe delete this in favor of `label(a[index])`.
 function LabelledNumbers.label(a::BlockedUnitRange, index::Integer)
   return label(a, blockedunitrange_findblock(a, index))
 end
 
+function blocklabels(a::BlockVector)
+  return map(BlockRange(a)) do block
+    return label(@view(a[block]))
+  end
+end
+
 function blocklabels(a::BlockedUnitRange)
-  # Using `blocklasts` here since that is what is stored
+  # Using `a.lasts` here since that is what is stored
   # inside of `BlockedUnitRange`, maybe change that.
+  # For example, it could be something like:
+  #
+  # map(BlockRange(a)) do block
+  #   return label(@view(a[block]))
+  # end
+  #
   return label.(a.lasts)
 end
 
@@ -158,21 +175,43 @@ function blockedunitrange_getindices(a::BlockedUnitRange, indices::BlockIndexRan
   return a[block(indices)][only(indices.indices)]
 end
 
+function blockedunitrange_getindices(a::BlockedUnitRange, indices::Vector{<:Integer})
+  return map(index -> a[index], indices)
+end
+
+function blockedunitrange_getindices(a::BlockedUnitRange, indices::Vector{<:Block{1}})
+  return mortar(map(index -> a[index], indices))
+end
+
 function blockedunitrange_getindices(a::BlockedUnitRange, indices)
   return error("Not implemented.")
+end
+
+# The blocks of the corresponding slice.
+_blocks(a::AbstractUnitRange, indices) = error("Not implemented")
+function _blocks(a::AbstractUnitRange, indices::AbstractUnitRange)
+  return findblock(a, first(indices)):findblock(a, last(indices))
+end
+function _blocks(a::AbstractUnitRange, indices::BlockRange)
+  return indices
+end
+
+# The block labels of the corresponding slice.
+function blocklabels(a::AbstractUnitRange, indices)
+  return map(_blocks(a, indices)) do block
+    return label(a, block)
+  end
 end
 
 function blockedunitrange_getindices(
   ga::GradedUnitRange, indices::AbstractUnitRange{<:Integer}
 )
   a_indices = blockedunitrange_getindices(unlabel_blocks(ga), indices)
-  # TODO: Make this a generic function that works for other
-  # range types besides `UnitRange`.
-  blocks = findblock(ga, first(indices)):findblock(ga, last(indices))
-  labels = map(blocks) do block
-    return label(ga, block)
-  end
-  return labelled_blocks(a_indices, labels)
+  return labelled_blocks(a_indices, blocklabels(ga, indices))
+end
+
+function blockedunitrange_getindices(ga::GradedUnitRange, indices::BlockRange)
+  return labelled_blocks(unlabel_blocks(ga)[indices], blocklabels(ga, indices))
 end
 
 function Base.getindex(a::GradedUnitRange, index::Integer)
@@ -184,6 +223,12 @@ function Base.getindex(a::GradedUnitRange, index::Block{1})
 end
 
 function Base.getindex(a::GradedUnitRange, indices::BlockIndexRange)
+  return blockedunitrange_getindices(a, indices)
+end
+
+function Base.getindex(
+  a::GradedUnitRange, indices::BlockRange{1,<:Tuple{AbstractUnitRange{Int}}}
+)
   return blockedunitrange_getindices(a, indices)
 end
 
