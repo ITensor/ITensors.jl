@@ -79,14 +79,14 @@ end
 
 ## Block label interface
 
-# TODO: Maybe delete this in favor of `label(a[index])`.
-function LabelledNumbers.label(a::BlockedUnitRange, index::Block{1})
+# Internal function
+function get_label(a::BlockedUnitRange, index::Block{1})
   return label(blocklasts(a)[Int(index)])
 end
 
-# TODO: Maybe delete this in favor of `label(a[index])`.
-function LabelledNumbers.label(a::BlockedUnitRange, index::Integer)
-  return label(a, blockedunitrange_findblock(a, index))
+# Internal function
+function get_label(a::BlockedUnitRange, index::Integer)
+  return get_label(a, blockedunitrange_findblock(a, index))
 end
 
 function blocklabels(a::BlockVector)
@@ -135,7 +135,7 @@ function BlockArrays.blocklengths(a::GradedUnitRange)
 end
 
 function Base.first(a::GradedUnitRange)
-  return labelled(first(unlabel_blocks(a)), label(a, Block(1)))
+  return labelled(first(unlabel_blocks(a)), label(a[Block(1)]))
 end
 
 function firstblockindices(a::GradedUnitRange)
@@ -143,7 +143,9 @@ function firstblockindices(a::GradedUnitRange)
 end
 
 function blockedunitrange_getindex(a::GradedUnitRange, index)
-  return labelled(unlabel_blocks(a)[index], label(a, index))
+  # This uses `blocklasts` since that is what is stored
+  # in `BlockedUnitRange`, maybe abstract that away.
+  return labelled(unlabel_blocks(a)[index], get_label(a, index))
 end
 
 # Like `a[indices]` but preserves block structure.
@@ -201,7 +203,7 @@ end
 # The block labels of the corresponding slice.
 function blocklabels(a::AbstractUnitRange, indices)
   return map(_blocks(a, indices)) do block
-    return label(a, block)
+    return label(a[block])
   end
 end
 

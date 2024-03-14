@@ -12,6 +12,11 @@ unlabel_type(::Type{<:LabelledInteger{Value}}) where {Value} = Value
 
 # TODO: Define `labelled_convert`.
 Base.convert(type::Type{<:Number}, x::LabelledInteger) = type(unlabel(x))
+# TODO: This is only needed for older Julia versions, like Julia 1.6.
+# Delete once we drop support for older Julia versions.
+function Base.convert(type::Type{<:LabelledInteger}, x::LabelledInteger)
+  return type(unlabel(x), label(x))
+end
 # TODO: Define `labelled_promote_type`.
 function Base.promote_type(type1::Type{T}, type2::Type{T}) where {T<:LabelledInteger}
   return promote_type(unlabel_type(type1), unlabel_type(type2))

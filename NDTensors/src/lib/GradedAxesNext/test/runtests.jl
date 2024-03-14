@@ -28,10 +28,6 @@ using Test: @test, @test_broken, @testset
   @test a[Block(2)] == 3:5
   @test label(a[Block(2)]) == "y"
   @test length(a[Block(2)]) == 3
-  # TODO: Maybe delete this in favor of `label(a[Block(2)])`
-  @test label(a, Block(2)) == "y"
-  # TODO: Maybe delete this in favor of `label(a[4])`
-  @test label(a, 4) == "y"
   @test blocklengths(only(axes(a))) == blocklengths(a)
   @test blocklabels(only(axes(a))) == blocklabels(a)
 
