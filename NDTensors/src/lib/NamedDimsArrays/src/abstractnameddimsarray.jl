@@ -16,6 +16,7 @@ dimnames(a::AbstractNamedDimsArray) = error("Not implemented")
 # Unwrapping the names
 Base.parent(::AbstractNamedDimsArray) = error("Not implemented")
 
+## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(
   ::Type{<:AbstractNamedDimsArray}, ::typeof(parenttype)
 )

@@ -41,6 +41,7 @@ SetParameters.unspecify_parameters(::Type{<:CuArray}) = CuArray
 
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors
 using NDTensors.GPUArraysCoreExtensions: storagemode
+## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(eltype))
   return TypeParameterAccessors.Position(1)
 end

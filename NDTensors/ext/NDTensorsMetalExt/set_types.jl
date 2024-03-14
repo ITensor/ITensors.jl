@@ -47,7 +47,7 @@ function set_storagemode(arraytype::Type{<:MtlArray}, param)
 end
 
 SetParameters.unspecify_parameters(::Type{<:MtlArray}) = MtlArray
-
+## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(eltype))
   return TypeParameterAccessors.Position(1)
 end

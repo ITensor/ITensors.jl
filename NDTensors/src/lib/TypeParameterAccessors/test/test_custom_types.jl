@@ -64,6 +64,7 @@ using Test: @testset
       # Named positions
       function p1 end
       function p2 end
+      ## TODO remove TypeParameterAccessors when SetParameters is removed
       TypeParameterAccessors.position(::Type{<:MyType}, ::typeof(p1)) = Position(1)
       TypeParameterAccessors.position(::Type{<:MyType}, ::typeof(p2)) = Position(2)
 

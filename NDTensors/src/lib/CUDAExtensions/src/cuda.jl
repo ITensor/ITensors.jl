@@ -9,6 +9,7 @@ function cu end
 ## default_buffertype. Also `adapt(CuVector{<:Any, <:Any, Buffertype})` fails to work properly
 struct CuArrayAdaptor{B} end
 
+## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(::Type{<:CuArrayAdaptor}, ::typeof(storagemode))
   return TypeParameterAccessors.Position(1)
 end
