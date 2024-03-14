@@ -14,7 +14,6 @@ using Test: @testset
   "MetalExtensions",
   "NamedDimsArrays",
   "Sectors",
-  "SetParameters",
   "SmallVectors",
   "SortedSets",
   "SparseArrayDOKs",

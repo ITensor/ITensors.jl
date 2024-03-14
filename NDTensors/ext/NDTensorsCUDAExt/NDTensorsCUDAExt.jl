@@ -1,7 +1,6 @@
 module NDTensorsCUDAExt
 
 using NDTensors
-using NDTensors.SetParameters
 using NDTensors.Expose
 using Adapt
 using Functors

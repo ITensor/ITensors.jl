@@ -32,7 +32,6 @@ for lib in [
   :CUDAExtensions,
   :MetalExtensions,
   :Expose,
-  :SetParameters,
   :BroadcastMapConversion,
   :RankFactorization,
   :Sectors,

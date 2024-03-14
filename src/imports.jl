@@ -132,8 +132,6 @@ using ITensors.NDTensors:
   timer,
   using_auto_fermion
 
-using ITensors.NDTensors.SetParameters: get_parameters, set_eltype, specify_parameters
-
 using NDTensors.CUDAExtensions: cu
 
 import ITensors.NDTensors:
