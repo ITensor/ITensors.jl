@@ -23,6 +23,6 @@ function TypeParameterAccessors.default_type_parameters(::Type{<:MtlArray})
   return (Float32, 1, Metal.DefaultStorageMode)
 end
 
-function TypeParameterAccessors.set_ndims(type::Type{<:CuArray}, param)
+function TypeParameterAccessors.set_ndims(type::Type{<:MtlArray}, param)
   return set_type_parameter(type, ndims, param)
 end
