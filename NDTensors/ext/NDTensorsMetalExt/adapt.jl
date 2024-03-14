@@ -8,7 +8,7 @@ function MetalExtensions.mtl(xs; storage=DefaultStorageMode)
 end
 
 # More general than the version in Metal.jl
-## TODO Rewrite this using a custom `MetalAdaptor` which will be written in  `MetalExtensions`.
+## TODO Rewrite this using a custom `MtlArrayAdaptor` which will be written in  `MetalExtensions`.
 function Adapt.adapt_storage(arraytype::Type{<:MtlArray}, xs::AbstractArray)
   params = get_parameters(xs)
   arraytype_specified = specify_parameters(arraytype, params...)
