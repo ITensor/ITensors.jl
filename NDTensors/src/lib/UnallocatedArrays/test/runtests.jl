@@ -243,7 +243,8 @@ end
 
 using FillArrays: Fill, Zeros
 using NDTensors.UnallocatedArrays
-using NDTensors.TypeParameterAccessors: Position, default_type_parameter, nparameters, set_type_parameter, type_parameter
+using NDTensors.TypeParameterAccessors:
+  Position, default_type_parameter, nparameters, set_type_parameter, type_parameter
 using Test: @test, @testset
 
 @testset "SetParameters" begin
