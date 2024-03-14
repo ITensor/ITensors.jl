@@ -38,3 +38,20 @@ default_parameter(::Type{<:CuArray}, ::Position{3}) = Mem.DeviceBuffer
 nparameters(::Type{<:CuArray}) = Val(3)
 
 SetParameters.unspecify_parameters(::Type{<:CuArray}) = CuArray
+
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using NDTensors.GPUArraysCoreExtensions: storagemode
+## TODO remove TypeParameterAccessors when SetParameters is removed
+function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(eltype))
+  return TypeParameterAccessors.Position(1)
+end
+function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(Base.ndims))
+  return TypeParameterAccessors.Position(2)
+end
+function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(storagemode))
+  return TypeParameterAccessors.Position(3)
+end
+
+function TypeParameterAccessors.default_type_parameters(::Type{<:CuArray})
+  return (Float64, 1, CUDA.Mem.DeviceBuffer)
+end

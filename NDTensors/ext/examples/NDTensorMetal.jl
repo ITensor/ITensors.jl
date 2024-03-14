@@ -1,5 +1,6 @@
-using Metal: MtlVector, mtl
+using Metal: MtlVector
 using NDTensors
+using NDTensors.MetalExtensions: mtl
 
 using ITensors: ITensor, Index, randomITensor
 using Test: @test
@@ -7,7 +8,7 @@ using Zygote: gradient
 
 function main()
   cpu = NDTensors.cpu
-  gpu = NDTensors.mtl
+  gpu = mtl
   # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
   i = Index(20)
   j = Index(5)
