@@ -36,6 +36,8 @@ for lib in [
   :BroadcastMapConversion,
   :RankFactorization,
   :Sectors,
+  :LabelledNumbers,
+  :GradedAxesNext,
   :GradedAxes,
   :TensorAlgebra,
   :SparseArrayInterface,
