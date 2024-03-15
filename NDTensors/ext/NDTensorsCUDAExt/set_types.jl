@@ -15,7 +15,3 @@ end
 function TypeParameterAccessors.default_type_parameters(::Type{<:CuArray})
   return (Float64, 1, CUDA.Mem.DeviceBuffer)
 end
-
-function TypeParameterAccessors.set_ndims(type::Type{<:CuArray}, param)
-  return set_type_parameter(type, ndims, param)
-end

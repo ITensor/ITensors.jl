@@ -14,6 +14,7 @@ include("specify_parameters.jl")
 include("default_parameters.jl")
 include("base/abstractarray.jl")
 include("base/array.jl")
+include("base/ndims.jl")
 include("base/linearalgebra.jl")
 include("base/stridedviews.jl")
 end

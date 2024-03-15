@@ -62,6 +62,8 @@ using Base.Threads: @spawn
 using .CUDAExtensions: cu
 using .MetalExtensions: mtl
 using .GPUArraysCoreExtensions: cpu
+## Adding this here for now so that ndims in `NDTensors`` uses `TypeParameterAccessors`
+using .TypeParameterAccessors: ndims
 
 import Base:
   # Types

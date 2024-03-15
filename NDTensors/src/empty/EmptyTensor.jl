@@ -28,7 +28,7 @@ fulltype(T::Tensor) = fulltype(typeof(T))
 # Needed for correct `NDTensors.ndims` definitions, for
 # example `EmptyStorage` that wraps a `BlockSparse` which
 # can have non-unity dimensions.
-function ndims(storagetype::Type{<:EmptyStorage})
+function TypeParameterAccessors.ndims(storagetype::Type{<:EmptyStorage})
   return ndims(fulltype(storagetype))
 end
 

@@ -130,7 +130,8 @@ function randomTensor(StoreT::Type{<:TensorStorage}, inds::Tuple)
 end
 ## End Random Tensor
 
-ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
+## Potentially it would be better to define `TypeParameterAccessors.positoin(::Type{<:Tensor}, ::typeof(ndims)) = Position(2)` ?
+TypeParameterAccessors.ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
 
 # Like `Base.to_shape` but more general, can return
 # `Index`, etc. Customize for an array/tensor
