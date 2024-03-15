@@ -1,12 +1,9 @@
 using BlockArrays: BlockedUnitRange
-# TODO: Implement these.
-function blocksortperm end
-function blockmergesortperm(::BlockedUnitRange)
-  return error("Not implemented yet.")
-end
+
+# TODO: Implement or delete these, these are from the old
+# version of `GradedAxes`.
 function dual end
 function fuse end
-function invblockperm end
 function sector end
 
 # Represents the range `1:1` or `Base.OneTo(1)`.
@@ -47,7 +44,49 @@ function tensor_product(a1::OneToOne, a2::OneToOne)
   return OneToOne()
 end
 
+function fuse_labels(x, y)
+  return error(
+    "`fuse_labels` not implemented for object of type `$(typeof(x))` and `$(typeof(y))`."
+  )
+end
+
+function fuse_blocklengths(x::Integer, y::Integer)
+  return x * y
+end
+
+using ..LabelledNumbers: LabelledInteger, label, labelled, unlabel
+function fuse_blocklengths(x::LabelledInteger, y::LabelledInteger)
+  return labelled(unlabel(x) * unlabel(y), fuse_labels(label(x), label(y)))
+end
+
 using BlockArrays: blockedrange, blocks
 function tensor_product(a1::BlockedUnitRange, a2::BlockedUnitRange)
-  return blockedrange(prod.(length, vec(collect(Iterators.product(blocks.((a1, a2))...)))))
+  blocklengths = map(vec(collect(Iterators.product(blocks(a1), blocks(a2))))) do x
+    return mapreduce(length, fuse_blocklengths, x)
+  end
+  return blockedrange(blocklengths)
+end
+
+using BlockArrays: Block, BlockVector
+using SplitApplyCombine: groupcount
+
+function blocksortperm end
+
+invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
+
+# Get the permutation for sorting, then group by common elements.
+# groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
+function groupsortperm(v; kwargs...)
+  perm = sortperm(v; kwargs...)
+  v_sorted = @view v[perm]
+  group_lengths = collect(groupcount(identity, v_sorted))
+  return BlockVector(perm, group_lengths)
+end
+
+function blockmergesortperm(a::GradedUnitRange)
+  # If it is dual, reverse the sorting so the sectors
+  # end up sorted in the same way whether or not the space
+  # is dual.
+  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
+  return Block.(groupsortperm(blocklabels(a)))
 end

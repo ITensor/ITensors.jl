@@ -3,12 +3,18 @@ struct LabelledInteger{Value<:Integer,Label} <: Integer
   label::Label
 end
 LabelledStyle(::Type{<:LabelledInteger}) = IsLabelled()
+# TODO: Define `set_value` and `set_label`?
 label(lobject::LabelledInteger) = lobject.label
 # TODO: Use `TypeParameterAccessors`.
 label_type(::Type{<:LabelledInteger{<:Any,Label}}) where {Label} = Label
 labelled(object::Integer, label) = LabelledInteger(object, label)
 unlabel(lobject::LabelledInteger) = lobject.value
 unlabel_type(::Type{<:LabelledInteger{Value}}) where {Value} = Value
+
+# When using as shapes of arrays.
+# TODO: Preserve the label? For example:
+# labelled(Base.to_shape(unlabel(x)), label(x))
+Base.to_shape(x::LabelledInteger) = Base.to_shape(unlabel(x))
 
 # TODO: Define `labelled_convert`.
 Base.convert(type::Type{<:Number}, x::LabelledInteger) = type(unlabel(x))

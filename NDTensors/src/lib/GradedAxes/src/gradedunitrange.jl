@@ -51,6 +51,11 @@ function gradedrange(lblocklengths::AbstractVector{<:LabelledInteger})
   return BlockArrays._BlockedUnitRange(lfirst, lblocklasts)
 end
 
+# To help with generic code.
+function BlockArrays.blockedrange(lblocklengths::AbstractVector{<:LabelledInteger})
+  return gradedrange(lblocklengths)
+end
+
 Base.last(a::GradedUnitRange) = isempty(a.lasts) ? first(a) - 1 : last(a.lasts)
 
 function gradedrange(lblocklengths::AbstractVector{<:Pair{<:Any,<:Integer}})
