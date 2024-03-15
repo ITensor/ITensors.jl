@@ -10,7 +10,6 @@ using Test: @testset
   "CUDAExtensions",
   "DiagonalArrays",
   "GradedAxes",
-  "GradedAxesNext",
   "GPUArraysCoreExtensions",
   "LabelledNumbers",
   "MetalExtensions",
