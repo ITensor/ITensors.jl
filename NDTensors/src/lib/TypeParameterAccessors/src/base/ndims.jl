@@ -3,11 +3,7 @@
 ## TODO So here I try to use the new type_parameters system for `NDTensors.ndims`
 ## But if `ndims` is not defined for a type, I revert to using Base.ndims
 function TypeParameterAccessors.ndims(array)
-  try
     type_parameter(array, Base.ndims)
-  catch
-    Base.ndims(array)
-  end
 end
 
 # ## In house patch to deal issue of calling ndims with an Array of unspecified eltype
