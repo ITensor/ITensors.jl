@@ -2,6 +2,7 @@
 module ITensorMPS
 
 using Adapt
+using HDF5
 using ..ITensors
 using IsApprox
 using KrylovKit
