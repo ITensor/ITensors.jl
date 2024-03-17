@@ -97,6 +97,8 @@ import ..ITensors.NDTensors:
   _NTuple,
   blas_get_num_threads,
   datatype,
+  dense,
+  diagind,
   disable_auto_fermion,
   double_precision,
   eachblock,
@@ -108,11 +110,13 @@ import ..ITensors.NDTensors:
   permutedims!,
   scalartype,
   single_precision,
+  tensor,
   timer,
   using_auto_fermion
 
 import ..ITensors: 
   AbstractRNG, 
+  addtags,
   Apply,
   apply,
   argument,
@@ -133,6 +137,7 @@ import ..ITensors:
   hassameinds,
   HDF5, 
   inner,
+  isfermionic,
   maxdim,
   mindim,
   ndims,

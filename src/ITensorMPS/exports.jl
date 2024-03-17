@@ -30,6 +30,7 @@ export
   normalize,
   ortho_lims,
   orthocenter,
+  promote_itensor_eltype,
   reset_ortho_lims!,
   set_ortho_lims!,
   siteinds,

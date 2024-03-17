@@ -1076,7 +1076,7 @@ function deprecate_make_inds_match!(
     make_inds_match = false
   end
   if !hassameinds(siteinds, M1dag, M2) && make_inds_match
-    warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mps)
+    ITensors.warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mps)
     replace_siteinds!(M1dag, siteindsM2)
   end
   return M1dag, M2
@@ -1776,7 +1776,7 @@ function _fermionic_swap(s1::Index, s2::Index)
     if _isodd_fermionic_parity(s1, n1) && _isodd_fermionic_parity(s2, n2)
       dval = -1.0
     end
-    Tb = blockview(tensor(T), b)
+    Tb = ITensors.blockview(tensor(T), b)
     mat_dim = prod(dims(Tb)[1:2])
     Tbr = reshape(Tb, mat_dim, mat_dim)
     for i in diagind(Tbr)
@@ -1849,7 +1849,7 @@ function setindex!(
     # are fermionic
     if !using_auto_fermion() && any(ITensors.anyfermionic, sites)
       if length(sites) == 2 && ψ isa MPS
-        if all(allfermionic, sites)
+        if all(ITensors.allfermionic, sites)
           s0 = Index.(sites0)
 
           # TODO: the Fermionic swap is could be diagonal,

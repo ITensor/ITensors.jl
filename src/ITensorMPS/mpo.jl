@@ -143,7 +143,7 @@ end
 
 function deprecate_make_inds_unmatch(::typeof(outer), ψ::MPS, ϕ::MPS; kw...)
   if hassameinds(siteinds, ψ, ϕ)
-    warn_once(outer_mps_mps_deprecation_warning(), :outer_mps_mps)
+    ITensors.warn_once(outer_mps_mps_deprecation_warning(), :outer_mps_mps)
     ψ = ψ'
   end
   return ψ, ϕ
@@ -353,7 +353,7 @@ function deprecate_make_inds_match!(
       )
     end
     if !hassameinds(siteinds, ydag, (A, x)) && make_inds_match
-      warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mpo_mps)
+      ITensors.warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mpo_mps)
       replace_siteinds!(ydag, sAx)
     end
   end
