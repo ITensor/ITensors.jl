@@ -18,7 +18,7 @@ function get_vecs!((phi, q), M, V, AV, ni)
   return lambda
 end
 
-function orthogonalize!(q::ITensor, V, ni)
+function orthogonalize!(q::ITensor, V, ni::Integer)
   q0 = copy(q)
   for k in 1:ni
     Vq0k = dot(V[k], q0)

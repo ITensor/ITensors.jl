@@ -88,6 +88,10 @@ import Adapt: adapt_structure, adapt_storage
 
 import HDF5: read, write
 
+import KrylovKit:
+  orthogonalize,
+  orthogonalize!
+
 import LinearAlgebra:
   axpby!,
   axpy!,
