@@ -99,7 +99,7 @@ function qn_svdMPO(
   llinks = Vector{QNIndex}(undef, N + 1)
   # Set dir=In for fermionic ordering, avoid arrow sign
   # <fermions>:
-  linkdir = using_auto_fermion() ? In : Out
+  linkdir = using_auto_fermion() ? ITensors.In : ITensors.Out
   llinks[1] = Index([QN() => 1, Hflux => 1]; tags="Link,l=0", dir=linkdir)
   for n in 1:N
     qi = Vector{Pair{QN,Int}}()
@@ -220,7 +220,7 @@ function qn_svdMPO(
         end
 
         b = loc(rq, cq)
-        T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+        T = ITensors.NDTensors.BlockSparseTensor(ValType, [b], (dag(ll), rl))
         T[b] .= M
 
         H[n] += (itensor(T) * Op)
@@ -230,13 +230,13 @@ function qn_svdMPO(
     # Put in ending identity operator
     Id = op("Id", sites[n])
     b = Block(1, 1)
-    T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+    T = ITensors.NDTensors.BlockSparseTensor(ValType, [b], (dag(ll), rl))
     T[b] = 1
     H[n] += (itensor(T) * Id)
 
     # Put in starting identity operator
     b = Block(nblocks(ll), nblocks(rl))
-    T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+    T = ITensors.NDTensors.BlockSparseTensor(ValType, [b], (dag(ll), rl))
     T[b] = 1
     H[n] += (itensor(T) * Id)
   end # for n in 1:N

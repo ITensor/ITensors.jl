@@ -1847,7 +1847,7 @@ function setindex!(
     sites = sites0[[perm...]]
     # Check if the site indices
     # are fermionic
-    if !using_auto_fermion() && any(anyfermionic, sites)
+    if !using_auto_fermion() && any(ITensors.anyfermionic, sites)
       if length(sites) == 2 && ψ isa MPS
         if all(allfermionic, sites)
           s0 = Index.(sites0)

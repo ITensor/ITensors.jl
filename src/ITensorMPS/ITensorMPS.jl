@@ -1,11 +1,13 @@
 
 module ITensorMPS
 
+using Adapt
 using ..ITensors
+using IsApprox
+using KrylovKit
 using Printf
 using Random
 using TupleTools
-using KrylovKit
 
 import ..ITensors.Ops: params
 

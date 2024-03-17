@@ -50,7 +50,6 @@ import Base:
   length,
   map,
   map!,
-  ndims,
   print,
   promote_rule,
   push!,
@@ -68,28 +67,77 @@ import Base:
   # macros
   @propagate_inbounds
 
+import Base.Broadcast:
+  # types
+  AbstractArrayStyle,
+  Broadcasted,
+  BroadcastStyle,
+  DefaultArrayStyle,
+  Style,
+  # functions
+  _broadcast_getindex,
+  broadcasted,
+  broadcastable,
+  instantiate
+
 import KrylovKit:
   orthogonalize,
   orthogonalize!
 
+import LinearAlgebra:
+  dot,
+  normalize!,
+  tr
+
+import ..ITensors.NDTensors:
+  Algorithm,
+  @Algorithm_str,
+  EmptyNumber,
+  _Tuple,
+  _NTuple,
+  blas_get_num_threads,
+  datatype,
+  disable_auto_fermion,
+  double_precision,
+  eachblock,
+  eachdiagblock,
+  enable_auto_fermion,
+  fill!!,
+  randn!!,
+  permutedims,
+  permutedims!,
+  scalartype,
+  single_precision,
+  timer,
+  using_auto_fermion
+
 import ..ITensors: 
   AbstractRNG, 
+  Apply,
   apply,
   argument,
   Broadcasted, 
   @Algorithm_str, 
+  checkflux,
   contract,
+  convert_leaf_eltype,
+  commontags,
   @debug_check, 
   dag,
+  data,
   DefaultArrayStyle, 
   DiskVector,
+  flux,
   hascommoninds,
   hasqns,
+  hassameinds,
   HDF5, 
   inner,
   maxdim,
   mindim,
+  ndims,
   noprime,
+  noprime!,
   norm,
   normalize,
   outer, 
@@ -100,6 +148,12 @@ import ..ITensors:
   prime!,
   product,
   QNIndex, 
+  replaceinds,
+  replaceprime,
+  replacetags,
+  replacetags!,
+  setprime,
+  sim,
   site,
   siteind,
   siteinds,
@@ -107,11 +161,11 @@ import ..ITensors:
   store,
   Style, 
   sum,
+  swapprime,
   terms,
   @timeit_debug,
   truncate!,
-  using_auto_fermion,
   which_op
 
-
+import SerializedElementArrays: disk
 

@@ -12,7 +12,9 @@ export
   common_siteinds,
   contract,
   convert_eltype,
+  convert_leaf_eltype,
   dag!,
+  eltype,
   findfirstsiteind,
   findfirstsiteinds,
   findsite,
@@ -24,11 +26,18 @@ export
   lognorm,
   movesite,
   movesites,
+  ndims,
   normalize,
   ortho_lims,
+  orthocenter,
   reset_ortho_lims!,
   set_ortho_lims!,
   siteinds,
+  sim!,
+
+  # autompo/
+  AutoMPO,
+  add!,
 
   # mpo.jl
   # Types
@@ -86,11 +95,14 @@ export
   truncerrors,
 
   # projmpo.jl
+  checkflux,
+  disk,
   ProjMPO,
   lproj,
   product,
   rproj,
   noiseterm,
+  nsite,
   position!,
 
   # projmposum.jl

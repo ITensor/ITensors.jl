@@ -68,7 +68,7 @@ subtract!(os::OpSum, o::Tuple) = add!(os, -Ops.op_term(o))
 function isfermionic(t::Vector{Op}, sites)
   p = +1
   for op in t
-    if has_fermion_string(name(op), sites[site(op)])
+    if has_fermion_string(ITensors.name(op), sites[site(op)])
       p *= -1
     end
   end

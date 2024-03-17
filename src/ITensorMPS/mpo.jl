@@ -595,7 +595,7 @@ end
 
 (A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
-Apply(A::MPO, ψ::MPS; kwargs...) = Applied(apply, (A, ψ), NamedTuple(kwargs))
+Apply(A::MPO, ψ::MPS; kwargs...) = ITensors.LazyApply.Applied(apply, (A, ψ), NamedTuple(kwargs))
 
 function contract(A::MPO, ψ::MPS; alg=nothing, method=alg, kwargs...)
   # TODO: Delete `method` since it is deprecated.
