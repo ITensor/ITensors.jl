@@ -1,10 +1,8 @@
 using BlockArrays: BlockedUnitRange
 
-# TODO: Implement or delete these, these are from the old
-# version of `GradedAxes`.
-function dual end
-function fuse end
-function sector end
+# TODO: Decide what to do about `dual`. Should there just
+# be a version in `Sectors`?
+## function dual end
 
 # Represents the range `1:1` or `Base.OneTo(1)`.
 struct OneToOne{T} <: AbstractUnitRange{T} end
@@ -67,13 +65,15 @@ function tensor_product(a1::BlockedUnitRange, a2::BlockedUnitRange)
   return blockedrange(blocklengths)
 end
 
+function blocksortperm(a::BlockedUnitRange)
+  # TODO: Figure out how to deal with dual sectors.
+  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
+  ## return Block.(sortperm(nondual_sectors(a); rev=isdual(a)))
+  return Block.(sortperm(blocklabels(a)))
+end
+
 using BlockArrays: Block, BlockVector
 using SplitApplyCombine: groupcount
-
-function blocksortperm end
-
-invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
-
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
 function groupsortperm(v; kwargs...)
@@ -83,10 +83,28 @@ function groupsortperm(v; kwargs...)
   return BlockVector(perm, group_lengths)
 end
 
+# Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
+# Get the permutation for sorting, then group by common elements.
+# groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
+function blockmergesortperm(a::BlockedUnitRange)
+  # If it is dual, reverse the sorting so the sectors
+  # end up sorted in the same way whether or not the space
+  # is dual.
+  # TODO: Figure out how to deal with dual sectors.
+  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
+  ## return Block.(groupsortperm(nondual_sectors(a); rev=isdual(a)))
+  return Block.(groupsortperm(blocklabels(a)))
+end
+
+# Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
+invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
+
+# Used by `TensorAlgebra.fusedims` in `BlockSparseArraysGradedAxesExt`.
 function blockmergesortperm(a::GradedUnitRange)
   # If it is dual, reverse the sorting so the sectors
   # end up sorted in the same way whether or not the space
   # is dual.
+  # TODO: Figure out how to deal with dual sectors.
   # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
   return Block.(groupsortperm(blocklabels(a)))
 end

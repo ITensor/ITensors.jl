@@ -34,6 +34,16 @@ function Base.promote_rule(type1::Type{<:LabelledInteger}, type2::Type{<:Number}
   return promote_type(unlabel_type(type1), type2)
 end
 
+# Used by `Base.hash(::Integer)`.
+# TODO: Define `labelled_trailing_zeros` to be used by other
+# labelled number types.
+Base.trailing_zeros(x::LabelledInteger) = trailing_zeros(unlabel(x))
+
+# Used by `Base.hash(::Integer)`.
+# TODO: Define `labelled_righ_bit_shift` to be used by other
+# labelled number types.
+Base.:>>(x::LabelledInteger, y::Int) = >>(unlabel(x), y)
+
 Base.:(==)(x::LabelledInteger, y::LabelledInteger) = labelled_isequal(x, y)
 Base.:<(x::LabelledInteger, y::LabelledInteger) = labelled_isless(x, y)
 # TODO: Define `labelled_colon`.

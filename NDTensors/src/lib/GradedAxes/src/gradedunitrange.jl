@@ -2,6 +2,7 @@ using BlockArrays:
   BlockArrays,
   Block,
   BlockedUnitRange,
+  BlockIndex,
   BlockRange,
   BlockVector,
   blockedrange,
@@ -223,6 +224,10 @@ function blockedunitrange_getindices(ga::GradedUnitRange, indices::BlockRange)
   return labelled_blocks(unlabel_blocks(ga)[indices], blocklabels(ga, indices))
 end
 
+function blockedunitrange_getindices(a::GradedUnitRange, indices::BlockIndex{1})
+  return a[block(indices)][blockindex(indices)]
+end
+
 function Base.getindex(a::GradedUnitRange, index::Integer)
   return blockedunitrange_getindex(a, index)
 end
@@ -238,6 +243,15 @@ end
 function Base.getindex(
   a::GradedUnitRange, indices::BlockRange{1,<:Tuple{AbstractUnitRange{Int}}}
 )
+  return blockedunitrange_getindices(a, indices)
+end
+
+# Fixes ambiguity error with `BlockArrays`.
+function Base.getindex(a::GradedUnitRange, indices::BlockRange{1,Tuple{Base.OneTo{Int}}})
+  return blockedunitrange_getindices(a, indices)
+end
+
+function Base.getindex(a::GradedUnitRange, indices::BlockIndex{1})
   return blockedunitrange_getindices(a, indices)
 end
 
