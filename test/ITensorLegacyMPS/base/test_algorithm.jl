@@ -37,3 +37,5 @@ using Test
   res = truncate!(A; alg="my_new_algorithm", cutoff=cutoff)
   @test res == "my_new_algorithm was called with cutoff $cutoff"
 end
+
+nothing

@@ -19,3 +19,5 @@ using Test
   @test @inferred(Tuple{Any,MPS}, dmrg(H, psi0, sweeps; outputlevel=0)) isa
     Tuple{Float64,MPS}
 end
+
+nothing

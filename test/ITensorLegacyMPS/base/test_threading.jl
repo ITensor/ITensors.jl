@@ -55,3 +55,5 @@ end
   BLAS.set_num_threads(blas_num_threads)
   ITensors.NDTensors.Strided.set_num_threads(strided_num_threads)
 end
+
+nothing

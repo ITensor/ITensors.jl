@@ -299,8 +299,8 @@ function MPO(os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)::MP
   return M
 end
 
-function MPO(eltype::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; kwargs...)
-  return NDTensors.convert_scalartype(eltype, MPO(os, sites; kwargs...))
+function MPO(elt::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; kwargs...)
+  return NDTensors.convert_scalartype(elt, MPO(os, sites; kwargs...))
 end
 
 # Conversion from other formats

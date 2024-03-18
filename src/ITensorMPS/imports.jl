@@ -80,6 +80,8 @@ import Base.Broadcast:
   broadcastable,
   instantiate
 
+import Adapt: adapt_structure, adapt_storage
+
 import HDF5: read, write
 
 import KrylovKit:
