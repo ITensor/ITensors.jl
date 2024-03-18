@@ -5,7 +5,7 @@ using NDTensors.GPUArraysCoreExtensions: storagemode
 function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(eltype))
   return Position(1)
 end
-function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(Base.ndims))
+function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(ndims))
   return Position(2)
 end
 function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(storagemode))

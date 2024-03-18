@@ -11,7 +11,7 @@ end
 
 ## This will fail if position of `ndims` is not defined for `type`
 function set_ndims(type::Type{<:AbstractArray}, param)
-  return set_type_parameter(type, Base.ndims, param)
+  return set_type_parameter(type, ndims, param)
 end
 
 using SimpleTraits: SimpleTraits, @traitdef, @traitimpl
@@ -71,7 +71,7 @@ end
 for wrapper in [:PermutedDimsArray, :(Base.ReshapedArray), :SubArray]
   @eval begin
     position(type::Type{<:$wrapper}, ::typeof(eltype)) = Position(1)
-    position(type::Type{<:$wrapper}, ::typeof(Base.ndims)) = Position(2)
+    position(type::Type{<:$wrapper}, ::typeof(ndims)) = Position(2)
   end
 end
 for wrapper in [:(Base.ReshapedArray), :SubArray]

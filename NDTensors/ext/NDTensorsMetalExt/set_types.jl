@@ -11,7 +11,7 @@ end
 function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(eltype))
   return Position(1)
 end
-function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(Base.ndims))
+function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(ndims))
   return Position(2)
 end
 function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(storagemode))
