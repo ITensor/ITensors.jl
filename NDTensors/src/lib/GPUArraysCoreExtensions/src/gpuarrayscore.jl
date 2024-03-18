@@ -1,4 +1,5 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors, type_parameter, set_type_parameter
+using NDTensors.TypeParameterAccessors:
+  TypeParameterAccessors, type_parameter, set_type_parameter
 
 function storagemode(object)
   return storagemode(typeof(object))

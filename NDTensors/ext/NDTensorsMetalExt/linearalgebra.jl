@@ -1,4 +1,5 @@
-using NDTensors.TypeParameterAccessors: set_type_parameters, type_parameters, unwrap_array_type
+using NDTensors.TypeParameterAccessors:
+  set_type_parameters, type_parameters, unwrap_array_type
 
 function LinearAlgebra.qr(A::Exposed{<:MtlMatrix})
   Q, R = qr(expose(NDTensors.cpu(A)))
@@ -22,7 +23,9 @@ end
 function LinearAlgebra.eigen(A::Exposed{<:MtlMatrix})
   Dcpu, Ucpu = eigen(expose(NDTensors.cpu(A)))
   D = adapt(
-    set_type_parameters(unwrap_array_type(A), (eltype, ndims),  type_parameters(Dcpu , (eltype, ndims))),
+    set_type_parameters(
+      unwrap_array_type(A), (eltype, ndims), type_parameters(Dcpu, (eltype, ndims))
+    ),
     Dcpu,
   )
   U = adapt(unwrap_array_type(A), Ucpu)
@@ -33,7 +36,9 @@ function LinearAlgebra.svd(A::Exposed{<:MtlMatrix}; kwargs...)
   Ucpu, Scpu, Vcpu = svd(expose(NDTensors.cpu(A)); kwargs...)
   U = adapt(unwrap_array_type(A), Ucpu)
   S = adapt(
-    set_type_parameters(unwrap_array_type(A), (eltype, ndims), type_parameters(Scpu , (eltype, ndims))),
+    set_type_parameters(
+      unwrap_array_type(A), (eltype, ndims), type_parameters(Scpu, (eltype, ndims))
+    ),
     Scpu,
   )
   V = adapt(unwrap_array_type(A), Vcpu)
