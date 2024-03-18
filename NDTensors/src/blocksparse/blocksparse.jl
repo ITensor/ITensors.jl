@@ -15,7 +15,7 @@ end
 # TODO: Implement as `fieldtype(storagetype, :data)`.
 datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
 # TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+Base.ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
 # TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
 blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
 
@@ -23,7 +23,7 @@ function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:Abstrac
   return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
 end
 
-function SetParameters.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
+function TypeParameterAccessors.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
   return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
 end
 
@@ -112,7 +112,7 @@ Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
 
 complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
 
-ndims(::BlockSparse{T,V,N}) where {T,V,N} = N
+Base.ndims(::BlockSparse{T,V,N}) where {T,V,N} = N
 
 eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
