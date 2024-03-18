@@ -1,4 +1,4 @@
-module CUDAExtensions
+module AMDGPUExtensions
 include("roc.jl")
 
 end

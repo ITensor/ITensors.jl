@@ -1,7 +1,7 @@
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors
 using NDTensors.GPUArraysCoreExtensions: storagemode
 # Implemented in NDTensorsAMDGPUExt
-function Roc end
+function roc end
 
 ## Here we need an ROCArrayAdaptor to prevent conversion of 64 bit numbers to 32 bit.  
 ## We cannot write `adapt(CuVector, x)` because this
