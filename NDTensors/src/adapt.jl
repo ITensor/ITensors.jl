@@ -2,8 +2,6 @@ using .GPUArraysCoreExtensions: GPUArraysCoreExtensions
 adapt_structure(to, x::TensorStorage) = setdata(x, adapt(to, data(x)))
 adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 
-## use unwrap cpu here because Expose is included before NDTensors
-## TODO make a AMDGPUExtensions library with `AMDGPUExtensions.roc` definied.
 function GPUArraysCoreExtensions.cpu(eltype::Type{<:Number}, x)
   return fmap(x -> adapt(Array{eltype}, x), x)
 end
