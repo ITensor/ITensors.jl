@@ -8,6 +8,7 @@ expose(object) = Exposed{unwrap_array_type(object),typeof(object)}(object)
 
 unexpose(E::Exposed) = E.object
 
+## TODO remove TypeParameterAccessors when SetParameters is removed
 TypeParameterAccessors.parenttype(type::Type{<:Exposed}) = parameter(type, parenttype)
 function TypeParameterAccessors.position(::Type{<:Exposed}, ::typeof(parenttype))
   return TypeParameterAccessors.Position(1)
