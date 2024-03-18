@@ -1,4 +1,3 @@
-
 module ITensorMPS
 
 using Adapt
@@ -9,8 +8,6 @@ using KrylovKit
 using Printf
 using Random
 using TupleTools
-
-import ..ITensors.Ops: params
 
 include("imports.jl")
 include("exports.jl")

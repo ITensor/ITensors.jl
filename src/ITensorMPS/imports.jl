@@ -172,4 +172,6 @@ import ..ITensors:
   truncate!,
   which_op
 
+import ..ITensors.Ops: params
+
 import SerializedElementArrays: disk
