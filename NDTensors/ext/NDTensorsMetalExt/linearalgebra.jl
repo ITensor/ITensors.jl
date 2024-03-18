@@ -22,7 +22,7 @@ end
 function LinearAlgebra.eigen(A::Exposed{<:MtlMatrix})
   Dcpu, Ucpu = eigen(expose(NDTensors.cpu(A)))
   D = adapt(
-    set_type_parameters(unwrap_array_type(A), (eltype, ndims),  type_parameters(Scpu , (eltype, ndims))),
+    set_type_parameters(unwrap_array_type(A), (eltype, ndims),  type_parameters(Dcpu , (eltype, ndims))),
     Dcpu,
   )
   U = adapt(unwrap_array_type(A), Ucpu)
