@@ -25,8 +25,15 @@ unlabel_type(object) = typeof(unlabel(object))
 
 labelled_mul(x, y) = labelled_mul(LabelledStyle(x), x, LabelledStyle(y), y)
 labelled_mul(::IsLabelled, x, ::IsLabelled, y) = unlabel(x) * unlabel(y)
+# TODO: Define in terms of `set_value`?
 labelled_mul(::IsLabelled, x, ::NotLabelled, y) = labelled(unlabel(x) * y, label(x))
+# TODO: Define in terms of `set_value`?
 labelled_mul(::NotLabelled, x, ::IsLabelled, y) = labelled(x * unlabel(y), label(y))
+
+# TODO: This is only needed for older Julia versions, like Julia 1.6.
+# Delete once we drop support for older Julia versions.
+# TODO: Define in terms of `set_value`?
+labelled_minus(x) = labelled(-unlabel(x), label(x))
 
 for (f, labelled_f) in [(:div, :labelled_div), (:/, :labelled_division)]
   @eval begin

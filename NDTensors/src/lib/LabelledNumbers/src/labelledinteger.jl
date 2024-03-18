@@ -40,7 +40,7 @@ end
 Base.trailing_zeros(x::LabelledInteger) = trailing_zeros(unlabel(x))
 
 # Used by `Base.hash(::Integer)`.
-# TODO: Define `labelled_righ_bit_shift` to be used by other
+# TODO: Define `labelled_right_bit_shift` to be used by other
 # labelled number types.
 Base.:>>(x::LabelledInteger, y::Int) = >>(unlabel(x), y)
 
@@ -63,3 +63,9 @@ Base.:*(x::Integer, y::LabelledInteger) = labelled_mul(x, y)
 
 Base.:/(x::LabelledInteger, y::Number) = labelled_division(x, y)
 Base.div(x::LabelledInteger, y::Number) = labelled_div(x, y)
+
+# TODO: This is only needed for older Julia versions, like Julia 1.6.
+# Delete once we drop support for older Julia versions.
+# TODO: Define in terms of a generic `labelled_minus` function.
+# TODO: Define in terms of `set_value`?
+Base.:-(x::LabelledInteger) = labelled_minus(x)
