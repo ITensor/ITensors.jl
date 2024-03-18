@@ -32,7 +32,6 @@
 @deprecate setstore(T::ITensor, st) setstorage(T, st) false
 @deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
 
-
 # physics/autompo.jl
 @deprecate toMPO(args...; kwargs...) MPO(args...; kwargs...)
 

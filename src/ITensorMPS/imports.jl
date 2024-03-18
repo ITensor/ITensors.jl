@@ -84,14 +84,9 @@ import Adapt: adapt_structure, adapt_storage
 
 import HDF5: read, write
 
-import KrylovKit:
-  orthogonalize,
-  orthogonalize!
+import KrylovKit: orthogonalize, orthogonalize!
 
-import LinearAlgebra:
-  dot,
-  normalize!,
-  tr
+import LinearAlgebra: dot, normalize!, tr
 
 import ..ITensors.NDTensors:
   Algorithm,
@@ -118,28 +113,28 @@ import ..ITensors.NDTensors:
   timer,
   using_auto_fermion
 
-import ..ITensors: 
-  AbstractRNG, 
+import ..ITensors:
+  AbstractRNG,
   addtags,
   Apply,
   apply,
   argument,
-  Broadcasted, 
-  @Algorithm_str, 
+  Broadcasted,
+  @Algorithm_str,
   checkflux,
   contract,
   convert_leaf_eltype,
   commontags,
-  @debug_check, 
+  @debug_check,
   dag,
   data,
-  DefaultArrayStyle, 
+  DefaultArrayStyle,
   DiskVector,
   flux,
   hascommoninds,
   hasqns,
   hassameinds,
-  HDF5, 
+  HDF5,
   inner,
   isfermionic,
   maxdim,
@@ -149,14 +144,14 @@ import ..ITensors:
   noprime!,
   norm,
   normalize,
-  outer, 
-  OneITensor, 
+  outer,
+  OneITensor,
   orthogonalize!,
   permute,
   prime,
   prime!,
   product,
-  QNIndex, 
+  QNIndex,
   replaceinds,
   replaceprime,
   replacetags,
@@ -168,7 +163,7 @@ import ..ITensors:
   siteinds,
   splitblocks,
   store,
-  Style, 
+  Style,
   sum,
   swapprime,
   symmetrystyle,
@@ -178,4 +173,3 @@ import ..ITensors:
   which_op
 
 import SerializedElementArrays: disk
-
