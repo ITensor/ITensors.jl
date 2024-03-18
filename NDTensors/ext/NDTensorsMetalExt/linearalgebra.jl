@@ -1,4 +1,4 @@
-using NDTensors.TypeParameterAccessors: unwrap_array_type
+using NDTensors.TypeParameterAccessors: set_type_parameters, unwrap_array_type
 
 function LinearAlgebra.qr(A::Exposed{<:MtlMatrix})
   Q, R = qr(expose(NDTensors.cpu(A)))
@@ -19,7 +19,6 @@ function NDTensors.Expose.ql_positive(A::Exposed{<:MtlMatrix})
   return adapt(unwrap_array_type(A), Matrix(Q)), adapt(unwrap_array_type(A), L)
 end
 
-using NDTensors.TypeParameterAccessors: set_type_parameters
 function LinearAlgebra.eigen(A::Exposed{<:MtlMatrix})
   Dcpu, Ucpu = eigen(expose(NDTensors.cpu(A)))
   D = adapt(
