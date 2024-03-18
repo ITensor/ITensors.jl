@@ -26,13 +26,7 @@ function devices_list(test_args)
   end
 
   if "rocm" in test_args || "all" in test_args
-    if AMDGPU.functional()
-      push!(devs, NDTensors.roc)
-    else
-      println(
-        "Warning: AMDGPU.jl is not functional on this architecture and tests will be skipped.",
-      )
-    end
+    push!(devs, NDTensors.roc)
   end
 
   if "metal" in test_args || "all" in test_args
