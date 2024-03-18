@@ -59,7 +59,6 @@ using Base.Cartesian: @nexprs
 
 using Base.Threads: @spawn
 
-
 using .AMDGPUExtensions: roc
 using .CUDAExtensions: cu
 using .GPUArraysCoreExtensions: cpu

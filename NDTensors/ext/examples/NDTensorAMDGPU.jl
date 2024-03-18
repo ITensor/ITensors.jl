@@ -3,8 +3,7 @@
 using AMDGPU
 using NDTensors
 using ITensors
-using ITensors:
-  Index, ITensor, orthogonalize, qr, siteinds, svd
+using ITensors: Index, ITensor, orthogonalize, qr, siteinds, svd
 using Test: @test
 
 function main()
