@@ -1,5 +1,5 @@
 using NDTensors.MetalExtensions: MetalExtensions
-using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions
+using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions, set_storagemode
 using NDTensors.TypeParameterAccessors: specify_type_parameters, type_parameters
 
 GPUArraysCoreExtensions.cpu(e::Exposed{<:MtlArray}) = adapt(Array, e)
