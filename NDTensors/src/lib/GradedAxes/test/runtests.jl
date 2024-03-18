@@ -2,6 +2,6 @@
 using Test: @testset
 @testset "GradedAxes" begin
   include("test_basics.jl")
-  include("../ext/GradedAxesSectorsExt/test/runtests.jl")
+  include("test_tensor_product.jl")
 end
 end
