@@ -22,6 +22,7 @@ end
 
 # TODO: Implement as `copy(@view a[I...])`, which is then implemented
 # through `ArrayLayouts.sub_materialize`.
+using ..SparseArrayInterface: set_getindex_zero_function
 function blocksparse_getindex(
   a::AbstractArray{<:Any,N}, I::Vararg{AbstractVector{<:Block{1}},N}
 ) where {N}
@@ -30,8 +31,9 @@ function blocksparse_getindex(
   CI = map(i -> Int.(i), I)
   subblocks_a = blocks_a[CI...]
   subaxes = ntuple(ndims(a)) do i
-    return axes(a, i)[I[i]]
+    return only(axes(axes(a, i)[I[i]]))
   end
+  subblocks_a = set_getindex_zero_function(subblocks_a, BlockZero(subaxes))
   return typeof(a)(subblocks_a, subaxes)
 end
 
