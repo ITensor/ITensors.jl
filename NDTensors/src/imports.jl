@@ -29,6 +29,7 @@ for lib in [
   :UnspecifiedTypes,
   :TypeParameterAccessors,
   :GPUArraysCoreExtensions,
+  :AMDGPUExtensions,
   :CUDAExtensions,
   :MetalExtensions,
   :Expose,
@@ -58,9 +59,11 @@ using Base.Cartesian: @nexprs
 
 using Base.Threads: @spawn
 
+
+using .AMDGPUExtensions: roc
 using .CUDAExtensions: cu
-using .MetalExtensions: mtl
 using .GPUArraysCoreExtensions: cpu
+using .MetalExtensions: mtl
 
 import Base:
   # Types

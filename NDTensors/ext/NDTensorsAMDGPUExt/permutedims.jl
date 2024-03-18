@@ -1,4 +1,4 @@
-## Code adapted from NDTensors/ext/NDTensorsCUDAExt/permutedims.jl
+using NDTensors.Expose: Exposed, expose, parent, unexpose
 
 function Base.permutedims!(
   Edest::Exposed{<:ROCArray,<:Base.ReshapedArray}, Esrc::Exposed{<:ROCArray}, perm

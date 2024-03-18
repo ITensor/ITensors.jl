@@ -1,3 +1,5 @@
+using NDTensors.Expose: Exposed, expose, parent, unexpose
+using NDTensors.GPUArraysCoreExtensions: cpu
 function Base.getindex(E::Exposed{<:ROCArray})
   return AMDGPU.@allowscalar unexpose(E)[]
 end
@@ -14,5 +16,5 @@ end
 Base.any(f, E::Exposed{<:ROCArray,<:NDTensors.Tensor}) = any(f, data(unexpose(E)))
 
 function Base.print_array(io::IO, E::Exposed{<:ROCArray})
-  return Base.print_array(io, expose(NDTensors.cpu(E)))
+  return Base.print_array(io, expose(cpu(E)))
 end

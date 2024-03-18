@@ -1,4 +1,4 @@
-## Code adapted from NDTensors/ext/NDTensorsCUDAExt/copyto.jl
+using NDTensors.Expose: Exposed, expose, parent, unexpose
 
 # Same definition as `MtlArray`.
 function Base.copy(src::Exposed{<:ROCArray,<:Base.ReshapedArray})
