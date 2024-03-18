@@ -18,6 +18,7 @@ using Test: @test, @testset
     @test x ÷ 2 == 1
     @test label(x ÷ 2) == "x"
     @test -x == -2
+    @test hash(x) == hash(2)
   end
   @testset "Labelled array ($a)" for a in (collect(2:5), 2:5)
     x = labelled(a, "x")

@@ -69,3 +69,7 @@ Base.div(x::LabelledInteger, y::Number) = labelled_div(x, y)
 # TODO: Define in terms of a generic `labelled_minus` function.
 # TODO: Define in terms of `set_value`?
 Base.:-(x::LabelledInteger) = labelled_minus(x)
+
+# TODO: This is only needed for older Julia versions, like Julia 1.6.
+# Delete once we drop support for older Julia versions.
+Base.hash(x::LabelledInteger, h::UInt64) = labelled_hash(x, h)

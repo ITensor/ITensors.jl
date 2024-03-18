@@ -35,6 +35,10 @@ labelled_mul(::NotLabelled, x, ::IsLabelled, y) = labelled(x * unlabel(y), label
 # TODO: Define in terms of `set_value`?
 labelled_minus(x) = labelled(-unlabel(x), label(x))
 
+# TODO: This is only needed for older Julia versions, like Julia 1.6.
+# Delete once we drop support for older Julia versions.
+labelled_hash(x, h::UInt64) = hash(unlabel(x), h)
+
 for (f, labelled_f) in [(:div, :labelled_div), (:/, :labelled_division)]
   @eval begin
     $labelled_f(x, y) = $labelled_f(LabelledStyle(x), x, LabelledStyle(y), y)
