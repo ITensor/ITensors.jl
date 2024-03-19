@@ -8,7 +8,6 @@ using AMDGPU.Runtime.Mem
 using AMDGPU.rocBLAS
 using AMDGPU.rocSOLVER
 
-include("imports.jl")
 include("copyto.jl")
 include("set_types.jl")
 include("adapt.jl")
