@@ -238,7 +238,6 @@ export
   # physics/fermions.jl
   fparity,
   isfermionic,
-  parity_sign,
 
   # physics/lattices.jl
   Lattice,

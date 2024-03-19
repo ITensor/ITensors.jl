@@ -207,7 +207,7 @@ function sorteachterm(os::OpSum, sites)
     filter!(!iszero, perm)
     # and account for anti-commuting, fermionic operators
     # during above sort; put resulting sign into coef
-    t *= parity_sign(perm)
+    t *= ITensors.parity_sign(perm)
     terms(os)[j] = t
   end
 
