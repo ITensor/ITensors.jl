@@ -466,5 +466,3 @@ import ITensors.ITensorMPS: nsite, set_nsite!, site_range
     energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
   end
 end
-
-nothing

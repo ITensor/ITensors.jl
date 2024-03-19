@@ -97,5 +97,3 @@ using ITensors, Test
     #println("Final energy = $energy")
   end
 end
-
-nothing

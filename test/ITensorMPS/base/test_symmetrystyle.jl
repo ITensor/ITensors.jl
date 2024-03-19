@@ -11,5 +11,3 @@ using Test
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(psiqn)) ==
     ITensors.HasQNs()
 end
-
-nothing

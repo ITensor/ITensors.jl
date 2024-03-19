@@ -2006,5 +2006,3 @@ end
     @test norm(M - Mt) ≈ 0 atol = 1e-12
   end
 end
-
-nothing

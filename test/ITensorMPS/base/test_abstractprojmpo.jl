@@ -78,5 +78,3 @@ import ITensors.ITensorMPS
     @test_broken contract(po, ITensor(one(Bool)))
   end
 end
-
-nothing
