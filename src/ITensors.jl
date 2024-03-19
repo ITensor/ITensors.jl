@@ -68,6 +68,7 @@ using PackageCompiler
 using Pkg
 using Printf
 using Random
+using Reexport
 using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
@@ -183,7 +184,7 @@ include("physics/fermions.jl")
 # MPS/MPO
 #
 include("ITensorMPS/ITensorMPS.jl")
-using .ITensorMPS
+@reexport using .ITensorMPS
 
 #####################################
 # ITensorsNamedDimsArraysExt

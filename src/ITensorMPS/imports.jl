@@ -146,7 +146,6 @@ import ..ITensors:
   normalize,
   outer,
   OneITensor,
-  orthogonalize!,
   permute,
   prime,
   prime!,
