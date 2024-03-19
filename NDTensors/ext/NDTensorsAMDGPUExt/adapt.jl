@@ -6,7 +6,7 @@ end
 
 function Adapt.adapt_storage(adaptor::ROCArrayAdaptor, xs::AbstractArray)
   ElT = eltype(xs)
-  BufT = stro(adaptor)
+  BufT = storagemode(adaptor)
   N = ndims(xs)
   return isbits(xs) ? xs : adapt(ROCArray{ElT,N,BufT}, xs)
 end
