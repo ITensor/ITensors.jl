@@ -26,7 +26,7 @@ function devices_list(test_args)
   end
 
   if "rocm" in test_args || "all" in test_args
-    push!(devs, NDTensors.roc)
+    push!(devs, NDTensors.AMDGPUExtensions.roc)
   end
 
   if "metal" in test_args || "all" in test_args
