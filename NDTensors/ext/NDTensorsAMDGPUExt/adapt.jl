@@ -1,4 +1,4 @@
-using NDTensors.AMDGPUExtensions: AMDGPUExtensions, RocArrayAdaptor
+using NDTensors.AMDGPUExtensions: AMDGPUExtensions, ROCArrayAdaptor
 using NDTensors.GPUArraysCoreExtensions: storagemode
 function AMDGPUExtensions.roc(xs)
   return fmap(x -> adapt(ROCArrayAdaptor{AMDGPU.Runtime.Mem.HIPBuffer}(), x), xs)

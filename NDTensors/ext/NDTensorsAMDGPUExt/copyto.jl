@@ -1,4 +1,5 @@
 using NDTensors.Expose: Exposed, expose, parent, unexpose
+using LinearAlgebra: LinearAlgebra, Adjoint
 
 # Same definition as `MtlArray`.
 function Base.copy(src::Exposed{<:ROCArray,<:Base.ReshapedArray})
