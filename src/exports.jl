@@ -230,7 +230,6 @@ export
   # Macros
   @preserve_ortho,
   # Methods
-  AbstractMPS,
   add,
   common_siteind,
   common_siteinds,
