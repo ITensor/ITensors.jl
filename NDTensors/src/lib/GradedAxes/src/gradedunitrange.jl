@@ -9,6 +9,7 @@ using BlockArrays:
   BlockIndexRange,
   blockfirsts,
   blocklasts,
+  blocklength,
   blocklengths,
   findblock,
   findblockindex,
@@ -61,6 +62,11 @@ function BlockArrays.blockedrange(lblocklengths::AbstractVector{<:LabelledIntege
 end
 
 Base.last(a::GradedUnitRange) = isempty(a.lasts) ? first(a) - 1 : last(a.lasts)
+
+function BlockArrays.blocks(a::GradedUnitRange)
+  # TODO: Fix `BlockRange`, use `BlockRange` instead.
+  return [a[Block(i)] for i in 1:blocklength(a)]
+end
 
 function gradedrange(lblocklengths::AbstractVector{<:Pair{<:Any,<:Integer}})
   return gradedrange(labelled.(last.(lblocklengths), first.(lblocklengths)))

@@ -14,6 +14,8 @@ Base.first(a::UnitRangeDual) = label_dual(first(nondual(a)))
 Base.last(a::UnitRangeDual) = label_dual(last(nondual(a)))
 Base.step(a::UnitRangeDual) = label_dual(step(nondual(a)))
 
+Base.view(a::UnitRangeDual, index::Block{1}) = a[index]
+
 function Base.getindex(a::UnitRangeDual, indices::AbstractUnitRange{<:Integer})
   return dual(getindex(nondual(a), indices))
 end
@@ -30,13 +32,12 @@ Base.getindex(a::UnitRangeDual, indices::Block{1}) = dual(getindex(nondual(a), i
 # TODO: Use `label_dual.` here, make broadcasting work?
 Base.getindex(a::UnitRangeDual, indices::BlockRange) = dual(getindex(nondual(a), indices))
 
+# TODO: Use `label_dual.` here, make broadcasting work?
 function unitrangedual_getindices_blocks(a, indices)
   a_indices = getindex(nondual(a), indices)
   return mortar([dual(b) for b in blocks(a_indices)])
 end
 
-# TODO: Fix this, actually take the `dual`.
-# TODO: Use `label_dual.` here, make broadcasting work?
 function Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
@@ -44,16 +45,6 @@ end
 function Base.getindex(a::UnitRangeDual, indices::Vector{<:BlockIndexRange{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
-
-# Fix ambiguity errors with Base.
-## for type in [
-##   :Integer,
-##   :(AbstractUnitRange{<:Integer}),
-##   :(Block{1}),
-##   :BlockRange,
-## ]
-##   @eval Base.getindex(a::UnitRangeDual, indices::$type) = dual(getindex(nondual(a), indices))
-## end
 
 Base.axes(a::UnitRangeDual) = axes(nondual(a))
 
