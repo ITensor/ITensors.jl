@@ -13,7 +13,6 @@ using BlockArrays:
   findblock,
   findblockindex,
   mortar
-# using .BlockedUnitRanges: BlockedUnitRange
 using ..LabelledNumbers: LabelledNumbers, LabelledInteger, label, labelled, unlabel
 
 # Custom `BlockedUnitRange` constructor that takes a unit range
