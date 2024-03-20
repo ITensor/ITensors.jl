@@ -48,10 +48,13 @@ Base.:(==)(x::LabelledInteger, y::LabelledInteger) = labelled_isequal(x, y)
 Base.:<(x::LabelledInteger, y::LabelledInteger) = labelled_isless(x, y)
 # TODO: Define `labelled_colon`.
 (::Base.Colon)(start::LabelledInteger, stop::LabelledInteger) = unlabel(start):unlabel(stop)
-# TODO: Define `labelled_one`.
-Base.one(lobject::LabelledInteger) = one(unlabel(lobject))
-# TODO: Define `labelled_oneunit`.
-Base.oneunit(lobject::LabelledInteger) = labelled(one(lobject), label(lobject))
+Base.zero(lobject::LabelledInteger) = labelled_zero(lobject)
+Base.one(lobject::LabelledInteger) = labelled_one(lobject)
+Base.one(type::Type{<:LabelledInteger}) = labelled_one(type)
+Base.oneunit(lobject::LabelledInteger) = labelled_oneunit(lobject)
+Base.oneunit(type::Type{<:LabelledInteger}) = error("Not implemented.")
+
+Base.Int(x::LabelledInteger) = Int(unlabel(x))
 
 Base.:*(x::LabelledInteger, y::LabelledInteger) = labelled_mul(x, y)
 Base.:*(x::LabelledInteger, y::Number) = labelled_mul(x, y)

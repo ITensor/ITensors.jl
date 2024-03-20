@@ -1,4 +1,5 @@
-struct LabelledArray{T,N,Value<:AbstractArray{T,N},Label} <: AbstractArray{T,N}
+struct LabelledArray{T,N,Value<:AbstractArray{T,N},Label} <:
+       AbstractArray{LabelledInteger{T,Label},N}
   value::Value
   label::Label
 end
