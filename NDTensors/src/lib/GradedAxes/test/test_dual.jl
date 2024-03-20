@@ -28,16 +28,14 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test ad[[2, 4]] == [2, 4]
   @test label(ad[[2, 4]][2]) == U1(-1)
   @test ad[Block(2)] == 3:5
-  # TODO: `label(UnitRangeDual)` not defined.
-  @test_broken label(ad[Block(2)]) == U1(-1)
+  @test label(ad[Block(2)]) == U1(-1)
   @test ad[Block(1):Block(2)][Block(2)] == 3:5
-  # TODO: `label(UnitRangeDual)` not defined.
-  @test_broken label(ad[Block(1):Block(2)][Block(2)]) == U1(-1)
+  @test label(ad[Block(1):Block(2)][Block(2)]) == U1(-1)
   @test ad[[Block(2), Block(1)]][Block(1)] == 3:5
   # TODO: This outputs `U1(1)`.
   @test_broken label(ad[[Block(2), Block(1)]][Block(1)]) == U1(-1)
   @test ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)] == 3:4
-  # TODO: This should output a `UnitRangeDual`.
+  # TODO: This should output an `ArrayDual`.
   @test_broken label(ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)]) == U1(-1)
 end
 end

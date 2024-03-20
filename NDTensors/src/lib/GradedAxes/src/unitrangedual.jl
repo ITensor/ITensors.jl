@@ -56,6 +56,9 @@ function BlockArrays.BlockSlice(b::Block, a::LabelledUnitRange)
   return BlockSlice(b, unlabel(a))
 end
 
+using NDTensors.LabelledNumbers: LabelledNumbers, label
+LabelledNumbers.label(a::UnitRangeDual) = dual(label(nondual(a)))
+
 using BlockArrays: BlockArrays, blockaxes, blocklasts, findblock
 BlockArrays.blockaxes(a::UnitRangeDual) = blockaxes(nondual(a))
 BlockArrays.blockfirsts(a::UnitRangeDual) = label_dual.(blockfirsts(nondual(a)))
