@@ -13,6 +13,7 @@ using BlockArrays:
   findblock,
   findblockindex,
   mortar
+# using .BlockedUnitRanges: BlockedUnitRange
 using ..LabelledNumbers: LabelledNumbers, LabelledInteger, label, labelled, unlabel
 
 # Custom `BlockedUnitRange` constructor that takes a unit range
@@ -41,6 +42,9 @@ function blockedunitrange_findblockindex(a::BlockedUnitRange, index::Integer)
 end
 
 const GradedUnitRange{BlockLasts<:Vector{<:LabelledInteger}} = BlockedUnitRange{BlockLasts}
+
+# TODO: Use `TypeParameterAccessors`.
+Base.eltype(::Type{<:GradedUnitRange{<:Vector{T}}}) where {T} = T
 
 function gradedrange(lblocklengths::AbstractVector{<:LabelledInteger})
   brange = blockedrange(unlabel.(lblocklengths))
