@@ -1,5 +1,6 @@
 using NDTensors.Expose: Exposed, expose, parent, unexpose
 using LinearAlgebra: LinearAlgebra, Adjoint
+using AMDGPU: ROCArray
 
 # Same definition as `MtlArray`.
 function Base.copy(src::Exposed{<:ROCArray,<:Base.ReshapedArray})

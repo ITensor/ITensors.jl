@@ -42,14 +42,15 @@ function NDTensors.svd_catch_error(A::CuMatrix, ::CUDA.CUSOLVER.QRAlgorithm)
   return USV
 end
 
-using NDTensors.Expose: expose, ql, ql_positive
+using NDTensors.GPUArraysCoreExtensions: cpu
+using NDTensors.Expose: Expose, expose, ql, ql_positive
 using NDTensors.TypeParameterAccessors: unwrap_array_type
 ## TODO currently AMDGPU doesn't have ql so make a ql function
-function NDTensors.Expose.ql(A::Exposed{<:CuMatrix})
-  Q, L = ql(expose(NDTensors.cpu(A)))
+function Expose.ql(A::Exposed{<:CuMatrix})
+  Q, L = ql(expose(cpu(A)))
   return adapt(unwrap_array_type(A), Matrix(Q)), adapt(unwrap_array_type(A), L)
 end
-function NDTensors.Expose.ql_positive(A::Exposed{<:CuMatrix})
-  Q, L = ql_positive(expose(NDTensors.cpu(A)))
+function Expose.ql_positive(A::Exposed{<:CuMatrix})
+  Q, L = ql_positive(expose(cpu(A)))
   return adapt(unwrap_array_type(A), Matrix(Q)), adapt(unwrap_array_type(A), L)
 end

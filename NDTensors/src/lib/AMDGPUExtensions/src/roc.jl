@@ -1,4 +1,4 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 using NDTensors.GPUArraysCoreExtensions: storagemode
 # Implemented in NDTensorsAMDGPUExt
 function roc end
@@ -9,7 +9,6 @@ function roc end
 ## default_buffertype. Also `adapt(CuVector{<:Any, <:Any, Buffertype})` fails to work properly
 struct ROCArrayAdaptor{B} end
 
-## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(::Type{<:ROCArrayAdaptor}, ::typeof(storagemode))
-  return TypeParameterAccessors.Position(1)
+  return Position(1)
 end

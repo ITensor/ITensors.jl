@@ -1,5 +1,7 @@
 using NDTensors.Expose: Exposed, expose, parent, unexpose
 using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!
+using AMDGPU: ROCArray
+
 # This was calling generic matrix multiplication.
 function LinearAlgebra.mul!(
   CM::Exposed{<:ROCArray,<:LinearAlgebra.Transpose},

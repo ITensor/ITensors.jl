@@ -1,4 +1,5 @@
 using NDTensors.Expose: Exposed, expose, parent, unexpose
+using AMDGPU: ROCArray
 
 function Base.permutedims!(
   Edest::Exposed{<:ROCArray,<:Base.ReshapedArray}, Esrc::Exposed{<:ROCArray}, perm

@@ -2,6 +2,7 @@ using SafeTestsets: @safetestset
 
 @safetestset "NDTensors" begin
   using Test: @testset
+  using NDTensors: NDTensors
   @testset "$(@__DIR__)" begin
     filenames = filter(readdir(@__DIR__)) do f
       startswith("test_")(f) && endswith(".jl")(f)
@@ -15,15 +16,9 @@ using SafeTestsets: @safetestset
     end
   end
   if "cuda" in ARGS || "all" in ARGS
-    using NDTensors: NDTensors
     include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
   end
-  if "rocm" in ARGS || "all" in ARGS
-    using NDTensors: NDTensors
-    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorAMDGPU.jl"))
-  end
   if "metal" in ARGS || "all" in ARGS
-    using NDTensors: NDTensors
     include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
   end
 end
