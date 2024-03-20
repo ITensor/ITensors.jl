@@ -33,7 +33,6 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test ad[[Block(2), Block(1)]][Block(1)] == 3:5
   @test label(ad[[Block(2), Block(1)]][Block(1)]) == U1(-1)
   @test ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)] == 3:4
-  # TODO: This should output an `ArrayDual`.
-  @test_broken label(ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)]) == U1(-1)
+  @test label(ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)]) == U1(-1)
 end
 end

@@ -30,15 +30,19 @@ Base.getindex(a::UnitRangeDual, indices::Block{1}) = dual(getindex(nondual(a), i
 # TODO: Use `label_dual.` here, make broadcasting work?
 Base.getindex(a::UnitRangeDual, indices::BlockRange) = dual(getindex(nondual(a), indices))
 
-# TODO: Fix this, actually take the `dual`.
-# TODO: Use `label_dual.` here, make broadcasting work?
-function Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}})
+function unitrangedual_getindices_blocks(a, indices)
   a_indices = getindex(nondual(a), indices)
   return mortar([dual(b) for b in blocks(a_indices)])
 end
 
+# TODO: Fix this, actually take the `dual`.
+# TODO: Use `label_dual.` here, make broadcasting work?
+function Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}})
+  return unitrangedual_getindices_blocks(a, indices)
+end
+
 function Base.getindex(a::UnitRangeDual, indices::Vector{<:BlockIndexRange{1}})
-  return label_dual.(getindex(nondual(a), indices))
+  return unitrangedual_getindices_blocks(a, indices)
 end
 
 # Fix ambiguity errors with Base.
