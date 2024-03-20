@@ -12,7 +12,7 @@ function AMDGPUExtensions.roc(xs, buffer=default_type_parameter(ROCArray, storag
 end
 
 function Adapt.adapt_storage(adaptor::ROCArrayAdaptor, xs::AbstractArray)
-  new_parameters = (type_parameters(xs, (eltype, ndims)..., storagemode(adaptor)))
+  new_parameters = (type_parameters(xs, (eltype, ndims))..., storagemode(adaptor))
   roctype = set_type_parameters(ROCArray, (eltype, ndims, storagemode), new_parameters)
   return isbits(xs) ? xs : adapt(roctype, xs)
 end
