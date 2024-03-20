@@ -2,7 +2,7 @@ using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
 using NDTensors.AMDGPUExtensions: AMDGPUExtensions, ROCArrayAdaptor
 using NDTensors.GPUArraysCoreExtensions: storagemode
 using NDTensors.TypeParameterAccessors:
-  set_type_parameter, set_type_parameters, type_parameter, type_parameters
+  default_type_parameter, set_type_parameter, set_type_parameters, type_parameter, type_parameters
 using Adapt: Adapt, adapt
 using AMDGPU: AMDGPU, ROCArray, ROCVector
 using Functors: fmap
