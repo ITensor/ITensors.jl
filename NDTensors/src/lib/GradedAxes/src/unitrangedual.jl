@@ -15,7 +15,7 @@ Base.last(a::UnitRangeDual) = label_dual(last(nondual(a)))
 Base.step(a::UnitRangeDual) = label_dual(step(nondual(a)))
 
 function Base.getindex(a::UnitRangeDual, indices::AbstractUnitRange{<:Integer})
-  return label_dual.(getindex(nondual(a), indices))
+  return dual(getindex(nondual(a), indices))
 end
 
 using BlockArrays: Block, BlockIndexRange, BlockRange
@@ -32,7 +32,10 @@ Base.getindex(a::UnitRangeDual, indices::BlockRange) = dual(getindex(nondual(a),
 
 # TODO: Fix this, actually take the `dual`.
 # TODO: Use `label_dual.` here, make broadcasting work?
-Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}}) = getindex(nondual(a), indices)
+function Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}})
+  a_indices = getindex(nondual(a), indices)
+  return mortar([dual(b) for b in blocks(a_indices)])
+end
 
 function Base.getindex(a::UnitRangeDual, indices::Vector{<:BlockIndexRange{1}})
   return label_dual.(getindex(nondual(a), indices))

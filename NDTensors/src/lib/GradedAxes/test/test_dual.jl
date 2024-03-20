@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using BlockArrays: Block, blockaxes, blockfirsts, blocklasts, blocks, findblock
-using NDTensors.GradedAxes: GradedAxes, dual, gradedrange, nondual
+using NDTensors.GradedAxes: GradedAxes, UnitRangeDual, dual, gradedrange, nondual
 using NDTensors.LabelledNumbers: LabelledInteger, label, labelled
 using Test: @test, @test_broken, @testset
 struct U1
@@ -22,9 +22,8 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test ad[4] == 4
   @test label(ad[4]) == U1(-1)
   @test ad[2:4] == 2:4
-  @test_broken ad[2:4] isa UnitRangeDual
-  # TODO: `ad[2:4]` outputs a strange type, should output a `UnitRangeDual`.
-  @test_broken label(ad[2:4][Block(2)]) == U1(-1)
+  @test ad[2:4] isa UnitRangeDual
+  @test label(ad[2:4][Block(2)]) == U1(-1)
   @test ad[[2, 4]] == [2, 4]
   @test label(ad[[2, 4]][2]) == U1(-1)
   @test ad[Block(2)] == 3:5
@@ -32,8 +31,7 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test ad[Block(1):Block(2)][Block(2)] == 3:5
   @test label(ad[Block(1):Block(2)][Block(2)]) == U1(-1)
   @test ad[[Block(2), Block(1)]][Block(1)] == 3:5
-  # TODO: This outputs `U1(1)`.
-  @test_broken label(ad[[Block(2), Block(1)]][Block(1)]) == U1(-1)
+  @test label(ad[[Block(2), Block(1)]][Block(1)]) == U1(-1)
   @test ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)] == 3:4
   # TODO: This should output an `ArrayDual`.
   @test_broken label(ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)]) == U1(-1)

@@ -21,6 +21,8 @@ using Test: @test, @testset
     @test label(x ÷ 2) == "x"
     @test -x == -2
     @test hash(x) == hash(2)
+    @test zero(x) == false
+    @test label(zero(x)) == "x"
     @test one(x) == true
     @test !islabelled(one(x))
     @test oneunit(x) == true
