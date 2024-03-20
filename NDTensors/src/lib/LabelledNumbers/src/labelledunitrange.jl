@@ -27,7 +27,6 @@ function Base.getindex(a::LabelledUnitRange, indices::AbstractUnitRange{<:Intege
 end
 
 function Base.iterate(a::LabelledUnitRange, i)
-  @inline
   i == last(a) && return nothing
   next = convert(eltype(a), labelled(i + step(a), label(a)))
   return (next, next)
