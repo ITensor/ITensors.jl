@@ -9,6 +9,7 @@ using BlockArrays:
   BlockIndexRange,
   blockfirsts,
   blocklasts,
+  blocklength,
   blocklengths,
   findblock,
   findblockindex,
@@ -42,6 +43,9 @@ end
 
 const GradedUnitRange{BlockLasts<:Vector{<:LabelledInteger}} = BlockedUnitRange{BlockLasts}
 
+# TODO: Use `TypeParameterAccessors`.
+Base.eltype(::Type{<:GradedUnitRange{<:Vector{T}}}) where {T} = T
+
 function gradedrange(lblocklengths::AbstractVector{<:LabelledInteger})
   brange = blockedrange(unlabel.(lblocklengths))
   lblocklasts = labelled.(blocklasts(brange), label.(lblocklengths))
@@ -58,6 +62,17 @@ function BlockArrays.blockedrange(lblocklengths::AbstractVector{<:LabelledIntege
 end
 
 Base.last(a::GradedUnitRange) = isempty(a.lasts) ? first(a) - 1 : last(a.lasts)
+
+# TODO: This needs to be defined to circumvent an issue
+# in the `BlockArrays.BlocksView` constructor. This
+# is likely caused by issues around `BlockedUnitRange` constraining
+# the element type to be `Int`, which is being fixed in:
+# https://github.com/JuliaArrays/BlockArrays.jl/pull/337
+# Remove this definition once that is fixed.
+function BlockArrays.blocks(a::GradedUnitRange)
+  # TODO: Fix `BlockRange`, try using `BlockRange` instead.
+  return [a[Block(i)] for i in 1:blocklength(a)]
+end
 
 function gradedrange(lblocklengths::AbstractVector{<:Pair{<:Any,<:Integer}})
   return gradedrange(labelled.(last.(lblocklengths), first.(lblocklengths)))

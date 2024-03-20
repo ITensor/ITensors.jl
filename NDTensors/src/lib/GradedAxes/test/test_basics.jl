@@ -1,6 +1,13 @@
 @eval module $(gensym())
 using BlockArrays:
-  Block, BlockVector, blockedrange, blockfirsts, blocklasts, blocklength, blocklengths
+  Block,
+  BlockVector,
+  blockedrange,
+  blockfirsts,
+  blocklasts,
+  blocklength,
+  blocklengths,
+  blocks
 using NDTensors.GradedAxes: GradedUnitRange, blocklabels, gradedrange
 using NDTensors.LabelledNumbers: LabelledUnitRange, label, labelled, unlabel
 using Test: @test, @test_broken, @testset
@@ -12,6 +19,11 @@ using Test: @test, @test_broken, @testset
   )
     @test a isa GradedUnitRange
     @test length(a) == 5
+    @test length(blocks(a)) == 2
+    @test blocks(a)[1] == 1:2
+    @test label(blocks(a)[1]) == "x"
+    @test blocks(a)[2] == 3:5
+    @test label(blocks(a)[2]) == "y"
     @test a[Block(2)] == 3:5
     @test label(a[Block(2)]) == "y"
     @test a[Block(2)] isa LabelledUnitRange
