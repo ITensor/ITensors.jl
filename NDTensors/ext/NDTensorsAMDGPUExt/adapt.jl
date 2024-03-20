@@ -5,17 +5,17 @@ using NDTensors.TypeParameterAccessors:
   set_type_parameter, set_type_parameters, type_parameter, type_parameters
 using Adapt: Adapt, adapt
 using AMDGPU: AMDGPU, ROCArray, ROCVector
+using Functors: fmap
 
-function AMDGPUExtensions.roc(xs)
-  return fmap(x -> adapt(ROCArrayAdaptor{AMDGPU.Runtime.Mem.HIPBuffer}(), x), xs)
+function AMDGPUExtensions.roc(xs, buffer=default_type_parameter(ROCArray, storagemode))
+  return fmap(x -> adapt(ROCArrayAdaptor{buffer}(), x), xs)
 end
 
 function Adapt.adapt_storage(adaptor::ROCArrayAdaptor, xs::AbstractArray)
+  new_parameters = (type_parameters(xs, (eltype, ndims)..., storagemode(adaptor)))
   roctype = set_type_parameters(
-    ROCArray, (eltype, ndims), type_parameters(xs, (eltype, ndims))
+    ROCArray, (eltype, ndims, storagemode), new_parameters
   )
-  roctype = set_type_parameter(roctype, storagemode, storagemode(adaptor))
-
   return isbits(xs) ? xs : adapt(roctype, xs)
 end
 

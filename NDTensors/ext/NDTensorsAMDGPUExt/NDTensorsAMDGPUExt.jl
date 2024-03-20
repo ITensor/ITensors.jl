@@ -1,5 +1,4 @@
 module NDTensorsAMDGPUExt
-using Functors
 
 include("copyto.jl")
 include("set_types.jl")

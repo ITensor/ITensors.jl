@@ -8,7 +8,7 @@ function Base.getindex(E::Exposed{<:ROCArray})
 end
 
 function Base.setindex!(E::Exposed{<:ROCArray}, x::Number)
-  AMDGPU.@allowscalar unexpose(E)[] = x
+  @allowscalar unexpose(E)[] = x
   return unexpose(E)
 end
 
