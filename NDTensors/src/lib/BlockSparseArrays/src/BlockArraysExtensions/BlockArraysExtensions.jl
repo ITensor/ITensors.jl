@@ -13,6 +13,7 @@ using BlockArrays:
   blocks,
   findblock,
   findblockindex
+using Compat: allequal
 using Dictionaries: Dictionary, Indices
 using ..SparseArrayInterface: stored_indices
 
