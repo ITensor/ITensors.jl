@@ -11,6 +11,13 @@ labelled(object::AbstractUnitRange, label) = LabelledUnitRange(object, label)
 unlabel(lobject::LabelledUnitRange) = lobject.value
 unlabel_type(::Type{<:LabelledUnitRange{Value}}) where {Value} = Value
 
+# Used by `CartesianIndices` constructor.
+# TODO: Maybe reconsider this definition? Also, this should preserve
+# the label if possible, currently it drops the label.
+function Base.AbstractUnitRange{T}(a::LabelledUnitRange) where {T}
+  return AbstractUnitRange{T}(unlabel(a))
+end
+
 for f in [:first, :getindex, :last, :length, :step]
   @eval Base.$f(a::LabelledUnitRange, args...) = labelled($f(unlabel(a), args...), label(a))
 end

@@ -129,8 +129,6 @@ end
 
 # TODO: Move to `BlockArraysExtensions`.
 function blockindices(axis::AbstractUnitRange, block::Block, indices::AbstractUnitRange)
-  @show indices
-  error()
   indices_within_block = intersect(indices, axis[block])
   if iszero(length(indices_within_block))
     # Falls outside of block
@@ -146,7 +144,6 @@ end
 function blockindices(
   axis::AbstractUnitRange, block::Block, indices::AbstractVector{<:Block{1}}
 )
-  error()
   if block ∉ indices
     # Falls outside of block
     return 1:0
