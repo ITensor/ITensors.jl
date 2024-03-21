@@ -148,5 +148,3 @@ import ITensors: nactive
     @test QN("T", -3, 3) == QN("T", 0, 3)
   end
 end
-
-nothing

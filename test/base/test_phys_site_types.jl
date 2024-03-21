@@ -846,5 +846,3 @@ using ITensors, LinearAlgebra, Test
     @test op(s, "a", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
   end
 end
-
-nothing
