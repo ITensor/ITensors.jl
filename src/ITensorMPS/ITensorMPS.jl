@@ -1,14 +1,6 @@
 module ITensorMPS
 
-using Adapt
-using HDF5
-using ..ITensors
-using IsApprox
-using KrylovKit
-using Printf
-using Random
-using TupleTools
-
+include("usings.jl")
 include("imports.jl")
 include("exports.jl")
 include("abstractmps.jl")

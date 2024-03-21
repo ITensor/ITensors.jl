@@ -61,7 +61,6 @@ using DocStringExtensions
 using Functors
 using HDF5
 using IsApprox
-using KrylovKit
 using LinearAlgebra
 using NDTensors
 using PackageCompiler
@@ -138,7 +137,6 @@ include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
-include("iterativesolvers.jl")
 include("adapt.jl")
 include("set_types.jl")
 
@@ -185,6 +183,12 @@ include("physics/fermions.jl")
 #
 include("ITensorMPS/ITensorMPS.jl")
 @reexport using .ITensorMPS
+
+# Only include iterativesolvers.jl after ITensorMPS
+# since it defines orthogonalize! which could
+# conflict with definition in ITensorMPS
+import .ITensorMPS: orthogonalize!
+include("iterativesolvers.jl")
 
 #####################################
 # ITensorsNamedDimsArraysExt

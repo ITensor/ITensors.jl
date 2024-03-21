@@ -1,5 +1,5 @@
 using ITensors, Test, Random
-import ITensors.ITensorMPS: nsite, set_nsite!, site_range
+using ITensors.ITensorMPS: nsite, set_nsite!, site_range
 
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
