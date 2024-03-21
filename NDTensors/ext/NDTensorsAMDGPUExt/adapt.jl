@@ -11,7 +11,7 @@ using Adapt: Adapt, adapt
 using AMDGPU: AMDGPU, ROCArray, ROCVector
 using Functors: fmap
 
-function AMDGPUExtensions.roc(xs, storagemode=default_type_parameter(ROCArray, storagemode))
+function AMDGPUExtensions.roc(xs; storagemode=default_type_parameter(ROCArray, storagemode))
   return fmap(x -> adapt(ROCArrayAdaptor{storagemode}(), x), xs)
 end
 
