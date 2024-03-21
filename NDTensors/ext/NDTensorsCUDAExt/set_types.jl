@@ -1,7 +1,7 @@
 # TypeParameterAccessors definitions
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 using NDTensors.GPUArraysCoreExtensions: storagemode
-## TODO remove TypeParameterAccessors when SetParameters is removed
+
 function TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(eltype))
   return Position(1)
 end

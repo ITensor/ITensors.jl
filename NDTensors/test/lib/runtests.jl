@@ -4,6 +4,7 @@ using Test: @testset
 @testset "Test NDTensors lib $lib" for lib in [
   "AlgorithmSelection",
   "AllocateData",
+  "AMDGPUExtensions",
   "BaseExtensions",
   "BlockSparseArrays",
   "BroadcastMapConversion",
