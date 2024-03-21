@@ -184,12 +184,6 @@ include("physics/fermions.jl")
 include("ITensorMPS/ITensorMPS.jl")
 @reexport using .ITensorMPS
 
-# Only include iterativesolvers.jl after ITensorMPS
-# since it defines orthogonalize! which could
-# conflict with definition in ITensorMPS
-import .ITensorMPS: orthogonalize!
-include("iterativesolvers.jl")
-
 #####################################
 # ITensorsNamedDimsArraysExt
 # Requires `AbstractMPS`.

@@ -199,9 +199,6 @@ export
   vector,
   emptyITensor,
 
-  # iterativesolvers.jl
-  davidson,
-
   # not.jl
   not,
 
