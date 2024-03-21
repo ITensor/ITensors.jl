@@ -4,7 +4,6 @@ using Adapt
 using Functors
 using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!, qr, eigen, svd
 using NDTensors
-using NDTensors.SetParameters
 using NDTensors.Expose: qr_positive, ql_positive, ql
 
 using Metal

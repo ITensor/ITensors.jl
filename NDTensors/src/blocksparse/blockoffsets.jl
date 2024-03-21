@@ -10,9 +10,9 @@ const BlockOffsets{N} = Dictionary{Block{N},Int}
 
 BlockOffset(block::Block{N}, offset::Int) where {N} = BlockOffset{N}(block, offset)
 
-ndims(::Blocks{N}) where {N} = N
-ndims(::BlockOffset{N}) where {N} = N
-ndims(::BlockOffsets{N}) where {N} = N
+Base.ndims(::Blocks{N}) where {N} = N
+Base.ndims(::BlockOffset{N}) where {N} = N
+Base.ndims(::BlockOffsets{N}) where {N} = N
 
 blocktype(bofs::BlockOffsets) = keytype(bofs)
 

@@ -301,6 +301,7 @@ function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
   return itensor(EmptyTensor(ElT, ()))
 end
 
+using NDTensors.TypeParameterAccessors: set_eltype, type_parameters, specify_type_parameters
 """
     ITensor([ElT::Type, ]A::Array, inds)
     ITensor([ElT::Type, ]A::Array, inds::Index...)
@@ -695,11 +696,11 @@ zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 # Helper functions for different view behaviors
 # TODO: Move to NDTensors.jl
 function (arraytype::Type{<:AbstractArray})(::NeverAlias, A::AbstractArray)
-  return specify_parameters(arraytype, get_parameters(A))(A)
+  return specify_type_parameters(arraytype, type_parameters(A))(A)
 end
 
 function (arraytype::Type{<:AbstractArray})(::AllowAlias, A::AbstractArray)
-  return convert(specify_parameters(arraytype, get_parameters(A)), A)
+  return convert(specify_type_parameters(arraytype, type_parameters(A)), A)
 end
 
 """
