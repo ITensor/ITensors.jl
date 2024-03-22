@@ -19,25 +19,25 @@ using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: stored_indices
 
 # Outputs a `BlockUnitRange`.
-function sub_unitrange(a::AbstractUnitRange, indices)
+function sub_axis(a::AbstractUnitRange, indices)
   return error("Not implemented")
 end
 
 # TODO: Use `GradedAxes.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
-function sub_unitrange(a::AbstractUnitRange, indices::AbstractUnitRange)
+function sub_axis(a::AbstractUnitRange, indices::AbstractUnitRange)
   return only(axes(blockedunitrange_getindices(a, indices)))
 end
 
 # TODO: Use `GradedAxes.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
-function sub_unitrange(a::AbstractUnitRange, indices::AbstractVector{<:Block})
+function sub_axis(a::AbstractUnitRange, indices::AbstractVector{<:Block})
   return blockedrange([length(a[index]) for index in indices])
 end
 
 # TODO: Use `GradedAxes.blockedunitrange_getindices`.
 # TODO: Merge blocks.
-function sub_unitrange(a::AbstractUnitRange, indices::BlockVector{<:Block})
+function sub_axis(a::AbstractUnitRange, indices::BlockVector{<:Block})
   # `collect` is needed here, otherwise a `PseudoBlockVector` is
   # constructed.
   return blockedrange([length(a[index]) for index in collect(indices)])

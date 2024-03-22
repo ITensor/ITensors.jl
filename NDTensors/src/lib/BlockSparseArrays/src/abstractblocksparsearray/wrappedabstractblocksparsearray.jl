@@ -1,13 +1,6 @@
 using BlockArrays: BlockedUnitRange, blockedrange
 using SplitApplyCombine: groupcount
 
-## # TODO: Write a specialized version for `indices::AbstractUnitRange`.
-## # TODO: Write a generic version for blocked unit ranges (like `GradedAxes`).
-## function sub_unitrange(a::BlockedUnitRange, indices)
-##   indices = sort(indices)
-##   return blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
-## end
-
 using Adapt: Adapt, WrappedArray
 
 const WrappedAbstractBlockSparseArray{T,N,A} = WrappedArray{
@@ -23,7 +16,7 @@ const BlockSparseArrayLike{T,N} = Union{
 # TODO: Use `BlockSparseArrayLike`.
 # TODO: Need to handle block indexing.
 function Base.axes(a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray})
-  return ntuple(i -> sub_unitrange(axes(parent(a), i), a.indices[i]), ndims(a))
+  return ntuple(i -> sub_axis(axes(parent(a), i), a.indices[i]), ndims(a))
 end
 
 # BlockArrays `AbstractBlockArray` interface
