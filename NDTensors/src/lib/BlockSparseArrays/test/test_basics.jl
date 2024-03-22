@@ -48,9 +48,36 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(a) == 2
     @test nstored(a) == 2 * 4 + 3 * 3
 
+    b = similar(a, complex(elt))
+    @test eltype(b) == complex(eltype(a))
+    @test iszero(b)
+    @test block_nstored(b) == 0
+    @test nstored(b) == 0
+    @test size(b) == size(a)
+    @test blocksize(b) == blocksize(a)
+
+    b = copy(a)
+    b[1, 1] = 11
+    @test b[1, 1] == 11
+    @test a[1, 1] ≠ 11
+
+    b = copy(a)
+    b .*= 2
+    @test b ≈ 2a
+
+    b = copy(a)
+    b ./= 2
+    @test b ≈ a / 2
+
     b = 2 * a
     @test Array(b) ≈ 2 * Array(a)
     @test eltype(b) == elt
+    @test block_nstored(b) == 2
+    @test nstored(b) == 2 * 4 + 3 * 3
+
+    b = (2 + 3im) * a
+    @test Array(b) ≈ (2 + 3im) * Array(a)
+    @test eltype(b) == complex(elt)
     @test block_nstored(b) == 2
     @test nstored(b) == 2 * 4 + 3 * 3
 
@@ -123,12 +150,30 @@ include("TestBlockSparseArraysUtils.jl")
     @test nstored(b) == 2 * 2
     @test block_nstored(b) == 1
 
-    # Broken, need to fix.
+    ## Broken, need to fix.
+
     @test_broken a[Block(1), Block(1):Block(2)]
+
     # This is outputting only zero blocks.
     b = a[Block(2):Block(2), Block(1):Block(2)]
     @test_broken block_nstored(b) == 1
     @test_broken b == Array(a)[3:5, 1:end]
+
+    b = a'
+    @test_broken block_nstored(b) == 2
+
+    b = transpose(a)
+    @test_broken block_nstored(b) == 2
+
+    b = copy(a)
+    x = randn(size(@view(a[Block(2, 2)])))
+    b[Block(2), Block(2)] = x
+    @test_broken b[Block(2, 2)] == x
+
+    # Doesnt' set the block
+    b = copy(a)
+    b[Block(1, 1)] .= 1
+    @test_broken b[1, 1] == trues(size(@view(b[1, 1])))
   end
   @testset "LinearAlgebra" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])
