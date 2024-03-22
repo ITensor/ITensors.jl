@@ -1,9 +1,15 @@
+using CUDA: CuArray
+using GPUArraysCore: @allowscalar
+using NDTensors: NDTensors
+using NDTensors.Expose: Exposed, expose, parent, unexpose
+
+using GPUArraysCore: @allowscalar
 function Base.getindex(E::Exposed{<:CuArray})
-  return CUDA.@allowscalar unexpose(E)[]
+  return @allowscalar unexpose(E)[]
 end
 
 function Base.setindex!(E::Exposed{<:CuArray}, x::Number)
-  CUDA.@allowscalar unexpose(E)[] = x
+  @allowscalar unexpose(E)[] = x
   return unexpose(E)
 end
 
