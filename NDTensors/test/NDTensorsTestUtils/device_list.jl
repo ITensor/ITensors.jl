@@ -1,11 +1,14 @@
 using NDTensors: NDTensors
+using Pkg
 if "cuda" in ARGS || "all" in ARGS
   using CUDA
 end
 if "rocm" in ARGS || "all" in ARGS
+  Pkg.add("AMDGPU")
   using AMDGPU
 end
 if "metal" in ARGS || "all" in ARGS
+  Pkg.add("Metal")
   using Metal
 end
 

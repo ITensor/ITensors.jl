@@ -22,6 +22,10 @@ function (f::BlockZero)(a::AbstractArray, I)
   return f(eltype(a), I)
 end
 
+function (f::BlockZero)(arraytype::Type{<:SubArray{<:Any,<:Any,P}}, I) where {P}
+  return f(P, I)
+end
+
 function (f::BlockZero)(arraytype::Type{<:AbstractArray}, I)
   # TODO: Make sure this works for sparse or block sparse blocks, immutable
   # blocks, diagonal blocks, etc.!

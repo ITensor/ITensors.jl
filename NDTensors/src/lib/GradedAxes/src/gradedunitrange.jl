@@ -25,17 +25,19 @@ function blockedunitrange(a::AbstractUnitRange, blocklengths)
   return BlockArrays._BlockedUnitRange(first(a), blocklasts)
 end
 
-# Circumvents issue in `findblock` that assumes the `BlockedUnitRange`
-# starts at 1.
-# TODO: Raise an issue with `BlockArrays`.
+# TODO: Move this to a `BlockArraysExtensions` library.
+# TODO: Rename this. `BlockArrays.findblock(a, k)` finds the
+# block of the value `k`, while this finds the block of the index `k`.
+# This could make use of the `BlockIndices` object, i.e. `block(BlockIndices(a)[index])`.
 function blockedunitrange_findblock(a::BlockedUnitRange, index::Integer)
   @boundscheck index in 1:length(a) || throw(BoundsError(a, index))
   return @inbounds findblock(a, index + first(a) - 1)
 end
 
-# Circumvents issue in `findblockindex` that assumes the `BlockedUnitRange`
-# starts at 1.
-# TODO: Raise an issue with `BlockArrays`.
+# TODO: Move this to a `BlockArraysExtensions` library.
+# TODO: Rename this. `BlockArrays.findblockindex(a, k)` finds the
+# block index of the value `k`, while this finds the block index of the index `k`.
+# This could make use of the `BlockIndices` object, i.e. `BlockIndices(a)[index]`.
 function blockedunitrange_findblockindex(a::BlockedUnitRange, index::Integer)
   @boundscheck index in 1:length(a) || throw(BoundsError())
   return @inbounds findblockindex(a, index + first(a) - 1)
@@ -169,6 +171,7 @@ function blockedunitrange_getindex(a::GradedUnitRange, index)
   return labelled(unlabel_blocks(a)[index], get_label(a, index))
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
 # Like `a[indices]` but preserves block structure.
 using BlockArrays: block, blockindex
 function blockedunitrange_getindices(
@@ -194,20 +197,24 @@ function blockedunitrange_getindices(
   return blockedunitrange(indices .+ (first(a) - 1), blocklengths)
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::BlockedUnitRange, indices::BlockIndexRange)
   return a[block(indices)][only(indices.indices)]
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::BlockedUnitRange, indices::Vector{<:Integer})
   return map(index -> a[index], indices)
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(
   a::BlockedUnitRange, indices::Vector{<:Union{Block{1},BlockIndexRange{1}}}
 )
   return mortar(map(index -> a[index], indices))
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::BlockedUnitRange, indices)
   return error("Not implemented.")
 end
