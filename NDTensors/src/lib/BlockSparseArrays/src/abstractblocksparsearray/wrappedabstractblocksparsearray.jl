@@ -30,9 +30,9 @@ function BlockArrays.blocks(
   return blocksparse_blocks(a)
 end
 
-# TODO: Use `TypeParameterAccessors`.
+using ..TypeParameterAccessors: parenttype
 function blockstype(arraytype::Type{<:WrappedAbstractBlockSparseArray})
-  return blockstype(Adapt.parent_type(arraytype))
+  return blockstype(parenttype(arraytype))
 end
 
 blocktype(a::BlockSparseArrayLike) = eltype(blocks(a))
