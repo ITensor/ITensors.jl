@@ -1,10 +1,9 @@
-using ArrayLayouts: ArrayLayouts, MemoryLayout, MatMulMatAdd, MulAdd
+using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
 using BlockArrays: BlockLayout
 using ..SparseArrayInterface: SparseLayout
 using LinearAlgebra: mul!
 
-# TODO: Generalize to `BlockSparseArrayLike`.
-function ArrayLayouts.MemoryLayout(arraytype::Type{<:AbstractBlockSparseArray})
+function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
   outer_layout = typeof(MemoryLayout(blockstype(arraytype)))
   inner_layout = typeof(MemoryLayout(blocktype(arraytype)))
   return BlockLayout{outer_layout,inner_layout}()
@@ -16,14 +15,9 @@ function Base.similar(
   return similar(BlockSparseArray{elt}, axes)
 end
 
-function ArrayLayouts.materialize!(
-  m::MatMulMatAdd{
-    <:BlockLayout{<:SparseLayout},
-    <:BlockLayout{<:SparseLayout},
-    <:BlockLayout{<:SparseLayout},
-  },
-)
-  α, a1, a2, β, a_dest = m.α, m.A, m.B, m.β, m.C
-  mul!(a_dest, a1, a2, α, β)
+# Materialize a SubArray view.
+function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, axes)
+  a_dest = BlockSparseArray{eltype(a)}(axes)
+  a_dest .= a
   return a_dest
 end
