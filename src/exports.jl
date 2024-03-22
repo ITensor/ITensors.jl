@@ -48,6 +48,9 @@ export
   svd,
   diag,
 
+  # tensor_operations/tensor_algebra.jl
+  contract,
+
   # global_variables.jl
   # Methods
 

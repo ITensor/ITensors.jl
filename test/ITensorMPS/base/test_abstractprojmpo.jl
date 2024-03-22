@@ -1,7 +1,7 @@
 using ITensors
 using Random
 using Test
-using ITensors.ITensorMPS: ITensorMPS
+using ITensors: ITensorMPS
 
 @testset "AbstractProjMPO (eltype=$elt, conserve_qns=$conserve_qns)" for elt in (
     Float32, Float64, Complex{Float32}, Complex{Float64}

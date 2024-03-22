@@ -10,7 +10,6 @@ export
   add,
   common_siteind,
   common_siteinds,
-  contract,
   findfirstsiteind,
   findfirstsiteinds,
   findsite,
