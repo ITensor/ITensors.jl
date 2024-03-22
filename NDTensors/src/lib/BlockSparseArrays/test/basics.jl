@@ -78,8 +78,57 @@ include("TestBlockSparseArraysUtils.jl")
     b = map(x -> 2x, a)
     @test Array(b) ≈ 2 * Array(a)
     @test eltype(b) == elt
+    @test size(b) == size(a)
+    @test blocksize(b) == (2, 2)
     @test block_nstored(b) == 2
     @test nstored(b) == 2 * 4 + 3 * 3
+
+    b = a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    @test b[Block(1, 1)] == a[Block(2, 2)]
+    @test b[Block(1, 2)] == a[Block(2, 1)]
+    @test b[Block(2, 1)] == a[Block(1, 2)]
+    @test b[Block(2, 2)] == a[Block(1, 1)]
+    @test size(b) == size(a)
+    @test blocksize(b) == (2, 2)
+    @test nstored(b) == nstored(a)
+    @test block_nstored(b) == 2
+
+    b = a[Block(1):Block(2), Block(1):Block(2)]
+    @test b == a
+    @test size(b) == size(a)
+    @test blocksize(b) == (2, 2)
+    @test nstored(b) == nstored(a)
+    @test block_nstored(b) == 2
+
+    b = a[Block(1):Block(1), Block(1):Block(2)]
+    @test b == Array(a)[1:2, 1:end]
+    @test b[Block(1, 1)] == a[Block(1, 1)]
+    @test b[Block(1, 2)] == a[Block(1, 2)]
+    @test size(b) == (2, 7)
+    @test blocksize(b) == (1, 2)
+    @test nstored(b) == nstored(a[Block(1, 2)])
+    @test block_nstored(b) == 1
+
+    b = a[2:4, 2:4]
+    @test b == Array(a)[2:4, 2:4]
+    @test size(b) == (3, 3)
+    @test blocksize(b) == (2, 2)
+    @test nstored(b) == 1 * 1 + 2 * 2
+    @test block_nstored(b) == 2
+
+    b = a[Block(2, 1)[1:2, 2:3]]
+    @test b == Array(a)[3:4, 2:3]
+    @test size(b) == (2, 2)
+    @test blocksize(b) == (1, 1)
+    @test nstored(b) == 2 * 2
+    @test block_nstored(b) == 1
+
+    # Broken, need to fix.
+    @test_broken a[Block(1), Block(1):Block(2)]
+    # This is outputting only zero blocks.
+    b = a[Block(2):Block(2), Block(1):Block(2)]
+    @test_broken block_nstored(b) == 1
+    @test_broken b == Array(a)[3:5, 1:end]
   end
   @testset "LinearAlgebra" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])

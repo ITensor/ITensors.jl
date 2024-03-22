@@ -199,3 +199,7 @@ end
 function blocksparse_blocks(a::SubArray)
   return SparseSubArrayBlocks(a)
 end
+
+using BlockArrays: BlocksView
+# TODO: Is this correct in general?
+SparseArrayInterface.nstored(a::BlocksView) = 1
