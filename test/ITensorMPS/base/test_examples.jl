@@ -21,5 +21,3 @@ using ITensors, Test, Suppressor
     end
   end
 end
-
-nothing

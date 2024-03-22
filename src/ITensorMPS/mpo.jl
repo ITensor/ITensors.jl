@@ -143,7 +143,7 @@ end
 
 function deprecate_make_inds_unmatch(::typeof(outer), ψ::MPS, ϕ::MPS; kw...)
   if hassameinds(siteinds, ψ, ϕ)
-    warn_once(outer_mps_mps_deprecation_warning(), :outer_mps_mps)
+    ITensors.warn_once(outer_mps_mps_deprecation_warning(), :outer_mps_mps)
     ψ = ψ'
   end
   return ψ, ϕ
@@ -353,7 +353,7 @@ function deprecate_make_inds_match!(
       )
     end
     if !hassameinds(siteinds, ydag, (A, x)) && make_inds_match
-      warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mpo_mps)
+      ITensors.warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mpo_mps)
       replace_siteinds!(ydag, sAx)
     end
   end
@@ -595,9 +595,11 @@ end
 
 (A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
-Apply(A::MPO, ψ::MPS; kwargs...) = Applied(apply, (A, ψ), NamedTuple(kwargs))
+function Apply(A::MPO, ψ::MPS; kwargs...)
+  return ITensors.LazyApply.Applied(apply, (A, ψ), NamedTuple(kwargs))
+end
 
-function contract(A::MPO, ψ::MPS; alg=nothing, method=alg, kwargs...)
+function ITensors.contract(A::MPO, ψ::MPS; alg=nothing, method=alg, kwargs...)
   # TODO: Delete `method` since it is deprecated.
   alg = NDTensors.replace_nothing(method, "densitymatrix")
 
@@ -659,9 +661,9 @@ See also [`apply`](@ref).
 
 @doc """
 $contract_mpo_mps_doc
-""" contract(::MPO, ::MPS)
+""" ITensors.contract(::MPO, ::MPS)
 
-contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
+ITensors.contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
 
 *(A::MPO, B::MPS; kwargs...) = contract(A, B; kwargs...)
 *(A::MPS, B::MPO; kwargs...) = contract(A, B; kwargs...)
@@ -674,7 +676,7 @@ contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
 
 #@doc (@doc contract(::MPO, ::MPS)) *(::MPO, ::MPS)
 
-function contract(
+function ITensors.contract(
   ::Algorithm"densitymatrix",
   A::MPO,
   ψ::MPS;
@@ -793,19 +795,19 @@ function _contract(::Algorithm"naive", A, ψ; truncate=true, kwargs...)
   return ψ_out
 end
 
-function contract(alg::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)
+function ITensors.contract(alg::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)
   return _contract(alg, A, ψ; kwargs...)
 end
 
-function contract(A::MPO, B::MPO; alg="zipup", kwargs...)
+function ITensors.contract(A::MPO, B::MPO; alg="zipup", kwargs...)
   return contract(Algorithm(alg), A, B; kwargs...)
 end
 
-function contract(alg::Algorithm"naive", A::MPO, B::MPO; kwargs...)
+function ITensors.contract(alg::Algorithm"naive", A::MPO, B::MPO; kwargs...)
   return _contract(alg, A, B; kwargs...)
 end
 
-function contract(
+function ITensors.contract(
   ::Algorithm"zipup",
   A::MPO,
   B::MPO;
@@ -945,7 +947,7 @@ See also [`apply`](@ref) for details about the arguments available.
 
 @doc """
 $contract_mpo_mpo_doc
-""" contract(::MPO, ::MPO)
+""" ITensors.contract(::MPO, ::MPO)
 
 *(A::MPO, B::MPO; kwargs...) = contract(A, B; kwargs...)
 

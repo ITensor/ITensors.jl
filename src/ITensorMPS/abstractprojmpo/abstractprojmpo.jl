@@ -33,7 +33,7 @@ function rproj(P::AbstractProjMPO)::Union{ITensor,OneITensor}
   return P.LR[P.rpos]
 end
 
-function contract(P::AbstractProjMPO, v::ITensor)::ITensor
+function ITensors.contract(P::AbstractProjMPO, v::ITensor)::ITensor
   itensor_map = Union{ITensor,OneITensor}[lproj(P)]
   append!(itensor_map, P.H[site_range(P)])
   push!(itensor_map, rproj(P))

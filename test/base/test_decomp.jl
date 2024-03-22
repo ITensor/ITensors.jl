@@ -500,5 +500,3 @@ end
     @test dim(commonind(U, B)) <= 4
   end
 end
-
-nothing

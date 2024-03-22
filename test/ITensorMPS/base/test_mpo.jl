@@ -852,5 +852,3 @@ end
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
   end
 end
-
-nothing
