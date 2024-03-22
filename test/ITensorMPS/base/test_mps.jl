@@ -1,6 +1,6 @@
 using Combinatorics
 using ITensors
-import ITensors.ITensorMPS
+using ITensors.ITensorMPS: ITensorMPS
 using Random
 using LinearAlgebra: diag
 using Test
