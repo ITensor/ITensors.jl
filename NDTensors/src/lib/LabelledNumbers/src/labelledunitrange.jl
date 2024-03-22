@@ -17,6 +17,12 @@ unlabel_type(::Type{<:LabelledUnitRange{Value}}) where {Value} = Value
 function Base.AbstractUnitRange{T}(a::LabelledUnitRange) where {T}
   return AbstractUnitRange{T}(unlabel(a))
 end
+# Used by `CartesianIndices` constructor.
+# TODO: Seems to only be needed for Julia v1.6, maybe remove once we
+# drop Julia v1.6 support.
+function Base.OrdinalRange{T1,T2}(a::LabelledUnitRange) where {T1,T2<:Integer}
+  return OrdinalRange{T1,T2}(unlabel(a))
+end
 
 for f in [:first, :getindex, :last, :length, :step]
   @eval Base.$f(a::LabelledUnitRange, args...) = labelled($f(unlabel(a), args...), label(a))
