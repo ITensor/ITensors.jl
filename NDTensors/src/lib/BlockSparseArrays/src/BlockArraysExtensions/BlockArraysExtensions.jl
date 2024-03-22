@@ -15,6 +15,7 @@ using BlockArrays:
   findblockindex
 using Compat: allequal
 using Dictionaries: Dictionary, Indices
+using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: stored_indices
 
 # Outputs a `BlockUnitRange`.
@@ -22,21 +23,24 @@ function sub_unitrange(a::AbstractUnitRange, indices)
   return error("Not implemented")
 end
 
-# TODO: Write a specialized version for `indices::AbstractUnitRange`.
-# TODO: Write a generic version for blocked unit ranges (like `GradedAxes`).
+# TODO: Use `GradedAxes.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_unitrange(a::AbstractUnitRange, indices::AbstractUnitRange)
-  indices = sort(indices)
-  return blockedrange(collect(groupcount(i -> findblock(a, i), indices)))
+  return only(axes(blockedunitrange_getindices(a, indices)))
 end
 
+# TODO: Use `GradedAxes.blockedunitrange_getindices`.
 # Outputs a `BlockUnitRange`.
 function sub_unitrange(a::AbstractUnitRange, indices::AbstractVector{<:Block})
   return blockedrange([length(a[index]) for index in indices])
 end
 
+# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# TODO: Merge blocks.
 function sub_unitrange(a::AbstractUnitRange, indices::BlockVector{<:Block})
-  return blockedrange([length(a[index]) for index in indices])
+  # `collect` is needed here, otherwise a `PseudoBlockVector` is
+  # constructed.
+  return blockedrange([length(a[index]) for index in collect(indices)])
 end
 
 # TODO: Use `Tuple` conversion once
