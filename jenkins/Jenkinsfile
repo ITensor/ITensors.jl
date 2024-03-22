@@ -5,10 +5,10 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '8', daysToKeepStr: '20'))
   }
   stages {
-    stage('ITensorGPU test') {
+    stage('GPU Testing') {
       parallel {
-        stage('julia-1.6') {
-	  options {
+        stage('ITensorGPU julia-1.6') {
+	        options {
             timeout(time: 45, unit: 'MINUTES')
           }
           agent {
@@ -29,13 +29,10 @@ pipeline {
             sh '''
               julia -e 'using Pkg; Pkg.add(name="NDTensors", version="0.1"); Pkg.add(name="ITensors"); Pkg.develop(path="./ITensorGPU"); Pkg.instantiate(); Pkg.test("ITensorGPU");'
               '''
-            sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.develop(path="."); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["cuda"])'
-            '''
           }
         }
-        stage('julia-1.10') {
-	  options {
+        stage('ITensorGPU julia-1.10') {
+	        options {
             timeout(time: 45, unit: 'MINUTES')
           }
           agent {
@@ -56,21 +53,71 @@ pipeline {
             sh '''
               julia -e 'using Pkg; Pkg.add(name="NDTensors", version="0.1"); Pkg.add(name="ITensors"); Pkg.develop(path="./ITensorGPU"); Pkg.instantiate(); Pkg.test("ITensorGPU");'
             '''
+          }
+        }
+        stage('NDTensorsCUDAExt julia-1.6') {
+	        options {
+            timeout(time: 45, unit: 'MINUTES')
+          }
+          agent {
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.6'
+              args '--gpus "device=0"'
+            }
+          }
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
+          }
+          steps {
             sh '''
               julia --project=monorepo -e 'using Pkg; Pkg.develop(path="."); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
-      }
-    }
-    stage('NDTensor M1 GPU test'){
-      stage('julia-1.10'){
-        stage('m1'){
+        stage('NDTensorsCUDAExt julia-1.10') {
+	        options {
+            timeout(time: 45, unit: 'MINUTES')
+          }
+          agent {
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.10'
+              args '--gpus "device=1"'
+            }
+          }
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
+          }
+          steps {
+            sh '''
+              julia --project=monorepo -e 'using Pkg; Pkg.develop(path="."); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["cuda"])'
+            '''
+          }
+        }
+        stage('NDTensorsMetalExt Julia-1.10'){
+          options {
+            timeout(time: 45, unit: 'MINUTES')
+          }
+          agent {
+            label 'm1'
+          }
           environment{
-            PATH=$HOME/.juliaup/bin:$PATH
-            juliaup default release
+            PATH="${env.HOME}/.juliaup/bin:${env.PATH}"
+            PLATFORM = 'macos'
           }
           steps{
+            sh '''
+              juliaup update
+            '''
             sh '''
               julia -e 'using Pkg; Pkg.develop(path="."); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["metal"])
             '''
