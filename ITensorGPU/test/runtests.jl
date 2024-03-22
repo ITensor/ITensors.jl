@@ -21,7 +21,6 @@ CUDA.allowscalar(false)
     "test_cucontract.jl",
     "test_cumpo.jl",
     "test_cumps.jl",
-    "test_cuiterativesolvers.jl",
     "test_cutruncate.jl",
     #"test_pastaq.jl",
   )

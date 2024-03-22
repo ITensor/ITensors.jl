@@ -36,5 +36,3 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   #
   rm("data.h5"; force=true)
 end
-
-nothing

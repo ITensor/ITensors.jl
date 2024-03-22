@@ -68,7 +68,7 @@ subtract!(os::OpSum, o::Tuple) = add!(os, -Ops.op_term(o))
 function isfermionic(t::Vector{Op}, sites)
   p = +1
   for op in t
-    if has_fermion_string(name(op), sites[site(op)])
+    if has_fermion_string(ITensors.name(op), sites[site(op)])
       p *= -1
     end
   end
@@ -207,7 +207,7 @@ function sorteachterm(os::OpSum, sites)
     filter!(!iszero, perm)
     # and account for anti-commuting, fermionic operators
     # during above sort; put resulting sign into coef
-    t *= parity_sign(perm)
+    t *= ITensors.parity_sign(perm)
     terms(os)[j] = t
   end
 
@@ -299,8 +299,8 @@ function MPO(os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)::MP
   return M
 end
 
-function MPO(eltype::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; kwargs...)
-  return NDTensors.convert_scalartype(eltype, MPO(os, sites; kwargs...))
+function MPO(elt::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; kwargs...)
+  return NDTensors.convert_scalartype(elt, MPO(os, sites; kwargs...))
 end
 
 # Conversion from other formats

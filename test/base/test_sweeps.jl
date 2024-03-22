@@ -149,5 +149,3 @@ using Test
     @test maxdim(sw, 5) == typemax(Int)
   end
 end
-
-nothing

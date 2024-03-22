@@ -132,5 +132,3 @@ using ITensors, Test
     @test sU isa String
   end
 end
-
-nothing

@@ -65,5 +65,3 @@ using Test
   ITensor(fill(x, (1, 1, 1))) == ITensor(x)
   @test_throws ErrorException ITensor(fill(x, (2, 2)))
 end
-
-nothing

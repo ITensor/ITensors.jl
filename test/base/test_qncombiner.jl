@@ -10,5 +10,3 @@ using ITensors, Test
   Ã = AC * dag(C)
   @test Ã ≈ A
 end
-
-nothing

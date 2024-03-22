@@ -50,5 +50,3 @@ include(joinpath(src_dir, "2d_classical_ising.jl"))
   m = (ACTszₗ * dag(ACₗ))[] / κ
   @test abs(m) ≈ ising_magnetization(β)
 end
-
-nothing

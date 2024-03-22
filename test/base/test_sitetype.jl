@@ -568,5 +568,3 @@ end
     @test is_unitary(U; rtol=1e-15)
   end
 end
-
-nothing

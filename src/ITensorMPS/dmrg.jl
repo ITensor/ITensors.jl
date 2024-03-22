@@ -1,7 +1,4 @@
-
-#function IndexSet_ignore_missing(is::Union{Index,Nothing}...)
-#  return IndexSet(filter(i -> i isa Index, is))
-#end
+using KrylovKit: eigsolve
 
 function permute(
   M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)}

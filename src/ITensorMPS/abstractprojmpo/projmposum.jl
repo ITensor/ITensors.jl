@@ -44,7 +44,7 @@ shorthand for `product(P,v)`.
 """
 product(A::AbstractSum, v::ITensor) = sum(t -> product(t, v), terms(A))
 
-contract(A::AbstractSum, v::ITensor) = sum(t -> contract(t, v), terms(A))
+ITensors.contract(A::AbstractSum, v::ITensor) = sum(t -> contract(t, v), terms(A))
 
 """
     eltype(P::ProjMPOSum)

@@ -372,5 +372,3 @@ using Compat
     @test dag(is) == Index[]
   end
 end
-
-nothing
