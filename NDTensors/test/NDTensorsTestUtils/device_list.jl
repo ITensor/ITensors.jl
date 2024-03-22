@@ -1,5 +1,5 @@
 using NDTensors: NDTensors
-using Pkg
+using Pkg: Pkg
 if "cuda" in ARGS || "all" in ARGS
   using CUDA
 end
