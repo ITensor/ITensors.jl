@@ -2,7 +2,6 @@ using .GPUArraysCoreExtensions: GPUArraysCoreExtensions
 adapt_structure(to, x::TensorStorage) = setdata(x, adapt(to, data(x)))
 adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 
-## use unwrap cpu here because Expose is included before NDTensors
 function GPUArraysCoreExtensions.cpu(eltype::Type{<:Number}, x)
   return fmap(x -> adapt(Array{eltype}, x), x)
 end
@@ -28,10 +27,11 @@ double_precision(x) = fmap(x -> adapt(double_precision(eltype(x)), x), x)
 # Used to adapt `EmptyStorage` types
 #
 
+using .TypeParameterAccessors: specify_type_parameter, specify_type_parameters
 function adapt_storagetype(to::Type{<:AbstractVector}, x::Type{<:TensorStorage})
-  return set_datatype(x, specify_parameters(to, eltype(x)))
+  return set_datatype(x, specify_type_parameter(to, eltype, eltype(x)))
 end
 
 function adapt_storagetype(to::Type{<:AbstractArray}, x::Type{<:TensorStorage})
-  return set_datatype(x, specify_parameters(set_ndims(to, 1), eltype(x)))
+  return set_datatype(x, specify_type_parameter(to, (ndims, eltype), (1, eltype(x))))
 end

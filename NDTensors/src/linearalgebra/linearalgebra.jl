@@ -389,11 +389,6 @@ function ql_positive(M::AbstractMatrix)
   # TODO: Change to `isgpu`, or better yet rewrite
   # in terms of broadcasting and linear algebra
   # like `qr_positive`.
-  iscuda = iscu(M)
-  if iscuda
-    cutype = unwrap_array_type(M)
-    M = NDTensors.cpu(M)
-  end
   sparseQ, L = ql(M)
   Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
@@ -407,10 +402,6 @@ function ql_positive(M::AbstractMatrix)
       end
     end
   end
-  if iscuda
-    Q = adapt(cutype, Q)
-    L = adapt(cutype, L)
-  end
   return (Q, L)
 end
 
@@ -423,16 +414,7 @@ function ql(A::AbstractMatrix)
   T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
   copyto!(expose(AA), expose(A))
-  iscuda = iscu(AA)
-  if iscuda
-    cutype = unwrap_array_type(AA)
-    AA = NDTensors.cpu(AA)
-  end
   Q, L = ql!(AA)
-  if iscuda
-    Q = adapt(cutype, Q)
-    L = adapt(cutype, L)
-  end
   return (Q, L)
 end
 #
@@ -440,6 +422,8 @@ end
 # about unpacking Q and L from the A matrix.
 #
 function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
+  ## TODO is this really necessary here, we could create Expose function if
+  ## we need this function on CU/GPU
   if iscu(A)
     throw("Error: ql is not implemented in CUDA.jl")
   end

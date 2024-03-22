@@ -23,10 +23,29 @@ unlabel(object) = object
 unlabel_type(type::Type) = type
 unlabel_type(object) = typeof(unlabel(object))
 
+set_value(x, value) = labelled(value, label(x))
+
+labelled_zero(x) = set_value(x, zero(unlabel(x)))
+labelled_one(x) = one(unlabel(x))
+labelled_one(type::Type) = one(unlabel_type(type))
+labelled_oneunit(x) = set_value(x, one(x))
+# TODO: Implement this for types where the label is
+# encoded in the type.
+labelled_oneunit(type::Type) = error("Not implemented.")
+
 labelled_mul(x, y) = labelled_mul(LabelledStyle(x), x, LabelledStyle(y), y)
 labelled_mul(::IsLabelled, x, ::IsLabelled, y) = unlabel(x) * unlabel(y)
-labelled_mul(::IsLabelled, x, ::NotLabelled, y) = labelled(unlabel(x) * y, label(x))
-labelled_mul(::NotLabelled, x, ::IsLabelled, y) = labelled(x * unlabel(y), label(y))
+labelled_mul(::IsLabelled, x, ::NotLabelled, y) = set_value(x, unlabel(x) * y)
+labelled_mul(::NotLabelled, x, ::IsLabelled, y) = set_value(y, x * unlabel(y))
+
+# TODO: This is only needed for older Julia versions, like Julia 1.6.
+# Delete once we drop support for older Julia versions.
+# TODO: Define in terms of `set_value`?
+labelled_minus(x) = set_value(x, -unlabel(x))
+
+# TODO: This is only needed for older Julia versions, like Julia 1.6.
+# Delete once we drop support for older Julia versions.
+labelled_hash(x, h::UInt64) = hash(unlabel(x), h)
 
 for (f, labelled_f) in [(:div, :labelled_div), (:/, :labelled_division)]
   @eval begin

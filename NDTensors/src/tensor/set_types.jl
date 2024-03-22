@@ -1,5 +1,5 @@
-using .TypeParameterAccessors: TypeParameterAccessors, parenttype
-function SetParameters.set_ndims(arraytype::Type{<:Tensor}, ndims)
+using .TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
+function TypeParameterAccessors.set_ndims(arraytype::Type{<:Tensor}, ndims)
   # TODO: Implement something like:
   # ```julia
   # return set_storagetype(arraytype, set_ndims(storagetype(arraytype), ndims))
@@ -26,7 +26,6 @@ function TypeParameterAccessors.parenttype(storagetype::Type{<:TensorStorage})
   return datatype(storagetype)
 end
 
-## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(::Type{<:Tensor}, ::typeof(parenttype))
-  return TypeParameterAccessors.Position(3)
+  return Position(3)
 end
