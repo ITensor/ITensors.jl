@@ -118,7 +118,6 @@ import ..ITensors:
   Broadcasted,
   @Algorithm_str,
   checkflux,
-  contract,
   convert_leaf_eltype,
   commontags,
   @debug_check,

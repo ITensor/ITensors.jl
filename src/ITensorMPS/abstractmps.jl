@@ -79,7 +79,7 @@ know if there is functionality not available for MPS/MPO you would like.
 """
 data(m::AbstractMPS) = m.data
 
-contract(ψ::AbstractMPS) = contract(data(ψ))
+ITensors.contract(ψ::AbstractMPS) = contract(data(ψ))
 
 leftlim(m::AbstractMPS) = m.llim
 
