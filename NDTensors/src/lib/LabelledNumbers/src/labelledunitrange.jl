@@ -23,6 +23,10 @@ end
 function Base.OrdinalRange{T1,T2}(a::LabelledUnitRange) where {T1,T2<:Integer}
   return OrdinalRange{T1,T2}(unlabel(a))
 end
+# Fix ambiguity error in Julia v1.10.
+function Base.OrdinalRange{T,T}(a::LabelledUnitRange) where {T<:Integer}
+  return OrdinalRange{T,T}(unlabel(a))
+end
 
 for f in [:first, :getindex, :last, :length, :step]
   @eval Base.$f(a::LabelledUnitRange, args...) = labelled($f(unlabel(a), args...), label(a))
