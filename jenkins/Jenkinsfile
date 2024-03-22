@@ -63,5 +63,20 @@ pipeline {
         }
       }
     }
+    stage('NDTensor M1 GPU test'){
+      stage('julia-1.10'){
+        stage('m1'){
+          environment{
+            PATH=$HOME/.juliaup/bin:$PATH
+            juliaup default release
+          }
+          steps{
+            sh '''
+              julia -e 'using Pkg; Pkg.develop(path="."); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["metal"])
+            '''
+          }
+        }
+      }
+    }
   }
 }
