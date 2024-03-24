@@ -1,6 +1,7 @@
 using NDTensors: NDTensors
 using Pkg: Pkg
 if "cuda" in ARGS || "all" in ARGS
+  Pkg.add("CUDA")
   using CUDA
 end
 if "rocm" in ARGS || "all" in ARGS
