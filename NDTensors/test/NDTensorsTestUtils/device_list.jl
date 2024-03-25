@@ -5,10 +5,12 @@ if "cuda" in ARGS || "all" in ARGS
   using CUDA
 end
 if "rocm" in ARGS || "all" in ARGS
+  ## Warning AMDGPU does not work in Julia versions below 1.8
   Pkg.add("AMDGPU")
   using AMDGPU
 end
 if "metal" in ARGS || "all" in ARGS
+  ## Warning Metal does not work in Julia versions below 1.8
   Pkg.add("Metal")
   using Metal
 end
