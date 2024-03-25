@@ -9,7 +9,7 @@ struct SU2 <: AbstractCategory
   j::Half{Int}
 end
 
-dual(s::SU2) = s
+GradedAxes.dual(s::SU2) = s
 
 label(s::SU2) = s.j
 
@@ -19,4 +19,8 @@ adjoint(::Type{SU2}) = SU2(1)
 
 dimension(s::SU2) = twice(label(s)) + 1
 
-label_fusion_rule(::Type{SU2}, j1, j2) = abs(j1 - j2):(j1 + j2)
+function label_fusion_rule(::Type{SU2}, j1, j2)
+  labels = collect(abs(j1 - j2):(j1 + j2))
+  degen = ones(Int, length(labels))
+  return degen, labels
+end

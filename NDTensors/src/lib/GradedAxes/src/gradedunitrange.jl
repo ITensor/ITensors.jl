@@ -80,6 +80,10 @@ function gradedrange(lblocklengths::AbstractVector{<:Pair{<:Any,<:Integer}})
   return gradedrange(labelled.(last.(lblocklengths), first.(lblocklengths)))
 end
 
+function chain(a::GradedUnitRange, b::GradedUnitRange)
+  return gradedrange(vcat(blocklengths(a), blocklengths(b)))
+end
+
 function labelled_blocks(a::BlockedUnitRange, labels)
   return BlockArrays._BlockedUnitRange(a.first, labelled.(a.lasts, labels))
 end

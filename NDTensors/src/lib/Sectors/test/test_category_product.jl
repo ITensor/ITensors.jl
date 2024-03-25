@@ -1,5 +1,6 @@
 @eval module $(gensym())
-using NDTensors.Sectors: Fib, Ising, SU, SU2, U1, Z, ⊗, ⊕, ×, sector
+using NDTensors.Sectors: ×, ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, sector, dimension
+using NDTensors.GradedAxes: dual, gradedrange
 using Test: @test, @testset, @test_throws
 @testset "Test Named Category Products" begin
   @testset "Construct from × of NamedTuples" begin
@@ -7,10 +8,14 @@ using Test: @test, @testset, @test_throws
     @test length(s) == 2
     @test s[:A] == U1(1)
     @test s[:B] == SU2(2)
+    @test dimension(s) == 5
+    @test dual(s) == (A=U1(-1),) × (B=SU2(2),)
 
     s = s × (C=Ising("ψ"),)
     @test length(s) == 3
     @test s[:C] == Ising("ψ")
+    @test dimension(s) == 5.0
+    @test dual(s) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
   end
 
   @testset "Construct from Pairs" begin
@@ -18,6 +23,8 @@ using Test: @test, @testset, @test_throws
     @test length(s) == 1
     @test s[:A] == U1(2)
     @test s == sector(; A=U1(2))
+    @test dimension(s) == 1
+    @test dual(s) == sector("A" => U1(-2))
 
     s = sector("B" => Ising("ψ"), :C => Z{2}(1))
     @test length(s) == 2
@@ -31,10 +38,13 @@ using Test: @test, @testset, @test_throws
     q01 = sector(; B=U1(1))
     q11 = sector(; A=U1(1), B=U1(1))
 
-    @test q00 ⊗ q00 == [q00]
-    @test q01 ⊗ q00 == [q01]
-    @test q00 ⊗ q01 == [q01]
-    @test q10 ⊗ q01 == [q11]
+    @test dimension(q00) == 0
+    @test dual(q00) == q00
+
+    @test q00 ⊗ q00 == q00
+    @test q01 ⊗ q00 == q01
+    @test q00 ⊗ q01 == q01
+    @test q10 ⊗ q01 == q11
   end
 
   @testset "U(1) ⊗ SU(2) conventional" begin
@@ -50,7 +60,7 @@ using Test: @test, @testset, @test_throws
     q22 = (N=U1(2),) × (J=SU2(2),)
 
     @test q1h ⊗ q1h == q20 ⊕ q21
-    @test q10 ⊗ q1h == [q2h]
+    @test q10 ⊗ q1h == gradedrange([q2h => 1])
     @test q0h ⊗ q1h == q10 ⊕ q11
     @test q11 ⊗ q11 == q20 ⊕ q21 ⊕ q22
   end
@@ -68,7 +78,7 @@ using Test: @test, @testset, @test_throws
     q22 = (N=U1(2),) × (J=SU{2}(5),)
 
     @test q1h ⊗ q1h == q20 ⊕ q21
-    @test q10 ⊗ q1h == [q2h]
+    @test q10 ⊗ q1h == gradedrange([q2h => 1])
     @test q0h ⊗ q1h == q10 ⊕ q11
     @test q11 ⊗ q11 == q20 ⊕ q21 ⊕ q22
   end
@@ -93,11 +103,15 @@ end
   @testset "Ordered Constructor" begin
     s = sector(U1(1), U1(2))
     @test length(s) == 2
+    @test dimension(s) == 1
+    @test dual(s) == sector(U1(-1), U1(-2))
     @test s[1] == U1(1)
     @test s[2] == U1(2)
 
     s = U1(1) × SU2(1//2) × U1(3)
     @test length(s) == 3
+    @test dimension(s) == 2
+    @test dual(s) == U1(-1) × SU2(1//2) × U1(-3)
     @test s[1] == U1(1)
     @test s[2] == SU2(1//2)
     @test s[3] == U1(3)
