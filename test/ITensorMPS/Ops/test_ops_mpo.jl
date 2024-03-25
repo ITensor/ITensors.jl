@@ -1,6 +1,7 @@
 using Test
 using ITensors
 using ITensors.Ops
+using ITensors: ITensorMPS
 using LinearAlgebra
 
 @testset "Ops to MPO" begin
@@ -42,7 +43,7 @@ using LinearAlgebra
     ℋ_merged = OpSum()
     ℋ_merged += (4, "Z", 1)
     ℋ_merged += (3, "X", 2)
-    @test ITensors.sortmergeterms(ℋ) == ℋ_merged
+    @test ITensorMPS.sortmergeterms(ℋ) == ℋ_merged
 
     # Test with repeated terms
     s = siteinds("S=1/2", 1)
