@@ -1,5 +1,6 @@
 import Base: sortperm, size, length, eltype, conj, transpose, copy, *
 using ITensors: alias
+using ITensors.ITensorMPS: ITensorMPS
 abstract type AbstractSymmetry end
 struct ConservesNfParity{T} <: AbstractSymmetry
   data::T
@@ -177,8 +178,8 @@ end
 
 function quadratic_operator(os::OpSum)
   os = deepcopy(os)
-  #os = ITensors.sorteachterm(os, sites)
-  os = ITensors.sortmergeterms(os)
+  #os = ITensorMPS.sorteachterm(os, sites)
+  os = ITensorMPS.sortmergeterms(os)
 
   nterms = length(os)
   coefs = Vector{Number}(undef, nterms)
