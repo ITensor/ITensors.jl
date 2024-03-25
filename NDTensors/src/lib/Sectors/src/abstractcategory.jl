@@ -28,7 +28,7 @@ end
 
 istrivial(c::AbstractCategory) = (c == trivial(typeof(c)))
 
-# name conflict with LabelledNumber. TBD is that an issue?
+# name conflict with LabelledNumber.label. TBD is that an issue?
 label(c::AbstractCategory) = error("method `label` not defined for type $(typeof(c))")
 
 # TBD dimension in Sectors or in GradedAxes namespace?
@@ -37,7 +37,10 @@ function dimension(c::AbstractCategory)
 end
 
 function dimension(g::GradedAxes.GradedUnitRange)
-  return sum(LabelledNumber.unlabel(b) * dimension(label(b)) for b in blocklengths(g))
+  return sum(
+    LabelledNumbers.unlabel(b) * dimension(LabelledNumbers.label(b)) for
+    b in blocklengths(g)
+  )
 end
 
 function GradedAxes.dual(category_type::Type{<:AbstractCategory})

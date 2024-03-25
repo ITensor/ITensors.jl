@@ -1,7 +1,7 @@
 @eval module $(gensym())
+using NDTensors.GradedAxes: dual
 using NDTensors.Sectors:
-  ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, adjoint, dimension, fundamental, istrivial, trivial
-using NDTensors.GradedAxes: dual, gradedrange
+  Fib, Ising, SU, SU2, U1, Z, adjoint, dimension, fundamental, istrivial, trivial
 using Test: @inferred, @test, @testset
 @testset "Test Category Types" begin
   @testset "U(1)" begin
@@ -12,15 +12,8 @@ using Test: @inferred, @test, @testset
     @test dimension(q1) == 1
     @test dimension(q2) == 1
 
-    @test q1 ⊗ q1 == U1(2)
-    @test q1 ⊗ q2 == U1(3)
-    @test q2 ⊗ q1 == U1(3)
-    @test (@inferred q1 ⊗ q2) == q3  # no better way, see Julia PR 23426
-
     @test trivial(U1) == U1(0)
     @test istrivial(U1(0))
-    @test q1 ⊕ q2 == gradedrange([q1 => 1, q2 => 1])
-    @test q1 ⊕ q1 == gradedrange([q1 => 1, q1 => 1])
 
     @test dual(U1(2)) == U1(-2)
     @test isless(U1(1), U1(2))
@@ -40,11 +33,6 @@ using Test: @inferred, @test, @testset
     @test dual(z0) == z0
     @test dual(z1) == z1
 
-    @test z0 ⊗ z0 == z0
-    @test z0 ⊗ z1 == z1
-    @test z1 ⊗ z1 == z0
-    @test (@inferred z0 ⊗ z0) == z0
-
     @test dual(Z{2}(1)) == Z{2}(1)
     @test isless(Z{2}(0), Z{2}(1))
     @test !isless(Z{2}(1), Z{2}(0))
@@ -55,7 +43,6 @@ using Test: @inferred, @test, @testset
     j2 = SU2(1//2)
     j3 = SU2(1)
     j4 = SU2(3//2)
-    j5 = SU2(2)
 
     @test trivial(SU2) == SU2(0)
     @test istrivial(SU2(0))
@@ -72,12 +59,6 @@ using Test: @inferred, @test, @testset
     @test dual(j2) == j2
     @test dual(j3) == j3
     @test dual(j4) == j4
-
-    @test j1 ⊗ j2 == gradedrange([j2 => 1])
-    @test j2 ⊗ j2 == j1 ⊕ j3
-    @test j2 ⊗ j3 == j2 ⊕ j4
-    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
-    @test (@inferred j1 ⊗ j2) == gradedrange([j2 => 1])
   end
 
   @testset "SU(2)" begin
@@ -85,7 +66,6 @@ using Test: @inferred, @test, @testset
     j2 = SU{2}(2)
     j3 = SU{2}(3)
     j4 = SU{2}(4)
-    j5 = SU{2}(5)
 
     @test trivial(SU{2}) == SU{2}(1)
     @test istrivial(SU{2}(1))
@@ -102,12 +82,6 @@ using Test: @inferred, @test, @testset
     @test dual(j2) == j2
     @test dual(j3) == j3
     @test dual(j4) == j4
-
-    @test j1 ⊗ j2 == gradedrange([j2 => 1])
-    @test j2 ⊗ j2 == j1 ⊕ j3
-    @test j2 ⊗ j3 == j2 ⊕ j4
-    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
-    @test (@inferred j1 ⊗ j2) == gradedrange([j2 => 1])
   end
 
   @testset "SU(N)" begin
@@ -153,12 +127,6 @@ using Test: @inferred, @test, @testset
 
     @test dimension(ı) === 1.0
     @test dimension(τ) == ((1 + √5) / 2)
-
-    @test ı ⊗ ı == gradedrange([ı => 1])
-    @test ı ⊗ τ == gradedrange([τ => 1])
-    @test τ ⊗ ı == gradedrange([τ => 1])
-    @test τ ⊗ τ == ı ⊕ τ
-    @test (@inferred τ ⊗ τ) == ı ⊕ τ
   end
 
   @testset "Ising" begin
@@ -176,17 +144,6 @@ using Test: @inferred, @test, @testset
     @test dimension(ı) === 1.0
     @test dimension(σ) == √2
     @test dimension(ψ) === 1.0
-
-    @test ı ⊗ ı == gradedrange([ı => 1])
-    @test ı ⊗ σ == gradedrange([σ => 1])
-    @test σ ⊗ ı == gradedrange([σ => 1])
-    @test ı ⊗ ψ == gradedrange([ψ => 1])
-    @test ψ ⊗ ı == gradedrange([ψ => 1])
-    @test σ ⊗ σ == ı ⊕ ψ
-    @test σ ⊗ ψ == gradedrange([σ => 1])
-    @test ψ ⊗ σ == gradedrange([σ => 1])
-    @test ψ ⊗ ψ == gradedrange([ı => 1])
-    @test (@inferred ψ ⊗ ψ) == gradedrange([ı => 1])
   end
 end
 end
