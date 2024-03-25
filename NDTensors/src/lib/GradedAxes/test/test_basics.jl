@@ -8,7 +8,7 @@ using BlockArrays:
   blocklength,
   blocklengths,
   blocks
-using NDTensors.GradedAxes: GradedUnitRange, blocklabels, chain, gradedrange
+using NDTensors.GradedAxes: GradedUnitRange, blocklabels, axis_cat, gradedrange
 using NDTensors.LabelledNumbers: LabelledUnitRange, label, labelled, unlabel
 using Test: @test, @test_broken, @testset
 @testset "GradedAxes basics" begin
@@ -123,7 +123,7 @@ using Test: @test, @test_broken, @testset
 
   x = gradedrange(["x" => 2, "y" => 3])
   y = gradedrange(["x" => 1, "z" => 2])
-  z = chain(x, y)
+  z = axis_cat(x, y)
   @test z == gradedrange(["x" => 2, "y" => 3, "x" => 1, "z" => 2])
 end
 end

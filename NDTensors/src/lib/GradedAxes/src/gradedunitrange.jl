@@ -80,9 +80,18 @@ function gradedrange(lblocklengths::AbstractVector{<:Pair{<:Any,<:Integer}})
   return gradedrange(labelled.(last.(lblocklengths), first.(lblocklengths)))
 end
 
-function chain(a::GradedUnitRange, b::GradedUnitRange)
-  return gradedrange(vcat(blocklengths(a), blocklengths(b)))
+# Generic function for concatenating axes with blocks.
+function blockedunitrange_axis_cat(a::AbstractUnitRange, b::AbstractUnitRange)
+  return blockedrange(vcat(blocklengths(a), blocklengths(b)))
 end
+
+axis_cat(a::GradedUnitRange, b::GradedUnitRange) = blockedunitrange_axis_cat(a, b)
+
+axis_cat(a::BlockedUnitRange, b::BlockedUnitRange) = blockedunitrange_axis_cat(a, b)
+
+# Assume in general there aren't blocks.
+# Probably should check the axes are one-based.
+axis_cat(a::AbstractUnitRange, b::AbstractUnitRange) = Base.OneTo(length(a) + length(b))
 
 function labelled_blocks(a::BlockedUnitRange, labels)
   return BlockArrays._BlockedUnitRange(a.first, labelled.(a.lasts, labels))

@@ -114,5 +114,5 @@ function ⊕(
   g1::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}},
   g2::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}},
 ) where {V<:Integer,C<:AbstractCategory}
-  return GradedAxes.chain(g1, g2)
+  return GradedAxes.axis_cat(g1, g2)
 end
