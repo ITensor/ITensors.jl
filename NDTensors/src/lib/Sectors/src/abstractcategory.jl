@@ -31,14 +31,13 @@ istrivial(c::AbstractCategory) = (c == trivial(typeof(c)))
 # name conflict with LabelledNumber.label. TBD is that an issue?
 label(c::AbstractCategory) = error("method `label` not defined for type $(typeof(c))")
 
-# TBD dimension in Sectors or in GradedAxes namespace?
-function dimension(c::AbstractCategory)
+function quantum_dimension(c::AbstractCategory)
   return error("method `dimension` not defined for type $(typeof(c))")
 end
 
-function dimension(g::GradedAxes.GradedUnitRange)
+function quantum_dimension(g::AbstractUnitRange)
   return sum(
-    LabelledNumbers.unlabel(b) * dimension(LabelledNumbers.label(b)) for
+    LabelledNumbers.unlabel(b) * quantum_dimension(LabelledNumbers.label(b)) for
     b in blocklengths(g)
   )
 end

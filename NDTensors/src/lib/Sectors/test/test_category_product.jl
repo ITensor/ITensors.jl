@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using NDTensors.Sectors: ×, ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, sector, dimension
+using NDTensors.Sectors: ×, ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, sector, quantum_dimension
 using NDTensors.GradedAxes: dual, gradedrange
 using Test: @test, @testset, @test_throws
 @testset "Test Named Category Products" begin
@@ -8,13 +8,13 @@ using Test: @test, @testset, @test_throws
     @test length(s) == 2
     @test s[:A] == U1(1)
     @test s[:B] == SU2(2)
-    @test dimension(s) == 5
+    @test quantum_dimension(s) == 5
     @test dual(s) == (A=U1(-1),) × (B=SU2(2),)
 
     s = s × (C=Ising("ψ"),)
     @test length(s) == 3
     @test s[:C] == Ising("ψ")
-    @test dimension(s) == 5.0
+    @test quantum_dimension(s) == 5.0
     @test dual(s) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
   end
 
@@ -23,7 +23,7 @@ using Test: @test, @testset, @test_throws
     @test length(s) == 1
     @test s[:A] == U1(2)
     @test s == sector(; A=U1(2))
-    @test dimension(s) == 1
+    @test quantum_dimension(s) == 1
     @test dual(s) == sector("A" => U1(-2))
 
     s = sector("B" => Ising("ψ"), :C => Z{2}(1))
@@ -38,7 +38,7 @@ using Test: @test, @testset, @test_throws
     q01 = sector(; B=U1(1))
     q11 = sector(; A=U1(1), B=U1(1))
 
-    @test dimension(q00) == 0
+    @test quantum_dimension(q00) == 0
     @test dual(q00) == q00
 
     @test q00 ⊗ q00 == q00
@@ -103,14 +103,14 @@ end
   @testset "Ordered Constructor" begin
     s = sector(U1(1), U1(2))
     @test length(s) == 2
-    @test dimension(s) == 1
+    @test quantum_dimension(s) == 1
     @test dual(s) == sector(U1(-1), U1(-2))
     @test s[1] == U1(1)
     @test s[2] == U1(2)
 
     s = U1(1) × SU2(1//2) × U1(3)
     @test length(s) == 3
-    @test dimension(s) == 2
+    @test quantum_dimension(s) == 2
     @test dual(s) == U1(-1) × SU2(1//2) × U1(-3)
     @test s[1] == U1(1)
     @test s[2] == SU2(1//2)

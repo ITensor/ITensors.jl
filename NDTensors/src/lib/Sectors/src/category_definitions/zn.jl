@@ -12,7 +12,7 @@ modulus(::Type{Z{N}}) where {N} = N
 
 modulus(c::Z) = modulus(typeof(c))
 
-dimension(::Z) = 1
+quantum_dimension(::Z) = 1
 
 trivial(category_type::Type{<:Z}) = category_type(0)
 

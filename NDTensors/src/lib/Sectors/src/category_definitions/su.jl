@@ -20,7 +20,7 @@ fundamental(::Type{SU{N}}) where {N} = SU{N}(ntuple(i -> Int(i == 1), Val(N)))
 
 adjoint(::Type{SU{N}}) where {N} = SU{N}((ntuple(i -> Int(i == 1) + Int(i < N), Val(N))))
 
-function dimension(s::SU)
+function quantum_dimension(s::SU)
   N = groupdim(s)
   l = label(s)
   d = 1
@@ -64,11 +64,11 @@ end
 
 #
 # Specializations for the case SU{2}
-# Where irreps specified by dimension "d"
+# Where irreps specified by quantum_dimension "d"
 # TBD remove me?
 #
 
-dimension(s::SU{2}) = 1 + label(s)[1]
+quantum_dimension(s::SU{2}) = 1 + label(s)[1]
 
 SU{2}(d::Integer) = SU{2}((d - 1, 0))
 
@@ -83,5 +83,5 @@ function label_fusion_rule(::Type{SU{2}}, s1, s2)
 end
 
 function Base.show(io::IO, s::SU{2})
-  return print(io, "SU{2}(", dimension(s), ")")
+  return print(io, "SU{2}(", quantum_dimension(s), ")")
 end

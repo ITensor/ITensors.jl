@@ -24,7 +24,7 @@ label(i::Ising) = i.l
 
 trivial(::Type{Ising}) = Ising(0)
 
-dimension(i::Ising) = (label(i) == 1//2) ? √2 : 1.0
+quantum_dimension(i::Ising) = (label(i) == 1//2) ? √2 : 1.0
 
 # Fusion rules identical to su2₂
 label_fusion_rule(::Type{Ising}, l1, l2) = label_fusion_rule(su2{2}, l1, l2)

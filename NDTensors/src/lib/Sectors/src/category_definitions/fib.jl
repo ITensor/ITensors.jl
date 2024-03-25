@@ -24,7 +24,7 @@ label(f::Fib) = f.l
 
 trivial(::Type{Fib}) = Fib(0)
 
-dimension(f::Fib) = istrivial(f) ? 1.0 : ((1 + √5) / 2)
+quantum_dimension(f::Fib) = istrivial(f) ? 1.0 : ((1 + √5) / 2)
 
 # Fusion rules identical to su2₃
 label_fusion_rule(::Type{Fib}, l1, l2) = label_fusion_rule(su2{3}, l1, l2)

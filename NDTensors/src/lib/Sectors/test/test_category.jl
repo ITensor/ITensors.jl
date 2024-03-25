@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes: dual
 using NDTensors.Sectors:
-  Fib, Ising, SU, SU2, U1, Z, adjoint, dimension, fundamental, istrivial, trivial
+  Fib, Ising, SU, SU2, U1, Z, adjoint, quantum_dimension, fundamental, istrivial, trivial
 using Test: @inferred, @test, @testset
 @testset "Test Category Types" begin
   @testset "U(1)" begin
@@ -9,8 +9,8 @@ using Test: @inferred, @test, @testset
     q2 = U1(2)
     q3 = U1(3)
 
-    @test dimension(q1) == 1
-    @test dimension(q2) == 1
+    @test quantum_dimension(q1) == 1
+    @test quantum_dimension(q2) == 1
 
     @test trivial(U1) == U1(0)
     @test istrivial(U1(0))
@@ -27,8 +27,8 @@ using Test: @inferred, @test, @testset
     @test trivial(Z{2}) == Z{2}(0)
     @test istrivial(Z{2}(0))
 
-    @test dimension(z0) == 1
-    @test dimension(z1) == 1
+    @test quantum_dimension(z0) == 1
+    @test quantum_dimension(z1) == 1
 
     @test dual(z0) == z0
     @test dual(z1) == z1
@@ -50,10 +50,10 @@ using Test: @inferred, @test, @testset
     @test fundamental(SU2) == SU2(1//2)
     @test adjoint(SU2) == SU2(1)
 
-    @test dimension(j1) == 1
-    @test dimension(j2) == 2
-    @test dimension(j3) == 3
-    @test dimension(j4) == 4
+    @test quantum_dimension(j1) == 1
+    @test quantum_dimension(j2) == 2
+    @test quantum_dimension(j3) == 3
+    @test quantum_dimension(j4) == 4
 
     @test dual(j1) == j1
     @test dual(j2) == j2
@@ -73,10 +73,10 @@ using Test: @inferred, @test, @testset
     @test fundamental(SU{2}) == SU{2}(2)
     @test adjoint(SU{2}) == SU{2}(3)
 
-    @test dimension(j1) == 1
-    @test dimension(j2) == 2
-    @test dimension(j3) == 3
-    @test dimension(j4) == 4
+    @test quantum_dimension(j1) == 1
+    @test quantum_dimension(j2) == 2
+    @test quantum_dimension(j3) == 3
+    @test quantum_dimension(j4) == 4
 
     @test dual(j1) == j1
     @test dual(j2) == j2
@@ -105,14 +105,14 @@ using Test: @inferred, @test, @testset
     @test dual(ad3) == ad3
     @test dual(ad4) == ad4
 
-    @test dimension(f3) == 3
-    @test dimension(f4) == 4
-    @test dimension(ad3) == 8
-    @test dimension(ad4) == 15
-    @test dimension(SU{3}((4, 2, 0))) == 27
-    @test dimension(SU{3}((3, 3, 0))) == 10
-    @test dimension(SU{3}((3, 0, 0))) == 10
-    @test dimension(SU{3}((0, 0, 0))) == 1
+    @test quantum_dimension(f3) == 3
+    @test quantum_dimension(f4) == 4
+    @test quantum_dimension(ad3) == 8
+    @test quantum_dimension(ad4) == 15
+    @test quantum_dimension(SU{3}((4, 2, 0))) == 27
+    @test quantum_dimension(SU{3}((3, 3, 0))) == 10
+    @test quantum_dimension(SU{3}((3, 0, 0))) == 10
+    @test quantum_dimension(SU{3}((0, 0, 0))) == 1
   end
 
   @testset "Fibonacci" begin
@@ -125,8 +125,8 @@ using Test: @inferred, @test, @testset
     @test dual(ı) == ı
     @test dual(τ) == τ
 
-    @test dimension(ı) === 1.0
-    @test dimension(τ) == ((1 + √5) / 2)
+    @test quantum_dimension(ı) === 1.0
+    @test quantum_dimension(τ) == ((1 + √5) / 2)
   end
 
   @testset "Ising" begin
@@ -141,9 +141,9 @@ using Test: @inferred, @test, @testset
     @test dual(σ) == σ
     @test dual(ψ) == ψ
 
-    @test dimension(ı) === 1.0
-    @test dimension(σ) == √2
-    @test dimension(ψ) === 1.0
+    @test quantum_dimension(ı) === 1.0
+    @test quantum_dimension(σ) == √2
+    @test quantum_dimension(ψ) === 1.0
   end
 end
 end

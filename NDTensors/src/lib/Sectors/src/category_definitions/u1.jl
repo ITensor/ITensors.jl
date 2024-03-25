@@ -12,7 +12,7 @@ GradedAxes.dual(u::U1) = U1(-u.n)
 
 label(u::U1) = u.n
 
-dimension(::U1) = 1
+quantum_dimension(::U1) = 1
 
 trivial(::Type{U1}) = U1(0)
 
