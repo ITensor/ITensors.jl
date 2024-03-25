@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '[test ITensors mps]')
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '[test ITensorMPS]')
     runs-on: ${{ matrix.os }}
     env:
       JULIA_NUM_THREADS: ${{ matrix.threads }}
