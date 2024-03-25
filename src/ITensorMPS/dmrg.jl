@@ -249,12 +249,11 @@ function dmrg(
         ## into `DeviceMemory`. This conversion line is here temporarily to fix that problem when it arises
         ## Adapt is only called when using CUDA backend. CPU will work as implemented previously.
         ## TODO this might be the only place we really need iscu if its not fixed.
-        phi::ITensor = if NDTensors.iscu(phi) && NDTensors.iscu(vecs[1])
-          adapt(set_eltype(unwrap_array_type(phi), eltype(vecs[1])), vecs[1])
+        if NDTensors.iscu(phi) && NDTensors.iscu(vecs[1])
+          phi = adapt(ITensors.set_eltype(unwrap_array_type(phi), eltype(vecs[1])), vecs[1])
         else
-          vecs[1]
+          phi = vecs[1]
         end
-        #phi::ITensor = vecs[1]
 
         ortho = ha == 1 ? "left" : "right"
 
