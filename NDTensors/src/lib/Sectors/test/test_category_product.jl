@@ -48,7 +48,7 @@ using Test: @test, @testset, @test_throws
     @test q10 ⊗ q01 == q11
   end
 
-  @testset "U(1) ⊗ SU(2) conventional" begin
+  @testset "U(1) × SU(2) conventional" begin
     q0 = sector()
     q0h = sector(; J=SU2(1//2))
     q10 = (N=U1(1),) × (J=SU2(0),)
@@ -66,7 +66,7 @@ using Test: @test, @testset, @test_throws
     @test q11 ⊗ q11 == q20 ⊕ q21 ⊕ q22
   end
 
-  @testset "U(1) ⊗ SU(2)" begin
+  @testset "U(1) × SU(2)" begin
     q0 = sector()
     q0h = sector(; J=SU{2}(2))
     q10 = (N=U1(1),) × (J=SU{2}(1),)
