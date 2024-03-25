@@ -10,7 +10,7 @@ end
 copy(P::AbstractSum) = typeof(P)(copy.(terms(P)))
 
 function nsite(P::AbstractSum)
-  @assert allequal(nsite.(terms(P)))
+  @assert all(y -> y == nsite(first(terms(P))), nsite.(terms(P)))
   return nsite(first(terms(P)))
 end
 
@@ -19,12 +19,12 @@ function set_nsite!(A::AbstractSum, nsite)
 end
 
 function length(A::AbstractSum)
-  @assert allequal(length.(terms(A)))
+  @assert all(y -> y == length(first(terms(A))), length.(terms(A)))
   return length(first(terms(A)))
 end
 
 function site_range(A::AbstractSum)
-  @assert allequal(Iterators.map(site_range, terms(A)))
+  @assert all(y -> y == site_range(first(terms(A))), Iterators.map(site_range, terms(A)))
   return site_range(first(terms(A)))
 end
 
