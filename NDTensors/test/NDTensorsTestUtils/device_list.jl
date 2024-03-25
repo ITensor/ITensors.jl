@@ -1,7 +1,9 @@
 using NDTensors: NDTensors
 using Pkg: Pkg
 if "cuda" in ARGS || "all" in ARGS
-  Pkg.add("CUDA")
+  ## Right now adding CUDA during Pkg.test results in a
+  ## compat issues. I am adding it back to test/Project.toml
+  # Pkg.add("CUDA")
   using CUDA
 end
 if "rocm" in ARGS || "all" in ARGS
