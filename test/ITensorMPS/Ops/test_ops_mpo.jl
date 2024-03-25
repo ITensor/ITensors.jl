@@ -1,7 +1,7 @@
 using Test
 using ITensors
 using ITensors.Ops
-using ITensors: ITensorMPS
+using ITensors.ITensorMPS: ITensorMPS
 using LinearAlgebra
 
 @testset "Ops to MPO" begin
