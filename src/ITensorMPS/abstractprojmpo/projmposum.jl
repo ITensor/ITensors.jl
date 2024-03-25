@@ -1,3 +1,4 @@
+using Compat: allequal
 
 abstract type AbstractSum end
 
