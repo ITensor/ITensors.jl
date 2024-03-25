@@ -11,6 +11,7 @@ using Test: @inferred, @test, @testset
 
     @test quantum_dimension(q1) == 1
     @test quantum_dimension(q2) == 1
+    @test (@inferred quantum_dimension(q1)) == 1
 
     @test trivial(U1) == U1(0)
     @test istrivial(U1(0))
@@ -29,6 +30,7 @@ using Test: @inferred, @test, @testset
 
     @test quantum_dimension(z0) == 1
     @test quantum_dimension(z1) == 1
+    @test (@inferred quantum_dimension(z0)) == 1
 
     @test dual(z0) == z0
     @test dual(z1) == z1
@@ -54,6 +56,7 @@ using Test: @inferred, @test, @testset
     @test quantum_dimension(j2) == 2
     @test quantum_dimension(j3) == 3
     @test quantum_dimension(j4) == 4
+    @test (@inferred quantum_dimension(j1)) == 1
 
     @test dual(j1) == j1
     @test dual(j2) == j2
@@ -77,6 +80,7 @@ using Test: @inferred, @test, @testset
     @test quantum_dimension(j2) == 2
     @test quantum_dimension(j3) == 3
     @test quantum_dimension(j4) == 4
+    @test (@inferred quantum_dimension(j1)) == 1
 
     @test dual(j1) == j1
     @test dual(j2) == j2
@@ -113,6 +117,7 @@ using Test: @inferred, @test, @testset
     @test quantum_dimension(SU{3}((3, 3, 0))) == 10
     @test quantum_dimension(SU{3}((3, 0, 0))) == 10
     @test quantum_dimension(SU{3}((0, 0, 0))) == 1
+    @test (@inferred quantum_dimension(f3)) == 3
   end
 
   @testset "Fibonacci" begin
@@ -125,8 +130,8 @@ using Test: @inferred, @test, @testset
     @test dual(ı) == ı
     @test dual(τ) == τ
 
-    @test quantum_dimension(ı) === 1.0
-    @test quantum_dimension(τ) == ((1 + √5) / 2)
+    @test (@inferred quantum_dimension(ı)) == 1.0
+    @test (@inferred quantum_dimension(τ)) == ((1 + √5) / 2)
   end
 
   @testset "Ising" begin
@@ -141,9 +146,9 @@ using Test: @inferred, @test, @testset
     @test dual(σ) == σ
     @test dual(ψ) == ψ
 
-    @test quantum_dimension(ı) === 1.0
-    @test quantum_dimension(σ) == √2
-    @test quantum_dimension(ψ) === 1.0
+    @test (@inferred quantum_dimension(ı)) == 1.0
+    @test (@inferred quantum_dimension(σ)) == √2
+    @test (@inferred quantum_dimension(ψ)) == 1.0
   end
 end
 end

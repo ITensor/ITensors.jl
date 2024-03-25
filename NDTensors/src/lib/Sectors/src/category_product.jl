@@ -14,11 +14,11 @@ Base.isempty(s::CategoryProduct) = isempty(categories(s))
 Base.length(s::CategoryProduct) = length(categories(s))
 Base.getindex(s::CategoryProduct, args...) = getindex(categories(s), args...)
 
-function dimension(s::CategoryProduct)
+function quantum_dimension(s::CategoryProduct)
   if length(s) == 0
     return 0
   end
-  return prod(map(dimension, categories(s)))
+  return prod(map(quantum_dimension, categories(s)))
 end
 
 GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categories(s)))

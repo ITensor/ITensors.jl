@@ -11,7 +11,7 @@ using Test: @inferred, @test, @testset
   @test q1 ⊕ q2 == gradedrange([q1 => 1, q2 => 1])
   @test q2 ⊕ q1 == gradedrange([q2 => 1, q1 => 1])  # unsorted
   @test q1 ⊕ q1 == gradedrange([q1 => 1, q1 => 1])
-  @test quantum_dimension(gradedrange([q1 => 1, q2 => 2])) == 3
+  @test (@inferred quantum_dimension(gradedrange([q1 => 1, q2 => 2]))) == 3
 
   # test non-abelian
   j2 = SU2(1//2)
@@ -19,7 +19,7 @@ using Test: @inferred, @test, @testset
   @test j2 ⊕ j3 == gradedrange([j2 => 1, j3 => 1])
   @test j3 ⊕ j2 == gradedrange([j3 => 1, j2 => 1])  # unsorted
   @test j2 ⊕ j2 == gradedrange([j2 => 1, j2 => 1])
-  @test quantum_dimension(gradedrange([j2 => 2, j3 => 3])) == 13
+  @test (@inferred quantum_dimension(gradedrange([j2 => 2, j3 => 3]))) == 13
 end
 
 @testset "fusion rules" begin
@@ -83,6 +83,7 @@ end
     @test τ ⊗ ı == gradedrange([τ => 1])
     @test τ ⊗ τ == ı ⊕ τ
     @test (@inferred τ ⊗ τ) == ı ⊕ τ
+    @test (@inferred quantum_dimension(ı ⊕ ı)) == 2.0
   end
 
   @testset "Ising fusion rules" begin
@@ -100,6 +101,7 @@ end
     @test ψ ⊗ σ == gradedrange([σ => 1])
     @test ψ ⊗ ψ == gradedrange([ı => 1])
     @test (@inferred ψ ⊗ ψ) == gradedrange([ı => 1])
+    @test (@inferred quantum_dimension(ı ⊕ ψ)) == 2.0
   end
 end
 end
