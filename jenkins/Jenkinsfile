@@ -75,7 +75,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.develop("NDTensors"); Pkg.develop("ITensors"); Pkg.Registry.update(); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -99,7 +99,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.develop("NDTensors"); Pkg.develop("ITensors"); Pkg.Registry.update(); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -119,7 +119,7 @@ pipeline {
               juliaup update
             '''
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.develop("NDTensors"); Pkg.develop("ITensors"); Pkg.Registry.update(); Pkg.test("NDTensors"; test_args=["metal"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
             '''
           }
         }
