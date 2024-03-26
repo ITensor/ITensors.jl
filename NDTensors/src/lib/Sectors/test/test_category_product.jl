@@ -1,35 +1,36 @@
 @eval module $(gensym())
-using NDTensors.Sectors: ×, ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, sector, quantum_dimension
+using NDTensors.Sectors:
+  ×, ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, categories, sector, quantum_dimension
 using NDTensors.GradedAxes: dual, gradedrange
 using Test: @test, @testset, @test_throws
 @testset "Test Named Category Products" begin
   @testset "Construct from × of NamedTuples" begin
     s = (A=U1(1),) × (B=SU2(2),)
-    @test length(s) == 2
-    @test s[:A] == U1(1)
-    @test s[:B] == SU2(2)
+    @test length(categories(s)) == 2
+    @test categories(s)[:A] == U1(1)
+    @test categories(s)[:B] == SU2(2)
     @test quantum_dimension(s) == 5
     @test dual(s) == (A=U1(-1),) × (B=SU2(2),)
 
     s = s × (C=Ising("ψ"),)
-    @test length(s) == 3
-    @test s[:C] == Ising("ψ")
+    @test length(categories(s)) == 3
+    @test categories(s)[:C] == Ising("ψ")
     @test quantum_dimension(s) == 5.0
     @test dual(s) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
   end
 
   @testset "Construct from Pairs" begin
     s = sector("A" => U1(2))
-    @test length(s) == 1
-    @test s[:A] == U1(2)
+    @test length(categories(s)) == 1
+    @test categories(s)[:A] == U1(2)
     @test s == sector(; A=U1(2))
     @test quantum_dimension(s) == 1
     @test dual(s) == sector("A" => U1(-2))
 
     s = sector("B" => Ising("ψ"), :C => Z{2}(1))
-    @test length(s) == 2
-    @test s[:B] == Ising("ψ")
-    @test s[:C] == Z{2}(1)
+    @test length(categories(s)) == 2
+    @test categories(s)[:B] == Ising("ψ")
+    @test categories(s)[:C] == Z{2}(1)
   end
 
   @testset "Multiple U(1)'s" begin
@@ -102,19 +103,19 @@ end
 @testset "Test Ordered Products" begin
   @testset "Ordered Constructor" begin
     s = sector(U1(1), U1(2))
-    @test length(s) == 2
+    @test length(categories(s)) == 2
     @test quantum_dimension(s) == 1
     @test dual(s) == sector(U1(-1), U1(-2))
-    @test s[1] == U1(1)
-    @test s[2] == U1(2)
+    @test categories(s)[1] == U1(1)
+    @test categories(s)[2] == U1(2)
 
     s = U1(1) × SU2(1//2) × U1(3)
-    @test length(s) == 3
+    @test length(categories(s)) == 3
     @test quantum_dimension(s) == 2
     @test dual(s) == U1(-1) × SU2(1//2) × U1(-3)
-    @test s[1] == U1(1)
-    @test s[2] == SU2(1//2)
-    @test s[3] == U1(3)
+    @test categories(s)[1] == U1(1)
+    @test categories(s)[2] == SU2(1//2)
+    @test categories(s)[3] == U1(3)
   end
 
   @testset "Fusion of U1 products" begin

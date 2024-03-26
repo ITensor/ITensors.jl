@@ -10,12 +10,8 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-Base.isempty(s::CategoryProduct) = isempty(categories(s))
-Base.length(s::CategoryProduct) = length(categories(s))
-Base.getindex(s::CategoryProduct, args...) = getindex(categories(s), args...)
-
 function quantum_dimension(s::CategoryProduct)
-  if length(s) == 0
+  if length(categories(s)) == 0
     return 0
   end
   return prod(map(quantum_dimension, categories(s)))
@@ -34,7 +30,7 @@ function Base.:(==)(A::CategoryProduct, B::CategoryProduct)
 end
 
 function Base.show(io::IO, s::CategoryProduct)
-  (length(s) < 2) && print(io, "sector")
+  (length(categories(s)) < 2) && print(io, "sector")
   print(io, "(")
   symbol = ""
   for p in pairs(categories(s))
