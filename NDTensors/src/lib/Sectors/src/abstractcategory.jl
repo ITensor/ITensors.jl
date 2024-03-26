@@ -93,25 +93,3 @@ function GradedAxes.tensor_product(
 end
 
 GradedAxes.fuse_labels(c1::AbstractCategory, c2::AbstractCategory) = c1 ⊗ c2
-
-# ===============  sum rules ====================
-⊕(c1::C, c2::C) where {C<:AbstractCategory} = GradedAxes.gradedrange([c1 => 1, c2 => 1])
-
-function ⊕(
-  c::C, g::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}}
-) where {V<:Integer,C<:AbstractCategory}
-  return GradedAxes.gradedrange([c => 1]) ⊕ g
-end
-
-function ⊕(
-  g::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}}, c::C
-) where {V<:Integer,C<:AbstractCategory}
-  return g ⊕ GradedAxes.gradedrange([c => 1])
-end
-
-function ⊕(
-  g1::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}},
-  g2::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}},
-) where {V<:Integer,C<:AbstractCategory}
-  return GradedAxes.axis_cat(g1, g2)
-end

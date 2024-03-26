@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using NDTensors.Sectors:
-  ×, ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, categories, sector, quantum_dimension
+  ×, ⊗, Fib, Ising, SU, SU2, U1, Z, categories, sector, quantum_dimension
 using NDTensors.GradedAxes: dual, gradedrange
 using Test: @test, @testset, @test_throws
 @testset "Test Named Category Products" begin
@@ -60,10 +60,10 @@ using Test: @test, @testset, @test_throws
     q21 = (N=U1(2),) × (J=SU2(1),)
     q22 = (N=U1(2),) × (J=SU2(2),)
 
-    @test q1h ⊗ q1h == q20 ⊕ q21
+    @test q1h ⊗ q1h == gradedrange([q20 => 1, q21 => 1])
     @test q10 ⊗ q1h == gradedrange([q2h => 1])
-    @test q0h ⊗ q1h == q10 ⊕ q11
-    @test q11 ⊗ q11 == q20 ⊕ q21 ⊕ q22
+    @test q0h ⊗ q1h == gradedrange([q10 => 1, q11 => 1])
+    @test q11 ⊗ q11 == gradedrange([q20 => 1, q21 => 1, q22 => 1])
   end
 
   @testset "U(1) × SU(2)" begin
@@ -78,10 +78,10 @@ using Test: @test, @testset, @test_throws
     q21 = (N=U1(2),) × (J=SU{2}(3),)
     q22 = (N=U1(2),) × (J=SU{2}(5),)
 
-    @test q1h ⊗ q1h == q20 ⊕ q21
+    @test q1h ⊗ q1h == gradedrange([q20 => 1, q21 => 1])
     @test q10 ⊗ q1h == gradedrange([q2h => 1])
-    @test q0h ⊗ q1h == q10 ⊕ q11
-    @test q11 ⊗ q11 == q20 ⊕ q21 ⊕ q22
+    @test q0h ⊗ q1h == gradedrange([q10 => 1, q11 => 1])
+    @test q11 ⊗ q11 == gradedrange([q20 => 1, q21 => 1, q22 => 1])
   end
 
   @testset "Comparisons with unspecified labels" begin
@@ -134,17 +134,22 @@ end
 
   @testset "Fusion of SU2 products" begin
     phh = SU2(1//2) × SU2(1//2)
-    @test phh ⊗ phh ==
-      (SU2(0) × SU2(0)) ⊕ (SU2(1) × SU2(0)) ⊕ (SU2(0) × SU2(1)) ⊕ (SU2(1) × SU2(1))
+    @test phh ⊗ phh == gradedrange([
+      1 => (SU2(0) × SU2(0)),
+      1 => (SU2(1) × SU2(0)),
+      1 => (SU2(0) × SU2(1)),
+      1 => (SU2(1) × SU2(1)),
+    ])
   end
 
   @testset "Fusion of mixed U1 and SU2 products" begin
     p2h = U1(2) × SU2(1//2)
     p1h = U1(1) × SU2(1//2)
-    @test p2h ⊗ p1h == (U1(3) × SU2(0)) ⊕ (U1(3) × SU2(1))
+    @test p2h ⊗ p1h == gradedrange([(U1(3) × SU2(0)) => 1, (U1(3) × SU2(1)) => 1])
 
     p1h1 = U1(1) × SU2(1//2) × Z{2}(1)
-    @test p1h1 ⊗ p1h1 == (U1(2) × SU2(0) × Z{2}(0)) ⊕ (U1(2) × SU2(1) × Z{2}(0))
+    @test p1h1 ⊗ p1h1 ==
+      gradedrabge([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1])
   end
 end
 end

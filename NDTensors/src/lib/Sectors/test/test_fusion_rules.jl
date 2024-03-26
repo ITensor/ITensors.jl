@@ -1,26 +1,7 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes: fuse_labels, gradedrange
-using NDTensors.Sectors: ⊕, ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension
+using NDTensors.Sectors: ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension
 using Test: @inferred, @test, @testset
-
-@testset "sum rules" begin
-
-  # test abelian
-  q1 = U1(1)
-  q2 = U1(2)
-  @test q1 ⊕ q2 == gradedrange([q1 => 1, q2 => 1])
-  @test q2 ⊕ q1 == gradedrange([q2 => 1, q1 => 1])  # unsorted
-  @test q1 ⊕ q1 == gradedrange([q1 => 1, q1 => 1])
-  @test (@inferred quantum_dimension(gradedrange([q1 => 1, q2 => 2]))) == 3
-
-  # test non-abelian
-  j2 = SU2(1//2)
-  j3 = SU2(1)
-  @test j2 ⊕ j3 == gradedrange([j2 => 1, j3 => 1])
-  @test j3 ⊕ j2 == gradedrange([j3 => 1, j2 => 1])  # unsorted
-  @test j2 ⊕ j2 == gradedrange([j2 => 1, j2 => 1])
-  @test (@inferred quantum_dimension(gradedrange([j2 => 2, j3 => 3]))) == 13
-end
 
 @testset "fusion rules" begin
   @testset "Z{2} fusion rules" begin
@@ -54,9 +35,9 @@ end
     j5 = SU2(2)
 
     @test j1 ⊗ j2 == gradedrange([j2 => 1])
-    @test j2 ⊗ j2 == j1 ⊕ j3
-    @test j2 ⊗ j3 == j2 ⊕ j4
-    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
+    @test j2 ⊗ j2 == gradedrange([j1 => 1, j3 => 1])
+    @test j2 ⊗ j3 == gradedrange([j2 => 1, j4 => 1])
+    @test j3 ⊗ j3 == gradedrange([j1 => 1, j3 => 1, j5 => 1])
     @test (@inferred j1 ⊗ j2) == gradedrange([j2 => 1])
   end
 
@@ -68,9 +49,9 @@ end
     j5 = SU{2}(5)
 
     @test j1 ⊗ j2 == gradedrange([j2 => 1])
-    @test j2 ⊗ j2 == j1 ⊕ j3
-    @test j2 ⊗ j3 == j2 ⊕ j4
-    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
+    @test j2 ⊗ j2 == gradedrange([j1 => 1, j3 => 1])
+    @test j2 ⊗ j3 == gradedrange([j2 => 1, j4 => 1])
+    @test j3 ⊗ j3 == gradedrange([j1 => 1, j3 => 1, j5 => 1])
     @test (@inferred j1 ⊗ j2) == gradedrange([j2 => 1])
   end
 
@@ -81,9 +62,8 @@ end
     @test ı ⊗ ı == gradedrange([ı => 1])
     @test ı ⊗ τ == gradedrange([τ => 1])
     @test τ ⊗ ı == gradedrange([τ => 1])
-    @test τ ⊗ τ == ı ⊕ τ
-    @test (@inferred τ ⊗ τ) == ı ⊕ τ
-    @test (@inferred quantum_dimension(ı ⊕ ı)) == 2.0
+    @test (@inferred τ ⊗ τ) == gradedrange([ı => 1, τ => 1])
+    @test (@inferred quantum_dimension(gradedrange([ı => 1, ı => 1]))) == 2.0
   end
 
   @testset "Ising fusion rules" begin
@@ -96,12 +76,12 @@ end
     @test σ ⊗ ı == gradedrange([σ => 1])
     @test ı ⊗ ψ == gradedrange([ψ => 1])
     @test ψ ⊗ ı == gradedrange([ψ => 1])
-    @test σ ⊗ σ == ı ⊕ ψ
+    @test σ ⊗ σ == gradedrange([ı => 1, ψ => 1])
     @test σ ⊗ ψ == gradedrange([σ => 1])
     @test ψ ⊗ σ == gradedrange([σ => 1])
     @test ψ ⊗ ψ == gradedrange([ı => 1])
     @test (@inferred ψ ⊗ ψ) == gradedrange([ı => 1])
-    @test (@inferred quantum_dimension(ı ⊕ ψ)) == 2.0
+    @test (@inferred quantum_dimension(σ ⊗ σ)) == 2.0
   end
 end
 end
