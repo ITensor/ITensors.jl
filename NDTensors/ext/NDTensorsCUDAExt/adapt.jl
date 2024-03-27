@@ -1,7 +1,7 @@
 using Adapt: Adapt
 using CUDA: CUDA, CuArray
 using Functors: fmap
-using NDTensors: NDTensors, EmptyStorage
+using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
 using NDTensors.CUDAExtensions: CUDAExtensions, CuArrayAdaptor
 using NDTensors.GPUArraysCoreExtensions: storagemode
 using NDTensors.TypeParameterAccessors:
@@ -19,8 +19,10 @@ function Adapt.adapt_storage(adaptor::CuArrayAdaptor, xs::AbstractArray)
 end
 
 function NDTensors.adapt_storagetype(
-  adaptor::CuArrayAdaptor, xs::Type{EmptyStorage{ElT,StoreT}}
+  adaptor::CuArrayAdaptor, ::Type{EmptyStorage{ElT,StoreT}}
 ) where {ElT,StoreT}
-  BufT = storagemode(adaptor)
-  return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,BufT}, StoreT))
+  cutype = set_type_parameters(
+    CuVector, (eltype, storagemode), (ElT, storagemode(adaptor))
+  )
+  return emptytype(adapt_storagetype(cutype, StoreT))
 end
