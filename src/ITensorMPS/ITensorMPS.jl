@@ -3,7 +3,6 @@ module ITensorMPS
 using ..ITensors
 using Printf: @printf
 
-include("usings.jl")
 include("imports.jl")
 include("exports.jl")
 include("abstractmps.jl")
@@ -25,5 +24,21 @@ include("autompo/opsum_to_mpo_generic.jl")
 include("autompo/opsum_to_mpo.jl")
 include("autompo/opsum_to_mpo_qn.jl")
 include("deprecated.jl")
+
+include("abstractprojmpo/projmpo_apply.jl")
+include("abstractprojmpo/projmps2.jl")
+include("abstractprojmpo/projmpo_mps2.jl")
+include("defaults.jl")
+include("update_observer.jl")
+include("solver_utils.jl")
+include("tdvporder.jl")
+include("tdvpinfo.jl")
+include("sweep_update.jl")
+include("alternating_update.jl")
+include("tdvp.jl")
+include("dmrg.jl")
+include("dmrg_x.jl")
+include("contract_mpo_mps.jl")
+include("linsolve.jl")
 
 end # module ITensorMPS

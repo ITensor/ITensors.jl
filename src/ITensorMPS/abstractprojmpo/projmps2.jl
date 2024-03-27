@@ -1,5 +1,4 @@
 using ITensors: ITensors, ITensor, dag, dim, prime
-using ITensors.ITensorMPS: ITensorMPS, AbstractProjMPO, OneITensor, lproj, rproj, site_range
 
 """
 Holds the following data where psi
@@ -29,12 +28,12 @@ function Base.copy(P::ProjMPS2)
   return ProjMPS2(P.lpos, P.rpos, P.nsite, copy(P.M), copy(P.LR))
 end
 
-function ITensorMPS.set_nsite!(P::ProjMPS2, nsite)
+function set_nsite!(P::ProjMPS2, nsite)
   P.nsite = nsite
   return P
 end
 
-function ITensorMPS.makeL!(P::ProjMPS2, psi::MPS, k::Int)
+function makeL!(P::ProjMPS2, psi::MPS, k::Int)
   # Save the last `L` that is made to help with caching
   # for DiskProjMPO
   ll = P.lpos
@@ -58,7 +57,7 @@ function ITensorMPS.makeL!(P::ProjMPS2, psi::MPS, k::Int)
   return P
 end
 
-function ITensorMPS.makeR!(P::ProjMPS2, psi::MPS, k::Int)
+function makeR!(P::ProjMPS2, psi::MPS, k::Int)
   # Save the last `R` that is made to help with caching
   # for DiskProjMPO
   rl = P.rpos

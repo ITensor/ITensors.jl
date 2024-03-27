@@ -1,4 +1,3 @@
-using ITensors: MPO, MPS
 using KrylovKit: KrylovKit, linsolve
 
 """
@@ -34,7 +33,7 @@ function KrylovKit.linsolve(
 )
   function linsolve_solver(P::ProjMPO_MPS2, t, x₀; current_time, outputlevel)
     b = dag(only(proj_mps(P)))
-    x, info = linsolve(P, b, x₀, a₀, a₁; solver_kwargs...)
+    x, info = KrylovKit.linsolve(P, b, x₀, a₀, a₁; solver_kwargs...)
     return x, nothing
   end
   P = ProjMPO_MPS2(A, b)

@@ -1,15 +1,4 @@
-using ITensors:
-  ITensors,
-  Index,
-  ITensor,
-  @Algorithm_str,
-  commoninds,
-  contract,
-  hasind,
-  linkinds,
-  replace_siteinds!,
-  sim,
-  siteinds
+using ITensors: ITensors, Index, ITensor, @Algorithm_str, commoninds, contract, hasind, sim
 
 function contractmpo_solver(; kwargs...)
   function solver(PH, t, psi; kws...)

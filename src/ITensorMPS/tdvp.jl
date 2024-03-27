@@ -1,4 +1,4 @@
-using ITensors: Algorithm, MPO, MPS, @Algorithm_str
+using ITensors: Algorithm, @Algorithm_str
 
 # Select solver function
 solver_function(solver_backend::String) = solver_function(Algorithm(solver_backend))

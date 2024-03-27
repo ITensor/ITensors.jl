@@ -1,4 +1,4 @@
-using ITensors: MPS, array, contract, dag, uniqueind, onehot
+using ITensors: array, contract, dag, uniqueind, onehot
 using LinearAlgebra: eigen
 
 function dmrg_x_solver(PH, t, psi0; current_time, outputlevel)

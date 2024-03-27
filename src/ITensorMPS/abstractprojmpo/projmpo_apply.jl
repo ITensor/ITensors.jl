@@ -1,5 +1,4 @@
 using ITensors: ITensor
-using ITensors.ITensorMPS: ITensorMPS, AbstractProjMPO, MPO, MPS
 
 """
 A ProjMPOApply represents the application of an
@@ -36,12 +35,12 @@ function Base.copy(P::ProjMPOApply)
   return ProjMPOApply(P.lpos, P.rpos, P.nsite, copy(P.psi0), copy(P.H), copy(P.LR))
 end
 
-function ITensorMPS.set_nsite!(P::ProjMPOApply, nsite)
+function set_nsite!(P::ProjMPOApply, nsite)
   P.nsite = nsite
   return P
 end
 
-function ITensorMPS.makeL!(P::ProjMPOApply, psi::MPS, k::Int)
+function makeL!(P::ProjMPOApply, psi::MPS, k::Int)
   # Save the last `L` that is made to help with caching
   # for DiskProjMPO
   ll = P.lpos
@@ -65,7 +64,7 @@ function ITensorMPS.makeL!(P::ProjMPOApply, psi::MPS, k::Int)
   return P
 end
 
-function ITensorMPS.makeR!(P::ProjMPOApply, psi::MPS, k::Int)
+function makeR!(P::ProjMPOApply, psi::MPS, k::Int)
   # Save the last `R` that is made to help with caching
   # for DiskProjMPO
   rl = P.rpos

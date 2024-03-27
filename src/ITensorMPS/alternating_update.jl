@@ -1,16 +1,4 @@
 using ITensors: permute
-using ITensors.ITensorMPS:
-  AbstractObserver,
-  MPO,
-  MPS,
-  ProjMPO,
-  ProjMPOSum,
-  check_hascommoninds,
-  checkdone!,
-  disk,
-  linkind,
-  maxlinkdim,
-  siteinds
 
 function _compute_nsweeps(t; time_step=default_time_step(t), nsweeps=default_nsweeps())
   if isinf(t) && isnothing(nsweeps)

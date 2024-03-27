@@ -10,7 +10,7 @@ function permute(
     lₙ₋₁ = linkind(M, n - 1)
     lₙ = linkind(M, n)
     s⃗ₙ = TupleTools.sort(Tuple(siteinds(M, n)); by=plev)
-    M̃[n] = permute(M[n], filter(!isnothing, (lₙ₋₁, s⃗ₙ..., lₙ)))
+    M̃[n] = ITensors.permute(M[n], filter(!isnothing, (lₙ₋₁, s⃗ₙ..., lₙ)))
   end
   set_ortho_lims!(M̃, ortho_lims(M))
   return M̃
@@ -341,11 +341,6 @@ function dmrg(
   end
   return (energy, psi)
 end
-
-default_maxdim() = typemax(Int)
-default_mindim() = 1
-default_cutoff() = 1e-8
-default_noise() = false
 
 function _dmrg_sweeps(;
   nsweeps,
