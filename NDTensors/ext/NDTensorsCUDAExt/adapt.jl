@@ -4,12 +4,11 @@ using Functors: fmap
 using NDTensors: NDTensors, EmptyStorage
 using NDTensors.CUDAExtensions: CUDAExtensions, CuArrayAdaptor
 using NDTensors.GPUArraysCoreExtensions: storagemode
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors, default_type_parameter, set_type_parameters, type_parameters
+using NDTensors.TypeParameterAccessors:
+  TypeParameterAccessors, default_type_parameter, set_type_parameters, type_parameters
 
 function CUDAExtensions.cu(xs; storagemode=default_type_parameter(CuArray, storagemode))
-  return fmap(
-    x -> adapt(CuArrayAdaptor{storagemode}, x), xs
-  )
+  return fmap(x -> adapt(CuArrayAdaptor{storagemode}, x), xs)
 end
 
 ## Could do this generically
