@@ -1,3 +1,5 @@
+using IsApprox: Approx, IsApprox
+
 abstract type AbstractMPS end
 
 """

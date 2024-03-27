@@ -1,4 +1,6 @@
+using Adapt: adapt
 using KrylovKit: eigsolve
+using TupleTools: TupleTools
 
 function permute(
   M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)}
