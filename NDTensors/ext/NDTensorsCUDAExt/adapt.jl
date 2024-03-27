@@ -21,8 +21,6 @@ end
 function NDTensors.adapt_storagetype(
   adaptor::CuArrayAdaptor, ::Type{EmptyStorage{ElT,StoreT}}
 ) where {ElT,StoreT}
-  cutype = set_type_parameters(
-    CuVector, (eltype, storagemode), (ElT, storagemode(adaptor))
-  )
+  cutype = set_type_parameters(CuVector, (eltype, storagemode), (ElT, storagemode(adaptor)))
   return emptytype(adapt_storagetype(cutype, StoreT))
 end
