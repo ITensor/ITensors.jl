@@ -3,7 +3,7 @@
 
 using NDTensors.LabelledNumbers
 using NDTensors.GradedAxes
-using BlockArrays: blockedrange, blocklengths
+using BlockArrays: blockedrange, blocklengths, blocks
 
 abstract type AbstractCategory end
 
@@ -62,34 +62,79 @@ function fusion_rule(c1::C, c2::C) where {C<:AbstractCategory}
   return C(out)  # AbelianGroup: return Category
 end
 
-function fusion_rule(g::GradedAxes.GradedUnitRange, c::AbstractCategory)
-  return fusion_rule(c, g)
-end
-
-function ⊗(c1::C, c2::C) where {C<:AbstractCategory}
+function ⊗(c1::AbstractCategory, c2::AbstractCategory)
   return fusion_rule(c1, c2)
 end
 
 # =============  fusion rule and gradedunitrange ===================
 # TBD define ⊗(c, g2), ⊗(g1, c), ⊗(g1, g2)?
-function GradedAxes.tensor_product(
-  g1::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}}, c::C
-) where {V,C<:AbstractCategory}
-  g2 = gradedrange(c)
-  return GradedAxes.tensor_product(g1, g2)
+
+# 1. make GradedAxes.tensor_product return fusion_rule
+function GradedAxes.tensor_product(c1::AbstractCategory, c2::AbstractCategory)
+  return fusion_rule(c1, c2)
+end
+
+function GradedAxes.tensor_product(r::AbstractUnitRange, c::AbstractCategory)
+  return fusion_rule(r, c)
+end
+
+function GradedAxes.tensor_product(c::AbstractCategory, r::AbstractUnitRange)
+  return fusion_rule(c, r)
 end
 
 function GradedAxes.tensor_product(
-  c::C, g::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}}
-) where {V,C<:AbstractCategory}
-  return c ⊗ g
+  g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange
+)
+  return fusion_rule(g1, g2)
 end
 
-function GradedAxes.tensor_product(
-  g1::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}},
-  g2::GradedAxes.GradedUnitRange{Vector{LabelledNumbers.LabelledInteger{V,C}}},
-) where {V,C<:AbstractCategory}
-  return g1 ⊗ g2
-end
-
+# 2. make GradedAxes.fuse_labels return fusion_rule
 GradedAxes.fuse_labels(c1::AbstractCategory, c2::AbstractCategory) = c1 ⊗ c2
+
+# 3. promote Category to GradedAxes
+# TODO define promote_rule
+function fusion_rule(c::AbstractCategory, r::AbstractUnitRange)
+  return fusion_rule(GradedAxes.gradedrange([c => 1]), r)
+end
+
+function fusion_rule(r::AbstractUnitRange, c::AbstractCategory)
+  return fusion_rule(GradedAxes.gradedrange(r, [c => 1]))
+end
+
+# 4. define fusion rule for reducible representations
+# TODO deal with dual
+function fusion_rule(g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange)
+  blocks3 = empty(blocklengths(g1))
+  for b1 in blocklengths(g1)
+    cat1 = LabelledNumbers.label(b1)
+    degen1 = LabelledNumbers.unlabel(b1)
+    for b2 in blocklengths(g2)
+      cat2 = LabelledNumbers.label(b2)
+      degen2 = LabelledNumbers.unlabel(b2)
+      degen3 = degen1 * degen2
+      fuse12 = cat1 ⊗ cat2
+
+      if typeof(fuse12) <: AbstractCategory  # TODO replace with Trait or promote
+        push!(blocks3, LabelledNumbers.LabelledInteger(degen3, fuse12))
+      else
+        g12 = blocklengths(fuse12)
+        # Int * LabelledInteger -> Int, need to recast explicitly
+        scaled_g12 =
+          LabelledNumbers.LabelledInteger.(degen3 .* g12, LabelledNumbers.label.(g12))
+        append!(blocks3, scaled_g12)
+      end
+    end
+  end
+  # sort and fuse blocks carrying the same category label
+  # there is probably a better way to do this
+  unsorted_g3 = GradedAxes.gradedrange(blocks3)
+  perm = GradedAxes.blockmergesortperm(unsorted_g3)
+  vec3 = empty(blocks3)
+  for b in blocks(perm)
+    x = unsorted_g3[b]
+    n = LabelledNumbers.LabelledInteger(sum(length(x); init=0), LabelledNumbers.label(x[1]))
+    push!(vec3, n)
+  end
+  g3 = GradedAxes.gradedrange(vec3)
+  return g3
+end
