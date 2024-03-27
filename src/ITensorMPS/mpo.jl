@@ -460,7 +460,9 @@ loginner(y::MPS, A::MPO, x::MPS; kwargs...) = logdot(y, A, x; kwargs...)
 
 Same as [`inner`](@ref).
 """
-function LinearAlgebra.dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
+function LinearAlgebra.dot(
+  B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...
+)::Number
   !make_inds_match && error(
     "make_inds_match = false not currently supported in dot(::MPO, ::MPS, ::MPO, ::MPS)"
   )
