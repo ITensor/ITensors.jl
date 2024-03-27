@@ -346,7 +346,7 @@ function _dmrg_sweeps(;
   nsweeps,
   maxdim=default_maxdim(),
   mindim=default_mindim(),
-  cutoff=default_cutoff(),
+  cutoff=default_cutoff(Float64),
   noise=default_noise(),
 )
   sweeps = Sweeps(nsweeps)
@@ -364,7 +364,7 @@ function dmrg(
   nsweeps,
   maxdim=default_maxdim(),
   mindim=default_mindim(),
-  cutoff=default_cutoff(),
+  cutoff=default_cutoff(Float64),
   noise=default_noise(),
   kwargs...,
 )
@@ -379,7 +379,7 @@ function dmrg(
   nsweeps,
   maxdim=default_maxdim(),
   mindim=default_mindim(),
-  cutoff=default_cutoff(),
+  cutoff=default_cutoff(Float64),
   noise=default_noise(),
   kwargs...,
 )
@@ -446,4 +446,3 @@ function alternate_dmrg(
   )
   return psi
 end
-
