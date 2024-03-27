@@ -1,4 +1,4 @@
-using ITensors: contract
+using ITensors: ITensors, contract
 
 mutable struct ProjMPO_MPS2 <: AbstractProjMPO
   PH::ProjMPO

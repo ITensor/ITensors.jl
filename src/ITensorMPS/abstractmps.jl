@@ -1,5 +1,5 @@
 using IsApprox: Approx, IsApprox
-using NDTensors: using_auto_fermion
+using NDTensors: using_auto_fermion, scalartype
 
 abstract type AbstractMPS end
 
@@ -1224,7 +1224,7 @@ function norm(M::AbstractMPS)
     return norm(M[orthocenter(M)])
   end
   norm2_M = dot(M, M)
-  rtol = eps(real(ITensors.scalartype(M))) * 10
+  rtol = eps(real(scalartype(M))) * 10
   atol = rtol
   if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "norm² is $norm2_M, which is not real up to a relative tolerance of " *
@@ -1249,7 +1249,7 @@ function lognorm(M::AbstractMPS)
     return log(norm(M[orthocenter(M)]))
   end
   lognorm2_M = logdot(M, M)
-  rtol = eps(real(ITensors.scalartype(M))) * 10
+  rtol = eps(real(scalartype(M))) * 10
   atol = rtol
   if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance " *

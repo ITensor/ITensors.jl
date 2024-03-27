@@ -1,4 +1,5 @@
 using ITensors: permute
+using NDTensors: scalartype
 using Printf: @printf
 
 function _compute_nsweeps(t; time_step=default_time_step(t), nsweeps=default_nsweeps())
@@ -122,7 +123,7 @@ end
 # Use a time step of `Inf` as a convention, since TDVP
 # with an infinite time step corresponds to DMRG.
 function alternating_update(solver, H, psi0::MPS; kwargs...)
-  return alternating_update(solver, H, ITensors.scalartype(psi0)(Inf), psi0; kwargs...)
+  return alternating_update(solver, H, scalartype(psi0)(Inf), psi0; kwargs...)
 end
 
 function alternating_update(solver, H::MPO, t::Number, psi0::MPS; kwargs...)

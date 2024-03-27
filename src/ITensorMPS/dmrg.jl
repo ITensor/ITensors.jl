@@ -1,6 +1,6 @@
 using Adapt: adapt
 using KrylovKit: eigsolve
-using NDTensors: timer
+using NDTensors: scalartype, timer
 using Printf: @printf
 using TupleTools: TupleTools
 
@@ -419,7 +419,7 @@ function dmrg_solver(
   return solver
 end
 
-function alternate_dmrg(
+function alternating_update_dmrg(
   H,
   psi0::MPS;
   ishermitian=default_ishermitian(),
