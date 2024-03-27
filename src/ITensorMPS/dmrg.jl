@@ -1,5 +1,7 @@
 using Adapt: adapt
 using KrylovKit: eigsolve
+using NDTensors: timer
+using Printf: @printf
 using TupleTools: TupleTools
 
 function permute(

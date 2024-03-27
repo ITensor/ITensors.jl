@@ -1,4 +1,5 @@
 using ITensors: permute
+using Printf: @printf
 
 function _compute_nsweeps(t; time_step=default_time_step(t), nsweeps=default_nsweeps())
   if isinf(t) && isnothing(nsweeps)

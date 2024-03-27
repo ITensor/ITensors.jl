@@ -401,7 +401,7 @@ end
 
 Same as [`inner`](@ref).
 """
-function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
+function LinearAlgebra.dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
   return _log_or_not_dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
 end
 
@@ -460,7 +460,7 @@ loginner(y::MPS, A::MPO, x::MPS; kwargs...) = logdot(y, A, x; kwargs...)
 
 Same as [`inner`](@ref).
 """
-function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
+function LinearAlgebra.dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
   !make_inds_match && error(
     "make_inds_match = false not currently supported in dot(::MPO, ::MPS, ::MPO, ::MPS)"
   )
@@ -518,7 +518,7 @@ Same as [`dot`](@ref).
 """
 inner(B::MPO, y::MPS, A::MPO, x::MPS) = dot(B, y, A, x)
 
-function dot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
+function LinearAlgebra.dot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   if make_inds_match
     error("In dot(::MPO, ::MPO), make_inds_match is not currently supported")
   end
@@ -534,7 +534,7 @@ function logdot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   return _log_or_not_dot(M1, M2, true; make_inds_match=make_inds_match)
 end
 
-function tr(M::MPO; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
+function LinearAlgebra.tr(M::MPO; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   N = length(M)
   #
   # TODO: choose whether to contract or trace

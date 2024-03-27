@@ -1,4 +1,5 @@
 using IsApprox: Approx, IsApprox
+using NDTensors: using_auto_fermion
 
 abstract type AbstractMPS end
 
@@ -47,9 +48,9 @@ have type `ComplexF64`, return `ComplexF64`.
 """
 promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
-scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
-scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
-scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
 
 """
     eltype(m::MPS)
@@ -1143,7 +1144,7 @@ Same as [`inner`](@ref).
 
 See also [`loginner`](@ref), [`logdot`](@ref).
 """
-function dot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
+function LinearAlgebra.dot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
   return _log_or_not_dot(M1, M2, false; kwargs...)
 end
 
@@ -1223,7 +1224,7 @@ function norm(M::AbstractMPS)
     return norm(M[orthocenter(M)])
   end
   norm2_M = dot(M, M)
-  rtol = eps(real(scalartype(M))) * 10
+  rtol = eps(real(ITensors.scalartype(M))) * 10
   atol = rtol
   if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "norm² is $norm2_M, which is not real up to a relative tolerance of " *
@@ -1248,7 +1249,7 @@ function lognorm(M::AbstractMPS)
     return log(norm(M[orthocenter(M)]))
   end
   lognorm2_M = logdot(M, M)
-  rtol = eps(real(scalartype(M))) * 10
+  rtol = eps(real(ITensors.scalartype(M))) * 10
   atol = rtol
   if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance " *
@@ -1321,7 +1322,7 @@ lognorm_ψ[1] == -Inf # There was an infinite norm
 
 See also [`normalize`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
-function normalize!(M::AbstractMPS; (lognorm!)=[])
+function LinearAlgebra.normalize!(M::AbstractMPS; (lognorm!)=[])
   c = ortho_lims(M)
   lognorm_M = lognorm(M)
   push!(lognorm!, lognorm_M)

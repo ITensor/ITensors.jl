@@ -1,7 +1,6 @@
 module ITensorMPS
 
 using ..ITensors
-using Printf: @printf
 
 include("imports.jl")
 include("exports.jl")

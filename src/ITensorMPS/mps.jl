@@ -1,5 +1,6 @@
 using Adapt: adapt
 using HDF5: attributes, create_group, open_group
+using NDTensors: using_auto_fermion
 using Random: Random
 
 """
