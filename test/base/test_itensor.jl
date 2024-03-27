@@ -1847,5 +1847,3 @@ end # End Dense ITensor basic functionality
 
 # Disable debug checking once tests are completed
 ITensors.disable_debug_checks()
-
-nothing

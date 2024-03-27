@@ -230,5 +230,3 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   ##   # @test F.U * F.S * F.V ≈ T
   ## end
 end
-
-nothing

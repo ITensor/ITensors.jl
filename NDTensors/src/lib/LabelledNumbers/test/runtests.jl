@@ -12,9 +12,26 @@ using Test: @test, @testset
     @test !islabelled(unlabel(x))
 
     @test x * 2 == 4
-    @test 2 * x == 4
     @test label(x * 2) == "x"
+    @test 2 * x == 4
     @test label(2 * x) == "x"
+    @test x * x == 4
+    @test !islabelled(x * x)
+
+    @test x + 3 == 5
+    @test label(x + 3) == "x"
+    @test 3 + x == 5
+    @test label(3 + x) == "x"
+    @test x + x == 4
+    @test !islabelled(x + x)
+
+    @test x - 3 == -1
+    @test label(x - 3) == "x"
+    @test 3 - x == 1
+    @test label(3 - x) == "x"
+    @test x - x == 0
+    @test !islabelled(x - x)
+
     @test x / 2 == 1
     @test label(x / 2) == "x"
     @test x ÷ 2 == 1

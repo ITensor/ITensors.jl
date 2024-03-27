@@ -51,5 +51,3 @@ using ITensors, Test
 
   @test_throws MethodError !1
 end
-
-nothing

@@ -1,5 +1,6 @@
 using Combinatorics
 using ITensors
+using ITensors: ITensorMPS
 using Random
 using LinearAlgebra: diag
 using Test
@@ -160,7 +161,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
           @test eltype(psi[j]) == ComplexF64
         end
         @test eltype(psi) == ITensor
-        @test ITensors.promote_itensor_eltype(psi) == ComplexF64
+        @test ITensorMPS.promote_itensor_eltype(psi) == ComplexF64
       end
     end
 
@@ -585,17 +586,17 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   for (l0, l) in zip(l0s, ls)
     @test tags(l0) == tags(l)
   end
-  @test ITensors.leftlim(psi) == length(psi) - 2
-  @test ITensors.rightlim(psi) == length(psi)
+  @test ITensorMPS.leftlim(psi) == length(psi) - 2
+  @test ITensorMPS.rightlim(psi) == length(psi)
   orthogonalize!(psi, 2)
-  @test ITensors.leftlim(psi) == 1
-  @test ITensors.rightlim(psi) == 3
+  @test ITensorMPS.leftlim(psi) == 1
+  @test ITensorMPS.rightlim(psi) == 3
   psi = randomMPS(sites)
-  ITensors.setrightlim!(psi, length(psi) + 1) # do this to test qr
+  ITensorMPS.setrightlim!(psi, length(psi) + 1) # do this to test qr
   # from rightmost tensor
   orthogonalize!(psi, div(length(psi), 2))
-  @test ITensors.leftlim(psi) == div(length(psi), 2) - 1
-  @test ITensors.rightlim(psi) == div(length(psi), 2) + 1
+  @test ITensorMPS.leftlim(psi) == div(length(psi), 2) - 1
+  @test ITensorMPS.rightlim(psi) == div(length(psi), 2) + 1
 
   @test isnothing(linkind(MPS(fill(ITensor(), length(psi)), 0, length(psi) + 1), 1))
 
@@ -611,20 +612,20 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     orthogonalize!(psi, 5)
     phi = psi[5] * psi[6]
     replacebond!(psi, 5, phi; ortho="left")
-    @test ITensors.leftlim(psi) == 5
-    @test ITensors.rightlim(psi) == 7
+    @test ITensorMPS.leftlim(psi) == 5
+    @test ITensorMPS.rightlim(psi) == 7
 
     phi = psi[5] * psi[6]
     replacebond!(psi, 5, phi; ortho="right")
-    @test ITensors.leftlim(psi) == 4
-    @test ITensors.rightlim(psi) == 6
+    @test ITensorMPS.leftlim(psi) == 4
+    @test ITensorMPS.rightlim(psi) == 6
 
-    ITensors.setleftlim!(psi, 3)
-    ITensors.setrightlim!(psi, 7)
+    ITensorMPS.setleftlim!(psi, 3)
+    ITensorMPS.setrightlim!(psi, 7)
     phi = psi[5] * psi[6]
     replacebond!(psi, 5, phi; ortho="left")
-    @test ITensors.leftlim(psi) == 3
-    @test ITensors.rightlim(psi) == 7
+    @test ITensorMPS.leftlim(psi) == 3
+    @test ITensorMPS.rightlim(psi) == 7
 
     # check that replacebond! runs with svd kwargs
     psi = randomMPS(sites)
@@ -648,8 +649,8 @@ end
   init_state = [isodd(n) ? "Up" : "Dn" for n in 1:length(sites)]
   psi0 = MPS(sites, init_state)
   orthogonalize!(psi0, 4)
-  @test ITensors.leftlim(psi0) == 3
-  @test ITensors.rightlim(psi0) == 5
+  @test ITensorMPS.leftlim(psi0) == 3
+  @test ITensorMPS.rightlim(psi0) == 5
 end
 
 # Helper function for making MPS
@@ -691,8 +692,8 @@ end
     M = basicRandomMPS(30)
     orthogonalize!(M, c)
 
-    @test ITensors.leftlim(M) == c - 1
-    @test ITensors.rightlim(M) == c + 1
+    @test ITensorMPS.leftlim(M) == c - 1
+    @test ITensorMPS.rightlim(M) == c + 1
 
     # Test for left-orthogonality
     L = M[1] * prime(M[1], "Link")
@@ -722,7 +723,7 @@ end
     M0 = copy(M)
     truncate!(M; maxdim=5)
 
-    @test ITensors.rightlim(M) == 2
+    @test ITensorMPS.rightlim(M) == 2
 
     # Test for right-orthogonality
     R = M[length(M)] * prime(M[length(M)], "Link")
@@ -779,8 +780,8 @@ end
     sites = siteinds(2, 20)
     M = randomMPS(sites; linkdims=chi)
 
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == 2
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == 2
 
     @test norm(M[1]) ≈ 1.0
 
@@ -810,8 +811,8 @@ end
     M = randomMPS(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", 0)
 
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == 2
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == 2
 
     @test norm(M[1]) ≈ 1.0
     @test inner(M, M) ≈ 1.0
@@ -1100,31 +1101,31 @@ end
 
     # Test map! with limits getting set
     M = orthogonalize(M0, 1)
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == 2
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == 2
     map!(prime, M)
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == length(M0) + 1
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == length(M0) + 1
 
     # Test map! without limits getting set
     M = orthogonalize(M0, 1)
     map!(prime, M; set_limits=false)
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == 2
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == 2
 
     # Test prime! with limits getting set
     M = orthogonalize(M0, 1)
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == 2
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == 2
     prime!(M; set_limits=true)
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == length(M0) + 1
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == length(M0) + 1
 
     # Test prime! without limits getting set
     M = orthogonalize(M0, 1)
     prime!(M)
-    @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == 2
+    @test ITensorMPS.leftlim(M) == 0
+    @test ITensorMPS.rightlim(M) == 2
   end
 
   @testset "setindex!(::MPS, _, ::Colon)" begin
@@ -1133,15 +1134,15 @@ end
     ϕ = MPS(s, "↑")
     orthogonalize!(ϕ, 1)
     ψ[:] = ϕ
-    @test ITensors.orthocenter(ψ) == 1
+    @test ITensorMPS.orthocenter(ψ) == 1
     @test inner(ψ, ϕ) ≈ 1
 
     ψ = randomMPS(s)
     ϕ = MPS(s, "↑")
     orthogonalize!(ϕ, 1)
-    ψ[:] = ITensors.data(ϕ)
-    @test ITensors.leftlim(ψ) == 0
-    @test ITensors.rightlim(ψ) == length(ψ) + 1
+    ψ[:] = ITensorMPS.data(ϕ)
+    @test ITensorMPS.leftlim(ψ) == 0
+    @test ITensorMPS.rightlim(ψ) == length(ψ) + 1
     @test inner(ψ, ϕ) ≈ 1
   end
 
@@ -1237,21 +1238,21 @@ end
     A = randomITensor(s...)
     ψ = MPS(A, s)
     @test prod(ψ) ≈ A
-    @test ITensors.orthocenter(ψ) == N
+    @test ITensorMPS.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 4
 
     ψ0 = MPS(s, "↑")
     A = prod(ψ0)
     ψ = MPS(A, s; cutoff=1e-15)
     @test prod(ψ) ≈ A
-    @test ITensors.orthocenter(ψ) == N
+    @test ITensorMPS.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 1
 
     ψ0 = randomMPS(s; linkdims=2)
     A = prod(ψ0)
     ψ = MPS(A, s; cutoff=1e-15, orthocenter=2)
     @test prod(ψ) ≈ A
-    @test ITensors.orthocenter(ψ) == 2
+    @test ITensorMPS.orthocenter(ψ) == 2
     @test maxlinkdim(ψ) == 2
 
     A = randomITensor(s..., l[1], r[1])
@@ -1260,7 +1261,7 @@ end
     @test hassameinds(ψ[1], (l[1], s[1], ls[1]))
     @test hassameinds(ψ[N], (r[1], s[N], ls[N - 1]))
     @test prod(ψ) ≈ A
-    @test ITensors.orthocenter(ψ) == 3
+    @test ITensorMPS.orthocenter(ψ) == 3
     @test maxlinkdim(ψ) == 12
 
     A = randomITensor(s..., l..., r...)
@@ -1269,7 +1270,7 @@ end
     @test hassameinds(ψ[1], (l..., s[1], ls[1]))
     @test hassameinds(ψ[N], (r..., s[N], ls[N - 1]))
     @test prod(ψ) ≈ A
-    @test ITensors.orthocenter(ψ) == N
+    @test ITensorMPS.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 36
 
     #
@@ -1290,26 +1291,26 @@ end
     ψ0 = randomMPS(s; linkdims=3)
 
     ψ = orthogonalize(ψ0, 2)
-    A = prod(ITensors.data(ψ)[2:(N - 1)])
+    A = prod(ITensorMPS.data(ψ)[2:(N - 1)])
     randn!(A)
     ϕ = MPS(A, s[2:(N - 1)]; orthocenter=1)
     ψ[2:(N - 1)] = ϕ
     @test prod(ψ) ≈ ψ[1] * A * ψ[N]
     @test maxlinkdim(ψ) == 4
-    @test ITensors.orthocenter(ψ) == 2
+    @test ITensorMPS.orthocenter(ψ) == 2
 
     ψ = orthogonalize(ψ0, 1)
-    A = prod(ITensors.data(ψ)[2:(N - 1)])
+    A = prod(ITensorMPS.data(ψ)[2:(N - 1)])
     randn!(A)
     @test_throws AssertionError ψ[2:(N - 1)] = A
 
     ψ = orthogonalize(ψ0, 2)
-    A = prod(ITensors.data(ψ)[2:(N - 1)])
+    A = prod(ITensorMPS.data(ψ)[2:(N - 1)])
     randn!(A)
     ψ[2:(N - 1), orthocenter=3] = A
     @test prod(ψ) ≈ ψ[1] * A * ψ[N]
     @test maxlinkdim(ψ) == 4
-    @test ITensors.orthocenter(ψ) == 3
+    @test ITensorMPS.orthocenter(ψ) == 3
   end
 
   @testset "movesites reverse sites" begin
@@ -1967,9 +1968,9 @@ end
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
     @test all(==(IndexSet()), linkinds(all, ψ))
     ϕ = orthogonalize(ψ, 2)
-    @test ITensors.hasdefaultlinktags(ϕ)
+    @test ITensorMPS.hasdefaultlinktags(ϕ)
     @test ortho_lims(ϕ) == 2:2
-    @test ITensors.dist(ψ, ϕ) ≈ 0 atol = 1e-6
+    @test ITensorMPS.dist(ψ, ϕ) ≈ 0 atol = 1e-6
     # TODO: use this instead?
     # @test lognorm(ψ - ϕ) < -16
     @test norm(ψ - ϕ) ≈ 0 atol = 1e-6
@@ -1980,7 +1981,7 @@ end
     s = siteinds("S=1/2", N)
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
     ρ = outer(ψ', ψ)
-    @test !ITensors.hasnolinkinds(ρ)
+    @test !ITensorMPS.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ', ρ, ψ) ≈ inner(ψ, ψ)^2
 
@@ -1990,7 +1991,7 @@ end
     @test_deprecated inner(ψ, ρ, ψ)
 
     ρ = @test_deprecated MPO(ψ)
-    @test !ITensors.hasnolinkinds(ρ)
+    @test !ITensorMPS.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ', ρ, ψ) ≈ inner(ψ, ψ)^2
   end
@@ -1999,11 +2000,9 @@ end
     N = 4
     s = siteinds("S=1/2", N)
     M = MPO([itensor(randn(ComplexF64, 2, 2), s[n]', dag(s[n])) for n in 1:N])
-    @test ITensors.hasnolinkinds(M)
+    @test ITensorMPS.hasnolinkinds(M)
     Mt = truncate(M; cutoff=1e-15)
-    @test ITensors.hasdefaultlinktags(Mt)
+    @test ITensorMPS.hasdefaultlinktags(Mt)
     @test norm(M - Mt) ≈ 0 atol = 1e-12
   end
 end
-
-nothing

@@ -1,3 +1,37 @@
+# mps/abstractmps.jl
+@deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
+@deprecate store(m::AbstractMPS) data(m)
+@deprecate replacesites!(args...; kwargs...) ITensors.replace_siteinds!(args...; kwargs...)
+@deprecate applyMPO(args...; kwargs...) contract(args...; kwargs...)
+@deprecate applympo(args...; kwargs...) contract(args...; kwargs...)
+@deprecate errorMPOprod(args...; kwargs...) error_contract(args...; kwargs...)
+@deprecate error_mpoprod(args...; kwargs...) error_contract(args...; kwargs...)
+@deprecate error_mul(args...; kwargs...) error_contract(args...; kwargs...)
+@deprecate multMPO(args...; kwargs...) contract(args...; kwargs...)
+@deprecate sum(A::AbstractMPS, B::AbstractMPS; kwargs...) add(A, B; kwargs...)
+@deprecate multmpo(args...; kwargs...) contract(args...; kwargs...)
+@deprecate set_leftlim!(args...; kwargs...) ITensors.setleftlim!(args...; kwargs...)
+@deprecate set_rightlim!(args...; kwargs...) ITensors.setrightlim!(args...; kwargs...)
+@deprecate tensors(args...; kwargs...) ITensors.data(args...; kwargs...)
+@deprecate primelinks!(args...; kwargs...) ITensors.prime_linkinds!(args...; kwargs...)
+@deprecate simlinks!(args...; kwargs...) ITensors.sim_linkinds!(args...; kwargs...)
+@deprecate mul(A::AbstractMPS, B::AbstractMPS; kwargs...) contract(A, B; kwargs...)
+
+# mps/mpo.jl
+@deprecate MPO(A::MPS; kwargs...) outer(A', A; kwargs...)
+
+# mps/mps.jl
+@deprecate randomMPS(sites::Vector{<:Index}, linkdims::Integer) randomMPS(
+  sites; linkdims=linkdims
+)
+@deprecate randomMPS(ElType::Type, sites::Vector{<:Index}, linkdims::Integer) randomMPS(
+  ElType, sites; linkdims=linkdims
+)
+@deprecate randomMPS(sites::Vector{<:Index}, state, linkdims::Integer) randomMPS(
+  sites, state; linkdims=linkdims
+)
+
+# Pass throughs of old name to new name:
 
 unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer) = siteinds(uniqueind, A, B, j)
 

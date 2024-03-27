@@ -285,5 +285,3 @@ import ITensors: Out, In
 
   ITensors.disable_auto_fermion()
 end
-
-nothing

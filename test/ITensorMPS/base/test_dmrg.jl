@@ -1,6 +1,5 @@
 using ITensors, Test, Random
-
-using ITensors: nsite, set_nsite!
+using ITensors.ITensorMPS: nsite, set_nsite!, site_range
 
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
@@ -108,7 +107,7 @@ using ITensors: nsite, set_nsite!
 
     @test length(PH) == N
     @test length(PHdisk) == N
-    @test ITensors.site_range(PH) == n:(n + 1)
+    @test site_range(PH) == n:(n + 1)
     @test eltype(PH) == Float64
     ## TODO sometimes randomMPS gives a linkdim value of 3 
     ## which causes an error in `calculated_dim = 3^2 * 4^2`
@@ -467,5 +466,3 @@ using ITensors: nsite, set_nsite!
     energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
   end
 end
-
-nothing

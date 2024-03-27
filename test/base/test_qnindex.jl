@@ -68,5 +68,3 @@ import ITensors: In, Out, Neither
     @test_throws ErrorException ITensors.directsum(i, dag(j))
   end
 end
-
-nothing

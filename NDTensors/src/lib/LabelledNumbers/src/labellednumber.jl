@@ -12,16 +12,6 @@ unlabel_type(::Type{<:LabelledNumber{Value}}) where {Value} = Value
 
 # TODO: Define `labelled_convert`.
 Base.convert(type::Type{<:Number}, x::LabelledNumber) = type(unlabel(x))
-# TODO: Define `labelled_promote_type`.
-function Base.promote_type(type1::Type{T}, type2::Type{T}) where {T<:LabelledNumber}
-  return promote_type(unlabel_type(type1), unlabel_type(type2))
-end
-function Base.promote_rule(type1::Type{<:LabelledNumber}, type2::Type{<:LabelledNumber})
-  return promote_type(unlabel_type(type1), unlabel_type(type2))
-end
-function Base.promote_rule(type1::Type{<:LabelledNumber}, type2::Type{<:Number})
-  return promote_type(unlabel_type(type1), type2)
-end
 
 Base.:(==)(x::LabelledNumber, y::LabelledNumber) = labelled_isequal(x, y)
 Base.:<(x::LabelledNumber, y::LabelledNumber) = labelled_isless(x < y)

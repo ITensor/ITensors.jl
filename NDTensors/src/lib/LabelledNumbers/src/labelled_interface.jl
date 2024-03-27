@@ -33,10 +33,16 @@ labelled_oneunit(x) = set_value(x, one(x))
 # encoded in the type.
 labelled_oneunit(type::Type) = error("Not implemented.")
 
-labelled_mul(x, y) = labelled_mul(LabelledStyle(x), x, LabelledStyle(y), y)
-labelled_mul(::IsLabelled, x, ::IsLabelled, y) = unlabel(x) * unlabel(y)
-labelled_mul(::IsLabelled, x, ::NotLabelled, y) = set_value(x, unlabel(x) * y)
-labelled_mul(::NotLabelled, x, ::IsLabelled, y) = set_value(y, x * unlabel(y))
+labelled_mul(x, y) = labelled_binary_op(*, x, y)
+labelled_add(x, y) = labelled_binary_op(+, x, y) #labelled_add(LabelledStyle(x), x, LabelledStyle(y), y)
+labelled_minus(x, y) = labelled_binary_op(-, x, y) #labelled_add(LabelledStyle(x), x, LabelledStyle(y), y)
+
+function labelled_binary_op(f, x, y)
+  return labelled_binary_op(f, LabelledStyle(x), x, LabelledStyle(y), y)
+end
+labelled_binary_op(f, ::IsLabelled, x, ::IsLabelled, y) = f(unlabel(x), unlabel(y))
+labelled_binary_op(f, ::IsLabelled, x, ::NotLabelled, y) = set_value(x, f(unlabel(x), y))
+labelled_binary_op(f, ::NotLabelled, x, ::IsLabelled, y) = set_value(y, f(x, unlabel(y)))
 
 # TODO: This is only needed for older Julia versions, like Julia 1.6.
 # Delete once we drop support for older Julia versions.

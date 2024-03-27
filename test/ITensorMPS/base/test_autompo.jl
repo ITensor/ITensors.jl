@@ -1248,5 +1248,3 @@ end
     @test_nowarn H = MPO(os, sites)
   end
 end
-
-nothing
