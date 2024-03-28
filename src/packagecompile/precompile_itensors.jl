@@ -14,11 +14,11 @@ sweeps = Sweeps(3)
 maxdim!(sweeps, 10)
 cutoff!(sweeps, 1E-13)
 
-ampo = OpSum()
+opsum = OpSum()
 for j in 1:(N - 1)
-  ampo .+= "Sz", j, "Sz", j + 1
-  ampo .+= 0.5, "S+", j, "S-", j + 1
-  ampo .+= 0.5, "S-", j, "S+", j + 1
+  opsum .+= "Sz", j, "Sz", j + 1
+  opsum .+= 0.5, "S+", j, "S-", j + 1
+  opsum .+= 0.5, "S-", j, "S+", j + 1
 end
 
 sites = siteinds("S=1", N)

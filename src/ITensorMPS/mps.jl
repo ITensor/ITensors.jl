@@ -784,8 +784,7 @@ function correlation_matrix(
     end
   end
 
-  psi = copy(psi)
-  orthogonalize!(psi, start_site)
+  psi = orthogonalize(psi, start_site)
   norm2_psi = norm(psi[start_site])^2
 
   # Nb = size of block of correlation matrix
@@ -994,13 +993,13 @@ function expect(psi::MPS, ops; sites=1:length(psi), site_range=nothing)
 
   el_types = map(o -> ishermitian(op(o, s[start_site])) ? real(ElT) : ElT, ops)
 
-  orthogonalize!(psi, start_site)
+  psi = orthogonalize(psi, start_site)
   norm2_psi = norm(psi)^2
   iszero(norm2_psi) && error("MPS has zero norm in function `expect`")
 
   ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
   for (entry, j) in enumerate(site_range)
-    orthogonalize!(psi, j)
+    psi = orthogonalize(psi, j)
     for (n, opname) in enumerate(ops)
       oⱼ = adapt(datatype(psi[j]), op(opname, s[j]))
       val = inner(psi[j], apply(oⱼ, psi[j])) / norm2_psi

@@ -1797,11 +1797,11 @@ end
 
       t = 1.0
       U = 1.0
-      ampo = OpSum()
+      opsum = OpSum()
       for b in 1:(N - 1)
-        ampo .+= -t, "Cdag", b, "C", b + 1
-        ampo .+= -t, "Cdag", b + 1, "C", b
-        ampo .+= U, "N", b, "N", b + 1
+        opsum .+= -t, "Cdag", b, "C", b + 1
+        opsum .+= -t, "Cdag", b + 1, "C", b
+        opsum .+= U, "N", b, "N", b + 1
       end
       H = MPO(ampo, s)
 
@@ -1831,8 +1831,8 @@ end
           G2 *= op("C", s, j)
         end
 
-        ampo = OpSum()
-        ampo += "Cdag", i, "C", j
+        opsum = OpSum()
+        opsum += "Cdag", i, "C", j
         G3 = MPO(ampo, s)
 
         A_OP = prod(product(G1, ψ0; cutoff=1e-6))
@@ -1862,8 +1862,8 @@ end
           end
           G2 *= op("C", s, l)
 
-          ampo = OpSum()
-          ampo += "Cdag", i, "Cdag", j, "C", k, "C", l
+          opsum = OpSum()
+          opsum += "Cdag", i, "Cdag", j, "C", k, "C", l
           G3 = MPO(ampo, s)
 
           A_OP = prod(product(G1, ψ0; cutoff=1e-16))
@@ -1883,15 +1883,15 @@ end
       ψ0 = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
       t = 1.0
       U = 1.0
-      ampo = OpSum()
+      opsum = OpSum()
       for b in 1:(N - 1)
-        ampo .+= -t, "Cdagup", b, "Cup", b + 1
-        ampo .+= -t, "Cdagup", b + 1, "Cup", b
-        ampo .+= -t, "Cdagdn", b, "Cdn", b + 1
-        ampo .+= -t, "Cdagdn", b + 1, "Cdn", b
+        opsum .+= -t, "Cdagup", b, "Cup", b + 1
+        opsum .+= -t, "Cdagup", b + 1, "Cup", b
+        opsum .+= -t, "Cdagdn", b, "Cdn", b + 1
+        opsum .+= -t, "Cdagdn", b + 1, "Cdn", b
       end
       for n in 1:N
-        ampo .+= U, "Nupdn", n
+        opsum .+= U, "Nupdn", n
       end
       H = MPO(ampo, s)
       sweeps = Sweeps(6)
@@ -1904,8 +1904,8 @@ end
       end
 
       for i in 1:(N - 1), j in (i + 1):N
-        ampo = OpSum()
-        ampo += "Cdagup", i, "Cup", j
+        opsum = OpSum()
+        opsum += "Cdagup", i, "Cup", j
         G1 = MPO(ampo, s)
         G2 = op("CCup", s, i, j)
         A_MPO = prod(noprime(contract(G1, ψ; cutoff=1e-8)))

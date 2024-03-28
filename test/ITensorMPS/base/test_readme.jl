@@ -76,7 +76,7 @@ using ITensors, Test
     # Input operator terms which define
     # a Hamiltonian matrix, and convert
     # these terms to an MPO tensor network
-    ampo = OpSum()
+    opsum = OpSum()
     for j in 1:(N - 1)
       add!(ampo, "Sz", j, "Sz", j + 1)
       add!(ampo, 0.5, "S+", j, "S-", j + 1)

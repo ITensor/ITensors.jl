@@ -197,11 +197,11 @@ end
 @testset "splitblocks" begin
   N = 4
   sites = siteinds("S=1", N; conserve_qns=true)
-  ampo = OpSum()
+  opsum = OpSum()
   for j in 1:(N - 1)
-    ampo .+= 0.5, "S+", j, "S-", j + 1
-    ampo .+= 0.5, "S-", j, "S+", j + 1
-    ampo .+= "Sz", j, "Sz", j + 1
+    opsum .+= 0.5, "S+", j, "S-", j + 1
+    opsum .+= 0.5, "S-", j, "S+", j + 1
+    opsum .+= "Sz", j, "Sz", j + 1
   end
   H = MPO(ampo, sites; splitblocks=false)
 
@@ -299,7 +299,7 @@ end
 function make_Heisenberg_AutoMPO(sites, NNN::Int64; J::Float64=1.0, kwargs...)::MPO
   N = length(sites)
   @assert N >= NNN
-  ampo = OpSum()
+  opsum = OpSum()
   for dj in 1:NNN
     f = J / dj
     for j in 1:(N - dj)
