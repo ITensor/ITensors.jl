@@ -8,17 +8,6 @@ using BlockArrays: blockedrange, blocklengths, blocks
 abstract type AbstractCategory end
 
 # ============  Base interface  =================
-function Base.show(io::IO, cs::Vector{<:AbstractCategory})
-  (length(cs) <= 1) && print(io, "[")
-  symbol = ""
-  for c in cs
-    print(io, symbol, c)
-    symbol = " ⊕ "
-  end
-  (length(cs) <= 1) && print(io, "]")
-  return nothing
-end
-
 Base.isless(c1::AbstractCategory, c2::AbstractCategory) = isless(label(c1), label(c2))
 
 # =================  Misc  ======================
