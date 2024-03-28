@@ -1,5 +1,5 @@
 using IsApprox: Approx, IsApprox
-using NDTensors: using_auto_fermion, scalartype
+using NDTensors: using_auto_fermion, scalartype, tensor
 
 abstract type AbstractMPS end
 
