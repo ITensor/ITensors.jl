@@ -69,22 +69,16 @@ H = MPO(os, s)
 
 println("Random starting state energy")
 @show flux(ψr)
-@show inner(ψr, H, ψr)
+@show inner(ψr', H, ψr)
 println()
 println("Free fermion starting state energy")
 @show flux(ψ0)
-@show inner(ψ0, H, ψ0)
+@show inner(ψ0', H, ψ0)
 
 println("\nStart from product state")
-sweeps = Sweeps(10)
-setmaxdim!(sweeps, 10, 20, _maxlinkdim)
-setcutoff!(sweeps, _cutoff)
-@time dmrg(H, ψr, sweeps)
+@time dmrg(H, ψr; nsweeps=10, maxdim=[10, 20, _maxlinkdim], cutoff=_cutoff)
 
 println("\nStart from free fermion state")
-sweeps = Sweeps(5)
-setmaxdim!(sweeps, _maxlinkdim)
-setcutoff!(sweeps, _cutoff)
-@time dmrg(H, ψ0, sweeps)
+@time dmrg(H, ψ0; nsweeps=5, maxdim=_maxlinkdim, cutoff=_cutoff)
 
 nothing

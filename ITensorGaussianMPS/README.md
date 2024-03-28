@@ -67,16 +67,10 @@ println("\nRandom state starting energy")
 @show inner(ψr, H, ψr)
 
 println("\nRun dmrg with random starting state")
-sweeps = Sweeps(10)
-setmaxdim!(sweeps,10,20,40,60)
-setcutoff!(sweeps,1E-12)
-@time dmrg(H, ψr, sweeps)
+@time dmrg(H, ψr; nsweeps=10, maxdim=[10, 20, 40, 60], cutoff=1e-12)
 
 println("\nRun dmrg with free fermion starting state")
-sweeps = Sweeps(4)
-setmaxdim!(sweeps,60)
-setcutoff!(sweeps,1E-12)
-@time dmrg(H, ψ0, sweeps)
+@time dmrg(H, ψ0; nsweeps=4, maxdim=60, cutoff=1e-12)
 ```
 This will output something like:
 ```julia

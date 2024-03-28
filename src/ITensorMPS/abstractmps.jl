@@ -103,7 +103,7 @@ Returns the range of sites of the orthogonality center of the MPS/MPO.
 ```julia
 s = siteinds("S=½", 5)
 ψ = randomMPS(s)
-orthogonalize!(ψ, 3)
+ψ = orthogonalize(ψ, 3)
 
 # ortho_lims(ψ) = 3:3
 @show ortho_lims(ψ)
@@ -174,8 +174,8 @@ s = siteinds("S=1/2", 4)
 # Make random MPS with bond dimension 2
 ψ₁ = randomMPS(s, "↑", 2)
 ψ₂ = randomMPS(s, "↑", 2)
-orthogonalize!(ψ₁, 1)
-orthogonalize!(ψ₂, 1)
+ψ₁ = orthogonalize(ψ₁, 1)
+ψ₂ = orthogonalize(ψ₂, 1)
 
 # ortho_lims(ψ₁) = 1:1
 @show ortho_lims(ψ₁)
@@ -1948,7 +1948,7 @@ function (::Type{MPST})(
   M = MPST(ψ)
   setleftlim!(M, N - 1)
   setrightlim!(M, N + 1)
-  orthogonalize!(M, orthocenter)
+  M = orthogonalize(M, orthocenter)
   return M
 end
 
@@ -1969,9 +1969,9 @@ function swapbondsites(ψ::AbstractMPS, b::Integer; ortho="right", kwargs...)
     orthocenter = b
   end
   if leftlim(ψ) < b - 1
-    orthogonalize!(ψ, b)
+    ψ = orthogonalize(ψ, b)
   elseif rightlim(ψ) > b + 2
-    orthogonalize!(ψ, b + 1)
+    ψ = orthogonalize(ψ, b + 1)
   end
   ψ[b:(b + 1), orthocenter=orthocenter, perm=[2, 1], kwargs...] = ψ[b] * ψ[b + 1]
   return ψ
