@@ -31,17 +31,17 @@ end
     noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
     sites = siteinds("Electron", N; conserve_qns=true)
     lattice = square_lattice(Nx, Ny; yperiodic=true)
-    ampo = OpSum()
+    opsum = OpSum()
     for b in lattice
-      ampo .+= -t, "Cdagup", b.s1, "Cup", b.s2
-      ampo .+= -t, "Cdagup", b.s2, "Cup", b.s1
-      ampo .+= -t, "Cdagdn", b.s1, "Cdn", b.s2
-      ampo .+= -t, "Cdagdn", b.s2, "Cdn", b.s1
+      opsum .+= -t, "Cdagup", b.s1, "Cup", b.s2
+      opsum .+= -t, "Cdagup", b.s2, "Cup", b.s1
+      opsum .+= -t, "Cdagdn", b.s1, "Cdn", b.s2
+      opsum .+= -t, "Cdagdn", b.s2, "Cdn", b.s1
     end
     for n in 1:N
-      ampo .+= U, "Nupdn", n
+      opsum .+= U, "Nupdn", n
     end
-    H = MPO(ampo, sites)
+    H = MPO(opsum, sites)
     Hsplit = splitblocks(linkinds, H)
     state = [isodd(n) ? "↑" : "↓" for n in 1:N]
     ψ0 = productMPS(sites, state)

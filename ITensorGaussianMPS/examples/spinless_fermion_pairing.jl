@@ -67,19 +67,16 @@ let
 
   println("\nFree fermion starting energy")
   @show flux(psi)
-  @show inner(psi, H, psi)
+  @show inner(psi', H, psi)
   println("\nRun dmrg with GMPS starting state")
-  sweeps = Sweeps(12)
-  setmaxdim!(sweeps, 10, 20, 40, _maxlinkdim)
-  setcutoff!(sweeps, _cutoff)
-  _, psidmrg = dmrg(H, psi, sweeps)
+  _, psidmrg = dmrg(H, psi; nsweeps=12, maxdim=[10, 20, 40, _maxlinkdim], cutoff=_cutoff)
   cdagc_dmrg = correlation_matrix(psidmrg, "C", "Cdag")
   cc_dmrg = correlation_matrix(psidmrg, "C", "C")
 
   @show norm(cdagc_dmrg - cdagc)
   @show norm(cc_dmrg - cc)
 
-  @show inner(psidmrg, H, psidmrg)
+  @show inner(psidmrg', H, psidmrg)
   @show(abs(inner(psidmrg, psi)))
 
   #return

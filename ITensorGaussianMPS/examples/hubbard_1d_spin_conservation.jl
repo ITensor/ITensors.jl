@@ -68,7 +68,7 @@ for n in 1:(N - 1)
 end
 
 H_noninteracting = MPO(os_noninteracting, s)
-@show inner(ψ0, H_noninteracting, ψ0)
+@show inner(ψ0', H_noninteracting, ψ0)
 @show sum(diag(Φ_up' * h_up * Φ_up)) + sum(diag(Φ_dn' * h_dn * Φ_dn))
 
 # The total interacting Hamiltonian
@@ -90,25 +90,19 @@ H = MPO(os_interacting, s)
 
 println("Random starting state energy")
 @show flux(ψr)
-@show inner(ψr, H, ψr)
+@show inner(ψr', H, ψr)
 println()
 println("Free fermion starting state energy")
 @show flux(ψ0)
-@show inner(ψ0, H, ψ0)
+@show inner(ψ0', H, ψ0)
 
 println("\nStart from random product state")
-sweeps = Sweeps(10)
-setmaxdim!(sweeps, 10, 20, _maxlinkdim)
-setcutoff!(sweeps, _cutoff)
-er, ψ̃r = @time dmrg(H, ψr, sweeps)
+er, ψ̃r = @time dmrg(H, ψr; nsweeps=10, maxdim=[10, 20, _maxlinkdim], cutoff=_cutoff)
 @show er
 @show flux(ψ̃r)
 
 println("\nStart from free fermion state")
-sweeps = Sweeps(5)
-setmaxdim!(sweeps, _maxlinkdim)
-setcutoff!(sweeps, _cutoff)
-e0, ψ̃0 = @time dmrg(H, ψ0, sweeps)
+e0, ψ̃0 = @time dmrg(H, ψ0; nsweeps=5, maxdim=_maxlinkdim, cutoff=_cutoff)
 @show e0
 @show flux(ψ̃0)
 
