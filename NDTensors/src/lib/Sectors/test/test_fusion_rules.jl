@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes: fuse_labels, gradedrange, tensor_product
 using NDTensors.Sectors: ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension
-using Test: @inferred, @test, @testset
+using Test: @inferred, @test, @testset, @test_throws
 
 @testset "Simple object fusion rules" begin
   @testset "Z{2} fusion rules" begin
@@ -96,6 +96,9 @@ end
     @test tensor_product(g3, g4) == gradedrange([
       SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2
     ])
+
+    # test different categories cannot be fused
+    @test_throws MethodError tensor_product(g1, g4)
   end
 end
 end
