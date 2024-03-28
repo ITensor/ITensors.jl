@@ -10,7 +10,20 @@ jobs:
   deploy:
     name: Deploy
     if: github.event.issue.pull_request && contains(github.event.comment.body, '[test ITensorTDVP]')
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    env:
+      JULIA_NUM_THREADS: ${{ matrix.threads }}
+    strategy:
+      matrix:
+        version:
+          - '1.6'
+          - '1'
+        os:
+          - ubuntu-latest
+        threads:
+          - '2'
+        arch:
+          - x64
     steps:
       - name: Get PR branch
         uses: xt0rted/pull-request-comment-branch@v1
