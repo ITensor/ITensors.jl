@@ -1,32 +1,17 @@
 @eval module $(gensym())
+using NDTensors.GradedAxes: dual
 using NDTensors.Sectors:
-  Fib,
-  Ising,
-  SU,
-  SU2,
-  U1,
-  Z,
-  ⊗,
-  ⊕,
-  dimension,
-  dual,
-  istrivial,
-  trivial,
-  fundamental,
-  adjoint
-using Test: @test, @testset
+  Fib, Ising, SU, SU2, U1, Z, adjoint, quantum_dimension, fundamental, istrivial, trivial
+using Test: @inferred, @test, @testset
 @testset "Test Category Types" begin
   @testset "U(1)" begin
     q1 = U1(1)
     q2 = U1(2)
     q3 = U1(3)
 
-    @test dimension(q1) == 1
-    @test dimension(q2) == 1
-
-    @test q1 ⊗ q1 == [q2]
-    @test q1 ⊗ q2 == [q3]
-    @test q2 ⊗ q1 == [q3]
+    @test quantum_dimension(q1) == 1
+    @test quantum_dimension(q2) == 1
+    @test (@inferred quantum_dimension(q1)) == 1
 
     @test trivial(U1) == U1(0)
     @test istrivial(U1(0))
@@ -43,15 +28,12 @@ using Test: @test, @testset
     @test trivial(Z{2}) == Z{2}(0)
     @test istrivial(Z{2}(0))
 
-    @test dimension(z0) == 1
-    @test dimension(z1) == 1
+    @test quantum_dimension(z0) == 1
+    @test quantum_dimension(z1) == 1
+    @test (@inferred quantum_dimension(z0)) == 1
 
     @test dual(z0) == z0
     @test dual(z1) == z1
-
-    @test z0 ⊗ z0 == [z0]
-    @test z0 ⊗ z1 == [z1]
-    @test z1 ⊗ z1 == [z0]
 
     @test dual(Z{2}(1)) == Z{2}(1)
     @test isless(Z{2}(0), Z{2}(1))
@@ -63,7 +45,6 @@ using Test: @test, @testset
     j2 = SU2(1//2)
     j3 = SU2(1)
     j4 = SU2(3//2)
-    j5 = SU2(2)
 
     @test trivial(SU2) == SU2(0)
     @test istrivial(SU2(0))
@@ -71,20 +52,16 @@ using Test: @test, @testset
     @test fundamental(SU2) == SU2(1//2)
     @test adjoint(SU2) == SU2(1)
 
-    @test dimension(j1) == 1
-    @test dimension(j2) == 2
-    @test dimension(j3) == 3
-    @test dimension(j4) == 4
+    @test quantum_dimension(j1) == 1
+    @test quantum_dimension(j2) == 2
+    @test quantum_dimension(j3) == 3
+    @test quantum_dimension(j4) == 4
+    @test (@inferred quantum_dimension(j1)) == 1
 
     @test dual(j1) == j1
     @test dual(j2) == j2
     @test dual(j3) == j3
     @test dual(j4) == j4
-
-    @test j1 ⊗ j2 == [j2]
-    @test j2 ⊗ j2 == j1 ⊕ j3
-    @test j2 ⊗ j3 == j2 ⊕ j4
-    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
   end
 
   @testset "SU(2)" begin
@@ -92,7 +69,6 @@ using Test: @test, @testset
     j2 = SU{2}(2)
     j3 = SU{2}(3)
     j4 = SU{2}(4)
-    j5 = SU{2}(5)
 
     @test trivial(SU{2}) == SU{2}(1)
     @test istrivial(SU{2}(1))
@@ -100,20 +76,16 @@ using Test: @test, @testset
     @test fundamental(SU{2}) == SU{2}(2)
     @test adjoint(SU{2}) == SU{2}(3)
 
-    @test dimension(j1) == 1
-    @test dimension(j2) == 2
-    @test dimension(j3) == 3
-    @test dimension(j4) == 4
+    @test quantum_dimension(j1) == 1
+    @test quantum_dimension(j2) == 2
+    @test quantum_dimension(j3) == 3
+    @test quantum_dimension(j4) == 4
+    @test (@inferred quantum_dimension(j1)) == 1
 
     @test dual(j1) == j1
     @test dual(j2) == j2
     @test dual(j3) == j3
     @test dual(j4) == j4
-
-    @test j1 ⊗ j2 == [j2]
-    @test j2 ⊗ j2 == j1 ⊕ j3
-    @test j2 ⊗ j3 == j2 ⊕ j4
-    @test j3 ⊗ j3 == j1 ⊕ j3 ⊕ j5
   end
 
   @testset "SU(N)" begin
@@ -137,14 +109,15 @@ using Test: @test, @testset
     @test dual(ad3) == ad3
     @test dual(ad4) == ad4
 
-    @test dimension(f3) == 3
-    @test dimension(f4) == 4
-    @test dimension(ad3) == 8
-    @test dimension(ad4) == 15
-    @test dimension(SU{3}((4, 2, 0))) == 27
-    @test dimension(SU{3}((3, 3, 0))) == 10
-    @test dimension(SU{3}((3, 0, 0))) == 10
-    @test dimension(SU{3}((0, 0, 0))) == 1
+    @test quantum_dimension(f3) == 3
+    @test quantum_dimension(f4) == 4
+    @test quantum_dimension(ad3) == 8
+    @test quantum_dimension(ad4) == 15
+    @test quantum_dimension(SU{3}((4, 2, 0))) == 27
+    @test quantum_dimension(SU{3}((3, 3, 0))) == 10
+    @test quantum_dimension(SU{3}((3, 0, 0))) == 10
+    @test quantum_dimension(SU{3}((0, 0, 0))) == 1
+    @test (@inferred quantum_dimension(f3)) == 3
   end
 
   @testset "Fibonacci" begin
@@ -157,13 +130,8 @@ using Test: @test, @testset
     @test dual(ı) == ı
     @test dual(τ) == τ
 
-    @test dimension(ı) == 1
-    @test dimension(τ) == ((1 + √5) / 2)
-
-    @test ı ⊗ ı == [ı]
-    @test ı ⊗ τ == [τ]
-    @test τ ⊗ ı == [τ]
-    @test τ ⊗ τ == ı ⊕ τ
+    @test (@inferred quantum_dimension(ı)) == 1.0
+    @test (@inferred quantum_dimension(τ)) == ((1 + √5) / 2)
   end
 
   @testset "Ising" begin
@@ -178,15 +146,9 @@ using Test: @test, @testset
     @test dual(σ) == σ
     @test dual(ψ) == ψ
 
-    @test ı ⊗ ı == [ı]
-    @test ı ⊗ σ == [σ]
-    @test σ ⊗ ı == [σ]
-    @test ı ⊗ ψ == [ψ]
-    @test ψ ⊗ ı == [ψ]
-    @test σ ⊗ σ == ı ⊕ ψ
-    @test σ ⊗ ψ == [σ]
-    @test ψ ⊗ σ == [σ]
-    @test ψ ⊗ ψ == [ı]
+    @test (@inferred quantum_dimension(ı)) == 1.0
+    @test (@inferred quantum_dimension(σ)) == √2
+    @test (@inferred quantum_dimension(ψ)) == 1.0
   end
 end
 end

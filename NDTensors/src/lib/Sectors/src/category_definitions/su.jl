@@ -20,7 +20,7 @@ fundamental(::Type{SU{N}}) where {N} = SU{N}(ntuple(i -> Int(i == 1), Val(N)))
 
 adjoint(::Type{SU{N}}) where {N} = SU{N}((ntuple(i -> Int(i == 1) + Int(i < N), Val(N))))
 
-function dimension(s::SU)
+function quantum_dimension(s::SU)
   N = groupdim(s)
   l = label(s)
   d = 1
@@ -30,7 +30,7 @@ function dimension(s::SU)
   return Int(d)
 end
 
-function dual(s::SU)
+function GradedAxes.dual(s::SU)
   l = label(s)
   nl = ((reverse(cumsum(l[begin:(end - 1)] .- l[(begin + 1):end]))..., 0))
   return typeof(s)(nl)
@@ -64,20 +64,24 @@ end
 
 #
 # Specializations for the case SU{2}
-# Where irreps specified by dimension "d"
+# Where irreps specified by quantum_dimension "d"
+# TBD remove me?
 #
 
-dimension(s::SU{2}) = 1 + label(s)[1]
+quantum_dimension(s::SU{2}) = 1 + label(s)[1]
 
 SU{2}(d::Integer) = SU{2}((d - 1, 0))
 
-dual(s::SU{2}) = s
+GradedAxes.dual(s::SU{2}) = s
 
-function fusion_rule(s1::SU{2}, s2::SU{2})
-  d1, d2 = dimension(s1), dimension(s2)
-  return [SU{2}(d) for d in (abs(d1 - d2) + 1):2:(d1 + d2 - 1)]
+function label_fusion_rule(::Type{SU{2}}, s1, s2)
+  d1 = s1[1] + 1
+  d2 = s2[1] + 1
+  labels = collect((abs(d1 - d2) + 1):2:(d1 + d2 - 1))
+  degen = ones(Int, length(labels))
+  return degen, labels
 end
 
 function Base.show(io::IO, s::SU{2})
-  return print(io, "SU{2}(", dimension(s), ")")
+  return print(io, "SU{2}(", quantum_dimension(s), ")")
 end

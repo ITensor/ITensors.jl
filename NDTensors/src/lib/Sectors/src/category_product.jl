@@ -1,3 +1,5 @@
+# This files defines a structure for Cartesian product of 2 or more fusion categories
+# e.g. U(1)×U(1), U(1)×SU2(2)×SU(3)
 
 struct CategoryProduct{Categories} <: AbstractCategory
   cats::Categories
@@ -8,9 +10,14 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-Base.isempty(S::CategoryProduct) = isempty(categories(S))
-Base.length(S::CategoryProduct) = length(categories(S))
-Base.getindex(S::CategoryProduct, args...) = getindex(categories(S), args...)
+function quantum_dimension(s::CategoryProduct)
+  if length(categories(s)) == 0
+    return 0
+  end
+  return prod(map(quantum_dimension, categories(s)))
+end
+
+GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categories(s)))
 
 function fusion_rule(s1::CategoryProduct, s2::CategoryProduct)
   return [
@@ -23,7 +30,7 @@ function Base.:(==)(A::CategoryProduct, B::CategoryProduct)
 end
 
 function Base.show(io::IO, s::CategoryProduct)
-  (length(s) < 2) && print(io, "sector")
+  (length(categories(s)) < 2) && print(io, "sector")
   print(io, "(")
   symbol = ""
   for p in pairs(categories(s))
