@@ -36,11 +36,11 @@ end
 
     opsum = OpSum()
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      add!(opsum,"Sz",j,"Sz",j+1)
+      add!(opsum,0.5,"S+",j,"S-",j+1)
+      add!(opsum,0.5,"S-",j,"S+",j+1)
     end
-    H = cuMPO(MPO(ampo,sites))
+    H = cuMPO(MPO(opsum,sites))
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
     psi = randomCuMPS(sites,state,4)
@@ -65,10 +65,10 @@ end
 
     opsum = OpSum()
     for j in 1:N
-      j < N && add!(ampo, -1.0, "Sz", j, "Sz", j + 1)
-      add!(ampo, -0.5, "Sx", j)
+      j < N && add!(opsum, -1.0, "Sz", j, "Sz", j + 1)
+      add!(opsum, -0.5, "Sx", j)
     end
-    H = cuMPO(MPO(ampo, sites))
+    H = cuMPO(MPO(opsum, sites))
 
     sweeps = Sweeps(5)
     maxdim!(sweeps, 10, 20)
@@ -106,12 +106,12 @@ end
 
     opsum = OpSum()
     for j = 1:N-1
-      add!(ampo,-1.0,"Sz",j,"Sz",j+1)
+      add!(opsum,-1.0,"Sz",j,"Sz",j+1)
     end
     for j = 1:N
-      add!(ampo,-0.2,"Sx",j)
+      add!(opsum,-0.2,"Sx",j)
     end
-    H = cuMPO(MPO(ampo,sites))
+    H = cuMPO(MPO(opsum,sites))
 
     sweeps = Sweeps(3)
     maxdim!(sweeps,10)
@@ -140,16 +140,16 @@ end
 
     ampoZ = OpSum()
     for j=1:N-1
-      add!(ampoZ,"Sz",j,"Sz",j+1)
+      add!(opsumZ,"Sz",j,"Sz",j+1)
     end
-    HZ = MPO(ampoZ,sites)
+    HZ = MPO(opsumZ,sites)
 
     ampoXY = OpSum()
     for j=1:N-1
-      add!(ampoXY,0.5,"S+",j,"S-",j+1)
-      add!(ampoXY,0.5,"S-",j,"S+",j+1)
+      add!(opsumXY,0.5,"S+",j,"S-",j+1)
+      add!(opsumXY,0.5,"S-",j,"S+",j+1)
     end
-    HXY = MPO(ampoXY,sites)
+    HXY = MPO(opsumXY,sites)
 
     psi = randomMPS(sites)
 
@@ -172,11 +172,11 @@ end
 
     opsum = OpSum()
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      add!(opsum,"Sz",j,"Sz",j+1)
+      add!(opsum,0.5,"S+",j,"S-",j+1)
+      add!(opsum,0.5,"S-",j,"S+",j+1)
     end
-    H = cuMPO(MPO(ampo,sites))
+    H = cuMPO(MPO(opsum,sites))
 
     psi0i = randomCuMPS(sites,10)
 
@@ -221,7 +221,7 @@ end
       opsum += (-t2, "Cdag", j,   "C", j+2)
       opsum += (-t2, "Cdag", j+2, "C", j)
     end
-    H = MPO(ampo, s)
+    H = MPO(opsum, s)
 
     sweeps = Sweeps(5)
     maxdim!(sweeps, 10, 20, 100, 100, 200)

@@ -11,7 +11,7 @@ let
     opsum .+= (0.5, "S+", j, "S-", j + 1)
     opsum .+= (0.5, "S-", j, "S+", j + 1)
   end
-  H = MPO(ampo, sites)
+  H = MPO(opsum, sites)
   psi0 = randomMPS(sites, 10)
   sweeps = Sweeps(1)
   maxdim!(sweeps, 10)

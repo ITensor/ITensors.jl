@@ -1803,7 +1803,7 @@ end
         opsum .+= -t, "Cdag", b + 1, "C", b
         opsum .+= U, "N", b, "N", b + 1
       end
-      H = MPO(ampo, s)
+      H = MPO(opsum, s)
 
       sweeps = Sweeps(6)
       maxdim!(sweeps, 10, 20, 40)
@@ -1833,7 +1833,7 @@ end
 
         opsum = OpSum()
         opsum += "Cdag", i, "C", j
-        G3 = MPO(ampo, s)
+        G3 = MPO(opsum, s)
 
         A_OP = prod(product(G1, ψ0; cutoff=1e-6))
 
@@ -1864,7 +1864,7 @@ end
 
           opsum = OpSum()
           opsum += "Cdag", i, "Cdag", j, "C", k, "C", l
-          G3 = MPO(ampo, s)
+          G3 = MPO(opsum, s)
 
           A_OP = prod(product(G1, ψ0; cutoff=1e-16))
 
@@ -1893,7 +1893,7 @@ end
       for n in 1:N
         opsum .+= U, "Nupdn", n
       end
-      H = MPO(ampo, s)
+      H = MPO(opsum, s)
       sweeps = Sweeps(6)
       maxdim!(sweeps, 10, 20, 40)
       cutoff!(sweeps, 1E-12)
@@ -1906,7 +1906,7 @@ end
       for i in 1:(N - 1), j in (i + 1):N
         opsum = OpSum()
         opsum += "Cdagup", i, "Cup", j
-        G1 = MPO(ampo, s)
+        G1 = MPO(opsum, s)
         G2 = op("CCup", s, i, j)
         A_MPO = prod(noprime(contract(G1, ψ; cutoff=1e-8)))
         A_OP = prod(product(G2, ψ; cutoff=1e-8))

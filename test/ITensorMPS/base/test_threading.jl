@@ -41,7 +41,7 @@ end
     for n in 1:N
       opsum .+= U, "Nupdn", n
     end
-    H = MPO(ampo, sites)
+    H = MPO(opsum, sites)
     Hsplit = splitblocks(linkinds, H)
     state = [isodd(n) ? "↑" : "↓" for n in 1:N]
     ψ0 = productMPS(sites, state)

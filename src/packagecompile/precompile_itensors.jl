@@ -10,9 +10,7 @@ using ITensors
 #                  "runtests.jl"))
 
 N = 6
-sweeps = Sweeps(3)
-maxdim!(sweeps, 10)
-cutoff!(sweeps, 1E-13)
+dmrg_kwargs = (; nsweeps=3, maxdim=10, cutoff=1e-13)
 
 opsum = OpSum()
 for j in 1:(N - 1)
@@ -22,14 +20,14 @@ for j in 1:(N - 1)
 end
 
 sites = siteinds("S=1", N)
-H = MPO(ampo, sites)
+H = MPO(opsum, sites)
 psi0 = randomMPS(sites; linkdims=2)
-dmrg(H, psi0, sweeps)
+dmrg(H, psi0; dmrg_kwargs...)
 
 sites_qn = siteinds("S=1", N; conserve_qns=true)
 if !hasqns(sites_qn[1])
   throw(ErrorException("Index does not have QNs in part of precompile script"))
 end
-H_qn = MPO(ampo, sites_qn)
+H_qn = MPO(opsum, sites_qn)
 psi0_qn = randomMPS(sites_qn, [isodd(n) ? "Up" : "Dn" for n in 1:N]; linkdims=2)
-dmrg(H_qn, psi0_qn, sweeps)
+dmrg(H_qn, psi0_qn; dmrg_kwargs...)

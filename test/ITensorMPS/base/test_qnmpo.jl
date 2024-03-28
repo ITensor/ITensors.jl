@@ -203,16 +203,16 @@ end
     opsum .+= 0.5, "S-", j, "S+", j + 1
     opsum .+= "Sz", j, "Sz", j + 1
   end
-  H = MPO(ampo, sites; splitblocks=false)
+  H = MPO(opsum, sites; splitblocks=false)
 
   # Split the tensors to make them more sparse
   # Drops zero blocks by default
   H̃ = splitblocks(linkinds, H)
 
-  H̃2 = MPO(ampo, sites; splitblocks=true)
+  H̃2 = MPO(opsum, sites; splitblocks=true)
 
   # Defaults to true
-  H̃3 = MPO(ampo, sites)
+  H̃3 = MPO(opsum, sites)
 
   @test prod(H) ≈ prod(H̃)
   @test prod(H) ≈ prod(H̃2)
@@ -303,12 +303,12 @@ function make_Heisenberg_AutoMPO(sites, NNN::Int64; J::Float64=1.0, kwargs...)::
   for dj in 1:NNN
     f = J / dj
     for j in 1:(N - dj)
-      add!(ampo, f, "Sz", j, "Sz", j + dj)
-      add!(ampo, f * 0.5, "S+", j, "S-", j + dj)
-      add!(ampo, f * 0.5, "S-", j, "S+", j + dj)
+      add!(opsum, f, "Sz", j, "Sz", j + dj)
+      add!(opsum, f * 0.5, "S+", j, "S-", j + dj)
+      add!(opsum, f * 0.5, "S-", j, "S+", j + dj)
     end
   end
-  return MPO(ampo, sites; kwargs...)
+  return MPO(opsum, sites; kwargs...)
 end
 
 function make_Hubbard_AutoMPO(
