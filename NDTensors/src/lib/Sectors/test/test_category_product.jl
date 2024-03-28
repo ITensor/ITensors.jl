@@ -149,7 +149,7 @@ end
 
     p1h1 = U1(1) × SU2(1//2) × Z{2}(1)
     @test p1h1 ⊗ p1h1 ==
-      gradedrabge([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1])
+      gradedrange([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1])
   end
 end
 end
