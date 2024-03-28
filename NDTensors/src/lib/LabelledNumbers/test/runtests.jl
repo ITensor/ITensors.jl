@@ -12,30 +12,30 @@ using Test: @test, @testset
     @test !islabelled(unlabel(x))
 
     @test x * 2 == 4
-    @test label(x * 2) == "x"
+    @test !islabelled(x * 2)
     @test 2 * x == 4
-    @test label(2 * x) == "x"
+    @test !islabelled(2 * x)
     @test x * x == 4
     @test !islabelled(x * x)
 
     @test x + 3 == 5
-    @test label(x + 3) == "x"
+    @test !islabelled(x + 3)
     @test 3 + x == 5
-    @test label(3 + x) == "x"
+    @test !islabelled(3 + x)
     @test x + x == 4
     @test !islabelled(x + x)
 
     @test x - 3 == -1
-    @test label(x - 3) == "x"
+    @test !islabelled(x - 3)
     @test 3 - x == 1
-    @test label(3 - x) == "x"
+    @test !islabelled(3 - x)
     @test x - x == 0
     @test !islabelled(x - x)
 
     @test x / 2 == 1
-    @test label(x / 2) == "x"
+    @test !islabelled(x / 2)
     @test x ÷ 2 == 1
-    @test label(x ÷ 2) == "x"
+    @test !islabelled(x ÷ 2)
     @test -x == -2
     @test hash(x) == hash(2)
     @test zero(x) == false
