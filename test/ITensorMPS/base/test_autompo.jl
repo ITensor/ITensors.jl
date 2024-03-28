@@ -1,4 +1,5 @@
 using ITensors, Test, Random, JLD2
+using NDTensors: scalartype
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
 
@@ -294,26 +295,26 @@ end
     H1 = MPO(elt, O1, sites)
     H2 = MPO(elt, O2, sites)
     H = H1 + 2 * H2
-    @test ITensors.scalartype(H1) == elt
-    @test ITensors.scalartype(H2) == elt
-    @test ITensors.scalartype(H) == elt
+    @test scalartype(H1) == elt
+    @test scalartype(H2) == elt
+    @test scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
 
-    @test ITensors.scalartype(MPO(elt, Op("Sz", 1), sites)) == elt
-    @test ITensors.scalartype(MPO(elt, Op("Sz", 1) + Op("Sz", 2), sites)) == elt
-    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1) + 3 * Op("Sz", 2), sites)) == elt
-    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1), sites)) == elt
-    @test ITensors.scalartype(MPO(elt, Op("Sz", 1) * Op("Sz", 2), sites)) == elt
-    @test ITensors.scalartype(MPO(elt, 2 * Op("Sz", 1) * Op("Sz", 2), sites)) == elt
+    @test scalartype(MPO(elt, Op("Sz", 1), sites)) == elt
+    @test scalartype(MPO(elt, Op("Sz", 1) + Op("Sz", 2), sites)) == elt
+    @test scalartype(MPO(elt, 2 * Op("Sz", 1) + 3 * Op("Sz", 2), sites)) == elt
+    @test scalartype(MPO(elt, 2 * Op("Sz", 1), sites)) == elt
+    @test scalartype(MPO(elt, Op("Sz", 1) * Op("Sz", 2), sites)) == elt
+    @test scalartype(MPO(elt, 2 * Op("Sz", 1) * Op("Sz", 2), sites)) == elt
 
     O = O1 - 2 * O2
     @test length(O) == 2 * n - 1
     H1 = MPO(elt, O1, sites)
     H2 = MPO(elt, O2, sites)
     H = H1 - 2 * H2
-    @test ITensors.scalartype(H1) == elt
-    @test ITensors.scalartype(H2) == elt
-    @test ITensors.scalartype(H) == elt
+    @test scalartype(H1) == elt
+    @test scalartype(H2) == elt
+    @test scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
 
     O = O1 - O2 / 2
@@ -321,9 +322,9 @@ end
     H1 = MPO(elt, O1, sites)
     H2 = MPO(elt, O2, sites)
     H = H1 - H2 / 2
-    @test ITensors.scalartype(H1) == elt
-    @test ITensors.scalartype(H2) == elt
-    @test ITensors.scalartype(H) == elt
+    @test scalartype(H1) == elt
+    @test scalartype(H2) == elt
+    @test scalartype(H) == elt
     @test prod(MPO(O, sites)) ≈ prod(H)
   end
 
@@ -345,7 +346,7 @@ end
     end
     sites = siteinds("S=1/2", N)
     Ha = MPO(os, sites)
-    @test ITensors.scalartype(Ha) <: Float64
+    @test scalartype(Ha) <: Float64
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
@@ -353,7 +354,7 @@ end
     @test Oa ≈ Oe
 
     H_complex = MPO(ComplexF64, os, sites)
-    @test ITensors.scalartype(H_complex) <: ComplexF64
+    @test scalartype(H_complex) <: ComplexF64
     @test H_complex ≈ Ha
   end
 

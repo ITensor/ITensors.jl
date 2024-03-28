@@ -795,7 +795,7 @@ symmetrystyle(T::Tensor) = symmetrystyle(inds(T))
 symmetrystyle(T::ITensor)::SymmetryStyle = symmetrystyle(tensor(T))
 
 eltype(T::ITensor) = eltype(tensor(T))
-scalartype(x::ITensor) = eltype(x)
+NDTensors.scalartype(x::ITensor) = eltype(x)
 
 """
     order(A::ITensor)

@@ -1,3 +1,6 @@
+using IsApprox: Approx, IsApprox
+using NDTensors: using_auto_fermion, scalartype, tensor
+
 abstract type AbstractMPS end
 
 """
@@ -45,9 +48,9 @@ have type `ComplexF64`, return `ComplexF64`.
 """
 promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
-scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
-scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
-scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
 
 """
     eltype(m::MPS)
@@ -1141,7 +1144,7 @@ Same as [`inner`](@ref).
 
 See also [`loginner`](@ref), [`logdot`](@ref).
 """
-function dot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
+function LinearAlgebra.dot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
   return _log_or_not_dot(M1, M2, false; kwargs...)
 end
 
@@ -1319,7 +1322,7 @@ lognorm_ψ[1] == -Inf # There was an infinite norm
 
 See also [`normalize`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
-function normalize!(M::AbstractMPS; (lognorm!)=[])
+function LinearAlgebra.normalize!(M::AbstractMPS; (lognorm!)=[])
   c = ortho_lims(M)
   lognorm_M = lognorm(M)
   push!(lognorm!, lognorm_M)
