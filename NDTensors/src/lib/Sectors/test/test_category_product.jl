@@ -135,10 +135,10 @@ end
   @testset "Fusion of SU2 products" begin
     phh = SU2(1//2) × SU2(1//2)
     @test phh ⊗ phh == gradedrange([
-      1 => (SU2(0) × SU2(0)),
-      1 => (SU2(1) × SU2(0)),
-      1 => (SU2(0) × SU2(1)),
-      1 => (SU2(1) × SU2(1)),
+      (SU2(0) × SU2(0)) => 1,
+      (SU2(1) × SU2(0)) => 1,
+      (SU2(0) × SU2(1)) => 1,
+      (SU2(1) × SU2(1)) => 1,
     ])
   end
 
