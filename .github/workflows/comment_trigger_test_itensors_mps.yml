@@ -1,4 +1,4 @@
-name: Run ITensors mps tests from comment trigger
+name: Run ITensorMPS tests from comment trigger
 
 # https://dev.to/zirkelc/trigger-github-workflow-for-comment-on-pull-request-45l2
 
