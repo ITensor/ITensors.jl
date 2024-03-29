@@ -1,5 +1,6 @@
 using Combinatorics
 using ITensors
+using NDTensors: scalartype
 using Test
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
@@ -800,7 +801,7 @@ end
     sites = siteinds("S=1/2", 4)
     A = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
     B = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
-    @test ITensors.scalartype(apply(A, B)) == T
+    @test scalartype(apply(A, B)) == T
   end
   @testset "sample" begin
     N = 6
