@@ -87,7 +87,7 @@ function fusion_rule(g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRa
       degen2 = LabelledNumbers.unlabel(b2)
       degen3 = degen1 * degen2
       fuse12 = cat1 ⊗ cat2
-      if typeof(fuse12) <: AbstractCategory  # TBD define SymmetryStyle(GradedUnitRange)? promote?
+      if SymmetryStyle(fuse12) == AbelianGroup()
         push!(blocks3, LabelledNumbers.LabelledInteger(degen3, fuse12))
       else
         g12 = BlockArrays.blocklengths(fuse12)
