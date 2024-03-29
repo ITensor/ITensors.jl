@@ -1,5 +1,6 @@
 module Sectors
 
+include("symmetry_style.jl")
 include("abstractcategory.jl")
 include("category_definitions/u1.jl")
 include("category_definitions/zn.jl")

@@ -1,6 +1,7 @@
 # This files defines a structure for Cartesian product of 2 or more fusion categories
 # e.g. U(1)×U(1), U(1)×SU2(2)×SU(3)
 
+# ==============  Definition and getters  =================
 struct CategoryProduct{Categories} <: AbstractCategory
   cats::Categories
   global _CategoryProduct(l) = new{typeof(l)}(l)
@@ -10,21 +11,35 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-function quantum_dimension(s::CategoryProduct)
-  if length(categories(s)) == 0
-    return 0
+# ==============  SymmetryStyle ==============================
+combine_styles(::AbelianGroup, ::AbelianGroup) = AbelianGroup()
+combine_styles(::AbelianGroup, ::NonAbelianGroup) = NonAbelianGroup()
+combine_styles(::AbelianGroup, ::NonGroupCategory) = NonGroupCategory()
+combine_styles(::NonAbelianGroup, ::AbelianGroup) = NonAbelianGroup()
+combine_styles(::NonAbelianGroup, ::NonAbelianGroup) = NonAbelianGroup()
+combine_styles(::NonAbelianGroup, ::NonGroupCategory) = NonGroupCategory()
+combine_styles(::NonGroupCategory, ::SymmetryStyle) = NonGroupCategory()
+
+function SymmetryStyle(c::CategoryProduct)
+  return if length(categories(c)) == 0
+    EmptyCategory()
+  else
+    reduce(combine_styles, map(SymmetryStyle, (categories(c))))
   end
+end
+
+# ==============  Sector interface  =================
+function quantum_dimension(::NonAbelianGroup, s::CategoryProduct)
+  return prod(map(quantum_dimension, categories(s)))
+end
+
+function quantum_dimension(::NonGroupCategory, s::CategoryProduct)
   return prod(map(quantum_dimension, categories(s)))
 end
 
 GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categories(s)))
 
-function fusion_rule(s1::CategoryProduct, s2::CategoryProduct)
-  return [
-    CategoryProduct(l) for l in categories_fusion_rule(categories(s1), categories(s2))
-  ]
-end
-
+# ==============  Base interface  =================
 function Base.:(==)(A::CategoryProduct, B::CategoryProduct)
   return categories_equal(categories(A), categories(B))
 end
@@ -45,11 +60,14 @@ category_show(io::IO, k, v) = print(io, v)
 
 category_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
+# ==============  Cartesian product  =================
 ×(c1::AbstractCategory, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
 function ×(p1::CategoryProduct, p2::CategoryProduct)
   return CategoryProduct(categories_product(categories(p1), categories(p2)))
 end
 
+# currently (A=U1(1),) × (A=U1(2),) = sector((A=U1(1),))
+# this is misleading. TBD throw in this case?
 categories_product(l1::NamedTuple, l2::NamedTuple) = union_keys(l1, l2)
 
 categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
@@ -58,10 +76,24 @@ categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 ×(c1::NamedTuple, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
 ×(c1::AbstractCategory, c2::NamedTuple) = ×(CategoryProduct(c1), CategoryProduct(c2))
 
-#
-# Dictionary-like implementation
-#
+function ×(l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger)
+  c3 = LabelledNumbers.label(l1) × LabelledNumbers.label(l2)
+  m3 = LabelledNumbers.unlabel(l1) * LabelledNumbers.unlabel(l2)
+  return LabelledNumbers.LabelledInteger(m3, c3)
+end
 
+×(g::AbstractUnitRange, c::AbstractCategory) = ×(g, GradedAxes.gradedrange([c => 1]))
+×(c::AbstractCategory, g::AbstractUnitRange) = ×(GradedAxes.gradedrange([c => 1]), g)
+
+function ×(g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange)
+  # keep F convention in loop order
+  v = [
+    l1 × l2 for l2 in BlockArrays.blocklengths(g2) for l1 in BlockArrays.blocklengths(g1)
+  ]
+  return GradedAxes.gradedrange(v)
+end
+
+# ==============  Dictionary-like implementation  =================
 function CategoryProduct(nt::NamedTuple)
   categories = sort_keys(nt)
   return _CategoryProduct(categories)
@@ -73,6 +105,13 @@ function CategoryProduct(pairs::Pair...)
   keys = ntuple(n -> Symbol(pairs[n][1]), length(pairs))
   vals = ntuple(n -> pairs[n][2], length(pairs))
   return CategoryProduct(NamedTuple{keys}(vals))
+end
+
+function categories_equal(A::NamedTuple, B::NamedTuple)
+  common_categories = zip(pairs(intersect_keys(A, B)), pairs(intersect_keys(B, A)))
+  common_categories_match = all(nl -> (nl[1] == nl[2]), common_categories)
+  unique_categories_zero = all(l -> istrivial(l), symdiff_keys(A, B))
+  return common_categories_match && unique_categories_zero
 end
 
 function categories_fusion_rule(A::NamedTuple, B::NamedTuple)
@@ -87,32 +126,27 @@ function categories_fusion_rule(A::NamedTuple, B::NamedTuple)
   return qs
 end
 
-function categories_equal(A::NamedTuple, B::NamedTuple)
-  common_categories = zip(pairs(intersect_keys(A, B)), pairs(intersect_keys(B, A)))
-  common_categories_match = all(nl -> (nl[1] == nl[2]), common_categories)
-  unique_categories_zero = all(l -> istrivial(l), symdiff_keys(A, B))
-  return common_categories_match && unique_categories_zero
-end
+# allow ⊗ for different types in NamedTuple
+function fusion_rule(
+  s1::CategoryProduct{Cat1}, s2::CategoryProduct{Cat2}
+) where {Cat1<:NamedTuple,Cat2<:NamedTuple} end
 
-#
-# Ordered implementation
-#
-
+# ==============  Ordered implementation  =================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
 CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
 
 categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
-function categories_fusion_rule(o1::Tuple, o2::Tuple)
-  N = length(o1)
-  length(o2) == N ||
-    throw(DimensionMismatch("Ordered CategoryProduct must have same size in ⊗"))
-  os = [o1]
-  replace(o, n, val) = ntuple(m -> (m == n) ? val : o[m], length(o))
-  for n in 1:N
-    os = [replace(o, n, f) for f in ⊗(o1[n], o2[n]) for o in os]
-  end
-  return os
-end
-
 sector(args...; kws...) = CategoryProduct(args...; kws...)
+
+# for ordered tuple, impose same type in fusion
+function fusion_rule(s1::CategoryProduct{Cat}, s2::CategoryProduct{Cat}) where {Cat<:Tuple}
+  if SymmetryStyle(s1) == EmptyCategory()  # compile-time; simpler than specifying init
+    return s1
+  end
+  cat1 = categories(s1)
+  cat2 = categories(s2)
+  prod12 = ntuple(i -> cat1[i] ⊗ cat2[i], length(cat1))
+  g = reduce(×, prod12)
+  return g
+end

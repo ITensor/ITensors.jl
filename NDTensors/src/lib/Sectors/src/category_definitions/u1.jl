@@ -8,11 +8,11 @@ struct U1 <: AbstractCategory
   n::Half{Int}
 end
 
+SymmetryStyle(::U1) = AbelianGroup()
+
 GradedAxes.dual(u::U1) = U1(-u.n)
 
 label(u::U1) = u.n
-
-quantum_dimension(::U1) = 1
 
 trivial(::Type{U1}) = U1(0)
 

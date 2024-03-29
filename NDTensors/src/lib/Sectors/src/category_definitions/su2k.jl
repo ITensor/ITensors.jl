@@ -8,6 +8,8 @@ struct su2{k} <: AbstractCategory
   j::Half{Int}
 end
 
+SymmetryStyle(::su2) = NonGroupCategory()
+
 dual(s::su2) = s
 
 label(s::su2) = s.j

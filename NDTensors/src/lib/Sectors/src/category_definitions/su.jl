@@ -10,6 +10,8 @@ struct SU{N} <: AbstractCategory
   l::NTuple{N,Int}
 end
 
+SymmetryStyle(::SU) = NonAbelianGroup()
+
 label(s::SU) = s.l
 
 groupdim(::SU{N}) where {N} = N
@@ -20,7 +22,7 @@ fundamental(::Type{SU{N}}) where {N} = SU{N}(ntuple(i -> Int(i == 1), Val(N)))
 
 adjoint(::Type{SU{N}}) where {N} = SU{N}((ntuple(i -> Int(i == 1) + Int(i < N), Val(N))))
 
-function quantum_dimension(s::SU)
+function quantum_dimension(::NonAbelianGroup, s::SU)
   N = groupdim(s)
   l = label(s)
   d = 1

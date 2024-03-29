@@ -7,12 +7,12 @@ struct Z{N} <: AbstractCategory
   Z{N}(m) where {N} = new{N}(m % N)
 end
 
+SymmetryStyle(::Z) = AbelianGroup()
+
 label(c::Z) = c.m
 modulus(::Type{Z{N}}) where {N} = N
 
 modulus(c::Z) = modulus(typeof(c))
-
-quantum_dimension(::Z) = 1
 
 trivial(category_type::Type{<:Z}) = category_type(0)
 

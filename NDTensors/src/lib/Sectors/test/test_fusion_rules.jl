@@ -39,6 +39,7 @@ using Test: @inferred, @test, @testset, @test_throws
     @test j2 ⊗ j3 == gradedrange([j2 => 1, j4 => 1])
     @test j3 ⊗ j3 == gradedrange([j1 => 1, j3 => 1, j5 => 1])
     @test (@inferred j1 ⊗ j2) == gradedrange([j2 => 1])
+    @test (@inferred quantum_dimension(j1 ⊗ j2)) == 2
   end
 
   @testset "SU{2} fusion rules" begin

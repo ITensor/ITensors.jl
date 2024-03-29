@@ -1,10 +1,6 @@
 # This file defines the abstract type AbstractCategory
 # all fusion categories (Z{2}, SU2, Ising...) are subtypes of AbstractCategory
 
-using NDTensors.LabelledNumbers
-using NDTensors.GradedAxes
-using BlockArrays: blockedrange, blocklengths, blocks
-
 abstract type AbstractCategory end
 
 # ============  Base interface  =================
@@ -20,22 +16,11 @@ istrivial(c::AbstractCategory) = (c == trivial(typeof(c)))
 # name conflict with LabelledNumber.label. TBD is that an issue?
 label(c::AbstractCategory) = error("method `label` not defined for type $(typeof(c))")
 
-function quantum_dimension(c::AbstractCategory)
-  return error("method `dimension` not defined for type $(typeof(c))")
-end
-
-function quantum_dimension(g::AbstractUnitRange)
-  return sum(
-    LabelledNumbers.unlabel(b) * quantum_dimension(LabelledNumbers.label(b)) for
-    b in blocklengths(g)
-  )
-end
-
 function GradedAxes.dual(category_type::Type{<:AbstractCategory})
   return error("`dual` not defined for type $(category_type).")
 end
 
-# ================  fuion rule interface ====================
+# ================  fusion rule interface ====================
 function label_fusion_rule(category_type::Type{<:AbstractCategory}, l1, l2)
   return error("`label_fusion_rule` not defined for type $(category_type).")
 end
@@ -43,12 +28,12 @@ end
 # TBD always return GradedUnitRange?
 function fusion_rule(c1::C, c2::C) where {C<:AbstractCategory}
   out = label_fusion_rule(C, label(c1), label(c2))
-  if typeof(out) <: Tuple{Vector,Vector}  # TODO replace with Trait
-    degen, labels = out
-    # NonAbelianGroup or NonGroupCategory: return GradedUnitRange
-    return GradedAxes.gradedrange(LabelledNumbers.LabelledInteger.(degen, C.(labels)))
+  if SymmetryStyle(c1) == AbelianGroup()
+    return C(out)  # AbelianGroup: return Category
   end
-  return C(out)  # AbelianGroup: return Category
+  degen, labels = out
+  # NonAbelianGroup or NonGroupCategory: return GradedUnitRange
+  return GradedAxes.gradedrange(LabelledNumbers.LabelledInteger.(degen, C.(labels)))
 end
 
 function ⊗(c1::AbstractCategory, c2::AbstractCategory)
@@ -93,20 +78,19 @@ end
 # 4. define fusion rule for reducible representations
 # TODO deal with dual
 function fusion_rule(g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange)
-  blocks3 = empty(blocklengths(g1))
-  for b1 in blocklengths(g1)
+  blocks3 = empty(BlockArrays.blocklengths(g1))
+  for b1 in BlockArrays.blocklengths(g1)
     cat1 = LabelledNumbers.label(b1)
     degen1 = LabelledNumbers.unlabel(b1)
-    for b2 in blocklengths(g2)
+    for b2 in BlockArrays.blocklengths(g2)
       cat2 = LabelledNumbers.label(b2)
       degen2 = LabelledNumbers.unlabel(b2)
       degen3 = degen1 * degen2
       fuse12 = cat1 ⊗ cat2
-
-      if typeof(fuse12) <: AbstractCategory  # TODO replace with Trait or promote
+      if typeof(fuse12) <: AbstractCategory  # TBD define SymmetryStyle(GradedUnitRange)? promote?
         push!(blocks3, LabelledNumbers.LabelledInteger(degen3, fuse12))
       else
-        g12 = blocklengths(fuse12)
+        g12 = BlockArrays.blocklengths(fuse12)
         # Int * LabelledInteger -> Int, need to recast explicitly
         scaled_g12 =
           LabelledNumbers.LabelledInteger.(degen3 .* g12, LabelledNumbers.label.(g12))
@@ -119,7 +103,7 @@ function fusion_rule(g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRa
   unsorted_g3 = GradedAxes.gradedrange(blocks3)
   perm = GradedAxes.blockmergesortperm(unsorted_g3)
   vec3 = empty(blocks3)
-  for b in blocks(perm)
+  for b in BlockArrays.blocks(perm)
     x = unsorted_g3[b]
     n = LabelledNumbers.LabelledInteger(sum(length(x); init=0), LabelledNumbers.label(x[1]))
     push!(vec3, n)
