@@ -171,7 +171,6 @@ import ITensors.NDTensors:
   permuteblocks,
   polar,
   ql,
-  scalartype,
   scale!,
   setblock!,
   setblockdim!,

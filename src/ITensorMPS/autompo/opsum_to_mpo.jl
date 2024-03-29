@@ -1,3 +1,5 @@
+using NDTensors: using_auto_fermion
+
 # `ValType::Type{<:Number}` is used instead of `ValType::Type` for efficiency, possibly due to increased method specialization.
 # See https://github.com/ITensor/ITensors.jl/pull/1183.
 function svdMPO(
