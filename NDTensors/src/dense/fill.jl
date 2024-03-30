@@ -46,4 +46,3 @@ end
 function generic_zeros(StoreT::Type{<:Dense}, dim)
   return generic_zeros(default_storagetype(), dim)
 end
-
