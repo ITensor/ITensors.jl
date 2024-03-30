@@ -1,3 +1,4 @@
+using CUDA: CuArray
 ## CUDA.jl has no append! function and 
 ## calling base results in a scalar issue
 ## This is probably super slow and I am seeing 
