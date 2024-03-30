@@ -6,6 +6,13 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
 
 @testset "Test Named Category Products" begin
   @testset "Construct from × of NamedTuples" begin
+    s = (A=U1(1),) × (B=Z{2}(0),)
+    @test length(categories(s)) == 2
+    @test categories(s)[:A] == U1(1)
+    @test categories(s)[:B] == Z{2}(0)
+    @test (@inferred quantum_dimension(s)) == 1
+    @test dual(s) == (A=U1(-1),) × (B=Z{2}(0),)
+
     s = (A=U1(1),) × (B=SU2(2),)
     @test length(categories(s)) == 2
     @test categories(s)[:A] == U1(1)
@@ -35,20 +42,25 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test (@inferred quantum_dimension(s)) == 1.0
   end
 
-  @testset "Multiple U(1)'s" begin
+  @testset "Empty category" begin
+    s = sector()
+    @test dual(s) == s
+    @test s × s == s
+    @test s ⊗ s == s
+    @test (@inferred quantum_dimension(s)) == 0
+  end
+
+  @testset "Abelian fusion rules" begin
     q00 = sector()
     q10 = sector(; A=U1(1))
     q01 = sector(; B=U1(1))
     q11 = sector(; A=U1(1), B=U1(1))
 
-    @test (@inferred quantum_dimension(q00)) == 0
-    @test (@inferred quantum_dimension(q11)) == 1
-    @test dual(q00) == q00
-
-    @test q00 ⊗ q00 == q00
+    @test q10 ⊗ q10 == sector(; A=U1(2))
     @test q01 ⊗ q00 == q01
     @test q00 ⊗ q01 == q01
     @test q10 ⊗ q01 == q11
+    @test q11 ⊗ q11 == sector(; A=U1(2), B=U1(2))
   end
 
   @testset "U(1) × SU(2) conventional" begin
@@ -140,6 +152,7 @@ end
 
   @testset "Empty category" begin
     s = CategoryProduct(())
+    @test dual(s) == s
     @test s × s == s
     @test s ⊗ s == s
     @test (@inferred quantum_dimension(s)) == 0

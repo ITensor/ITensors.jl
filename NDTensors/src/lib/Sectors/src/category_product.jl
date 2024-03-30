@@ -70,6 +70,10 @@ end
 # this is misleading. TBD throw in this case?
 categories_product(l1::NamedTuple, l2::NamedTuple) = union_keys(l1, l2)
 
+# edge cases
+categories_product(l1::NamedTuple, l2::Tuple{}) = l1
+categories_product(l1::Tuple{}, l2::NamedTuple) = l2
+
 categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
 ×(nt1::NamedTuple, nt2::NamedTuple) = ×(CategoryProduct(nt1), CategoryProduct(nt2))
@@ -114,22 +118,34 @@ function categories_equal(A::NamedTuple, B::NamedTuple)
   return common_categories_match && unique_categories_zero
 end
 
-function categories_fusion_rule(A::NamedTuple, B::NamedTuple)
-  qs = [A]
-  for (la, lb) in zip(pairs(intersect_keys(A, B)), pairs(intersect_keys(B, A)))
-    @assert la[1] == lb[1]
-    fused_vals = ⊗(la[2], lb[2])
-    qs = [union_keys((; la[1] => v), q) for v in fused_vals for q in qs]
+function fusion_rule(k::Symbol, c1::C, c2::C) where {C<:AbstractCategory}
+  fused = c1 ⊗ c2
+  if SymmetryStyle(c1) == AbelianGroup()
+    return sector(k => fused)
   end
-  # Include sectors of B not in A
-  qs = [union_keys(q, B) for q in qs]
-  return qs
+  return GradedAxes.gradedrange([
+    sector(k => LabelledNumbers.label(b)) => LabelledNumbers.unlabel(b) for
+    b in blocklengths(fused)
+  ])
 end
 
 # allow ⊗ for different types in NamedTuple
 function fusion_rule(
   s1::CategoryProduct{Cat1}, s2::CategoryProduct{Cat2}
-) where {Cat1<:NamedTuple,Cat2<:NamedTuple} end
+) where {Cat1<:NamedTuple,Cat2<:NamedTuple}
+  if SymmetryStyle(s1) == EmptyCategory()  # still works when s2 is also empty
+    return s2
+  end
+  A = categories(s1)
+  B = categories(s2)
+  diff_cat = A[setdiff(keys(A), keys(B))] × B[setdiff(keys(B), keys(A))]
+  shared_keys = intersect(keys(A), keys(B))
+  shared_cat = ntuple(
+    i -> fusion_rule(shared_keys[i], A[shared_keys[i]], B[shared_keys[i]]),
+    length(shared_keys),
+  )
+  return diff_cat × reduce(×, shared_cat; init=sector())
+end
 
 # ==============  Ordered implementation  =================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
