@@ -22,7 +22,7 @@ function generic_randn(StoreT::Type{<:Dense}, dim::Integer=0)
 end
 
 function generic_zeros(
-  StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
+  StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer
 ) where {DataT<:AbstractArray,ElT}
   @assert ElT == eltype(DataT)
   data = generic_zeros(DataT, dim)
@@ -30,10 +30,20 @@ function generic_zeros(
   return StoreT(data)
 end
 
-function generic_zeros(StoreT::Type{<:Dense{ElT}}, dim::Integer=0) where {ElT}
+function generic_zeros(
+  StoreT::Type{<:Dense{ElT,DataT}}, dims
+) where {DataT<:AbstractArray,ElT}
+  @assert ElT == eltype(DataT)
+  data = generic_zeros(DataT, dim(dims))
+  StoreT = set_datatype(StoreT, typeof(data))
+  return StoreT(data)
+end
+
+function generic_zeros(StoreT::Type{<:Dense{ElT}}, dim) where {ElT}
   return generic_zeros(default_storagetype(ElT), dim)
 end
 
-function generic_zeros(StoreT::Type{<:Dense}, dim::Integer=0)
+function generic_zeros(StoreT::Type{<:Dense}, dim)
   return generic_zeros(default_storagetype(), dim)
 end
+

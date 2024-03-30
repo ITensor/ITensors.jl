@@ -701,6 +701,9 @@ function permutedims!!(
   f::Function=(r, t) -> t,
 ) where {ElR,ElT,N}
   RR = convert(promote_type(typeof(R), typeof(T)), R)
+  if (datatype(RR) != datatype(T))
+    error("datatype(RR), $(datatype(RR)), doesn't match datatype(T), $(datatype(T))")
+  end
   permutedims!(RR, T, perm, f)
   return RR
 end
@@ -725,6 +728,7 @@ end
 # <fermions>
 permfactor(perm, block, inds) = 1
 
+using .TypeParameterAccessors: set_type_parameters, parenttype
 function permutedims!(
   R::BlockSparseTensor{<:Number,N},
   T::BlockSparseTensor{<:Number,N},
@@ -751,17 +755,20 @@ function permutedims!(
       # Rblock doesn't exist
       block_size = permute(size(Tblock), perm)
       # TODO: Make GPU friendly.
-      Rblock = tensor(Dense(zeros(eltype(R), block_size)), block_size)
+      DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(R), datatype(R)))
+      Rblock = tensor(generic_zeros(DenseT, block_size), block_size)
     elseif !Tblock_exists
       # Tblock doesn't exist
       block_size = permute(size(Rblock), invperm(perm))
       # TODO: Make GPU friendly.
-      Tblock = tensor(Dense(zeros(eltype(T), block_size)), block_size)
+      DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(T), datatype(T)))
+      Tblock = tensor(generic_zeros(DenseT, block_size), block_size)
     end
     permutedims!(Rblock, Tblock, perm, f_fac)
     if !Rblock_exists
       # Set missing nonzero block
-      if !iszero(Rblock)
+      ## To make sure no allowscalar issue grab the data
+      if !iszero(data(Rblock))
         R[block] = Rblock
       end
     end
