@@ -80,10 +80,6 @@ import Base.Broadcast:
   broadcastable,
   instantiate
 
-import Adapt: adapt_structure, adapt_storage
-
-import LinearAlgebra: dot, normalize!, tr
-
 import ..ITensors.NDTensors:
   Algorithm,
   @Algorithm_str,
@@ -102,12 +98,7 @@ import ..ITensors.NDTensors:
   fill!!,
   randn!!,
   permutedims,
-  permutedims!,
-  scalartype,
-  single_precision,
-  tensor,
-  timer,
-  using_auto_fermion
+  permutedims!
 
 import ..ITensors:
   AbstractRNG,
