@@ -701,9 +701,6 @@ function permutedims!!(
   f::Function=(r, t) -> t,
 ) where {ElR,ElT,N}
   RR = convert(promote_type(typeof(R), typeof(T)), R)
-  if (datatype(RR) != datatype(T))
-    error("datatype(RR), $(datatype(RR)), doesn't match datatype(T), $(datatype(T))")
-  end
   permutedims!(RR, T, perm, f)
   return RR
 end
