@@ -1,10 +1,9 @@
-using ITensors
-using Test
-
+@eval module $(gensym())
+using ITensors: ITensors
+using Test: @testset
 ITensors.Strided.disable_threads()
 ITensors.BLAS.set_num_threads(1)
 ITensors.disable_threaded_blocksparse()
-
 @testset "$(@__DIR__)" begin
   filenames = filter(readdir(@__DIR__)) do f
     startswith("test_")(f) && endswith(".jl")(f)
@@ -13,4 +12,5 @@ ITensors.disable_threaded_blocksparse()
     println("Running $(@__DIR__)/$filename")
     @time include(filename)
   end
+end
 end

@@ -53,26 +53,7 @@ module ITensors
 #####################################
 # External packages
 #
-using Adapt
-using BitIntegers
-using ChainRulesCore
-using Compat
-using DocStringExtensions
-using Functors
-using HDF5
-using IsApprox
-using LinearAlgebra
-using NDTensors
-using PackageCompiler
-using Pkg
-using Printf
-using Random
-using Reexport
-using SerializedElementArrays
-using StaticArrays
-using TimerOutputs
-using TupleTools
-using Zeros
+include("usings.jl")
 
 #####################################
 # General utility functions
