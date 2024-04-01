@@ -500,8 +500,8 @@ function diagITensor(inds::QNIndices)
 end
 
 """
-    delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
-    delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
+    delta([::Type{ElT} = Bool, ][flux::QN = QN(), ]is)
+    delta([::Type{ElT} = Bool, ][flux::QN = QN(), ]is::Index...)
 
 Make an ITensor with storage type `NDTensors.DiagBlockSparse` with uniform
 elements `one(ElT)`. The ITensor only has diagonal blocks consistent with the
@@ -544,7 +544,7 @@ function dropzeros(T::ITensor; tol=0)
 end
 
 function δ_split(i1::Index, i2::Index)
-  d = emptyITensor(Bool,i1, i2)
+  d = emptyITensor(Bool, i1, i2)
   for n in 1:min(dim(i1), dim(i2))
     d[n, n] = 1
   end

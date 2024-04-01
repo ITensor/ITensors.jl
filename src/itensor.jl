@@ -531,8 +531,8 @@ end
 diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
 
 """
-    delta([::Type{ElT} = Float64, ]inds)
-    delta([::Type{ElT} = Float64, ]inds::Index...)
+    delta([::Type{ElT} = Bool, ]inds)
+    delta([::Type{ElT} = Bool, ]inds::Index...)
 
 Make a uniform diagonal ITensor with all diagonal elements
 `one(ElT)`. Only a single diagonal element is stored.
