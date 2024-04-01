@@ -1,10 +1,10 @@
 using .TypeParameterAccessors: unwrap_array_type, specify_default_type_parameters
 
 function generic_randn(
-  arraytype::Type{<:AbstractArray}, dim::Integer=0; rng=Random.default_rng()
+  arraytype::Type{<:AbstractArray}, dims...; rng=Random.default_rng()
 )
   arraytype_specified = specify_default_type_parameters(unwrap_array_type(arraytype))
-  data = similar(arraytype_specified, dim)
+  data = similar(arraytype_specified, dims...)
   return randn!(rng, data)
 end
 
