@@ -12,8 +12,8 @@ function contractmpo_solver(; kwargs...)
   return solver
 end
 
-function ITensors.contract(
-  ::Algorithm"fit", A::MPO, psi0::MPS; init_mps=psi0, nsweeps=1, kwargs...
+function itensortdvp_contract(
+  alg::Algorithm"fit", A::MPO, psi0::MPS; init_mps=psi0, nsweeps=1, kwargs...
 )::MPS
   n = length(A)
   n != length(psi0) &&
