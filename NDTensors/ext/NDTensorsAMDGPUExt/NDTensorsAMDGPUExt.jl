@@ -1,5 +1,6 @@
 module NDTensorsAMDGPUExt
 
+include("append.jl")
 include("copyto.jl")
 include("set_types.jl")
 include("adapt.jl")

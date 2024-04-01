@@ -1,5 +1,8 @@
-# This circumvents an issues that `MtlArray` can't call `resize!`.
-# TODO: Raise an issue with Metal.jl.
-function NDTensors.append!!(::Type{<:MtlArray}, collection, collections...)
-  return vcat(collection, collections...)
+## Right now append! is broken on metal but make this available for when it is working
+using GPUArraysCore: @allowscalar
+using Metal: MtlArray
+using NDTensors.Expose: Exposed, unexpose
+
+function Base.append!(Ecollection::Exposed{<:MtlArray}, collections...)
+  return @allowscalar append!(unexpose(Ecollection), collections...)
 end

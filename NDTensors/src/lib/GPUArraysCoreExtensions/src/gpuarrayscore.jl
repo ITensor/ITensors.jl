@@ -17,7 +17,3 @@ end
 function cpu end
 
 cpu(E::Exposed) = cpu(unexpose(E))
-
-function Base.append!(Ecollection::Exposed{<:AbstractGPUArray}, collections...)
-  return @allowscalar append!(unexpose(Ecollection), collections...)
-end
