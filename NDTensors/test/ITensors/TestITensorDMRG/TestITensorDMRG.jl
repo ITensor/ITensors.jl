@@ -19,9 +19,7 @@ is_broken(dev, elt::Type, conserve_qns::Val) = false
 ## Currently Metal fails because we are waiting for `resize!` to be added. Should be in the next metal release
 ## ROC fails because TODO determine again why roc fails.
 
-#is_broken(dev::typeof(cu), elt::Type, conserve_qns::Val{true}) = true
 is_broken(dev::typeof(mtl), elt::Type, conserve_qns::Val{true}) = true
-is_broken(dev::typeof(roc), elt::Type, conserve_qns::Val{true}) = true
 
 include("dmrg.jl")
 
