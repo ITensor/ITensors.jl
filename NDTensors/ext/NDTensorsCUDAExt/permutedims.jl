@@ -1,5 +1,5 @@
 using CUDA: CuArray
-using NDTensors.Expose: Exposed, expose, parent, unexpose
+using NDTensors.Expose: Exposed, expose, unexpose
 
 function Base.permutedims!(
   Edest::Exposed{<:CuArray,<:Base.ReshapedArray}, Esrc::Exposed{<:CuArray}, perm

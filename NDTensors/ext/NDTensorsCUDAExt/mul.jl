@@ -1,6 +1,6 @@
 using CUDA: CuArray
 using LinearAlgebra: LinearAlgebra, mul!, transpose
-using NDTensors.Expose: Exposed, expose, parent, unexpose
+using NDTensors.Expose: Exposed, expose, unexpose
 
 # This was calling generic matrix multiplication.
 # TODO: Raise an issue with `CUDA.jl`.

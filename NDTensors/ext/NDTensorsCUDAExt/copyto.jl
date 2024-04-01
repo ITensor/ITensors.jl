@@ -1,5 +1,5 @@
 using CUDA: CuArray
-using NDTensors.Expose: Exposed, expose, parent, unexpose
+using NDTensors.Expose: Exposed, expose, unexpose
 using LinearAlgebra: Adjoint
 
 # Same definition as `MtlArray`.
