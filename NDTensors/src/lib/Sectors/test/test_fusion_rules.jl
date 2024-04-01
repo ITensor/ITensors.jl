@@ -89,14 +89,15 @@ end
   @testset "GradedUnitRange fusion rules" begin
     g1 = gradedrange([U1(1) => 1, U1(2) => 2])
     g2 = gradedrange([U1(-1) => 2, U1(0) => 1, U1(1) => 2])
-    @test tensor_product(g1, g2) ==
+    @test (@inferred tensor_product(g1, g2)) ==
       gradedrange([U1(0) => 2, U1(1) => 5, U1(2) => 4, U1(3) => 4])
 
     g3 = gradedrange([SU2(0) => 1, SU2(1//2) => 2, SU2(1) => 1])
     g4 = gradedrange([SU2(1//2) => 1, SU2(1) => 2])
-    @test tensor_product(g3, g4) == gradedrange([
-      SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2
-    ])
+    @test @inferred(
+      tensor_product(g3, g4) ==
+        gradedrange([SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2])
+    )
 
     # test different categories cannot be fused
     @test_throws MethodError tensor_product(g1, g4)

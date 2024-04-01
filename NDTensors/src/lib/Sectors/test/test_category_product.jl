@@ -141,6 +141,32 @@ end
     @test categories(s)[3] == Fib("τ")
   end
 
+  @testset "Quantum dimension and GradedUnitRange" begin
+    g_fib = gradedrange([(Fib("1") × Fib("1")) => 1])
+    g_ising = gradedrange([(Ising("1") × Ising("1")) => 1])
+    # for the next 2 tests, the first one will be broken, the second will pass
+    # it does not matter which one is Fib and which one is Ising
+    # only compilation order matters
+    # I don't understand.
+    @test_broken (@inferred quantum_dimension(g_fib)) == 1.0
+    @test (@inferred quantum_dimension(g_ising)) == 1.0
+
+    # check commenting the two tests above and uncommenting the two below
+    #@test_broken (@inferred quantum_dimension(g_ising)) == 1.0
+    #@test (@inferred quantum_dimension(g_fib)) ==  1.0
+
+    # or even executing the sector-wise test below *before* magically makes the tests pass
+    @test (@inferred quantum_dimension((Fib("1") × Fib("1")))) == 1.0
+    @test (@inferred quantum_dimension((Ising("1") × Ising("1")))) == 1.0
+
+    # similar story below: swapping the two tests make both pass.
+    @test_broken (@inferred quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
+    @test (@inferred quantum_dimension(U1(1) × Fib("1"))) == 1.0
+    # check commenting above and uncommenting below!
+    # @test (@inferred quantum_dimension(U1(1) × Fib("1"))) == 1.0
+    # @test (@inferred quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
+  end
+
   @testset "Enforce same spaces in fusion" begin
     p12 = U1(1) × U1(2)
     p123 = U1(1) × U1(2) × U1(3)
@@ -152,22 +178,22 @@ end
 
   @testset "Empty category" begin
     s = CategoryProduct(())
-    @test dual(s) == s
-    @test s × s == s
-    @test s ⊗ s == s
+    @test (@inferred dual(s)) == s
+    @test (@inferred s × s) == s
+    @test (@inferred s ⊗ s) == s
     @test (@inferred quantum_dimension(s)) == 0
   end
 
   @testset "Fusion of Abelian products" begin
     p11 = U1(1) × U1(1)
-    @test p11 ⊗ p11 == U1(2) × U1(2)
+    @test @inferred(p11 ⊗ p11 == U1(2) × U1(2))
 
     p123 = U1(1) × U1(2) × U1(3)
-    @test p123 ⊗ p123 == U1(2) × U1(4) × U1(6)
+    @test @inferred(p123 ⊗ p123 == U1(2) × U1(4) × U1(6))
 
     s1 = sector(U1(1), Z{2}(1))
     s2 = sector(U1(0), Z{2}(0))
-    @test s1 ⊗ s2 == U1(1) × Z{2}(1)
+    @test @inferred(s1 ⊗ s2 == U1(1) × Z{2}(1))
   end
 
   @testset "Fusion of NonAbelian products" begin
@@ -179,27 +205,30 @@ end
       (SU2(1) × SU2(1)) => 1,
     ])
     @test (@inferred quantum_dimension(phh ⊗ phh)) == 16
+    @test (@inferred phh ⊗ phh == gradedrange([
+      (SU2(0) × SU2(0)) => 1,
+      (SU2(1) × SU2(0)) => 1,
+      (SU2(0) × SU2(1)) => 1,
+      (SU2(1) × SU2(1)) => 1,
+    ]))
   end
 
   @testset "Fusion of NonGroupCategory products" begin
     ı = Fib("1")
     τ = Fib("τ")
     s = ı × ı
-    g = gradedrange([(ı × ı) => 1])
-    @test s ⊗ s == g
-    @test_broken (@inferred quantum_dimension(g)) == 1.0  # I don't understand
+    @test @inferred(s ⊗ s == gradedrange([s => 1]))
 
     s = τ × τ
-    g = gradedrange([(ı × ı) => 1, (τ × ı) => 1, (ı × τ) => 1, (τ × τ) => 1])
-    @test s ⊗ s == g
-    @test_broken (@inferred quantum_dimension(g)) == 2.0 + 3quantum_dimension(τ)  # I don't understand
+    @test @inferred(
+      s ⊗ s == gradedrange([(ı × ı) => 1, (τ × ı) => 1, (ı × τ) => 1, (τ × τ) => 1])
+    )
 
     σ = Ising("σ")
     ψ = Ising("ψ")
     s = τ × σ
     g = gradedrange([(ı × Ising(1)) => 1, (τ × Ising(1)) => 1, (ı × ψ) => 1, (τ × ψ) => 1])
-    @test s ⊗ s == g
-    @test (@inferred quantum_dimension(g)) == 2.0 + 2quantum_dimension(τ)  # ???
+    @test @inferred(s ⊗ s) == g
   end
 
   @testset "Fusion of mixed Abelian and NonAbelian products" begin
@@ -235,8 +264,7 @@ end
     @test (@inferred quantum_dimension(s ⊗ s)) == 4.0 + 4.0quantum_dimension(τ)
 
     s = U1(1) × ı × τ
-    @test s ⊗ s == gradedrange([(U1(2) × ı × ı) => 1, (U1(2) × ı × τ) => 1])
-    @test_broken (@inferred quantum_dimension(s ⊗ s)) == 1.0 + quantum_dimension(τ)
+    @test @inferred(s ⊗ s) == gradedrange([(U1(2) × ı × ı) => 1, (U1(2) × ı × τ) => 1])
   end
 end
 end
