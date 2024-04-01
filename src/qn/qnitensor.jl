@@ -521,15 +521,15 @@ function delta(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
   return delta(ElT, flux, indices(is...))
 end
 
-delta(flux::QN, inds::Indices) = delta(Float64, flux, is)
+delta(flux::QN, inds::Indices) = delta(Bool, flux, is)
 
-delta(flux::QN, is...) = delta(Float64, flux, indices(is...))
+delta(flux::QN, is...) = delta(Bool, flux, indices(is...))
 
 function delta(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
   return delta(ElT, QN(), inds)
 end
 
-delta(inds::QNIndices) = delta(Float64, QN(), inds)
+delta(inds::QNIndices) = delta(Bool, QN(), inds)
 
 function dropzeros(T::ITensor; tol=0)
   # XXX: replace with empty(T)
@@ -544,7 +544,7 @@ function dropzeros(T::ITensor; tol=0)
 end
 
 function δ_split(i1::Index, i2::Index)
-  d = emptyITensor(i1, i2)
+  d = emptyITensor(Bool,i1, i2)
   for n in 1:min(dim(i1), dim(i2))
     d[n, n] = 1
   end

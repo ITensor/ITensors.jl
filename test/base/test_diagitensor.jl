@@ -263,8 +263,8 @@ using Test
     end
 
     @testset "Add (Diag uniform + Diag uniform)" begin
-      D1 = δ(i, j, k)
-      D2 = δ(k, i, j)
+      D1 = δ(i, j, k) * 1.0 # hack, for Float64
+      D2 = δ(k, i, j) * 1.0
 
       D3 = D1 + D2
 
@@ -391,12 +391,12 @@ using Test
     @testset "delta constructor (order 2)" begin
       D = δ(i, j)
 
-      @test eltype(D) == Float64
+      @test eltype(D) == Bool
       for ii in 1:d, jj in 1:d
         if ii == jj
-          @test D[i => ii, j => jj] == 1.0
+          @test D[i => ii, j => jj] == 1
         else
-          @test D[i => ii, j => jj] == 0.0
+          @test D[i => ii, j => jj] == 0
         end
       end
     end
@@ -404,12 +404,12 @@ using Test
     @testset "delta constructor (order 3)" begin
       D = δ(i, j, k)
 
-      @test eltype(D) == Float64
+      @test eltype(D) == Bool
       for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
         if ii == jj == kk
-          @test D[i => ii, j => jj, k => kk] == 1.0
+          @test D[i => ii, j => jj, k => kk] == 1
         else
-          @test D[i => ii, j => jj, k => kk] == 0.0
+          @test D[i => ii, j => jj, k => kk] == 0
         end
       end
     end
@@ -417,7 +417,7 @@ using Test
     @testset "Set elements" begin
       D = δ(i, j, k)
 
-      @test eltype(D) == Float64
+      @test eltype(D) == Bool
 
       # Can't set elements of uniform diag tensor
       # TODO: should we make a function that converts
@@ -431,18 +431,18 @@ using Test
       D = δ(i, j, k)
       T = dense(D)
 
-      @test storage(T) isa NDTensors.Dense{Float64}
+      @test storage(T) isa NDTensors.Dense{Bool}
       for ii in 1:d, jj in 1:d, kk in 1:d
         if ii == jj == kk
-          @test T[ii, ii, ii] == 1.0
+          @test T[ii, ii, ii] == 1
         else
-          @test T[i => ii, j => jj, k => kk] == 0.0
+          @test T[i => ii, j => jj, k => kk] == 0
         end
       end
     end
 
     @testset "Add (Diag uniform + Dense)" begin
-      D = δ(i, j, k)
+      D = δ(i, j, k) * 1.0 # hack, Float64
       A = randomITensor(k, j, i)
 
       R = D + A
@@ -508,16 +508,16 @@ using Test
     end
 
     @testset "Contraction (Diag uniform * Diag uniform, all contracted)" begin
-      D1 = δ(l, i, k, j)
-      D2 = δ(j, l, i, k)
+      D1 = δ(l, i, k, j) * 1.0 # hack, convert to Float64
+      D2 = δ(j, l, i, k) * 1.0
 
       @test D1 * D2 ≈ dense(D1) * dense(D2)
       @test D2 * D1 ≈ dense(D1) * dense(D2)
     end
 
     @testset "Contraction (Diag uniform * Diag uniform, general)" begin
-      D1 = δ(l, i, k, j)
-      D2 = δ(m, k, n, l)
+      D1 = δ(l, i, k, j) * 1.0 # hack convert to Float64
+      D2 = δ(m, k, n, l) * 1.0
 
       @test D1 * D2 ≈ dense(D1) * dense(D2)
       @test D2 * D1 ≈ dense(D1) * dense(D2)

@@ -547,7 +547,7 @@ function delta(eltype::Type{<:Number}, is...)
   return delta(eltype, indices(is...))
 end
 
-delta(is...) = delta(Float64, is...)
+delta(is...) = delta(Bool, is...)
 
 const δ = delta
 
