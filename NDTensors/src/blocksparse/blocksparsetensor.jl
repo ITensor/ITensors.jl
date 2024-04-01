@@ -754,13 +754,13 @@ function permutedims!(
       block_size = permute(size(Tblock), perm)
       # TODO: Make GPU friendly.
       DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(R), datatype(R)))
-      Rblock = tensor(generic_zeros(DenseT, block_size), block_size)
+      Rblock = tensor(generic_zeros(DenseT, prod(block_size)), block_size)
     elseif !Tblock_exists
       # Tblock doesn't exist
       block_size = permute(size(Rblock), invperm(perm))
       # TODO: Make GPU friendly.
       DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(T), datatype(T)))
-      Tblock = tensor(generic_zeros(DenseT, block_size), block_size)
+      Tblock = tensor(generic_zeros(DenseT, prod(block_size)), block_size)
     end
     permutedims!(Rblock, Tblock, perm, f_fac)
     if !Rblock_exists
