@@ -256,6 +256,7 @@ end
 # Returns the offset of the new block added.
 # XXX rename to insertblock!, no need to return offset
 using .TypeParameterAccessors: unwrap_array_type
+using .Expose: expose
 function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
   newdim = blockdim(T, newblock)
   newoffset = nnz(T)
@@ -264,7 +265,7 @@ function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) wh
   new_data = generic_zeros(unwrap_array_type(T), newdim)
   # TODO: `append!` is broken on `Metal` since `resize!`
   # isn't implemented.
-  append!(data(T), new_data)
+  append!(expose(data(T)), new_data)
   return newoffset
 end
 
