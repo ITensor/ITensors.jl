@@ -1,5 +1,3 @@
-using NDTensors.RankFactorization: Spectrum, eigs, entropy, truncerror
-
 export
   # From external modules
   # LinearAlgebra
