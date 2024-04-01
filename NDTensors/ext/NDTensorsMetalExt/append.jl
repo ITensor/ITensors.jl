@@ -1,4 +1,5 @@
-## Right now append! is broken on metal but make this available for when it is working
+## Right now append! is broken on metal because of a missing resize! function
+## but make this available in the next release this will allow metal to work working
 using GPUArraysCore: @allowscalar
 using Metal: MtlArray
 using NDTensors.Expose: Exposed, unexpose
