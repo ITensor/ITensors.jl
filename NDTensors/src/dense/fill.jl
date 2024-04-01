@@ -21,21 +21,26 @@ function generic_randn(StoreT::Type{<:Dense}, dim::Integer=0)
   return generic_randn(default_storagetype(), dim)
 end
 
-function generic_zeros( StoreT::Type{<:Dense}, dim::Integer)
-  return generic_zeros(StoreT, (dim,)) 
-end 
+function generic_zeros(StoreT::Type{<:Dense}, dim::Integer)
+  return generic_zeros(StoreT, (dim,))
+end
 
-using .TypeParameterAccessors: default_type_parameter, parenttype, set_eltype, specify_default_type_parameters, type_parameter
-function generic_zeros( StoreT::Type{<:Dense}, dims::Tuple{Integer})
+using .TypeParameterAccessors:
+  default_type_parameter,
+  parenttype,
+  set_eltype,
+  specify_default_type_parameters,
+  type_parameter
+function generic_zeros(StoreT::Type{<:Dense}, dims::Tuple{Integer})
   StoreT = specify_default_type_parameters(StoreT)
   DataT = specify_type_parameter(type_parameter(StoreT, parenttype), eltype, eltype(StoreT))
-  @assert eltype(StoreT) == eltype(DataT) 
+  @assert eltype(StoreT) == eltype(DataT)
 
-  data = generic_zeros(DataT, dim(dims)) 
-  StoreT = set_datatype(StoreT, typeof(data)) 
-  return StoreT(data) 
-end 
+  data = generic_zeros(DataT, dim(dims))
+  StoreT = set_datatype(StoreT, typeof(data))
+  return StoreT(data)
+end
 
-function generic_zeros(::Type{<:Dense}, ::Tuple{Integer,Integer,Vararg{Integer}} )
-  return error("Can't make a multidimensional `Dense` object.") 
+function generic_zeros(::Type{<:Dense}, ::Tuple{Integer,Integer,Vararg{Integer}})
+  return error("Can't make a multidimensional `Dense` object.")
 end
