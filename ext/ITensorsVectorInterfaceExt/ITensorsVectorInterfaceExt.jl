@@ -2,18 +2,51 @@ module ITensorsVectorInterfaceExt
 using ITensors: ITensors, ITensor
 using VectorInterface: VectorInterface
 
+function VectorInterface.add(a::ITensor, b::ITensor)
+  return a + b
+end
+function VectorInterface.add!(a::ITensor, b::ITensor)
+  a .= a .+ b
+  return a
+end
+function VectorInterface.add!!(a::ITensor, b::ITensor)
+  if promote_type(eltype(a), eltype(b)) <: eltype(a)
+    VectorInterface.add!(a, b)
+  else
+    a = VectorInterface.add(a, b)
+  end
+  return a
+end
+
+function VectorInterface.add(a::ITensor, b::ITensor, α::Number)
+  return a + b * α
+end
+function VectorInterface.add!(a::ITensor, b::ITensor, α::Number)
+  a .= a .+ b .* α
+  return a
+end
+function VectorInterface.add!!(a::ITensor, b::ITensor, α::Number)
+  if promote_type(eltype(a), eltype(b), typeof(α)) <: eltype(a)
+    VectorInterface.add!(a, b, α)
+  else
+    a = VectorInterface.add(a, b, α)
+  end
+  return a
+end
+
 function VectorInterface.add(a::ITensor, b::ITensor, α::Number, β::Number)
-  a′ = copy(a)
-  VectorInterface.add!(a′, b, α, β)
-  return a′
+  return a * β + b * α
 end
 function VectorInterface.add!(a::ITensor, b::ITensor, α::Number, β::Number)
-  # TODO: Optimize this!
-  a .= a * β + b * α
+  a .= a .* β .+ b .* α
   return a
 end
 function VectorInterface.add!!(a::ITensor, b::ITensor, α::Number, β::Number)
-  VectorInterface.add!(a, b, α, β)
+  if promote_type(eltype(a), eltype(b), typeof(α), typeof(β)) <: eltype(a)
+    VectorInterface.add!(a, b, α, β)
+  else
+    a = VectorInterface.add(a, b, α, β)
+  end
   return a
 end
 

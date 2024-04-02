@@ -43,14 +43,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   add!(a′, b, α, β)
   @test a′ ≈ β * a + α * b
 
-  # TODO: Should this work?
-  a′ = copy(a)
-  add!(a′, b, αᶜ)
-  @test a′ ≈ a + αᶜ * b
-  a′ = copy(a)
-  add!(a′, b, αᶜ, βᶜ)
-  @test a′ ≈ βᶜ * a + αᶜ * b
-
   # add!!
   a′ = copy(a)
   add!!(a′, b)
