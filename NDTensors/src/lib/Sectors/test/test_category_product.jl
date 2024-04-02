@@ -74,13 +74,12 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
       sector(; A=U1(2), B=SU2(0), C=Z{2}(0)) => 1,
       sector(; A=U1(2), B=SU2(1), C=Z{2}(0)) => 1,
     ])
-    @test_broken (@inferred quantum_dimension(g)) == 4  # TODO
+    @test (@inferred quantum_dimension(g)) == 4
 
     # non group categories
-    # make no sense, see Ordered Products
     g_fib = gradedrange([sector(; A=Fib("1"), B=Fib("1")) => 1])
     g_ising = gradedrange([sector(; A=Ising("1"), B=Ising("1")) => 1])
-    @test_broken (@inferred quantum_dimension(g_fib)) == 1.0
+    @test (@inferred quantum_dimension(g_fib)) == 1.0
     @test (@inferred quantum_dimension(g_ising)) == 1.0
 
     # mixed product Abelian / NonAbelian / NonGroup
@@ -260,30 +259,16 @@ end
     g = gradedrange([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1])
     @test (@inferred quantum_dimension(g)) == 4
 
-    # NonGroupCategory is strange
+    # NonGroupCategory
     g_fib = gradedrange([(Fib("1") × Fib("1")) => 1])
     g_ising = gradedrange([(Ising("1") × Ising("1")) => 1])
-    # for the next 2 tests, the first one will be broken, the second will pass
-    # it does not matter which one is Fib and which one is Ising
-    # only compilation order matters
-    # I don't understand.
-    @test_broken (@inferred quantum_dimension(g_fib)) == 1.0
-    @test (@inferred quantum_dimension(g_ising)) == 1.0
-
-    # check commenting the two tests above and uncommenting the two below
-    #@test_broken (@inferred quantum_dimension(g_ising)) == 1.0
-    #@test (@inferred quantum_dimension(g_fib)) ==  1.0
-
-    # or even executing the sector-wise test below *before* magically makes the tests pass
     @test (@inferred quantum_dimension((Fib("1") × Fib("1")))) == 1.0
+    @test (@inferred quantum_dimension(g_fib)) == 1.0
+    @test (@inferred quantum_dimension(g_ising)) == 1.0
     @test (@inferred quantum_dimension((Ising("1") × Ising("1")))) == 1.0
 
-    # similar story below: swapping the two tests make both pass.
-    @test_broken (@inferred quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
     @test (@inferred quantum_dimension(U1(1) × Fib("1"))) == 1.0
-    # check commenting above and uncommenting below!
-    # @test (@inferred quantum_dimension(U1(1) × Fib("1"))) == 1.0
-    # @test (@inferred quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
+    @test (@inferred quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
 
     # mixed product Abelian / NonAbelian / NonGroup
     g = gradedrange([

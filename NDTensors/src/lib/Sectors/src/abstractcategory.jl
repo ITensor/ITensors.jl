@@ -20,8 +20,20 @@ function GradedAxes.dual(category_type::Type{<:AbstractCategory})
   return error("`dual` not defined for type $(category_type).")
 end
 
+quantum_dimension(c::AbstractCategory) = quantum_dimension(SymmetryStyle(c), c)
+
 function quantum_dimension(::SymmetryStyle, c::AbstractCategory)
   return error("method `quantum_dimension` not defined for type $(typeof(c))")
+end
+
+function quantum_dimension(g::AbstractUnitRange)
+  if SymmetryStyle(g) == AbelianGroup()
+    return length(g)
+  end
+
+  mult = LabelledNumbers.unlabel.(BlockArrays.blocklengths(g))
+  dims = quantum_dimension.(LabelledNumbers.label.(BlockArrays.blocklengths(g)))
+  return sum(m * d for (m, d) in zip(mult, dims))
 end
 
 quantum_dimension(::AbelianGroup, ::AbstractCategory) = 1
