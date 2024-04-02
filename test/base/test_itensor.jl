@@ -1528,6 +1528,11 @@ end
           end
         end
       end
+      @testset "Test polar type safety" begin
+        U, P, u = polar(A, (k, l))
+        @test eltype(U) == eltype(A)
+        @test eltype(P) == eltype(A)
+      end
 
       @testset "Test Hermitian eigendecomposition of an ITensor" begin
         is = IndexSet(i, j)
