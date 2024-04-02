@@ -7,6 +7,11 @@ struct SU{N} <: AbstractCategory
   # Gelfand-Tsetlin (GT) pattern describing
   # an SU(N) irrep
   #TODO: any way this could be NTuple{N-1,Int} ?
+  # not in a natural way
+  # see https://discourse.julialang.org/t/addition-to-parameter-of-parametric-type/20059/15
+  # and https://github.com/JuliaLang/julia/issues/8472
+  # can use https://github.com/vtjnash/ComputedFieldTypes.jl
+  # can define SU{N,M} and impose M=N-1 in the constructor
   l::NTuple{N,Int}
 end
 

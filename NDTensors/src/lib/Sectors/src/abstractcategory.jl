@@ -20,6 +20,13 @@ function GradedAxes.dual(category_type::Type{<:AbstractCategory})
   return error("`dual` not defined for type $(category_type).")
 end
 
+function quantum_dimension(::SymmetryStyle, c::AbstractCategory)
+  return error("method `quantum_dimension` not defined for type $(typeof(c))")
+end
+
+quantum_dimension(::AbelianGroup, ::AbstractCategory) = 1
+quantum_dimension(::EmptyCategory, ::AbstractCategory) = 0
+
 # ================  fusion rule interface ====================
 function label_fusion_rule(category_type::Type{<:AbstractCategory}, l1, l2)
   return error("`label_fusion_rule` not defined for type $(category_type).")
