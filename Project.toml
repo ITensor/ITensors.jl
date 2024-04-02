@@ -40,6 +40,9 @@ VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 [extensions]
 ITensorsVectorInterfaceExt = "VectorInterface"
 
+[extras]
+VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
+
 [compat]
 Adapt = "3.5, 4"
 BitIntegers = "0.2, 0.3"
