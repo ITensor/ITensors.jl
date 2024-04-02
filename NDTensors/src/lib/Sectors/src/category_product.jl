@@ -181,13 +181,11 @@ function fusion_rule(
     return sector(key => fused)
   end
   la = fused[1]
-  v = [sector(key => LabelledNumbers.label(la)) => LabelledNumbers.unlabel(la)]
-  for la in blocklengths(fused[2:end])
+  v = Vector{Pair{CategoryProduct{NT},Int64}}()
+  for la in blocklengths(fused)
     push!(v, sector(key => LabelledNumbers.label(la)) => LabelledNumbers.unlabel(la))
   end
   g = GradedAxes.gradedrange(v)
-
-  #g = GradedAxes.gradedrange(set_name.(BlockArrays.blocklengths(fused)))
   return g
 end
 

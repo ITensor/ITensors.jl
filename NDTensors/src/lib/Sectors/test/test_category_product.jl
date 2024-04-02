@@ -153,7 +153,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     ı = Fib("1")
     τ = Fib("τ")
     s = sector(; A=ı, B=ı)
-    @test_broken @inferred(s ⊗ s) == gradedrange([s => 1])  # TODO
+    @test @inferred(s ⊗ s) == gradedrange([s => 1])
 
     s = sector(; A=τ, B=τ)
     @test @inferred(s ⊗ s) == gradedrange([
@@ -187,7 +187,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     q22 = (N=U1(2),) × (J=SU2(2),)
 
     @test @inferred(q1h ⊗ q1h) == gradedrange([q20 => 1, q21 => 1])
-    @test_broken @inferred(q10 ⊗ q1h) == gradedrange([q2h => 1])  # TODO
+    @test @inferred(q10 ⊗ q1h) == gradedrange([q2h => 1])
     @test @inferred(q0h ⊗ q1h) == gradedrange([q10 => 1, q11 => 1])
     @test @inferred(q11 ⊗ q11) == gradedrange([q20 => 1, q21 => 1, q22 => 1])
   end
