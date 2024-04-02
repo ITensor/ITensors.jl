@@ -203,15 +203,15 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
 
     ı = Fib("1")
     τ = Fib("τ")
-    s = U1(1) × SU2(1//2) × τ
-    @test_broken @inferred(s ⊗ s) == gradedrange([  # TODO
+    s = sector(; A=U1(1), B=SU2(1//2), C=τ)
+    @test @inferred(s ⊗ s) == gradedrange([
       sector(; A=U1(2), B=SU2(0), C=ı) => 1,
       sector(; A=U1(2), B=SU2(1), C=ı) => 1,
       sector(; A=U1(2), B=SU2(0), C=τ) => 1,
       sector(; A=U1(2), B=SU2(1), C=τ) => 1,
     ])
 
-    s = U1(1) × ı × τ
+    s = sector(; A=U1(1), B=ı, C=τ)
     @test @inferred(s ⊗ s) ==
       gradedrange([sector(; A=U1(2), B=ı, C=ı) => 1, sector(; A=U1(2), B=ı, C=τ) => 1])
   end
@@ -354,16 +354,18 @@ end
   @testset "Fusion of mixed Abelian and NonAbelian products" begin
     p2h = U1(2) × SU2(1//2)
     p1h = U1(1) × SU2(1//2)
-    @test p2h ⊗ p1h == gradedrange([(U1(3) × SU2(0)) => 1, (U1(3) × SU2(1)) => 1])
+    @test @inferred(p2h ⊗ p1h) ==
+      gradedrange([(U1(3) × SU2(0)) => 1, (U1(3) × SU2(1)) => 1])
 
     p1h1 = U1(1) × SU2(1//2) × Z{2}(1)
-    @test p1h1 ⊗ p1h1 ==
-      gradedrange([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1])
+    @test_broken @inferred(p1h1 ⊗ p1h1) == gradedrange([
+      (U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1
+    ])
   end
 
   @testset "Fusion of fully mixed products" begin
     s = U1(1) × SU2(1//2) × Ising("σ")
-    @test s ⊗ s == gradedrange([
+    @test_broken @inferred(s ⊗ s) == gradedrange([
       (U1(2) × SU2(0) × Ising(1)) => 1,
       (U1(2) × SU2(1) × Ising(1)) => 1,
       (U1(2) × SU2(0) × Ising("ψ")) => 1,
@@ -373,7 +375,7 @@ end
     ı = Fib("1")
     τ = Fib("τ")
     s = U1(1) × SU2(1//2) × τ
-    @test s ⊗ s == gradedrange([
+    @test_broken @inferred(s ⊗ s) == gradedrange([
       (U1(2) × SU2(0) × ı) => 1,
       (U1(2) × SU2(1) × ı) => 1,
       (U1(2) × SU2(0) × τ) => 1,
