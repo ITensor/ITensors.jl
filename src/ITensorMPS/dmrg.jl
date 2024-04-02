@@ -419,7 +419,7 @@ function dmrg_solver(
   return solver
 end
 
-function alternating_update_dmrg(
+function itensortdvp_dmrg(
   H,
   psi0::MPS;
   ishermitian=default_ishermitian(),

@@ -22,7 +22,7 @@ Keyword arguments:
     ```
     See `KrylovKit.jl` documentation for more details on available keyword arguments.
 """
-function KrylovKit.linsolve(
+function itensortdvp_linsolve(
   A::MPO,
   b::MPS,
   x₀::MPS,
