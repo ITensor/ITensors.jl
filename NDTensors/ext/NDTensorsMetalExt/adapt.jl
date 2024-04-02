@@ -4,8 +4,8 @@ using NDTensors.TypeParameterAccessors: specify_type_parameters, type_parameters
 
 GPUArraysCoreExtensions.cpu(e::Exposed{<:MtlArray}) = adapt(Array, e)
 
-function MetalExtensions.mtl(xs; storage=DefaultStorageMode)
-  return adapt(set_storagemode(MtlArray, storage), xs)
+function MetalExtensions.mtl(xs; storagemode=DefaultStorageMode)
+  return adapt(set_storagemode(MtlArray, storagemode), xs)
 end
 
 # More general than the version in Metal.jl
