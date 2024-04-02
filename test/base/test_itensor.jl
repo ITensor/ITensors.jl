@@ -1512,7 +1512,12 @@ end
 
       @testset "Test polar decomposition of an ITensor" begin
         U, P, u = polar(A, (k, l))
+
+        @test eltype(U) == eltype(A)
+        @test eltype(P) == eltype(A)
+
         @test A ≈ U * P atol = atol
+
         #Note: this is only satisfied when left dimensions
         #are greater than right dimensions
         UUᵀ = U * dag(prime(U, u))
