@@ -22,6 +22,7 @@ ITensors.disable_threaded_blocksparse()
       "ITensorChainRules",
       "ITensorNetworkMaps",
       "ITensorsObserversExt",
+      "ITensorsVectorInterfaceExt",
     ]
     @time for dir in dirs
       println("\nTest $(@__DIR__)/$(dir)")

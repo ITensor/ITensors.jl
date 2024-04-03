@@ -213,7 +213,9 @@ include("packagecompile/compile.jl")
 #
 include("developer_tools.jl")
 
+using PackageExtensionCompat: @require_extensions
 function __init__()
+  @require_extensions
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 end
 
