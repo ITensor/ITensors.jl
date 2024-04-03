@@ -1,2 +1,16 @@
-# Implemented in `ITensorGPU` and NDTensorCUDA
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
+using NDTensors.GPUArraysCoreExtensions: storagemode
+# Implemented in `ITensorGPU` and NDTensorsMetalExt
 function mtl end
+
+## Here we need an MtlArrayAdaptor because the MtlArrayAdaptor provided by Metal
+## converts 64 bit numbers to 32 bit.  We cannot write `adapt(MtlArray, x)` because this
+## Will not allow us to properly utilize the buffer preference without changing the value of
+## default_buffertype. Also `adapt(MtlArray{<:Any, <:Any, Buffertype})` fails to work properly 
+
+struct MtlArrayAdaptor{B} end
+
+## TODO remove TypeParameterAccessors when SetParameters is removed
+function TypeParameterAccessors.position(::Type{<:MtlArrayAdaptor}, ::typeof(storagemode))
+  return Position(1)
+end

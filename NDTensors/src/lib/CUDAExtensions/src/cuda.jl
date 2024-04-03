@@ -1,4 +1,4 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 using NDTensors.GPUArraysCoreExtensions: storagemode
 # Implemented in `ITensorGPU` and NDTensorsCUDAExt
 function cu end
@@ -11,5 +11,5 @@ struct CuArrayAdaptor{B} end
 
 ## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(::Type{<:CuArrayAdaptor}, ::typeof(storagemode))
-  return TypeParameterAccessors.Position(1)
+  return Position(1)
 end
