@@ -1,17 +1,29 @@
-using NDTensors.MetalExtensions: MetalExtensions
-using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions, set_storagemode
-using NDTensors.TypeParameterAccessors: specify_type_parameters, type_parameters
+using Adapt: Adapt, adapt
+using Functors: fmap
+using Metal: MtlArray, MtlVector, DefaultStorageMode
+using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
+using NDTensors.Expose: Exposed
+using NDTensors.MetalExtensions: MetalExtensions, MtlArrayAdaptor
+using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions
+using NDTensors.TypeParameterAccessors: set_type_parameters, type_parameters
 
 GPUArraysCoreExtensions.cpu(e::Exposed{<:MtlArray}) = adapt(Array, e)
 
 function MetalExtensions.mtl(xs; storagemode=DefaultStorageMode)
-  return adapt(set_storagemode(MtlArray, storagemode), xs)
+  return fmap(x -> adapt(MtlArrayAdaptor{storagemode}(), x), xs)
 end
 
-# More general than the version in Metal.jl
-## TODO Rewrite this using a custom `MtlArrayAdaptor` which will be written in  `MetalExtensions`.
-function Adapt.adapt_storage(arraytype::Type{<:MtlArray}, xs::AbstractArray)
-  params = type_parameters(xs)
-  arraytype_specified = specify_type_parameters(arraytype, params)
-  return isbitstype(typeof(xs)) ? xs : convert(arraytype_specified, xs)
+function Adapt.adapt_storage(adaptor::MtlArrayAdaptor, xs::AbstractArray)
+  new_parameters = (type_parameters(xs, (eltype, ndims))..., storagemode(adaptor))
+  mtltype = set_type_parameters(MtlArray, (eltype, ndims, storagemode), new_parameters)
+  return isbits(xs) ? xs : adapt(mtltype, xs)
+end
+
+function NDTensors.adapt_storagetype(
+  adaptor::MtlArrayAdaptor, ::Type{EmptyStorage{ElT,StoreT}}
+) where {ElT,StoreT}
+  mtltype = set_type_parameters(
+    MtlVector, (eltype, storagemode), (ElT, storagemode(adaptor))
+  )
+  return emptytype(adapt_storagetype(mtltype, StoreT))
 end
