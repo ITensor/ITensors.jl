@@ -18,8 +18,8 @@ using Observers: observer
   obs = observer(iteration)
   niter = 100
   iterative_function(niter; (observer!)=obs, observe_step=10)
-  
-  @test size(obs) == (10,1)
+
+  @test size(obs) == (10, 1)
 end
 
 end
