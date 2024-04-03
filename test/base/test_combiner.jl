@@ -261,5 +261,3 @@ using Combinatorics: permutations
     @test B == A
   end
 end
-
-nothing

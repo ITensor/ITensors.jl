@@ -3,7 +3,7 @@ module ITensorNetworkMaps
 using ..ITensors
 using LinearMaps
 
-using ITensors: promote_itensor_eltype
+import ITensors.ITensorMPS: promote_itensor_eltype
 
 import Base: *
 

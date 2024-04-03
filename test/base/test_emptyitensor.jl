@@ -101,5 +101,3 @@ end
   A = ITensor(i', dag(i))
   @test NDTensors.tensor(zero(A)) isa typeof(NDTensors.tensor(A))
 end
-
-nothing

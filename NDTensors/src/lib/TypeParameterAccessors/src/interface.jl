@@ -19,4 +19,4 @@ of the specified type with default values.
 This function should output a Tuple of the default values, with exactly
 one for each type parameter slot of the type.
 """
-function default_parameters end
+function default_type_parameters end

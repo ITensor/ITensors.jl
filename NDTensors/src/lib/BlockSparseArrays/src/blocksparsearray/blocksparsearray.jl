@@ -16,6 +16,9 @@ struct BlockSparseArray{
   axes::Axes
 end
 
+const BlockSparseMatrix{T,A,Blocks,Axes} = BlockSparseArray{T,2,A,Blocks,Axes}
+const BlockSparseVector{T,A,Blocks,Axes} = BlockSparseArray{T,1,A,Blocks,Axes}
+
 function BlockSparseArray(
   block_data::Dictionary{<:Block{N},<:AbstractArray{<:Any,N}},
   axes::Tuple{Vararg{AbstractUnitRange,N}},
@@ -101,16 +104,17 @@ end
 # Base `AbstractArray` interface
 Base.axes(a::BlockSparseArray) = a.axes
 
-# BlockArrays `AbstractBlockArray` interface
-BlockArrays.blocks(a::BlockSparseArray) = a.blocks
+# BlockArrays `AbstractBlockArray` interface.
+# This is used by `blocks(::BlockSparseArrayLike)`.
+blocksparse_blocks(a::BlockSparseArray) = a.blocks
 
-# TODO: Use `SetParameters`.
+# TODO: Use `TypeParameterAccessors`.
 blockstype(::Type{<:BlockSparseArray{<:Any,<:Any,<:Any,B}}) where {B} = B
 
-# Base interface
-function Base.similar(
-  a::AbstractBlockSparseArray, elt::Type, axes::Tuple{Vararg{BlockedUnitRange}}
-)
-  # TODO: Preserve GPU data!
-  return BlockSparseArray{elt}(undef, axes)
-end
+## # Base interface
+## function Base.similar(
+##   a::AbstractBlockSparseArray, elt::Type, axes::Tuple{Vararg{BlockedUnitRange}}
+## )
+##   # TODO: Preserve GPU data!
+##   return BlockSparseArray{elt}(undef, axes)
+## end

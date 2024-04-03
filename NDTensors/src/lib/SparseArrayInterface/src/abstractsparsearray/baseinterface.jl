@@ -11,7 +11,14 @@ function Base.getindex(a::AbstractSparseArray, I...)
 end
 
 # Fixes ambiguity error with `ArrayLayouts`.
-function Base.getindex(a::AbstractSparseArray, I1::AbstractVector, I2::AbstractVector)
+function Base.getindex(a::AbstractSparseMatrix, I1::AbstractVector, I2::AbstractVector)
+  return SparseArrayInterface.sparse_getindex(a, I1, I2)
+end
+
+# Fixes ambiguity error with `ArrayLayouts`.
+function Base.getindex(
+  a::AbstractSparseMatrix, I1::AbstractUnitRange, I2::AbstractUnitRange
+)
   return SparseArrayInterface.sparse_getindex(a, I1, I2)
 end
 

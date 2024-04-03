@@ -1,5 +1,5 @@
 using LinearAlgebra: BlasFloat
-using .Unwrap: expose
+using .Expose: expose
 
 # TODO: Delete these exports
 export backend_auto, backend_blas, backend_generic

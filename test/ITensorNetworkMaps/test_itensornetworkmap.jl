@@ -1,10 +1,14 @@
-using Test
-using ITensors
-using ITensors.ITensorNetworkMaps
+@eval module $(gensym())
+using Test: @test, @testset
+using ITensors: ITensors, dag, prime, randomITensor
+using ITensors.ITensorMPS: linkinds
+using ITensors.ITensorNetworkMaps: input_inds
 using KrylovKit: eigsolve
 using LinearAlgebra
+using Random: randn!
 
-include(joinpath(@__DIR__, "utils", "utils.jl"))
+include(joinpath(@__DIR__, "utils", "TestITensorNetworkMapsUtils.jl"))
+using .TestITensorNetworkMapsUtils: infmps, transfer_matrices, transfer_matrix
 
 @testset "ITensorNetworkMaps.jl" begin
   N = 3 # Number of sites in the unit cell
@@ -46,4 +50,5 @@ include(joinpath(@__DIR__, "utils", "utils.jl"))
   for n in 1:length(dk)
     @test norm((T - dk[n]I)(vk[n])) ≈ 0 atol = 1e-10
   end
+end
 end

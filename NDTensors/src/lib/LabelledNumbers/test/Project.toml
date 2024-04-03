@@ -1,0 +1,3 @@
+[deps]
+NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

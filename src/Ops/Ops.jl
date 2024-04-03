@@ -142,7 +142,7 @@ function sites(a::Union{Sum,Prod})
   for n in 1:length(a)
     s = s ∪ sites(a[n])
   end
-  return sort(map(identity, s))
+  return map(identity, s)
 end
 sites(a::Scaled{C,<:Sum}) where {C} = sites(argument(a))
 sites(a::Scaled{C,<:Prod}) where {C} = sites(argument(a))

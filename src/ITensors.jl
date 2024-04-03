@@ -53,26 +53,7 @@ module ITensors
 #####################################
 # External packages
 #
-using Adapt
-using BitIntegers
-using ChainRulesCore
-using Compat
-using DocStringExtensions
-using Functors
-using HDF5
-using IsApprox
-using KrylovKit
-using LinearAlgebra
-using NDTensors
-using PackageCompiler
-using Pkg
-using Printf
-using Random
-using SerializedElementArrays
-using StaticArrays
-using TimerOutputs
-using TupleTools
-using Zeros
+include("usings.jl")
 
 #####################################
 # General utility functions
@@ -137,7 +118,6 @@ include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
-include("iterativesolvers.jl")
 include("adapt.jl")
 include("set_types.jl")
 
@@ -163,30 +143,6 @@ include("nullspace.jl")
 include("Ops/ops_itensor.jl")
 
 #####################################
-# MPS/MPO
-#
-include("mps/abstractmps.jl")
-include("mps/deprecated.jl")
-include("mps/mps.jl")
-include("mps/mpo.jl")
-include("mps/sweeps.jl")
-include("mps/abstractprojmpo/abstractprojmpo.jl")
-include("mps/abstractprojmpo/projmpo.jl")
-include("mps/abstractprojmpo/diskprojmpo.jl")
-include("mps/abstractprojmpo/projmposum.jl")
-include("mps/abstractprojmpo/projmps.jl")
-include("mps/abstractprojmpo/projmpo_mps.jl")
-include("mps/observer.jl")
-include("mps/dmrg.jl")
-include("mps/adapt.jl")
-
-#####################################
-# ITensorsNamedDimsArraysExt
-# Requires `AbstractMPS`.
-include("ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
-using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
-
-#####################################
 # Physics
 #
 include("physics/sitetype.jl")
@@ -202,11 +158,18 @@ include("physics/site_types/tj.jl")
 include("physics/site_types/qudit.jl") # EXPERIMENTAL
 include("physics/site_types/boson.jl") # EXPERIMENTAL
 include("physics/fermions.jl")
-include("physics/autompo/matelem.jl")
-include("physics/autompo/qnmatelem.jl")
-include("physics/autompo/opsum_to_mpo_generic.jl")
-include("physics/autompo/opsum_to_mpo.jl")
-include("physics/autompo/opsum_to_mpo_qn.jl")
+
+#####################################
+# MPS/MPO
+#
+include("ITensorMPS/ITensorMPS.jl")
+@reexport using .ITensorMPS
+
+#####################################
+# ITensorsNamedDimsArraysExt
+# Requires `AbstractMPS`.
+include("ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
+using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
 
 #####################################
 # Trotter-Suzuki decomposition
@@ -250,7 +213,9 @@ include("packagecompile/compile.jl")
 #
 include("developer_tools.jl")
 
+using PackageExtensionCompat: @require_extensions
 function __init__()
+  @require_extensions
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 end
 

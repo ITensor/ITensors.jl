@@ -4,6 +4,9 @@
 module TestITensorDMRG
 using ITensors
 using NDTensors
+using NDTensors.AMDGPUExtensions: roc
+using NDTensors.CUDAExtensions: cu
+using NDTensors.MetalExtensions: mtl
 using Random
 
 reference_energies = Dict([
@@ -11,7 +14,14 @@ reference_energies = Dict([
 ])
 
 is_broken(dev, elt::Type, conserve_qns::Val) = false
-is_broken(dev::typeof(NDTensors.cu), elt::Type, conserve_qns::Val{true}) = true
+
+## Disable blocksparse GPU testing on CUDA, Metal and ROC backends.
+## Currently Metal fails because we are waiting for `resize!` to be added. Should be in the next metal release
+## CUDA fails because there is no defined `append!`.
+## ROC fails because TODO determine again why roc fails.
+is_broken(dev::typeof(cu), elt::Type, conserve_qns::Val{true}) = true
+is_broken(dev::typeof(mtl), elt::Type, conserve_qns::Val{true}) = true
+is_broken(dev::typeof(roc), elt::Type, conserve_qns::Val{true}) = true
 
 include("dmrg.jl")
 

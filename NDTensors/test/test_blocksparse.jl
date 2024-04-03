@@ -234,7 +234,7 @@ using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
   @testset "svd on $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
     elt in (Float32, Float64)
 
-    if dev == NDTensors.mtl && elt == Float64
+    if !is_supported_eltype(dev, elt)
       continue
     end
     @testset "svd example 1" begin

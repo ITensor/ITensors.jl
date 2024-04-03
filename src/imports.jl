@@ -110,7 +110,7 @@ import LinearAlgebra:
   tr,
   transpose
 
-using ITensors.NDTensors.Unwrap: cpu
+using ITensors.NDTensors.Expose: cpu
 
 using ITensors.NDTensors:
   Algorithm,
@@ -119,7 +119,6 @@ using ITensors.NDTensors:
   _Tuple,
   _NTuple,
   blas_get_num_threads,
-  cu,
   disable_auto_fermion,
   double_precision,
   eachblock,
@@ -133,7 +132,7 @@ using ITensors.NDTensors:
   timer,
   using_auto_fermion
 
-using ITensors.NDTensors.SetParameters: get_parameters, set_eltype, specify_parameters
+using NDTensors.CUDAExtensions: cu
 
 import ITensors.NDTensors:
   # Modules
@@ -172,7 +171,6 @@ import ITensors.NDTensors:
   permuteblocks,
   polar,
   ql,
-  scalartype,
   scale!,
   setblock!,
   setblockdim!,
@@ -189,8 +187,6 @@ import ITensors.NDTensors:
   # Deprecated
   addblock!,
   store
-
-using NDTensors.Unwrap: unwrap_type
 
 import ITensors.Ops: Prod, Sum, terms
 

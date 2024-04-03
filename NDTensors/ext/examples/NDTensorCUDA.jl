@@ -1,5 +1,6 @@
 using NDTensors
-using CUDA: CUDA, CuVector, cu, reshape
+using NDTensors.CUDAExtensions: cu
+using CUDA: CUDA, CuVector, reshape
 using ITensors:
   Index, ITensor, randomMPO, randomMPS, inner, orthogonalize, qr, siteinds, svd
 using Test: @test
@@ -8,7 +9,7 @@ using Zygote: gradient
 function main()
   # using ITensorGPU
   cpu = NDTensors.cpu
-  gpu = NDTensors.cu
+  gpu = cu
   # Here is an example of how to utilize NDTensors based tensors with CUDA datatypes
   i = Index(2)
   j = Index(5)

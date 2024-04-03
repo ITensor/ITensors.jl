@@ -12,5 +12,3 @@ end
   tL = triangular_lattice(3, 4; yperiodic=true)
   @test length(tL) == 28 # inc. periodic vertical bonds
 end
-
-nothing
