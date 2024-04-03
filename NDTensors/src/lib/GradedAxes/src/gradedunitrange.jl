@@ -8,7 +8,7 @@ using BlockArrays:
   blockedrange,
   BlockIndexRange,
   blockfirsts,
-  blocklasts,
+  blockisequal,
   blocklength,
   blocklengths,
   findblock,
@@ -44,6 +44,11 @@ function blockedunitrange_findblockindex(a::BlockedUnitRange, index::Integer)
 end
 
 const GradedUnitRange{BlockLasts<:Vector{<:LabelledInteger}} = BlockedUnitRange{BlockLasts}
+
+# == is just a range comparison that ignores labels. Need dedicated function to check equality.
+function gradedisequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
+end
 
 # TODO: Use `TypeParameterAccessors`.
 Base.eltype(::Type{<:GradedUnitRange{<:Vector{T}}}) where {T} = T

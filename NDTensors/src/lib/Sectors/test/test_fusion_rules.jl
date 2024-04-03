@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using NDTensors.GradedAxes: fuse_labels, gradedrange, tensor_product
+using NDTensors.GradedAxes: fuse_labels, gradedisequal, gradedrange, tensor_product
 using NDTensors.Sectors: ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension
 using Test: @inferred, @test, @testset, @test_throws
 
@@ -34,11 +34,11 @@ using Test: @inferred, @test, @testset, @test_throws
     j4 = SU2(3//2)
     j5 = SU2(2)
 
-    @test j1 ⊗ j2 == gradedrange([j2 => 1])
-    @test j2 ⊗ j2 == gradedrange([j1 => 1, j3 => 1])
-    @test j2 ⊗ j3 == gradedrange([j2 => 1, j4 => 1])
-    @test j3 ⊗ j3 == gradedrange([j1 => 1, j3 => 1, j5 => 1])
-    @test (@inferred j1 ⊗ j2) == gradedrange([j2 => 1])
+    @test gradedisequal(j1 ⊗ j2, gradedrange([j2 => 1]))
+    @test gradedisequal(j2 ⊗ j2, gradedrange([j1 => 1, j3 => 1]))
+    @test gradedisequal(j2 ⊗ j3, gradedrange([j2 => 1, j4 => 1]))
+    @test gradedisequal(j3 ⊗ j3, gradedrange([j1 => 1, j3 => 1, j5 => 1]))
+    @test gradedisequal((@inferred j1 ⊗ j2), gradedrange([j2 => 1]))
     @test (@inferred quantum_dimension(j1 ⊗ j2)) == 2
   end
 
@@ -49,21 +49,21 @@ using Test: @inferred, @test, @testset, @test_throws
     j4 = SU{2}(4)
     j5 = SU{2}(5)
 
-    @test j1 ⊗ j2 == gradedrange([j2 => 1])
-    @test j2 ⊗ j2 == gradedrange([j1 => 1, j3 => 1])
-    @test j2 ⊗ j3 == gradedrange([j2 => 1, j4 => 1])
-    @test j3 ⊗ j3 == gradedrange([j1 => 1, j3 => 1, j5 => 1])
-    @test (@inferred j1 ⊗ j2) == gradedrange([j2 => 1])
+    @test gradedisequal(j1 ⊗ j2, gradedrange([j2 => 1]))
+    @test gradedisequal(j2 ⊗ j2, gradedrange([j1 => 1, j3 => 1]))
+    @test gradedisequal(j2 ⊗ j3, gradedrange([j2 => 1, j4 => 1]))
+    @test gradedisequal(j3 ⊗ j3, gradedrange([j1 => 1, j3 => 1, j5 => 1]))
+    @test gradedisequal((@inferred j1 ⊗ j2), gradedrange([j2 => 1]))
   end
 
   @testset "Fibonacci fusion rules" begin
     ı = Fib("1")
     τ = Fib("τ")
 
-    @test ı ⊗ ı == gradedrange([ı => 1])
-    @test ı ⊗ τ == gradedrange([τ => 1])
-    @test τ ⊗ ı == gradedrange([τ => 1])
-    @test (@inferred τ ⊗ τ) == gradedrange([ı => 1, τ => 1])
+    @test gradedisequal(ı ⊗ ı, gradedrange([ı => 1]))
+    @test gradedisequal(ı ⊗ τ, gradedrange([τ => 1]))
+    @test gradedisequal(τ ⊗ ı, gradedrange([τ => 1]))
+    @test gradedisequal((@inferred τ ⊗ τ), gradedrange([ı => 1, τ => 1]))
     @test (@inferred quantum_dimension(gradedrange([ı => 1, ı => 1]))) == 2.0
   end
 
@@ -72,16 +72,16 @@ using Test: @inferred, @test, @testset, @test_throws
     σ = Ising("σ")
     ψ = Ising("ψ")
 
-    @test ı ⊗ ı == gradedrange([ı => 1])
-    @test ı ⊗ σ == gradedrange([σ => 1])
-    @test σ ⊗ ı == gradedrange([σ => 1])
-    @test ı ⊗ ψ == gradedrange([ψ => 1])
-    @test ψ ⊗ ı == gradedrange([ψ => 1])
-    @test σ ⊗ σ == gradedrange([ı => 1, ψ => 1])
-    @test σ ⊗ ψ == gradedrange([σ => 1])
-    @test ψ ⊗ σ == gradedrange([σ => 1])
-    @test ψ ⊗ ψ == gradedrange([ı => 1])
-    @test (@inferred ψ ⊗ ψ) == gradedrange([ı => 1])
+    @test gradedisequal(ı ⊗ ı, gradedrange([ı => 1]))
+    @test gradedisequal(ı ⊗ σ, gradedrange([σ => 1]))
+    @test gradedisequal(σ ⊗ ı, gradedrange([σ => 1]))
+    @test gradedisequal(ı ⊗ ψ, gradedrange([ψ => 1]))
+    @test gradedisequal(ψ ⊗ ı, gradedrange([ψ => 1]))
+    @test gradedisequal(σ ⊗ σ, gradedrange([ı => 1, ψ => 1]))
+    @test gradedisequal(σ ⊗ ψ, gradedrange([σ => 1]))
+    @test gradedisequal(ψ ⊗ σ, gradedrange([σ => 1]))
+    @test gradedisequal(ψ ⊗ ψ, gradedrange([ı => 1]))
+    @test gradedisequal((@inferred ψ ⊗ ψ), gradedrange([ı => 1]))
     @test (@inferred quantum_dimension(σ ⊗ σ)) == 2.0
   end
 end
@@ -89,14 +89,16 @@ end
   @testset "GradedUnitRange fusion rules" begin
     g1 = gradedrange([U1(1) => 1, U1(2) => 2])
     g2 = gradedrange([U1(-1) => 2, U1(0) => 1, U1(1) => 2])
-    @test (@inferred tensor_product(g1, g2)) ==
-      gradedrange([U1(0) => 2, U1(1) => 5, U1(2) => 4, U1(3) => 4])
+    @test gradedisequal(
+      (@inferred tensor_product(g1, g2)),
+      gradedrange([U1(0) => 2, U1(1) => 5, U1(2) => 4, U1(3) => 4]),
+    )
 
     g3 = gradedrange([SU2(0) => 1, SU2(1//2) => 2, SU2(1) => 1])
     g4 = gradedrange([SU2(1//2) => 1, SU2(1) => 2])
-    @test @inferred(
-      tensor_product(g3, g4) ==
-        gradedrange([SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2])
+    @test gradedisequal(
+      (@inferred tensor_product(g3, g4)),
+      gradedrange([SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2]),
     )
 
     # test different categories cannot be fused
