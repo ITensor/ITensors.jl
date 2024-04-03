@@ -225,4 +225,14 @@ end
 #  _precompile_()
 #end
 
+
+
+#
+# See section on "Transition from normal dependency to extension"
+# in https://pkgdocs.julialang.org/v1/creating-packages
+#
+if !isdefined(Base, :get_extension)
+  include("../ext/ITensorsObserversExt.jl")
+end
+
 end # module ITensors

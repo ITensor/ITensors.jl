@@ -33,6 +33,15 @@ TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
+[weakdeps]
+Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
+
+[extensions]
+ITensorsObserversExt = "Observers"
+
+[extras]
+Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
+
 [compat]
 Adapt = "3.5, 4"
 BitIntegers = "0.2, 0.3"
