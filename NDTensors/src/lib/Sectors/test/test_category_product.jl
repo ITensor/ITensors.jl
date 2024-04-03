@@ -75,6 +75,11 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
       sector(; A=U1(2), B=SU2(1), C=Z{2}(0)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 4
+    g = gradedrange([
+      sector(; A=SU2(0), B=Z{2}(0), C=SU2(1//2)) => 1,
+      sector(; A=SU2(0), B=Z{2}(1), C=SU2(1//2)) => 1,
+    ])
+    @test (@inferred quantum_dimension(g)) == 4
 
     # non group categories
     g_fib = gradedrange([sector(; A=Fib("1"), B=Fib("1")) => 1])
@@ -92,10 +97,10 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test @inferred(quantum_dimension(g)) == 8.0
 
     g = gradedrange([
-      sector(; A=U1(2), B=SU2(0), C=Fib("1")) => 1,
-      sector(; A=U1(2), B=SU2(1), C=Fib("1")) => 1,
-      sector(; A=U1(2), B=SU2(0), C=Fib("τ")) => 1,
-      sector(; A=U1(2), B=SU2(1), C=Fib("τ")) => 1,
+      sector(; A=Fib("1"), B=SU2(0), C=U1(2)) => 1,
+      sector(; A=Fib("1"), B=SU2(1), C=U1(2)) => 1,
+      sector(; A=Fib("τ"), B=SU2(0), C=U1(2)) => 1,
+      sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
   end
@@ -258,6 +263,8 @@ end
     # mixed group
     g = gradedrange([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1])
     @test (@inferred quantum_dimension(g)) == 4
+    g = gradedrange([(SU2(0) × U1(0) × SU2(1//2)) => 1, (SU2(0) × U1(1) × SU2(1//2)) => 1])
+    @test (@inferred quantum_dimension(g)) == 4
 
     # NonGroupCategory
     g_fib = gradedrange([(Fib("1") × Fib("1")) => 1])
@@ -280,10 +287,10 @@ end
     @test @inferred(quantum_dimension(g)) == 8.0
 
     g = gradedrange([
-      (U1(2) × SU2(0) × Fib("1")) => 1,
-      (U1(2) × SU2(1) × Fib("1")) => 1,
-      (U1(2) × SU2(0) × Fib("τ")) => 1,
-      (U1(2) × SU2(1) × Fib("τ")) => 1,
+      (Fib("1") × SU2(0) × U1(2)) => 1,
+      (Fib("1") × SU2(1) × U1(2)) => 1,
+      (Fib("τ") × SU2(0) × U1(2)) => 1,
+      (Fib("τ") × SU2(1) × U1(2)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
   end
