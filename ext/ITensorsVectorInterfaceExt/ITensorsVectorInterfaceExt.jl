@@ -93,7 +93,7 @@ function VectorInterface.zerovector(a::ITensor, type::Type{<:Number})
   return a′
 end
 function VectorInterface.zerovector!(a::ITensor)
-  fill!(a, zero(eltype(a)))
+  a .= zero(eltype(a))
   return a
 end
 function VectorInterface.zerovector!!(a::ITensor, type::Type{<:Number})
