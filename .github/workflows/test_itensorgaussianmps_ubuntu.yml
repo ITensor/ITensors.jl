@@ -1,9 +1,11 @@
-name: Run ITensorGaussianMPS tests on push to main
+name: Run ITensorGaussianMPS tests (Ubuntu)
 
 on:
   push:
     branches:
       - main
+    tags: '*'
+  pull_request:
 
 jobs:
   test:
@@ -22,6 +24,9 @@ jobs:
           - '1'
         arch:
           - x64
+        exclude:
+          # MacOS not available on x86
+          - {os: 'macOS-latest', arch: 'x86'}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
