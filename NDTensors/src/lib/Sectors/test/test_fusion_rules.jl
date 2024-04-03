@@ -104,5 +104,21 @@ end
     # test different categories cannot be fused
     @test_throws MethodError tensor_product(g1, g4)
   end
+
+  @testset "Mixed GradedUnitRange - Category fusion rules" begin
+    g1 = gradedrange([U1(1) => 1, U1(2) => 2])
+    g2 = gradedrange([U1(2) => 1, U1(3) => 2])
+    @test gradedisequal((@inferred tensor_product(g1, U1(1))), g2)
+    @test gradedisequal((@inferred tensor_product(U1(1), g1)), g2)
+
+    g3 = gradedrange([SU2(0) => 1, SU2(1//2) => 2])
+    g4 = gradedrange([SU2(0) => 2, SU2(1//2) => 1, SU2(1) => 2])
+    @test gradedisequal((@inferred tensor_product(g3, SU2(1//2))), g4)
+    @test gradedisequal((@inferred tensor_product(SU2(1//2), g3)), g4)
+
+    # test different categories cannot be fused
+    @test_throws MethodError tensor_product(g1, SU2(1))
+    @test_throws MethodError tensor_product(U1(1), g3)
+  end
 end
 end

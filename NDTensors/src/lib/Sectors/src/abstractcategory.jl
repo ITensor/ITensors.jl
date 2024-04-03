@@ -44,7 +44,6 @@ function label_fusion_rule(category_type::Type{<:AbstractCategory}, l1, l2)
   return error("`label_fusion_rule` not defined for type $(category_type).")
 end
 
-# TBD always return GradedUnitRange?
 function fusion_rule(c1::C, c2::C) where {C<:AbstractCategory}
   out = label_fusion_rule(C, label(c1), label(c2))
   if SymmetryStyle(c1) == AbelianGroup()
@@ -82,6 +81,7 @@ function GradedAxes.tensor_product(
 end
 
 # 2. make GradedAxes.fuse_labels return fusion_rule
+# TBD return GradedAxis for AbelianGroup too?
 GradedAxes.fuse_labels(c1::AbstractCategory, c2::AbstractCategory) = c1 ⊗ c2
 
 # 3. promote Category to GradedAxes
@@ -91,7 +91,7 @@ function fusion_rule(c::AbstractCategory, r::AbstractUnitRange)
 end
 
 function fusion_rule(r::AbstractUnitRange, c::AbstractCategory)
-  return fusion_rule(GradedAxes.gradedrange(r, [c => 1]))
+  return fusion_rule(r, GradedAxes.gradedrange([c => 1]))
 end
 
 # 4. define fusion rule for reducible representations
