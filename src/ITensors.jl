@@ -225,8 +225,6 @@ end
 #  _precompile_()
 #end
 
-
-
 #
 # See section on "Transition from normal dependency to extension"
 # in https://pkgdocs.julialang.org/v1/creating-packages
