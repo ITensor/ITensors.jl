@@ -555,7 +555,7 @@ function polar(A::ITensor, Linds...)
   U, S, V = svd(A, Linds...)
   u = commoninds(S, U)
   v = commoninds(S, V)
-  δᵤᵥ′ = δ(u..., v'...)
+  δᵤᵥ′ = δ(eltype(A), u..., v'...)
   Q = U * δᵤᵥ′ * V'
   P = dag(V') * dag(δᵤᵥ′) * S * V
   return Q, P, commoninds(Q, P)

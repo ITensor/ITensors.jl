@@ -1,5 +1,7 @@
-using Observers: Observers
+function update_observer!(observer; kwargs...)
+  return error("Not implemented")
+end
 
-function Observers.update!(observer::AbstractObserver; kwargs...)
+function update_observer!(observer::AbstractObserver; kwargs...)
   return measure!(observer; kwargs...)
 end

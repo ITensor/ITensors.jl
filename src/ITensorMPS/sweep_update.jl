@@ -2,7 +2,6 @@ using ITensors: uniqueinds
 using ITensors.ITensorMPS:
   ITensorMPS, MPS, isortho, orthocenter, orthogonalize!, position!, replacebond!, set_nsite!
 using LinearAlgebra: norm, normalize!, svd
-using Observers: update!
 using Printf: @printf
 
 function sweep_update(
@@ -132,7 +131,7 @@ function sub_sweep_update(
       end
       flush(stdout)
     end
-    update!(
+    update_observer!(
       observer!;
       psi,
       bond=b,

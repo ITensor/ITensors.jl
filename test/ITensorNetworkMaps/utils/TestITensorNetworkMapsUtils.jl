@@ -1,5 +1,7 @@
-using ITensors
-using ITensors.ITensorNetworkMaps
+module TestITensorNetworkMapsUtils
+using ITensors: ITensors, Index, ITensor, commonind, commoninds, dag, prime
+using ITensors.ITensorMPS: linkind, linkinds
+using ITensors.ITensorNetworkMaps: ITensorNetworkMap
 
 struct InfTN
   data::Vector{ITensor}
@@ -17,8 +19,8 @@ function infmps(N; χ⃗, d)
   linkindex(χ⃗, e) = Index(χ⃗[e], "l=$(e[1])↔$(e[2])")
   l⃗ = Dict([e .=> linkindex(χ⃗, e) for e in e⃗])
   s⃗ = [Index(d, "s=$n") for n in n⃗]
-  neigbhors(n, N) = [mod1(n - 1, N) => n, n => mod1(n + 1, N)]
-  return InfTN([ITensor(getindex.(Ref(l⃗), neigbhors(n, N))..., s⃗[n]) for n in n⃗])
+  neighbors(n, N) = [mod1(n - 1, N) => n, n => mod1(n + 1, N)]
+  return InfTN([ITensor(getindex.(Ref(l⃗), neighbors(n, N))..., s⃗[n]) for n in n⃗])
 end
 
 ITensors.dag(tn::InfTN) = InfTN(dag.(tn.data))
@@ -62,4 +64,5 @@ function transfer_matrices(ψ::InfTN)
     T⃗[n] = ITensorNetworkMap([ψ[n], ψ′[n]]; input_inds=right_inds, output_inds=left_inds)
   end
   return T⃗
+end
 end
