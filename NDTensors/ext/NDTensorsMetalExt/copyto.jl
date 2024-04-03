@@ -1,3 +1,6 @@
+using Metal: MtlArray
+using NDTensors.Expose: Exposed, expose, unexpose
+
 function Base.copy(src::Exposed{<:MtlArray,<:Base.ReshapedArray})
   return reshape(copy(parent(src)), size(unexpose(src)))
 end

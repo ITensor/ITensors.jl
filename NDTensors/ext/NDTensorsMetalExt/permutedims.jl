@@ -1,3 +1,4 @@
+using Metal: MtlArray
 ## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted using
 ## permutedims (failing in that Metal uses scalar indexing)
 ## These functions are to address the problem in different instances of permutedims
