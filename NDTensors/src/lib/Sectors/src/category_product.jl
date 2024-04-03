@@ -202,9 +202,9 @@ function fusion_rule(s1::CategoryProduct{Cat}, s2::CategoryProduct{Cat}) where {
   if SymmetryStyle(s1) == EmptyCategory()  # compile-time; simpler than specifying init
     return s1
   end
-  cat1 = categories(s1)
-  cat2 = categories(s2)
-  prod12 = ntuple(i -> cat1[i] ⊗ cat2[i], length(cat1))
-  g = reduce(×, prod12)
+  cats1 = categories(s1)
+  cats2 = categories(s2)
+  fused = map(fusion_rule, cats1, cats2)
+  g = reduce(×, fused)
   return g
 end
