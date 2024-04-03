@@ -4,7 +4,6 @@ using ITensors.ITensorMPS: update_observer!
 using Observers: observer
 
 @testset "ITensorsObserversExt" begin
-
   function iterative_function(niter; observer!, observe_step)
     for n in 1:niter
       if iszero(n % observe_step)
