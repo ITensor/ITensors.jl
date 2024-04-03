@@ -128,7 +128,7 @@ energy, psi = dmrg(H, psi0, sweeps)
 upd = fill(0.0, N)
 dnd = fill(0.0, N)
 for j in 1:N
-  orthogonalize!(psi, j)
+  psi = orthogonalize(psi, j)
   psidag_j = dag(prime(psi[j], "Site"))
   upd[j] = scalar(psidag_j * op(sites, "Nup", j) * psi[j])
   dnd[j] = scalar(psidag_j * op(sites, "Ndn", j) * psi[j])

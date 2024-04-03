@@ -1895,5 +1895,3 @@ Random.seed!(1234)
     @test !ITensors.have_same_qns([QN(0) => 1, QN(0) => 2, QN(("Sz", 2)) => 1])
   end
 end
-
-nothing

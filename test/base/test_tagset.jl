@@ -143,5 +143,3 @@ using ITensors, Test
     ITensors.set_strict_tags!(false)
   end
 end
-
-nothing

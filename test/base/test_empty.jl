@@ -79,5 +79,3 @@ using Test
     @test norm(E - A) < 1E-8
   end
 end
-
-nothing

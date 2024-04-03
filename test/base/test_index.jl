@@ -183,5 +183,3 @@ import ITensors: In, Out, Neither
     @test hastags(ijk, "test2")
   end
 end
-
-nothing

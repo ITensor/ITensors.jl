@@ -1,0 +1,42 @@
+module ITensorMPS
+
+using ..ITensors
+
+include("imports.jl")
+include("exports.jl")
+include("abstractmps.jl")
+include("mps.jl")
+include("mpo.jl")
+include("sweeps.jl")
+include("abstractprojmpo/abstractprojmpo.jl")
+include("abstractprojmpo/projmpo.jl")
+include("abstractprojmpo/diskprojmpo.jl")
+include("abstractprojmpo/projmposum.jl")
+include("abstractprojmpo/projmps.jl")
+include("abstractprojmpo/projmpo_mps.jl")
+include("observer.jl")
+include("dmrg.jl")
+include("adapt.jl")
+include("autompo/matelem.jl")
+include("autompo/qnmatelem.jl")
+include("autompo/opsum_to_mpo_generic.jl")
+include("autompo/opsum_to_mpo.jl")
+include("autompo/opsum_to_mpo_qn.jl")
+include("deprecated.jl")
+
+include("abstractprojmpo/projmpo_apply.jl")
+include("abstractprojmpo/projmps2.jl")
+include("abstractprojmpo/projmpo_mps2.jl")
+include("defaults.jl")
+include("update_observer.jl")
+include("solver_utils.jl")
+include("tdvporder.jl")
+include("tdvpinfo.jl")
+include("sweep_update.jl")
+include("alternating_update.jl")
+include("tdvp.jl")
+include("dmrg_x.jl")
+include("contract_mpo_mps.jl")
+include("linsolve.jl")
+
+end # module ITensorMPS

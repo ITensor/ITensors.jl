@@ -4,14 +4,14 @@ using NDTensors.TypeParameterAccessors:
   TypeParameterAccessors,
   Position,
   TypeParameter,
-  set_parameter,
-  set_parameters,
-  specify_parameter,
-  specify_parameters,
+  set_type_parameter,
+  set_type_parameters,
+  specify_type_parameter,
+  specify_type_parameters,
   type_parameter,
   type_parameters,
-  unspecify_parameter,
-  unspecify_parameters
+  unspecify_type_parameter,
+  unspecify_type_parameters
 include("utils/test_inferred.jl")
 @testset "TypeParameterAccessors basics" begin
   @testset "Get parameters" begin
@@ -27,39 +27,42 @@ include("utils/test_inferred.jl")
     @test_inferred type_parameters(Matrix{Float64}, (Position(2), eltype)) == (2, Float64)
   end
   @testset "Set parameters" begin
-    @test_inferred set_parameter(Array, 1, Float64) == Array{Float64} wrapped = true
-    @test_inferred set_parameter(Array, Position(1), Float64) == Array{Float64}
-    @test_inferred set_parameter(Array, 2, 2) == Matrix wrapped = true
-    @test_inferred set_parameter(Array, eltype, Float32) == Array{Float32}
-    @test_inferred set_parameters(
+    @test_inferred set_type_parameter(Array, 1, Float64) == Array{Float64} wrapped = true
+    @test_inferred set_type_parameter(Array, Position(1), Float64) == Array{Float64}
+    @test_inferred set_type_parameter(Array, 2, 2) == Matrix wrapped = true
+    @test_inferred set_type_parameter(Array, eltype, Float32) == Array{Float32}
+    @test_inferred set_type_parameters(
       Array, (eltype, Position(2)), (TypeParameter(Float32), TypeParameter(3))
     ) == Array{Float32,3}
-    @test_inferred set_parameters(Array, (eltype, 2), (Float32, 3)) == Array{Float32,3} wrapped =
+    @test_inferred set_type_parameters(Array, (eltype, 2), (Float32, 3)) == Array{Float32,3} wrapped =
       true
 
     # TODO: This should infer without wrapping but doesn't.
-    @test_inferred set_parameters(
+    @test_inferred set_type_parameters(
       Array, (eltype, Position(2)), (Float32, TypeParameter(3))
     ) == Array{Float32,3} wrapped = true
   end
   @testset "Specify parameters" begin
-    @test_inferred specify_parameter(Array, 1, Float64) == Array{Float64} wrapped = true
-    @test_inferred specify_parameter(Array, Position(1), Float64) == Array{Float64}
-    @test_inferred specify_parameters(Matrix, (2, 1), (4, Float32)) == Matrix{Float32} wrapped =
+    @test_inferred specify_type_parameter(Array, 1, Float64) == Array{Float64} wrapped =
       true
-    @test_inferred specify_parameters(Array, (Float64, 2)) == Matrix{Float64} wrapped = true
-    @test_inferred specify_parameter(Array, eltype, Float32) == Array{Float32}
-    @test_inferred specify_parameters(Array, (eltype, 2), (Float32, 3)) == Array{Float32,3} wrapped =
+    @test_inferred specify_type_parameter(Array, Position(1), Float64) == Array{Float64}
+    @test_inferred specify_type_parameters(Matrix, (2, 1), (4, Float32)) == Matrix{Float32} wrapped =
       true
+    @test_inferred specify_type_parameters(Array, (Float64, 2)) == Matrix{Float64} wrapped =
+      true
+    @test_inferred specify_type_parameter(Array, eltype, Float32) == Array{Float32}
+    @test_inferred specify_type_parameters(Array, (eltype, 2), (Float32, 3)) ==
+      Array{Float32,3} wrapped = true
   end
   @testset "Unspecify parameters" begin
-    @test_inferred unspecify_parameter(Vector, 2) == Array wrapped = true
-    @test_inferred unspecify_parameter(Vector, Position(2)) == Array
-    @test_inferred unspecify_parameter(Vector{Float64}, eltype) == Vector
-    @test_inferred unspecify_parameters(Vector{Float64}) == Array
-    @test_inferred unspecify_parameters(Vector{Float64}, (eltype, 2)) == Array wrapped =
+    @test_inferred unspecify_type_parameter(Vector, 2) == Array wrapped = true
+    @test_inferred unspecify_type_parameter(Vector, Position(2)) == Array
+    @test_inferred unspecify_type_parameter(Vector{Float64}, eltype) == Vector
+    @test_inferred unspecify_type_parameters(Vector{Float64}) == Array
+    @test_inferred unspecify_type_parameters(Vector{Float64}, (eltype, 2)) == Array wrapped =
       true
-    @test_inferred unspecify_parameters(Vector{Float64}, (eltype, Position(2))) == Array
+    @test_inferred unspecify_type_parameters(Vector{Float64}, (eltype, Position(2))) ==
+      Array
   end
   @testset "On objects" begin
     @test_inferred type_parameter(Val{3}()) == 3

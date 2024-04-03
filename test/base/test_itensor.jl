@@ -1,16 +1,83 @@
-using ITensors
-using LinearAlgebra
-using Test
-
+@eval module $(gensym())
 using Combinatorics: permutations
-
-import Random: seed!
-import ITensors.NDTensors: DenseTensor
+using ITensors:
+  ITensors,
+  Index,
+  IndexSet,
+  ITensor,
+  Order,
+  QN,
+  ⊕,
+  δ,
+  addtags,
+  allhastags,
+  anyhastags,
+  commonind,
+  convert_eltype,
+  convert_leaf_eltype,
+  dag,
+  directsum,
+  eachindval,
+  eachval,
+  filterinds,
+  firstind,
+  hascommoninds,
+  hasind,
+  hasinds,
+  hassameinds,
+  hastags,
+  inner,
+  itensor,
+  mapprime,
+  noprime,
+  onehot,
+  order,
+  permute,
+  prime,
+  product,
+  randomITensor,
+  removetags,
+  replaceind,
+  replaceind!,
+  replaceinds,
+  replaceinds!,
+  replacetags,
+  scalar,
+  setelt,
+  setprime,
+  settags,
+  sim,
+  swapinds,
+  swapinds!,
+  swapprime,
+  uniqueind,
+  uniqueindex,
+  val
+using ITensors.NDTensors:
+  NDTensors,
+  DenseTensor,
+  array,
+  dim,
+  dims,
+  eigen,
+  factorize,
+  ind,
+  inds,
+  matrix,
+  maxdim,
+  mindim,
+  polar,
+  storage,
+  vector
+using LinearAlgebra:
+  LinearAlgebra, axpy!, diag, dot, ishermitian, mul!, norm, nullspace, qr, rmul!, svd, tr
+using Random: Random
+using Test: @test, @test_throws, @testset
 
 # Enable debug checking for these tests
 ITensors.enable_debug_checks()
 
-seed!(12345)
+Random.seed!(12345)
 
 function invdigits(::Type{T}, x...) where {T}
   return T(sum([x[length(x) - k + 1] * 10^(k - 1) for k in 1:length(x)]))
@@ -70,6 +137,15 @@ end
       @test iszero(imag(A))
       @test iszero(ITensor(0.0, i, j))
       @test iszero(ITensor(i, j))
+    end
+
+    elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
+    @testset "ITensors.scalartype (eltype=$elt)" for elt in elts
+      i, j = Index.((2, 2))
+      a = ITensor(elt, i, j)
+      @test ITensors.scalartype(a) === elt
+      a = randomITensor(elt, i, j)
+      @test ITensors.scalartype(a) === elt
     end
 
     @testset "map" begin
@@ -1436,7 +1512,12 @@ end
 
       @testset "Test polar decomposition of an ITensor" begin
         U, P, u = polar(A, (k, l))
+
+        @test eltype(U) == eltype(A)
+        @test eltype(P) == eltype(A)
+
         @test A ≈ U * P atol = atol
+
         #Note: this is only satisfied when left dimensions
         #are greater than right dimensions
         UUᵀ = U * dag(prime(U, u))
@@ -1847,5 +1928,4 @@ end # End Dense ITensor basic functionality
 
 # Disable debug checking once tests are completed
 ITensors.disable_debug_checks()
-
-nothing
+end

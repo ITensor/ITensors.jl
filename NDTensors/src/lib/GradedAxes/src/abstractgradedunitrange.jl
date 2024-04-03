@@ -81,7 +81,7 @@ function tensor_product(
       return fuse(isdual ? dual(l1) : l1, isdual ? dual(l2) : l2)
     end,
   )
-  return gradedrange(a, nondual_sectors_a, isdual)
+  return gradedrange(nondual_sectors_a, a, isdual)
 end
 
 function Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractGradedUnitRange)
@@ -117,10 +117,18 @@ function blockmergesortperm(a::AbstractGradedUnitRange)
   return Block.(groupsortperm(nondual_sectors(a); rev=isdual(a)))
 end
 
-function Base.getindex(a::AbstractGradedUnitRange, I::AbstractVector{<:Block})
+function block_getindex(a::AbstractGradedUnitRange, I::AbstractVector{<:Block{1}})
   nondual_sectors_sub = map(b -> nondual_sector(a, b), I)
   blocklengths_sub = map(b -> length(a, b), I)
   return gradedrange(nondual_sectors_sub, blocklengths_sub, isdual(a))
+end
+
+function Base.getindex(a::AbstractGradedUnitRange, I::AbstractVector{<:Block{1}})
+  return block_getindex(a, I)
+end
+
+function Base.getindex(a::AbstractGradedUnitRange, I::BlockRange{1})
+  return block_getindex(a, I)
 end
 
 function Base.getindex(

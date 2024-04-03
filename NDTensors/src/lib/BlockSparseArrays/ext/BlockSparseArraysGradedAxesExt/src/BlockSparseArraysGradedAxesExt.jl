@@ -2,25 +2,18 @@ module BlockSparseArraysGradedAxesExt
 using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange
 using ..BlockSparseArrays: BlockSparseArrays, block_merge
 using ...GradedAxes:
-  AbstractGradedUnitRange,
-  OneToOne,
-  blockmergesortperm,
-  blocksortperm,
-  invblockperm,
-  tensor_product
+  GradedUnitRange, OneToOne, blockmergesortperm, blocksortperm, invblockperm, tensor_product
 using ...TensorAlgebra:
   TensorAlgebra, FusionStyle, BlockReshapeFusion, SectorFusion, fusedims, splitdims
 
 # TODO: Make a `ReduceWhile` library.
 include("reducewhile.jl")
 
-TensorAlgebra.FusionStyle(::AbstractGradedUnitRange) = SectorFusion()
+TensorAlgebra.FusionStyle(::GradedUnitRange) = SectorFusion()
 
 # TODO: Need to implement this! Will require implementing
 # `block_merge(a::AbstractUnitRange, blockmerger::BlockedUnitRange)`.
-function BlockSparseArrays.block_merge(
-  a::AbstractGradedUnitRange, blockmerger::BlockedUnitRange
-)
+function BlockSparseArrays.block_merge(a::GradedUnitRange, blockmerger::BlockedUnitRange)
   return a
 end
 

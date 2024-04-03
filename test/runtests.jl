@@ -21,6 +21,7 @@ ITensors.disable_threaded_blocksparse()
       "ContractionSequenceOptimization",
       "ITensorChainRules",
       "ITensorNetworkMaps",
+      "ITensorsVectorInterfaceExt",
     ]
     @time for dir in dirs
       println("\nTest $(@__DIR__)/$(dir)")
@@ -35,7 +36,7 @@ ITensors.disable_threaded_blocksparse()
     println(
       """\nArguments ARGS = $(test_args) are empty, or contain `"all"` or `"mps"`. Running MPS/MPO ITensors tests.""",
     )
-    dir = "ITensorLegacyMPS"
+    dir = "ITensorMPS"
     println("\nTest $(@__DIR__)/$(dir)")
     @time include(joinpath(@__DIR__, dir, "runtests.jl"))
     if ARGS ≠ test_args

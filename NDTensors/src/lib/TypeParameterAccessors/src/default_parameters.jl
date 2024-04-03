@@ -37,24 +37,26 @@ function wrapped_default_type_parameter(object, pos)
   return wrapped_default_type_parameter(typeof(object), pos)
 end
 
-function set_default_parameter(type::Type, pos)
-  return set_parameter(type, pos, wrapped_default_type_parameter(type, pos))
+function set_default_type_parameter(type::Type, pos)
+  return set_type_parameter(type, pos, wrapped_default_type_parameter(type, pos))
 end
-function set_default_parameters(type::Type)
-  return set_parameters(type, wrapped_default_type_parameters(type))
+function set_default_type_parameters(type::Type)
+  return set_type_parameters(type, wrapped_default_type_parameters(type))
 end
-function set_default_parameters(type::Type, positions::Tuple)
-  return set_parameters(type, positions, wrapped_default_type_parameters(type, positions))
+function set_default_type_parameters(type::Type, positions::Tuple)
+  return set_type_parameters(
+    type, positions, wrapped_default_type_parameters(type, positions)
+  )
 end
 
-function specify_default_parameter(type::Type, pos)
-  return specify_parameter(type, pos, wrapped_default_type_parameter(type, pos))
+function specify_default_type_parameter(type::Type, pos)
+  return specify_type_parameter(type, pos, wrapped_default_type_parameter(type, pos))
 end
-function specify_default_parameters(type::Type)
-  return specify_parameters(type, wrapped_default_type_parameters(type))
+function specify_default_type_parameters(type::Type)
+  return specify_type_parameters(type, wrapped_default_type_parameters(type))
 end
-function specify_default_parameters(type::Type, positions::Tuple)
-  return specify_parameters(
+function specify_default_type_parameters(type::Type, positions::Tuple)
+  return specify_type_parameters(
     type, positions, wrapped_default_type_parameters(type, positions)
   )
 end

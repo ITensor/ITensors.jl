@@ -71,5 +71,3 @@ import ITensors: SmallString, Tag, isint, isnull, IntChar
     @test sprint(show, t) == "Electron"
   end
 end
-
-nothing

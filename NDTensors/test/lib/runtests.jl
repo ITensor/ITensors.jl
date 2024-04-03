@@ -4,14 +4,18 @@ using Test: @testset
 @testset "Test NDTensors lib $lib" for lib in [
   "AlgorithmSelection",
   "AllocateData",
+  "AMDGPUExtensions",
   "BaseExtensions",
   "BlockSparseArrays",
   "BroadcastMapConversion",
+  "CUDAExtensions",
   "DiagonalArrays",
   "GradedAxes",
+  "GPUArraysCoreExtensions",
+  "LabelledNumbers",
+  "MetalExtensions",
   "NamedDimsArrays",
   "Sectors",
-  "SetParameters",
   "SmallVectors",
   "SortedSets",
   "SparseArrayDOKs",
@@ -20,7 +24,7 @@ using Test: @testset
   "TypeParameterAccessors",
   "UnallocatedArrays",
   "UnspecifiedTypes",
-  "Unwrap",
+  "Expose",
 ]
   include(joinpath(pkgdir(NDTensors), "src", "lib", lib, "test", "runtests.jl"))
 end

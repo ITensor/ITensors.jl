@@ -1,0 +1,7 @@
+name = "GPUArraysCoreExtensions"
+
+[deps]
+GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
+
+[compat]
+GPUArraysCore = "0.1"

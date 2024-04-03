@@ -23,11 +23,9 @@ function Broadcast.BroadcastStyle(
   return DefaultArrayStyle{N}()
 end
 
-# TODO: Use `allocate_output`, share logic with `map`.
 function Base.similar(bc::Broadcasted{<:BlockSparseArrayStyle}, elt::Type)
-  # TODO: Is this a good definition? Probably should check that
-  # they have consistent axes.
-  return similar(first(map_args(bc)), elt)
+  # TODO: Make sure this handles GPU arrays properly.
+  return similar(first(map_args(bc)), elt, combine_axes(axes.(map_args(bc))...))
 end
 
 # Broadcasting implementation
