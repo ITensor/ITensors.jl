@@ -774,7 +774,7 @@ import ITensors: Out, In
     i = Index(2)
     a = randomITensor(i', i)
     d, u = eigen(a)
-    @test norm(a * u - u' * d) ≈ 0
+    @test norm(a * u - u' * d) ≈ 0 atol = √(eps(real(eltype(a))))
   end
 
   ITensors.disable_auto_fermion()
