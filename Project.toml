@@ -1,7 +1,7 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
-version = "0.3.64"
+version = "0.3.66"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -17,7 +17,6 @@ KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
 NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
-Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
 PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
 PackageExtensionCompat = "65ce6f38-6b18-4e1d-a461-8949797d7930"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
@@ -40,9 +39,6 @@ VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 [extensions]
 ITensorsVectorInterfaceExt = "VectorInterface"
 
-[extras]
-VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
-
 [compat]
 Adapt = "3.5, 4"
 BitIntegers = "0.2, 0.3"
@@ -57,7 +53,6 @@ KrylovKit = "0.4.2, 0.5, 0.6, 0.7"
 LinearAlgebra = "1.6"
 LinearMaps = "3"
 NDTensors = "0.2.30"
-Observers = "0.2"
 PackageCompiler = "1.0.0, 2"
 PackageExtensionCompat = "1"
 Pkg = "1.6"
@@ -75,3 +70,6 @@ VectorInterface = "0.4"
 Zeros = "0.3.0"
 ZygoteRules = "0.2.2"
 julia = "1.6"
+
+[extras]
+VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"

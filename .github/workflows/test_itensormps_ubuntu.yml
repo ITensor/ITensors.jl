@@ -1,9 +1,11 @@
-name: Run ITensors mps tests on push to main
+name: Run ITensorMPS tests (Ubuntu)
 
 on:
   push:
     branches:
       - main
+    tags: '*'
+  pull_request:
 
 jobs:
   test:

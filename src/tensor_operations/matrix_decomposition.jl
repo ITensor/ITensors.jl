@@ -353,7 +353,7 @@ function eigen(
   end
 
   # <fermions>
-  if using_auto_fermion()
+  if hasqns(A) && using_auto_fermion()
     if !all(i -> dir(i) == Out, Lis)
       error("With auto_fermion enabled, left inds in eigen must have Out arrows")
     end
