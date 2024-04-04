@@ -9,7 +9,7 @@ function generic_randn(StoreT::Type{<:Dense}, dim::Integer; kwargs...)
 end
 
 function generic_randn(
-  StoreT::Type{<:Dense}, dims::Tuple{Integer}; rng = Random.default_rng()
+  StoreT::Type{<:Dense}, dims::Tuple{Integer}; rng=Random.default_rng()
 )
   StoreT = specify_default_type_parameters(StoreT)
   DataT = specify_type_parameter(type_parameter(StoreT, parenttype), eltype, eltype(StoreT))
