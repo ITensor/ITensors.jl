@@ -2,8 +2,7 @@ using .TypeParameterAccessors:
   unwrap_array_type, specify_default_type_parameters, type_parameter
 
 ## Warning to use these functions it is necessary to define `TypeParameterAccessors.position(::Type{<:YourArrayType}, ::typeof(ndims)))`
-## Creating these functions to help flatten tuples e.g. generic_randn(Array, (2,3)) -> generic_randn(Array, 2,3)
-## So that its possible to take the length of dims and check it agains the given ndims(arraytype)
+# Implementation, catches if `ndims(arraytype) != length(dims)`.
 function generic_randn(
   arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng()
 )
@@ -20,6 +19,7 @@ function generic_randn(arraytype::Type{<:AbstractArray}, dims...; rng=Random.def
   return randn!(rng, data)
 end
 
+# Implementation, catches if `ndims(arraytype) != length(dims)`.
 function generic_zeros(arraytype::Type{<:AbstractArray}, dims::Tuple)
   return generic_zeros(arraytype, dims...)
 end
