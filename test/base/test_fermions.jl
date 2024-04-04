@@ -768,5 +768,14 @@ import ITensors: Out, In
     end
   end # Regression Tests
 
+  @testset "Non-QN eigen Regression Test" begin
+    # Test that non-QN eigen runs properly
+    # with auto-fermion enabled.
+    i = Index(2)
+    a = randomITensor(i', i)
+    d, u = eigen(a)
+    @test norm(a * u - u' * d) ≈ 0
+  end
+
   ITensors.disable_auto_fermion()
 end
