@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using NDTensors.GradedAxes: fuse_labels, gradedisequal, gradedrange, tensor_product
+using NDTensors.GradedAxes: gradedisequal, gradedrange, fusion_product
 using NDTensors.Sectors: ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension
 using Test: @inferred, @test, @testset, @test_throws
 
@@ -14,8 +14,8 @@ using Test: @inferred, @test, @testset, @test_throws
     @test (@inferred z0 ⊗ z0) == z0  # no better way, see Julia PR 23426
 
     # using GradedAxes interface
-    @test fuse_labels(z0, z0) == z0
-    @test fuse_labels(z0, z1) == z1
+    @test gradedisequal(fusion_product(z0, z0), gradedrange([z0 => 1]))
+    @test gradedisequal(fusion_product(z0, z1), gradedrange([z1 => 1]))
   end
   @testset "U(1) fusion rules" begin
     q1 = U1(1)
@@ -90,35 +90,35 @@ end
     g1 = gradedrange([U1(1) => 1, U1(2) => 2])
     g2 = gradedrange([U1(-1) => 2, U1(0) => 1, U1(1) => 2])
     @test gradedisequal(
-      (@inferred tensor_product(g1, g2)),
+      (@inferred fusion_product(g1, g2)),
       gradedrange([U1(0) => 2, U1(1) => 5, U1(2) => 4, U1(3) => 4]),
     )
 
     g3 = gradedrange([SU2(0) => 1, SU2(1//2) => 2, SU2(1) => 1])
     g4 = gradedrange([SU2(1//2) => 1, SU2(1) => 2])
     @test gradedisequal(
-      (@inferred tensor_product(g3, g4)),
+      (@inferred fusion_product(g3, g4)),
       gradedrange([SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2]),
     )
 
     # test different categories cannot be fused
-    @test_throws MethodError tensor_product(g1, g4)
+    @test_throws MethodError fusion_product(g1, g4)
   end
 
   @testset "Mixed GradedUnitRange - Category fusion rules" begin
     g1 = gradedrange([U1(1) => 1, U1(2) => 2])
     g2 = gradedrange([U1(2) => 1, U1(3) => 2])
-    @test gradedisequal((@inferred tensor_product(g1, U1(1))), g2)
-    @test gradedisequal((@inferred tensor_product(U1(1), g1)), g2)
+    @test gradedisequal((@inferred fusion_product(g1, U1(1))), g2)
+    @test gradedisequal((@inferred fusion_product(U1(1), g1)), g2)
 
     g3 = gradedrange([SU2(0) => 1, SU2(1//2) => 2])
     g4 = gradedrange([SU2(0) => 2, SU2(1//2) => 1, SU2(1) => 2])
-    @test gradedisequal((@inferred tensor_product(g3, SU2(1//2))), g4)
-    @test gradedisequal((@inferred tensor_product(SU2(1//2), g3)), g4)
+    @test gradedisequal((@inferred fusion_product(g3, SU2(1//2))), g4)
+    @test gradedisequal((@inferred fusion_product(SU2(1//2), g3)), g4)
 
     # test different categories cannot be fused
-    @test_throws MethodError tensor_product(g1, SU2(1))
-    @test_throws MethodError tensor_product(U1(1), g3)
+    @test_throws MethodError fusion_product(g1, SU2(1))
+    @test_throws MethodError fusion_product(U1(1), g3)
   end
 end
 end

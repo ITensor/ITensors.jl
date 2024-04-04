@@ -25,6 +25,10 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test categories(s)[:C] == Ising("ψ")
     @test (@inferred quantum_dimension(s)) == 5.0
     @test dual(s) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
+
+    s1 = (A=U1(1),) × (B=Z{2}(0),)
+    s2 = (A=U1(1),) × (C=Z{2}(0),)
+    @test_throws MethodError s1 × s2
   end
 
   @testset "Construct from Pairs" begin
@@ -218,14 +222,14 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
 
     ı = Fib("1")
     τ = Fib("τ")
-    s = sector(; A=U1(1), B=SU2(1//2), C=τ)
+    s = sector(; A=SU2(1//2), B=U1(1), C=τ)
     @test gradedisequal(
       (@inferred s ⊗ s),
       gradedrange([
-        sector(; A=U1(2), B=SU2(0), C=ı) => 1,
-        sector(; A=U1(2), B=SU2(1), C=ı) => 1,
-        sector(; A=U1(2), B=SU2(0), C=τ) => 1,
-        sector(; A=U1(2), B=SU2(1), C=τ) => 1,
+        sector(; A=SU2(0), B=U1(2), C=ı) => 1,
+        sector(; A=SU2(1), B=U1(2), C=ı) => 1,
+        sector(; A=SU2(0), B=U1(2), C=τ) => 1,
+        sector(; A=SU2(1), B=U1(2), C=τ) => 1,
       ]),
     )
 
@@ -407,16 +411,17 @@ end
         (U1(2) × SU2(1) × Ising("ψ")) => 1,
       ]),
     )
+
     ı = Fib("1")
     τ = Fib("τ")
-    s = U1(1) × SU2(1//2) × τ
+    s = SU2(1//2) × U1(1) × τ
     @test gradedisequal(
       (@inferred s ⊗ s),
       gradedrange([
-        (U1(2) × SU2(0) × ı) => 1,
-        (U1(2) × SU2(1) × ı) => 1,
-        (U1(2) × SU2(0) × τ) => 1,
-        (U1(2) × SU2(1) × τ) => 1,
+        (SU2(0) × U1(2) × ı) => 1,
+        (SU2(1) × U1(2) × ı) => 1,
+        (SU2(0) × U1(2) × τ) => 1,
+        (SU2(1) × U1(2) × τ) => 1,
       ]),
     )
 

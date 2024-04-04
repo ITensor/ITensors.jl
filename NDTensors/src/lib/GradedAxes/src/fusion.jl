@@ -18,6 +18,10 @@ function tensor_product(
   return foldl(tensor_product, (a1, a2, a3, a_rest...))
 end
 
+function fusion_product()
+  return error("Not implemented")
+end
+
 function tensor_product(a1::AbstractUnitRange, a2::AbstractUnitRange)
   return error("Not implemented yet.")
 end

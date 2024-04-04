@@ -19,21 +19,16 @@ combine_styles(::NonAbelianGroup, ::AbelianGroup) = NonAbelianGroup()
 combine_styles(::NonAbelianGroup, ::NonAbelianGroup) = NonAbelianGroup()
 combine_styles(::NonAbelianGroup, ::NonGroupCategory) = NonGroupCategory()
 combine_styles(::NonGroupCategory, ::SymmetryStyle) = NonGroupCategory()
+combine_styles(::EmptyCategory, s::SymmetryStyle) = s
+combine_styles(s::SymmetryStyle, ::EmptyCategory) = s
+combine_styles(::EmptyCategory, ::EmptyCategory) = EmptyCategory()
 
 function SymmetryStyle(c::CategoryProduct)
-  return if length(categories(c)) == 0
-    EmptyCategory()
-  else
-    reduce(combine_styles, map(SymmetryStyle, (categories(c))))
-  end
+  return reduce(combine_styles, map(SymmetryStyle, categories(c)); init=EmptyCategory())
 end
 
 function SymmetryStyle(nt::NamedTuple)
-  return if length(nt) == 0
-    EmptyCategory()
-  else
-    reduce(combine_styles, map(SymmetryStyle, (values(nt))))
-  end
+  return reduce(combine_styles, map(SymmetryStyle, values(nt)); init=EmptyCategory())
 end
 
 # ==============  Sector interface  =================
@@ -74,9 +69,12 @@ function ×(p1::CategoryProduct, p2::CategoryProduct)
   return CategoryProduct(categories_product(categories(p1), categories(p2)))
 end
 
-# currently (A=U1(1),) × (A=U1(2),) = sector((A=U1(1),))
-# this is misleading. TBD throw in this case?
-categories_product(l1::NamedTuple, l2::NamedTuple) = union_keys(l1, l2)
+function categories_product(l1::NamedTuple, l2::NamedTuple)
+  if length(intersect_keys(l1, l2)) > 0
+    throw(MethodError("Cannot define product of shared keys"))
+  end
+  return union_keys(l1, l2)
+end
 
 # edge cases
 categories_product(l1::NamedTuple, l2::Tuple{}) = l1
@@ -84,6 +82,8 @@ categories_product(l1::Tuple{}, l2::NamedTuple) = l2
 
 categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
+×(a, g::AbstractUnitRange) = ×(to_graded_axis(a), g)
+×(g::AbstractUnitRange, b) = ×(g, to_graded_axis(b))
 ×(nt1::NamedTuple, nt2::NamedTuple) = ×(CategoryProduct(nt1), CategoryProduct(nt2))
 ×(c1::NamedTuple, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
 ×(c1::AbstractCategory, c2::NamedTuple) = ×(CategoryProduct(c1), CategoryProduct(c2))
@@ -94,15 +94,32 @@ function ×(l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInt
   return LabelledNumbers.LabelledInteger(m3, c3)
 end
 
-×(g::AbstractUnitRange, c::AbstractCategory) = ×(g, GradedAxes.gradedrange([c => 1]))
-×(c::AbstractCategory, g::AbstractUnitRange) = ×(GradedAxes.gradedrange([c => 1]), g)
-
-function ×(g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange)
+function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)
   # keep F convention in loop order
   v = [
     l1 × l2 for l2 in BlockArrays.blocklengths(g2) for l1 in BlockArrays.blocklengths(g1)
   ]
   return GradedAxes.gradedrange(v)
+end
+
+# ===================  Fusion rule  ====================
+function fusion_rule(s1::CategoryProduct, s2::CategoryProduct)
+  return fusion_rule(combine_styles(SymmetryStyle(s1), SymmetryStyle(s2)), s1, s2)
+end
+
+# generic case: fusion returns a GradedAxes, even for fusion with Empty
+function fusion_rule(::SymmetryStyle, s1::CategoryProduct, s2::CategoryProduct)
+  return to_graded_axis(categories_fusion_rule(categories(s1), categories(s2)))
+end
+
+# Abelian case: fusion returns CategoryProduct
+function fusion_rule(::AbelianGroup, s1::CategoryProduct, s2::CategoryProduct)
+  return categories_fusion_rule(categories(s1), categories(s2))
+end
+
+# Empty case: use × cast conventions between NamedTupled and ordered implem
+function fusion_rule(::EmptyCategory, s1::CategoryProduct, s2::CategoryProduct)
+  return s1 × s2
 end
 
 # ==============  Dictionary-like implementation  =================
@@ -127,59 +144,41 @@ function categories_equal(A::NamedTuple, B::NamedTuple)
 end
 
 # allow ⊗ for different types in NamedTuple
-function fusion_rule(
-  s1::CategoryProduct{Cat1}, s2::CategoryProduct{Cat2}
-) where {Cat1<:NamedTuple,Cat2<:NamedTuple}
-
-  # avoid issues with length 0 CategoryProduct
-  if SymmetryStyle(s1) == EmptyCategory()
-    if SymmetryStyle(s2) == AbelianGroup() || SymmetryStyle(s2) == EmptyCategory()
-      return s2
-    end
-    return GradedAxes.gradedrange([s2 => 1])
-  end
-  if SymmetryStyle(s2) == EmptyCategory()
-    if SymmetryStyle(s1) == AbelianGroup()
-      return s1
-    end
-    return GradedAxes.gradedrange([s1 => 1])
-  end
-
-  cats1 = categories(s1)
-  cats2 = categories(s2)
+function categories_fusion_rule(cats1::NamedTuple, cats2::NamedTuple)
   diff_cat = CategoryProduct(symdiff_keys(cats1, cats2))
   shared1 = intersect_keys(cats1, cats2)
-  if length(shared1) == 0
-    if SymmetryStyle(diff_cat) == AbelianGroup()
-      return diff_cat
-    end
-    return GradedAxes.gradedrange([diff_cat => 1])
-  end
-
   shared2 = intersect_keys(cats2, cats1)
-  fused = fusion_rule(shared1, shared2)
-  out = diff_cat × fused
-  return out
+  return diff_cat × categories_fusion_rule(shared1, shared2)
 end
 
-function fusion_rule(
+# iterate over keys
+function categories_fusion_rule(
   cats1::NT, cats2::NT
 ) where {Names,NT<:NamedTuple{Names,<:Tuple{AbstractCategory,Vararg{AbstractCategory}}}}
-  return fusion_rule(cats1[(Names[1],)], cats2[(Names[1],)]) ×
-         fusion_rule(cats1[Names[2:end]], cats2[Names[2:end]])
+  return categories_fusion_rule(cats1[(Names[1],)], cats2[(Names[1],)]) ×
+         categories_fusion_rule(cats1[Names[2:end]], cats2[Names[2:end]])
 end
 
-fusion_rule(cats1::NamedTuple{}, cats2::NamedTuple{}) = sector()
+# zero key
+categories_fusion_rule(cats1::NT, cats2::NT) where {NT<:NamedTuple{}} = sector()
 
-function fusion_rule(
+# one key
+function categories_fusion_rule(
   cats1::NT, cats2::NT
 ) where {NT<:NamedTuple{<:Any,<:Tuple{AbstractCategory}}}
-  # cannot be EmptyCategory
+  return single_fusion_rule(SymmetryStyle(cats1), cats1, cats2)
+end
+
+# abelian fusion of one category
+function single_fusion_rule(::AbelianGroup, cats1::NT, cats2::NT) where {NT}
+  fused = fusion_rule(only(values(cats1)), only(values(cats2)))
+  return sector(only(keys(cats1)) => fused)
+end
+
+# generic fusion of one category
+function single_fusion_rule(::SymmetryStyle, cats1::NT, cats2::NT) where {NT}
+  fused = fusion_rule(only(values(cats1)), only(values(cats2)))
   key = only(keys(cats1))
-  fused = only(values(cats1)) ⊗ only(values(cats2))
-  if SymmetryStyle(cats1) == AbelianGroup()
-    return sector(key => fused)
-  end
   la = fused[1]
   v = Vector{Pair{CategoryProduct{NT},Int64}}()
   for la in blocklengths(fused)
@@ -198,13 +197,6 @@ categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
 sector(args...; kws...) = CategoryProduct(args...; kws...)
 
 # for ordered tuple, impose same type in fusion
-function fusion_rule(s1::CategoryProduct{Cat}, s2::CategoryProduct{Cat}) where {Cat<:Tuple}
-  if SymmetryStyle(s1) == EmptyCategory()  # compile-time; simpler than specifying init
-    return s1
-  end
-  cats1 = categories(s1)
-  cats2 = categories(s2)
-  fused = map(fusion_rule, cats1, cats2)
-  g = reduce(×, fused)
-  return g
+function categories_fusion_rule(cats1::Tu, cats2::Tu) where {Tu<:Tuple}
+  return reduce(×, map(fusion_rule, cats1, cats2); init=CategoryProduct(()))
 end

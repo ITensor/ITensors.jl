@@ -20,113 +20,79 @@ function GradedAxes.dual(category_type::Type{<:AbstractCategory})
   return error("`dual` not defined for type $(category_type).")
 end
 
-quantum_dimension(c::AbstractCategory) = quantum_dimension(SymmetryStyle(c), c)
+quantum_dimension(x) = quantum_dimension(SymmetryStyle(x), x)
 
 function quantum_dimension(::SymmetryStyle, c::AbstractCategory)
   return error("method `quantum_dimension` not defined for type $(typeof(c))")
 end
 
-function quantum_dimension(g::AbstractUnitRange)
-  if SymmetryStyle(g) == AbelianGroup()
-    return length(g)
-  end
+quantum_dimension(::AbelianGroup, ::AbstractCategory) = 1
+quantum_dimension(::EmptyCategory, ::AbstractCategory) = 0
 
+function quantum_dimension(::SymmetryStyle, g::AbstractUnitRange)
   mult = LabelledNumbers.unlabel.(BlockArrays.blocklengths(g))
   dims = quantum_dimension.(LabelledNumbers.label.(BlockArrays.blocklengths(g)))
   return sum(m * d for (m, d) in zip(mult, dims))
 end
 
-quantum_dimension(::AbelianGroup, ::AbstractCategory) = 1
-quantum_dimension(::EmptyCategory, ::AbstractCategory) = 0
+quantum_dimension(::AbelianGroup, g::AbstractUnitRange) = length(g)
 
 # ================  fusion rule interface ====================
+⊗(c1::AbstractCategory, c2::AbstractCategory) = fusion_rule(c1, c2)
+
+function fusion_rule(c1::C, c2::C) where {C<:AbstractCategory}
+  return fusion_rule(SymmetryStyle(c1), c1, c2)
+end
+
+function fusion_rule(::SymmetryStyle, c1::C, c2::C) where {C<:AbstractCategory}
+  degen, labels = label_fusion_rule(C, label(c1), label(c2))
+  return GradedAxes.gradedrange(LabelledNumbers.LabelledInteger.(degen, C.(labels)))
+end
+
+function fusion_rule(::AbelianGroup, c1::C, c2::C) where {C<:AbstractCategory}
+  return C(label_fusion_rule(C, label(c1), label(c2)))  # return AbelianGroup
+end
+
 function label_fusion_rule(category_type::Type{<:AbstractCategory}, l1, l2)
   return error("`label_fusion_rule` not defined for type $(category_type).")
 end
 
-function fusion_rule(c1::C, c2::C) where {C<:AbstractCategory}
-  out = label_fusion_rule(C, label(c1), label(c2))
-  if SymmetryStyle(c1) == AbelianGroup()
-    return C(out)  # AbelianGroup: return Category
-  end
-  degen, labels = out
-  # NonAbelianGroup or NonGroupCategory: return GradedUnitRange
-  return GradedAxes.gradedrange(LabelledNumbers.LabelledInteger.(degen, C.(labels)))
-end
-
-function ⊗(c1::AbstractCategory, c2::AbstractCategory)
-  return fusion_rule(c1, c2)
-end
-
 # =============  fusion rule and gradedunitrange ===================
-# TBD define ⊗(c, g2), ⊗(g1, c), ⊗(g1, g2)?
+to_graded_axis(c::AbstractCategory) = GradedAxes.gradedrange([c => 1])
+to_graded_axis(g::AbstractUnitRange) = g
 
-# 1. make GradedAxes.tensor_product return fusion_rule
-function GradedAxes.tensor_product(c1::AbstractCategory, c2::AbstractCategory)
-  return fusion_rule(c1, c2)
+function GradedAxes.fusion_product(a, b)
+  return GradedAxes.fusion_product(to_graded_axis(a), to_graded_axis(b))
 end
 
-function GradedAxes.tensor_product(r::AbstractUnitRange, c::AbstractCategory)
-  return fusion_rule(r, c)
-end
-
-function GradedAxes.tensor_product(c::AbstractCategory, r::AbstractUnitRange)
-  return fusion_rule(c, r)
-end
-
-function GradedAxes.tensor_product(
-  g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange
-)
-  return fusion_rule(g1, g2)
-end
-
-# 2. make GradedAxes.fuse_labels return fusion_rule
-# TBD return GradedAxis for AbelianGroup too?
-GradedAxes.fuse_labels(c1::AbstractCategory, c2::AbstractCategory) = c1 ⊗ c2
-
-# 3. promote Category to GradedAxes
-# TODO define promote_rule
-function fusion_rule(c::AbstractCategory, r::AbstractUnitRange)
-  return fusion_rule(GradedAxes.gradedrange([c => 1]), r)
-end
-
-function fusion_rule(r::AbstractUnitRange, c::AbstractCategory)
-  return fusion_rule(r, GradedAxes.gradedrange([c => 1]))
-end
-
-# 4. define fusion rule for reducible representations
 # TODO deal with dual
-function fusion_rule(g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange)
-  blocks3 = empty(BlockArrays.blocklengths(g1))
-  for b1 in BlockArrays.blocklengths(g1)
-    cat1 = LabelledNumbers.label(b1)
-    degen1 = LabelledNumbers.unlabel(b1)
-    for b2 in BlockArrays.blocklengths(g2)
-      cat2 = LabelledNumbers.label(b2)
-      degen2 = LabelledNumbers.unlabel(b2)
+function GradedAxes.fusion_product(g1::AbstractUnitRange, g2::AbstractUnitRange)
+  blocks2 = BlockArrays.blocklengths(g2)
+  blocks3 = empty(blocks2)
+  sym = SymmetryStyle(g2)
+  for b2 in blocks2
+    c2 = LabelledNumbers.label(b2)
+    degen2 = LabelledNumbers.unlabel(b2)
+    for b1 in BlockArrays.blocklengths(g1)
+      c1 = LabelledNumbers.label(b1)
+      degen1 = LabelledNumbers.unlabel(b1)
       degen3 = degen1 * degen2
-      fuse12 = cat1 ⊗ cat2
-      if SymmetryStyle(fuse12) == AbelianGroup()
-        push!(blocks3, LabelledNumbers.LabelledInteger(degen3, fuse12))
-      else
-        g12 = BlockArrays.blocklengths(fuse12)
-        # Int * LabelledInteger -> Int, need to recast explicitly
-        scaled_g12 =
-          LabelledNumbers.LabelledInteger.(degen3 .* g12, LabelledNumbers.label.(g12))
-        append!(blocks3, scaled_g12)
-      end
+      _append_fusion!(blocks3, sym, degen3, c1, c2)
     end
   end
-  # sort and fuse blocks carrying the same category label
-  # there is probably a better way to do this
-  unsorted_g3 = GradedAxes.gradedrange(blocks3)
-  perm = GradedAxes.blockmergesortperm(unsorted_g3)
-  vec3 = empty(blocks3)
-  for b in BlockArrays.blocks(perm)
-    x = unsorted_g3[b]
-    n = LabelledNumbers.LabelledInteger(sum(length(x); init=0), LabelledNumbers.label(x[1]))
-    push!(vec3, n)
-  end
-  g3 = GradedAxes.gradedrange(vec3)
-  return g3
+  la3 = LabelledNumbers.label.(blocks3)
+  pairs3 = [r => sum(blocks3[findall(==(r), la3)]; init=0) for r in sort(unique(la3))]
+  return GradedAxes.gradedrange(pairs3)
+end
+
+function _append_fusion!(blocks3, ::AbelianGroup, degen3, c1::C, c2::C) where {C}
+  return push!(blocks3, LabelledNumbers.LabelledInteger(degen3, fusion_rule(c1, c2)))
+end
+function _append_fusion!(blocks3, ::SymmetryStyle, degen3, c1::C, c2::C) where {C}
+  fused_blocks = BlockArrays.blocklengths(fusion_rule(c1, c2))
+  g12 =
+    LabelledNumbers.LabelledInteger.(
+      degen3 * LabelledNumbers.unlabel.(fused_blocks), LabelledNumbers.label.(fused_blocks)
+    )
+  return append!(blocks3, g12)
 end
