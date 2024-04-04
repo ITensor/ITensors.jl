@@ -4,21 +4,24 @@
 # This is a file to write generic fills for NDTensors.
 #  This includes random fills, zeros, ...
 
+function generic_randn(StoreT::Type{<:Dense}, dim::Integer; kwargs...)
+  return generic_randn(StoreT, (dim,); kwargs...)
+end
+
 function generic_randn(
-  StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
-) where {DataT<:AbstractArray,ElT}
-  @assert ElT == eltype(DataT)
-  data = generic_randn(DataT, dim)
+  StoreT::Type{<:Dense}, dims::Tuple{Integer}; rng = Random.default_rng()
+)
+  StoreT = specify_default_type_parameters(StoreT)
+  DataT = specify_type_parameter(type_parameter(StoreT, parenttype), eltype, eltype(StoreT))
+  @assert eltype(StoreT) == eltype(DataT)
+
+  data = generic_randn(DataT, dims; rng=rng)
   StoreT = set_datatype(StoreT, typeof(data))
   return StoreT(data)
 end
 
-function generic_randn(StoreT::Type{<:Dense{ElT}}, dim::Integer=0) where {ElT}
-  return generic_randn(default_storagetype(ElT), dim)
-end
-
-function generic_randn(StoreT::Type{<:Dense}, dim::Integer=0)
-  return generic_randn(default_storagetype(), dim)
+function generic_randn(::Type{<:Dense}, ::Tuple{Integer,Integer,Vararg{Integer}}; kwargs...)
+  return error("Can't make a multidimensional `Dense` object.")
 end
 
 function generic_zeros(StoreT::Type{<:Dense}, dim::Integer)
@@ -36,7 +39,7 @@ function generic_zeros(StoreT::Type{<:Dense}, dims::Tuple{Integer})
   DataT = specify_type_parameter(type_parameter(StoreT, parenttype), eltype, eltype(StoreT))
   @assert eltype(StoreT) == eltype(DataT)
 
-  data = generic_zeros(DataT, dim(dims))
+  data = generic_zeros(DataT, dims)
   StoreT = set_datatype(StoreT, typeof(data))
   return StoreT(data)
 end
