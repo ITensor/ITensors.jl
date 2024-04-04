@@ -63,6 +63,10 @@ category_show(io::IO, k, v) = print(io, v)
 
 category_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
+function Base.isless(s1::C, s2::C) where {C<:CategoryProduct}
+  return isless(label.(values(categories(s1))), label.(values(categories(s2))))
+end
+
 # ==============  Cartesian product  =================
 ×(c1::AbstractCategory, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
 function ×(p1::CategoryProduct, p2::CategoryProduct)
@@ -102,7 +106,7 @@ function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)
   return GradedAxes.gradedrange(v)
 end
 
-# ===================  Fusion rule  ====================
+# ===================  Fusion rules  ====================
 function fusion_rule(s1::CategoryProduct, s2::CategoryProduct)
   return fusion_rule(combine_styles(SymmetryStyle(s1), SymmetryStyle(s2)), s1, s2)
 end
@@ -179,9 +183,8 @@ end
 function single_fusion_rule(::SymmetryStyle, cats1::NT, cats2::NT) where {NT}
   fused = fusion_rule(only(values(cats1)), only(values(cats2)))
   key = only(keys(cats1))
-  la = fused[1]
   v = Vector{Pair{CategoryProduct{NT},Int64}}()
-  for la in blocklengths(fused)
+  for la in BlockArrays.blocklengths(fused)
     push!(v, sector(key => LabelledNumbers.label(la)) => LabelledNumbers.unlabel(la))
   end
   g = GradedAxes.gradedrange(v)
@@ -196,7 +199,11 @@ categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
 sector(args...; kws...) = CategoryProduct(args...; kws...)
 
-# for ordered tuple, impose same type in fusion
-function categories_fusion_rule(cats1::Tu, cats2::Tu) where {Tu<:Tuple}
-  return reduce(×, map(fusion_rule, cats1, cats2); init=CategoryProduct(()))
+# allow additional categories at one end
+function categories_fusion_rule(cats1::Tuple, cats2::Tuple)
+  n = min(length(cats1), length(cats2))
+  shared = map(fusion_rule, cats1[begin:n], cats2[begin:n])
+  sup1 = CategoryProduct(cats1[(n + 1):end])
+  sup2 = CategoryProduct(cats2[(n + 1):end])
+  return reduce(×, (shared..., sup1, sup2))
 end

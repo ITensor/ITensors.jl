@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using NDTensors.Sectors:
   ×, ⊗, CategoryProduct, Fib, Ising, SU, SU2, U1, Z, categories, sector, quantum_dimension
-using NDTensors.GradedAxes: dual, gradedisequal, gradedrange
+using NDTensors.GradedAxes: dual, fusion_product, gradedisequal, gradedrange
 using Test: @inferred, @test, @testset, @test_broken, @test_throws
 
 @testset "Test Named Category Products" begin
@@ -239,6 +239,15 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
       gradedrange([sector(; B=U1(2), A=ı, C=ı) => 1, sector(; B=U1(2), A=τ, C=ı) => 1]),
     )
   end
+  @testset "GradedUnitRange fusion rules" begin
+    s1 = sector(; A=U1(1), B=SU2(1//2), C=Ising("σ"))
+    s2 = sector(; A=U1(0), B=SU2(1//2), C=Ising("1"))
+    g1 = gradedrange([s1 => 2])
+    g2 = gradedrange([s2 => 1])
+    s3 = sector(; A=U1(1), B=SU2(0), C=Ising("σ"))
+    s4 = sector(; A=U1(1), B=SU2(1), C=Ising("σ"))
+    @test gradedisequal((@inferred fusion_product(g1, g2)), gradedrange([s3 => 2, s4 => 2]))
+  end
 end
 
 @testset "Test Ordered Products" begin
@@ -314,15 +323,6 @@ end
     @test (@inferred quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
   end
 
-  @testset "Enforce same spaces in fusion" begin
-    p12 = U1(1) × U1(2)
-    p123 = U1(1) × U1(2) × U1(3)
-    @test_throws MethodError p12 ⊗ p123
-
-    z12 = Z{2}(1) × Z{2}(1)
-    @test_throws MethodError p12 ⊗ z12
-  end
-
   @testset "Empty category" begin
     s = CategoryProduct(())
     @test (@inferred dual(s)) == s
@@ -332,6 +332,10 @@ end
   end
 
   @testset "Fusion of Abelian products" begin
+    p1 = sector(U1(1))
+    p2 = sector(U1(2))
+    @test (@inferred p1 ⊗ p2) == sector(U1(3))
+
     p11 = U1(1) × U1(1)
     @test (@inferred p11 ⊗ p11) == U1(2) × U1(2)
 
@@ -344,6 +348,10 @@ end
   end
 
   @testset "Fusion of NonAbelian products" begin
+    p0 = sector(SU2(0))
+    ph = sector(SU2(1//2))
+    @test gradedisequal((@inferred p0 ⊗ ph), gradedrange([sector(SU2(1//2)) => 1]))
+
     phh = SU2(1//2) × SU2(1//2)
     @test gradedisequal(
       phh ⊗ phh,
@@ -428,6 +436,36 @@ end
     s = U1(1) × ı × τ
     @test gradedisequal(
       (@inferred s ⊗ s), gradedrange([(U1(2) × ı × ı) => 1, (U1(2) × ı × τ) => 1])
+    )
+  end
+
+  @testset "Fusion of different length Categories" begin
+    @test sector(U1(1) × U1(0)) ⊗ sector(U1(1)) == sector(U1(2) × U1(0))
+    @test gradedisequal(
+      sector(SU2(0) × SU2(0)) ⊗ sector(SU2(1)), gradedrange([sector(SU2(1) × SU2(0)) => 1])
+    )
+
+    @test gradedisequal(
+      sector(SU2(1) × U1(1)) ⊗ sector(SU2(0)), gradedrange([sector(SU2(1) × U1(1)) => 1])
+    )
+    @test gradedisequal(
+      sector(U1(1) × SU2(1)) ⊗ sector(U1(2)), gradedrange([sector(U1(3) × SU2(1)) => 1])
+    )
+
+    # check incompatible categories
+    p12 = Z{2}(1) × U1(2)
+    z12 = Z{2}(1) × Z{2}(1)
+    @test_throws MethodError p12 ⊗ z12
+  end
+
+  @testset "GradedUnitRange fusion rules" begin
+    s1 = U1(1) × SU2(1//2) × Ising("σ")
+    s2 = U1(0) × SU2(1//2) × Ising("1")
+    g1 = gradedrange([s1 => 2])
+    g2 = gradedrange([s2 => 1])
+    @test gradedisequal(
+      (@inferred fusion_product(g1, g2)),
+      gradedrange([U1(1) × SU2(0) × Ising("σ") => 2, U1(1) × SU2(1) × Ising("σ") => 2]),
     )
   end
 end

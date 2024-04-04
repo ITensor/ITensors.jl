@@ -4,7 +4,7 @@
 abstract type AbstractCategory end
 
 # ============  Base interface  =================
-Base.isless(c1::AbstractCategory, c2::AbstractCategory) = isless(label(c1), label(c2))
+Base.isless(c1::C, c2::C) where {C<:AbstractCategory} = isless(label(c1), label(c2))
 
 # =================  Misc  ======================
 function trivial(category_type::Type{<:AbstractCategory})
@@ -69,15 +69,14 @@ end
 function GradedAxes.fusion_product(g1::AbstractUnitRange, g2::AbstractUnitRange)
   blocks2 = BlockArrays.blocklengths(g2)
   blocks3 = empty(blocks2)
-  sym = SymmetryStyle(g2)
   for b2 in blocks2
     c2 = LabelledNumbers.label(b2)
     degen2 = LabelledNumbers.unlabel(b2)
     for b1 in BlockArrays.blocklengths(g1)
       c1 = LabelledNumbers.label(b1)
-      degen1 = LabelledNumbers.unlabel(b1)
-      degen3 = degen1 * degen2
-      _append_fusion!(blocks3, sym, degen3, c1, c2)
+      degen = degen2 * LabelledNumbers.unlabel(b1)
+      fused = c1 ⊗ c2
+      _append_fusion!(blocks3, degen, fused)
     end
   end
   la3 = LabelledNumbers.label.(blocks3)
@@ -85,14 +84,17 @@ function GradedAxes.fusion_product(g1::AbstractUnitRange, g2::AbstractUnitRange)
   return GradedAxes.gradedrange(pairs3)
 end
 
-function _append_fusion!(blocks3, ::AbelianGroup, degen3, c1::C, c2::C) where {C}
-  return push!(blocks3, LabelledNumbers.LabelledInteger(degen3, fusion_rule(c1, c2)))
+# AbelianGroup case
+function _append_fusion!(blocks3, degen, fused::AbstractCategory)
+  return push!(blocks3, LabelledNumbers.LabelledInteger(degen, fused))
 end
-function _append_fusion!(blocks3, ::SymmetryStyle, degen3, c1::C, c2::C) where {C}
-  fused_blocks = BlockArrays.blocklengths(fusion_rule(c1, c2))
-  g12 =
+
+# generic case
+function _append_fusion!(blocks3, degen, fused::AbstractUnitRange)
+  fused_blocks = BlockArrays.blocklengths(fused)
+  scaled =
     LabelledNumbers.LabelledInteger.(
-      degen3 * LabelledNumbers.unlabel.(fused_blocks), LabelledNumbers.label.(fused_blocks)
+      degen * LabelledNumbers.unlabel.(fused_blocks), LabelledNumbers.label.(fused_blocks)
     )
-  return append!(blocks3, g12)
+  return append!(blocks3, scaled)
 end
