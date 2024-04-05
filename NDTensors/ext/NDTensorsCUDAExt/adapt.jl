@@ -5,7 +5,7 @@ using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
 using NDTensors.CUDAExtensions: CUDAExtensions, CuArrayAdaptor
 using NDTensors.GPUArraysCoreExtensions: storagemode
 using NDTensors.TypeParameterAccessors:
-  TypeParameterAccessors, default_type_parameter, set_type_parameters, type_parameters
+  default_type_parameter, set_type_parameters, type_parameters
 
 function CUDAExtensions.cu(xs; storagemode=default_type_parameter(CuArray, storagemode))
   return fmap(x -> adapt(CuArrayAdaptor{storagemode}(), x), xs)

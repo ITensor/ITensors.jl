@@ -10,7 +10,6 @@ function mtl end
 
 struct MtlArrayAdaptor{B} end
 
-## TODO remove TypeParameterAccessors when SetParameters is removed
 function TypeParameterAccessors.position(::Type{<:MtlArrayAdaptor}, ::typeof(storagemode))
   return Position(1)
 end

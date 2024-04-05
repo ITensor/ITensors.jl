@@ -1,7 +1,7 @@
 using Metal: Metal, MtlArray
 # `TypeParameterAccessors.jl` definitions.
 
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position, set_type_parameter
+using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 using NDTensors.GPUArraysCoreExtensions: storagemode
 
 ## TODO remove TypeParameterAccessors when SetParameters is removed
