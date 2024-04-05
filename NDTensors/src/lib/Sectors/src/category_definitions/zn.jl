@@ -9,7 +9,7 @@ end
 
 SymmetryStyle(::Z) = AbelianGroup()
 
-label(c::Z) = c.m
+category_label(c::Z) = c.m
 modulus(::Type{Z{N}}) where {N} = N
 
 modulus(c::Z) = modulus(typeof(c))
@@ -20,4 +20,4 @@ function label_fusion_rule(category_type::Type{<:Z}, n1, n2)
   return (n1 + n2) % modulus(category_type)
 end
 
-GradedAxes.dual(c::Z) = typeof(c)(mod(-label(c), modulus(c)))
+GradedAxes.dual(c::Z) = typeof(c)(mod(-category_label(c), modulus(c)))

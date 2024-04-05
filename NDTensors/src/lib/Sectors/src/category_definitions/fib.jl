@@ -22,7 +22,7 @@ SymmetryStyle(::Fib) = NonGroupCategory()
 
 GradedAxes.dual(f::Fib) = f
 
-label(f::Fib) = f.l
+category_label(f::Fib) = f.l
 
 trivial(::Type{Fib}) = Fib(0)
 

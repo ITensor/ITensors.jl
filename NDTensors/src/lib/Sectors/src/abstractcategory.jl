@@ -4,7 +4,9 @@
 abstract type AbstractCategory end
 
 # ============  Base interface  =================
-Base.isless(c1::C, c2::C) where {C<:AbstractCategory} = isless(label(c1), label(c2))
+function Base.isless(c1::C, c2::C) where {C<:AbstractCategory}
+  return isless(category_label(c1), category_label(c2))
+end
 
 # =================  Misc  ======================
 function trivial(category_type::Type{<:AbstractCategory})
@@ -13,8 +15,9 @@ end
 
 istrivial(c::AbstractCategory) = (c == trivial(typeof(c)))
 
-# name conflict with LabelledNumber.label. TBD is that an issue?
-label(c::AbstractCategory) = error("method `label` not defined for type $(typeof(c))")
+function category_label(c::AbstractCategory)
+  return error("method `category_label` not defined for type $(typeof(c))")
+end
 
 function GradedAxes.dual(category_type::Type{<:AbstractCategory})
   return error("`dual` not defined for type $(category_type).")
@@ -45,12 +48,12 @@ function fusion_rule(c1::C, c2::C) where {C<:AbstractCategory}
 end
 
 function fusion_rule(::SymmetryStyle, c1::C, c2::C) where {C<:AbstractCategory}
-  degen, labels = label_fusion_rule(C, label(c1), label(c2))
+  degen, labels = label_fusion_rule(C, category_label(c1), category_label(c2))
   return GradedAxes.gradedrange(LabelledNumbers.LabelledInteger.(degen, C.(labels)))
 end
 
 function fusion_rule(::AbelianGroup, c1::C, c2::C) where {C<:AbstractCategory}
-  return C(label_fusion_rule(C, label(c1), label(c2)))  # return AbelianGroup
+  return C(label_fusion_rule(C, category_label(c1), category_label(c2)))  # return AbelianGroup
 end
 
 function label_fusion_rule(category_type::Type{<:AbstractCategory}, l1, l2)

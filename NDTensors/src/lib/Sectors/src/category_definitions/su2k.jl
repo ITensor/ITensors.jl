@@ -12,7 +12,7 @@ SymmetryStyle(::su2) = NonGroupCategory()
 
 dual(s::su2) = s
 
-label(s::su2) = s.j
+category_label(s::su2) = s.j
 
 level(::su2{k}) where {k} = k
 

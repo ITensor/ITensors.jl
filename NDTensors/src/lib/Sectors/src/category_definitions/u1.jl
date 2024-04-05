@@ -12,7 +12,7 @@ SymmetryStyle(::U1) = AbelianGroup()
 
 GradedAxes.dual(u::U1) = U1(-u.n)
 
-label(u::U1) = u.n
+category_label(u::U1) = u.n
 
 trivial(::Type{U1}) = U1(0)
 

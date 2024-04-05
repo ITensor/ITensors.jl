@@ -17,7 +17,7 @@ end
 
 SymmetryStyle(::SU) = NonAbelianGroup()
 
-label(s::SU) = s.l
+category_label(s::SU) = s.l
 
 groupdim(::SU{N}) where {N} = N
 
@@ -29,7 +29,7 @@ adjoint(::Type{SU{N}}) where {N} = SU{N}((ntuple(i -> Int(i == 1) + Int(i < N), 
 
 function quantum_dimension(::NonAbelianGroup, s::SU)
   N = groupdim(s)
-  l = label(s)
+  l = category_label(s)
   d = 1
   for k1 in 1:N, k2 in (k1 + 1):N
     d *= ((k2 - k1) + (l[k1] - l[k2]))//(k2 - k1)
@@ -38,14 +38,14 @@ function quantum_dimension(::NonAbelianGroup, s::SU)
 end
 
 function GradedAxes.dual(s::SU)
-  l = label(s)
+  l = category_label(s)
   nl = ((reverse(cumsum(l[begin:(end - 1)] .- l[(begin + 1):end]))..., 0))
   return typeof(s)(nl)
 end
 
 # display SU(N) irrep as a Young tableau with utf8 box char
 function Base.show(io::IO, ::MIME"text/plain", s::SU)
-  l = label(s)
+  l = category_label(s)
   if l[1] == 0  # singlet = no box
     println(io, "●")
     return nothing
@@ -75,7 +75,7 @@ end
 # TBD remove me?
 #
 
-quantum_dimension(s::SU{2}) = 1 + label(s)[1]
+quantum_dimension(s::SU{2}) = 1 + category_label(s)[1]
 
 SU{2}(d::Integer) = SU{2}((d - 1, 0))
 

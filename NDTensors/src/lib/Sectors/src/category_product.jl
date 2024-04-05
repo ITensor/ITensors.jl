@@ -64,7 +64,9 @@ category_show(io::IO, k, v) = print(io, v)
 category_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
 function Base.isless(s1::C, s2::C) where {C<:CategoryProduct}
-  return isless(label.(values(categories(s1))), label.(values(categories(s2))))
+  return isless(
+    category_label.(values(categories(s1))), category_label.(values(categories(s2)))
+  )
 end
 
 # ==============  Cartesian product  =================
