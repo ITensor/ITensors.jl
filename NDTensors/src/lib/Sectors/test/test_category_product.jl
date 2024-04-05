@@ -247,6 +247,13 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     s3 = sector(; A=U1(1), B=SU2(0), C=Ising("σ"))
     s4 = sector(; A=U1(1), B=SU2(1), C=Ising("σ"))
     @test gradedisequal((@inferred fusion_product(g1, g2)), gradedrange([s3 => 2, s4 => 2]))
+
+    sA = sector(; A=U1(1))
+    sB = sector(; B=SU2(1//2))
+    sAB = sector(; A=U1(1), B=SU2(1//2))
+    gA = gradedrange([sA => 2])
+    gB = gradedrange([sB => 1])
+    @test gradedisequal((@inferred fusion_product(gA, gB)), gradedrange([sAB => 2]))
   end
 end
 

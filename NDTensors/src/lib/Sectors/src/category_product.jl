@@ -12,17 +12,6 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 categories(s::CategoryProduct) = s.cats
 
 # ==============  SymmetryStyle ==============================
-combine_styles(::AbelianGroup, ::AbelianGroup) = AbelianGroup()
-combine_styles(::AbelianGroup, ::NonAbelianGroup) = NonAbelianGroup()
-combine_styles(::AbelianGroup, ::NonGroupCategory) = NonGroupCategory()
-combine_styles(::NonAbelianGroup, ::AbelianGroup) = NonAbelianGroup()
-combine_styles(::NonAbelianGroup, ::NonAbelianGroup) = NonAbelianGroup()
-combine_styles(::NonAbelianGroup, ::NonGroupCategory) = NonGroupCategory()
-combine_styles(::NonGroupCategory, ::SymmetryStyle) = NonGroupCategory()
-combine_styles(::EmptyCategory, s::SymmetryStyle) = s
-combine_styles(s::SymmetryStyle, ::EmptyCategory) = s
-combine_styles(::EmptyCategory, ::EmptyCategory) = EmptyCategory()
-
 function SymmetryStyle(c::CategoryProduct)
   return reduce(combine_styles, map(SymmetryStyle, categories(c)); init=EmptyCategory())
 end
@@ -109,10 +98,6 @@ function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)
 end
 
 # ===================  Fusion rules  ====================
-function fusion_rule(s1::CategoryProduct, s2::CategoryProduct)
-  return fusion_rule(combine_styles(SymmetryStyle(s1), SymmetryStyle(s2)), s1, s2)
-end
-
 # generic case: fusion returns a GradedAxes, even for fusion with Empty
 function fusion_rule(::SymmetryStyle, s1::CategoryProduct, s2::CategoryProduct)
   return to_graded_axis(categories_fusion_rule(categories(s1), categories(s2)))
