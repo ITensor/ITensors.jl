@@ -10,7 +10,9 @@ using .TypeParameterAccessors:
 # This is a file to write generic fills for NDTensors.
 #  This includes random fills, zeros, ...
 
-function generic_randn(StoreT::Type{<:Dense}, dims::Integer; rng=Random.default_rng())
+function generic_randn(
+  StoreT::Type{<:Dense}, dims::Tuple{Integer}; rng=Random.default_rng()
+)
   StoreT = specify_default_type_parameters(StoreT)
   DataT = specify_type_parameter(type_parameter(StoreT, parenttype), eltype, eltype(StoreT))
   @assert eltype(StoreT) == eltype(DataT)
