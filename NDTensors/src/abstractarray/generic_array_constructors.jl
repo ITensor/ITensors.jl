@@ -6,10 +6,6 @@ using .TypeParameterAccessors:
 function generic_randn(
   arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng()
 )
-  return generic_randn(arraytype, dims...; rng=rng)
-end
-
-function generic_randn(arraytype::Type{<:AbstractArray}, dims...; rng=Random.default_rng())
   arraytype_specified = specify_type_parameter(
     unwrap_array_type(arraytype), ndims, length(dims)
   )
@@ -19,12 +15,12 @@ function generic_randn(arraytype::Type{<:AbstractArray}, dims...; rng=Random.def
   return randn!(rng, data)
 end
 
-# Implementation, catches if `ndims(arraytype) != length(dims)`.
-function generic_zeros(arraytype::Type{<:AbstractArray}, dims::Tuple)
-  return generic_zeros(arraytype, dims...)
+function generic_randn(arraytype::Type{<:AbstractArray}, dims...; rng=Random.default_rng())
+  generic_randn(arraytype, (dims))
 end
 
-function generic_zeros(arraytype::Type{<:AbstractArray}, dims...)
+# Implementation, catches if `ndims(arraytype) != length(dims)`.
+function generic_zeros(arraytype::Type{<:AbstractArray}, dims::Tuple)
   arraytype_specified = specify_type_parameter(
     unwrap_array_type(arraytype), ndims, length(dims)
   )
@@ -32,4 +28,8 @@ function generic_zeros(arraytype::Type{<:AbstractArray}, dims...)
   @assert length(dims) == type_parameter(arraytype_specified, ndims)
   ElT = eltype(arraytype_specified)
   return fill!(similar(arraytype_specified, dims...), zero(ElT))
+end
+
+function generic_zeros(arraytype::Type{<:AbstractArray}, dims...)
+  return generic_zeros(arraytype, (dims))
 end
