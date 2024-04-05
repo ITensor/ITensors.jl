@@ -4,9 +4,7 @@ using .TypeParameterAccessors:
 ## Warning to use these functions it is necessary to define `TypeParameterAccessors.position(::Type{<:YourArrayType}, ::typeof(ndims)))`
 # Implementation, catches if `ndims(arraytype) != length(dims)`.
 ## TODO convert ndims to `type_parameter(::, typeof(ndims))`
-function generic_randn(
-  arraytype::Type{<:AbstractArray}, dims...; rng=Random.default_rng()
-)
+function generic_randn(arraytype::Type{<:AbstractArray}, dims...; rng=Random.default_rng())
   arraytype_specified = specify_type_parameter(
     unwrap_array_type(arraytype), ndims, length(dims)
   )
@@ -16,7 +14,9 @@ function generic_randn(
   return randn!(rng, data)
 end
 
-function generic_randn(arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng())
+function generic_randn(
+  arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng()
+)
   return generic_randn(arraytype, dims...; rng=rng)
 end
 
