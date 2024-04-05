@@ -5,7 +5,7 @@ using .TypeParameterAccessors:
 # Implementation, catches if `ndims(arraytype) != length(dims)`.
 ## TODO convert ndims to `type_parameter(::, typeof(ndims))`
 function generic_randn(
-  arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng()
+  arraytype::Type{<:AbstractArray}, dims...; rng=Random.default_rng()
 )
   arraytype_specified = specify_type_parameter(
     unwrap_array_type(arraytype), ndims, length(dims)
@@ -16,12 +16,12 @@ function generic_randn(
   return randn!(rng, data)
 end
 
-function generic_randn(arraytype::Type{<:AbstractArray}, dims...; rng=Random.default_rng())
-  return generic_randn(arraytype, (dims); rng=rng)
+function generic_randn(arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng())
+  return generic_randn(arraytype, dims...; rng=rng)
 end
 
 # Implementation, catches if `ndims(arraytype) != length(dims)`.
-function generic_zeros(arraytype::Type{<:AbstractArray}, dims::Tuple)
+function generic_zeros(arraytype::Type{<:AbstractArray}, dims...)
   arraytype_specified = specify_type_parameter(
     unwrap_array_type(arraytype), ndims, length(dims)
   )
@@ -31,6 +31,6 @@ function generic_zeros(arraytype::Type{<:AbstractArray}, dims::Tuple)
   return fill!(similar(arraytype_specified, dims...), zero(ElT))
 end
 
-function generic_zeros(arraytype::Type{<:AbstractArray}, dims...)
-  return generic_zeros(arraytype, (dims))
+function generic_zeros(arraytype::Type{<:AbstractArray}, dims::Tuple)
+  return generic_zeros(arraytype, dims...)
 end
