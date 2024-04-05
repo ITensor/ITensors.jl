@@ -1,5 +1,8 @@
 using .TypeParameterAccessors:
   unwrap_array_type, specify_default_type_parameters, type_parameter
+
+## Warning to use these functions it is necessary to define `TypeParameterAccessors.position(::Type{<:YourArrayType}, ::typeof(ndims)))`
+# Implementation, catches if `ndims(arraytype) != length(dims)`.
 ## TODO convert ndims to `type_parameter(::, typeof(ndims))`
 function generic_randn(
   arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng()
