@@ -1,3 +1,9 @@
+using .TypeParameterAccessors:
+  default_type_parameter,
+  parenttype,
+  set_eltype,
+  specify_default_type_parameters,
+  type_parameter
 ##TODO replace randn in ITensors with generic_randn
 ## and replace zeros with generic_zeros
 
@@ -14,12 +20,6 @@ function generic_randn(StoreT::Type{<:Dense}, dims::Integer; rng=Random.default_
   return StoreT(data)
 end
 
-using .TypeParameterAccessors:
-  default_type_parameter,
-  parenttype,
-  set_eltype,
-  specify_default_type_parameters,
-  type_parameter
 function generic_zeros(StoreT::Type{<:Dense}, dims::Tuple{Integer})
   StoreT = specify_default_type_parameters(StoreT)
   DataT = specify_type_parameter(type_parameter(StoreT, parenttype), eltype, eltype(StoreT))
