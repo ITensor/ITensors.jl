@@ -105,12 +105,6 @@ end
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
 
-# Used by `TensorAlgebra.fusedims` in `BlockSparseArraysGradedAxesExt`.
-# TBD remove me? Same as a::BlockedUnitRange?
-function blockmergesortperm(a::GradedUnitRange)
-  return Block.(groupsortperm(blocklabels(a)))
-end
-
 function blockmergesortperm(a::UnitRangeDual)
   # If it is dual, reverse the sorting so the sectors
   # end up sorted in the same way whether or not the space
