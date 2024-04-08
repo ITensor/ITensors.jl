@@ -33,9 +33,8 @@ quantum_dimension(::AbelianGroup, ::AbstractCategory) = 1
 quantum_dimension(::EmptyCategory, ::AbstractCategory) = 0
 
 function quantum_dimension(::SymmetryStyle, g::AbstractUnitRange)
-  mult = LabelledNumbers.unlabel.(BlockArrays.blocklengths(g))
-  dims = quantum_dimension.(LabelledNumbers.label.(BlockArrays.blocklengths(g)))
-  return sum(m * d for (m, d) in zip(mult, dims))
+  gblocks = BlockArrays.blocklengths(g)
+  return sum(gblocks .* quantum_dimension.(LabelledNumbers.label.(gblocks)))
 end
 
 quantum_dimension(::AbelianGroup, g::AbstractUnitRange) = length(g)
