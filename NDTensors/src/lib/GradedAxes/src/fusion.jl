@@ -74,10 +74,14 @@ function tensor_product(a1::BlockedUnitRange, a2::BlockedUnitRange)
 end
 
 function blocksortperm(a::BlockedUnitRange)
-  # TODO: Figure out how to deal with dual sectors.
-  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
-  ## return Block.(sortperm(nondual_sectors(a); rev=isdual(a)))
   return Block.(sortperm(blocklabels(a)))
+end
+
+function blocksortperm(a::UnitRangeDual)
+  # If it is dual, reverse the sorting so the sectors
+  # end up sorted in the same way whether or not the space
+  # is dual.
+  return Block.(sortperm(blocklabels(label_dual(dual(a)))))
 end
 
 using BlockArrays: Block, BlockVector
@@ -95,12 +99,6 @@ end
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
 function blockmergesortperm(a::BlockedUnitRange)
-  # If it is dual, reverse the sorting so the sectors
-  # end up sorted in the same way whether or not the space
-  # is dual.
-  # TODO: Figure out how to deal with dual sectors.
-  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
-  ## return Block.(groupsortperm(nondual_sectors(a); rev=isdual(a)))
   return Block.(groupsortperm(blocklabels(a)))
 end
 
@@ -108,13 +106,16 @@ end
 invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
 
 # Used by `TensorAlgebra.fusedims` in `BlockSparseArraysGradedAxesExt`.
+# TBD remove me? Same as a::BlockedUnitRange?
 function blockmergesortperm(a::GradedUnitRange)
+  return Block.(groupsortperm(blocklabels(a)))
+end
+
+function blockmergesortperm(a::UnitRangeDual)
   # If it is dual, reverse the sorting so the sectors
   # end up sorted in the same way whether or not the space
   # is dual.
-  # TODO: Figure out how to deal with dual sectors.
-  # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
-  return Block.(groupsortperm(blocklabels(a)))
+  return Block.(groupsortperm(blocklabels(label_dual(dual(a)))))
 end
 
 # fusion_product generalizes tensor_product to non-abelian groups and fusion categories

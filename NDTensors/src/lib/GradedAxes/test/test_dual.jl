@@ -1,12 +1,14 @@
 @eval module $(gensym())
-using BlockArrays: Block, blockaxes, blockfirsts, blocklasts, blocks, findblock
-using NDTensors.GradedAxes: GradedAxes, UnitRangeDual, dual, gradedrange, nondual
+using BlockArrays: Block, blockaxes, blockfirsts, blocklasts, blocklength, blocks, findblock
+using NDTensors.GradedAxes:
+  GradedAxes, UnitRangeDual, blockmergesortperm, blocksortperm, dual, gradedrange, nondual
 using NDTensors.LabelledNumbers: LabelledInteger, label, labelled
 using Test: @test, @test_broken, @testset
 struct U1
   n::Int
 end
 GradedAxes.dual(c::U1) = U1(-c.n)
+Base.isless(c1::U1, c2::U1) = c1.n < c2.n
 @testset "dual" begin
   a = gradedrange([U1(0) => 2, U1(1) => 3])
   ad = dual(a)
@@ -34,5 +36,11 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test label(ad[[Block(2), Block(1)]][Block(1)]) == U1(-1)
   @test ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)] == 3:4
   @test label(ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)]) == U1(-1)
+  @test blocksortperm(a) == [Block(1), Block(2)]
+  @test blocksortperm(ad) == [Block(2), Block(1)]
+  @test blocklength(blockmergesortperm(a)) == 2
+  @test blocklength(blockmergesortperm(ad)) == 2
+  @test blockmergesortperm(a) == [Block(1), Block(2)]
+  @test blockmergesortperm(ad) == [Block(2), Block(1)]
 end
 end
