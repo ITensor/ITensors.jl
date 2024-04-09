@@ -65,6 +65,7 @@ function label_fusion_rule(category_type::Type{<:AbstractCategory}, l1, l2)
 end
 
 # convenient to define fusion rule for LabelledInteger too
+# TBD expose this through ⊗? Currently not accessible.
 function fusion_rule(
   ::SymmetryStyle, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )

@@ -1,3 +1,6 @@
+# This file defines SymmetryStyle, a trait to distinguish abelian groups, non-abelian groups
+# and non-group fusion categories.
+
 using BlockArrays
 
 using NDTensors.LabelledNumbers
@@ -8,7 +11,7 @@ abstract type SymmetryStyle end
 struct AbelianGroup <: SymmetryStyle end
 struct NonAbelianGroup <: SymmetryStyle end
 struct NonGroupCategory <: SymmetryStyle end
-struct EmptyCategory <: SymmetryStyle end
+struct EmptyCategory <: SymmetryStyle end  # CategoryProduct with zero category inside
 
 combine_styles(::AbelianGroup, ::AbelianGroup) = AbelianGroup()
 combine_styles(::AbelianGroup, ::NonAbelianGroup) = NonAbelianGroup()
