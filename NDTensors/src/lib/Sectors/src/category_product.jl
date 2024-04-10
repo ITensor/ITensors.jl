@@ -66,7 +66,7 @@ end
 
 function categories_product(l1::NamedTuple, l2::NamedTuple)
   if length(intersect_keys(l1, l2)) > 0
-    throw(MethodError("Cannot define product of shared keys"))
+    throw(error("Cannot define product of shared keys"))
   end
   return union_keys(l1, l2)
 end
@@ -137,37 +137,19 @@ end
 # allow ⊗ for different types in NamedTuple
 function categories_fusion_rule(cats1::NamedTuple, cats2::NamedTuple)
   diff_cat = CategoryProduct(symdiff_keys(cats1, cats2))
-  shared1 = intersect_keys(cats1, cats2)
-  shared2 = intersect_keys(cats2, cats1)
+  shared1 = pack_named_tuple(intersect_keys(cats1, cats2))
+  shared2 = pack_named_tuple(intersect_keys(cats2, cats1))
   return diff_cat × categories_fusion_rule(shared1, shared2)
 end
 
-# iterate over keys
-function categories_fusion_rule(
-  cats1::NT, cats2::NT
-) where {Names,NT<:NamedTuple{Names,<:Tuple{AbstractCategory,Vararg{AbstractCategory}}}}
-  return categories_fusion_rule(cats1[(Names[1],)], cats2[(Names[1],)]) ×
-         categories_fusion_rule(cats1[Names[2:end]], cats2[Names[2:end]])
-end
-
-# zero key
-categories_fusion_rule(cats1::NT, cats2::NT) where {NT<:NamedTuple{}} = sector()
-
-# one key
-function categories_fusion_rule(
-  cats1::NT, cats2::NT
-) where {NT<:NamedTuple{<:Any,<:Tuple{AbstractCategory}}}
-  return single_fusion_rule(SymmetryStyle(cats1), cats1, cats2)
-end
-
 # abelian fusion of one category
-function single_fusion_rule(::AbelianGroup, cats1::NT, cats2::NT) where {NT}
+function fusion_rule(::AbelianGroup, cats1::NT, cats2::NT) where {NT<:NamedTuple}
   fused = fusion_rule(only(values(cats1)), only(values(cats2)))
   return sector(only(keys(cats1)) => fused)
 end
 
 # generic fusion of one category
-function single_fusion_rule(::SymmetryStyle, cats1::NT, cats2::NT) where {NT}
+function fusion_rule(::SymmetryStyle, cats1::NT, cats2::NT) where {NT<:NamedTuple}
   fused = fusion_rule(only(values(cats1)), only(values(cats2)))
   key = only(keys(cats1))
   v = Vector{Pair{CategoryProduct{NT},Int64}}()
