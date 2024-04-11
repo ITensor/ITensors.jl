@@ -113,6 +113,23 @@ function fusion_rule(::EmptyCategory, s1::CategoryProduct, s2::CategoryProduct)
   return s1 × s2
 end
 
+# ==============  Ordered implementation  =================
+CategoryProduct(t::Tuple) = _CategoryProduct(t)
+CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
+
+categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
+
+sector(args...; kws...) = CategoryProduct(args...; kws...)
+
+# allow additional categories at one end
+function categories_fusion_rule(cats1::Tuple, cats2::Tuple)
+  n = min(length(cats1), length(cats2))
+  shared = map(fusion_rule, cats1[begin:n], cats2[begin:n])
+  sup1 = CategoryProduct(cats1[(n + 1):end])
+  sup2 = CategoryProduct(cats2[(n + 1):end])
+  return reduce(×, (shared..., sup1, sup2))
+end
+
 # ==============  Dictionary-like implementation  =================
 function CategoryProduct(nt::NamedTuple)
   categories = sort_keys(nt)
@@ -158,21 +175,4 @@ function fusion_rule(::SymmetryStyle, cats1::NT, cats2::NT) where {NT<:NamedTupl
   end
   g = GradedAxes.gradedrange(v)
   return g
-end
-
-# ==============  Ordered implementation  =================
-CategoryProduct(t::Tuple) = _CategoryProduct(t)
-CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
-
-categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
-
-sector(args...; kws...) = CategoryProduct(args...; kws...)
-
-# allow additional categories at one end
-function categories_fusion_rule(cats1::Tuple, cats2::Tuple)
-  n = min(length(cats1), length(cats2))
-  shared = map(fusion_rule, cats1[begin:n], cats2[begin:n])
-  sup1 = CategoryProduct(cats1[(n + 1):end])
-  sup2 = CategoryProduct(cats2[(n + 1):end])
-  return reduce(×, (shared..., sup1, sup2))
 end
