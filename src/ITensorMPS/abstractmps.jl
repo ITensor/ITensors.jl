@@ -1,5 +1,24 @@
 using IsApprox: Approx, IsApprox
 using NDTensors: using_auto_fermion, scalartype, tensor
+import ITensors:
+  dag,
+  #dag!, 
+  prime,
+  prime!,
+  setprime,
+  setprime!,
+  noprime,
+  noprime!,
+  swapprime,
+  swapprime!,
+  replaceprime,
+  replaceprime!,
+  addtags,
+  addtags!,
+  removetags,
+  removetags!,
+  settags,
+  settags!
 
 abstract type AbstractMPS end
 
@@ -698,26 +717,6 @@ end
 function map(f::Function, M::AbstractMPS; set_limits::Bool=true)
   return map!(f, copy(M); set_limits=set_limits)
 end
-
-import ITensors:
-  dag,
-  #dag!, 
-  prime,
-  prime!,
-  setprime,
-  setprime!,
-  noprime,
-  noprime!,
-  swapprime,
-  swapprime!,
-  replaceprime,
-  replaceprime!,
-  addtags,
-  addtags!,
-  removetags,
-  removetags!,
-  settags,
-  settags!
 
 for fname in (
   :dag,
