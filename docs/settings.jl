@@ -1,4 +1,5 @@
-using Documenter, ITensors
+using Documenter 
+using ITensors
 
 DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
 
