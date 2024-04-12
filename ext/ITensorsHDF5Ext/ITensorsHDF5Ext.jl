@@ -1,7 +1,5 @@
 module ITensorsHDF5Ext
 
-using HDF5: HDF5, attributes, create_group, open_group, read, write
-
 include("index.jl")
 include("itensor.jl")
 include("qnindex.jl")
