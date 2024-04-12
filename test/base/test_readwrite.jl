@@ -1,4 +1,6 @@
-using ITensors, HDF5, Test
+using HDF5
+using ITensors
+using Test
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
 

@@ -11,7 +11,6 @@ Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Functors = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
-HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 IsApprox = "28f27b66-4bd8-47e7-9110-e2746eb8bed7"
 KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -34,9 +33,11 @@ Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [weakdeps]
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 
 [extensions]
+ITensorsHDF5Ext = "HDF5"
 ITensorsVectorInterfaceExt = "VectorInterface"
 
 [compat]
