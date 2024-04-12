@@ -15,12 +15,6 @@ using SafeTestsets: @safetestset
       include(filename)
     end
   end
-  if "cuda" in ARGS || "all" in ARGS
-    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorCUDA.jl"))
-  end
-  if "metal" in ARGS || "all" in ARGS
-    include(joinpath(pkgdir(NDTensors), "ext", "examples", "NDTensorMetal.jl"))
-  end
 end
 
 nothing

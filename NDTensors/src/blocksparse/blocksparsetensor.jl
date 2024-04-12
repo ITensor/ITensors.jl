@@ -256,6 +256,7 @@ end
 # Returns the offset of the new block added.
 # XXX rename to insertblock!, no need to return offset
 using .TypeParameterAccessors: unwrap_array_type
+using .Expose: expose
 function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
   newdim = blockdim(T, newblock)
   newoffset = nnz(T)
@@ -264,7 +265,7 @@ function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) wh
   new_data = generic_zeros(unwrap_array_type(T), newdim)
   # TODO: `append!` is broken on `Metal` since `resize!`
   # isn't implemented.
-  append!(data(T), new_data)
+  append!(expose(data(T)), new_data)
   return newoffset
 end
 
@@ -725,6 +726,7 @@ end
 # <fermions>
 permfactor(perm, block, inds) = 1
 
+using .TypeParameterAccessors: set_type_parameters, parenttype
 function permutedims!(
   R::BlockSparseTensor{<:Number,N},
   T::BlockSparseTensor{<:Number,N},
@@ -751,17 +753,20 @@ function permutedims!(
       # Rblock doesn't exist
       block_size = permute(size(Tblock), perm)
       # TODO: Make GPU friendly.
-      Rblock = tensor(Dense(zeros(eltype(R), block_size)), block_size)
+      DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(R), datatype(R)))
+      Rblock = tensor(generic_zeros(DenseT, prod(block_size)), block_size)
     elseif !Tblock_exists
       # Tblock doesn't exist
       block_size = permute(size(Rblock), invperm(perm))
       # TODO: Make GPU friendly.
-      Tblock = tensor(Dense(zeros(eltype(T), block_size)), block_size)
+      DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(T), datatype(T)))
+      Tblock = tensor(generic_zeros(DenseT, prod(block_size)), block_size)
     end
     permutedims!(Rblock, Tblock, perm, f_fac)
     if !Rblock_exists
       # Set missing nonzero block
-      if !iszero(Rblock)
+      ## To make sure no allowscalar issue grab the data
+      if !iszero(data(Rblock))
         R[block] = Rblock
       end
     end

@@ -1,9 +1,14 @@
+using Metal: MtlArray
+using GPUArraysCore: @allowscalar
+using LinearAlgebra: Adjoint
+using NDTensors.Expose: Exposed, expose, unexpose
+
 function Base.getindex(E::Exposed{<:MtlArray})
-  return Metal.@allowscalar unexpose(E)[]
+  return @allowscalar unexpose(E)[]
 end
 
 function Base.setindex!(E::Exposed{<:MtlArray}, x::Number)
-  Metal.@allowscalar unexpose(E)[] = x
+  @allowscalar unexpose(E)[] = x
   return unexpose(E)
 end
 

@@ -12,6 +12,7 @@ include("import.jl")
 ## using that type
 ## Exposed based functions
 include("functions/abstractarray.jl")
+include("functions/append.jl")
 include("functions/copyto.jl")
 include("functions/linearalgebra.jl")
 include("functions/mul.jl")
