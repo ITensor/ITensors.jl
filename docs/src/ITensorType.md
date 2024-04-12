@@ -117,6 +117,7 @@ swapinds(::ITensor, ::Any...)
 ```@docs
 *(::ITensor, ::ITensor)
 dag(T::ITensor; kwargs...)
+directsum(::Pair{ITensor},::Pair{ITensor},::Pair{ITensor},args...; kws...)
 exp(::ITensor, ::Any, ::Any)
 nullspace(::ITensor, ::Any...)
 ```
