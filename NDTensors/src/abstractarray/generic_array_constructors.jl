@@ -17,7 +17,7 @@ end
 function generic_randn(
   arraytype::Type{<:AbstractArray}, dims::Tuple; rng=Random.default_rng()
 )
-  return generic_randn(arraytype, dims...; rng=rng)
+  return generic_randn(arraytype, dims...; rng)
 end
 
 # Implementation, catches if `ndims(arraytype) != length(dims)`.
