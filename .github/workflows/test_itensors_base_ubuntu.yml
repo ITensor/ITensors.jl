@@ -37,10 +37,10 @@ jobs:
         shell: julia {0}
         run: |
           using Pkg;
-          Pkg.activate(temp=true)
+          Pkg.activate(temp=true);
           Pkg.develop(path="./NDTensors");
           Pkg.develop(path=".");
-          Pkg.test("ITensors"; coverage=true, test_args=["base"])
+          Pkg.test("ITensors"; coverage=true, test_args=["base"]);
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
