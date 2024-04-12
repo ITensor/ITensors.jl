@@ -1,3 +1,6 @@
+using Metal: MtlMatrix
+using LinearAlgebra: LinearAlgebra, qr, eigen, svd
+using NDTensors.Expose: qr_positive, ql_positive, ql
 using NDTensors.TypeParameterAccessors:
   set_type_parameters, type_parameters, unwrap_array_type
 

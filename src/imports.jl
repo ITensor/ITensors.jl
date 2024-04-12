@@ -108,7 +108,7 @@ import LinearAlgebra:
   tr,
   transpose
 
-using ITensors.NDTensors.Expose: cpu
+using ITensors.NDTensors.GPUArraysCoreExtensions: cpu
 
 using ITensors.NDTensors:
   Algorithm,

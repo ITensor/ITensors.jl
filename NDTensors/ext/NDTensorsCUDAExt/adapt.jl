@@ -1,24 +1,26 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors
-using NDTensors.GPUArraysCoreExtensions: storagemode
+using Adapt: Adapt
+using CUDA: CUDA, CuArray, CuVector
+using Functors: fmap
+using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
 using NDTensors.CUDAExtensions: CUDAExtensions, CuArrayAdaptor
+using NDTensors.GPUArraysCoreExtensions: storagemode
+using NDTensors.TypeParameterAccessors:
+  default_type_parameter, set_type_parameters, type_parameters
 
-## TODO make this work for unified. This works but overwrites CUDA's adapt_storage. This fails for emptystorage...
-function CUDAExtensions.cu(xs; unified::Bool=false)
-  return fmap(
-    x -> adapt(CuArrayAdaptor{unified ? Mem.UnifiedBuffer : Mem.DeviceBuffer}(), x), xs
-  )
+function CUDAExtensions.cu(xs; storagemode=default_type_parameter(CuArray, storagemode))
+  return fmap(x -> adapt(CuArrayAdaptor{storagemode}(), x), xs)
 end
 
+## Could do this generically
 function Adapt.adapt_storage(adaptor::CuArrayAdaptor, xs::AbstractArray)
-  ElT = eltype(xs)
-  BufT = storagemode(adaptor)
-  N = ndims(xs)
-  return isbits(xs) ? xs : adapt(CuArray{ElT,N,BufT}, xs)
+  params = (type_parameters(xs, (eltype, ndims))..., storagemode(adaptor))
+  cutype = set_type_parameters(CuArray, (eltype, ndims, storagemode), params)
+  return isbits(xs) ? xs : adapt(cutype, xs)
 end
 
 function NDTensors.adapt_storagetype(
-  adaptor::CuArrayAdaptor, xs::Type{EmptyStorage{ElT,StoreT}}
+  adaptor::CuArrayAdaptor, ::Type{EmptyStorage{ElT,StoreT}}
 ) where {ElT,StoreT}
-  BufT = storagemode(adaptor)
-  return NDTensors.emptytype(NDTensors.adapt_storagetype(CuVector{ElT,BufT}, StoreT))
+  cutype = set_type_parameters(CuVector, (eltype, storagemode), (ElT, storagemode(adaptor)))
+  return emptytype(adapt_storagetype(cutype, StoreT))
 end
