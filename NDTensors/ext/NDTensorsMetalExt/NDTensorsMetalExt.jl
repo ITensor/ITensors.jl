@@ -1,14 +1,5 @@
 module NDTensorsMetalExt
 
-using Adapt
-using Functors
-using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!, qr, eigen, svd
-using NDTensors
-using NDTensors.Expose: qr_positive, ql_positive, ql
-
-using Metal
-
-include("imports.jl")
 include("adapt.jl")
 include("set_types.jl")
 include("indexing.jl")

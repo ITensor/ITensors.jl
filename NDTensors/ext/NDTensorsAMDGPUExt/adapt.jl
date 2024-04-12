@@ -22,7 +22,7 @@ function Adapt.adapt_storage(adaptor::ROCArrayAdaptor, xs::AbstractArray)
 end
 
 function NDTensors.adapt_storagetype(
-  adaptor::ROCArrayAdaptor, xs::Type{EmptyStorage{ElT,StoreT}}
+  adaptor::ROCArrayAdaptor, ::Type{EmptyStorage{ElT,StoreT}}
 ) where {ElT,StoreT}
   roctype = set_type_parameters(
     ROCVector, (eltype, storagemode), (ElT, storagemode(adaptor))

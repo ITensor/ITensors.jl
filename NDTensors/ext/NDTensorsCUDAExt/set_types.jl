@@ -1,4 +1,5 @@
 # TypeParameterAccessors definitions
+using CUDA: CUDA, CuArray
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 using NDTensors.GPUArraysCoreExtensions: storagemode
 

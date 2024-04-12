@@ -33,14 +33,13 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - name: Install Julia dependencies
-        shell: julia --project=monorepo {0}
+      - name: Install Julia dependencies and run tests
+        shell: julia --depwarn=yes {0}
         run: |
           using Pkg;
-          Pkg.develop(path=".");
+          Pkg.activate(temp=true);
           Pkg.develop(path="./NDTensors");
+          Pkg.develop(path=".");
           Pkg.develop(path="./ITensorVisualizationBase");
           Pkg.develop(path="./ITensorUnicodePlots");
-      - name: Run the tests
-        run: >
-          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorUnicodePlots")'
+          Pkg.test("ITensorUnicodePlots")
