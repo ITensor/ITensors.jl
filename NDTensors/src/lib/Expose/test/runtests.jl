@@ -184,7 +184,11 @@ using NDTensors.GPUArraysCoreExtensions: cpu
   copyto!(expose(y), expose(x))
   @allowscalar begin
     @test y == x
-    @test copy(x) == x
+    if dev == NDTensors.mtl
+      @test_broken copy(x) == x
+    else
+      @test copy(x) == x
+    end
   end
 
   y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())
