@@ -1,4 +1,4 @@
-using ITensors: IndexSet, inds, itensor, ITensor, storage
+using ITensors: inds, itensor, ITensor, storage
 using NDTensors:
   NDTensors, BlockSparse, Combiner, Dense, Diag, DiagBlockSparse, EmptyStorage
 
@@ -17,8 +17,7 @@ function HDF5.read(
   if read(attributes(g)["type"]) != "ITensor"
     error("HDF5 group or file does not contain ITensor data")
   end
-  # TODO: use Vector{Index} here?
-  inds = read(g, "inds", IndexSet)
+  inds = read(g, "inds", Vector{<:Index})
 
   # check input file for key name of ITensor data
   # ITensors.jl <= v0.1.x uses `store` as key
