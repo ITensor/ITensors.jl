@@ -51,6 +51,8 @@ jobs:
         run: |
           using Pkg;
           Pkg.add("ITensorTDVP");
+          Pkg.activate(temp=true);
+          Pkg.develop("ITensors");
           Pkg.test("ITensorTDVP");
       - name: Set latest commit status as ${{ job.status }}
         uses: myrotvorets/set-commit-status-action@master
