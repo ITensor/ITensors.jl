@@ -38,4 +38,3 @@ jobs:
           Pkg.develop(path="./NDTensors");
           Pkg.develop(path=".");
           Pkg.test("NDTensors");
-          
