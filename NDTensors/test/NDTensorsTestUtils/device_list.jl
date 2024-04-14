@@ -13,7 +13,10 @@ if "rocm" in ARGS || "all" in ARGS
 end
 if "metal" in ARGS || "all" in ARGS
   ## Warning Metal does not work in Julia versions below 1.8
-  Pkg.add("Metal")
+  ## Essentially compat versioning here because we can't put Metal
+  ## in the Project.toml because it causes issues during testing in 
+  ## Julia versions below 1.8
+  Pkg.add(; name="Metal", version="1.1.0")
   using Metal
 end
 
