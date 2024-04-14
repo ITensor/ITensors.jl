@@ -42,6 +42,3 @@ jobs:
           Pkg.develop(path=".");
           Pkg.add("ITensorTDVP");
           Pkg.test("ITensorTDVP");
-      - uses: julia-actions/julia-uploadcodecov@latest
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
