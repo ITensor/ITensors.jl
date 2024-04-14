@@ -58,7 +58,6 @@ function itensortdvp_tdvp(
   solver_outputlevel=default_solver_outputlevel(solver_function),
   kwargs...,
 )
-  println("Testing PR 1381")
   return itensortdvp_tdvp(
     tdvp_solver(
       solver_function;
