@@ -14,8 +14,6 @@ end
 if "metal" in ARGS || "all" in ARGS
   ## Warning Metal does not work in Julia versions below 1.8
   Pkg.add("Metal")
-  ## This line forces Pkg to update metal to latest version
-  Pkg.update("Metal"; preserve=PRESERVE_DIRECT)
   using Metal
 end
 
