@@ -4,6 +4,9 @@ using NDTensors.Sectors:
 using NDTensors.GradedAxes: dual, fusion_product, gradedisequal, gradedrange
 using Test: @inferred, @test, @testset, @test_broken, @test_throws
 
+# some types are not correctly inferred on julia 1.6
+# every operation is type stable on julia 1.10
+
 @testset "Test Ordered Products" begin
   @testset "Ordered Constructor" begin
     s = sector(U1(1), U1(2))
@@ -343,11 +346,11 @@ end
     q01 = sector(; B=U1(1))
     q11 = sector(; A=U1(1), B=U1(1))
 
-    @test (@inferred q10 ⊗ q10) == sector(; A=U1(2))
+    @test q10 ⊗ q10 == sector(; A=U1(2))
     @test (@inferred q01 ⊗ q00) == q01
     @test (@inferred q00 ⊗ q01) == q01
     @test (@inferred q10 ⊗ q01) == q11
-    @test (@inferred q11 ⊗ q11) == sector(; A=U1(2), B=U1(2))
+    @test q11 ⊗ q11 == sector(; A=U1(2), B=U1(2))
 
     s11 = sector(; A=U1(1), B=Z{2}(1))
     s10 = sector(; A=U1(1))
@@ -355,7 +358,7 @@ end
     @test (@inferred s01 ⊗ q00) == s01
     @test (@inferred q00 ⊗ s01) == s01
     @test (@inferred s10 ⊗ s01) == s11
-    @test (@inferred s11 ⊗ s11) == sector(; A=U1(2), B=Z{2}(0))
+    @test s11 ⊗ s11 == sector(; A=U1(2), B=Z{2}(0))
   end
 
   @testset "Fusion of NonAbelian products" begin
@@ -365,14 +368,14 @@ end
     phab = sector(; A=SU2(1//2), B=SU2(1//2))
 
     @test gradedisequal(
-      (@inferred pha ⊗ pha), gradedrange([sector(; A=SU2(0)) => 1, sector(; A=SU2(1)) => 1])
+      pha ⊗ pha, gradedrange([sector(; A=SU2(0)) => 1, sector(; A=SU2(1)) => 1])
     )
     @test gradedisequal((@inferred pha ⊗ p0), gradedrange([pha => 1]))
     @test gradedisequal((@inferred p0 ⊗ phb), gradedrange([phb => 1]))
     @test gradedisequal((@inferred pha ⊗ phb), gradedrange([phab => 1]))
 
     @test gradedisequal(
-      (@inferred phab ⊗ phab),
+      phab ⊗ phab,
       gradedrange([
         sector(; A=SU2(0), B=SU2(0)) => 1,
         sector(; A=SU2(1), B=SU2(0)) => 1,
@@ -386,11 +389,11 @@ end
     ı = Fib("1")
     τ = Fib("τ")
     s = sector(; A=ı, B=ı)
-    @test gradedisequal((@inferred s ⊗ s), gradedrange([s => 1]))
+    @test gradedisequal(s ⊗ s, gradedrange([s => 1]))
 
     s = sector(; A=τ, B=τ)
     @test gradedisequal(
-      (@inferred s ⊗ s),
+      s ⊗ s,
       gradedrange([
         sector(; A=ı, B=ı) => 1,
         sector(; A=τ, B=ı) => 1,
@@ -408,7 +411,7 @@ end
       sector(; A=ı, B=ψ) => 1,
       sector(; A=τ, B=ψ) => 1,
     ])
-    @test gradedisequal((@inferred s ⊗ s), g)
+    @test gradedisequal(s ⊗ s, g)
   end
 
   @testset "Fusion of mixed Abelian and NonAbelian products" begin
@@ -422,16 +425,16 @@ end
     q21 = (N=U1(2),) × (J=SU2(1),)
     q22 = (N=U1(2),) × (J=SU2(2),)
 
-    @test gradedisequal((@inferred q1h ⊗ q1h), gradedrange([q20 => 1, q21 => 1]))
-    @test gradedisequal((@inferred q10 ⊗ q1h), gradedrange([q2h => 1]))
-    @test gradedisequal((@inferred q0h ⊗ q1h), gradedrange([q10 => 1, q11 => 1]))
-    @test gradedisequal((@inferred q11 ⊗ q11), gradedrange([q20 => 1, q21 => 1, q22 => 1]))
+    @test gradedisequal(q1h ⊗ q1h, gradedrange([q20 => 1, q21 => 1]))
+    @test gradedisequal(q10 ⊗ q1h, gradedrange([q2h => 1]))
+    @test gradedisequal(q0h ⊗ q1h, gradedrange([q10 => 1, q11 => 1]))
+    @test gradedisequal(q11 ⊗ q11, gradedrange([q20 => 1, q21 => 1, q22 => 1]))
   end
 
   @testset "Fusion of fully mixed products" begin
     s = sector(; A=U1(1), B=SU2(1//2), C=Ising("σ"))
     @test gradedisequal(
-      (@inferred s ⊗ s),
+      s ⊗ s,
       gradedrange([
         sector(; A=U1(2), B=SU2(0), C=Ising("1")) => 1,
         sector(; A=U1(2), B=SU2(1), C=Ising("1")) => 1,
@@ -444,7 +447,7 @@ end
     τ = Fib("τ")
     s = sector(; A=SU2(1//2), B=U1(1), C=τ)
     @test gradedisequal(
-      (@inferred s ⊗ s),
+      s ⊗ s,
       gradedrange([
         sector(; A=SU2(0), B=U1(2), C=ı) => 1,
         sector(; A=SU2(1), B=U1(2), C=ı) => 1,
@@ -455,7 +458,7 @@ end
 
     s = sector(; A=τ, B=U1(1), C=ı)
     @test gradedisequal(
-      (@inferred s ⊗ s),
+      s ⊗ s,
       gradedrange([sector(; B=U1(2), A=ı, C=ı) => 1, sector(; B=U1(2), A=τ, C=ı) => 1]),
     )
   end

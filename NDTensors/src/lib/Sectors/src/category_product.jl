@@ -154,8 +154,10 @@ end
 # allow ⊗ for different types in NamedTuple
 function categories_fusion_rule(cats1::NamedTuple, cats2::NamedTuple)
   diff_cat = CategoryProduct(symdiff_keys(cats1, cats2))
-  shared1 = pack_named_tuple(intersect_keys(cats1, cats2))
-  shared2 = pack_named_tuple(intersect_keys(cats2, cats1))
+  nt1 = intersect_keys(cats1, cats2)
+  shared1 = ntuple(i -> (; keys(nt1)[i] => values(nt1)[i]), length(nt1))
+  nt2 = intersect_keys(cats2, cats1)
+  shared2 = ntuple(i -> (; keys(nt2)[i] => values(nt2)[i]), length(nt2))
   return diff_cat × categories_fusion_rule(shared1, shared2)
 end
 
