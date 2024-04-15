@@ -1,5 +1,5 @@
 using NDTensors: NDTensors
-using Pkg: Pkg
+using Pkg: Pkg, PRESERVE_DIRECT
 if "cuda" in ARGS || "all" in ARGS
   ## Right now adding CUDA during Pkg.test results in a
   ## compat issues. I am adding it back to test/Project.toml
