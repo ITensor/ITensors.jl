@@ -1220,8 +1220,6 @@ the full inner product of the MPS/MPO with itself.
 See also [`lognorm`](@ref).
 """
 function norm(M::AbstractMPS)
-  println("Using PR #1381")
-
   if isortho(M)
     return norm(M[orthocenter(M)])
   end
