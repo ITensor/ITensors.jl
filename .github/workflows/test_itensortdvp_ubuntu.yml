@@ -1,0 +1,53 @@
+name: Run ITensorTDVP tests (Unbuntu)
+
+on:
+  push:
+    branches:
+      - main
+    tags: '*'
+  pull_request:
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)
+    runs-on: ${{ matrix.os }}
+    env:
+      JULIA_NUM_THREADS: ${{ matrix.threads }}
+    strategy:
+      matrix:
+        version:
+          - '1.6'
+          - '1'
+        os:
+          - ubuntu-latest
+        threads:
+          - '2'
+        arch:
+          - x64
+        exclude:
+          # MacOS not available on x86
+          - {os: 'macOS-latest', arch: 'x86'}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - name: Install Julia dependencies and run tests
+        shell: julia {0}
+        run: |
+          using Pkg;
+          try
+            Pkg.activate(temp=true);
+            Pkg.develop(path="./NDTensors");
+            Pkg.develop(path=".");
+            Pkg.add("ITensorTDVP");
+            Pkg.test("ITensorTDVP");
+          catch err
+            err isa Pkg.Resolve.ResolverError || rethrow()
+            # If we can't resolve that means this is incompatible by SemVer and this is fine
+            # It means we marked this as a breaking change, so we don't need to worry about
+            # Mistakenly introducing a breaking change, as we have intentionally made one
+            @info "ITensorTDVP not compatible with this release. Skipping this test." exception=err
+            exit(0)  # Exit immediately, as a success
+          end

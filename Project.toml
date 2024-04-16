@@ -34,10 +34,12 @@ ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [weakdeps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 
 [extensions]
 ITensorsHDF5Ext = "HDF5"
+ITensorsObserversExt = "Observers"
 ITensorsVectorInterfaceExt = "VectorInterface"
 
 [compat]
@@ -74,4 +76,5 @@ julia = "1.6"
 
 [extras]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
