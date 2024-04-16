@@ -65,8 +65,6 @@ function makeL!(P::ProjMPOApply, psi::MPS, k::Int)
 end
 
 function makeR!(P::ProjMPOApply, psi::MPS, k::Int)
-  println("Testing PR 1381")
-
   # Save the last `R` that is made to help with caching
   # for DiskProjMPO
   rl = P.rpos
