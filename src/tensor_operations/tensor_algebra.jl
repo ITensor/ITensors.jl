@@ -396,6 +396,8 @@ Given a list of pairs of ITensors and indices, perform a partial
 direct sum of the tensors over the specified indices. Indices that are
 not specified to be summed must match between the tensors.
 
+(Note: `Pair{ITensor}` in Julia is short for `Pair{ITensor,<:Any}` which means any pair `T => x` where `T` is an ITensor.)
+
 If all indices are specified then the operation is equivalent to creating
 a block diagonal tensor.
 

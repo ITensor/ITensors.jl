@@ -10,7 +10,6 @@ using ChainRulesCore
 using Compat
 using DocStringExtensions
 using Functors
-using HDF5
 using IsApprox
 using LinearAlgebra
 using NDTensors
