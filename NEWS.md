@@ -6,6 +6,24 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.4.0 Release Notes
+==============================
+
+This version removes HDF5 as a dependency and moves the HDF5
+read and write functions for ITensor, MPS, MPO, and other associated
+types into a package extension. To enable ITensor HDF5 features,
+install the HDF5 package and put `using HDF5` before `using ITensors`
+in your code.
+
+Bugs (since v0.3.66):
+- Fixes to CI (GLMakie and other workflows)
+- Fix incorrect ITensor constructor declaration in docs
+
+Enhancements (since v0.3.66):
+- Refactoring GPU extensions (#1365)
+- Add directsum function to docs
+
+
 ITensors v0.3.22 Release Notes
 ==============================
 
