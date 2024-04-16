@@ -1,24 +1,5 @@
 using IsApprox: Approx, IsApprox
 using NDTensors: using_auto_fermion, scalartype, tensor
-import ITensors:
-  dag,
-  #dag!, 
-  prime,
-  prime!,
-  setprime,
-  setprime!,
-  noprime,
-  noprime!,
-  swapprime,
-  swapprime!,
-  replaceprime,
-  replaceprime!,
-  addtags,
-  addtags!,
-  removetags,
-  removetags!,
-  settags,
-  settags!
 
 abstract type AbstractMPS end
 
