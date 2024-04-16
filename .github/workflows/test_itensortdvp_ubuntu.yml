@@ -37,8 +37,17 @@ jobs:
         shell: julia {0}
         run: |
           using Pkg;
-          Pkg.activate(temp=true);
-          Pkg.develop(path="./NDTensors");
-          Pkg.develop(path=".");
-          Pkg.add("ITensorTDVP");
-          Pkg.test("ITensorTDVP");
+          try
+            Pkg.activate(temp=true);
+            Pkg.develop(path="./NDTensors");
+            Pkg.develop(path=".");
+            Pkg.add("ITensorTDVP");
+            Pkg.test("ITensorTDVP");
+          catch err
+            err isa Pkg.Resolve.ResolverError || rethrow()
+            # If we can't resolve that means this is incompatible by SemVer and this is fine
+            # It means we marked this as a breaking change, so we don't need to worry about
+            # Mistakenly introducing a breaking change, as we have intentionally made one
+            @info "ITensorTDVP not compatible with this release. Skipping this test." exception=err
+            exit(0)  # Exit immediately, as a success
+          end
