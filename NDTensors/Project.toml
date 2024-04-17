@@ -15,7 +15,6 @@ FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 Folds = "41a02a25-b8f0-4f67-bc48-60067656b558"
 Functors = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
 GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
-HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 HalfIntegers = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
 InlineStrings = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -34,6 +33,7 @@ VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4"
 TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
@@ -41,6 +41,7 @@ AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
 
 [extensions]
 NDTensorsCUDAExt = "CUDA"
+NDTensorsHDF5Ext = "HDF5"
 NDTensorsMetalExt = "Metal"
 NDTensorsOctavianExt = "Octavian"
 NDTensorsTBLISExt = "TBLIS"
@@ -75,3 +76,6 @@ TimerOutputs = "0.5.5"
 TupleTools = "1.2.0"
 VectorInterface = "0.4.2"
 julia = "1.6"
+
+[extras]
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
