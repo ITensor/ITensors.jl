@@ -26,7 +26,7 @@ itensor(::Array{<:Number}, ::ITensors.Indices)
 ## QN BlockSparse Constructors
 
 ```@docs
-ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
+ITensor(::Type{<:Number}, ::QN, ::ITensors.QNIndices)
 ITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Array{<:Number}, ::ITensors.QNIndices; tol=0)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::QN, ::ITensors.Indices)
 ```
@@ -117,6 +117,7 @@ swapinds(::ITensor, ::Any...)
 ```@docs
 *(::ITensor, ::ITensor)
 dag(T::ITensor; kwargs...)
+directsum(::Pair{ITensor},::Pair{ITensor},::Pair{ITensor},args...; kws...)
 exp(::ITensor, ::Any, ::Any)
 nullspace(::ITensor, ::Any...)
 ```

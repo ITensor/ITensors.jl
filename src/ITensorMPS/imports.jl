@@ -120,7 +120,6 @@ import ..ITensors:
   hascommoninds,
   hasqns,
   hassameinds,
-  HDF5,
   inner,
   isfermionic,
   maxdim,
