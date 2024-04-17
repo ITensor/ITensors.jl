@@ -141,4 +141,3 @@ end
 function convert(::Type{<:Dense{ElR,DataT}}, D::Dense) where {ElR,DataT}
   return Dense(convert(DataT, data(D)))
 end
-

@@ -132,4 +132,3 @@ end
 # Convert a Diag storage type to the closest Dense storage type
 dense(::Type{<:NonuniformDiag{ElT,DataT}}) where {ElT,DataT} = Dense{ElT,DataT}
 dense(::Type{<:UniformDiag{ElT}}) where {ElT} = Dense{ElT,default_datatype(ElT)}
-
