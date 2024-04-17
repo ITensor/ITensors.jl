@@ -86,8 +86,6 @@ import ITensors.ContractionSequenceOptimization:
 
 import Adapt: adapt_structure, adapt_storage
 
-import HDF5: read, write
-
 import LinearAlgebra:
   axpby!,
   axpy!,

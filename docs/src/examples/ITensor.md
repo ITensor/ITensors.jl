@@ -501,6 +501,11 @@ UT = dag(C) * CT
 
 ## Write and Read an ITensor to Disk with HDF5
 
+
+
+!!! info 
+    Make sure to install the HDF5 package to use this feature. (Run `julia> ] add HDF5` in the Julia REPL console.)
+
 Saving ITensors to disk can be very useful. For example, you
 might encounter a bug in your own code, and by reading the
 ITensors involved from disk you can shortcut the process of
@@ -520,7 +525,7 @@ from a calculation. To write it to an HDF5 file named "myfile.h5"
 you can use the following pattern:
 
 ```julia
-using ITensors.HDF5
+using HDF5
 f = h5open("myfile.h5","w")
 write(f,"T",T)
 close(f)
@@ -531,8 +536,6 @@ or "Result Tensor" and doesn't have to have the same name as the reference `T`.
 Closing the file `f` is optional and you can also write other objects to the same
 file before closing it.
 
-[*Above we did `using ITensors.HDF5` since HDF5 is already included as a dependency with ITensor. You can also do `using HDF5` but must add the HDF5 package beforehand for that to work.*]
-
 **Reading an ITensor from an HDF5 File**
 
 Say you have an HDF5 file "myfile.h5" which contains an ITensor stored as a dataset with the
@@ -540,7 +543,7 @@ name "T". (Which would be the situation if you wrote it as in the example above.
 To read this ITensor back from the HDF5 file, use the following pattern:
 
 ```julia
-using ITensors.HDF5
+using HDF5
 f = h5open("myfile.h5","r")
 T = read(f,"T",ITensor)
 close(f)
