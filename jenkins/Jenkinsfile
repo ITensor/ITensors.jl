@@ -119,9 +119,6 @@ pipeline {
               juliaup update
             '''
             sh '''
-              julia -e 'using Pkg; Pkg.activate("./NDTensors/test/"); Pkg.add("Metal")';
-            '''
-            sh '''
               julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
             '''
           }
