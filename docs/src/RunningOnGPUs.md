@@ -1,10 +1,10 @@
 # Running on GPUs
 
 ITensor provides package extensions for running tensor operations in the GPU with different backends.
-You can activate a backend by loading the Julia GPU package alongside ITensors.jl
+You can activate a backend by loading the appropriate Julia GPU package alongside ITensors.jl
 and moving your tensors to the GPU using that package's provided accelerator.
 
-For example, you can load CUDA.jl 8 to perform tensor operations on NVIDIA GPUs or Metal.jl 3 to perform tensor operations on Apple GPUs:
+For example, you can load CUDA.jl to perform tensor operations on NVIDIA GPUs or Metal.jl to perform tensor operations on Apple GPUs:
 
 ```julia
 using ITensors
