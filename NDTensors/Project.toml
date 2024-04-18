@@ -43,7 +43,7 @@ TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
 [extensions]
 NDTensorsAMDGPUExt = "AMDGPU"
 NDTensorsCUDAExt = "CUDA"
-NDTensorscuTENSORExt = "cuTENSOr"
+NDTensorscuTENSORExt = "cuTENSOR"
 NDTensorsHDF5Ext = "HDF5"
 NDTensorsMetalExt = "Metal"
 NDTensorsOctavianExt = "Octavian"
