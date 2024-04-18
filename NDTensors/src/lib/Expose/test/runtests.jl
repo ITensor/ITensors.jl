@@ -184,7 +184,8 @@ using NDTensors.GPUArraysCoreExtensions: cpu
   copyto!(expose(y), expose(x))
   @allowscalar begin
     @test y == x
-    @test copy(x) == x
+    ## temporarily use expose copy because this is broken in Metal 1.1 
+    @test copy(expose(x)) == x
   end
 
   y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())

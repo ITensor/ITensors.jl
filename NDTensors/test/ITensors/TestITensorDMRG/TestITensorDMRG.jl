@@ -15,9 +15,6 @@ reference_energies = Dict([
 
 is_broken(dev, elt::Type, conserve_qns::Val) = false
 
-## Currently Metal fails because we are waiting for `resize!` to be added. Should be in the next metal release
-is_broken(dev::typeof(mtl), elt::Type, conserve_qns::Val{true}) = true
-
 include("dmrg.jl")
 
 end
