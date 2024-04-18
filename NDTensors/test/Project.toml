@@ -27,4 +27,4 @@ AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 
 [compat]
-Metal = "1.0.1"
+Metal = "^1.1.0"
