@@ -1,5 +1,5 @@
 using NDTensors: NDTensors
-using Pkg: Pkg, PRESERVE_DIRECT
+using Pkg: Pkg
 if "cuda" in ARGS || "all" in ARGS
   ## Right now adding CUDA during Pkg.test results in a
   ## compat issues. I am adding it back to test/Project.toml
@@ -14,8 +14,6 @@ end
 if "metal" in ARGS || "all" in ARGS
   ## Warning Metal does not work in Julia versions below 1.8
   Pkg.add("Metal")
-  ## This line forces Pkg to update metal to latest version
-  Pkg.update("Metal"; preserve=PRESERVE_DIRECT)
   using Metal
 end
 

@@ -15,7 +15,6 @@ using Random
 using LinearAlgebra
 using StaticArrays
 using Functors
-using HDF5
 using SimpleTraits
 using SplitApplyCombine
 using Strided

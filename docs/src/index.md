@@ -29,6 +29,8 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ## News
 
+- April 16, 2024: ITensors.jl v0.4 has been released. This version removes HDF5 as a dependency (a breaking change) and moves the HDF5 read and write functions for ITensor, MPS, MPO, and other associated types into a package extension. To enable ITensor HDF5 features, install the HDF5 package and put `using HDF5` together with `using ITensors` in your code. Other recent changes include support for multiple GPU backends using package extensions.
+
 - March 25, 2022: ITensors.jl v0.3 has been released. The main breaking change is that we no longer support versions of Julia below 1.6. Julia 1.6 is the long term support version of Julia (LTS), which means that going forward versions below Julia 1.6 won't be as well supported with bug fixes and improvements. Additionally, Julia 1.6 introduced many improvements including syntax improvements that we would like to start using with ITensors.jl, which becomes challenging if we try to support Julia versions below 1.6. See [here](https://www.oxinabox.net/2021/02/13/Julia-1.6-what-has-changed-since-1.0.html) and [here](https://julialang.org/blog/2021/03/julia-1.6-highlights/) for some nice summaries of the Julia 1.6 release.
 
 -  Jun 09, 2021: ITensors.jl v0.2 has been released, with a few breaking changes as well as a variety of bug fixes
