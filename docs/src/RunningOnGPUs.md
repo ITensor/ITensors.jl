@@ -37,6 +37,8 @@ Bmtl = mtl(B)
 Amtl * Bmtl
 ```
 
+## GPU backends
+
 ITensor currently provides
 package extensions for the following GPU backends:
 
@@ -50,3 +52,14 @@ Some important caveats to keep in mind related to the ITensor GPU backends are:
 * only dense tensor operations are well supported right now. Block sparse operations (which arise when QN conservation is enabled) are under active development and either may not work or may be slower than their CPU counterparts,
 * certain GPU backends do not have native support for certain matrix decompositions like `svd`, `eigen`, and `qr` in which case we will perform those operations on CPU. If your calculation is dominated by those operations, there likely is no advantage to running it on GPU right now. CUDA generally has good support for native matrix decompositions, while Metal and AMD have more limited support right now, and
 * single precision (`Float32`) calculations are generally fastest on GPU.
+
+The table below summarizes each backend's current capabilities.
+
+|                              | CUDA | ROCm   | Metal  | oneAPI |
+|------------------------------|------|--------|--------|--------|
+| Contractions (dense)         |   ✓  |   ✓    |   ✓    |  N/A   |
+| QR (dense)                   |   ✓  | On CPU | On CPU |  N/A   |
+| SVD (dense)                  |   ✓  | On CPU | On CPU |  N/A   |
+| Eigendecomposition (dense)   |   ✓  | On CPU | On CPU |  N/A   |
+| Double precision (`Float64`) |   ✓  |   ✓    |  N/A   |  N/A   |
+| Block sparse                 |  N/A |  N/A   |  N/A   |  N/A   |
