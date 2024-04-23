@@ -83,12 +83,13 @@ function can_contract(tensor1::Tensor, tensor2::Tensor)
   return can_contract(typeof(tensor1), typeof(tensor2))
 end
 
+using NDTensors.Expose: Exposed, expose, unexpose
 # Version where output labels aren't supplied
 @traitfn function contract(
   tensor1::TensorT1, labels_tensor1, tensor2::TensorT2, labels_tensor2
 ) where {TensorT1<:Tensor,TensorT2<:Tensor;CanContract{TensorT1,TensorT2}}
   labelsoutput_tensor = contract_labels(labels_tensor1, labels_tensor2)
-  return contract(tensor1, labels_tensor1, tensor2, labels_tensor2, labelsoutput_tensor)
+  return contract(expose(tensor1), labels_tensor1, expose(tensor2), labels_tensor2, labelsoutput_tensor)
 end
 
 @traitfn function contract(
@@ -97,6 +98,10 @@ end
   return error(
     "Can't contract tensor of storage type $(storagetype(tensor1)) with tensor of storage type $(storagetype(tensor2)).",
   )
+end
+
+function contract(Etensor1::Exposed, labelstensor1, Etensor2::Exposed, labelstensor2, labelsoutput_tensor)
+  contract(unexpose(Etensor1), labelstensor1, unexpose(Etensor2), labelstensor2, labelsoutput_tensor)
 end
 
 function contract(
