@@ -1,4 +1,5 @@
-using Documenter, ITensors
+using Documenter
+using ITensors
 
 DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
 
@@ -57,6 +58,7 @@ settings = Dict(
     "Advanced Usage Guide" => [
       "Advanced Usage Guide" => "AdvancedUsageGuide.md",
       "Multithreading" => "Multithreading.md",
+      "Running on GPUs" => "RunningOnGPUs.md",
       "Symmetric (QN conserving) tensors: background and usage" => "QNTricks.md",
       "Timing and profiling" => "CodeTiming.md",
       "Contraction sequence optimization" => "ContractionSequenceOptimization.md",

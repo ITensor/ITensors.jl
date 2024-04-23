@@ -65,13 +65,10 @@ H = MPO(os, s)
 
 println("Free fermion starting state energy")
 @show flux(ψ0)
-@show inner(ψ0, H, ψ0)
+@show inner(ψ0', H, ψ0)
 
 println("\nStart from free fermion state")
-sweeps = Sweeps(5)
-setmaxdim!(sweeps, _maxlinkdim)
-setcutoff!(sweeps, _cutoff)
-e, ψ = @time dmrg(H, ψ0, sweeps)
+e, ψ = @time dmrg(H, ψ0; nsweeps=5, maxdim=_maxlinkdim, cutoff=_cutoff)
 @show e
 @show flux(ψ)
 
@@ -81,4 +78,4 @@ using ITensorGaussianMPS: correlation_matrix_to_gmps, correlation_matrix_to_mps,
 Λ_dn = correlation_matrix(ψ, "Cdagdn", "Cdn")
 ψ̃0 = correlation_matrix_to_mps(s, Λ_up, Λ_dn; eigval_cutoff=1e-2, maxblocksize=4)
 @show inner(ψ̃0, ψ)
-@show inner(ψ̃0, H, ψ̃0)
+@show inner(ψ̃0', H, ψ̃0)

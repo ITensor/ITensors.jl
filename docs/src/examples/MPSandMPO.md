@@ -223,7 +223,7 @@ removing the prime from the ``s'_3`` index afterward:
 
 ```julia
 newA = G * psi[3]
-noprime!(newA)
+newA = noprime(newA)
 ```
 
 Finally, put the new tensor back into MPS `psi` to update its third MPS tensor:
@@ -238,11 +238,11 @@ Afterward, we can visualize the modified MPS as:
 
 As a technical note, if you are working in a context where gauge or orthogonality
 properties of the MPS are important, such as in time evolution using two-site gates,
-then you may want to call `orthogonalize!(psi,3)`
+then you may want to call `psi = orthogonalize(psi, 3)`
 before modifying the tensor at site 3, which will ensure that the MPS remains in a
 well-defined orthogonal gauge centered on site 3. Modifying a tensor which is left- or right-orthogonal
 (i.e. not the "center" tensor of the gauge) will destroy the gauge condition and
-require extra operations to restore it. (Calling `orthogonalize!` method will automatically
+require extra operations to restore it. (Calling `orthogonalize` method will automatically
 fix this but will have to do extra work to do so.)
 
 
@@ -264,7 +264,7 @@ that either site 3 or 4 is the *orthogonality center*. Here we make site 3
 the center:
 
 ```julia
-orthogonalize!(psi,3)
+psi = orthogonalize(psi, 3)
 ```
 
 ![](twosite_figures/gate_gauge.png)
@@ -278,7 +278,7 @@ Next, contract the gate tensor G with the MPS tensors for sites 3 and 4
 
 ```julia
 wf = (psi[3] * psi[4]) * G
-noprime!(wf)
+wf = noprime(wf)
 ```
 
 Finally, use the singular value decomposition (SVD) to factorize the
@@ -306,15 +306,15 @@ as well as limits on the maximum bond dimension (`maxdim` keyword argument).
 **Complete code example**
 
 ```julia
-orthogonalize!(psi,3)
+psi = orthogonalize(psi, 3)
 
 wf = (psi[3] * psi[4]) * G
-noprime!(wf)
+wf = noprime(wf)
 
-inds3 = uniqueinds(psi[3],psi[4])
-U,S,V = svd(wf,inds3,cutoff=1E-8)
+inds3 = uniqueinds(psi[3], psi[4])
+U, S, V = svd(wf, inds3; cutoff=1E-8)
 psi[3] = U
-psi[4] = S*V
+psi[4] = S * V
 ```
 
 ## Computing the Entanglement Entropy of an MPS
@@ -326,8 +326,8 @@ Say that we have obtained an MPS `psi` of length N and we wish to compute the en
 Then the following code formula can be used to accomplish this task:
 
 ```julia
-orthogonalize!(psi, b)
-U,S,V = svd(psi[b], (linkind(psi, b-1), siteind(psi,b)))
+psi = orthogonalize(psi, b)
+U,S,V = svd(psi[b], (linkinds(psi, b-1)..., siteinds(psi, b)...))
 SvN = 0.0
 for n=1:dim(S, 1)
   p = S[n,n]^2
@@ -335,7 +335,7 @@ for n=1:dim(S, 1)
 end
 ```
 
-As a brief explanation of the code above, the call to `orthogonalize!(psi,b)`
+As a brief explanation of the code above, the call to `psi = orthogonalize(psi, b)`
 shifts the orthogonality center to site `b` of the MPS.
 
 The call to the `svd` routine says to treat the link (virtual or bond) Index connecting the b'th MPS tensor `psi[b]` and the b'th physical Index as "row" indices for the purposes of the SVD (these indices will end up on `U`, along with the Index connecting `U` to `S`).
@@ -379,10 +379,13 @@ in the "computational basis".
 
 For reasons of efficiency, the `sample` function requires the MPS to be in orthogonal
 form, orthogonalized to the first site. If it is not already in this form, it
-can be brought into orthogonal form by calling `orthogonalize!(psi,1)`.
+can be brought into orthogonal form by calling `psi = orthogonalize(psi, 1)`.
 
 
 ## Write and Read an MPS or MPO to Disk with HDF5
+
+!!! info 
+    Make sure to install the HDF5 package to use this feature. (Run `julia> ] add HDF5` in the Julia REPL console.)
 
 **Writing an MPS to an HDF5 File**
 
@@ -391,7 +394,7 @@ from a calculation. To write it to an HDF5 file named "myfile.h5"
 you can use the following pattern:
 
 ```julia
-using ITensors.HDF5
+using HDF5
 f = h5open("myfile.h5","w")
 write(f,"psi",psi)
 close(f)
@@ -402,8 +405,6 @@ or "Result MPS" and doesn't have to have the same name as the reference `psi`.
 Closing the file `f` is optional and you can also write other objects to the same
 file before closing it.
 
-[*Above we did `using ITensors.HDF5` since HDF5 is already included as a dependency with ITensor. You can also do `using HDF5` but must add the HDF5 package beforehand for that to work.*]
-
 **Reading an MPS from an HDF5 File**
 
 Say you have an HDF5 file "myfile.h5" which contains an MPS stored as a dataset with the
@@ -411,7 +412,7 @@ name "psi". (Which would be the situation if you wrote it as in the example abov
 To read this ITensor back from the HDF5 file, use the following pattern:
 
 ```julia
-using ITensors.HDF5
+using HDF5
 f = h5open("myfile.h5","r")
 psi = read(f,"psi",MPS)
 close(f)
@@ -435,7 +436,6 @@ H = MPO(os,sites)
 # Compute <psi|H|psi>
 energy_psi = inner(psi',H,psi)
 ```
-
 
 Note the `MPS` argument to the read function, which tells Julia which read function
 to call and how to interpret the data stored in the HDF5 dataset named "psi". In the

@@ -15,9 +15,8 @@ include("abstractarray/to_shape.jl")
 include("abstractarray/iscu.jl")
 include("abstractarray/similar.jl")
 include("abstractarray/mul.jl")
-include("abstractarray/append.jl")
 include("abstractarray/permutedims.jl")
-include("abstractarray/fill.jl")
+include("abstractarray/generic_array_constructors.jl")
 include("array/permutedims.jl")
 include("array/mul.jl")
 include("tupletools.jl")
@@ -45,7 +44,7 @@ include("dense/tensoralgebra/contract.jl")
 include("dense/linearalgebra/decompositions.jl")
 include("dense/tensoralgebra/outer.jl")
 include("dense/set_types.jl")
-include("dense/fill.jl")
+include("dense/generic_array_constructors.jl")
 include("linearalgebra/symmetric.jl")
 include("linearalgebra/linearalgebra.jl")
 include("diag/diag.jl")
@@ -91,6 +90,15 @@ include("empty/adapt.jl")
 # Deprecations
 #
 include("deprecated.jl")
+
+#####################################
+# NDTensorsNamedDimsArraysExt
+# I tried putting this inside of an
+# `NDTensorsNamedDimsArraysExt` module
+# but for some reason it kept overloading
+# `Base.similar` instead of `NDTensors.similar`.
+#
+include("NDTensorsNamedDimsArraysExt/NDTensorsNamedDimsArraysExt.jl")
 
 #####################################
 # A global timer used with TimerOutputs.jl

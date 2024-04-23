@@ -1,3 +1,5 @@
+using Adapt: adapt
+using Random: Random
 
 """
     MPO
@@ -398,7 +400,7 @@ end
 
 Same as [`inner`](@ref).
 """
-function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
+function LinearAlgebra.dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)
   return _log_or_not_dot(y, A, x, false; make_inds_match=make_inds_match, kwargs...)
 end
 
@@ -457,7 +459,9 @@ loginner(y::MPS, A::MPO, x::MPS; kwargs...) = logdot(y, A, x; kwargs...)
 
 Same as [`inner`](@ref).
 """
-function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
+function LinearAlgebra.dot(
+  B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...
+)::Number
   !make_inds_match && error(
     "make_inds_match = false not currently supported in dot(::MPO, ::MPS, ::MPO, ::MPS)"
   )
@@ -515,7 +519,7 @@ Same as [`dot`](@ref).
 """
 inner(B::MPO, y::MPS, A::MPO, x::MPS) = dot(B, y, A, x)
 
-function dot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
+function LinearAlgebra.dot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   if make_inds_match
     error("In dot(::MPO, ::MPO), make_inds_match is not currently supported")
   end
@@ -531,7 +535,7 @@ function logdot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   return _log_or_not_dot(M1, M2, true; make_inds_match=make_inds_match)
 end
 
-function tr(M::MPO; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
+function LinearAlgebra.tr(M::MPO; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   N = length(M)
   #
   # TODO: choose whether to contract or trace
@@ -1034,29 +1038,4 @@ function sample(rng::AbstractRNG, M::MPO)
     end
   end
   return result
-end
-
-function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPO)
-  g = create_group(parent, name)
-  attributes(g)["type"] = "MPO"
-  attributes(g)["version"] = 1
-  N = length(M)
-  write(g, "rlim", M.rlim)
-  write(g, "llim", M.llim)
-  write(g, "length", N)
-  for n in 1:N
-    write(g, "MPO[$(n)]", M[n])
-  end
-end
-
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{MPO})
-  g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "MPO"
-    error("HDF5 group or file does not contain MPO data")
-  end
-  N = read(g, "length")
-  rlim = read(g, "rlim")
-  llim = read(g, "llim")
-  v = [read(g, "MPO[$(i)]", ITensor) for i in 1:N]
-  return MPO(v, llim, rlim)
 end

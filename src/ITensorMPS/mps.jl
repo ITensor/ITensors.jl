@@ -1,3 +1,6 @@
+using Adapt: adapt
+using NDTensors: using_auto_fermion
+using Random: Random
 
 """
     MPS
@@ -784,8 +787,7 @@ function correlation_matrix(
     end
   end
 
-  psi = copy(psi)
-  orthogonalize!(psi, start_site)
+  psi = orthogonalize(psi, start_site)
   norm2_psi = norm(psi[start_site])^2
 
   # Nb = size of block of correlation matrix
@@ -994,13 +996,13 @@ function expect(psi::MPS, ops; sites=1:length(psi), site_range=nothing)
 
   el_types = map(o -> ishermitian(op(o, s[start_site])) ? real(ElT) : ElT, ops)
 
-  orthogonalize!(psi, start_site)
+  psi = orthogonalize(psi, start_site)
   norm2_psi = norm(psi)^2
   iszero(norm2_psi) && error("MPS has zero norm in function `expect`")
 
   ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
   for (entry, j) in enumerate(site_range)
-    orthogonalize!(psi, j)
+    psi = orthogonalize(psi, j)
     for (n, opname) in enumerate(ops)
       oⱼ = adapt(datatype(psi[j]), op(opname, s[j]))
       val = inner(psi[j], apply(oⱼ, psi[j])) / norm2_psi
@@ -1028,29 +1030,4 @@ end
 
 function expect(psi::MPS, op1::Matrix{<:Number}, ops::Matrix{<:Number}...; kwargs...)
   return expect(psi, (op1, ops...); kwargs...)
-end
-
-function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPS)
-  g = create_group(parent, name)
-  attributes(g)["type"] = "MPS"
-  attributes(g)["version"] = 1
-  N = length(M)
-  write(g, "length", N)
-  write(g, "rlim", M.rlim)
-  write(g, "llim", M.llim)
-  for n in 1:N
-    write(g, "MPS[$(n)]", M[n])
-  end
-end
-
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{MPS})
-  g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "MPS"
-    error("HDF5 group or file does not contain MPS data")
-  end
-  N = read(g, "length")
-  rlim = read(g, "rlim")
-  llim = read(g, "llim")
-  v = [read(g, "MPS[$(i)]", ITensor) for i in 1:N]
-  return MPS(v, llim, rlim)
 end

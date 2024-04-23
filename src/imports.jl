@@ -86,8 +86,6 @@ import ITensors.ContractionSequenceOptimization:
 
 import Adapt: adapt_structure, adapt_storage
 
-import HDF5: read, write
-
 import LinearAlgebra:
   axpby!,
   axpy!,
@@ -110,7 +108,7 @@ import LinearAlgebra:
   tr,
   transpose
 
-using ITensors.NDTensors.Expose: cpu
+using ITensors.NDTensors.GPUArraysCoreExtensions: cpu
 
 using ITensors.NDTensors:
   Algorithm,
@@ -171,7 +169,6 @@ import ITensors.NDTensors:
   permuteblocks,
   polar,
   ql,
-  scalartype,
   scale!,
   setblock!,
   setblockdim!,

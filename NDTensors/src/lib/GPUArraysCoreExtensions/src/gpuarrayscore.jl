@@ -1,3 +1,5 @@
+using GPUArraysCore: AbstractGPUArray, @allowscalar
+using NDTensors.Expose: Exposed, unexpose
 using NDTensors.TypeParameterAccessors:
   TypeParameterAccessors, type_parameter, set_type_parameter
 
@@ -13,3 +15,5 @@ function set_storagemode(type::Type, param)
 end
 
 function cpu end
+
+cpu(E::Exposed) = cpu(unexpose(E))

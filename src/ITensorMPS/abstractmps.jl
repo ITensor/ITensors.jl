@@ -1,3 +1,6 @@
+using IsApprox: Approx, IsApprox
+using NDTensors: using_auto_fermion, scalartype, tensor
+
 abstract type AbstractMPS end
 
 """
@@ -45,9 +48,9 @@ have type `ComplexF64`, return `ComplexF64`.
 """
 promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
-scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
-scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
-scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
+NDTensors.scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
 
 """
     eltype(m::MPS)
@@ -103,7 +106,7 @@ Returns the range of sites of the orthogonality center of the MPS/MPO.
 ```julia
 s = siteinds("S=½", 5)
 ψ = randomMPS(s)
-orthogonalize!(ψ, 3)
+ψ = orthogonalize(ψ, 3)
 
 # ortho_lims(ψ) = 3:3
 @show ortho_lims(ψ)
@@ -174,8 +177,8 @@ s = siteinds("S=1/2", 4)
 # Make random MPS with bond dimension 2
 ψ₁ = randomMPS(s, "↑", 2)
 ψ₂ = randomMPS(s, "↑", 2)
-orthogonalize!(ψ₁, 1)
-orthogonalize!(ψ₂, 1)
+ψ₁ = orthogonalize(ψ₁, 1)
+ψ₂ = orthogonalize(ψ₂, 1)
 
 # ortho_lims(ψ₁) = 1:1
 @show ortho_lims(ψ₁)
@@ -1141,7 +1144,7 @@ Same as [`inner`](@ref).
 
 See also [`loginner`](@ref), [`logdot`](@ref).
 """
-function dot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
+function LinearAlgebra.dot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
   return _log_or_not_dot(M1, M2, false; kwargs...)
 end
 
@@ -1319,7 +1322,7 @@ lognorm_ψ[1] == -Inf # There was an infinite norm
 
 See also [`normalize`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
-function normalize!(M::AbstractMPS; (lognorm!)=[])
+function LinearAlgebra.normalize!(M::AbstractMPS; (lognorm!)=[])
   c = ortho_lims(M)
   lognorm_M = lognorm(M)
   push!(lognorm!, lognorm_M)
@@ -1948,7 +1951,7 @@ function (::Type{MPST})(
   M = MPST(ψ)
   setleftlim!(M, N - 1)
   setrightlim!(M, N + 1)
-  orthogonalize!(M, orthocenter)
+  M = orthogonalize(M, orthocenter)
   return M
 end
 
@@ -1969,9 +1972,9 @@ function swapbondsites(ψ::AbstractMPS, b::Integer; ortho="right", kwargs...)
     orthocenter = b
   end
   if leftlim(ψ) < b - 1
-    orthogonalize!(ψ, b)
+    ψ = orthogonalize(ψ, b)
   elseif rightlim(ψ) > b + 2
-    orthogonalize!(ψ, b + 1)
+    ψ = orthogonalize(ψ, b + 1)
   end
   ψ[b:(b + 1), orthocenter=orthocenter, perm=[2, 1], kwargs...] = ψ[b] * ψ[b + 1]
   return ψ

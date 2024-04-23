@@ -1,0 +1,3 @@
+[deps]
+ITensorGaussianMPS = "2be41995-7c9f-4653-b682-bfa4e7cebb93"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"

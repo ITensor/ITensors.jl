@@ -1,13 +1,8 @@
-using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions, cpu
-
 parent(E::Exposed) = parent(unexpose(E))
 
 transpose(E::Exposed) = transpose(unexpose(E))
 
 adjoint(E::Exposed) = adjoint(unexpose(E))
-
-GPUArraysCoreExtensions.cpu(E::Exposed) = cpu(unexpose(E))
-
 getindex(E::Exposed) = unexpose(E)[]
 
 function setindex!(E::Exposed, x::Number)

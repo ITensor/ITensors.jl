@@ -15,7 +15,6 @@ using Random
 using LinearAlgebra
 using StaticArrays
 using Functors
-using HDF5
 using SimpleTraits
 using SplitApplyCombine
 using Strided
@@ -28,11 +27,11 @@ for lib in [
   :BaseExtensions,
   :UnspecifiedTypes,
   :TypeParameterAccessors,
+  :Expose,
   :GPUArraysCoreExtensions,
   :AMDGPUExtensions,
   :CUDAExtensions,
   :MetalExtensions,
-  :Expose,
   :BroadcastMapConversion,
   :RankFactorization,
   :LabelledNumbers,

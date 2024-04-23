@@ -17,6 +17,7 @@ using LinearAlgebra:
 using GPUArraysCore: @allowscalar
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
+using NDTensors.GPUArraysCoreExtensions: cpu
 
 @testset "Testing Expose $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
@@ -183,7 +184,8 @@ using .NDTensorsTestUtils: devices_list
   copyto!(expose(y), expose(x))
   @allowscalar begin
     @test y == x
-    @test copy(x) == x
+    ## temporarily use expose copy because this is broken in Metal 1.1 
+    @test copy(expose(x)) == x
   end
 
   y = Base.ReshapedArray(dev(randn(elt, 16)), (4, 4), ())
@@ -235,5 +237,29 @@ using .NDTensorsTestUtils: devices_list
   zero(C)
   mul!!(C, B, A, true, false)
   @test cpu(C) ≈ Cp
+
+  ##################################
+  ### Add test for append! to address scalar indexing in GPUs
+  ## For now, Metal doesn't have a `resize!` function so all the tests are failing
+  if (dev == NDTensors.mtl)
+    continue
+  end
+  A = dev(randn(elt, 10))
+  Ap = copy(A)
+  B = randn(elt, 3)
+  C = append!(expose(A), B)
+
+  @test length(C) == 13
+  @test sum(C) ≈ sum(Ap) + sum(B)
+
+  A = Ap
+  B = dev(randn(elt, 29))
+  Bp = copy(B)
+  C = append!(expose(B), A)
+  @test length(C) == 39
+  @test sum(C) ≈ sum(Bp) + sum(Ap)
+  @allowscalar for i in 1:length(B)
+    C[i] == B[i]
+  end
 end
 end
