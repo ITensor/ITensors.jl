@@ -46,11 +46,11 @@ using Test: @inferred, @test, @testset
     j3 = SU2(1)
     j4 = SU2(3//2)
 
-    # alternatative tuple constructor
-    @test j1 == SU2((0,))
-    @test j2 == SU2((1,))
-    @test j3 == SU2((2,))
-    @test j4 == SU2((3,))
+    # alternative tuple constructor
+    @test j1 == SU{2}((0,))
+    @test j2 == SU{2}((1,))
+    @test j3 == SU{2}((2,))
+    @test j4 == SU{2}((3,))
 
     @test trivial(SU2) == SU2(0)
     @test istrivial(SU2(0))
