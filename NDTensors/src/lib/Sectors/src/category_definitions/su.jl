@@ -2,18 +2,18 @@
 # Special unitary group SU{N}
 #
 
-struct SU{N} <: AbstractCategory
+struct SU{N,T,M} <: AbstractCategory
   # l is the first row of the
   # Gelfand-Tsetlin (GT) pattern describing
   # an SU(N) irrep
-  #TODO: any way this could be NTuple{N-1,Int} ?
-  # not in a natural way
-  # see https://discourse.julialang.org/t/addition-to-parameter-of-parametric-type/20059/15
-  # and https://github.com/JuliaLang/julia/issues/8472
-  # can use https://github.com/vtjnash/ComputedFieldTypes.jl
-  # can define SU{N,M} and impose M=N-1 in the constructor
-  l::NTuple{N,Int}
+  l::NTuple{M,T}
+
+  function SU{N,T,M}(t::NTuple{M,T}) where {N,T<:Integer,M}
+    return N == M + 1 ? new{N,T,M}(t) : error("Invalid tuple length")
+  end
 end
+
+SU{N}(t::NTuple{M,T}) where {N,T,M} = SU{N,T,M}(t)
 
 SymmetryStyle(::SU) = NonAbelianGroup()
 
@@ -21,15 +21,18 @@ category_label(s::SU) = s.l
 
 groupdim(::SU{N}) where {N} = N
 
-trivial(::Type{SU{N}}) where {N} = SU{N}(ntuple(_ -> 0, Val(N)))
+trivial(::Type{<:SU{N}}) where {N} = trivial(SU{N,Int})
+trivial(::Type{<:SU{N,T}}) where {N,T} = SU{N}(ntuple(_ -> T(0), Val(N - 1)))
 
-fundamental(::Type{SU{N}}) where {N} = SU{N}(ntuple(i -> Int(i == 1), Val(N)))
+fundamental(::Type{<:SU{N}}) where {N} = fundamental(SU{N,Int})
+fundamental(::Type{<:SU{N,T}}) where {N,T} = SU{N}(ntuple(i -> T(i == 1), Val(N - 1)))
 
-adjoint(::Type{SU{N}}) where {N} = SU{N}((ntuple(i -> Int(i == 1) + Int(i < N), Val(N))))
+adjoint(::Type{<:SU{N}}) where {N} = adjoint(SU{N,Int})
+adjoint(::Type{<:SU{N,T}}) where {N,T} = SU{N}((ntuple(i -> T(1 + (i == 1)), Val(N - 1))))
 
 function quantum_dimension(::NonAbelianGroup, s::SU)
   N = groupdim(s)
-  l = category_label(s)
+  l = (category_label(s)..., 0)
   d = 1
   for k1 in 1:N, k2 in (k1 + 1):N
     d *= ((k2 - k1) + (l[k1] - l[k2]))//(k2 - k1)
@@ -39,12 +42,17 @@ end
 
 function GradedAxes.dual(s::SU)
   l = category_label(s)
-  nl = ((reverse(cumsum(l[begin:(end - 1)] .- l[(begin + 1):end]))..., 0))
+  nl = reverse(cumsum((l[begin:(end - 1)] .- l[(begin + 1):end]..., l[end])))
   return typeof(s)(nl)
 end
 
+function Base.show(io::IO, s::SU)
+  disp = join([string(l) for l in category_label(s)], ", ")
+  return print(io, "SU(", groupdim(s), ")[", disp, "]")
+end
+
 # display SU(N) irrep as a Young tableau with utf8 box char
-function Base.show(io::IO, ::MIME"text/plain", s::SU)
+function Base.show(io::IO, ::MIME"text/plain", s::SU{N}) where {N}
   l = category_label(s)
   if l[1] == 0  # singlet = no box
     println(io, "●")
@@ -53,7 +61,7 @@ function Base.show(io::IO, ::MIME"text/plain", s::SU)
 
   println("┌─" * "┬─"^(l[1] - 1) * "┐")
   i = 1
-  while l[i + 1] != 0
+  while i < N - 1 && l[i + 1] != 0
     println(
       io,
       "├─",
@@ -72,32 +80,39 @@ end
 #
 # Specializations for the case SU{2}
 # Where irreps specified by quantum_dimension "d"
-# TBD remove me?
 #
 
-quantum_dimension(s::SU{2}) = 1 + category_label(s)[1]
+# SU2 is an alias for SU{2}
+const SU2 = SU{2}
 
-SU{2}(d::Integer) = SU{2}((d - 1, 0))
+# specific constructor for SU{2} with a half-integer
+SU{2}(h::Real) = SU{2}((HalfIntegers.twice(HalfIntegers.HalfInteger(h)),))
+
+quantum_dimension(s::SU{2}) = 1 + Int(category_label(s)[1])
 
 GradedAxes.dual(s::SU{2}) = s
 
-function label_fusion_rule(::Type{SU{2}}, s1, s2)
-  d1 = s1[1] + 1
-  d2 = s2[1] + 1
-  labels = collect((abs(d1 - d2) + 1):2:(d1 + d2 - 1))
+function label_fusion_rule(::Type{<:SU{2}}, s1, s2)
+  labels = collect((i,) for i in (abs(s1[1] - s2[1])):2:(s1[1] + s2[1]))
   degen = ones(Int, length(labels))
   return degen, labels
 end
 
+# display SU2 using half integers
 function Base.show(io::IO, s::SU{2})
-  return print(io, "SU{2}(", quantum_dimension(s), ")")
+  return print(io, "SU(2)[S=", HalfIntegers.half(quantum_dimension(s) - 1), "]")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", s::SU{2})
+  println("S = ", HalfIntegers.half(quantum_dimension(s) - 1))
+  return nothing
 end
 
 # Specializations for the case SU{3}
 # aimed for testing non-abelian non self-conjugate representations
 # TODO replace with generic implementation
 
-function label_fusion_rule(::Type{SU{3}}, left, right)
+function label_fusion_rule(::Type{<:SU{3}}, left, right)
   # Compute SU(3) fusion rules using Littlewood-Richardson rule for Young tableaus.
   # See e.g. Di Francesco, Mathieu and Sénéchal, section 13.5.3.
   if sum(right) > sum(left)  # impose more boxes in left Young tableau
@@ -137,7 +152,7 @@ function label_fusion_rule(::Type{SU{3}}, left, right)
       b3min2 = right_row2 + a23 - right_row1
       b3min = max(0, b3min1, b3min2)
       b3max1 = right_row2  # only other.row2 b boxes
-      b3max2 = (row2a + right_row2 - a3)//2  # row3ab >= row2ab
+      b3max2 = (row2a + right_row2 - a3) ÷ 2  # row3ab >= row2ab
       b3max3 = right_row1 - a3  # more a than b, right to left: b2 <= a1
       b3max4 = row2a - a3  # no b below b: row2a >= row3ab
       b3max = min(b3max1, b3max2, b3max3, b3max4)
@@ -145,7 +160,7 @@ function label_fusion_rule(::Type{SU{3}}, left, right)
         b2 = right_row2 - b3
         row2ab = row2a + b2
         row3ab = a3 + b3
-        yt = (row1a - row3ab, row2ab - row3ab, 0)
+        yt = (row1a - row3ab, row2ab - row3ab)
 
         push!(irreps, yt)
       end

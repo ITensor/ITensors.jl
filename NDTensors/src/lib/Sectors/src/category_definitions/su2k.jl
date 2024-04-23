@@ -1,11 +1,9 @@
-using HalfIntegers: Half
-
 #
 # Quantum 'group' su2ₖ
 #
 
 struct su2{k} <: AbstractCategory
-  j::Half{Int}
+  j::HalfIntegers.Half{Int}
 end
 
 SymmetryStyle(::su2) = NonGroupCategory()

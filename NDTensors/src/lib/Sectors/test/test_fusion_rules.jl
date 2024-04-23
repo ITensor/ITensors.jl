@@ -43,20 +43,6 @@ using Test: @inferred, @test, @testset, @test_throws
     @test (@inferred quantum_dimension(j1 ⊗ j2)) == 2
   end
 
-  @testset "SU{2} fusion rules" begin
-    j1 = SU{2}(1)
-    j2 = SU{2}(2)
-    j3 = SU{2}(3)
-    j4 = SU{2}(4)
-    j5 = SU{2}(5)
-
-    @test gradedisequal(j1 ⊗ j2, gradedrange([j2 => 1]))
-    @test gradedisequal(j2 ⊗ j2, gradedrange([j1 => 1, j3 => 1]))
-    @test gradedisequal(j2 ⊗ j3, gradedrange([j2 => 1, j4 => 1]))
-    @test gradedisequal(j3 ⊗ j3, gradedrange([j1 => 1, j3 => 1, j5 => 1]))
-    @test gradedisequal((@inferred j1 ⊗ j2), gradedrange([j2 => 1]))
-  end
-
   @testset "Fibonacci fusion rules" begin
     ı = Fib("1")
     τ = Fib("τ")
@@ -180,10 +166,10 @@ end
     )
 
     # test dual on non self-conjugate non-abelian representations
-    s1 = SU{3}((0, 0, 0))
-    f3 = SU{3}((1, 0, 0))
-    c3 = SU{3}((1, 1, 0))
-    ad8 = SU{3}((2, 1, 0))
+    s1 = SU{3}((0, 0))
+    f3 = SU{3}((1, 0))
+    c3 = SU{3}((1, 1))
+    ad8 = SU{3}((2, 1))
 
     g5 = gradedrange([s1 => 1, f3 => 1])
     g6 = gradedrange([s1 => 1, c3 => 1])
@@ -193,11 +179,11 @@ end
     )
     @test gradedisequal(
       fusion_product(dual(g5), g6),
-      gradedrange([s1 => 1, f3 => 1, c3 => 2, SU{3}((2, 2, 0)) => 1]),
+      gradedrange([s1 => 1, f3 => 1, c3 => 2, SU{3}((2, 2)) => 1]),
     )
     @test gradedisequal(
       fusion_product(g5, dual(g6)),
-      gradedrange([s1 => 1, f3 => 2, c3 => 1, SU{3}((2, 0, 0)) => 1]),
+      gradedrange([s1 => 1, f3 => 2, c3 => 1, SU{3}((2, 0)) => 1]),
     )
     @test gradedisequal(
       fusion_product(dual(g5), dual(g6)), gradedrange([s1 => 2, f3 => 1, c3 => 1, ad8 => 1])

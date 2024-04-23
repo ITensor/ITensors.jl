@@ -1,4 +1,4 @@
-using HalfIntegers: Half, twice
+using HalfIntegers: HalfIntegers
 
 #
 # Ising category
@@ -7,7 +7,7 @@ using HalfIntegers: Half, twice
 #
 
 struct Ising <: AbstractCategory
-  l::Half{Int}
+  l::HalfIntegers.Half{Int}
 end
 
 # TODO: Use `Val` dispatch here?
@@ -32,7 +32,7 @@ quantum_dimension(::NonGroupCategory, i::Ising) = (category_label(i) == 1//2) ? 
 label_fusion_rule(::Type{Ising}, l1, l2) = label_fusion_rule(su2{2}, l1, l2)
 
 # TODO: Use `Val` dispatch here?
-label_to_str(i::Ising) = ("1", "σ", "ψ")[twice(category_label(i)) + 1]
+label_to_str(i::Ising) = ("1", "σ", "ψ")[HalfIntegers.twice(category_label(i)) + 1]
 
 function Base.show(io::IO, f::Ising)
   return print(io, "Ising(", label_to_str(f), ")")

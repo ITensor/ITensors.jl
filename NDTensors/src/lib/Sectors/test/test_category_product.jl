@@ -271,10 +271,10 @@ end
 
   @testset "Comparisons with unspecified labels" begin
     q2 = sector(; N=U1(2))
-    q20 = (N=U1(2),) × (J=SU{2}(1),)
+    q20 = (N=U1(2),) × (J=SU2(0),)
     @test q20 == q2
 
-    q21 = (N=U1(2),) × (J=SU{2}(3),)
+    q21 = (N=U1(2),) × (J=SU2(1),)
     @test q21 != q2
 
     a = (A=U1(0),) × (B=U1(2),)

@@ -46,6 +46,12 @@ using Test: @inferred, @test, @testset
     j3 = SU2(1)
     j4 = SU2(3//2)
 
+    # alternatative tuple constructor
+    @test j1 == SU2((0,))
+    @test j2 == SU2((1,))
+    @test j3 == SU2((2,))
+    @test j4 == SU2((3,))
+
     @test trivial(SU2) == SU2(0)
     @test istrivial(SU2(0))
 
@@ -64,48 +70,24 @@ using Test: @inferred, @test, @testset
     @test dual(j4) == j4
   end
 
-  @testset "SU(2)" begin
-    j1 = SU{2}(1)
-    j2 = SU{2}(2)
-    j3 = SU{2}(3)
-    j4 = SU{2}(4)
-
-    @test trivial(SU{2}) == SU{2}(1)
-    @test istrivial(SU{2}(1))
-
-    @test fundamental(SU{2}) == SU{2}(2)
-    @test adjoint(SU{2}) == SU{2}(3)
-
-    @test quantum_dimension(j1) == 1
-    @test quantum_dimension(j2) == 2
-    @test quantum_dimension(j3) == 3
-    @test quantum_dimension(j4) == 4
-    @test (@inferred quantum_dimension(j1)) == 1
-
-    @test dual(j1) == j1
-    @test dual(j2) == j2
-    @test dual(j3) == j3
-    @test dual(j4) == j4
-  end
-
   @testset "SU(N)" begin
-    f3 = SU{3}((1, 0, 0))
-    f4 = SU{4}((1, 0, 0, 0))
-    ad3 = SU{3}((2, 1, 0))
-    ad4 = SU{4}((2, 1, 1, 0))
+    f3 = SU{3}((1, 0))
+    f4 = SU{4}((1, 0, 0))
+    ad3 = SU{3}((2, 1))
+    ad4 = SU{4}((2, 1, 1))
 
-    @test trivial(SU{3}) == SU{3}((0, 0, 0))
-    @test istrivial(SU{3}((0, 0, 0)))
-    @test trivial(SU{4}) == SU{4}((0, 0, 0, 0))
-    @test istrivial(SU{4}((0, 0, 0, 0)))
+    @test trivial(SU{3}) == SU{3}((0, 0))
+    @test istrivial(SU{3}((0, 0)))
+    @test trivial(SU{4}) == SU{4}((0, 0, 0))
+    @test istrivial(SU{4}((0, 0, 0)))
 
     @test fundamental(SU{3}) == f3
     @test adjoint(SU{3}) == ad3
     @test fundamental(SU{4}) == f4
     @test adjoint(SU{4}) == ad4
 
-    @test dual(f3) == SU{3}((1, 1, 0))
-    @test dual(f4) == SU{4}((1, 1, 1, 0))
+    @test dual(f3) == SU{3}((1, 1))
+    @test dual(f4) == SU{4}((1, 1, 1))
     @test dual(ad3) == ad3
     @test dual(ad4) == ad4
 
@@ -113,10 +95,10 @@ using Test: @inferred, @test, @testset
     @test quantum_dimension(f4) == 4
     @test quantum_dimension(ad3) == 8
     @test quantum_dimension(ad4) == 15
-    @test quantum_dimension(SU{3}((4, 2, 0))) == 27
-    @test quantum_dimension(SU{3}((3, 3, 0))) == 10
-    @test quantum_dimension(SU{3}((3, 0, 0))) == 10
-    @test quantum_dimension(SU{3}((0, 0, 0))) == 1
+    @test quantum_dimension(SU{3}((4, 2))) == 27
+    @test quantum_dimension(SU{3}((3, 3))) == 10
+    @test quantum_dimension(SU{3}((3, 0))) == 10
+    @test quantum_dimension(SU{3}((0, 0))) == 1
     @test (@inferred quantum_dimension(f3)) == 3
   end
 
