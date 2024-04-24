@@ -1,4 +1,4 @@
-using NDTensors: NDTensors, Tensor, array, inds
+using NDTensors: NDTensors, Tensor, array, contraction_output_type, contract_inds, inds
 using NDTensors.Expose: Exposed, unexpose
 using cuTENSOR: cuTENSOR, CuArray, CuTensor
 function NDTensors.contract(
@@ -11,21 +11,28 @@ function NDTensors.contract(
   tensor1 = unexpose(Etensor1)
   tensor2 = unexpose(Etensor2)
   ## convert the ITensors into CuTensors
-  ## for 
-  cutensorA = CuTensor(convert(CuArray, array(tensor1)), collect(labelstensor1))
-  cutensorB = CuTensor(convert(CuArray, array(tensor1)), collect(labelstensor2))
+  ## This can fail when array(tensor) returns a ReshapedArray(CuArray)
+  cutensorA = CuTensor(array(tensor1), collect(labelstensor1))
+  cutensorB = CuTensor(array(tensor2), collect(labelstensor2))
 
   ## contract the CuTensors
   cutensorC = cutensorA * cutensorB
 
   ## TODO this is a first draft to this idea to see if the 
   ## conversion works 
-  indsR = contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsoutput_tensor)
+  indsR = contract_inds(
+    inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsoutput_tensor
+  )
   TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), labelsoutput_tensor)
 
   ## Replace the data in the output_tensor with the correct data from the cutensor contraction
   ## it is necessary to flatten the data
-  output_tensor = TensorR(reshape(cutensorC.data, dim(output_tensor)), indsR)
+  ## TODO this could possibly fail for BlockSparse so need to determine that
+  output_tensor = TensorR(
+    NDTensors.AllowAlias(),
+    NDTensors.storagetype(TensorR)(reshape(cutensorC.data, dim(indsR))),
+    indsR,
+  )
 
   ## return output_tensor
   return output_tensor
