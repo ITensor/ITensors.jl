@@ -15,8 +15,8 @@ function NDTensors.contract(
   dA = reshape(data(tensor1), dims(tensor1))
   dB = reshape(data(tensor2), dims(tensor2))
   ## convert the ITensors into CuTensors
-  cutensorA = CuTensor(dA, [i for i in labelstensor1])
-  cutensorB = CuTensor(dB, [i for i in labelstensor2])
+  cutensorA = CuTensor(dA, collect(labelstensor1))
+  cutensorB = CuTensor(dB, collect(labelstensor2))
 
   ## contract the CuTensors
   cutensorC = cutensorA * cutensorB
