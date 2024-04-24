@@ -1,5 +1,5 @@
 using NDTensors: NDTensors, Tensor
-using NDTensors.Expose: unexpose
+using NDTensors.Expose: Exposed, unexpose
 using CUDA: CuArray
 using cuTENSOR: cuTENSOR
 function NDTensors.contract(
@@ -11,12 +11,9 @@ function NDTensors.contract(
 )
   tensor1 = unexpose(Etensor1)
   tensor2 = unexpose(Etensor2)
-  ## reshape the flat data from ITensors into the correct dimensions
-  dA = reshape(data(tensor1), dims(tensor1))
-  dB = reshape(data(tensor2), dims(tensor2))
   ## convert the ITensors into CuTensors
-  cutensorA = CuTensor(dA, collect(labelstensor1))
-  cutensorB = CuTensor(dB, collect(labelstensor2))
+  cutensorA = CuTensor(array(tensor1), collect(labelstensor1))
+  cutensorB = CuTensor(array(tensor2), collect(labelstensor2))
 
   ## contract the CuTensors
   cutensorC = cutensorA * cutensorB
