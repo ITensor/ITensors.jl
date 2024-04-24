@@ -1,7 +1,6 @@
 using NDTensors: NDTensors, Tensor
 using NDTensors.Expose: Exposed, unexpose
-using CUDA: CuArray
-using cuTENSOR: cuTENSOR
+using cuTENSOR: cuTENSOR, CuArray, CuTensor
 function NDTensors.contract(
   Etensor1::Exposed{<:CuArray},
   labelstensor1,
@@ -26,12 +25,7 @@ function NDTensors.contract(
 
   ## Replace the data in the output_tensor with the correct data from the cutensor contraction
   ## it is necessary to flatten the data
-  output_tensor = NDTensors.setstorage(
-    output_tensor,
-    NDTensors.setdata(
-      NDTensors.storage(output_tensor), reshape(cutensorC.data, dim(output_tensor))
-    ),
-  )
+  typeof(output_tensor)(reshape(cutensorC.data, dim(output_tensor)), inds(output_tensor))
 
   ## return output_tensor
   return output_tensor
