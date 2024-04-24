@@ -59,7 +59,7 @@ function Base.show(io::IO, ::MIME"text/plain", s::SU{N}) where {N}
     return nothing
   end
 
-  println("┌─" * "┬─"^(l[1] - 1) * "┐")
+  println(io, "┌─" * "┬─"^(l[1] - 1) * "┐")
   i = 1
   while i < N - 1 && l[i + 1] != 0
     println(
@@ -73,7 +73,7 @@ function Base.show(io::IO, ::MIME"text/plain", s::SU{N}) where {N}
     i += 1
   end
 
-  println(io, "└─", "┴─"^max(0, l[i] - 1), "┘")
+  print(io, "└─", "┴─"^max(0, l[i] - 1), "┘")
   return nothing
 end
 
@@ -104,7 +104,7 @@ function Base.show(io::IO, s::SU{2})
 end
 
 function Base.show(io::IO, ::MIME"text/plain", s::SU{2})
-  println("S = ", HalfIntegers.half(quantum_dimension(s) - 1))
+  print(io, "S = ", HalfIntegers.half(quantum_dimension(s) - 1))
   return nothing
 end
 
