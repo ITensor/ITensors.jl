@@ -10,7 +10,7 @@ function dmrg_x_solver(PH, t, psi0; current_time, outputlevel)
   return U_max, nothing
 end
 
-function itensortdvp_dmrg_x(PH, psi0::MPS; reverse_step=false, kwargs...)
+function dmrg_x(PH, psi0::MPS; reverse_step=false, kwargs...)
   psi = alternating_update(dmrg_x_solver, PH, psi0; reverse_step, kwargs...)
   return psi
 end

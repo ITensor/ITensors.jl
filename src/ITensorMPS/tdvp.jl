@@ -44,7 +44,7 @@ function tdvp_solver(
   return solver
 end
 
-function itensortdvp_tdvp(
+function tdvp(
   H,
   t::Number,
   psi0::MPS;
@@ -58,7 +58,7 @@ function itensortdvp_tdvp(
   solver_outputlevel=default_solver_outputlevel(solver_function),
   kwargs...,
 )
-  return itensortdvp_tdvp(
+  return tdvp(
     tdvp_solver(
       solver_function;
       ishermitian,
@@ -75,12 +75,12 @@ function itensortdvp_tdvp(
   )
 end
 
-function itensortdvp_tdvp(t::Number, H, psi0::MPS; kwargs...)
-  return itensortdvp_tdvp(H, t, psi0; kwargs...)
+function tdvp(t::Number, H, psi0::MPS; kwargs...)
+  return tdvp(H, t, psi0; kwargs...)
 end
 
-function itensortdvp_tdvp(H, psi0::MPS, t::Number; kwargs...)
-  return itensortdvp_tdvp(H, t, psi0; kwargs...)
+function tdvp(H, psi0::MPS, t::Number; kwargs...)
+  return tdvp(H, t, psi0; kwargs...)
 end
 
 """
@@ -96,20 +96,21 @@ Returns:
 * `psi::MPS` - time-evolved MPS
 
 Optional keyword arguments:
+* `nsite::Int = 2` - number of sites to use in the core steps of the algorithm.
 * `outputlevel::Int = 1` - larger outputlevel values resulting in printing more information and 0 means no output
 * `observer` - object implementing the [Observer](@ref observer) interface which can perform measurements and stop early
 * `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free memory in large calculations
 """
-function itensortdvp_tdvp(solver, H::MPO, t::Number, psi0::MPS; kwargs...)
+function tdvp(solver, H::MPO, t::Number, psi0::MPS; kwargs...)
   return alternating_update(solver, H, t, psi0; kwargs...)
 end
 
-function itensortdvp_tdvp(solver, t::Number, H, psi0::MPS; kwargs...)
-  return itensortdvp_tdvp(solver, H, t, psi0; kwargs...)
+function tdvp(solver, t::Number, H, psi0::MPS; kwargs...)
+  return tdvp(solver, H, t, psi0; kwargs...)
 end
 
-function itensortdvp_tdvp(solver, H, psi0::MPS, t::Number; kwargs...)
-  return itensortdvp_tdvp(solver, H, t, psi0; kwargs...)
+function tdvp(solver, H, psi0::MPS, t::Number; kwargs...)
+  return tdvp(solver, H, t, psi0; kwargs...)
 end
 
 """
@@ -131,6 +132,6 @@ each step of the algorithm when optimizing the MPS.
 Returns:
 * `psi::MPS` - time-evolved MPS
 """
-function itensortdvp_tdvp(solver, Hs::Vector{MPO}, t::Number, psi0::MPS; kwargs...)
+function tdvp(solver, Hs::Vector{MPO}, t::Number, psi0::MPS; kwargs...)
   return alternating_update(solver, Hs, t, psi0; kwargs...)
 end

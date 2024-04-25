@@ -1,4 +1,4 @@
-using KrylovKit: KrylovKit, linsolve
+using KrylovKit: KrylovKit
 
 """
 Compute a solution x to the linear system:
@@ -22,7 +22,7 @@ Keyword arguments:
     ```
     See `KrylovKit.jl` documentation for more details on available keyword arguments.
 """
-function itensortdvp_linsolve(
+function KrylovKit.linsolve(
   A::MPO,
   b::MPS,
   x₀::MPS,
