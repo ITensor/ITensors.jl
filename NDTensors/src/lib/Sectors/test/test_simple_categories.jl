@@ -50,7 +50,7 @@ using Test: @inferred, @test, @testset
     @test j1 == SU{2}((0,))
     @test j2 == SU{2}((1,))
     @test j3 == SU{2}((2,))
-    @test j4 == SU{2}((3,))
+    @test j4 == SU((3,))  # infer N from tuple length
 
     @test trivial(SU2) == SU2(0)
     @test istrivial(SU2(0))

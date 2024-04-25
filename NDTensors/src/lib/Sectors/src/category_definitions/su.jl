@@ -1,19 +1,24 @@
 #
-# Special unitary group SU{N}
+# Special unitary group SU(N)
 #
 
-struct SU{N,T,M} <: AbstractCategory
+struct SU{N,M} <: AbstractCategory
   # l is the first row of the
   # Gelfand-Tsetlin (GT) pattern describing
   # an SU(N) irrep
-  l::NTuple{M,T}
+  # this first row is identical to the Young tableau of the irrep
+  l::NTuple{M,Int}
 
-  function SU{N,T,M}(t::NTuple{M,T}) where {N,T<:Integer,M}
-    return N == M + 1 ? new{N,T,M}(t) : error("Invalid tuple length")
+  # M is there to avoid storing a N-Tuple with an extra zero.
+  # inner constructor enforces M = N - 1
+  # It does NOT check for Young Tableau validity (non-increasing positive integers)
+  function SU{N,M}(t::NTuple{M,Integer}) where {N,M}
+    return N == M + 1 && M > 0 ? new{N,M}(t) : error("Invalid tuple length")
   end
 end
 
-SU{N}(t::NTuple{M,T}) where {N,T,M} = SU{N,T,M}(t)
+SU{N}(t::Tuple) where {N} = SU{N,length(t)}(t)
+SU(t::Tuple) = SU{length(t) + 1}(t)  # infer N from tuple length
 
 SymmetryStyle(::SU) = NonAbelianGroup()
 
@@ -21,14 +26,11 @@ category_label(s::SU) = s.l
 
 groupdim(::SU{N}) where {N} = N
 
-trivial(::Type{<:SU{N}}) where {N} = trivial(SU{N,Int})
-trivial(::Type{<:SU{N,T}}) where {N,T} = SU{N}(ntuple(_ -> T(0), Val(N - 1)))
+trivial(::Type{<:SU{N}}) where {N} = SU{N}(ntuple(_ -> 0, Val(N - 1)))
 
-fundamental(::Type{<:SU{N}}) where {N} = fundamental(SU{N,Int})
-fundamental(::Type{<:SU{N,T}}) where {N,T} = SU{N}(ntuple(i -> T(i == 1), Val(N - 1)))
+fundamental(::Type{<:SU{N}}) where {N} = SU{N}(ntuple(i -> i == 1, Val(N - 1)))
 
-adjoint(::Type{<:SU{N}}) where {N} = adjoint(SU{N,Int})
-adjoint(::Type{<:SU{N,T}}) where {N,T} = SU{N}((ntuple(i -> T(1 + (i == 1)), Val(N - 1))))
+adjoint(::Type{<:SU{N}}) where {N} = SU{N}((ntuple(i -> 1 + (i == 1), Val(N - 1))))
 
 function quantum_dimension(::NonAbelianGroup, s::SU)
   N = groupdim(s)
@@ -79,16 +81,10 @@ end
 
 #
 # Specializations for the case SU{2}
-# Where irreps specified by quantum_dimension "d"
 #
 
-# SU2 is an alias for SU{2}
-const SU2 = SU{2}
-
-# specific constructor for SU{2} with a half-integer
-SU{2}(h::Real) = SU{2}((HalfIntegers.twice(HalfIntegers.HalfInteger(h)),))
-
-quantum_dimension(s::SU{2}) = 1 + Int(category_label(s)[1])
+# optimize implementation
+quantum_dimension(s::SU{2}) = category_label(s)[1] + 1
 
 GradedAxes.dual(s::SU{2}) = s
 
@@ -98,7 +94,15 @@ function label_fusion_rule(::Type{<:SU{2}}, s1, s2)
   return degen, labels
 end
 
-# display SU2 using half integers
+# define angular momentum-like interface using half-integers
+# SU2 is an alias for SU{2}
+const SU2 = SU{2}
+
+# specific constructor for SU{2} with a half-integer
+# note that SU{2}(1) = spin 1 while SU{2}((1,)) = spin 1/2
+SU{2}(h::Number) = SU{2}((HalfIntegers.twice(HalfIntegers.HalfInteger(h)),))
+
+# display SU2 using half-integers
 function Base.show(io::IO, s::SU{2})
   return print(io, "SU(2)[S=", HalfIntegers.half(quantum_dimension(s) - 1), "]")
 end
@@ -108,9 +112,11 @@ function Base.show(io::IO, ::MIME"text/plain", s::SU{2})
   return nothing
 end
 
+#
 # Specializations for the case SU{3}
 # aimed for testing non-abelian non self-conjugate representations
 # TODO replace with generic implementation
+#
 
 function label_fusion_rule(::Type{<:SU{3}}, left, right)
   # Compute SU(3) fusion rules using Littlewood-Richardson rule for Young tableaus.
