@@ -121,6 +121,10 @@ categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
 sector(args...; kws...) = CategoryProduct(args...; kws...)
 
+function trivial(::Type{<:CategoryProduct{T}}) where {T<:Tuple}
+  return sector(ntuple(i -> trivial(fieldtype(T, i)), fieldcount(T)))
+end
+
 # allow additional categories at one end
 function categories_fusion_rule(cats1::Tuple, cats2::Tuple)
   n = min(length(cats1), length(cats2))
@@ -150,6 +154,11 @@ function categories_equal(A::NamedTuple, B::NamedTuple)
   unique_categories_zero = all(l -> istrivial(l), symdiff_keys(A, B))
   return common_categories_match && unique_categories_zero
 end
+
+function trivial(::Type{<:CategoryProduct{NT}}) where {Keys,NT<:NamedTuple{Keys}}
+  return reduce(×, (ntuple(i -> (; Keys[i] => trivial(fieldtype(NT, i))), fieldcount(NT))))
+end
+trivial(::Type{<:CategoryProduct{<:NamedTuple{()}}}) = sector()  # Empty NamedTuple
 
 # allow ⊗ for different types in NamedTuple
 function categories_fusion_rule(cats1::NamedTuple, cats2::NamedTuple)
