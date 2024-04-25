@@ -42,15 +42,18 @@ using Test: @inferred, @test, @testset
 
   @testset "SU2" begin
     j1 = SU2(0)
-    j2 = SU2(1//2)
+    j2 = SU2(1//2)  # Rational will be cast to HalfInteger
     j3 = SU2(1)
     j4 = SU2(3//2)
 
-    # alternative tuple constructor
-    @test j1 == SU{2}((0,))
-    @test j2 == SU{2}((1,))
-    @test j3 == SU{2}((2,))
-    @test j4 == SU((3,))  # infer N from tuple length
+    # alternative constructors
+    @test j2 == SU{2}((1,))  # tuple SU(N)-like constructor
+    @test j2 == SU{2,1}((1,))  # tuple constructor with explicit {N,N-1}
+    @test j2 == SU{2}(1//2)  # half-integer constructor without N-1
+    @test j2 == SU((1,))  # infer N from tuple length
+    @test j2 == SU{2}((Int8(1),))  # any Integer type accepted
+    @test j2 == SU{2}((UInt32(1),))  # any Integer type accepted
+    @test j2 == SU2(1 / 2)  # Float will be cast to HalfInteger
 
     @test trivial(SU2) == SU2(0)
     @test istrivial(SU2(0))
