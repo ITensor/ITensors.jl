@@ -37,6 +37,8 @@ Bmtl = mtl(B)
 Amtl * Bmtl
 ```
 
+Note that we highly recommend using these new package extensions as opposed to [ITensorGPU.jl](https://github.com/ITensor/ITensors.jl/tree/main/ITensorGPU), which is ITensor's previous CUDA backend. The package extensions are better integrated into the main library so are more reliable and better supported right now. We plan to deprecate `ITensorGPU.jl` in the future.
+
 ## GPU backends
 
 ITensor currently provides
@@ -58,8 +60,9 @@ The table below summarizes each backend's current capabilities.
 |                              | CUDA | ROCm   | Metal  | oneAPI |
 |------------------------------|------|--------|--------|--------|
 | Contractions (dense)         |   ✓  |   ✓    |   ✓    |  N/A   |
+| Contractions (cuTENSOR)      |   In progress  |   N/A    |   N/A    |  N/A   |
 | QR (dense)                   |   ✓  | On CPU | On CPU |  N/A   |
 | SVD (dense)                  |   ✓  | On CPU | On CPU |  N/A   |
 | Eigendecomposition (dense)   |   ✓  | On CPU | On CPU |  N/A   |
 | Double precision (`Float64`) |   ✓  |   ✓    |  N/A   |  N/A   |
-| Block sparse                 |  N/A |  N/A   |  N/A   |  N/A   |
+| Block sparse                 |  In progress |  In progress   |  In progress   |  N/A   |
