@@ -14,14 +14,14 @@ ITensors.disable_threaded_blocksparse()
       """\nArguments ARGS = $(test_args) are empty, or contain `"all"` or `"base"`. Running base (non-MPS/MPO) ITensors tests.""",
     )
     dirs = [
-      "LazyApply",
-      "Ops",
+      "lib/LazyApply",
+      "lib/Ops",
       "base",
       "threading",
-      "ContractionSequenceOptimization",
-      "ITensorChainRules",
-      "ITensorNetworkMaps",
-      "ITensorsVectorInterfaceExt",
+      "lib/ContractionSequenceOptimization",
+      "lib/ITensorChainRules",
+      "lib/ITensorNetworkMaps",
+      "ext/ITensorsVectorInterfaceExt",
     ]
     @time for dir in dirs
       println("\nTest $(@__DIR__)/$(dir)")
