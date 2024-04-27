@@ -3,6 +3,8 @@ using NDTensors:
   BlockSparseTensor,
   Tensor,
   array,
+  contract!,
+  contraction_output,
   contraction_output_type,
   contract_inds,
   dense,
@@ -26,13 +28,23 @@ function NDTensors.contract(
 end
 
 ## working to fix blocksparse implementation. 
-# function NDTensors.contract(
-#   Etensor1::Exposed{<:CuArray, <:BlockSparseTensor},
-#   labelstensor1,
-#   Etensor2::Exposed{<:CuArray, <:BlockSparseTensor},
-#   labelstensor2,
-#   labelsoutput_tensor,
-# )
+function NDTensors.contract(
+  Etensor1::Exposed{<:CuArray, <:BlockSparseTensor},
+  labelstensor1,
+  Etensor2::Exposed{<:CuArray, <:BlockSparseTensor},
+  labelstensor2,
+  labelsoutput_tensor,
+)
+  ## temporarily don't use cutensor here, just keep implemented to prevent error
+  tensor1 = unexpose(tensor1)
+  tensor2 = unexpose(tensor2)
+  R, contraction_plan = contraction_output(
+    tensor1, labelstensor1, tensor2, labelstensor2, labelsR
+  )
+  R = contract!(
+    R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan
+  )
+  return R
 #   tensor1 = unexpose(Etensor1)
 #   tensor2 = unexpose(Etensor2)
 
@@ -44,7 +56,7 @@ end
 #   )
 #   TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
 #   return to_sparse(TensorR, denseoutput_tensor, indsR)
-# end
+end
 
 ## TODO this only works for dense tensors
 function cutensor_contract(
