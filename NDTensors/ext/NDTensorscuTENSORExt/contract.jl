@@ -29,9 +29,9 @@ end
 
 ## working to fix blocksparse implementation. 
 function NDTensors.contract(
-  Etensor1::Exposed{<:CuArray, <:BlockSparseTensor},
+  Etensor1::Exposed{<:CuArray,<:BlockSparseTensor},
   labelstensor1,
-  Etensor2::Exposed{<:CuArray, <:BlockSparseTensor},
+  Etensor2::Exposed{<:CuArray,<:BlockSparseTensor},
   labelstensor2,
   labelsoutput_tensor,
 )
@@ -45,17 +45,17 @@ function NDTensors.contract(
     R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan
   )
   return R
-#   tensor1 = unexpose(Etensor1)
-#   tensor2 = unexpose(Etensor2)
+  #   tensor1 = unexpose(Etensor1)
+  #   tensor2 = unexpose(Etensor2)
 
-#   denseoutput_tensor = cutensor_contract(dense(tensor1), labelstensor1, dense(tensor2), labelstensor2, labelsoutput_tensor)
+  #   denseoutput_tensor = cutensor_contract(dense(tensor1), labelstensor1, dense(tensor2), labelstensor2, labelsoutput_tensor)
 
-#   ## transform the dense tensor back to blocksparse
-#   indsR = contract_inds(
-#     inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsoutput_tensor
-#   )
-#   TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
-#   return to_sparse(TensorR, denseoutput_tensor, indsR)
+  #   ## transform the dense tensor back to blocksparse
+  #   indsR = contract_inds(
+  #     inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsoutput_tensor
+  #   )
+  #   TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
+  #   return to_sparse(TensorR, denseoutput_tensor, indsR)
 end
 
 ## TODO this only works for dense tensors
