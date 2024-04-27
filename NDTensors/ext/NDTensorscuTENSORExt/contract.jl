@@ -29,11 +29,11 @@ end
 
 ## working to fix blocksparse implementation. 
 function NDTensors.contract(
-  Etensor1::Exposed{<:CuArray,<:BlockSparseTensor},
+  tensor1::Exposed{<:CuArray,<:BlockSparseTensor},
   labelstensor1,
-  Etensor2::Exposed{<:CuArray,<:BlockSparseTensor},
+  tensor2::Exposed{<:CuArray,<:BlockSparseTensor},
   labelstensor2,
-  labelsoutput_tensor,
+  labelsR,
 )
   ## temporarily don't use cutensor here, just keep implemented to prevent error
   tensor1 = unexpose(tensor1)
