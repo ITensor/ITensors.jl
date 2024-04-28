@@ -68,7 +68,6 @@ include("global_variables.jl")
 include("lastval.jl")
 include("lib/SmallStrings/src/SmallStrings.jl")
 using .SmallStrings: SmallStrings, IntChar, Tag, isint, isnull
-export Tag
 include("readwrite.jl")
 # TODO: Move to `lib/Nots/src/Nots.jl`.
 include("not.jl")
@@ -82,8 +81,10 @@ include("indexset.jl")
 include("itensor.jl")
 include("val.jl")
 export val
+# include("lib/QuantumNumbers/src/QuantumNumbers.jl")
+# using .QuantumNumbers: QN
+# export QN
 include("qn/flux.jl")
-# TODO: Move to `lib/QuantumNumbers/src/QuantumNumbers.jl`.
 include("qn/qn.jl")
 include("oneitensor.jl")
 include("tensor_operations/tensor_algebra.jl")
