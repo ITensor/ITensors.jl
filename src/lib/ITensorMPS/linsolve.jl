@@ -6,7 +6,7 @@ Compute a solution x to the linear system:
 (a₀ + a₁ * A)*x = b
 
 using starting guess x₀. Leaving a₀, a₁
-set to their default values solves the 
+set to their default values solves the
 system A*x = b.
 
 To adjust the balance between accuracy of solution

@@ -13,7 +13,7 @@ one- and two-site algorithms.
 ```
      *--*--*-      -*--*--*--*--*--* <psi|
      |  |  |  |  |  |  |  |  |  |  |
-     h--h--h--h--h--h--h--h--h--h--h H  
+     h--h--h--h--h--h--h--h--h--h--h H
      |  |  |  |  |  |  |  |  |  |  |
      o--o--o-      -o--o--o--o--o--o |psi0>
 ```
