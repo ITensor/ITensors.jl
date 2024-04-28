@@ -1,4 +1,4 @@
-using .QuantumNumbers: QN, QNVal
+using .QuantumNumbers: QuantumNumbers, QN
 
 """
     parity_sign(P)
@@ -20,7 +20,7 @@ function parity_sign(P)::Int
   return s
 end
 
-isfermionic(qv::QNVal) = (modulus(qv) < 0)
+isfermionic(qv::QuantumNumbers.QNVal) = (QuantumNumbers.modulus(qv) < 0)
 
 isfermionic(qn::QN) = any(isfermionic, qn)
 
@@ -327,7 +327,7 @@ function NDTensors.before_combiner_signs(
   end
 
   return T
-end #NDTensors.before_combiner_signs
+end
 
 function NDTensors.after_combiner_signs(
   R, labelsR, indsR::NTuple{NR,QNIndex}, C, labelsC, indsC::NTuple{NC,QNIndex}
@@ -375,4 +375,4 @@ function NDTensors.after_combiner_signs(
   end
 
   return R
-end #NDTensors.after_combiner_signs
+end
