@@ -104,6 +104,7 @@ using .SiteTypes:
   @ValName_str,
   has_fermion_string,
   op,
+  op!,
   ops,
   state
 export OpName,
