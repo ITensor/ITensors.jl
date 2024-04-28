@@ -67,7 +67,7 @@ include("global_variables.jl")
 # TODO: Move to `lib/LastVals/src/LastVals.jl`.
 include("lastval.jl")
 include("lib/SmallStrings/src/SmallStrings.jl")
-using .SmallStrings: SmallStrings, Tag
+using .SmallStrings: SmallStrings, IntChar, Tag, isint, isnull
 export Tag
 include("readwrite.jl")
 # TODO: Move to `lib/Nots/src/Nots.jl`.
@@ -102,6 +102,7 @@ using .SiteTypes:
   @StateName_str,
   @TagType_str,
   @ValName_str,
+  alias,
   has_fermion_string,
   op,
   op!,

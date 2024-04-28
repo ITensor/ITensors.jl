@@ -1,4 +1,3 @@
-
 module ContractionSequenceOptimization
 
 export optimal_contraction_sequence, contraction_cost
