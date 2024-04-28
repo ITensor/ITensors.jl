@@ -73,7 +73,7 @@ include("readwrite.jl")
 # TODO: Move to `lib/Nots/src/Nots.jl`.
 include("not.jl")
 include("lib/TagSets/src/TagSets.jl")
-using .TagSets: TagSets
+using .TagSets: TagSets, set_strict_tags!, using_strict_tags
 include("arrow.jl")
 include("symmetrystyle.jl")
 include("index.jl")
@@ -121,6 +121,7 @@ export OpName,
   ops,
   state,
   val
+# TODO: Move to `lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl`.
 include("ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
@@ -132,7 +133,7 @@ include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 include("nullspace.jl")
 
-# TODO: Move to `ITensorsOpsExt`?
+# TODO: Move to `lib/ITensorsOpsExt/src/ITensorsOpsExt.jl`?
 include("lib/Ops/ops_itensor.jl")
 include("fermions/fermions.jl")
 

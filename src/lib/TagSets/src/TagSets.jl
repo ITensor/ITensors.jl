@@ -1,7 +1,8 @@
 module TagSets
 using BitIntegers: UInt256
+using DocStringExtensions: TYPEDSIGNATURES
 # TODO: Move to `Nots` lib.
-using ..ITensors: ITensors, not
+using ..ITensors: ITensors, Not, not
 using ..SmallStrings: SmallString, cast_to_uint, isnull
 using StaticArrays: MVector, SVector
 
@@ -9,6 +10,41 @@ const IntTag = UInt256  # An integer that can be cast to a Tag
 const MTagStorage = MVector{16,IntTag} # A mutable tag storage, holding 16 characters
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
+
+#
+# Turn the strict tags checking on and off
+#
+
+const _using_strict_tags = Ref(false)
+
+"""
+$(TYPEDSIGNATURES)
+See if checking for overflow of the number of tags of a TagSet
+or the number of characters of a tag is enabled or disabled.
+
+See also [`ITensors.set_strict_tags!`](@ref).
+"""
+function using_strict_tags()
+  return _using_strict_tags[]
+end
+
+"""
+$(TYPEDSIGNATURES)
+Enable or disable checking for overflow of the number of tags of a TagSet
+or the number of characters of a tag. If enabled (set to `true`), an error
+will be thrown if overflow occurs, otherwise the overflow will be ignored
+and the extra tags or tag characters will be dropped. This could cause
+unexpected bugs if tags are being used to distinguish Index objects that
+have the same ids and prime levels, but that is generally discouraged and
+should only be used if you know what you are doing.
+
+See also [`ITensors.using_strict_tags`](@ref).
+"""
+function set_strict_tags!(enable::Bool)
+  previous = using_strict_tags()
+  _using_strict_tags[] = enable
+  return previous
+end
 
 emptytag(::Type{IntTag}) = IntTag(0)
 function empty_storage(::Type{TagSetStorage{T,N}}) where {T,N}

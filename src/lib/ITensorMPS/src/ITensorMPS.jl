@@ -36,5 +36,5 @@ include("dmrg_x.jl")
 include("contract_mpo_mps.jl")
 include("linsolve.jl")
 include("lattices/lattices.jl")
-export square_lattice, triangular_lattice
+export LatticeBond, square_lattice, triangular_lattice
 end
