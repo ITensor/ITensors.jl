@@ -92,7 +92,7 @@ export val
 include("val.jl")
 export val
 include("lib/QuantumNumbers/src/QuantumNumbers.jl")
-using .QuantumNumbers: QN, QNVal, isactive, modulus, nactive
+using .QuantumNumbers: QN, QNVal, isactive, maxQNs, modulus, nactive
 export QN, isactive, modulus
 include("qn/flux.jl")
 include("oneitensor.jl")
