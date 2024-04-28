@@ -3,11 +3,9 @@ export
   # LinearAlgebra
   nullspace,
   tr,
-
   # Modules
   LinearAlgebra,
   NDTensors,
-
   # NDTensors module
   # Types
   Block,
@@ -19,13 +17,10 @@ export
   truncerror,
   # Deprecated
   addblock!,
-
   # ITensors.jl
   index_id_rng,
-
   # argsdict/argsdict.jl
   argsdict,
-
   # tensor_operations/matrix_decomposition.jl
   eigen,
   factorize,
@@ -36,18 +31,14 @@ export
   ql,
   svd,
   diag,
-
   # tensor_operations/tensor_algebra.jl
   contract,
-
   # global_variables.jl
   # Methods
-
   # Macros
   @disable_warn_order,
   @reset_warn_order,
   @set_warn_order,
-
   # index.jl
   # Types
   Index,
@@ -81,7 +72,6 @@ export
   space,
   splitblocks,
   tags,
-
   # indexset.jl
   # Types
   IndexSet,
@@ -108,7 +98,6 @@ export
   swapinds,
   swapprime,
   swaptags,
-
   # itensor.jl
   # Types
   ITensor,
@@ -189,13 +178,6 @@ export
   unionind,
   vector,
   emptyITensor,
-
-  # not.jl
-  not,
-
-  # readwrite.jl
-  readcpp,
-
   # tagset.jl
   # Types
   TagSet,
@@ -204,36 +186,10 @@ export
   # Methods
   addtags,
   hastags,
-
-  # LazyApply/LazyApply.jl
-  Scaled,
-  Sum,
-  Prod,
-  coefficient,
-
   # physics/autompo.jl
   AutoMPO,
   OpSum,
   add!,
-
-  # physics/fermions.jl
-  fparity,
-  isfermionic,
-
-  # physics/lattices.jl
-  Lattice,
-  LatticeBond,
-  square_lattice,
-  triangular_lattice,
-
-  # qn/qn.jl
-  # Types
-  QN,
-  # Methods
-  isactive,
-  isfermionic,
-  modulus,
-
   # qn/qnindex.jl
   blockdim,
   flux,

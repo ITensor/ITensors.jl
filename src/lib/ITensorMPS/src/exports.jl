@@ -1,7 +1,6 @@
 export
   # dmrg.jl
   dmrg,
-
   # abstractmps.jl
   # Macros
   @preserve_ortho,
@@ -29,11 +28,9 @@ export
   set_ortho_lims!,
   siteinds,
   sim!,
-
   # autompo/
   AutoMPO,
   add!,
-
   # mpo.jl
   # Types
   MPO,
@@ -49,7 +46,6 @@ export
   truncate!,
   unique_siteind,
   unique_siteinds,
-
   # mps.jl
   # Types
   MPS,
@@ -75,7 +71,6 @@ export
   replace_siteinds,
   swapbondsites,
   totalqn,
-
   # observer.jl
   # Types
   AbstractObserver,
@@ -88,7 +83,6 @@ export
   measure!,
   measurements,
   truncerrors,
-
   # projmpo.jl
   checkflux,
   disk,
@@ -99,13 +93,10 @@ export
   noiseterm,
   nsite,
   position!,
-
   # projmposum.jl
   ProjMPOSum,
-
   # projmpo_mps.jl
   ProjMPO_MPS,
-
   # sweeps.jl
   Sweeps,
   cutoff,

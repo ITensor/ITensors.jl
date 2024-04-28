@@ -57,12 +57,14 @@ using .ContractionSequenceOptimization
 include("lib/LazyApply/src/LazyApply.jl")
 # TODO: `using .LazyApply: LazyApply, ...`.
 using .LazyApply
+using .LazyApply: Prod, Scaled, Sum, coefficient
+export Prod, Scaled, Sum, coefficient
 include("lib/Ops/src/Ops.jl")
 # TODO: `using .Ops: Ops, ...`.
 using .Ops
 using .Ops: Ops, Op, Trotter
 import .Ops: sites, name
-export Trotter
+export Ops, Op, Trotter
 include("exports.jl")
 include("imports.jl")
 include("global_variables.jl")
@@ -71,8 +73,10 @@ include("lastval.jl")
 include("lib/SmallStrings/src/SmallStrings.jl")
 using .SmallStrings: SmallStrings, IntChar, SmallString, Tag, isint, isnull
 include("readwrite.jl")
+export readcpp
 # TODO: Move to `lib/Nots/src/Nots.jl`.
 include("not.jl")
+export not
 include("lib/TagSets/src/TagSets.jl")
 using .TagSets: TagSets, set_strict_tags!, using_strict_tags
 include("arrow.jl")
@@ -88,8 +92,8 @@ export val
 include("val.jl")
 export val
 include("lib/QuantumNumbers/src/QuantumNumbers.jl")
-using .QuantumNumbers: QN
-export QN
+using .QuantumNumbers: QN, isactive, modulus, nactive
+export QN, isactive, modulus
 include("qn/flux.jl")
 include("oneitensor.jl")
 include("tensor_operations/tensor_algebra.jl")
@@ -141,6 +145,7 @@ include("qn/qnitensor.jl")
 include("nullspace.jl")
 include("lib/ITensorsOpsExt/src/ITensorsOpsExt.jl")
 include("fermions/fermions.jl")
+export fparity, isfermionic
 include("lib/ITensorMPS/src/ITensorMPS.jl")
 # TODO: `using .ITensorMPS: ITensorMPS, ...` and
 # explicit export list.
