@@ -1,4 +1,5 @@
 using NDTensors: using_auto_fermion
+using ..Ops: Op
 
 # TODO: Deprecate.
 const AutoMPO = OpSum

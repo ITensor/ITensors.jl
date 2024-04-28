@@ -211,13 +211,6 @@ export
   Prod,
   coefficient,
 
-  # Ops/Ops.jl
-  Ops,
-  Op,
-
-  # Ops/trotter.jl
-  Trotter,
-
   # physics/autompo.jl
   AutoMPO,
   OpSum,

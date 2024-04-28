@@ -52,22 +52,24 @@ module ITensors
 include("usings.jl")
 include("utils.jl")
 include("lib/ContractionSequenceOptimization/src/ContractionSequenceOptimization.jl")
-# TODO: `using .ContractionSequenceOptimization: ContractionSequenceOptimization`.
+# TODO: `using .ContractionSequenceOptimization: ContractionSequenceOptimization, ...`.
 using .ContractionSequenceOptimization
 include("lib/LazyApply/src/LazyApply.jl")
-# TODO: `using .LazyApply: LazyApply`.
+# TODO: `using .LazyApply: LazyApply, ...`.
 using .LazyApply
 include("lib/Ops/src/Ops.jl")
-# TODO: `using .Ops: Ops`.
+# TODO: `using .Ops: Ops, ...`.
 using .Ops
+using .Ops: Ops, Op, Trotter
 import .Ops: sites, name
+export Trotter
 include("exports.jl")
 include("imports.jl")
 include("global_variables.jl")
 # TODO: Move to `lib/LastVals/src/LastVals.jl`.
 include("lastval.jl")
 include("lib/SmallStrings/src/SmallStrings.jl")
-using .SmallStrings: SmallStrings, IntChar, Tag, isint, isnull
+using .SmallStrings: SmallStrings, IntChar, SmallString, Tag, isint, isnull
 include("readwrite.jl")
 # TODO: Move to `lib/Nots/src/Nots.jl`.
 include("not.jl")
@@ -79,13 +81,16 @@ include("index.jl")
 include("set_operations.jl")
 include("indexset.jl")
 include("itensor.jl")
+# TODO: Move to `lib/Names/src/Names.jl`.
+include("name.jl")
+export val
+# TODO: Move to `lib/Vals/src/Vals.jl`.
 include("val.jl")
 export val
-# include("lib/QuantumNumbers/src/QuantumNumbers.jl")
-# using .QuantumNumbers: QN
-# export QN
+include("lib/QuantumNumbers/src/QuantumNumbers.jl")
+using .QuantumNumbers: QN
+export QN
 include("qn/flux.jl")
-include("qn/qn.jl")
 include("oneitensor.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
@@ -124,8 +129,7 @@ export OpName,
   ops,
   state,
   val
-# TODO: Move to `lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl`.
-include("ITensorsSiteTypesExt.jl")
+include("lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
 include("adapt.jl")
@@ -135,24 +139,18 @@ include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 include("nullspace.jl")
-
-# TODO: Move to `lib/ITensorsOpsExt/src/ITensorsOpsExt.jl`?
-include("lib/Ops/ops_itensor.jl")
+include("lib/ITensorsOpsExt/src/ITensorsOpsExt.jl")
 include("fermions/fermions.jl")
-
 include("lib/ITensorMPS/src/ITensorMPS.jl")
-# TODO: `using .ITensorMPS: ITensorMPS, ...`.
+# TODO: `using .ITensorMPS: ITensorMPS, ...` and
+# explicit export list.
 @reexport using .ITensorMPS
 include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
 using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
-
-# TODO: Move into `Ops`.
-include("lib/Ops/trotter.jl")
-
 include("lib/ITensorChainRules/src/ITensorChainRules.jl")
 include("lib/ITensorNetworkMaps/src/ITensorNetworkMaps.jl")
 include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
-# TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore`.
+# TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore, ...`.
 using .ITensorVisualizationCore
 using .ITensorVisualizationCore:
   @visualize,

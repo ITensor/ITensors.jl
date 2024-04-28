@@ -1,3 +1,5 @@
+using ..LazyApply: Applied, Sum
+
 abstract type ExpAlgorithm end
 
 struct Exact <: ExpAlgorithm end
@@ -6,13 +8,13 @@ struct Trotter{Order} <: ExpAlgorithm
   nsteps::Int
 end
 Trotter{Order}() where {Order} = Trotter{Order}(1)
-one(::Trotter{Order}) where {Order} = Trotter{Order}(1)
+Base.one(::Trotter{Order}) where {Order} = Trotter{Order}(1)
 
-function exp(o::Sum; alg::ExpAlgorithm=Exact())
+function Base.exp(o::Sum; alg::ExpAlgorithm=Exact())
   return exp(alg, o)
 end
 
-function exp(::Exact, o::Sum)
+function Base.exp(::Exact, o::Sum)
   return Applied(prod, ([Applied(exp, (o,))],))
 end
 
@@ -27,7 +29,7 @@ function exp_one_step(trotter::Trotter{2}, o::Sum)
   return exp_o
 end
 
-function exp(trotter::Trotter, o::Sum)
+function Base.exp(trotter::Trotter, o::Sum)
   expδo = exp_one_step(one(trotter), o / trotter.nsteps)
   return expδo^trotter.nsteps
 end

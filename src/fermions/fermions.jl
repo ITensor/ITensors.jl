@@ -1,3 +1,4 @@
+using .QuantumNumbers: QN, QNVal
 
 """
     parity_sign(P)

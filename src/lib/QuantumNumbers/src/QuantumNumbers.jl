@@ -1,10 +1,13 @@
-using .SmallStrings: SmallString
+module QuantumNumbers
+using ..ITensors: ITensors, Arrow, name
+using NDTensors: NDTensors
+using ..SmallStrings: SmallString
+using StaticArrays: MVector, SVector
 
 struct QNVal
   name::SmallString
   val::Int
   modulus::Int
-
   function QNVal(name, v::Int, m::Int=1)
     am = abs(m)
     if am > 1
@@ -17,11 +20,11 @@ end
 QNVal(v::Int, m::Int=1) = QNVal("", v, m)
 QNVal() = QNVal("", 0, 0)
 
-name(qv::QNVal) = qv.name
-val(qv::QNVal) = qv.val
+ITensors.name(qv::QNVal) = qv.name
+ITensors.val(qv::QNVal) = qv.val
 modulus(qv::QNVal) = qv.modulus
 isactive(qv::QNVal) = modulus(qv) != 0
-(qv1::QNVal < qv2::QNVal) = (name(qv1) < name(qv2))
+Base.:(<)(qv1::QNVal, qv2::QNVal) = (name(qv1) < name(qv2))
 
 function qn_mod(val::Int, modulus::Int)
   amod = abs(modulus)
@@ -35,11 +38,11 @@ end
 
 Base.zero(::Type{QNVal}) = QNVal()
 
-zero(qv::QNVal) = QNVal(name(qv), 0, modulus(qv))
+Base.zero(qv::QNVal) = QNVal(name(qv), 0, modulus(qv))
 
-(dir::Arrow * qv::QNVal) = QNVal(name(qv), Int(dir) * val(qv), modulus(qv))
+Base.:(*)(dir::Arrow, qv::QNVal) = QNVal(name(qv), Int(dir) * val(qv), modulus(qv))
 
-(qv::QNVal * dir::Arrow) = (dir * qv)
+Base.:(*)(qv::QNVal, dir::Arrow) = (dir * qv)
 
 function pm(qv1::QNVal, qv2::QNVal, fac::Int)
   if name(qv1) != name(qv2)
@@ -57,8 +60,8 @@ function pm(qv1::QNVal, qv2::QNVal, fac::Int)
   return QNVal(name(qv1), Base.mod(val(qv1) + fac * val(qv2), abs(m1)), m1)
 end
 
-(qv1::QNVal + qv2::QNVal) = pm(qv1, qv2, +1)
-(qv1::QNVal - qv2::QNVal) = pm(qv1, qv2, -1)
+Base.:(+)(qv1::QNVal, qv2::QNVal) = pm(qv1, qv2, +1)
+Base.:(-)(qv1::QNVal, qv2::QNVal) = pm(qv1, qv2, -1)
 
 const ZeroVal = QNVal()
 
@@ -81,12 +84,10 @@ collection, its value is treated as zero.
 """
 struct QN
   data::QNStorage
-
   function QN()
     s = QNStorage(ntuple(_ -> ZeroVal, Val(maxQNs)))
     return new(s)
   end
-
   QN(s::QNStorage) = new(s)
 end
 
@@ -153,11 +154,11 @@ QN(val::Int, modulus::Int=1) = QN(("", val, modulus))
 
 data(qn::QN) = qn.data
 
-getindex(q::QN, n::Int) = getindex(data(q), n)
+Base.getindex(q::QN, n::Int) = getindex(data(q), n)
 
-length(qn::QN) = length(data(qn))
+Base.length(qn::QN) = length(data(qn))
 
-lastindex(qn::QN) = length(qn)
+Base.lastindex(qn::QN) = length(qn)
 
 isactive(qn::QN) = isactive(qn[1])
 
@@ -168,12 +169,12 @@ function nactive(q::QN)
   return maxQNs
 end
 
-function iterate(qn::QN, state::Int=1)
+function Base.iterate(qn::QN, state::Int=1)
   (state > length(qn)) && return nothing
   return (qn[state], state + 1)
 end
 
-keys(qn::QN) = keys(data(qn))
+Base.keys(qn::QN) = keys(data(qn))
 
 """
     val(q::QN,name)
@@ -181,7 +182,7 @@ keys(qn::QN) = keys(data(qn))
 Get the value within the QN q
 corresponding to the string `name`
 """
-function val(q::QN, name_)
+function ITensors.val(q::QN, name_)
   sname = SmallString(name_)
   for n in 1:maxQNs
     name(q[n]) == sname && return val(q[n])
@@ -210,7 +211,7 @@ Returns a QN object containing
 the same names as q, but with
 all values set to zero.
 """
-function zero(qn::QN)
+function Base.zero(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
     mqn[i] = zero(qn[i])
@@ -218,7 +219,7 @@ function zero(qn::QN)
   return QN(mqn)
 end
 
-function (dir::Arrow * qn::QN)
+function Base.:(*)(dir::Arrow, qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
     mqn[i] = dir * qn[i]
@@ -226,9 +227,9 @@ function (dir::Arrow * qn::QN)
   return QN(mqn)
 end
 
-(qn::QN * dir::Arrow) = (dir * qn)
+Base.:(*)(qn::QN, dir::Arrow) = (dir * qn)
 
-function -(qn::QN)
+function Base.:(-)(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
     mqn[i] = -qn[i]
@@ -236,9 +237,8 @@ function -(qn::QN)
   return QN(mqn)
 end
 
-function (a::QN + b::QN)
+function Base.:(+)(a::QN, b::QN)
   !isactive(b[1]) && return a
-
   ma = MQNStorage(data(a))
   @inbounds for nb in 1:maxQNs
     !isactive(b[nb]) && break
@@ -263,7 +263,7 @@ function (a::QN + b::QN)
   return QN(QNStorage(ma))
 end
 
-(a::QN - b::QN) = (a + (-b))
+Base.:(-)(a::QN, b::QN) = (a + (-b))
 
 function hasname(qn::QN, qv_find::QNVal)
   for qv in qn
@@ -319,7 +319,7 @@ function isequal_assume_filled(qn1::QN, qn2::QN)
   return true
 end
 
-function ==(qn1::QN, qn2::QN; assume_filled=false)
+function Base.:(==)(qn1::QN, qn2::QN; assume_filled=false)
   if !assume_filled
     qn1, qn2 = fillqns(qn1, qn2)
   end
@@ -335,11 +335,11 @@ function isless_assume_filled(qn1::QN, qn2::QN)
   return false
 end
 
-function isless(qn1::QN, qn2::QN; assume_filled=false)
+function Base.isless(qn1::QN, qn2::QN; assume_filled=false)
   return <(qn1, qn2; assume_filled=assume_filled)
 end
 
-function <(qn1::QN, qn2::QN; assume_filled=false)
+function Base.:(<)(qn1::QN, qn2::QN; assume_filled=false)
   if !assume_filled
     qn1, qn2 = fillqns(qn1, qn2)
   end
@@ -362,7 +362,6 @@ end
 
 function removeqn(qn::QN, qn_name::String)
   ss_qn_name = SmallString(qn_name)
-
   # Find the location of the QNVal to remove
   n_qn = nothing
   for n in 1:length(qn)
@@ -374,7 +373,6 @@ function removeqn(qn::QN, qn_name::String)
   if isnothing(n_qn)
     return qn
   end
-
   qn_data = data(qn)
   for j in n_qn:(length(qn) - 1)
     qn_data = setindex(qn_data, qn_data[j + 1], j)
@@ -383,7 +381,7 @@ function removeqn(qn::QN, qn_name::String)
   return QN(qn_data)
 end
 
-function show(io::IO, q::QN)
+function Base.show(io::IO, q::QN)
   print(io, "QN(")
   Na = nactive(q)
   for n in 1:Na
@@ -400,4 +398,5 @@ function show(io::IO, q::QN)
     Na > 1 && print(io, ")")
   end
   return print(io, ")")
+end
 end
