@@ -1,5 +1,6 @@
 using ChainRulesCore: @ignore_derivatives
-using ..ITensors: Index, ITensor, itensor, dag, onehot, prime, product, swapprime, tags
+using ..ITensors:
+  ITensors, Index, ITensor, itensor, dag, onehot, prime, product, swapprime, tags
 using ..SmallStrings: SmallString
 using ..TagSets: TagSets, TagSet, addtags, commontags
 
@@ -158,12 +159,13 @@ macro notation: `OpName"MyTag"`.
 To make an OpName value or object, you can use
 the notation: `OpName("myop")`
 """
-OpName(s::AbstractString) = OpName{SmallString(s)}()
+OpName(s::AbstractString) = OpName{Symbol(s)}()
 OpName(s::Symbol) = OpName{s}()
-name(::OpName{N}) where {N} = N
+# TODO: Avoid overloading `ITensors` version.
+ITensors.name(::OpName{N}) where {N} = N
 
 macro OpName_str(s)
-  return OpName{SmallString(s)}
+  return OpName{Symbol(s)}
 end
 
 # Default implementations of op and op!
@@ -545,8 +547,9 @@ gates = ops(os, s)
 end
 
 StateName(s::AbstractString) = StateName{SmallString(s)}()
-StateName(s::Symbol) = StateName{s}()
-name(::StateName{N}) where {N} = N
+StateName(s::SmallString) = StateName{s}()
+# TODO: Avoid overloading `ITensors` version.
+ITensors.name(::StateName{N}) where {N} = N
 
 macro StateName_str(s)
   return StateName{SmallString(s)}
@@ -646,7 +649,8 @@ end
 
 ValName(s::AbstractString) = ValName{SmallString(s)}()
 ValName(s::Symbol) = ValName{s}()
-name(::ValName{N}) where {N} = N
+# TODO: Avoid overloading `ITensors` version.
+ITensors.name(::ValName{N}) where {N} = N
 
 macro ValName_str(s)
   return ValName{SmallString(s)}

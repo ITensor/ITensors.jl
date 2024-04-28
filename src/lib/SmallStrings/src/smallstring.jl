@@ -1,5 +1,5 @@
 using BitIntegers: UInt256
-using StaticArrays: MVector, SVector
+using StaticArrays: StaticArrays, MVector, SVector
 
 const IntChar = UInt16
 const IntSmallString = UInt256
