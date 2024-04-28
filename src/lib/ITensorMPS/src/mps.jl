@@ -1,6 +1,7 @@
 using Adapt: adapt
 using NDTensors: using_auto_fermion
 using Random: Random
+using ..SiteTypes: SiteTypes, siteind, siteinds
 
 """
     MPS
@@ -482,14 +483,14 @@ MPS(sites::Vector{<:Index}, states) = MPS(Float64, sites, states)
 
 Get the first site Index of the MPS. Return `nothing` if none is found.
 """
-siteind(M::MPS, j::Int; kwargs...) = siteind(first, M, j; kwargs...)
+SiteTypes.siteind(M::MPS, j::Int; kwargs...) = siteind(first, M, j; kwargs...)
 
 """
     siteind(::typeof(only), M::MPS, j::Int; kwargs...)
 
 Get the only site Index of the MPS. Return `nothing` if none is found.
 """
-function siteind(::typeof(only), M::MPS, j::Int; kwargs...)
+function SiteTypes.siteind(::typeof(only), M::MPS, j::Int; kwargs...)
   is = siteinds(M, j; kwargs...)
   if isempty(is)
     return nothing
@@ -511,7 +512,7 @@ Get a vector of the only site Index found on each tensor of the MPS. Errors if m
 
 Get a vector of the all site Indices found on each tensor of the MPS. Returns a Vector of IndexSets.
 """
-siteinds(M::MPS; kwargs...) = siteinds(first, M; kwargs...)
+SiteTypes.siteinds(M::MPS; kwargs...) = siteinds(first, M; kwargs...)
 
 function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)

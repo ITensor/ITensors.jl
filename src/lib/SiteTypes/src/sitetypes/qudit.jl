@@ -1,3 +1,5 @@
+using ChainRulesCore: @non_differentiable
+
 """
     space(::SiteType"Qudit";
           dim = 2,
@@ -9,7 +11,7 @@ Create the Hilbert space for a site of type "Qudit".
 
 Optionally specify the conserved symmetries and their quantum number labels.
 """
-function ITensors.space(
+function space(
   ::SiteType"Qudit";
   dim=2,
   conserve_qns=false,
@@ -22,11 +24,11 @@ function ITensors.space(
   return dim
 end
 
-function ITensors.val(::ValName{N}, ::SiteType"Qudit") where {N}
+function val(::ValName{N}, ::SiteType"Qudit") where {N}
   return parse(Int, String(N)) + 1
 end
 
-function ITensors.state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
+function state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
   n = parse(Int, String(N))
   st = zeros(dim(s))
   st[n + 1] = 1.0

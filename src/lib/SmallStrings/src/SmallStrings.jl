@@ -1,3 +1,7 @@
+module SmallStrings
+using BitIntegers: UInt256
+using StaticArrays: MVector, SVector
+
 const IntChar = UInt16
 const IntSmallString = UInt256
 
@@ -144,4 +148,5 @@ function readcpp(io::IO, ::Type{SmallString}; format="v3")
     throw(ArgumentError("read SmallString: format=$format not supported"))
   end
   return s
+end
 end

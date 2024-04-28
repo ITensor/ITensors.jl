@@ -1,5 +1,8 @@
 using IsApprox: Approx, IsApprox
-using NDTensors: using_auto_fermion, scalartype, tensor
+using ..ITensors: ITensors
+using NDTensors: NDTensors, using_auto_fermion, scalartype, tensor
+using ..SiteTypes: SiteTypes, siteinds
+using ..TagSets: TagSets
 
 abstract type AbstractMPS end
 
@@ -8,16 +11,16 @@ abstract type AbstractMPS end
 
 The number of sites of an MPS/MPO.
 """
-length(m::AbstractMPS) = length(data(m))
+Base.length(m::AbstractMPS) = length(data(m))
 
 """
     size(::MPS/MPO)
 
 The number of sites of an MPS/MPO, in a tuple.
 """
-size(m::AbstractMPS) = size(data(m))
+Base.size(m::AbstractMPS) = size(data(m))
 
-ndims(m::AbstractMPS) = ndims(data(m))
+Base.ndims(m::AbstractMPS) = ndims(data(m))
 
 function promote_itensor_eltype(m::Vector{ITensor})
   T = isassigned(m, 1) ? eltype(m[1]) : Number
@@ -61,12 +64,12 @@ The element type of the MPS/MPO. Always returns `ITensor`.
 For the element type of the ITensors of the MPS/MPO,
 use `promote_itensor_eltype`.
 """
-eltype(::AbstractMPS) = ITensor
+Base.eltype(::AbstractMPS) = ITensor
 
-complex(ψ::AbstractMPS) = complex.(ψ)
-real(ψ::AbstractMPS) = real.(ψ)
-imag(ψ::AbstractMPS) = imag.(ψ)
-conj(ψ::AbstractMPS) = conj.(ψ)
+Base.complex(ψ::AbstractMPS) = complex.(ψ)
+Base.real(ψ::AbstractMPS) = real.(ψ)
+Base.imag(ψ::AbstractMPS) = imag.(ψ)
+Base.conj(ψ::AbstractMPS) = conj.(ψ)
 
 function convert_leaf_eltype(eltype::Type, ψ::AbstractMPS)
   return map(ψᵢ -> convert_leaf_eltype(eltype, ψᵢ), ψ; set_limits=false)
@@ -278,9 +281,9 @@ julia> norm(M3)
 3.0000000000000004
 ```
 """
-copy(m::AbstractMPS) = typeof(m)(copy(data(m)), leftlim(m), rightlim(m))
+Base.copy(m::AbstractMPS) = typeof(m)(copy(data(m)), leftlim(m), rightlim(m))
 
-similar(m::AbstractMPS) = typeof(m)(similar(data(m)), 0, length(m))
+Base.similar(m::AbstractMPS) = typeof(m)(similar(data(m)), 0, length(m))
 
 """
     deepcopy(::MPS)
@@ -463,7 +466,7 @@ end
 
 Get the site index (or indices) of MPO `A` that is unique to `A` (not shared with MPS/MPO `B`).
 """
-function siteinds(
+function SiteTypes.siteinds(
   f::Union{typeof(uniqueinds),typeof(uniqueind)},
   A::AbstractMPS,
   B::AbstractMPS,
@@ -483,7 +486,7 @@ end
 
 Get the site indices of MPO `A` that are unique to `A` (not shared with MPS/MPO `B`), as a `Vector{<:Index}`.
 """
-function siteinds(
+function SiteTypes.siteinds(
   f::Union{typeof(uniqueinds),typeof(uniqueind)}, A::AbstractMPS, B::AbstractMPS; kwargs...
 )
   return [siteinds(f, A, B, j; kwargs...) for j in eachindex(A)]
@@ -495,7 +498,7 @@ end
 
 Get the site index (or indices) of  the `j`th MPO tensor of `A` that is shared with MPS/MPO `B`.
 """
-function siteinds(
+function SiteTypes.siteinds(
   f::Union{typeof(commoninds),typeof(commonind)},
   A::AbstractMPS,
   B::AbstractMPS,
@@ -511,7 +514,7 @@ end
 
 Get a vector of the site index (or indices) of MPO `A` that is shared with MPS/MPO `B`.
 """
-function siteinds(
+function SiteTypes.siteinds(
   f::Union{typeof(commoninds),typeof(commonind)}, A::AbstractMPS, B::AbstractMPS; kwargs...
 )
   return [siteinds(f, A, B, j) for j in eachindex(A)]
@@ -617,7 +620,7 @@ Return the first site Index found on the MPS or MPO
 You can choose different filters, like prime level
 and tags, with the `kwargs`.
 """
-function siteind(::typeof(first), M::AbstractMPS, j::Integer; kwargs...)
+function SiteTypes.siteind(::typeof(first), M::AbstractMPS, j::Integer; kwargs...)
   N = length(M)
   (N == 1) && return firstind(M[1]; kwargs...)
   if j == 1
@@ -639,7 +642,7 @@ at the site `j` as an IndexSet.
 Optionally filter prime tags and prime levels with
 keyword arguments like `plev` and `tags`.
 """
-function siteinds(M::AbstractMPS, j::Integer; kwargs...)
+function SiteTypes.siteinds(M::AbstractMPS, j::Integer; kwargs...)
   N = length(M)
   (N == 1) && return inds(M[1]; kwargs...)
   if j == 1
@@ -652,19 +655,19 @@ function siteinds(M::AbstractMPS, j::Integer; kwargs...)
   return si
 end
 
-function siteinds(::typeof(all), ψ::AbstractMPS, n::Integer; kwargs...)
+function SiteTypes.siteinds(::typeof(all), ψ::AbstractMPS, n::Integer; kwargs...)
   return siteinds(ψ, n; kwargs...)
 end
 
-function siteinds(::typeof(first), ψ::AbstractMPS; kwargs...)
+function SiteTypes.siteinds(::typeof(first), ψ::AbstractMPS; kwargs...)
   return [siteind(first, ψ, j; kwargs...) for j in 1:length(ψ)]
 end
 
-function siteinds(::typeof(only), ψ::AbstractMPS; kwargs...)
+function SiteTypes.siteinds(::typeof(only), ψ::AbstractMPS; kwargs...)
   return [siteind(only, ψ, j; kwargs...) for j in 1:length(ψ)]
 end
 
-function siteinds(::typeof(all), ψ::AbstractMPS; kwargs...)
+function SiteTypes.siteinds(::typeof(all), ψ::AbstractMPS; kwargs...)
   return [siteinds(ψ, j; kwargs...) for j in 1:length(ψ)]
 end
 
@@ -699,20 +702,18 @@ function map(f::Function, M::AbstractMPS; set_limits::Bool=true)
   return map!(f, copy(M); set_limits=set_limits)
 end
 
-for fname in (
-  :dag,
-  :prime,
-  :setprime,
-  :noprime,
-  :swapprime,
-  :replaceprime,
-  :addtags,
-  :removetags,
-  :replacetags,
-  :settags,
-)
-  fname! = Symbol(fname, :!)
-
+for (fname, fname!) in [
+  (:(ITensors.dag), :(dag!)),
+  (:(ITensors.prime), :(ITensors.prime!)),
+  (:(ITensors.setprime), :(ITensors.setprime!)),
+  (:(ITensors.noprime), :(ITensors.noprime!)),
+  (:(ITensors.swapprime), :(ITensors.swapprime!)),
+  (:(ITensors.replaceprime), :(ITensors.replaceprime!)),
+  (:(TagSets.addtags), :(ITensors.addtags!)),
+  (:(TagSets.removetags), :(ITensors.removetags!)),
+  (:(TagSets.replacetags), :(ITensors.replacetags!)),
+  (:(ITensors.settags), :(ITensors.settags!)),
+]
   @eval begin
     """
         $($fname)[!](M::MPS, args...; kwargs...)
@@ -847,9 +848,16 @@ function hassamenuminds(::typeof(siteinds), M1::AbstractMPS, M2::AbstractMPS)
   return true
 end
 
-for fname in
-    (:sim, :prime, :setprime, :noprime, :addtags, :removetags, :replacetags, :settags)
-  fname! = Symbol(fname, :!)
+for (fname, fname!) in [
+  (:(NDTensors.sim), :(sim!)),
+  (:(ITensors.prime), :(ITensors.prime!)),
+  (:(ITensors.setprime), :(ITensors.setprime!)),
+  (:(ITensors.noprime), :(ITensors.noprime!)),
+  (:(TagSets.addtags), :(ITensors.addtags!)),
+  (:(TagSets.removetags), :(ITensors.removetags!)),
+  (:(TagSets.replacetags), :(ITensors.replacetags!)),
+  (:(ITensors.settags), :(ITensors.settags!)),
+]
   @eval begin
     """
         $($fname)[!](linkinds, M::MPS, args...; kwargs...)
@@ -2369,11 +2377,13 @@ function copyto!(ψ::AbstractMPS, b::Broadcasted)
   return ψ
 end
 
-function similar(bc::Broadcasted{Style{MPST}}, ElType::Type) where {MPST<:AbstractMPS}
+function Base.similar(bc::Broadcasted{Style{MPST}}, ElType::Type) where {MPST<:AbstractMPS}
   return similar(Array{ElType}, axes(bc))
 end
 
-function similar(bc::Broadcasted{Style{MPST}}, ::Type{ITensor}) where {MPST<:AbstractMPS}
+function Base.similar(
+  bc::Broadcasted{Style{MPST}}, ::Type{ITensor}
+) where {MPST<:AbstractMPS}
   # In general, we assume the broadcast operation
   # will mess up the orthogonality so we use
   # a generic constructor where we don't specify

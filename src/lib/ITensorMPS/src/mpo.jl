@@ -1,5 +1,6 @@
 using Adapt: adapt
 using Random: Random
+using ..SiteTypes: SiteTypes, siteind, siteinds
 
 """
     MPO
@@ -238,7 +239,7 @@ end
 Get the first site Index of the MPO found, by
 default with prime level 0.
 """
-siteind(M::MPO, j::Int; kwargs...) = siteind(first, M, j; plev=0, kwargs...)
+SiteTypes.siteind(M::MPO, j::Int; kwargs...) = siteind(first, M, j; plev=0, kwargs...)
 
 # TODO: make this return the site indices that would have
 # been used to create the MPO? I.e.:
@@ -248,9 +249,9 @@ siteind(M::MPO, j::Int; kwargs...) = siteind(first, M, j; plev=0, kwargs...)
 
 Get a Vector of IndexSets of all the site indices of M.
 """
-siteinds(M::MPO; kwargs...) = siteinds(all, M; kwargs...)
+SiteTypes.siteinds(M::MPO; kwargs...) = siteinds(all, M; kwargs...)
 
-function siteinds(Mψ::Tuple{MPO,MPS}, n::Int; kwargs...)
+function SiteTypes.siteinds(Mψ::Tuple{MPO,MPS}, n::Int; kwargs...)
   return siteinds(uniqueinds, Mψ[1], Mψ[2], n; kwargs...)
 end
 
@@ -261,7 +262,9 @@ function nsites(Mψ::Tuple{MPO,MPS})
   return N
 end
 
-siteinds(Mψ::Tuple{MPO,MPS}; kwargs...) = [siteinds(Mψ, n; kwargs...) for n in 1:nsites(Mψ)]
+function SiteTypes.siteinds(Mψ::Tuple{MPO,MPS}; kwargs...)
+  return [siteinds(Mψ, n; kwargs...) for n in 1:nsites(Mψ)]
+end
 
 # XXX: rename originalsiteinds?
 """

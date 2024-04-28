@@ -1,4 +1,9 @@
-using BitIntegers
+module TagSets
+using BitIntegers: UInt256
+# TODO: Move to `Nots` lib.
+using ..ITensors: ITensors, not
+using ..SmallStrings: SmallString, cast_to_uint, isnull
+using StaticArrays: MVector, SVector
 
 const IntTag = UInt256  # An integer that can be cast to a Tag
 const MTagStorage = MVector{16,IntTag} # A mutable tag storage, holding 16 characters
@@ -55,7 +60,7 @@ function _addtag_ordered!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
 end
 
 function _addtag!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
-  t = Tag(tag)
+  t = SmallString(tag)
   # TODO: change to isempty, remove isnull
   if !isnull(t)
     ntags = _addtag_ordered!(ts, ntags, tag)
@@ -154,13 +159,13 @@ Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 Create a wrapper around a TagSet representing
 the set of indices that do not contain that TagSet.
 """
-not(ts::TagSet) = Not(ts)
+ITensors.not(ts::TagSet) = Not(ts)
 Base.:!(ts::TagSet) = Not(ts)
 
-not(ts::AbstractString) = Not(ts)
+ITensors.not(ts::AbstractString) = Not(ts)
 
 """
-ITensors.data(T::TagSet)
+data(T::TagSet)
 
 Get the raw storage of the TagSet.
 
@@ -172,7 +177,7 @@ available.
 data(T::TagSet) = T.data
 
 Base.length(T::TagSet) = T.length
-@propagate_inbounds getindex(T::TagSet, n::Integer) = Tag(data(T)[n])
+Base.@propagate_inbounds Base.getindex(T::TagSet, n::Integer) = SmallString(data(T)[n])
 Base.copy(ts::TagSet) = TagSet(data(ts), length(ts))
 
 function Base.:(==)(ts1::TagSet, ts2::TagSet)
@@ -278,9 +283,9 @@ function tagstring(T::TagSet)
   N = length(T)
   N == 0 && return res
   for n in 1:(N - 1)
-    res *= "$(Tag(data(T)[n])),"
+    res *= "$(SmallString(data(T)[n])),"
   end
-  res *= "$(Tag(data(T)[N]))"
+  res *= "$(SmallString(data(T)[N]))"
   return res
 end
 
@@ -338,7 +343,7 @@ function readcpp(io::IO, ::Type{TagSet}; format="v3")
     ntags = 0
     for n in 1:4
       t = readcpp(io, Tag; kwargs...)
-      if t != Tag()
+      if t != SmallString()
         ntags = _addtag_ordered!(mstore, ntags, IntTag(t))
       end
     end
@@ -347,4 +352,5 @@ function readcpp(io::IO, ::Type{TagSet}; format="v3")
     throw(ArgumentError("read TagSet: format=$format not supported"))
   end
   return ts
+end
 end

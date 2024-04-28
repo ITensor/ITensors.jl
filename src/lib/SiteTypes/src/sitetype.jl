@@ -1,3 +1,7 @@
+using ChainRulesCore: @ignore_derivatives
+using ..ITensors: Index, ITensor, itensor, dag, onehot, prime, product, swapprime, tags
+using ..SmallStrings: SmallString
+using ..TagSets: TagSets, TagSet, addtags, commontags
 
 @eval struct SiteType{T}
   (f::Type{<:SiteType})() = $(Expr(:new, :f))
@@ -26,10 +30,10 @@ To make a SiteType value or object, you can use
 the notation: `SiteType("MyTag")`
 
 There are currently a few built-in site types
-recognized by `ITensors.jl`. The system is easily extensible
+recognized by `jl`. The system is easily extensible
 by users. To add new operators to an existing site type,
 or to create new site types, you can follow the instructions
-[here](https://itensor.github.io/ITensors.jl/stable/examples/Physics.html).
+[here](https://itensor.github.io/jl/stable/examples/Physics.html).
 
 The current built-in site types are:
 
@@ -102,24 +106,24 @@ Many operators are available, for example:
 - ...
 
 You can view the source code for the internal SiteType definitions
-and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types).
+and operators that are defined [here](https://github.com/ITensor/jl/tree/main/src/physics/site_types).
 """
-SiteType(s::AbstractString) = SiteType{Tag(s)}()
+SiteType(s::AbstractString) = SiteType{SmallString(s)}()
 
-SiteType(t::Integer) = SiteType{Tag(t)}()
-SiteType(t::Tag) = SiteType{t}()
+SiteType(t::Integer) = SiteType{SmallString(t)}()
+SiteType(t::SmallString) = SiteType{t}()
 
 tag(::SiteType{T}) where {T} = T
 
 macro SiteType_str(s)
-  return SiteType{Tag(s)}
+  return SiteType{SmallString(s)}
 end
 
 # Keep TagType defined for backwards
 # compatibility; will be deprecated later
 const TagType = SiteType
 macro TagType_str(s)
-  return TagType{Tag(s)}
+  return TagType{SmallString(s)}
 end
 
 #---------------------------------------
@@ -145,7 +149,7 @@ OpName is a parameterized type which allows
 making strings into Julia types for the purpose
 of representing operator names.
 The main use of OpName is overloading the
-`ITensors.op!` method which generates operators
+`op!` method which generates operators
 for indices with certain tags such as "S=1/2".
 
 To make a OpName type, you can use the string
@@ -154,12 +158,12 @@ macro notation: `OpName"MyTag"`.
 To make an OpName value or object, you can use
 the notation: `OpName("myop")`
 """
-OpName(s::AbstractString) = OpName{Symbol(s)}()
+OpName(s::AbstractString) = OpName{SmallString(s)}()
 OpName(s::Symbol) = OpName{s}()
 name(::OpName{N}) where {N} = N
 
 macro OpName_str(s)
-  return OpName{Symbol(s)}
+  return OpName{SmallString(s)}
 end
 
 # Default implementations of op and op!
@@ -188,7 +192,7 @@ op(::SiteType, ::Index, ::AbstractString; kwargs...) = nothing
 
 function _sitetypes(ts::TagSet)
   Ntags = length(ts)
-  return SiteType[SiteType(data(ts)[n]) for n in 1:Ntags]
+  return SiteType[SiteType(TagSets.data(ts)[n]) for n in 1:Ntags]
 end
 
 _sitetypes(i::Index) = _sitetypes(tags(i))
@@ -223,7 +227,7 @@ Sz = op("Sz", s)
 ```
 
 To see all of the operator names defined for the site types included with
-ITensor, please view the [source code](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types)
+ITensor, please view the [source code](https://github.com/ITensor/jl/tree/main/src/physics/site_types)
 for each site type. Note that some site types such as "S=1/2" and "Qubit"
 are aliases for each other and share operator definitions.
 """
@@ -307,7 +311,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   op_mat = op(opn; kwargs...)
   if !isnothing(op_mat)
     rs = reverse(s)
-    res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+    res = itensor(op_mat, prime.(rs)..., dag.(rs)...)
     adjoint && return swapprime(dag(res), 0 => 1)
     return res
   end
@@ -320,8 +324,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
     op_mat = op(opn, st; kwargs...)
     if !isnothing(op_mat)
       rs = reverse(s)
-      #return itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
-      res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+      #return itensor(op_mat, prime.(rs)..., dag.(rs)...)
+      res = itensor(op_mat, prime.(rs)..., dag.(rs)...)
       adjoint && return swapprime(dag(res), 0 => 1)
       return res
     end
@@ -330,7 +334,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   # otherwise try calling a function of the form:
   #    op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...)
   #
-  Op = ITensor(prime.(s)..., ITensors.dag.(s)...)
+  Op = ITensor(prime.(s)..., dag.(s)...)
   for st in common_stypes
     op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
@@ -361,7 +365,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
       end
     end
 
-    Op = ITensor(prime.(s)..., ITensors.dag.(s)...)
+    Op = ITensor(prime.(s)..., dag.(s)...)
     for st in Iterators.product(stypes...)
       op!(Op, opn, st..., s...; kwargs...)
       if !isempty(Op)
@@ -541,7 +545,7 @@ gates = ops(os, s)
 end
 
 StateName(s::AbstractString) = StateName{SmallString(s)}()
-StateName(s::SmallString) = StateName{s}()
+StateName(s::Symbol) = StateName{s}()
 name(::StateName{N}) where {N} = N
 
 macro StateName_str(s)
@@ -641,7 +645,7 @@ state(sset::Vector{<:Index}, j::Integer, st; kwargs...) = state(sset[j], st; kwa
 end
 
 ValName(s::AbstractString) = ValName{SmallString(s)}()
-ValName(s::SmallString) = ValName{s}()
+ValName(s::Symbol) = ValName{s}()
 name(::ValName{N}) where {N} = N
 
 macro ValName_str(s)

@@ -20,15 +20,6 @@ export
   # Deprecated
   addblock!,
 
-  # ITensorVisualizationCore module
-  # Macros
-  @visualize,
-  @visualize!,
-  @visualize_noeval,
-  @visualize_noeval!,
-  @visualize_sequence,
-  @visualize_sequence_noeval,
-
   # ITensors.jl
   index_id_rng,
 
@@ -90,7 +81,6 @@ export
   space,
   splitblocks,
   tags,
-  val,
 
   # indexset.jl
   # Types
@@ -243,22 +233,6 @@ export
   square_lattice,
   triangular_lattice,
 
-  # physics/sitetype.jl
-  SiteType,
-  @SiteType_str,
-  StateName,
-  @StateName_str,
-  op,
-  ops,
-  OpName,
-  @OpName_str,
-  ValName,
-  @ValName_str,
-  state,
-  TagType,
-  @TagType_str,
-  has_fermion_string,
-
   # qn/qn.jl
   # Types
   QN,
@@ -266,7 +240,6 @@ export
   isactive,
   isfermionic,
   modulus,
-  val,
 
   # qn/qnindex.jl
   blockdim,

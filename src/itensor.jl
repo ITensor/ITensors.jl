@@ -1,3 +1,5 @@
+using .TagSets: TagSets, hastags, replacetags
+
 # Private inner constructor
 function _ITensor end
 
@@ -551,35 +553,6 @@ delta(is...) = delta(Float64, is...)
 
 const δ = delta
 
-"""
-    onehot(ivs...)
-    setelt(ivs...)
-    onehot(::Type, ivs...)
-    setelt(::Type, ivs...)
-
-Create an ITensor with all zeros except the specified value,
-which is set to 1.
-
-# Examples
-```julia
-i = Index(2,"i")
-A = onehot(i=>2)
-# A[i=>2] == 1, all other elements zero
-
-# Specify the element type
-A = onehot(Float32, i=>2)
-
-j = Index(3,"j")
-B = onehot(i=>1,j=>3)
-# B[i=>1,j=>3] == 1, all other element zero
-```
-"""
-function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
-  A = ITensor(eltype(datatype), ind.(ivs)...)
-  A[val.(ivs)...] = one(eltype(datatype))
-  return Adapt.adapt(datatype, A)
-end
-
 function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
   return onehot(NDTensors.default_datatype(eltype), ivs...)
 end
@@ -1126,14 +1099,6 @@ end
 # CartesianIndices
 @propagate_inbounds getindex(T::ITensor, I::CartesianIndex)::Any = T[Tuple(I)...]
 
-@propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{Any,N}) where {N}
-  # Tried ind.(ivs), val.(ivs) but it is slower
-  p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
-  return fac *
-         _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
-end
-
 """
     getindex(T::ITensor, ivs...)
 
@@ -1160,10 +1125,6 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
     )
   end
   return tensor(T)[]
-end
-
-function _vals(is::Indices, I::String...)
-  return val.(is, I)
 end
 
 function _vals(T::ITensor, I::String...)
@@ -1247,29 +1208,10 @@ end
   return setindex!(T, x, Tuple(I)...)
 end
 
-@propagate_inbounds @inline function _setindex!!(
-  T::Tensor, x::Number, ivs::Vararg{Any,N}
-) where {N}
-  # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
-  # but it was slower.
-  p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
-  return _setindex!!(
-    T, fac * x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
-  )
-end
-
 @propagate_inbounds @inline function setindex!(
   T::ITensor, x::Number, I::Vararg{Any,N}
 ) where {N}
   return settensor!(T, _setindex!!(tensor(T), x, I...))
-end
-
-@propagate_inbounds @inline function setindex!(
-  T::ITensor, x::Number, I1::Pair{<:Index,String}, I::Pair{<:Index,String}...
-)
-  Iv = map(i -> i.first => val(i.first, i.second), (I1, I...))
-  return setindex!(T, x, Iv...)
 end
 
 # XXX: what is this definition for?
@@ -1523,22 +1465,22 @@ filterinds(is::Indices) = is
 inds(A...; kwargs...) = filterinds(A...; kwargs...)
 
 # in-place versions of priming and tagging
-for fname in (
-  :prime,
-  :setprime,
-  :noprime,
-  :replaceprime,
-  :swapprime,
-  :addtags,
-  :removetags,
-  :replacetags,
-  :settags,
-  :swaptags,
-  :replaceind,
-  :replaceinds,
-  :swapind,
-  :swapinds,
-)
+for (fname, fname!) in [
+  (:(prime), :(prime!)),
+  (:(setprime), :(setprime!)),
+  (:(noprime), :(noprime!)),
+  (:(replaceprime), :(replaceprime!)),
+  (:(swapprime), :(swapprime!)),
+  (:(TagSets.addtags), :(addtags!)),
+  (:(TagSets.removetags), :(removetags!)),
+  (:(TagSets.replacetags), :(replacetags!)),
+  (:(settags), :(settags!)),
+  (:(swaptags), :(swaptags!)),
+  (:(replaceind), :(replaceind!)),
+  (:(replaceinds), :(replaceinds!)),
+  (:(swapind), :(swapind!)),
+  (:(swapinds), :(swapinds!)),
+]
   @eval begin
     $fname(f::Function, A::ITensor, args...) = ITensor($fname(f, tensor(A), args...))
 
@@ -1547,7 +1489,7 @@ for fname in (
       return setinds(A, $fname(f, inds(A), args...))
     end
 
-    function $(Symbol(fname, :!))(f::Function, A::ITensor, args...)
+    function $(fname!)(f::Function, A::ITensor, args...)
       return settensor!(A, $fname(f, tensor(A), args...))
     end
 
@@ -1558,7 +1500,7 @@ for fname in (
       return setinds(A, $fname(inds(A), args...; kwargs...))
     end
 
-    function $(Symbol(fname, :!))(A::ITensor, args...; kwargs...)
+    function $(fname!)(A::ITensor, args...; kwargs...)
       return settensor!(A, $fname(tensor(A), args...; kwargs...))
     end
   end
@@ -1642,7 +1584,7 @@ $priming_tagging_doc
 Add the tags `ts` to the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
-""" addtags(::ITensor, ::Any...)
+""" TagSets.addtags(::ITensor, ::Any...)
 
 @doc """
     removetags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
@@ -1652,7 +1594,7 @@ $priming_tagging_doc
 Remove the tags `ts` from the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
-""" removetags(::ITensor, ::Any...)
+""" TagSets.removetags(::ITensor, ::Any...)
 
 @doc """
     settags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
@@ -1672,7 +1614,7 @@ $priming_tagging_doc
 Replace the tags `tsold` with `tsnew` for the indices of an ITensor.
 
 $priming_tagging_doc
-""" replacetags(::ITensor, ::Any...)
+""" TagSets.replacetags(::ITensor, ::Any...)
 
 @doc """
     swaptags[!](A::ITensor, ts1::String, ts2::String; <keyword arguments>) -> ITensor
@@ -1740,7 +1682,7 @@ Check if any of the indices in the ITensor have the specified tags.
 """
 anyhastags(A::ITensor, ts) = anyhastags(inds(A), ts)
 
-hastags(A::ITensor, ts) = hastags(inds(A), ts)
+TagSets.hastags(A::ITensor, ts) = hastags(inds(A), ts)
 
 # XXX: rename to:
 # hastags(all, A, ts)

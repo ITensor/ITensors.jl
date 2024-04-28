@@ -1,7 +1,5 @@
 module ITensorMPS
-
 using ..ITensors
-
 include("imports.jl")
 include("exports.jl")
 include("abstractmps.jl")
@@ -17,13 +15,12 @@ include("abstractprojmpo/projmpo_mps.jl")
 include("observer.jl")
 include("dmrg.jl")
 include("adapt.jl")
-include("autompo/matelem.jl")
-include("autompo/qnmatelem.jl")
-include("autompo/opsum_to_mpo_generic.jl")
-include("autompo/opsum_to_mpo.jl")
-include("autompo/opsum_to_mpo_qn.jl")
+include("opsum_to_mpo/matelem.jl")
+include("opsum_to_mpo/qnmatelem.jl")
+include("opsum_to_mpo/opsum_to_mpo_generic.jl")
+include("opsum_to_mpo/opsum_to_mpo.jl")
+include("opsum_to_mpo/opsum_to_mpo_qn.jl")
 include("deprecated.jl")
-
 include("abstractprojmpo/projmpo_apply.jl")
 include("abstractprojmpo/projmps2.jl")
 include("abstractprojmpo/projmpo_mps2.jl")
@@ -38,5 +35,6 @@ include("tdvp.jl")
 include("dmrg_x.jl")
 include("contract_mpo_mps.jl")
 include("linsolve.jl")
-
-end # module ITensorMPS
+include("lattices/lattices.jl")
+export square_lattice, triangular_lattice
+end

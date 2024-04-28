@@ -12,7 +12,7 @@ Create the Hilbert space for a site of type "Electron".
 
 Optionally specify the conserved symmetries and their quantum number labels.
 """
-function ITensors.space(
+function space(
   ::SiteType"Electron";
   conserve_qns=false,
   conserve_sz=conserve_qns,
@@ -57,25 +57,25 @@ function ITensors.space(
   return 4
 end
 
-ITensors.val(::ValName"Emp", ::SiteType"Electron") = 1
-ITensors.val(::ValName"Up", ::SiteType"Electron") = 2
-ITensors.val(::ValName"Dn", ::SiteType"Electron") = 3
-ITensors.val(::ValName"UpDn", ::SiteType"Electron") = 4
-ITensors.val(::ValName"0", st::SiteType"Electron") = val(ValName("Emp"), st)
-ITensors.val(::ValName"↑", st::SiteType"Electron") = val(ValName("Up"), st)
-ITensors.val(::ValName"↓", st::SiteType"Electron") = val(ValName("Dn"), st)
-ITensors.val(::ValName"↑↓", st::SiteType"Electron") = val(ValName("UpDn"), st)
+val(::ValName"Emp", ::SiteType"Electron") = 1
+val(::ValName"Up", ::SiteType"Electron") = 2
+val(::ValName"Dn", ::SiteType"Electron") = 3
+val(::ValName"UpDn", ::SiteType"Electron") = 4
+val(::ValName"0", st::SiteType"Electron") = val(ValName("Emp"), st)
+val(::ValName"↑", st::SiteType"Electron") = val(ValName("Up"), st)
+val(::ValName"↓", st::SiteType"Electron") = val(ValName("Dn"), st)
+val(::ValName"↑↓", st::SiteType"Electron") = val(ValName("UpDn"), st)
 
-ITensors.state(::StateName"Emp", ::SiteType"Electron") = [1.0, 0, 0, 0]
-ITensors.state(::StateName"Up", ::SiteType"Electron") = [0.0, 1, 0, 0]
-ITensors.state(::StateName"Dn", ::SiteType"Electron") = [0.0, 0, 1, 0]
-ITensors.state(::StateName"UpDn", ::SiteType"Electron") = [0.0, 0, 0, 1]
-ITensors.state(::StateName"0", st::SiteType"Electron") = state(StateName("Emp"), st)
-ITensors.state(::StateName"↑", st::SiteType"Electron") = state(StateName("Up"), st)
-ITensors.state(::StateName"↓", st::SiteType"Electron") = state(StateName("Dn"), st)
-ITensors.state(::StateName"↑↓", st::SiteType"Electron") = state(StateName("UpDn"), st)
+state(::StateName"Emp", ::SiteType"Electron") = [1.0, 0, 0, 0]
+state(::StateName"Up", ::SiteType"Electron") = [0.0, 1, 0, 0]
+state(::StateName"Dn", ::SiteType"Electron") = [0.0, 0, 1, 0]
+state(::StateName"UpDn", ::SiteType"Electron") = [0.0, 0, 0, 1]
+state(::StateName"0", st::SiteType"Electron") = state(StateName("Emp"), st)
+state(::StateName"↑", st::SiteType"Electron") = state(StateName("Up"), st)
+state(::StateName"↓", st::SiteType"Electron") = state(StateName("Dn"), st)
+state(::StateName"↑↓", st::SiteType"Electron") = state(StateName("UpDn"), st)
 
-function ITensors.op(::OpName"Nup", ::SiteType"Electron")
+function op(::OpName"Nup", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 1.0 0.0 0.0
@@ -83,11 +83,11 @@ function ITensors.op(::OpName"Nup", ::SiteType"Electron")
     0.0 0.0 0.0 1.0
   ]
 end
-function ITensors.op(on::OpName"n↑", st::SiteType"Electron")
+function op(on::OpName"n↑", st::SiteType"Electron")
   return op(alias(on), st)
 end
 
-function ITensors.op(::OpName"Ndn", ::SiteType"Electron")
+function op(::OpName"Ndn", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -95,11 +95,11 @@ function ITensors.op(::OpName"Ndn", ::SiteType"Electron")
     0.0 0.0 0.0 1.0
   ]
 end
-function ITensors.op(on::OpName"n↓", st::SiteType"Electron")
+function op(on::OpName"n↓", st::SiteType"Electron")
   return op(alias(on), st)
 end
 
-function ITensors.op(::OpName"Nupdn", ::SiteType"Electron")
+function op(::OpName"Nupdn", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -107,11 +107,11 @@ function ITensors.op(::OpName"Nupdn", ::SiteType"Electron")
     0.0 0.0 0.0 1.0
   ]
 end
-function ITensors.op(on::OpName"n↑↓", st::SiteType"Electron")
+function op(on::OpName"n↑↓", st::SiteType"Electron")
   return op(alias(on), st)
 end
 
-function ITensors.op(::OpName"Ntot", ::SiteType"Electron")
+function op(::OpName"Ntot", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 1.0 0.0 0.0
@@ -119,11 +119,11 @@ function ITensors.op(::OpName"Ntot", ::SiteType"Electron")
     0.0 0.0 0.0 2.0
   ]
 end
-function ITensors.op(on::OpName"ntot", st::SiteType"Electron")
+function op(on::OpName"ntot", st::SiteType"Electron")
   return op(alias(on), st)
 end
 
-function ITensors.op(::OpName"Cup", ::SiteType"Electron")
+function op(::OpName"Cup", ::SiteType"Electron")
   return [
     0.0 1.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -131,11 +131,11 @@ function ITensors.op(::OpName"Cup", ::SiteType"Electron")
     0.0 0.0 0.0 0.0
   ]
 end
-function ITensors.op(on::OpName"c↑", st::SiteType"Electron")
+function op(on::OpName"c↑", st::SiteType"Electron")
   return op(alias(on), st)
 end
 
-function ITensors.op(::OpName"Cdagup", ::SiteType"Electron")
+function op(::OpName"Cdagup", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     1.0 0.0 0.0 0.0
@@ -143,11 +143,11 @@ function ITensors.op(::OpName"Cdagup", ::SiteType"Electron")
     0.0 0.0 1.0 0.0
   ]
 end
-function ITensors.op(on::OpName"c†↑", st::SiteType"Electron")
+function op(on::OpName"c†↑", st::SiteType"Electron")
   return op(alias(on), st)
 end
 
-function ITensors.op(::OpName"Cdn", ::SiteType"Electron")
+function op(::OpName"Cdn", ::SiteType"Electron")
   return [
     0.0 0.0 1.0 0.0
     0.0 0.0 0.0 -1.0
@@ -155,11 +155,11 @@ function ITensors.op(::OpName"Cdn", ::SiteType"Electron")
     0.0 0.0 0.0 0.0
   ]
 end
-function ITensors.op(on::OpName"c↓", st::SiteType"Electron")
+function op(on::OpName"c↓", st::SiteType"Electron")
   return op(alias(on), st)
 end
 
-function ITensors.op(::OpName"Cdagdn", ::SiteType"Electron")
+function op(::OpName"Cdagdn", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -167,11 +167,11 @@ function ITensors.op(::OpName"Cdagdn", ::SiteType"Electron")
     0.0 -1.0 0.0 0.0
   ]
 end
-function ITensors.op(::OpName"c†↓", st::SiteType"Electron")
+function op(::OpName"c†↓", st::SiteType"Electron")
   return op(OpName("Cdagdn"), st)
 end
 
-function ITensors.op(::OpName"Aup", ::SiteType"Electron")
+function op(::OpName"Aup", ::SiteType"Electron")
   return [
     0.0 1.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -179,11 +179,11 @@ function ITensors.op(::OpName"Aup", ::SiteType"Electron")
     0.0 0.0 0.0 0.0
   ]
 end
-function ITensors.op(::OpName"a↑", st::SiteType"Electron")
+function op(::OpName"a↑", st::SiteType"Electron")
   return op(OpName("Aup"), st)
 end
 
-function ITensors.op(::OpName"Adagup", ::SiteType"Electron")
+function op(::OpName"Adagup", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     1.0 0.0 0.0 0.0
@@ -191,11 +191,11 @@ function ITensors.op(::OpName"Adagup", ::SiteType"Electron")
     0.0 0.0 1.0 0.0
   ]
 end
-function ITensors.op(::OpName"a†↑", st::SiteType"Electron")
+function op(::OpName"a†↑", st::SiteType"Electron")
   return op(OpName("Adagup"), st)
 end
 
-function ITensors.op(::OpName"Adn", ::SiteType"Electron")
+function op(::OpName"Adn", ::SiteType"Electron")
   return [
     0.0 0.0 1.0 0.0
     0.0 0.0 0.0 1.0
@@ -203,11 +203,11 @@ function ITensors.op(::OpName"Adn", ::SiteType"Electron")
     0.0 0.0 0.0 0.0
   ]
 end
-function ITensors.op(::OpName"a↓", st::SiteType"Electron")
+function op(::OpName"a↓", st::SiteType"Electron")
   return op(OpName("Adn"), st)
 end
 
-function ITensors.op(::OpName"Adagdn", ::SiteType"Electron")
+function op(::OpName"Adagdn", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -215,11 +215,11 @@ function ITensors.op(::OpName"Adagdn", ::SiteType"Electron")
     0.0 1.0 0.0 0.0
   ]
 end
-function ITensors.op(::OpName"a†↓", st::SiteType"Electron")
+function op(::OpName"a†↓", st::SiteType"Electron")
   return op(OpName("Adagdn"), st)
 end
 
-function ITensors.op(::OpName"F", ::SiteType"Electron")
+function op(::OpName"F", ::SiteType"Electron")
   return [
     1.0 0.0 0.0 0.0
     0.0 -1.0 0.0 0.0
@@ -228,7 +228,7 @@ function ITensors.op(::OpName"F", ::SiteType"Electron")
   ]
 end
 
-function ITensors.op(::OpName"Fup", ::SiteType"Electron")
+function op(::OpName"Fup", ::SiteType"Electron")
   return [
     1.0 0.0 0.0 0.0
     0.0 -1.0 0.0 0.0
@@ -236,11 +236,11 @@ function ITensors.op(::OpName"Fup", ::SiteType"Electron")
     0.0 0.0 0.0 -1.0
   ]
 end
-function ITensors.op(::OpName"F↑", st::SiteType"Electron")
+function op(::OpName"F↑", st::SiteType"Electron")
   return op(OpName("Fup"), st)
 end
 
-function ITensors.op(::OpName"Fdn", ::SiteType"Electron")
+function op(::OpName"Fdn", ::SiteType"Electron")
   return [
     1.0 0.0 0.0 0.0
     0.0 1.0 0.0 0.0
@@ -248,11 +248,11 @@ function ITensors.op(::OpName"Fdn", ::SiteType"Electron")
     0.0 0.0 0.0 -1.0
   ]
 end
-function ITensors.op(::OpName"F↓", st::SiteType"Electron")
+function op(::OpName"F↓", st::SiteType"Electron")
   return op(OpName("Fdn"), st)
 end
 
-function ITensors.op(::OpName"Sz", ::SiteType"Electron")
+function op(::OpName"Sz", ::SiteType"Electron")
   #Op[s' => 2, s => 2] = +0.5
   #return Op[s' => 3, s => 3] = -0.5
   return [
@@ -263,11 +263,11 @@ function ITensors.op(::OpName"Sz", ::SiteType"Electron")
   ]
 end
 
-function ITensors.op(::OpName"Sᶻ", st::SiteType"Electron")
+function op(::OpName"Sᶻ", st::SiteType"Electron")
   return op(OpName("Sz"), st)
 end
 
-function ITensors.op(::OpName"Sx", ::SiteType"Electron")
+function op(::OpName"Sx", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 0.5 0.0
@@ -276,11 +276,11 @@ function ITensors.op(::OpName"Sx", ::SiteType"Electron")
   ]
 end
 
-function ITensors.op(::OpName"Sˣ", st::SiteType"Electron")
+function op(::OpName"Sˣ", st::SiteType"Electron")
   return op(OpName("Sx"), st)
 end
 
-function ITensors.op(::OpName"S+", ::SiteType"Electron")
+function op(::OpName"S+", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 1.0 0.0
@@ -289,17 +289,17 @@ function ITensors.op(::OpName"S+", ::SiteType"Electron")
   ]
 end
 
-function ITensors.op(::OpName"S⁺", st::SiteType"Electron")
+function op(::OpName"S⁺", st::SiteType"Electron")
   return op(OpName("S+"), st)
 end
-function ITensors.op(::OpName"Sp", st::SiteType"Electron")
+function op(::OpName"Sp", st::SiteType"Electron")
   return op(OpName("S+"), st)
 end
-function ITensors.op(::OpName"Splus", st::SiteType"Electron")
+function op(::OpName"Splus", st::SiteType"Electron")
   return op(OpName("S+"), st)
 end
 
-function ITensors.op(::OpName"S-", ::SiteType"Electron")
+function op(::OpName"S-", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -308,29 +308,29 @@ function ITensors.op(::OpName"S-", ::SiteType"Electron")
   ]
 end
 
-function ITensors.op(::OpName"S⁻", st::SiteType"Electron")
+function op(::OpName"S⁻", st::SiteType"Electron")
   return op(OpName("S-"), st)
 end
-function ITensors.op(::OpName"Sm", st::SiteType"Electron")
+function op(::OpName"Sm", st::SiteType"Electron")
   return op(OpName("S-"), st)
 end
-function ITensors.op(::OpName"Sminus", st::SiteType"Electron")
+function op(::OpName"Sminus", st::SiteType"Electron")
   return op(OpName("S-"), st)
 end
 
-ITensors.has_fermion_string(::OpName"Cup", ::SiteType"Electron") = true
-function ITensors.has_fermion_string(on::OpName"c↑", st::SiteType"Electron")
+has_fermion_string(::OpName"Cup", ::SiteType"Electron") = true
+function has_fermion_string(on::OpName"c↑", st::SiteType"Electron")
   return has_fermion_string(alias(on), st)
 end
-ITensors.has_fermion_string(::OpName"Cdagup", ::SiteType"Electron") = true
-function ITensors.has_fermion_string(on::OpName"c†↑", st::SiteType"Electron")
+has_fermion_string(::OpName"Cdagup", ::SiteType"Electron") = true
+function has_fermion_string(on::OpName"c†↑", st::SiteType"Electron")
   return has_fermion_string(alias(on), st)
 end
-ITensors.has_fermion_string(::OpName"Cdn", ::SiteType"Electron") = true
-function ITensors.has_fermion_string(on::OpName"c↓", st::SiteType"Electron")
+has_fermion_string(::OpName"Cdn", ::SiteType"Electron") = true
+function has_fermion_string(on::OpName"c↓", st::SiteType"Electron")
   return has_fermion_string(alias(on), st)
 end
-ITensors.has_fermion_string(::OpName"Cdagdn", ::SiteType"Electron") = true
-function ITensors.has_fermion_string(on::OpName"c†↓", st::SiteType"Electron")
+has_fermion_string(::OpName"Cdagdn", ::SiteType"Electron") = true
+function has_fermion_string(on::OpName"c†↓", st::SiteType"Electron")
   return has_fermion_string(alias(on), st)
 end

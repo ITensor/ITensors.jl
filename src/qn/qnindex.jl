@@ -1,3 +1,5 @@
+using .SiteTypes: SiteTypes
+using .TagSets: TagSets
 
 const QNBlock = Pair{QN,Int64}
 
@@ -210,7 +212,7 @@ end
 
 function block(iv::Pair{<:Index})
   i = ind(iv)
-  v = val(iv)
+  v = SiteTypes.val(iv)
   return block(space(i), v)
 end
 
@@ -534,7 +536,8 @@ function show(io::IO, i::QNIndex)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
     print(
-      io, "(dim=$(dim(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))"
+      io,
+      "(dim=$(dim(i))|id=$(idstr)|\"$(TagSets.tagstring(tags(i)))\")$(primestring(plev(i)))",
     )
   else
     print(io, "(dim=$(dim(i))|id=$(idstr))$(primestring(plev(i)))")

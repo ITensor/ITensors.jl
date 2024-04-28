@@ -1,3 +1,7 @@
+using LinearAlgebra: I
+using NDTensors: NDTensors, dim, tensor
+using ..ITensors: ITensor, itensor, settensor!
+
 function op!(
   o::ITensor, ::OpName"Id", ::SiteType"Generic", s1::Index, sn::Index...; eltype=Float64
 )

@@ -51,65 +51,118 @@ Documentation: https://itensor.github.io/ITensors.jl/stable/
 module ITensors
 include("usings.jl")
 include("utils.jl")
-include("lib/ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
+include("lib/ContractionSequenceOptimization/src/ContractionSequenceOptimization.jl")
+# TODO: `using .ContractionSequenceOptimization: ContractionSequenceOptimization`.
 using .ContractionSequenceOptimization
-include("lib/LazyApply/LazyApply.jl")
+include("lib/LazyApply/src/LazyApply.jl")
+# TODO: `using .LazyApply: LazyApply`.
 using .LazyApply
-include("lib/Ops/Ops.jl")
+include("lib/Ops/src/Ops.jl")
+# TODO: `using .Ops: Ops`.
 using .Ops
 import .Ops: sites, name
 include("exports.jl")
 include("imports.jl")
 include("global_variables.jl")
+# TODO: Move to `lib/LastVals/src/LastVals.jl`.
 include("lastval.jl")
-include("smallstring.jl")
+include("lib/SmallStrings/src/SmallStrings.jl")
+using .SmallStrings: SmallStrings, Tag
+export Tag
 include("readwrite.jl")
+# TODO: Move to `lib/Nots/src/Nots.jl`.
 include("not.jl")
-include("tagset.jl")
+include("lib/TagSets/src/TagSets.jl")
+using .TagSets: TagSets
 include("arrow.jl")
 include("symmetrystyle.jl")
 include("index.jl")
 include("set_operations.jl")
 include("indexset.jl")
 include("itensor.jl")
+include("val.jl")
+export val
+include("qn/flux.jl")
+# TODO: Move to `lib/QuantumNumbers/src/QuantumNumbers.jl`.
+include("qn/qn.jl")
 include("oneitensor.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
+include("lib/SiteTypes/src/SiteTypes.jl")
+using .SiteTypes:
+  SiteTypes,
+  OpName,
+  SiteType,
+  StateName,
+  TagType,
+  ValName,
+  @OpName_str,
+  @SiteType_str,
+  @StateName_str,
+  @TagType_str,
+  @ValName_str,
+  has_fermion_string,
+  op,
+  ops,
+  state
+export OpName,
+  SiteType,
+  StateName,
+  TagType,
+  ValName,
+  @OpName_str,
+  @SiteType_str,
+  @StateName_str,
+  @TagType_str,
+  @ValName_str,
+  has_fermion_string,
+  op,
+  ops,
+  state,
+  val
+include("ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
 include("adapt.jl")
 include("set_types.jl")
 include("tensor_operations/itensor_combiner.jl")
-include("qn/flux.jl")
-include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 include("nullspace.jl")
+
+# TODO: Move to `ITensorsOpsExt`?
 include("lib/Ops/ops_itensor.jl")
-include("physics/sitetype.jl")
-include("physics/lattices.jl")
-include("physics/site_types/aliases.jl")
-include("physics/site_types/generic_sites.jl")
-include("physics/site_types/qubit.jl")
-include("physics/site_types/spinhalf.jl")
-include("physics/site_types/spinone.jl")
-include("physics/site_types/fermion.jl")
-include("physics/site_types/electron.jl")
-include("physics/site_types/tj.jl")
-include("physics/site_types/qudit.jl")
-include("physics/site_types/boson.jl")
-include("physics/fermions.jl")
-include("lib/ITensorMPS/ITensorMPS.jl")
+include("fermions/fermions.jl")
+
+include("lib/ITensorMPS/src/ITensorMPS.jl")
+# TODO: `using .ITensorMPS: ITensorMPS, ...`.
 @reexport using .ITensorMPS
 include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
 using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
+
+# TODO: Move into `Ops`.
 include("lib/Ops/trotter.jl")
-include("lib/ITensorChainRules/ITensorChainRules.jl")
-include("lib/ITensorNetworkMaps/ITensorNetworkMaps.jl")
-include("lib/ITensorVisualizationCore/ITensorVisualizationCore.jl")
+
+include("lib/ITensorChainRules/src/ITensorChainRules.jl")
+include("lib/ITensorNetworkMaps/src/ITensorNetworkMaps.jl")
+include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
+# TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore`.
 using .ITensorVisualizationCore
+using .ITensorVisualizationCore:
+  @visualize,
+  @visualize!,
+  @visualize_noeval,
+  @visualize_noeval!,
+  @visualize_sequence,
+  @visualize_sequence_noeval
+export @visualize,
+  @visualize!,
+  @visualize_noeval,
+  @visualize_noeval!,
+  @visualize_sequence,
+  @visualize_sequence_noeval
 include("deprecated.jl")
 include("argsdict/argsdict.jl")
 include("packagecompile/compile.jl")

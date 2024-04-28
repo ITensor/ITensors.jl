@@ -1,3 +1,5 @@
+using .SmallStrings: SmallString
+
 struct QNVal
   name::SmallString
   val::Int
