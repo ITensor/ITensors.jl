@@ -2,7 +2,7 @@ using ITensors: ITensors, ITensor, dag, dim, prime
 
 """
 Holds the following data where psi
-is the MPS being optimized and M is the 
+is the MPS being optimized and M is the
 MPS held constant by the ProjMPS.
 ```
      o--o--o--o--o--o--o--o--o--o--o <M|

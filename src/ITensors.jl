@@ -49,56 +49,20 @@ ITensor website: https://itensor.org/
 Documentation: https://itensor.github.io/ITensors.jl/stable/
 """
 module ITensors
-
-#####################################
-# External packages
-#
 include("usings.jl")
-
-#####################################
-# General utility functions
-#
 include("utils.jl")
-
-#####################################
-# ContractionSequenceOptimization
-#
-include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
+include("lib/ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
 using .ContractionSequenceOptimization
-
-#####################################
-# LazyApply
-#
-include("LazyApply/LazyApply.jl")
+include("lib/LazyApply/LazyApply.jl")
 using .LazyApply
-
-#####################################
-# Ops
-#
-include("Ops/Ops.jl")
+include("lib/Ops/Ops.jl")
 using .Ops
 import .Ops: sites, name
-
-#####################################
-# Exports
-#
 include("exports.jl")
-
-#####################################
-# Imports
-#
 include("imports.jl")
-
-#####################################
-# Global Variables
-#
 include("global_variables.jl")
-
-#####################################
-# Index and IndexSet
-#
 include("lastval.jl")
-include("smallstring.jl") # Not currently using in TagSet
+include("smallstring.jl")
 include("readwrite.jl")
 include("not.jl")
 include("tagset.jl")
@@ -107,10 +71,6 @@ include("symmetrystyle.jl")
 include("index.jl")
 include("set_operations.jl")
 include("indexset.jl")
-
-#####################################
-# ITensor
-#
 include("itensor.jl")
 include("oneitensor.jl")
 include("tensor_operations/tensor_algebra.jl")
@@ -120,31 +80,14 @@ include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
 include("adapt.jl")
 include("set_types.jl")
-
-#####################################
-# Experimental ITensor Functions
-#
 include("tensor_operations/itensor_combiner.jl")
-# include("experimental/ops_mpo.jl") #Ops to MPO conversions
-
-#####################################
-# QNs
-#
 include("qn/flux.jl")
 include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 include("nullspace.jl")
-
-#####################################
-# Ops to ITensor conversions
-#
-include("Ops/ops_itensor.jl")
-
-#####################################
-# Physics
-#
+include("lib/Ops/ops_itensor.jl")
 include("physics/sitetype.jl")
 include("physics/lattices.jl")
 include("physics/site_types/aliases.jl")
@@ -155,62 +98,21 @@ include("physics/site_types/spinone.jl")
 include("physics/site_types/fermion.jl")
 include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
-include("physics/site_types/qudit.jl") # EXPERIMENTAL
-include("physics/site_types/boson.jl") # EXPERIMENTAL
+include("physics/site_types/qudit.jl")
+include("physics/site_types/boson.jl")
 include("physics/fermions.jl")
-
-#####################################
-# MPS/MPO
-#
-include("ITensorMPS/ITensorMPS.jl")
+include("lib/ITensorMPS/ITensorMPS.jl")
 @reexport using .ITensorMPS
-
-#####################################
-# ITensorsNamedDimsArraysExt
-# Requires `AbstractMPS`.
-include("ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
+include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
 using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
-
-#####################################
-# Trotter-Suzuki decomposition
-#
-include("Ops/trotter.jl")
-
-#####################################
-# ITensorChainRules
-#
-include("ITensorChainRules/ITensorChainRules.jl")
-
-#####################################
-# ITensorNetworkMaps
-#
-include("ITensorNetworkMaps/ITensorNetworkMaps.jl")
-
-#####################################
-# ITensorVisualizationCore
-#
-include("ITensorVisualizationCore/ITensorVisualizationCore.jl")
+include("lib/Ops/trotter.jl")
+include("lib/ITensorChainRules/ITensorChainRules.jl")
+include("lib/ITensorNetworkMaps/ITensorNetworkMaps.jl")
+include("lib/ITensorVisualizationCore/ITensorVisualizationCore.jl")
 using .ITensorVisualizationCore
-
-#####################################
-# Deprecations
-#
 include("deprecated.jl")
-
-#####################################
-# Argument parsing
-#
 include("argsdict/argsdict.jl")
-
-#####################################
-# Package compilation
-#
 include("packagecompile/compile.jl")
-
-#####################################
-# Developer tools, for internal
-# use only
-#
 include("developer_tools.jl")
 
 using PackageExtensionCompat: @require_extensions
@@ -218,13 +120,4 @@ function __init__()
   @require_extensions
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 end
-
-#####################################
-# Precompile certain functions
-#
-#if Base.VERSION >= v"1.4.2"
-#  include("precompile.jl")
-#  _precompile_()
-#end
-
-end # module ITensors
+end

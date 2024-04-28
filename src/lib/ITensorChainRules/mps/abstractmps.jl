@@ -127,7 +127,7 @@ function rrule(
               x̄1[n] = _contract(ITensor, ξ̃, ϕ̃; kwargs...)
             else
               # prepare contribution from taking the derivative w.r.t. Q
-              # M = x1Q†, QM -> M†W̄ = Qx1†W̄ 
+              # M = x1Q†, QM -> M†W̄ = Qx1†W̄
               ϕ̃ = swapprime(x1x2dag[n], 0 => 1)
               ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false, kwargs...)
               ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
@@ -136,7 +136,7 @@ function rrule(
               x̄1[n] = _contract(ITensor, ξ̃, ϕ̃; kwargs...)
 
               # prepare contribution from taking the derivative w.r.t. Q†
-              # M = Qx1, MQ† -> W̄†M = W̄†Qx1 
+              # M = Qx1, MQ† -> W̄†M = W̄†Qx1
               ϕ̃ = apply(x1[n], x1x2[n]; move_sites_back=true, apply_dag=false, kwargs...)
               ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
               ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
