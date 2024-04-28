@@ -79,6 +79,7 @@ include("not.jl")
 export not
 include("lib/TagSets/src/TagSets.jl")
 using .TagSets: TagSets, set_strict_tags!, using_strict_tags
+# TODO: Move to `lib/QuantumNumbers/src/`.
 include("arrow.jl")
 include("symmetrystyle.jl")
 include("index.jl")
@@ -87,7 +88,6 @@ include("indexset.jl")
 include("itensor.jl")
 # TODO: Move to `lib/Names/src/Names.jl`.
 include("name.jl")
-export val
 # TODO: Move to `lib/Vals/src/Vals.jl`.
 include("val.jl")
 export val
