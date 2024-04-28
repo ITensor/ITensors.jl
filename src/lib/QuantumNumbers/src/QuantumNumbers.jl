@@ -32,7 +32,7 @@ function qn_mod(val::Int, modulus::Int)
   return mod(val, amod)
 end
 
-function -(qv::QNVal)
+function Base.:(-)(qv::QNVal)
   return QNVal(name(qv), qn_mod(-val(qv), modulus(qv)), modulus(qv))
 end
 
