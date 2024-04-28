@@ -1,14 +1,12 @@
 using .AlgorithmSelection: Algorithm, @Algorithm_str
 
 function contract(
-  tensor1::Exposed{<:AbstractArray,<:BlockSparseTensor},
+  tensor1::BlockSparseTensor,
   labelstensor1,
-  tensor2::Exposed{<:AbstractArray,<:BlockSparseTensor},
+  tensor2::BlockSparseTensor,
   labelstensor2,
   labelsR=contract_labels(labelstensor1, labelstensor2),
 )
-  tensor1 = unexpose(tensor1)
-  tensor2 = unexpose(tensor2)
   R, contraction_plan = contraction_output(
     tensor1, labelstensor1, tensor2, labelstensor2, labelsR
   )
