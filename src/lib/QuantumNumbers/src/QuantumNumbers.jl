@@ -1,5 +1,5 @@
 module QuantumNumbers
-using ..ITensors: ITensors, Arrow, name
+using ..ITensors: ITensors, Arrow, name, val
 using NDTensors: NDTensors
 using ..SmallStrings: SmallString
 using StaticArrays: MVector, SVector
