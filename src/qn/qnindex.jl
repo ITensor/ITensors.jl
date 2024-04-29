@@ -1,4 +1,5 @@
-using .QuantumNumbers: QuantumNumbers, Arrow, Neither, Out, removeqn
+using .QuantumNumbers:
+  QuantumNumbers, Arrow, Neither, Out, have_same_mods, have_same_qns, removeqn
 using .SiteTypes: SiteTypes
 using .TagSets: TagSets
 
@@ -96,7 +97,7 @@ symmetrystyle(::NonQN, ::HasQNs) = HasQNs()
 
 hasqns(::QNBlocks) = true
 
-function have_same_qns(qnblocks::QNBlocks)
+function QuantumNumbers.have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks, 1)
   for n in 2:nblocks(qnblocks)
     !have_same_qns(qn1, qn(qnblocks, n)) && return false
@@ -104,7 +105,7 @@ function have_same_qns(qnblocks::QNBlocks)
   return true
 end
 
-function have_same_mods(qnblocks::QNBlocks)
+function QuantumNumbers.have_same_mods(qnblocks::QNBlocks)
   qn1 = qn(qnblocks, 1)
   for n in 2:nblocks(qnblocks)
     !have_same_mods(qn1, qn(qnblocks, n)) && return false

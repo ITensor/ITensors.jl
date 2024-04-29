@@ -86,7 +86,19 @@ include("val.jl")
 export val
 include("lib/QuantumNumbers/src/QuantumNumbers.jl")
 using .QuantumNumbers:
-  Arrow, In, Neither, Out, QN, QNVal, hasname, isactive, maxQNs, modulus, nactive
+  Arrow,
+  In,
+  Neither,
+  Out,
+  QN,
+  QNVal,
+  hasname,
+  have_same_mods,
+  have_same_qns,
+  isactive,
+  maxQNs,
+  modulus,
+  nactive
 export QN, isactive, modulus
 include("symmetrystyle.jl")
 include("index.jl")
