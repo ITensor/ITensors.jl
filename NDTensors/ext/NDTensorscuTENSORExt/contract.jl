@@ -27,6 +27,6 @@ function NDTensors.contract!(
       array.((unexpose(R), unexpose(T1), unexpose(T2))),
       collect.((labelsR, labelsT1, labelsT2)),
     )
-  cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
-  return output
+  mul!(cuR, cuT1, cuT2, α, β)
+  return R
 end
