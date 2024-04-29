@@ -1,9 +1,11 @@
-name: Run ITensorGLMakie tests on push to main
+name: Run ITensorGLMakie tests (Ubuntu)
 
 on:
   push:
     branches:
       - main
+    tags: '*'
+  pull_request:
 
 jobs:
   test:
@@ -22,6 +24,9 @@ jobs:
           - '1'
         arch:
           - x64
+        exclude:
+          # MacOS not available on x86
+          - {os: 'macOS-latest', arch: 'x86'}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -41,4 +46,4 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
       - name: Install Julia dependencies and run tests
         run: |
-          DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --depwarn=yes -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.develop(path="./ITensorVisualizationBase"); Pkg.develop(path="./ITensorMakie"); Pkg.develop(path="./ITensorGLMakie"); Pkg.test("ITensorGLMakie")'
+          JULIA_REFERENCETESTS_UPDATE=true DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --depwarn=yes -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.develop(path="./ITensorVisualizationBase"); Pkg.develop(path="./ITensorMakie"); Pkg.develop(path="./ITensorGLMakie"); Pkg.test("ITensorGLMakie")'
