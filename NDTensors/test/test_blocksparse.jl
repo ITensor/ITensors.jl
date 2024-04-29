@@ -1,10 +1,28 @@
 @eval module $(gensym())
-using NDTensors
-using LinearAlgebra: Hermitian, exp, svd
-using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
+using LinearAlgebra: Hermitian, exp, norm, svd
+using NDTensors:
+  NDTensors,
+  BlockSparseTensor,
+  array,
+  blockdims,
+  blockoffsets,
+  blockview,
+  data,
+  dense,
+  dims,
+  eachnzblock,
+  inds,
+  isblocknz,
+  nnz,
+  nnzblocks,
+  randomBlockSparseTensor,
+  store,
+  storage
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
+using Random: randn!
+using Test: @test, @test_throws, @testset
 
 @testset "BlockSparseTensor basic functionality" begin
   C = nothing
@@ -26,6 +44,7 @@ using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
 
     @test blockdims(A, (1, 2)) == (2, 5)
     @test blockdims(A, (2, 1)) == (3, 4)
+    @test !isempty(A)
     @test nnzblocks(A) == 2
     @test nnz(A) == 2 * 5 + 3 * 4
     @test inds(A) == ([2, 3], [4, 5])
@@ -101,6 +120,30 @@ using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
     randn!(A)
     @test conj(data(store(A))) == data(store(conj(A)))
     @test typeof(conj(A)) <: BlockSparseTensor
+
+    @testset "No blocks" begin
+      T = dev(BlockSparseTensor{elt}(Tuple{Int,Int}[], [2, 2], [2, 2]))
+      @test nnzblocks(T) == 0
+      @test size(T) == (4, 4)
+      @test length(T) == 16
+      @test !isempty(T)
+      @test isempty(storage(T))
+      @test nnz(T) == 0
+      @test eltype(T) == elt
+      @test norm(T) == 0
+    end
+
+    @testset "Empty" begin
+      T = dev(BlockSparseTensor{elt}(Tuple{Int,Int}[], Int[], Int[]))
+      @test nnzblocks(T) == 0
+      @test size(T) == (0, 0)
+      @test length(T) == 0
+      @test isempty(T)
+      @test isempty(storage(T))
+      @test nnz(T) == 0
+      @test eltype(T) == elt
+      @test norm(T) == 0
+    end
 
     @testset "Random constructor" begin
       T = dev(randomBlockSparseTensor(elt, [(1, 1), (2, 2)], ([2, 2], [2, 2])))

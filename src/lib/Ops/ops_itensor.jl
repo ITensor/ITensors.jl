@@ -1,4 +1,6 @@
-function op(I::UniformScaling, s::Index...)
+using .SiteTypes: SiteTypes, op
+
+function SiteTypes.op(I::UniformScaling, s::Index...)
   return I.λ * op("Id", s...)
 end
 

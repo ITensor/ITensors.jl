@@ -1,3 +1,7 @@
+using NDTensors: NDTensors, sim
+using .QuantumNumbers: QuantumNumbers, Arrow, In, Neither, Out
+using .TagSets:
+  TagSets, TagSet, @ts_str, addtags, commontags, hastags, removetags, replacetags
 
 #const IDType = UInt128
 const IDType = UInt64
@@ -128,7 +132,7 @@ copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 Produces an `Index` with the same properties (dimension or QN structure)
 but with a new `id`.
 """
-function sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
+function NDTensors.sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
   return Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
 end
 
@@ -199,9 +203,9 @@ Obtain the TagSet of an Index.
 """
 tags(i::Index) = i.tags
 
-commontags(is::Index...) = commontags(tags.(is)...)
-commontags(is::Index) = tags(is)
-commontags() = ts""
+TagSets.commontags(is::Index...) = commontags(tags.(is)...)
+TagSets.commontags(is::Index) = tags(is)
+TagSets.commontags() = ts""
 
 """
     plev(i::Index)
@@ -230,9 +234,9 @@ julia> hastags(i, "Link")
 false
 ```
 """
-hastags(i::Index, ts::Union{AbstractString,TagSet}) = hastags(tags(i), ts)
+TagSets.hastags(i::Index, ts::Union{AbstractString,TagSet}) = hastags(tags(i), ts)
 
-hastags(ts::Union{AbstractString,TagSet}) = x -> hastags(x, ts)
+TagSets.hastags(ts::Union{AbstractString,TagSet}) = x -> hastags(x, ts)
 
 """
     hasplev(i::Index, plev::Int)
@@ -411,7 +415,7 @@ specified tags added to the existing ones.
 The `ts` argument can be a comma-separated
 string of tags or a TagSet.
 """
-addtags(i::Index, ts) = settags(i, addtags(tags(i), ts))
+TagSets.addtags(i::Index, ts) = settags(i, addtags(tags(i), ts))
 
 """
     removetags(i::Index, ts)
@@ -420,7 +424,7 @@ Return a copy of Index `i` with the
 specified tags removed. The `ts` argument
 can be a comma-separated string of tags or a TagSet.
 """
-removetags(i::Index, ts) = settags(i, removetags(tags(i), ts))
+TagSets.removetags(i::Index, ts) = settags(i, removetags(tags(i), ts))
 
 """
     replacetags(i::Index, tsold, tsnew)
@@ -445,9 +449,9 @@ julia> replacetags(i, "l" => "m")
 (dim=2|id=83|"m,x")'
 ```
 """
-replacetags(i::Index, tsold, tsnew) = settags(i, replacetags(tags(i), tsold, tsnew))
+TagSets.replacetags(i::Index, tsold, tsnew) = settags(i, replacetags(tags(i), tsold, tsnew))
 
-replacetags(i::Index, rep_ts::Pair) = replacetags(i, rep_ts...)
+TagSets.replacetags(i::Index, rep_ts::Pair) = replacetags(i, rep_ts...)
 
 """
     prime(i::Index, plinc::Int = 1)
@@ -567,7 +571,7 @@ removeqns(i::Index) = i
 
 Remove the specified QN from the Index, if it has any.
 """
-removeqn(i::Index, qn_name::String) = i
+QuantumNumbers.removeqn(i::Index, qn_name::String) = i
 
 """
     mergeblocks(::Index)
@@ -597,10 +601,6 @@ end
 
 NDTensors.ind(iv::Pair{<:Index}) = first(iv)
 
-val(iv::Pair{<:Index}) = val(iv.first, iv.second)
-
-val(i::Index, l::LastVal) = l.f(dim(i))
-
 """
     isindequal(i::Index, iv::IndexVal)
 
@@ -617,16 +617,6 @@ isindequal(iv::Pair{<:Index}, i::Index) = isindequal(i, iv)
 isindequal(iv1::Pair{<:Index}, iv2::Pair{<:Index}) = (ind(iv1) == ind(iv2))
 
 plev(iv::Pair{<:Index}) = plev(ind(iv))
-
-# TODO:
-# Implement a macro with a general definition:
-# f(iv::Pair{<:Index}, args...) = (f(ind(iv), args...) => val(iv))
-prime(iv::Pair{<:Index}, inc::Integer=1) = (prime(ind(iv), inc) => val(iv))
-sim(iv::Pair{<:Index}, args...) = (sim(ind(iv), args...) => val(iv))
-
-dag(iv::Pair{<:Index}) = (dag(ind(iv)) => val(iv))
-
-Base.adjoint(iv::Pair{<:Index}) = (prime(ind(iv)) => val(iv))
 
 dir(iv::Pair{<:Index}) = dir(ind(iv))
 
@@ -655,7 +645,8 @@ function Base.show(io::IO, i::Index)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
     print(
-      io, "(dim=$(space(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))"
+      io,
+      "(dim=$(space(i))|id=$(idstr)|\"$(TagSets.tagstring(tags(i)))\")$(primestring(plev(i)))",
     )
   else
     print(io, "(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
