@@ -313,9 +313,9 @@ function removeqn(qn::QN, qn_name::String)
   end
   qn_data = data(qn)
   for j in n_qn:(length(qn) - 1)
-    qn_data = setindex(qn_data, qn_data[j + 1], j)
+    qn_data = Base.setindex(qn_data, qn_data[j + 1], j)
   end
-  qn_data = setindex(qn_data, QNVal(), length(qn))
+  qn_data = Base.setindex(qn_data, QNVal(), length(qn))
   return QN(qn_data)
 end
 

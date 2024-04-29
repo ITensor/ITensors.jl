@@ -1,5 +1,5 @@
 using BitIntegers: UInt256
-using StaticArrays: StaticArrays, MVector, SVector
+using StaticArrays: MVector, SVector
 
 const IntChar = UInt16
 const IntSmallString = UInt256
@@ -49,7 +49,7 @@ SmallString(s::SmallString) = SmallString(data(s))
 Base.getindex(s::SmallString, n::Int) = getindex(s.data, n)
 
 function Base.setindex(s::SmallString, val, n::Int)
-  return SmallString(StaticArrays.setindex(s.data, val, n))
+  return SmallString(Base.setindex(s.data, val, n))
 end
 
 # TODO: rename to `isempty`
