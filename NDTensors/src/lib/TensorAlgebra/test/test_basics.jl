@@ -8,6 +8,12 @@ using NDTensors.TensorAlgebra:
 using NDTensors: NDTensors
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: default_rtol
+## currently TensorOperations does not support cuTENSOR 2.x
+using Pkg: Pkg
+if ("cutensor" ∈ ARGS)
+  Pkg.rm("cuTENSOR")
+end
+Pkg.add("TensorOperations")
 using TensorOperations: TensorOperations
 using Test: @test, @test_broken, @testset
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
@@ -181,5 +187,11 @@ end
     )
     @test a ≈ a′
   end
+end
+
+Pkg.rm("TensorOperations")
+## currently TensorOperations does not support cuTENSOR 2.x
+if ("cutensor" ∈ ARGS)
+  Pkg.add("cuTENSOR")
 end
 end

@@ -17,6 +17,7 @@ if "metal" in ARGS || "all" in ARGS
   using Metal
 end
 if "cutensor" in ARGS || "all" in ARGS
+  Pkg.add("cuTENSOR")
   using CUDA, cuTENSOR
 end
 
