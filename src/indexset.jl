@@ -1,3 +1,7 @@
+using NDTensors: NDTensors, sim
+using .QuantumNumbers: QuantumNumbers, Arrow, removeqn
+using .TagSets: TagSets, addtags, commontags, hastags, removetags, replacetags
+
 # Represents a static order of an ITensor
 @eval struct Order{N}
   (OrderT::Type{<:Order})() = $(Expr(:new, :OrderT))
@@ -151,7 +155,7 @@ Make a new Indices with similar indices.
 
 You can also use the broadcast version `sim.(is)`.
 """
-sim(is::Indices) = map(i -> sim(i), is)
+NDTensors.sim(is::Indices) = map(i -> sim(i), is)
 
 function trivial_index(is::Indices)
   if isempty(is)
@@ -197,7 +201,7 @@ end
 
 Return a TagSet of the tags that are common to all of the indices.
 """
-commontags(is::Indices) = commontags(is...)
+TagSets.commontags(is::Indices) = commontags(is...)
 
 #
 # Set operations
@@ -412,9 +416,11 @@ function replaceprime(is::Indices, rep_pls::Pair{Int,Int}...; kwargs...)
   return replaceprime(fmatch(; kwargs...), is, rep_pls...)
 end
 
-addtags(f::Function, is::Indices, args...) = map(i -> f(i) ? addtags(i, args...) : i, is)
+function TagSets.addtags(f::Function, is::Indices, args...)
+  return map(i -> f(i) ? addtags(i, args...) : i, is)
+end
 
-function addtags(is::Indices, tags, args...; kwargs...)
+function TagSets.addtags(is::Indices, tags, args...; kwargs...)
   return addtags(fmatch(args...; kwargs...), is, tags)
 end
 
@@ -464,11 +470,11 @@ end
 eachindval(is::Index...) = eachindval(is)
 eachindval(is::Tuple{Vararg{Index}}) = (is .=> Tuple(ns) for ns in eachval(is))
 
-function removetags(f::Function, is::Indices, args...)
+function TagSets.removetags(f::Function, is::Indices, args...)
   return map(i -> f(i) ? removetags(i, args...) : i, is)
 end
 
-function removetags(is::Indices, tags, args...; kwargs...)
+function TagSets.removetags(is::Indices, tags, args...; kwargs...)
   return removetags(fmatch(args...; kwargs...), is, tags)
 end
 
@@ -489,7 +495,7 @@ Check if any of the indices in the Indices have the specified tags.
 """
 anyhastags(is::Indices, ts) = any(i -> hastags(i, ts), is)
 
-hastags(is::Indices, ts) = anyhastags(is, ts)
+TagSets.hastags(is::Indices, ts) = anyhastags(is, ts)
 
 # XXX new syntax
 # hastags(all, is, ts)
@@ -501,18 +507,20 @@ Check if all of the indices in the Indices have the specified tags.
 allhastags(is::Indices, ts::String) = all(i -> hastags(i, ts), is)
 
 # Version taking a list of Pairs
-function replacetags(f::Function, is::Indices, rep_ts::Pair...)
+function TagSets.replacetags(f::Function, is::Indices, rep_ts::Pair...)
   return map(i -> f(i) ? _replacetags(i, rep_ts...) : i, is)
 end
 
-function replacetags(is::Indices, rep_ts::Pair...; kwargs...)
+function TagSets.replacetags(is::Indices, rep_ts::Pair...; kwargs...)
   return replacetags(fmatch(; kwargs...), is, rep_ts...)
 end
 
 # Version taking two input TagSets/Strings
-replacetags(f::Function, is::Indices, tags1, tags2) = replacetags(f, is, tags1 => tags2)
+function TagSets.replacetags(f::Function, is::Indices, tags1, tags2)
+  return replacetags(f, is, tags1 => tags2)
+end
 
-function replacetags(is::Indices, tags1, tags2, args...; kwargs...)
+function TagSets.replacetags(is::Indices, tags1, tags2, args...; kwargs...)
   return replacetags(fmatch(args...; kwargs...), is, tags1 => tags2)
 end
 
@@ -631,7 +639,7 @@ end
 swapind(is::Indices, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
 removeqns(is::Indices) = map(removeqns, is)
-function removeqn(is::Indices, qn_name::String; mergeblocks=true)
+function QuantumNumbers.removeqn(is::Indices, qn_name::String; mergeblocks=true)
   return map(i -> removeqn(i, qn_name; mergeblocks), is)
 end
 mergeblocks(is::Indices) = map(mergeblocks, is)
