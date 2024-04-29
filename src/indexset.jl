@@ -1,4 +1,5 @@
 using NDTensors: NDTensors, sim
+using .QuantumNumbers: QuantumNumbers, Arrow, removeqn
 using .TagSets: TagSets, addtags, commontags, hastags, removetags, replacetags
 
 # Represents a static order of an ITensor
@@ -638,7 +639,7 @@ end
 swapind(is::Indices, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
 removeqns(is::Indices) = map(removeqns, is)
-function removeqn(is::Indices, qn_name::String; mergeblocks=true)
+function QuantumNumbers.removeqn(is::Indices, qn_name::String; mergeblocks=true)
   return map(i -> removeqn(i, qn_name; mergeblocks), is)
 end
 mergeblocks(is::Indices) = map(mergeblocks, is)

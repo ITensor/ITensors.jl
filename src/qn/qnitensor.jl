@@ -1,3 +1,4 @@
+using .QuantumNumbers: QuantumNumbers, removeqn
 using NDTensors: sim
 
 @propagate_inbounds @inline function _setindex!!(
@@ -572,7 +573,7 @@ function splitblocks(A::ITensor, is=inds(A); tol=0)
   return A
 end
 
-function removeqn(T::ITensor, qn_name::String; mergeblocks=true)
+function QuantumNumbers.removeqn(T::ITensor, qn_name::String; mergeblocks=true)
   if !hasqns(T)
     return T
   end

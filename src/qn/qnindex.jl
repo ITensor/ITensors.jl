@@ -1,3 +1,4 @@
+using .QuantumNumbers: QuantumNumbers, Arrow, Neither, Out, removeqn
 using .SiteTypes: SiteTypes
 using .TagSets: TagSets
 
@@ -39,7 +40,7 @@ function (qn1::QNBlock + qn2::QNBlock)
   return QNBlock(qn(qn1), blockdim(qn1) + blockdim(qn2))
 end
 
-function removeqn(qn_block::QNBlock, qn_name::String)
+function QuantumNumbers.removeqn(qn_block::QNBlock, qn_name::String)
   return removeqn(qn(qn_block), qn_name) => blockdim(qn_block)
 end
 
@@ -67,7 +68,7 @@ function mergeblocks(qns::QNBlocks)
   return qnsC
 end
 
-function removeqn(space::QNBlocks, qn_name::String; mergeblocks=true)
+function QuantumNumbers.removeqn(space::QNBlocks, qn_name::String; mergeblocks=true)
   space = QNBlocks([removeqn(qn_block, qn_name) for qn_block in space])
   if mergeblocks
     space = ITensors.mergeblocks(space)
@@ -480,7 +481,7 @@ function combineblocks(i::QNIndex)
 end
 
 removeqns(i::QNIndex) = setdir(setspace(i, dim(i)), Neither)
-function removeqn(i::QNIndex, qn_name::String; mergeblocks=true)
+function QuantumNumbers.removeqn(i::QNIndex, qn_name::String; mergeblocks=true)
   return setspace(i, removeqn(space(i), qn_name; mergeblocks))
 end
 mergeblocks(i::QNIndex) = setspace(i, mergeblocks(space(i)))

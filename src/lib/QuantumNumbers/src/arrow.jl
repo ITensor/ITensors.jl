@@ -1,4 +1,3 @@
-
 """
 Arrow
 
@@ -12,6 +11,6 @@ associated with an index, i.e. the index leg is directed into or out of a given 
 
 Reverse direction of a directed `Arrow`.
 """
-function Base.:-(dir::Arrow)
+function Base.:(-)(dir::Arrow)
   return Arrow(-Int(dir))
 end

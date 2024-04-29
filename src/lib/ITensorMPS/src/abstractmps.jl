@@ -1,6 +1,7 @@
 using IsApprox: Approx, IsApprox
 using ..ITensors: ITensors
 using NDTensors: NDTensors, using_auto_fermion, scalartype, tensor
+using ..QuantumNumbers: QuantumNumbers, removeqn
 using ..SiteTypes: SiteTypes, siteinds
 using ..TagSets: TagSets
 
@@ -2354,7 +2355,7 @@ function splitblocks(::typeof(linkinds), M::AbstractMPS; tol=0)
 end
 
 removeqns(M::AbstractMPS) = map(removeqns, M; set_limits=false)
-function removeqn(M::AbstractMPS, qn_name::String)
+function QuantumNumbers.removeqn(M::AbstractMPS, qn_name::String)
   return map(m -> removeqn(m, qn_name), M; set_limits=false)
 end
 

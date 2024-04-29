@@ -1,4 +1,5 @@
 using NDTensors: NDTensors, sim
+using .QuantumNumbers: QuantumNumbers, Arrow, In, Neither, Out
 using .TagSets:
   TagSets, TagSet, @ts_str, addtags, commontags, hastags, removetags, replacetags
 
@@ -570,7 +571,7 @@ removeqns(i::Index) = i
 
 Remove the specified QN from the Index, if it has any.
 """
-removeqn(i::Index, qn_name::String) = i
+QuantumNumbers.removeqn(i::Index, qn_name::String) = i
 
 """
     mergeblocks(::Index)
