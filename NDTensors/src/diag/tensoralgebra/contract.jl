@@ -59,6 +59,26 @@ function _contract!!(
 end
 
 function contract!(
+  output_tensor::Exposed{<:AbstractArray,<:DiagTensor},
+  labelsoutput_tensor,
+  tensor1::Exposed,
+  labelstensor1,
+  tensor2::Exposed,
+  labelstensor2,
+  α::Number=one(Bool),
+  β::Number=zero(Bool),
+)
+  return contract!(
+    unexpose(output_tensor),
+    labelsoutput_tensor,
+    unexpose(tensor1),
+    labelstensor1,
+    unexpose(tensor2),
+    labelstensor2,
+  )
+end
+
+function contract!(
   R::DiagTensor{ElR,NR},
   labelsR,
   T1::DiagTensor{<:Number,N1},

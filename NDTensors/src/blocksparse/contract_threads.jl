@@ -1,3 +1,4 @@
+using NDTensors.Expose: expose
 # TODO: This seems to be faster than the newer version using `Folds.jl`
 # in `contract_folds.jl`, investigate why.
 function contract_blocks!(
@@ -115,7 +116,16 @@ function contract!(
           ElR, labelsR, blockR, indsR, labelsT1, blockT1, indsT1, labelsT2, blockT2, indsT2
         )
 
-        contract!(blockR, labelsR, blockT1, labelsT1, blockT2, labelsT2, α, β)
+        contract!(
+          expose(blockR),
+          labelsR,
+          expose(blockT1),
+          labelsT1,
+          expose(blockT2),
+          labelsT2,
+          α,
+          β,
+        )
         # Now keep adding to the block, since it has
         # been written to
         # R .= α .* (T1 * T2) .+ R
