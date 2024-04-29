@@ -277,8 +277,6 @@ array(T::Tensor) = array(dense(T))
 matrix(T::Tensor{<:Number,2}) = array(T)
 vector(T::Tensor{<:Number,1}) = array(T)
 
-isempty(T::Tensor) = isempty(storage(T))
-
 #
 # Helper functions for BlockSparse-type storage
 #

@@ -6,7 +6,7 @@ The main breaking changes in ITensor.jl v0.2 involve changes to the `ITensor`, `
 
 In addition, we have moved development of NDTensors.jl into ITensors.jl to simplify the development process until NDTensors is more stable and can be a standalone package. Again, see below for more details.
 
-For a more comprehensive list of changes, see the [change log](https://github.com/ITensor/ITensors.jl/blob/main/NEWS.md) and the [commit history on Github](https://github.com/ITensor/ITensors.jl/commits/main).
+For a more comprehensive list of changes, see the [commit history on Github](https://github.com/ITensor/ITensors.jl/commits/main).
 
 If you have issues upgrading, please reach out by [raising an issue on Github](https://github.com/ITensor/ITensors.jl/issues/new) or asking a question on the [ITensor support forum](http://itensor.org/support/).
 
