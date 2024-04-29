@@ -1,3 +1,5 @@
+using .QuantumNumbers: Arrow
+
 #
 # NDTensors functionality
 #
@@ -112,7 +114,7 @@ end
 # Make `Pair{QN,Int}` act like a regular `dim`
 NDTensors.dim(qnv::Pair{QN,Int}) = last(qnv)
 
-Base.:*(qnv::Pair{QN,Int}, d::ITensors.Arrow) = qn(qnv) * d => dim(qnv)
+Base.:*(qnv::Pair{QN,Int}, d::Arrow) = qn(qnv) * d => dim(qnv)
 
 #
 # ITensors functionality
