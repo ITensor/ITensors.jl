@@ -13,6 +13,7 @@ using Test: @inferred, @test, @testset
     @test quantum_dimension(q2) == 1
     @test (@inferred quantum_dimension(q1)) == 1
 
+    @test trivial(q1) == U1(0)
     @test trivial(U1) == U1(0)
     @test istrivial(U1(0))
 

@@ -9,6 +9,7 @@ function Base.isless(c1::C, c2::C) where {C<:AbstractCategory}
 end
 
 # =================  Misc  ======================
+trivial(c::AbstractCategory) = trivial(typeof(c))
 function trivial(category_type::Type{<:AbstractCategory})
   return error("`trivial` not defined for type $(category_type).")
 end
