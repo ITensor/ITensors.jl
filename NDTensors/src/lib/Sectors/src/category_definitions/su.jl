@@ -95,12 +95,7 @@ function label_fusion_rule(::Type{<:SU{2}}, s1, s2)
 end
 
 # define angular momentum-like interface using half-integers
-const SU2 = SU{2,1}  # intuitive alias
-
-# specific constructor for SU{2} with a half-integer
-# note that SU{2}(1) = spin 1 while SU{2}((1,)) = spin 1/2
-SU{2}(h::Number) = SU{2,1}(h)
-SU{2,1}(h::Number) = SU{2,1}((HalfIntegers.twice(HalfIntegers.HalfInteger(h)),))
+SU2(h::Number) = SU{2,1}((HalfIntegers.twice(HalfIntegers.HalfInteger(h)),))
 
 # display SU2 using half-integers
 function Base.show(io::IO, s::SU{2})

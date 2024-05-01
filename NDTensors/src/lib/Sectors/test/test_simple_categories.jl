@@ -2,7 +2,7 @@
 using NDTensors.GradedAxes: dual
 using NDTensors.Sectors:
   Fib, Ising, SU, SU2, U1, Z, adjoint, quantum_dimension, fundamental, istrivial, trivial
-using Test: @inferred, @test, @testset
+using Test: @inferred, @test, @testset, @test_throws
 @testset "Test Category Types" begin
   @testset "U(1)" begin
     q1 = U1(1)
@@ -50,17 +50,18 @@ using Test: @inferred, @test, @testset
     # alternative constructors
     @test j2 == SU{2}((1,))  # tuple SU(N)-like constructor
     @test j2 == SU{2,1}((1,))  # tuple constructor with explicit {N,N-1}
-    @test j2 == SU{2}(1//2)  # half-integer constructor without N-1
     @test j2 == SU((1,))  # infer N from tuple length
     @test j2 == SU{2}((Int8(1),))  # any Integer type accepted
     @test j2 == SU{2}((UInt32(1),))  # any Integer type accepted
     @test j2 == SU2(1 / 2)  # Float will be cast to HalfInteger
+    @test_throws MethodError SU2((1,))  # avoid confusion between tuple and half-integer interfaces
+    @test_throws MethodError SU{2,1}(1)  # avoid confusion
 
-    @test trivial(SU2) == SU2(0)
+    @test trivial(SU{2}) == SU2(0)
     @test istrivial(SU2(0))
 
-    @test fundamental(SU2) == SU2(1//2)
-    @test adjoint(SU2) == SU2(1)
+    @test fundamental(SU{2}) == SU2(1//2)
+    @test adjoint(SU{2}) == SU2(1)
 
     @test quantum_dimension(j1) == 1
     @test quantum_dimension(j2) == 2
