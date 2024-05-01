@@ -13,15 +13,15 @@ using NDTensors.Expose: Exposed, expose, unexpose
 using cuTENSOR: CuArray, CuTensor, mul!
 
 function NDTensors.contract!(
-  R::Exposed{<:CuArray,<:DenseTensor{ElT}},
+  R::Exposed{<:CuArray,<:DenseTensor},
   labelsR,
   T1::Exposed{<:CuArray,<:DenseTensor},
   labelsT1,
   T2::Exposed{<:CuArray,<:DenseTensor},
   labelsT2,
-  α::Elα=one(Bool),
-  β::Elβ=zero(Bool),
-) where {Elα<:Number,Elβ<:Number,ElT}
+  α::Number=one(Bool),
+  β::Number=zero(Bool),
+) 
   cuR, cuT1, cuT2 =
     CuTensor.(
       array.((unexpose(R), unexpose(T1), unexpose(T2))),
