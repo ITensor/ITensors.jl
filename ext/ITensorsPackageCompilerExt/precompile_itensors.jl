@@ -1,4 +1,4 @@
-using ITensors: MPO, OpSum, dmrg, randomMPS, siteinds
+using ITensors.ITensorMPS: MPO, OpSum, dmrg, randomMPS, siteinds
 
 # TODO: This uses all of the tests to make
 # precompile statements, but takes a long time

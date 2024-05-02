@@ -21,6 +21,6 @@ function ITensors.compile(
     sysimage_path=path,
     precompile_execution_file=joinpath(@__DIR__, "precompile_itensors.jl"),
   )
-  println(compile_note(; dir, filename))
+  println(ITensors.compile_note(; dir, filename))
   return path
 end
