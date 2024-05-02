@@ -14,6 +14,7 @@ reference_energies = Dict([
 ])
 
 is_broken(dev, elt::Type, conserve_qns::Val) = false
+is_broken(dev::typeof(cu), elt::Type, conserve_qns::Val{true}) = ("cutensor" ∈ ARGS)
 
 include("dmrg.jl")
 
