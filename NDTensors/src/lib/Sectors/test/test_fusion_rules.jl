@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes:
   dual, fusion_product, gradedisequal, gradedrange, label_dual, tensor_product
-using NDTensors.Sectors: ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension
+using NDTensors.Sectors: ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension, trivial
 using Test: @inferred, @test, @testset, @test_throws
 
 @testset "Simple object fusion rules" begin
@@ -73,6 +73,13 @@ using Test: @inferred, @test, @testset, @test_throws
   end
 end
 @testset "Reducible object fusion rules" begin
+  @testset "Trivial GradedUnitRange" begin
+    g1 = gradedrange([U1(0) => 1])
+    g2 = gradedrange([SU2(0) => 1])
+    @test gradedisequal(trivial(g1), g1)
+    @test gradedisequal(trivial(dual(g1)), g1)  # trivial returns nondual
+    @test gradedisequal(trivial(typeof(g2)), g2)
+  end
   @testset "GradedUnitRange abelian tensor/fusion product" begin
     g1 = gradedrange([U1(-1) => 1, U1(0) => 1, U1(1) => 2])
     g2 = gradedrange([U1(-2) => 2, U1(0) => 1, U1(1) => 2])

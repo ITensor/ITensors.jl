@@ -9,9 +9,15 @@ function Base.isless(c1::C, c2::C) where {C<:AbstractCategory}
 end
 
 # =================  Misc  ======================
-trivial(c::AbstractCategory) = trivial(typeof(c))
-function trivial(category_type::Type{<:AbstractCategory})
-  return error("`trivial` not defined for type $(category_type).")
+trivial(x) = trivial(typeof(x))
+function trivial(axis_type::Type{<:AbstractUnitRange})
+  return GradedAxes.gradedrange([trivial(eltype(axis_type))])  # always returns nondual
+end
+function trivial(la_type::Type{<:LabelledNumbers.LabelledInteger})
+  return la_type(1, trivial(LabelledNumbers.label_type(la_type)))
+end
+function trivial(type::Type)
+  return error("`trivial` not defined for type $(type).")
 end
 
 istrivial(c::AbstractCategory) = (c == trivial(typeof(c)))
