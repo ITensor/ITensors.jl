@@ -21,7 +21,7 @@ function NDTensors.contract!(
   labelsT2,
   α::Number=one(Bool),
   β::Number=zero(Bool),
-) 
+)
   cuR, cuT1, cuT2 =
     CuTensor.(
       array.((unexpose(R), unexpose(T1), unexpose(T2))),
