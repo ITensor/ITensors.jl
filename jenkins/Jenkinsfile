@@ -103,6 +103,30 @@ pipeline {
             '''
           }
         }
+        stage('NDTensorscuTENSORExt julia-1.10') {
+	        options {
+            timeout(time: 45, unit: 'MINUTES')
+          }
+          agent {
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.10'
+              args '--gpus "device=1"'
+            }
+          }
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
+          }
+          steps {
+            sh '''
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+            '''
+          }
+        }
         stage('NDTensorsMetalExt Julia-1.10'){
           options {
             timeout(time: 45, unit: 'MINUTES')
