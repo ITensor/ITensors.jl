@@ -68,9 +68,8 @@ function contract!(
   α::Number=one(Bool),
   β::Number=zero(Bool),
 )
-  elt = eltype(unexpose(output_tensor))
-  @assert α ≈ one(elt)
-  @assert β ≈ zero(elt)
+  @assert α == one(Bool)
+  @assert β == zero(Bool)
   return contract!(
     unexpose(output_tensor),
     labelsoutput_tensor,
