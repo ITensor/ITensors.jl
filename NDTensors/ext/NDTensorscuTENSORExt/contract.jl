@@ -1,15 +1,8 @@
 using NDTensors:
   NDTensors,
   DenseTensor,
-  Tensor,
-  array,
-  contract!,
-  contraction_output,
-  contraction_output_type,
-  contract_inds,
-  dense,
-  inds
-using NDTensors.Expose: Exposed, expose, unexpose
+  array
+using NDTensors.Expose: Exposed, unexpose
 using cuTENSOR: CuArray, CuTensor, mul!
 
 function NDTensors.contract!(
