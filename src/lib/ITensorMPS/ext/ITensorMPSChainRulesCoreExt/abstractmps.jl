@@ -1,4 +1,13 @@
-function rrule(::Type{T}, x::Vector{<:ITensor}; kwargs...) where {T<:Union{MPS,MPO}}
+using Adapt: adapt
+using ChainRulesCore: ChainRulesCore, HasReverseMode, NoTangent, RuleConfig
+using ITensors:
+  ITensor, apply, dag, hassameinds, inds, inner, itensor, mapprime, replaceprime, swapprime
+using ITensors.ITensorMPS: MPO, MPS, siteinds
+using NDTensors: datatype
+
+function ChainRulesCore.rrule(
+  ::Type{T}, x::Vector{<:ITensor}; kwargs...
+) where {T<:Union{MPS,MPO}}
   y = T(x; kwargs...)
   function T_pullback(ȳ)
     ȳtensors = ȳ.data
@@ -21,7 +30,9 @@ function rrule(::Type{T}, x::Vector{<:ITensor}; kwargs...) where {T<:Union{MPS,M
   return y, T_pullback
 end
 
-function rrule(::typeof(inner), x1::T, x2::T; kwargs...) where {T<:Union{MPS,MPO}}
+function ChainRulesCore.rrule(
+  ::typeof(inner), x1::T, x2::T; kwargs...
+) where {T<:Union{MPS,MPO}}
   if !hassameinds(siteinds, x1, x2)
     error(
       "Taking gradients of `inner(::MPS, ::MPS)` is not supported if the site indices of the input MPS don't match. If you input `inner(x, Ay)` where `Ay` is the result of something like `contract(A::MPO, y::MPS)`, try `inner(x', Ay)` or `inner(x, replaceprime(Ay, 1 => 0))`instead.",
@@ -71,7 +82,7 @@ function _is_mps_or_hermitian_mpo(x::MPO; kwargs...)
 end
 _is_mps_or_hermitian_mpo(x::MPS; kwargs...) = true
 
-function rrule(
+function ChainRulesCore.rrule(
   ::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; apply_dag=false, kwargs...
 )
   #if apply_dag && !_is_mps_or_hermitian_mpo(x2)
@@ -161,7 +172,7 @@ function rrule(
   return y, apply_pullback
 end
 
-function rrule(
+function ChainRulesCore.rrule(
   config::RuleConfig{>:HasReverseMode},
   ::typeof(map),
   f,

@@ -37,7 +37,7 @@ end
   @test length(O) == N
 
   str = split(sprint(show, O), '\n')
-  @test str[1] == "MPO"
+  @test endswith(str[1], "MPO")
   @test length(str) == length(O) + 2
 
   O[1] = ITensor(sites[1], prime(sites[1]))
