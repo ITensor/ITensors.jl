@@ -8,7 +8,6 @@ using NDTensors.TensorAlgebra:
 using NDTensors: NDTensors
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: default_rtol
-using TensorOperations: TensorOperations
 using Test: @test, @test_broken, @testset
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 @testset "BlockedPermutation" begin
@@ -114,6 +113,7 @@ end
   ## Right now TensorOperations version is downgraded when using cuTENSOR to `v0.7` we
   ## are waiting for TensorOperations to support the breaking changes in cuTENSOR 2.x
   if !("cutensor" ∈ ARGS)
+    using TensorOperations: TensorOperations
     @testset "contract (eltype1=$elt1, eltype2=$elt2)" for elt1 in elts, elt2 in elts
       dims = (2, 3, 4, 5, 6, 7, 8, 9, 10)
       labels = (:a, :b, :c, :d, :e, :f, :g, :h, :i)

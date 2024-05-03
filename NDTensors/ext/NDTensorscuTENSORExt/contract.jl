@@ -1,7 +1,4 @@
-using NDTensors:
-  NDTensors,
-  DenseTensor,
-  array
+using NDTensors: NDTensors, DenseTensor, array
 using NDTensors.Expose: Exposed, unexpose
 using cuTENSOR: CuArray, CuTensor, mul!
 
