@@ -19,7 +19,7 @@ ITensors.disable_threaded_blocksparse()
       "base",
       "threading",
       "lib/ContractionSequenceOptimization",
-      "lib/ITensorChainRules",
+      "ext/ITensorsChainRulesCoreExt",
       "lib/ITensorNetworkMaps",
       "ext/ITensorsVectorInterfaceExt",
     ]

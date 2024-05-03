@@ -163,6 +163,7 @@ include("lib/ITensorMPS/src/ITensorMPS.jl")
 @reexport using .ITensorMPS
 include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
 using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
+include("../ext/ITensorsChainRulesCoreExt/ITensorsChainRulesCoreExt.jl")
 include("lib/ITensorNetworkMaps/src/ITensorNetworkMaps.jl")
 include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
 # TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore, ...`.

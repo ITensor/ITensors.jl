@@ -1,6 +1,7 @@
 using ChainRulesCore: ChainRulesCore, NoTangent
 using ITensors: contract, hassameinds, inner, mapprime
 using ITensors.ITensorMPS: MPO, MPS, siteinds
+using LinearAlgebra: tr
 
 function ChainRulesCore.rrule(::typeof(contract), x1::MPO, x2::MPO; kwargs...)
   y = contract(x1, x2; kwargs...)
