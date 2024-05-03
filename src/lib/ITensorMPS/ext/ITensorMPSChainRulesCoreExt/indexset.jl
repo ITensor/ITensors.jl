@@ -1,4 +1,5 @@
 using ChainRulesCore: ChainRulesCore, unthunk
+using Compat: Returns
 using ITensors:
   addtags,
   noprime,
@@ -22,7 +23,7 @@ for fname in (
         for j in eachindex(x̄)
           x̄[j] = replaceinds(ȳ[j], inds(y[j]) => inds(x[j]))
         end
-        ā = map_notangent(a)
+        ā = map(Returns(NoTangent()), a)
         return (NoTangent(), x̄, ā...)
       end
       return y, f_pullback
