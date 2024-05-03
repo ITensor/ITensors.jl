@@ -1,6 +1,6 @@
 using NDTensors: NDTensors, DenseTensor, array
 using NDTensors.Expose: Exposed, unexpose
-using cuTENSOR: CuArray, CuTensor
+using cuTENSOR: cuTENSOR, CuArray, CuTensor
 
 function NDTensors.contract!(
   R::Exposed{<:CuArray,<:DenseTensor},
