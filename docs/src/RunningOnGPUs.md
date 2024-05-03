@@ -45,11 +45,13 @@ ITensor currently provides
 package extensions for the following GPU backends:
 
 * [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) (NVIDIA GPUs)
+* [cuTENSOR.jl] (https://github.com/JuliaGPU/CUDA.jl/tree/master/lib/cutensor) (Submodule of `CUDA.jl`) 
 * [Metal.jl](https://github.com/JuliaGPU/Metal.jl) (Apple GPUs)
 * [AMDGPU.jl](https://github.com/JuliaGPU/AMDGPU.jl) (AMD GPUs)
 
 Our goal is to support all GPU backends which are supported by the [JuliaGPU organization](https://juliagpu.org).
 
+Notice that `cuTENSOR.jl` is an optional contraction backend for `CUDA.jl` and relies primarily on the `CuArray`. If `cuTENSOR` is loaded nearly all `CuArray` based contraction will utilize the `cuTENSOR.mul!` implementation instead of `cuBLAS.mul!`. It is not possible, as of now, to revert to `cuBLAS` if `cuTENSOR` is loaded. Blocksparse support with `cuTENSOR` is an active area of development and has a known bug for certain block-contractions. It is advised as of now to not use `cuTENSOR` with `BlockSparse`.
 Some important caveats to keep in mind related to the ITensor GPU backends are:
 * only dense tensor operations are well supported right now. Block sparse operations (which arise when QN conservation is enabled) are under active development and either may not work or may be slower than their CPU counterparts,
 * certain GPU backends do not have native support for certain matrix decompositions like `svd`, `eigen`, and `qr` in which case we will perform those operations on CPU. If your calculation is dominated by those operations, there likely is no advantage to running it on GPU right now. CUDA generally has good support for native matrix decompositions, while Metal and AMD have more limited support right now, and
@@ -57,13 +59,11 @@ Some important caveats to keep in mind related to the ITensor GPU backends are:
 
 The table below summarizes each backend's current capabilities.
 
-|                              | CUDA | ROCm   | Metal  | oneAPI |
-|------------------------------|------|--------|--------|--------|
-| Contractions (dense)         |   ✓  |   ✓    |   ✓    |  N/A   |
-| Contractions (cuTENSOR)      |   ✓  |   N/A    |   N/A    |  N/A   |
-| QR (dense)                   |   ✓  | On CPU | On CPU |  N/A   |
-| SVD (dense)                  |   ✓  | On CPU | On CPU |  N/A   |
-| Eigendecomposition (dense)   |   ✓  | On CPU | On CPU |  N/A   |
-| Double precision (`Float64`) |   ✓  |   ✓    |  N/A   |  N/A   |
-| Block sparse                 |  In progress |  In progress   |  In progress   |  N/A   |
-| Block sparse (cuTENSOR)      | In progress  |  N/A  |  N/A  |  N/A  |
+|                              | CUDA |  cuTENSOR  | ROCm   | Metal  | oneAPI |
+|------------------------------|------|------------|--------|--------|--------|
+| Contractions (dense)         |   ✓ (cuBLAS)  |    ✓    |   ✓    |   ✓    |  N/A   |
+| QR (dense)                   |   ✓ (cuSOLVER)  |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
+| SVD (dense)                  |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
+| Eigendecomposition (dense)   |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
+| Double precision (`Float64`) |   ✓ (cuSOLVER) |  ✓  |   ✓    |  N/A   |  N/A   |
+| Block sparse                 |  In progress |  In progress  |  In progress   |  In progress   |  N/A   |
