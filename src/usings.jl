@@ -14,7 +14,6 @@ using IsApprox
 using LinearAlgebra
 using NDTensors
 using NDTensors.RankFactorization: Spectrum, eigs, entropy, truncerror
-using PackageCompiler
 using Pkg
 using Printf
 using Random
