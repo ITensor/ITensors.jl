@@ -409,14 +409,14 @@ operator names into OpSum and it will know how to use these operators.
 **Further Steps**
 
 See how the built-in site types are defined inside the ITensor library:
-* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinhalf.jl) - Dimension 2 local Hilbert space. Similar to the `"Qubit"` site type, shares many of the same operator definitions.
-* [Qubit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/qubit.jl) - Dimension 2 local Hilbert space. Similar to the `"S=1/2"` site type, shares many of the same operator definitions.
-* [S=1 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinone.jl) - Dimension 3 local Hilbert space.
-* [Fermion sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/fermion.jl) - Dimension 2 local Hilbert space. Spinless fermion site type.
-* [Electron sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/electron.jl) - Dimension 4 local Hilbert space. Spinfull fermion site type.
-* [tJ sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/tj.jl) - Dimension 3 local Hilbert space. Spinfull fermion site type but without a doubly occupied state in the Hilbert space.
-* [Boson sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/boson.jl) - General d-dimensional local Hilbert space. Shares the same operator definitions as the `"Qudit"` site type.
-* [Qudit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/qudit.jl) - General d-dimensional local Hilbert space. Generalization of the `"Qubit"` site type, shares the same operator definitions as the ``Boson`` site type.
+* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/spinhalf.jl) - Dimension 2 local Hilbert space. Similar to the `"Qubit"` site type, shares many of the same operator definitions.
+* [Qubit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/qubit.jl) - Dimension 2 local Hilbert space. Similar to the `"S=1/2"` site type, shares many of the same operator definitions.
+* [S=1 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/spinone.jl) - Dimension 3 local Hilbert space.
+* [Fermion sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/fermion.jl) - Dimension 2 local Hilbert space. Spinless fermion site type.
+* [Electron sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/electron.jl) - Dimension 4 local Hilbert space. Spinfull fermion site type.
+* [tJ sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/tj.jl) - Dimension 3 local Hilbert space. Spinfull fermion site type but without a doubly occupied state in the Hilbert space.
+* [Boson sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/boson.jl) - General d-dimensional local Hilbert space. Shares the same operator definitions as the `"Qudit"` site type.
+* [Qudit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/SiteTypes/src/sitetypes/qudit.jl) - General d-dimensional local Hilbert space. Generalization of the `"Qubit"` site type, shares the same operator definitions as the ``Boson`` site type.
 
 
 ## Make a Custom Local Hilbert Space with QNs
