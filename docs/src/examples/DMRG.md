@@ -192,7 +192,7 @@ some helper functions which
 return an array of bonds. Each bond object has an
 "s1" field and an "s2" field which are the integers numbering
 the two sites the bond connects.
-(You can view the source for these functions at [this link](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/lattices.jl).)
+(You can view the source for these functions at [this link](https://github.com/ITensor/ITensors.jl/blob/main/src/lib/ITensorMPS/src/lattices/lattices.jl).)
 
 The two provided functions currently are `square_lattice` and
 `triangular_lattice`. It is not hard to write your own similar lattice
