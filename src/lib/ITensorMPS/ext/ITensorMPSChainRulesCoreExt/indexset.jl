@@ -1,4 +1,4 @@
-using ChainRulesCore: ChainRulesCore
+using ChainRulesCore: ChainRulesCore, unthunk
 using ITensors:
   addtags,
   noprime,
@@ -30,4 +30,4 @@ for fname in (
   end
 end
 
-ChainRulesCore.rrule(::typeof(adjoint), x::Union{MPS,MPO}) = rrule(prime, x)
+ChainRulesCore.rrule(::typeof(adjoint), x::Union{MPS,MPO}) = ChainRulesCore.rrule(prime, x)
