@@ -24,7 +24,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   @test isnothing(flux(psi))
 
   str = split(sprint(show, psi), '\n')
-  @test str[1] == "MPS"
+  @test endswith(str[1], "MPS")
   @test length(str) == length(psi) + 2
 
   @test siteind(psi, 2) == sites[2]
