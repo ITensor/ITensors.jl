@@ -60,9 +60,10 @@ The table below summarizes each backend's current capabilities.
 |                              | CUDA | ROCm   | Metal  | oneAPI |
 |------------------------------|------|--------|--------|--------|
 | Contractions (dense)         |   ✓  |   ✓    |   ✓    |  N/A   |
-| Contractions (cuTENSOR)      |   In progress  |   N/A    |   N/A    |  N/A   |
+| Contractions (cuTENSOR)      |   ✓  |   N/A    |   N/A    |  N/A   |
 | QR (dense)                   |   ✓  | On CPU | On CPU |  N/A   |
 | SVD (dense)                  |   ✓  | On CPU | On CPU |  N/A   |
 | Eigendecomposition (dense)   |   ✓  | On CPU | On CPU |  N/A   |
 | Double precision (`Float64`) |   ✓  |   ✓    |  N/A   |  N/A   |
 | Block sparse                 |  In progress |  In progress   |  In progress   |  N/A   |
+| Block sparse (cuTENSOR)      | In progress  |  N/A  |  N/A  |  N/A  |
