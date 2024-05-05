@@ -1,4 +1,4 @@
-using ..AlgorithmSelection: Algorithm
+using ..BackendSelection: Algorithm
 
 function output_labels(
   f::typeof(contract),
