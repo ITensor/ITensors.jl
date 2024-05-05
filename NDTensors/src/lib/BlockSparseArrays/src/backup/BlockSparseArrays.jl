@@ -1,5 +1,5 @@
 module BlockSparseArrays
-using ..AlgorithmSelection: Algorithm, @Algorithm_str
+using ..BackendSelection: Algorithm, @Algorithm_str
 using BlockArrays:
   AbstractBlockArray,
   BlockArrays,
