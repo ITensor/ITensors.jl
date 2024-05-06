@@ -220,7 +220,7 @@ const ITENSORMPS_EXPORTED_NAMES = [
   :StateName,
   :Sum,
   :Sweeps,
-  :TagType, # deprecate
+  :TagType,
   :Trotter,
   :ValName,
   :add,
@@ -229,36 +229,36 @@ const ITENSORMPS_EXPORTED_NAMES = [
   :applyMPO,
   :applympo,
   :argsdict,
-  :checkdone!, # remove export
+  :checkdone!,
   :coefficient,
   :common_siteind,
   :common_siteinds,
-  :convert_leaf_eltype, # remove export
+  :convert_leaf_eltype,
   :correlation_matrix,
   :cutoff,
-  :cutoff!, # deprecate
+  :cutoff!,
   :disk,
   :dmrg,
-  :dot, # remove export
-  :eigs, # deprecate
-  :energies, # deprecate
-  :entropy, # deprecate
-  :errorMPOprod, # deprecate
+  :dot,
+  :eigs,
+  :energies,
+  :entropy,
+  :errorMPOprod,
   :error_contract,
-  :error_mpoprod, # deprecate
-  :error_mul, # deprecate
+  :error_mpoprod,
+  :error_mul,
   :expect,
-  :findfirstsiteind, # deprecate
-  :findfirstsiteinds, # deprecate
-  :findsite, # deprecate
-  :findsites, # deprecate
-  :firstsiteind, # deprecate
-  :firstsiteinds, # deprecate
-  :get_cutoffs, # deprecate
-  :get_maxdims, # deprecate
-  :get_mindims, # deprecate
-  :get_noises, # deprecate
-  :has_fermion_string, # remove export
+  :findfirstsiteind,
+  :findfirstsiteinds,
+  :findsite,
+  :findsites,
+  :firstsiteind,
+  :firstsiteinds,
+  :get_cutoffs,
+  :get_maxdims,
+  :get_mindims,
+  :get_noises,
+  :has_fermion_string,
   :hassameinds,
   :inner,
   :isortho,
@@ -280,7 +280,7 @@ const ITENSORMPS_EXPORTED_NAMES = [
   :mindim!,
   :movesite,
   :movesites,
-  :mul, # deprecate
+  :mul,
   :multMPO,
   :multmpo,
   :noise,
