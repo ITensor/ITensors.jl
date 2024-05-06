@@ -45,10 +45,13 @@ ITensor currently provides
 package extensions for the following GPU backends:
 
 * [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) (NVIDIA GPUs)
+* [cuTENSOR.jl] (https://github.com/JuliaGPU/CUDA.jl/tree/master/lib/cutensor) (`CUDA.jl` extension providing accelerated binary tensor contractions) 
 * [Metal.jl](https://github.com/JuliaGPU/Metal.jl) (Apple GPUs)
 * [AMDGPU.jl](https://github.com/JuliaGPU/AMDGPU.jl) (AMD GPUs)
 
 Our goal is to support all GPU backends which are supported by the [JuliaGPU organization](https://juliagpu.org).
+
+Notice that `cuTENSOR.jl` is an extension of `CUDA.jl` that provides new functionality for accelerated binary tensor contractions. If the `cuTENSOR.jl` library is loaded then ITensors with `CuArray` data are contracted using `cuTENSOR` and if the `cuTENSOR.jl` library is not loaded but `CUDA.jl` is loaded then binary tensor contractions are mapped to a matrix multiplication and performed using `cuBLAS`.
 
 Some important caveats to keep in mind related to the ITensor GPU backends are:
 * only dense tensor operations are well supported right now. Block sparse operations (which arise when QN conservation is enabled) are under active development and either may not work or may be slower than their CPU counterparts,
@@ -57,12 +60,11 @@ Some important caveats to keep in mind related to the ITensor GPU backends are:
 
 The table below summarizes each backend's current capabilities.
 
-|                              | CUDA | ROCm   | Metal  | oneAPI |
-|------------------------------|------|--------|--------|--------|
-| Contractions (dense)         |   ✓  |   ✓    |   ✓    |  N/A   |
-| Contractions (cuTENSOR)      |   In progress  |   N/A    |   N/A    |  N/A   |
-| QR (dense)                   |   ✓  | On CPU | On CPU |  N/A   |
-| SVD (dense)                  |   ✓  | On CPU | On CPU |  N/A   |
-| Eigendecomposition (dense)   |   ✓  | On CPU | On CPU |  N/A   |
-| Double precision (`Float64`) |   ✓  |   ✓    |  N/A   |  N/A   |
-| Block sparse                 |  In progress |  In progress   |  In progress   |  N/A   |
+|                              | CUDA |  cuTENSOR  | ROCm   | Metal  | oneAPI |
+|------------------------------|------|------------|--------|--------|--------|
+| Contractions (dense)         |   ✓ (cuBLAS)  |    ✓    |   ✓    |   ✓    |  N/A   |
+| QR (dense)                   |   ✓ (cuSOLVER)  |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
+| SVD (dense)                  |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
+| Eigendecomposition (dense)   |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
+| Double precision (`Float64`) |   ✓ (cuSOLVER) |  ✓  |   ✓    |  N/A   |  N/A   |
+| Block sparse                 |  In progress |  In progress  |  In progress   |  In progress   |  N/A   |
