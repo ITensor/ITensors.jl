@@ -973,7 +973,7 @@ end
         ("S+", "S-"),
       ],
     )
-    # can't test ,("Cdn","Cdn") yet, because AutoMPO thinks this is antisymmetric
+    # can't test ,("Cdn","Cdn") yet, because OpSum to MPO thinks this is antisymmetric
 
     #trigger unsupported error
     let err = nothing

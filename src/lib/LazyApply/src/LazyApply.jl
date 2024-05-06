@@ -306,7 +306,7 @@ lastindex(a::Scaled{C,<:Sum}) where {C} = lastindex(argument(a))
 lastindex(a::Scaled{C,<:Prod}) where {C} = lastindex(argument(a))
 
 #
-# Functions convenient for AutoMPO code
+# Functions convenient for OpSum code
 #
 
 terms(a::Union{Sum,Prod}) = only(a.args)
