@@ -204,12 +204,12 @@ end
   @test hassameinds(ITensor(undef, QN(), is1), is)
   @test hassameinds(ITensor(undef, QN(), is2), is)
   @test hassameinds(ITensor(undef, QN(), is1...), is)
-  @test_throws ErrorException hassameinds(ITensor(QN(), is1), is)
-  @test_throws ErrorException hassameinds(ITensor(QN(), is2), is)
-  @test_throws ErrorException hassameinds(ITensor(QN(), is1...), is)
-  @test_throws ErrorException hassameinds(ITensor(Float64, QN(), is1), is)
-  @test_throws ErrorException hassameinds(ITensor(Float64, QN(), is2), is)
-  @test_throws ErrorException hassameinds(ITensor(Float64, QN(), is1...), is)
+  @test_throws ErrorException hassameinds(emptyITensor(QN(), is1), is)
+  @test_throws ErrorException hassameinds(emptyITensor(QN(), is2), is)
+  @test_throws ErrorException hassameinds(emptyITensor(QN(), is1...), is)
+  @test_throws ErrorException hassameinds(emptyITensor(Float64, QN(), is1), is)
+  @test_throws ErrorException hassameinds(emptyITensor(Float64, QN(), is2), is)
+  @test_throws ErrorException hassameinds(emptyITensor(Float64, QN(), is1...), is)
 end
 
 @testset "Test Index collection as Vector of abstract type" begin
