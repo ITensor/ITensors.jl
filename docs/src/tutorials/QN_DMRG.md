@@ -153,7 +153,7 @@ to turn it into a code which conserves the total ``S^z`` quantum
 number throughout the DMRG calculation. The resulting code is:
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 let
   N = 100
   sites = siteinds("S=1",N;conserve_qns=true)

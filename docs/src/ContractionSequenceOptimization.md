@@ -38,11 +38,11 @@ h₃ = Index(k, "h₃")
 s₁ = Index(d, "s₁")
 s₂ = Index(d, "s₂")
 
-H₁ = emptyITensor(dag(s₁), s₁', dag(h₁), h₂)
-H₂ = emptyITensor(dag(s₂), s₂', dag(h₂), h₃)
-L = emptyITensor(dag(l), l', h₁)
-R = emptyITensor(dag(r), r', h₃)
-ψ = emptyITensor(l, s₁, s₂, r)
+H₁ = ITensor(dag(s₁), s₁', dag(h₁), h₂)
+H₂ = ITensor(dag(s₂), s₂', dag(h₂), h₃)
+L = ITensor(dag(l), l', h₁)
+R = ITensor(dag(r), r', h₃)
+ψ = ITensor(l, s₁, s₂, r)
 
 TN = [ψ, L, H₁, H₂, R]
 sequence1 = Any[2, Any[3, Any[4, Any[1, 5]]]]
@@ -80,11 +80,11 @@ function tensor_network(; m, k, d)
   s₁ = Index(d, "s₁")
   s₂ = Index(d, "s₂")
 
-  ψ = emptyITensor(l, s₁, s₂, r)
-  L = emptyITensor(dag(l), l', h₁)
-  H₁ = emptyITensor(dag(s₁), s₁', dag(h₁), h₂)
-  H₂ = emptyITensor(dag(s₂), s₂', dag(h₂), h₃)
-  R = emptyITensor(dag(r), r', h₃)
+  ψ = ITensor(l, s₁, s₂, r)
+  L = ITensor(dag(l), l', h₁)
+  H₁ = ITensor(dag(s₁), s₁', dag(h₁), h₂)
+  H₂ = ITensor(dag(s₂), s₂', dag(h₂), h₃)
+  R = ITensor(dag(r), r', h₃)
   return [ψ, L, H₁, H₂, R]
 end
 

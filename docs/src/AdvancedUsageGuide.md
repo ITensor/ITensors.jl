@@ -141,6 +141,8 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 A common place you might accidentally come across this is when
 you are creating a Hamiltonian with `OpSum`:
 ```julia
+julia> using ITensors, ITensorMPS
+
 julia> N = 4;
 
 julia> sites = siteinds("S=1/2",N);
@@ -180,7 +182,7 @@ Julia provides many tools for searching for documentation interactively at the R
 julia> using ITensors
 
 julia> ?ITensor
-search: ITensor ITensors itensor emptyITensor randomITensor
+search: ITensor ITensors itensor randomITensor
 
   An ITensor is a tensor whose interface is independent of its
   memory layout. Therefore it is not necessary to know the ordering
@@ -220,27 +222,7 @@ julia> fieldnames(ITensor)
 ```
 which shows the fields of a type. Note that in general the specific names of the fields and structures of types may change (we consider those to be internal details), however we often make functions to access the fields of a type that have the same name as the field, so it is a good place to get started. For example, you can access the storage and indices of an ITensor `A` with the functions `store(A)` and `inds(A)`.
 
-Another helpful function is `apropos`, which search through all documentation for a string (ignoring the case) and prints a list of all types and methods with documentation that contain the string. For example:
-```julia
-julia> apropos("IndexSet")
-ITensors.IndexSet
-ITensors.push
-ITensors.insertat
-ITensors.getfirst
-ITensors.commoninds
-ITensors.pushfirst
-NDTensors.mindim
-[...]
-```
-This can often return too much information. A helpful way to narrow down the search is with regular expressions, for example:
-```julia
-julia> apropos(r"ITensor.*IndexSet")
-ITensors.block
-ITensors.hasinds
-ITensors.ITensor
-NDTensors.inds
-```
-where the notation `r"..."` is Julia notation for making a string that will be interpreted as a [regular expression](https://docs.julialang.org/en/v1/manual/strings/#Regular-Expressions). Here, we are searching for any documentation that contains the string "ITensor" followed at some point by "IndexSet". The notation `.*` is regular expression notation for matching any number of any type of character.
+Another helpful function is `apropos`, which search through all documentation for a string (ignoring the case) and prints a list of all types and methods with documentation that contain the string.
 
 Based on the `apropos` function, we can make some helper functions that may be useful. For example:
 ```julia
@@ -949,7 +931,7 @@ This allows us to have code like:
 julia> i = Index(2, "i")
 (dim=2|id=811|"i")
 
-julia> A = emptyITensor(i', i);
+julia> A = ITensor(i', i);
 
 julia> @show A;
 A = ITensor ord=2

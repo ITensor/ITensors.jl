@@ -9,15 +9,18 @@ can be found in the section [SiteTypes Included with ITensor](@ref).
 If you have an Index `s` carrying a "S=1/2" tag, for example, you can obtain the "Sz"
 operator like this:
 ```julia
+using ITensors, ITensorMPS
 op("Sz",s)
 ```
 
 Usually indices with physical tags come from an array of indices returned from the `siteinds` function
 ```julia
+using ITensors, ITensorMPS
 sites = siteinds("S=1/2",N)
 ```
 in which case one might want the "Sz" operator on site 4
 ```julia
+using ITensors, ITensorMPS
 Sz4 = op("Sz",sites[4])
 ```
 
@@ -34,6 +37,7 @@ M = [1/2 0 ; 0 -1/2]
 ```
 by calling
 ```julia
+using ITensors, ITensorMPS
 Sz = op(M,s)
 ```
 
@@ -51,6 +55,7 @@ Perhaps the most common part of the site type system one wishes to extend
 are the various `op` or `op!` function overloads which allow code like
 
 ```julia
+using ITensors, ITensorMPS
 s = siteind("S=1/2")
 Sz = op("Sz",s)
 ```
@@ -84,8 +89,7 @@ To add this operator to the ITensor `op` system, we just need to introduce the f
 code
 
 ```julia
-using ITensors
-
+using ITensors, ITensorMPS
 ITensors.op(::OpName"Pup",::SiteType"S=1/2") =
  [1 0
   0 0]
@@ -100,6 +104,7 @@ other functions of the name `op` inside the ITensors module.
 Having defined the above code, we can now do things like
 
 ```julia
+using ITensors, ITensorMPS
 s = siteind("S=1/2")
 Pup = op("Pup",s)
 ```
@@ -108,6 +113,7 @@ to obtain the `"Pup"` operator for our `"S=1/2"` Index `s`. Or we can do a simil
 thing for an array of site indices:
 
 ```julia
+using ITensors, ITensorMPS
 N = 40
 s = siteinds("S=1/2",N)
 Pup1 = op("Pup",s[1])
@@ -117,8 +123,7 @@ Pup3 = op("Pup",s[3])
 Note that for the `"Qudit"`/`"Boson"` site types, you have to define your overload
 of `op` with the dimension of the local Hilbert space, for example:
 ```julia
-using ITensors
-
+using ITensors, ITensorMPS
 function ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int)
   o = zeros(d, d)
   o[1, 1] = 1
@@ -142,6 +147,7 @@ indices.
 For example, we could now make an OpSum involving our custom operator such as:
 
 ```julia
+using ITensors, ITensorMPS
 N = 100
 sites = siteinds("S=1/2",N)
 os = OpSum()
@@ -166,6 +172,7 @@ Say we want to define a new state for the "Electron" site type called "+", which
 the meaning of one electron with its spin in the +X direction. First let's review
 the existing state definitions:
 ```julia
+using ITensors, ITensorMPS
 ITensors.state(::StateName"Emp", ::SiteType"Electron") = [1.0, 0, 0, 0]
 ITensors.state(::StateName"Up", ::SiteType"Electron") = [0.0, 1, 0, 0]
 ITensors.state(::StateName"Dn", ::SiteType"Electron") = [0.0, 0, 1, 0]
@@ -186,6 +193,7 @@ which makes the state
 Having defined this overload of `state`, if we have an Index of type "Electron"
 we can obtain our new state for it by doing
 ```julia
+using ITensors, ITensorMPS
 s = siteind("Electron")
 plus = state("+",s)
 ```
@@ -255,7 +263,7 @@ First let's see the minimal code needed to define and use this new
 the code is doing.
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 ITensors.space(::SiteType"S=3/2") = 4
 
@@ -308,6 +316,7 @@ describe the vector space corresponding to that site type. For our
 carrying the `"S=3/2"` tag, the definition is
 
 ```julia
+using ITensors, ITensorMPS
 ITensors.space(::SiteType"S=3/2") = 4
 ```
 
@@ -325,12 +334,14 @@ numbers.
 After defining this `space` function, you can just write code like:
 
 ```julia
+using ITensors, ITensorMPS
 s = siteind("S=3/2")
 ```
 
 to obtain a single `"S=3/2"` Index, or write code like
 
 ```julia
+using ITensors, ITensorMPS
 N = 100
 sites = siteinds("S=3/2",N)
 ```
@@ -352,8 +363,7 @@ In our example above, we defined this function for the case of the `"Sz"`
 operator as:
 
 ```@example S32
-using ITensors # hide
-
+using ITensors, ITensorMPS
 ITensors.op(::OpName"Sz",::SiteType"S=3/2") =
   [+3/2   0    0    0
      0  +1/2   0    0
@@ -379,6 +389,7 @@ then, for example, you can get the `"Sz"` operator for this Index
 and print it out by doing:
 
 ```@example S32
+using ITensors, ITensorMPS
 Sz = op("Sz",s)
 println(Sz)
 ```
@@ -392,6 +403,7 @@ You can use the `op` function yourself with a set of site indices created from
 the `siteinds` function like this:
 
 ```julia
+using ITensors, ITensorMPS
 N = 100
 sites = siteinds("S=3/2",N)
 Sz1 = op("Sz",sites[1])
@@ -439,7 +451,7 @@ quantum numbers of our ``S=3/2`` site type, then we will discuss what each part 
 the code is doing.
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 function ITensors.space(::SiteType"S=3/2";
                         conserve_qns=false)
@@ -491,6 +503,7 @@ it indicates the dimension of the subspace.
 After defining the `space` function this way, you can write code like:
 
 ```julia
+using ITensors, ITensorMPS
 s = siteind("S=3/2"; conserve_qns=true)
 ```
 
@@ -502,6 +515,7 @@ which are conventional for all site indices.
 You can now also call code like:
 
 ```julia
+using ITensors, ITensorMPS
 N = 100
 sites = siteinds("S=3/2",N; conserve_qns=true)
 ```

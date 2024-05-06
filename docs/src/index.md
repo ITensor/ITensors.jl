@@ -271,7 +271,7 @@ eigenvectors of Hamiltonian (energy) matrices which model
 the behavior of quantum systems.
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 let
   # Create 100 spin-one indices
   N = 100
