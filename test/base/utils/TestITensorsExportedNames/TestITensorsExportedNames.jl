@@ -47,6 +47,7 @@ const ITENSORMPS_EXPORTED_NAMES = [
   :StateName,
   :Sum,
   :Sweeps,
+  :TagType, # deprecate
   :Trotter,
   :ValName,
   :add,
@@ -187,7 +188,6 @@ const ITENSOR_EXPORTED_NAMES = [
   :Order, # deprecate
   :QN, # remove export
   :TagSet, # remove export
-  :TagType, # deprecate
   :addblock!, # deprecate
   :addtags,
   :addtags!, # deprecate
