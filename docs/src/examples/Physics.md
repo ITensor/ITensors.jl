@@ -10,12 +10,15 @@ If you have an Index `s` carrying a "S=1/2" tag, for example, you can obtain the
 operator like this:
 ```julia
 using ITensors, ITensorMPS
+
 op("Sz",s)
 ```
 
 Usually indices with physical tags come from an array of indices returned from the `siteinds` function
 ```julia
 using ITensors, ITensorMPS
+
+N = 10
 sites = siteinds("S=1/2",N)
 ```
 in which case one might want the "Sz" operator on site 4
@@ -132,6 +135,7 @@ end
 ```
 Alternatively you could use Julia's [array comprehension](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions) syntax:
 ```julia
+using ITensors, ITensorMPS
 ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int) =
   [(i == j == 1) ? 1.0 : 0.0 for i in 1:d, j in 1:d]
 ```
