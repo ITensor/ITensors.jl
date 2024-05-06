@@ -60,6 +60,7 @@ const ITENSORMPS_EXPORTED_NAMES = [
   :coefficient,
   :common_siteind,
   :common_siteinds,
+  :convert_leaf_eltype, # remove export
   :correlation_matrix,
   :cutoff,
   :cutoff!, # deprecate
@@ -206,7 +207,6 @@ const ITENSOR_EXPORTED_NAMES = [
   :complex!, # deprecate
   :contract,
   :convert_eltype, # remove export
-  :convert_leaf_eltype, # remove export
   :dag,
   :delta,
   :dense,
