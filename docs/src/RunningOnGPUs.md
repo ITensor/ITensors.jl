@@ -51,7 +51,7 @@ package extensions for the following GPU backends:
 
 Our goal is to support all GPU backends which are supported by the [JuliaGPU organization](https://juliagpu.org).
 
-Notice that `cuTENSOR.jl` is based on `CUDA.jl` and provides new functionality for accelerated binary tensor contractions. If the `cuTENSOR` library is loaded then ITensors with `CuArray` data are contracted using `cuTENSOR` and if the `cuTENSOR` library is not loaded then binary tensor contractions are mapped to a matrix multiplication and performed using `cuBLAS`. It is advised as of now to not use `cuTENSOR` with `BlockSparse`.
+Notice that `cuTENSOR.jl` is an extension of `CUDA.jl` that provides new functionality for accelerated binary tensor contractions. If the `cuTENSOR.jl` library is loaded then ITensors with `CuArray` data are contracted using `cuTENSOR` and if the `cuTENSOR.jl` library is not loaded but `CUDA.jl` is loaded then binary tensor contractions are mapped to a matrix multiplication and performed using `cuBLAS`.
 Some important caveats to keep in mind related to the ITensor GPU backends are:
 * only dense tensor operations are well supported right now. Block sparse operations (which arise when QN conservation is enabled) are under active development and either may not work or may be slower than their CPU counterparts,
 * certain GPU backends do not have native support for certain matrix decompositions like `svd`, `eigen`, and `qr` in which case we will perform those operations on CPU. If your calculation is dominated by those operations, there likely is no advantage to running it on GPU right now. CUDA generally has good support for native matrix decompositions, while Metal and AMD have more limited support right now, and
