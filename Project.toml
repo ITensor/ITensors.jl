@@ -1,7 +1,7 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
-version = "0.5.0"
+version = "0.5.2"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -29,19 +29,22 @@ Strided = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
-ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [weakdeps]
+# ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
 PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
+ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
+# ITensorsChainRulesCoreExt = "ChainRulesCore"
 ITensorsHDF5Ext = "HDF5"
 ITensorsObserversExt = "Observers"
 ITensorsPackageCompilerExt = "PackageCompiler"
 ITensorsVectorInterfaceExt = "VectorInterface"
+ITensorsZygoteRulesExt = "ZygoteRules"
 
 [compat]
 Adapt = "3.5, 4"
@@ -76,7 +79,9 @@ ZygoteRules = "0.2.2"
 julia = "1.6"
 
 [extras]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
 PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
+ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"

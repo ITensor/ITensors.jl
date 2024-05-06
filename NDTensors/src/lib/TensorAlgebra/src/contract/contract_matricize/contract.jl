@@ -1,4 +1,4 @@
-using ..AlgorithmSelection: @Algorithm_str
+using ..BackendSelection: @Algorithm_str
 using LinearAlgebra: mul!
 
 function contract!(

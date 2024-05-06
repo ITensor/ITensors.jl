@@ -1,12 +1,14 @@
-using ITensors, Test, Suppressor
-
+@eval module $(gensym())
+using ITensors: ITensors
+using Suppressor: @capture_out
+using Test: @test_nowarn, @testset
 @testset "Example Codes" begin
-  examples_dir = joinpath(pkgdir(ITensors), "examples")
-  @testset "Basic Ops" begin
+  @testset "Basic Ops $filename" for filename in ["basic_ops.jl", "qn_itensors.jl"]
     @test_nowarn begin
       @capture_out begin
-        include(joinpath(examples_dir, "basic_ops", "basic_ops.jl"))
+        include(joinpath(pkgdir(ITensors), "examples", "basic_ops", filename))
       end
     end
   end
+end
 end
