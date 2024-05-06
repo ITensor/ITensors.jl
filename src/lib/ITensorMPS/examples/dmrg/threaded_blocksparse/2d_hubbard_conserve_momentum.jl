@@ -2,8 +2,8 @@ using ITensors
 using LinearAlgebra
 using Random
 
-include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
-include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
+include(joinpath(@__DIR__, "..", "..", "src", "electronk.jl"))
+include(joinpath(@__DIR__, "..", "..", "src", "hubbard.jl"))
 
 function main(;
   Nx::Int=6,
@@ -58,7 +58,7 @@ function main(;
   end
   display(state)
 
-  psi0 = randomMPS(sites, state; linkdim=10)
+  psi0 = randomMPS(sites, state; linkdims=10)
 
   energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel)
 

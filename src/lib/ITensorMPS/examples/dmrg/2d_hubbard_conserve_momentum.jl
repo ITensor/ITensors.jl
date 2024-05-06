@@ -2,8 +2,8 @@ using ITensors
 using LinearAlgebra
 using Random
 
-include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
-include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
+include(joinpath(@__DIR__, "..", "src", "electronk.jl"))
+include(joinpath(@__DIR__, "..", "src", "hubbard.jl"))
 
 """
 Usage:

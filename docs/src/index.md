@@ -99,57 +99,6 @@ and associated "Codebase Release" for the version you have used. The current one
 }
 ```
 
-## Full Example Codes
-
-The ITensors.jl package contains a directory of examples, which we
-will continue to add to. You can find them online [here](https://github.com/ITensor/ITensors.jl/tree/main/examples).
-Additionally, once you have installed ITensors.jl you can find a local version
-of the examples in the directory `ITensors.examples_dir()`, and you can run them
-as follows from the Julia REPL:
-```julia
-julia> using ITensors
-
-julia> cd(ITensors.examples_dir())
-
-julia> readdir()
-7-element Array{String,1}:
- "basic_ops"
- "ctmrg"
- "dmrg"
- "gate_evolution"
- "krylov_methods"
- "src"
- "trg"
-
-julia> cd("dmrg")
-
-julia> readdir()
-8-element Array{String,1}:
- "1d_heisenberg.jl"
- "1d_heisenberg_conserve_spin.jl"
- "1d_hubbard_extended.jl"
- "1d_ising_with_observer.jl"
- "2d_heisenberg_conserve_spin.jl"
- "2d_hubbard_conserve_momentum.jl"
- "2d_hubbard_conserve_particles.jl"
- "input_files"
-
-julia> include("1d_heisenberg.jl")
-After sweep 1 energy=-138.837988775764 maxlinkdim=10 time=13.760
-After sweep 2 energy=-138.937408365962 maxlinkdim=20 time=0.249
-After sweep 3 energy=-138.940084788852 maxlinkdim=100 time=1.867
-After sweep 4 energy=-138.940086091070 maxlinkdim=100 time=3.824
-After sweep 5 energy=-138.940086113999 maxlinkdim=122 time=4.527
-Final energy = -138.940086113999
-
-julia> pwd()
-"[path_to_package_installation]/ITensors/examples/dmrg"
-```
-You can use your favorite text editor to view these examples. If you
-would like to modify them, either copy them into your own directory,
-or checkout ITensors.jl in development mode using the instructions
-in [Developing ITensors.jl](@ref).
-
 ## ITensor Code Samples
 
 ### Basic Overview
@@ -368,3 +317,5 @@ After sweep 4 energy=-138.940086009318 maxlinkdim=100 maxerr=1.05E-10 time=11.64
 After sweep 5 energy=-138.940086058840 maxlinkdim=96 maxerr=1.00E-10 time=12.771
 Final energy = -138.94008605883985
 ```
+You can find more examples of running `dmrg` and related algorithms [here](https://github.com/ITensor/ITensors.jl/tree/main/src/lib/ITensorMPS/examples).
+
