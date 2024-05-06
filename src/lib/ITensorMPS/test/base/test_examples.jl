@@ -1,16 +1,25 @@
-using ITensors, Test, Suppressor
-
+@eval module $(gensym())
+using ITensors: ITensors
+using Suppressor: @capture_out
+using Test: @test_nowarn, @testset
 @testset "Example Codes" begin
-  examples_dir = joinpath(pkgdir(ITensors), "examples")
-
   @testset "DMRG with Observer" begin
     @test_nowarn begin
       @capture_out begin
-        include(joinpath(examples_dir, "dmrg", "1d_ising_with_observer.jl"))
+        include(
+          joinpath(
+            pkgdir(ITensors),
+            "src",
+            "lib",
+            "ITensorMPS",
+            "examples",
+            "dmrg",
+            "1d_ising_with_observer.jl",
+          ),
+        )
       end
     end
   end
-
   @testset "Package Compile Code" begin
     @test_nowarn begin
       @capture_out begin
@@ -22,4 +31,5 @@ using ITensors, Test, Suppressor
       end
     end
   end
+end
 end

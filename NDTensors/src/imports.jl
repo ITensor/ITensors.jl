@@ -22,8 +22,8 @@ using TimerOutputs
 using TupleTools
 
 for lib in [
-  :AlgorithmSelection,
   :AllocateData,
+  :BackendSelection,
   :BaseExtensions,
   :UnspecifiedTypes,
   :TypeParameterAccessors,
@@ -51,6 +51,10 @@ for lib in [
   include("lib/$(lib)/src/$(lib).jl")
   @eval using .$lib: $lib
 end
+# TODO: This is defined for backwards compatibility,
+# delete this alias once downstream packages change over
+# to using `BackendSelection`.
+const AlgorithmSelection = BackendSelection
 
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 

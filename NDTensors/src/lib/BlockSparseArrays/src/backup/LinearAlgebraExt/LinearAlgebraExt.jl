@@ -1,5 +1,5 @@
 module LinearAlgebraExt
-using ...AlgorithmSelection: Algorithm, @Algorithm_str
+using ...BackendSelection: Algorithm, @Algorithm_str
 using BlockArrays: BlockArrays, blockedrange, blocks
 using ..BlockSparseArrays: nonzero_keys # TODO: Move to `SparseArraysExtensions` module, rename `SparseArrayDOK`.
 using ..BlockSparseArrays: BlockSparseArrays, BlockSparseArray, nonzero_blockkeys
