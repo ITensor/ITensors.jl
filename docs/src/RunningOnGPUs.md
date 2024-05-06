@@ -45,7 +45,7 @@ ITensor currently provides
 package extensions for the following GPU backends:
 
 * [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) (NVIDIA GPUs)
-* [cuTENSOR.jl] (https://github.com/JuliaGPU/CUDA.jl/tree/master/lib/cutensor) (Submodule of `CUDA.jl`) 
+* [cuTENSOR.jl] (https://github.com/JuliaGPU/CUDA.jl/tree/master/lib/cutensor) (`CUDA.jl` extension providing accelerated binary tensor contractions) 
 * [Metal.jl](https://github.com/JuliaGPU/Metal.jl) (Apple GPUs)
 * [AMDGPU.jl](https://github.com/JuliaGPU/AMDGPU.jl) (AMD GPUs)
 
