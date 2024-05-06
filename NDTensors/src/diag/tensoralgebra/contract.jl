@@ -68,8 +68,8 @@ function contract!(
   α::Number=one(Bool),
   β::Number=zero(Bool),
 )
-  @assert α == one(Bool)
-  @assert β == zero(Bool)
+  @assert isone(α)
+  @assert iszero(β)
   return contract!(
     unexpose(output_tensor),
     labelsoutput_tensor,
