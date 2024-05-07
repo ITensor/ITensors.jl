@@ -24,7 +24,9 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extras]
 AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
+cuTENSOR = "011b41b2-24ef-40a8-b3eb-fa098493e9e1"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 
 [compat]
 Metal = "1.1.0"
+cuTENSOR = "2.0"
