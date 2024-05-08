@@ -2,23 +2,9 @@ using FileUtils
 
 template_package_name = "PACKAGE"
 
-package_names = [
-  "ITensors",
-  "NDTensors",
-  "ITensorVisualizationBase",
-  "ITensorUnicodePlots",
-  "ITensorMakie",
-  "ITensorGLMakie",
-]
+package_names = ["ITensors", "NDTensors"]
 
-package_ordering = Dict([
-  "ITensors" => 1,
-  "NDTensors" => 2,
-  "ITensorVisualizationBase" => 3,
-  "ITensorUnicodePlots" => 4,
-  "ITensorMakie" => 5,
-  "ITensorGLMakie" => 6,
-])
+package_ordering = Dict(["ITensors" => 1, "NDTensors" => 2])
 
 function bug_report_file(package_name::String)
   return "$(package_name)_bug_report.md"

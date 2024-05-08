@@ -9,14 +9,6 @@ benchmark/mult
 benchmark/*.json
 docs/Manifest.toml
 docs/build/
-ITensorUnicodePlots/Manifest.toml
-ITensorUnicodePlots/test/Manifest.toml
-ITensorMakie/Manifest.toml
-ITensorMakie/test/Manifest.toml
-ITensorGLMakie/Manifest.toml
-ITensorGLMakie/test/Manifest.toml
-ITensorVisualizationBase/Manifest.toml
-ITensorVisualizationBase/test/Manifest.toml
 NDTensors/Manifest.toml
 NDTensors/test/Manifest.toml
 precompile/tmp
