@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    name: ${{ matrix.package.repo }}/${{ matrix.julia-version }}
+    name: ${{ matrix.package.repo }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
