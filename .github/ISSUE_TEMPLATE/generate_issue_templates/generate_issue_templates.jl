@@ -3,21 +3,15 @@ using FileUtils
 template_package_name = "PACKAGE"
 
 package_names = [
-  "ITensors",
-  "NDTensors",
-  "ITensorVisualizationBase",
-  "ITensorUnicodePlots",
-  "ITensorMakie",
-  "ITensorGLMakie",
+  "ITensors", "NDTensors", "ITensorVisualizationBase", "ITensorMakie", "ITensorGLMakie"
 ]
 
 package_ordering = Dict([
   "ITensors" => 1,
   "NDTensors" => 2,
   "ITensorVisualizationBase" => 3,
-  "ITensorUnicodePlots" => 4,
-  "ITensorMakie" => 5,
-  "ITensorGLMakie" => 6,
+  "ITensorMakie" => 4,
+  "ITensorGLMakie" => 5,
 ])
 
 function bug_report_file(package_name::String)
