@@ -2,9 +2,9 @@ using FileUtils
 
 template_package_name = "PACKAGE"
 
-package_names = ["ITensors", "NDTensors", "ITensorGLMakie"]
+package_names = ["ITensors", "NDTensors"]
 
-package_ordering = Dict(["ITensors" => 1, "NDTensors" => 2, "ITensorGLMakie" => 3])
+package_ordering = Dict(["ITensors" => 1, "NDTensors" => 2])
 
 function bug_report_file(package_name::String)
   return "$(package_name)_bug_report.md"
