@@ -5,7 +5,6 @@ template_package_name = "PACKAGE"
 package_names = [
   "ITensors",
   "NDTensors",
-  "ITensorGaussianMPS",
   "ITensorVisualizationBase",
   "ITensorUnicodePlots",
   "ITensorMakie",
@@ -15,11 +14,10 @@ package_names = [
 package_ordering = Dict([
   "ITensors" => 1,
   "NDTensors" => 2,
-  "ITensorGaussianMPS" => 3,
-  "ITensorVisualizationBase" => 4,
-  "ITensorUnicodePlots" => 5,
-  "ITensorMakie" => 6,
-  "ITensorGLMakie" => 7,
+  "ITensorVisualizationBase" => 3,
+  "ITensorUnicodePlots" => 4,
+  "ITensorMakie" => 5,
+  "ITensorGLMakie" => 6,
 ])
 
 function bug_report_file(package_name::String)
