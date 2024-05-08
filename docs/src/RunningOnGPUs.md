@@ -37,7 +37,7 @@ Bmtl = mtl(B)
 Amtl * Bmtl
 ```
 
-Note that we highly recommend using these new package extensions as opposed to [ITensorGPU.jl](https://github.com/ITensor/ITensors.jl/tree/main/ITensorGPU), which is ITensor's previous CUDA backend. The package extensions are better integrated into the main library so are more reliable and better supported right now. We plan to deprecate `ITensorGPU.jl` in the future.
+Note that we highly recommend using these new package extensions as opposed to [ITensorGPU.jl](https://github.com/ITensor/ITensorGPU.jl), which is ITensor's previous CUDA backend. The package extensions are better integrated into the main library so are more reliable and better supported right now. We plan to deprecate `ITensorGPU.jl` in the future.
 
 ## GPU backends
 
@@ -45,7 +45,7 @@ ITensor currently provides
 package extensions for the following GPU backends:
 
 * [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) (NVIDIA GPUs)
-* [cuTENSOR.jl] (https://github.com/JuliaGPU/CUDA.jl/tree/master/lib/cutensor) (`CUDA.jl` extension providing accelerated binary tensor contractions) 
+* [cuTENSOR.jl] (https://github.com/JuliaGPU/CUDA.jl/tree/master/lib/cutensor) (`CUDA.jl` extension providing accelerated binary tensor contractions)
 * [Metal.jl](https://github.com/JuliaGPU/Metal.jl) (Apple GPUs)
 * [AMDGPU.jl](https://github.com/JuliaGPU/AMDGPU.jl) (AMD GPUs)
 
