@@ -15,9 +15,7 @@ jobs:
         julia-version: [1]
         os: [ubuntu-latest]
         package:
-          - {user: ITensor, repo: ITensorGLMakie.jl}
           - {user: ITensor, repo: ITensorGaussianMPS.jl}
-          - {user: ITensor, repo: ITensorMakie.jl}
           - {user: ITensor, repo: ITensorTDVP.jl}
           - {user: ITensor, repo: ITensorUnicodePlots.jl}
           - {user: ITensor, repo: ITensorVisualizationBase.jl}
