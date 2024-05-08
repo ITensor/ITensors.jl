@@ -23,36 +23,6 @@ function _contract(A::ITensor, B::ITensor)::ITensor
   return C
 end
 
-_contract(T::ITensor, ::Nothing) = T
-
-function can_combine_contract(A::ITensor, B::ITensor)::Bool
-  return hasqns(A) &&
-         hasqns(B) &&
-         !iscombiner(A) &&
-         !iscombiner(B) &&
-         !isdiag(A) &&
-         !isdiag(B)
-end
-
-function combine_contract(A::ITensor, B::ITensor)::ITensor
-  # Combine first before contracting
-  C::ITensor = if can_combine_contract(A, B)
-    uniqueindsA = uniqueinds(A, B)
-    uniqueindsB = uniqueinds(B, A)
-    commonindsAB = commoninds(A, B)
-    combinerA = isempty(uniqueindsA) ? nothing : combiner(uniqueindsA)
-    combinerB = isempty(uniqueindsB) ? nothing : combiner(uniqueindsB)
-    combinerAB = isempty(commonindsAB) ? nothing : combiner(commonindsAB)
-    AC = _contract(_contract(A, combinerA), combinerAB)
-    BC = _contract(_contract(B, combinerB), dag(combinerAB))
-    CC = _contract(AC, BC)
-    _contract(_contract(CC, dag(combinerA)), dag(combinerB))
-  else
-    _contract(A, B)
-  end
-  return C
-end
-
 """
     A::ITensor * B::ITensor
     contract(A::ITensor, B::ITensor)
@@ -100,10 +70,8 @@ function contract(A::ITensor, B::ITensor)::ITensor
     return iscombiner(A) ? _contract(A, B) : A[] * B
   elseif NB == 0
     return iscombiner(B) ? _contract(B, A) : B[] * A
-  else
-    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
-    return C
   end
+  return _contract(A, B)
 end
 
 function optimal_contraction_sequence(A::Union{Vector{<:ITensor},Tuple{Vararg{ITensor}}})
