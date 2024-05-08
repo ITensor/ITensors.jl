@@ -15,7 +15,6 @@ jobs:
         julia-version: [1]
         os: [ubuntu-latest]
         package:
-          - {user: ITensor, repo: ITensorGPU.jl}
           - {user: ITensor, repo: ITensorGaussianMPS.jl}
           - {user: ITensor, repo: ITensorTDVP.jl}
 
