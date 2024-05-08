@@ -9,8 +9,6 @@ benchmark/mult
 benchmark/*.json
 docs/Manifest.toml
 docs/build/
-ITensorMakie/Manifest.toml
-ITensorMakie/test/Manifest.toml
 ITensorGLMakie/Manifest.toml
 ITensorGLMakie/test/Manifest.toml
 NDTensors/Manifest.toml
