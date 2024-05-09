@@ -252,7 +252,7 @@ Use [`deepcopy`](@ref) for an alternative that copies the ITensors as well.
 
 # Examples
 ```julia
-julia> using ITensors
+julia> using ITensors, ITensorMPS
 
 julia> s = siteinds("S=1/2", 3);
 
@@ -300,7 +300,7 @@ copying the ITensor data.
 
 # Examples
 ```julia
-julia> using ITensors
+julia> using ITensors, ITensorMPS
 
 julia> s = siteinds("S=1/2", 3);
 

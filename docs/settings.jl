@@ -42,7 +42,7 @@ settings = Dict(
         "Observer.md",
         "DMRGObserver.md",
       ],
-      "OpSum (AutoMPO)" => "OpSum.md",
+      "OpSum" => "OpSum.md",
     ],
     "Frequently Asked Questions" => [
       "Programming Language (Julia, C++, ...) FAQs" => "faq/JuliaAndCpp.md",

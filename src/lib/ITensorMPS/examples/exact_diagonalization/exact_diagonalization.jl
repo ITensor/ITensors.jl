@@ -1,11 +1,12 @@
-using ITensors
+using ITensors, ITensorMPS
 using KrylovKit
 using LinearAlgebra
 using MKL
+using Strided
 
 include("fuse_inds.jl")
 
-ITensors.Strided.disable_threads()
+Strided.disable_threads()
 ITensors.disable_threaded_blocksparse()
 
 function heisenberg(n)

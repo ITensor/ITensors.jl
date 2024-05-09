@@ -292,8 +292,8 @@ Random.seed!(1234)
     @test T[] == 0
 
     s = Index(QN(-1) => 1, QN(1) => 1)
-    A = emptyITensor(s, dag(s'))
-    B = emptyITensor(s', dag(s))
+    A = ITensor(s, dag(s'))
+    B = ITensor(s', dag(s))
     A[1, 1] = 1
     B[2, 2] = 1
     C = A * B
@@ -306,7 +306,7 @@ Random.seed!(1234)
   @testset "Empty constructor" begin
     i = Index([QN(0) => 1, QN(1) => 2], "i")
 
-    A = emptyITensor(i, dag(i'))
+    A = ITensor(i, dag(i'))
 
     @test nnzblocks(A) == 0
     @test nnz(A) == 0
@@ -426,7 +426,7 @@ Random.seed!(1234)
     @testset "Test 1" begin
       s1 = Index([QN("N", 0, -1) => 1, QN("N", 1, -1) => 1], "s1")
       s2 = Index([QN("N", 0, -1) => 1, QN("N", 1, -1) => 1], "s2")
-      A = emptyITensor(s1, s2)
+      A = ITensor(s1, s2)
 
       @test nnzblocks(A) == 0
       @test nnz(A) == 0
@@ -452,7 +452,7 @@ Random.seed!(1234)
     @testset "Test 2" begin
       s1 = Index([QN("N", 0, -1) => 1, QN("N", 1, -1) => 1], "s1")
       s2 = Index([QN("N", 0, -1) => 1, QN("N", 1, -1) => 1], "s2")
-      A = emptyITensor(s1, s2)
+      A = ITensor(s1, s2)
 
       @test nnzblocks(A) == 0
       @test nnz(A) == 0
@@ -872,7 +872,7 @@ Random.seed!(1234)
   @testset "Combiner for block deficient ITensor" begin
     i = Index(QN(0, 2) => 2, QN(1, 2) => 2; tags="i")
     j = settags(i, "j")
-    A = emptyITensor(i, j, dag(i'))
+    A = ITensor(i, j, dag(i'))
     A[1, 1, 1] = 1.0
     C = combiner(i, j; tags="c")
     AC = A * C
@@ -1529,7 +1529,7 @@ Random.seed!(1234)
         QN("Nf", 1, -1) => 2, QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 2; tags="Link,u"
       )
 
-      A = emptyITensor(ElT, l, s, dag(r))
+      A = ITensor(ElT, l, s, dag(r))
 
       insertblock!(A, Block(2, 1, 2))
       insertblock!(A, Block(1, 2, 2))
@@ -1561,7 +1561,7 @@ Random.seed!(1234)
         QN("Sz", 2) => 4,
         QN("Sz", 4) => 1,
       )
-      A = emptyITensor(ElT, s, s')
+      A = ITensor(ElT, s, s')
       insertblock!(A, Block(5, 2))
       insertblock!(A, Block(4, 3))
       insertblock!(A, Block(3, 4))
@@ -1579,7 +1579,7 @@ Random.seed!(1234)
         QN("Sz", 2) => 4,
         QN("Sz", 4) => 1,
       )
-      A = emptyITensor(ElT, s, s')
+      A = ITensor(ElT, s, s')
       insertblock!(A, Block(5, 1))
       insertblock!(A, Block(4, 2))
       insertblock!(A, Block(3, 3))
@@ -1598,7 +1598,7 @@ Random.seed!(1234)
         QN("Sz", 2) => 4,
         QN("Sz", 4) => 1,
       )
-      A = emptyITensor(ElT, s, s')
+      A = ITensor(ElT, s, s')
       insertblock!(A, Block(5, 1))
       insertblock!(A, Block(4, 2))
       insertblock!(A, Block(3, 3))

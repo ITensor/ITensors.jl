@@ -1,4 +1,4 @@
-using ITensors
+using ITensors, ITensorMPS
 using Zygote
 
 s = siteind("Qubit")

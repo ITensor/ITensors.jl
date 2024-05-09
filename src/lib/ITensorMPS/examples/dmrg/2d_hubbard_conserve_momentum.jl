@@ -1,6 +1,7 @@
-using ITensors
+using ITensors, ITensorMPS
 using LinearAlgebra
 using Random
+using Strided
 
 include(joinpath(@__DIR__, "..", "src", "electronk.jl"))
 include(joinpath(@__DIR__, "..", "src", "hubbard.jl"))
@@ -13,7 +14,7 @@ energy, H, psi = main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threa
 energy, H, psi = main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=false);
 energy, H, psi = main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=true);
 
-using ITensors.HDF5
+using HDF5
 h5open("2d_hubbard_conserve_momentum.h5", "w") do fid
   fid["energy"] = energy
   fid["H"] = H
@@ -49,7 +50,7 @@ function main(;
 
   # Disable other threading
   BLAS.set_num_threads(1)
-  ITensors.Strided.set_num_threads(1)
+  Strided.set_num_threads(1)
 
   ITensors.enable_threaded_blocksparse(threaded_blocksparse)
   @show ITensors.using_threaded_blocksparse()

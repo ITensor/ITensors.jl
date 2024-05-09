@@ -63,7 +63,7 @@ discuss the main steps. (If you need help running the code below, see the gettin
 started page on running ITensor codes.)
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 let
   N = 100

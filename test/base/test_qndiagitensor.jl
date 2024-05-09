@@ -83,7 +83,7 @@ using ITensors, Test
     r = addtags(s, "right")
     u = addtags(s, "up")
     d = dag(addtags(s, "down"))
-    A = emptyITensor(l, r, u, d)
+    A = ITensor(l, r, u, d)
     A[1, 1, 1, 1] = 1.0
     A[1, 1, 2, 2] = 1.0
     A[2, 2, 1, 1] = 1.0

@@ -1,8 +1,8 @@
-using ITensors
-using ITensors.Strided
+using ITensors, ITensorMPS
 using LinearAlgebra
 using Printf
 using Random
+using Strided
 
 Random.seed!(1234)
 BLAS.set_num_threads(1)

@@ -83,7 +83,7 @@ In the example code below we will obtain the element ``T^{1,2,1,1,2,1,2,2,2,1}``
 which is (implicitly) defined by the MPS psi:
 
 ```@example mps_element
-using ITensors # hide
+using ITensors, ITensorMPS
 let # hide
 N = 10
 s = siteinds(2,N)
@@ -139,7 +139,7 @@ following example we will use a random MPS of bond dimension ``\chi=4`` but the
 MPS could be obtained other ways such as through a DMRG calculation.
 
 ```@example expect
-using ITensors # hide
+using ITensors, ITensorMPS
 N = 10
 chi = 4
 sites = siteinds("S=1/2",N)
@@ -306,6 +306,8 @@ as well as limits on the maximum bond dimension (`maxdim` keyword argument).
 **Complete code example**
 
 ```julia
+using ITensors, ITensorMPS
+
 psi = orthogonalize(psi, 3)
 
 wf = (psi[3] * psi[4]) * G
@@ -355,7 +357,8 @@ the algorithm for sampling MPS is a `perfect' sampling algorithm with no autocor
 In more detail, say we have a set of `N` site indices `s` and define a random MPS
 with these sites:
 ```@example sample_mps; continued=true
-using ITensors # hide
+using ITensors, ITensorMPS
+
 N = 10 # number of sites
 d = 3  # dimension of each site
 chi = 16 # bond dimension of the MPS
@@ -384,7 +387,7 @@ can be brought into orthogonal form by calling `psi = orthogonalize(psi, 1)`.
 
 ## Write and Read an MPS or MPO to Disk with HDF5
 
-!!! info 
+!!! info
     Make sure to install the HDF5 package to use this feature. (Run `julia> ] add HDF5` in the Julia REPL console.)
 
 **Writing an MPS to an HDF5 File**
@@ -427,6 +430,8 @@ So for example, to create an MPO from an OpSum which has the same site indices
 as your MPS `psi`, do the following:
 
 ```julia
+using ITensors, ITensorMPS
+
 os = OpSum()
 # Then put operators into os...
 

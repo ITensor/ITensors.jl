@@ -296,7 +296,7 @@ end
 #
 #  Build up Hamiltonians with non trival QN spaces in the link indices and further neighbour interactions.
 #
-function make_Heisenberg_AutoMPO(sites, NNN::Int64; J::Float64=1.0, kwargs...)::MPO
+function make_heisenberg_opsum(sites, NNN::Int64; J::Float64=1.0, kwargs...)::MPO
   N = length(sites)
   @assert N >= NNN
   opsum = OpSum()
@@ -311,7 +311,7 @@ function make_Heisenberg_AutoMPO(sites, NNN::Int64; J::Float64=1.0, kwargs...)::
   return MPO(opsum, sites; kwargs...)
 end
 
-function make_Hubbard_AutoMPO(
+function make_hubbard_opsum(
   sites, NNN::Int64; U::Float64=1.0, t::Float64=1.0, V::Float64=0.5, kwargs...
 )::MPO
   N = length(sites)
@@ -333,7 +333,7 @@ function make_Hubbard_AutoMPO(
   return MPO(os, sites; kwargs...)
 end
 
-test_combos = [(make_Heisenberg_AutoMPO, "S=1/2"), (make_Hubbard_AutoMPO, "Electron")]
+test_combos = [(make_heisenberg_opsum, "S=1/2"), (make_hubbard_opsum, "Electron")]
 
 @testset "QR/QL MPO tensors with complex block structures, H=$(test_combo[1])" for test_combo in
                                                                                    test_combos

@@ -1,7 +1,7 @@
 # In this example we show how to pass a DMRGObserver to
 # the dmrg function which allows tracking energy convergence and
 # convergence of local operators.
-using ITensors
+using ITensors, ITensorMPS
 
 """
   Get MPO of transverse field Ising model Hamiltonian with field strength h

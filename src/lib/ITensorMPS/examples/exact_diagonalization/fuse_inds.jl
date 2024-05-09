@@ -1,4 +1,4 @@
-using ITensors
+using ITensors, ITensorMPS
 
 function fusion_tree(s::Vector{<:Index})
   n = length(s)
