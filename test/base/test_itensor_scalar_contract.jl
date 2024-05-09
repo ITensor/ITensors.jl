@@ -18,11 +18,11 @@ Random.seed!(1234)
   C = A * B
   @test C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
 
-  C = emptyITensor(is..., α', α'')
+  C = ITensor(is..., α', α'')
   C .= A .* B
   @test C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
 
-  C = emptyITensor(shuffle([(is..., α', α'')...])...)
+  C = ITensor(shuffle([(is..., α', α'')...])...)
   C .= A .* B
   @test C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
 end

@@ -116,6 +116,7 @@ function contract(
   return output_tensor
 end
 
+using NDTensors.Expose: Exposed, expose, unexpose
 # Overload this function for immutable storage types
 function _contract!!(
   output_tensor::Tensor,
@@ -129,21 +130,48 @@ function _contract!!(
 )
   if α ≠ 1 || β ≠ 0
     contract!(
-      output_tensor,
+      expose(output_tensor),
       labelsoutput_tensor,
-      tensor1,
+      expose(tensor1),
       labelstensor1,
-      tensor2,
+      expose(tensor2),
       labelstensor2,
       α,
       β,
     )
   else
     contract!(
-      output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
+      expose(output_tensor),
+      labelsoutput_tensor,
+      expose(tensor1),
+      labelstensor1,
+      expose(tensor2),
+      labelstensor2,
     )
   end
   return output_tensor
+end
+
+function contract!(
+  output_tensor::Exposed,
+  labelsoutput_tensor,
+  tensor1::Exposed,
+  labelstensor1,
+  tensor2::Exposed,
+  labelstensor2,
+  α::Number=one(Bool),
+  β::Number=zero(Bool),
+)
+  return contract!(
+    unexpose(output_tensor),
+    labelsoutput_tensor,
+    unexpose(tensor1),
+    labelstensor1,
+    unexpose(tensor2),
+    labelstensor2,
+    α,
+    β,
+  )
 end
 
 # Is this generic for all storage types?

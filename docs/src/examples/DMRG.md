@@ -7,6 +7,7 @@ or a wavefunction we need to construct a "site set" which will hold the site ind
 the physical Hilbert space:
 
 ```julia
+using ITensors, ITensorMPS
 N = 100
 sites = siteinds("S=1",N)
 ```
@@ -66,7 +67,7 @@ approximation to the ground state as the variable `psi`.
 Below you can find a complete working code that includes all of these steps:
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 let
   N = 100
@@ -118,7 +119,7 @@ These tags tell the OpSum system which local operators to use for these
 sites when building the Hamiltonian MPO.
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 let
   N = 100
@@ -208,7 +209,7 @@ the geometry a cylinder.
 **Full example code:**
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 let
   Ny = 6
@@ -285,7 +286,7 @@ within the same quantum number sector.
 **Full Example code:**
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 let
   N = 20
@@ -377,6 +378,8 @@ First we define our custom observer type, `EntanglementObserver`, and overload t
 for it:
 
 ```julia
+using ITensors, ITensorMPS
+
 mutable struct EntanglementObserver <: AbstractObserver
 end
 
@@ -398,7 +401,7 @@ has just finished optimizing.
 Here is a complete sample code including constructing the observer and passing it to DMRG:
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 mutable struct EntanglementObserver <: AbstractObserver
 end
@@ -473,6 +476,8 @@ First we define our custom observer type, `SizeObserver`, and overload the `meas
 for it:
 
 ```julia
+using ITensors, ITensorMPS
+
 mutable struct SizeObserver <: AbstractObserver
 end
 
@@ -493,7 +498,7 @@ When it runs, it calls `Base.summarysize` on the wavefunction `psi` object and t
 Here is a complete sample code including constructing the observer and passing it to DMRG:
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 mutable struct SizeObserver <: AbstractObserver
 end

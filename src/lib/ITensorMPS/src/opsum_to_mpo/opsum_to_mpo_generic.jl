@@ -204,7 +204,8 @@ function sorteachterm(os::OpSum, sites)
       end
     end
 
-    (t_parity == -1) && error("Parity-odd fermionic terms not yet supported by AutoMPO")
+    (t_parity == -1) &&
+      error("Parity-odd fermionic terms not yet supported by OpSum to MPO conversion")
 
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero, perm)

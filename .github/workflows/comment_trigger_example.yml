@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch@v1
+        uses: xt0rted/pull-request-comment-branch@v2
         id: comment-branch
       - name: Set latest commit status as pending
         uses: myrotvorets/set-commit-status-action@master
@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           status: pending
       - name: Checkout PR branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # https://github.com/actions/checkout/issues/331#issuecomment-1438220926
           ref: refs/pull/${{ github.event.issue.number }}/head
@@ -41,7 +41,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           status: ${{ job.status }}
       - name: Add comment to PR
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: always()
         with:
           script: |

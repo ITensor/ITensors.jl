@@ -1,8 +1,8 @@
-using ITensors
-using ITensors.Strided
+using ITensors, ITensorMPS
 using LinearAlgebra
 using Printf
 using Random
+using Strided
 
 Random.seed!(1234)
 Strided.set_num_threads(1)
@@ -29,7 +29,6 @@ let
   maxdim = [10, 20, 100, 100, 200]
   # Set maximum truncation error allowed when adapting bond dimensions
   cutoff = 1E-10
-  @show sweeps
 
   # Run the DMRG algorithm, returning energy and optimized MPS
   energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, write_when_maxdim_exceeds=25)

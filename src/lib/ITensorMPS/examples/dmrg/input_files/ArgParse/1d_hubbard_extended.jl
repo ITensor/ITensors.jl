@@ -1,4 +1,4 @@
-using ITensors
+using ITensors, ITensorMPS
 
 #
 # DMRG calculation of the extended Hubbard model

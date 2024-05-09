@@ -95,7 +95,7 @@ end
     # is for S=3/2, because we might define the
     # "S=3/2" TagType inside ITensors.jl later
     function ITensors.op(::OpName"Sz", ::SiteType"_Custom_", s::Index)
-      Op = emptyITensor(s', dag(s))
+      Op = ITensor(s', dag(s))
       Op[s' => 1, s => 1] = +3 / 2
       Op[s' => 2, s => 2] = +1 / 2
       Op[s' => 3, s => 3] = -1 / 2
@@ -104,7 +104,7 @@ end
     end
 
     function ITensors.op(::OpName"α", ::SiteType"_Custom_", s1::Index, s2::Index)
-      Op = emptyITensor(s1', s2', dag(s1), dag(s2))
+      Op = ITensor(s1', s2', dag(s1), dag(s2))
       Op[s1' => 1, s2' => 2, s1 => 1, s2 => 2] = +3 / 2
       Op[s1' => 2, s2' => 1, s1 => 2, s2 => 2] = +1 / 2
       Op[s1' => 3, s2' => 3, s1 => 3, s2 => 4] = -1 / 2
@@ -115,7 +115,7 @@ end
     function ITensors.op(
       ::OpName"β", ::SiteType"_Custom1", ::SiteType"_Custom2", s1::Index, s2::Index
     )
-      Op = emptyITensor(s1', s2', dag(s1), dag(s2))
+      Op = ITensor(s1', s2', dag(s1), dag(s2))
       Op[s1' => 1, s2' => 2, s1 => 1, s2 => 2] = +5 / 2
       Op[s1' => 2, s2' => 1, s1 => 2, s2 => 2] = +3 / 2
       Op[s1' => 3, s2' => 3, s1 => 3, s2 => 4] = -3 / 2
@@ -151,7 +151,7 @@ end
 
   @testset "Custom OpName with long name" begin
     function ITensors.op(::OpName"my_favorite_operator", ::SiteType"S=1/2", s::Index)
-      Op = emptyITensor(s', dag(s))
+      Op = ITensor(s', dag(s))
       Op[s' => 1, s => 1] = 0.11
       Op[s' => 1, s => 2] = 0.12
       Op[s' => 2, s => 1] = 0.21
@@ -291,7 +291,7 @@ end
     # is for S=3/2, because we might define the
     # "S=3/2" TagType inside ITensors.jl later
     function ITensors.op(::SiteType"_Custom_", s::Index, opname::AbstractString)
-      Op = emptyITensor(s', dag(s))
+      Op = ITensor(s', dag(s))
       if opname == "S+"
         Op[s' => 1, s => 2] = sqrt(3)
         Op[s' => 2, s => 3] = 2

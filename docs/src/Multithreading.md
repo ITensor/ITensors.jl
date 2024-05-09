@@ -34,8 +34,6 @@ julia> using LinearAlgebra
 julia> BLAS.vendor()  # Check which BLAS you are using
 :mkl
 
-julia> using ITensors
-
 julia> BLAS.get_num_threads()
 6
 
@@ -60,17 +58,19 @@ $ julia -t 4
 julia> Threads.nthreads()
 4
 
-julia> ITensors.Strided.get_num_threads()
+julia> using Strided
+
+julia> Strided.get_num_threads()
 4
 ```
 We find that this threading competes with BLAS threading as well as ITensors.jl's own block sparse
 multithreading, so if you are using Julia with multiple threads you may want to disable
 Strided.jl's threading with:
 ```julia
-julia> ITensors.Strided.disable_threads()
+julia> Strided.disable_threads()
 1
 
-julia> ITensors.Strided.get_num_threads()
+julia> Strided.get_num_threads()
 1
 ```
 in favor of either BLAS threading or ITensors.jl's block sparse threading.
@@ -88,12 +88,13 @@ Here is a simple example of using block sparse multithreading to speed up a spar
 tensor contraction:
 ```julia
 using BenchmarkTools
-using ITensors
+using ITensors, ITensorMPS
 using LinearAlgebra
+using Strided
 
 function main(; d = 20, order = 4)
   BLAS.set_num_threads(1)
-  ITensors.Strided.set_num_threads(1)
+  Strided.set_num_threads(1)
 
   println("#################################################")
   println("# order = ", order)
@@ -139,7 +140,7 @@ julia> main(d = 20, order = 4)
 Threads.nthreads() = 5
 Sys.CPU_THREADS = 6
 BLAS.get_num_threads() = 1
-ITensors.Strided.get_num_threads() = 1
+Strided.get_num_threads() = 1
 
 Serial contract:
   21.558 ms (131 allocations: 7.34 MiB)

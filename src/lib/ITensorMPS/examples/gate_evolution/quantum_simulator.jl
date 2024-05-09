@@ -1,4 +1,4 @@
-using ITensors
+using ITensors, ITensorMPS
 
 N = 10
 s = siteinds("Qubit", N)

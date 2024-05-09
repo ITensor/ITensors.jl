@@ -25,7 +25,7 @@ discuss the main steps. If you need help running the code below, see the getting
 started page on [Running ITensor and Julia Codes](@ref).
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 let
   N = 100
   sites = siteinds("S=1",N)
@@ -56,7 +56,7 @@ end
 The first two lines
 
 ```@example siteinds; continued=true
-using ITensors # hide
+using ITensors, ITensorMPS
 N = 100
 sites = siteinds("S=1",N)
 ```

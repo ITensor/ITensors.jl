@@ -1,4 +1,4 @@
-using ITensors
+using ITensors, ITensorMPS
 using OptimKit
 using Zygote
 
