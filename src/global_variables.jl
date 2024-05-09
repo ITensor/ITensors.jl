@@ -167,24 +167,6 @@ $(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
 disable_threaded_blocksparse() = NDTensors._disable_threaded_blocksparse()
 
 #
-# Turn enable or disable combining QN ITensors before contracting
-#
-
-const _using_combine_contract = Ref(false)
-
-using_combine_contract() = _using_combine_contract[]
-
-function enable_combine_contract()
-  _using_combine_contract[] = true
-  return nothing
-end
-
-function disable_combine_contract()
-  _using_combine_contract[] = false
-  return nothing
-end
-
-#
 # Turn debug checks on and off
 #
 
