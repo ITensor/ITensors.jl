@@ -1,13 +1,10 @@
 
 # global_variables.jl
-@deprecate disable_combine_contract!() ITensors.disable_combine_contract()
 @deprecate disable_tblis!() ITensors.disable_tblis()
 @deprecate disable_warn_order!() ITensors.disable_warn_order()
-@deprecate enable_combine_contract!() ITensors.enable_combine_contract()
 @deprecate enable_tblis!() ITensors.enable_tblis()
 @deprecate reset_warn_order!() ITensors.reset_warn_order()
 @deprecate set_warn_order!(N) ITensors.set_warn_order(N)
-@deprecate use_combine_contract() ITensors.using_combine_contract()
 @deprecate use_debug_checks() ITensors.using_debug_checks()
 
 # index.jl
