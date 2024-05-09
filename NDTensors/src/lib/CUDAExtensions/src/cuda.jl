@@ -1,6 +1,6 @@
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 using NDTensors.GPUArraysCoreExtensions: storagemode
-# Implemented in `ITensorGPU` and NDTensorsCUDAExt
+# Implemented in NDTensorsCUDAExt
 function cu end
 
 ## Here we need an CuArrayAdaptor because the CuArrayAdaptor provided by CUDA
