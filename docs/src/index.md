@@ -3,37 +3,13 @@
 ITensor is a library for rapidly creating correct and efficient
 tensor network algorithms.
 
-| **Documentation**|**Citation**|**Build Status**|
-|:----------------:|:----------:|:--------------:|
-| [![docs][docs-dev-img]][docs-dev-url]|[![SciPost][citation-img]][citation-url] [![arXiv][preprint-img]][preprint-url] |[![Tests][tests-img]][tests-url]|
+| **Documentation**|**Citation**|
+|:----------------:|:----------:|
+|[![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://itensor.github.io/ITensors.jl/dev/)|[![SciPost](https://img.shields.io/badge/SciPost-10.21468-blue.svg)](https://scipost.org/SciPostPhysCodeb.4) [![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
 
 |**Version**|**Download Statistics**|**Style Guide**|**License**|
 |:---------:|:---------------------:|:-------------:|:---------:|
-|[![version][version-img]][version-url]|[![ITensor Downloads][downloads-img]][downloads-url]|[![Code Style: Blue][codestyle-img]][codestyle-url]|[![license][license-img]][license-url]|
-
-[docs-dev-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-dev-url]: https://itensor.github.io/ITensors.jl/dev
-
-[citation-img]: https://img.shields.io/badge/SciPost-10.21468-blue.svg
-[citation-url]: https://scipost.org/SciPostPhysCodeb.4
-
-[preprint-img]: https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg
-[preprint-url]: https://arxiv.org/abs/2007.14822
-
-[tests-img]: https://github.com/ITensor/ITensors.jl/workflows/Run+ITensorMPS+tests+(Ubuntu)/badge.svg
-[tests-url]: https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ARun+ITensorMPS+tests+(Ubuntu)
-
-[version-img]: https://juliahub.com/docs/ITensors/version.svg
-[version-url]: https://juliahub.com/ui/Packages/ITensors/P3pqL
-
-[downloads-img]: https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FITensors&query=total_requests&suffix=%2Fmonth&label=Downloads
-[downloads-url]: http://juliapkgstats.com/pkg/ITensors
-
-[codestyle-img]: https://img.shields.io/badge/code%20style-blue-4495d1.svg
-[codestyle-url]: https://github.com/invenia/BlueStyle
-
-[license-img]: https://img.shields.io/badge/License-Apache_2.0-blue.svg
-[license-url]: https://github.com/ITensor/ITensors.jl/blob/main/LICENSE
+|[![version](https://juliahub.com/docs/ITensors/version.svg)](https://juliahub.com/ui/Packages/ITensors/P3pqL)|[![ITensor Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FITensors&query=total_requests&suffix=%2Fmonth&label=Downloads)](http://juliapkgstats.com/pkg/ITensors)|[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|[![license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/ITensor/ITensors.jl/blob/main/LICENSE)|
 
 The source code for ITensor can be found [on Github](https://github.com/ITensor/ITensors.jl).
 
