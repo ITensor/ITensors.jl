@@ -210,8 +210,7 @@ state (MPS) by multiplying it with an operator that acts
 only on a single site. This is actually a very straightforward
 operation and this formula shows you how to do it in ITensor.
 
-Say we have an operator ``G^{s'_3}_{s_3}`` which
-which acts non-trivially on site 3 of our MPS `psi`
+Say we have an operator ``G^{s'_3}_{s_3}`` which acts non-trivially on site 3 of our MPS `psi`
 as in the following diagram:
 
 ![](mps_onesite_figures/operator_app_mps.png)
