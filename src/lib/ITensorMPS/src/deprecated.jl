@@ -1,6 +1,6 @@
 # mps/abstractmps.jl
 @deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
-@deprecate store(m::AbstractMPS) data(m)
+@deprecate store(m::AbstractMPS) data(m) false
 @deprecate replacesites!(args...; kwargs...) ITensors.replace_siteinds!(args...; kwargs...)
 @deprecate applyMPO(args...; kwargs...) contract(args...; kwargs...)
 @deprecate applympo(args...; kwargs...) contract(args...; kwargs...)

@@ -1,4 +1,3 @@
-
 # global_variables.jl
 @deprecate disable_tblis!() ITensors.disable_tblis()
 @deprecate disable_warn_order!() ITensors.disable_warn_order()
