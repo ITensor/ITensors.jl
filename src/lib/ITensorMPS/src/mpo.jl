@@ -1,4 +1,5 @@
 using Adapt: adapt
+using LinearAlgebra: dot
 using Random: Random
 using ..SiteTypes: SiteTypes, siteind, siteinds
 

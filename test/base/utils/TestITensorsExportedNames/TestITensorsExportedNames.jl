@@ -33,7 +33,6 @@ const ITENSORS_EXPORTED_NAMES = [
   :DMRGMeasurement,
   :DMRGObserver,
   :ITensor,
-  :ITensorMPS,
   :ITensors,
   :Index,
   :IndexSet,

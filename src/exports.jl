@@ -1,3 +1,5 @@
+using LinearAlgebra: ⋅
+export ⋅
 export
   # From external modules
   # LinearAlgebra
@@ -124,7 +126,6 @@ export
   diagitensor,
   diagITensor,
   directsum,
-  dot,
   eachnzblock,
   firstind,
   filterinds,

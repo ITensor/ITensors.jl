@@ -51,6 +51,7 @@ export
   MPS,
   # Methods
   ⋅,
+  dot,
   correlation_matrix,
   expect,
   inner,
