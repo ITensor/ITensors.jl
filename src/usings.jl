@@ -16,7 +16,6 @@ using NDTensors.RankFactorization: Spectrum, eigs, entropy, truncerror
 using Pkg
 using Printf
 using Random
-using Reexport
 using SerializedElementArrays
 using StaticArrays
 using TimerOutputs

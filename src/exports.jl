@@ -124,7 +124,6 @@ export
   diagitensor,
   diagITensor,
   directsum,
-  dot,
   eachnzblock,
   firstind,
   filterinds,

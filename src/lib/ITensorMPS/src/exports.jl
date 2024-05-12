@@ -1,3 +1,4 @@
+using LinearAlgebra: ⋅
 export
   # dmrg.jl
   dmrg,
@@ -51,6 +52,7 @@ export
   MPS,
   # Methods
   ⋅,
+  dot,
   correlation_matrix,
   expect,
   inner,
