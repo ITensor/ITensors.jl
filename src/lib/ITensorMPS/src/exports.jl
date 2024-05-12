@@ -1,3 +1,4 @@
+using LinearAlgebra: ⋅
 export
   # dmrg.jl
   dmrg,

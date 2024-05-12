@@ -1,5 +1,3 @@
-using LinearAlgebra: ⋅
-export ⋅
 export
   # From external modules
   # LinearAlgebra
