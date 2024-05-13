@@ -110,22 +110,23 @@ function Base.resize!(a::SparseArrayDOK{<:Any,N}, new_size::NTuple{N,Integer}) w
   return a
 end
 
-function setindex_maybe_grow!(
-  a::SparseArrayDOK{<:Any,N}, value, i1::Int, I::Int...
-) where {N}
-  index = (i1, I...)
-  if any(index .> size(a))
-    resize!(a, max.(index, size(a)))
+function setindex_maybe_grow!(a::SparseArrayDOK{<:Any,N}, value, I::Vararg{Int,N}) where {N}
+  if any(I .> size(a))
+    resize!(a, max.(I, size(a)))
   end
-  a[index...] = value
+  a[I...] = value
   return a
 end
 
 macro maybe_grow(ex)
+  if ex.head != :(=)
+    error("@maybe_grow must be used with setindex! syntax (@maybe_grow a[inds] = value)")
+  end
   arr_name = esc(ex.args[1].args[1])
   index = esc(ex.args[1].args[2:end])
   value = esc(ex.args[2])
-  quote
-    SparseArrayDOKs.setindex_maybe_grow!($arr_name, $value, $index...)
+  e = quote
+    setindex_maybe_grow!($arr_name, $value, $index...)
   end
+  return e
 end
