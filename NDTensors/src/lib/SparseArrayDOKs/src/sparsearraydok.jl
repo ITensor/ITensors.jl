@@ -4,7 +4,7 @@ using ..SparseArrayInterface:
   SparseArrayInterface, AbstractSparseArray, getindex_zero_function
 
 # TODO: Parametrize by `data`?
-struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
+mutable struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
   data::Dictionary{CartesianIndex{N},T}
   dims::NTuple{N,Int}
   zero::Zero
@@ -103,4 +103,29 @@ SparseArrayDOK{T}(a::AbstractArray) where {T} = SparseArrayDOK{T,ndims(a)}(a)
 
 function SparseArrayDOK{T,N}(a::AbstractArray) where {T,N}
   return SparseArrayInterface.sparse_convert(SparseArrayDOK{T,N}, a)
+end
+
+function Base.resize!(a::SparseArrayDOK{<:Any,N}, new_size::NTuple{N,Integer}) where {N}
+  a.dims = new_size
+  return a
+end
+
+function setindex_maybe_grow!(
+  a::SparseArrayDOK{<:Any,N}, value, i1::Int, I::Int...
+) where {N}
+  index = (i1, I...)
+  if any(index .> size(a))
+    resize!(a, max.(index, size(a)))
+  end
+  a[index...] = value
+  return a
+end
+
+macro maybe_grow(ex)
+  arr_name = esc(ex.args[1].args[1])
+  index = esc(ex.args[1].args[2:end])
+  value = esc(ex.args[2])
+  quote
+    SparseArrayDOKs.setindex_maybe_grow!($arr_name, $value, $index...)
+  end
 end
