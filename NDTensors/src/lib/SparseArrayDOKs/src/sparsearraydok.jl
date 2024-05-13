@@ -1,5 +1,6 @@
 using Accessors: @set
 using Dictionaries: Dictionary, set!
+using MacroTools: @capture
 using ..SparseArrayInterface:
   SparseArrayInterface, AbstractSparseArray, getindex_zero_function
 
@@ -124,8 +125,6 @@ macro maybe_grow(ex)
       "@maybe_grow must be used with setindex! syntax (as @maybe_grow a[i,j,...] = value)"
     )
   end
-  arr_name = esc(ex.args[1].args[1])
-  indices = esc(ex.args[1].args[2:end])
-  value = esc(ex.args[2])
-  return :(setindex_maybe_grow!($arr_name, $value, $indices...))
+  @capture(ex, array_[indices__] = value_)
+  return :(setindex_maybe_grow!($(esc(array)), $value, $indices...))
 end
