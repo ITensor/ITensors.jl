@@ -119,8 +119,10 @@ function setindex_maybe_grow!(a::SparseArrayDOK{<:Any,N}, value, I::Vararg{Int,N
 end
 
 macro maybe_grow(ex)
-  if ex.head != :(=)
-    error("@maybe_grow must be used with setindex! syntax (@maybe_grow a[inds] = value)")
+  if !(ex.head == :(=) && ex.args[1] isa Expr && ex.args[1].head == :(ref))
+    error(
+      "@maybe_grow must be used with setindex! syntax (e.g. as @maybe_grow a[i,j,...] = value)",
+    )
   end
   arr_name = esc(ex.args[1].args[1])
   index = esc(ex.args[1].args[2:end])
