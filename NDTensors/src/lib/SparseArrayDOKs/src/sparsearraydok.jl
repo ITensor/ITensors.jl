@@ -121,14 +121,11 @@ end
 macro maybe_grow(ex)
   if !(ex.head == :(=) && ex.args[1] isa Expr && ex.args[1].head == :(ref))
     error(
-      "@maybe_grow must be used with setindex! syntax (e.g. as @maybe_grow a[i,j,...] = value)",
+      "@maybe_grow must be used with setindex! syntax (as @maybe_grow a[i,j,...] = value)"
     )
   end
   arr_name = esc(ex.args[1].args[1])
-  index = esc(ex.args[1].args[2:end])
+  indices = esc(ex.args[1].args[2:end])
   value = esc(ex.args[2])
-  e = quote
-    setindex_maybe_grow!($arr_name, $value, $index...)
-  end
-  return e
+  return :(setindex_maybe_grow!($arr_name, $value, $indices...))
 end
