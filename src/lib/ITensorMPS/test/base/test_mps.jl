@@ -1766,11 +1766,11 @@ end
       # Reference state |110⟩
       ψ110 = MPS(s, n -> n == 1 || n == 2 ? "1" : "0")
 
-      function ITensors.op(::OpName"CdagC", ::SiteType, s1::Index, s2::Index)
+      function ITensors.op(::OpName"CdagC1", ::SiteType, s1::Index, s2::Index)
         return op("Cdag", s1) * op("C", s2)
       end
 
-      os = [("CdagC", 1, 3)]
+      os = [("CdagC1", 1, 3)]
       Os = ops(os, s)
 
       # Results in -|110⟩
@@ -1811,7 +1811,7 @@ end
       cutoff!(sweeps, 1E-12)
       energy, ψ0 = dmrg(H, ψ0, sweeps; outputlevel=0)
 
-      function ITensors.op(::OpName"CdagC", ::SiteType, s1::Index, s2::Index)
+      function ITensors.op(::OpName"CdagC2", ::SiteType, s1::Index, s2::Index)
         return op("Cdag", s1) * op("C", s2)
       end
 
@@ -1822,7 +1822,7 @@ end
       end
 
       for i in 1:(N - 1), j in (i + 1):N
-        G1 = op("CdagC", s, i, j)
+        G1 = op("CdagC2", s, i, j)
 
         @disable_warn_order begin
           G2 = op("Cdag", s, i)
