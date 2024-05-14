@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using Combinatorics
 using ITensors
 using NDTensors: scalartype
@@ -852,4 +853,5 @@ end
     @test inner(H, H) ≈ inner_add((α₁, H₁), (-α₂, H₂))
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
   end
+end
 end
