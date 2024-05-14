@@ -5,10 +5,13 @@ using ..SparseArrayInterface:
   SparseArrayInterface, AbstractSparseArray, getindex_zero_function
 
 # TODO: Parametrize by `data`?
-mutable struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
+struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
   data::Dictionary{CartesianIndex{N},T}
-  dims::NTuple{N,Int}
+  dims::Ref{NTuple{N,Int}}
   zero::Zero
+  function SparseArrayDOK{T,N,Zero}(data, dims::NTuple{N,Int}, zero) where {T,N,Zero}
+    return new{T,N,Zero}(data, Ref(dims), zero)
+  end
 end
 
 # Constructors
@@ -73,7 +76,7 @@ function SparseArrayDOK{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}, zero) w
 end
 
 # Base `AbstractArray` interface
-Base.size(a::SparseArrayDOK) = a.dims
+Base.size(a::SparseArrayDOK) = a.dims[]
 
 SparseArrayInterface.getindex_zero_function(a::SparseArrayDOK) = a.zero
 function SparseArrayInterface.set_getindex_zero_function(a::SparseArrayDOK, f)
@@ -107,7 +110,7 @@ function SparseArrayDOK{T,N}(a::AbstractArray) where {T,N}
 end
 
 function Base.resize!(a::SparseArrayDOK{<:Any,N}, new_size::NTuple{N,Integer}) where {N}
-  a.dims = new_size
+  a.dims[] = new_size
   return a
 end
 
@@ -117,13 +120,6 @@ function setindex_maybe_grow!(a::SparseArrayDOK{<:Any,N}, value, I::Vararg{Int,N
   end
   a[I...] = value
   return a
-end
-
-function check_siteindex!_expr(expr, macroname=:macro)
-  try
-    @assert expr.head == :(=) && expr.args[1] isa Expr && expr.args[1].head == :(ref)
-  catch
-  end
 end
 
 function is_setindex!_expr(expr::Expr)
