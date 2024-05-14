@@ -582,8 +582,8 @@ function dense(A::ITensor)
 end
 
 """
-    randomITensor([rng=default_rng(), ::Type{ElT <: Number} = Float64, ]inds)
-    randomITensor([rng=default_rng(), ::Type{ElT <: Number} = Float64, ]inds::Index...)
+    randomITensor([rng=Random.default_rng(), ][::Type{ElT <: Number} = Float64, ]inds)
+    randomITensor([rng=Random.default_rng(), ][::Type{ElT <: Number} = Float64, ]inds::Index...)
 
 Construct an ITensor with type `ElT` and indices `inds`, whose elements are
 normally distributed random numbers. If the element type is not specified,
