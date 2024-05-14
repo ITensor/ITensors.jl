@@ -69,6 +69,10 @@ function Tensor(as::AliasStyle, storage::TensorStorage, inds::Tuple)
   )
 end
 
+function Tensor(as::NeverAlias, storage::TensorStorage, inds::Tuple)
+  return Tensor(AllowAlias(), copy(storage), inds)
+end
+
 # Automatically convert to Tuple if the indices are not a Tuple
 # already (like a Vector). In the future this may be lifted
 # to allow for very large tensor orders in which case Tuple
