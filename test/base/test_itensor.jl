@@ -1805,12 +1805,21 @@ end
     A = randomITensor(i1, i2, j)
     B = randomITensor(i1, i2, k)
     C = randomITensor(i1, i2, l)
+    D = ITensor(i1, i2, k)
 
     S, s = directsum(A => index_op(j), B => index_op(k))
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
 
     S, s = (A => index_op(j)) ⊕ (B => index_op(k))
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, s = (A => index_op(j)) ⊕ (D => index_op(k))
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, s = (D => index_op(k)) ⊕ (A => index_op(j))
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
 
