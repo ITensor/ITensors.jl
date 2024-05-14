@@ -186,7 +186,7 @@ function ChainRulesCore.rrule(
   end
   y = typeof(x)(y_data)
   if !set_limits
-    y = ITensorMPS.set_ortho_lims(y, ortho_lims(x))
+    y = ITensorMPS.set_ortho_lims(y, ITensorMPS.ortho_lims(x))
   end
   return y, map_pullback
 end
