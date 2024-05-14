@@ -119,6 +119,15 @@ using SparseArrays: SparseMatrixCSC, nnz
     @maybe_grow v[5] = 50
     @test size(v) == (5,)
     @test v[5] == 50
+    # Test setting from a variable (to test macro escaping)
+    i = 6
+    val = 60
+    @maybe_grow v[i] = val
+    @test v[i] == val
+    i, j = 1, 2
+    val = 120
+    @maybe_grow a[i, j] = val
+    @test a[i, j] == val
   end
   @testset "Test Lower Level Constructor" begin
     d = Dictionary{CartesianIndex{2},elt}()
