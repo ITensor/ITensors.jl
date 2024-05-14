@@ -5,6 +5,7 @@
 # Custom zero type
 # Slicing
 
+using Dictionaries: Dictionary
 using Test: @test, @testset, @test_broken
 using NDTensors.SparseArrayDOKs:
   SparseArrayDOKs, SparseArrayDOK, SparseMatrixDOK, @maybe_grow
@@ -118,6 +119,12 @@ using SparseArrays: SparseMatrixCSC, nnz
     @maybe_grow v[5] = 50
     @test size(v) == (5,)
     @test v[5] == 50
+  end
+  @testset "Test Lower Level Constructor" begin
+    d = Dictionary{CartesianIndex{2},elt}()
+    a = SparseArrayDOK(d, (2, 2), zero(elt))
+    a[1, 2] = 12.0
+    @test a[1, 2] == 12.0
   end
 end
 end

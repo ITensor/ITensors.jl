@@ -15,6 +15,10 @@ struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
 end
 
 # Constructors
+function SparseArrayDOK(data, dims::NTuple{N,Int}, zero) where {N}
+  return SparseArrayDOK{eltype(data),N,typeof(zero)}(data, dims, zero)
+end
+
 function SparseArrayDOK{T,N,Zero}(dims::Tuple{Vararg{Int}}, zero) where {T,N,Zero}
   return SparseArrayDOK{T,N,Zero}(default_data(T, N), dims, zero)
 end
