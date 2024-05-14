@@ -1,18 +1,8 @@
 using Adapt: adapt
 using ChainRulesCore: ChainRulesCore, HasReverseMode, NoTangent, RuleConfig, rrule_via_ad
 using ITensors:
-  ITensors,
-  ITensor,
-  apply,
-  dag,
-  hassameinds,
-  inds,
-  inner,
-  itensor,
-  mapprime,
-  replaceprime,
-  swapprime
-using ITensors.ITensorMPS: MPO, MPS, siteinds
+  ITensors, ITensor, dag, hassameinds, inds, itensor, mapprime, replaceprime, swapprime
+using ITensors.ITensorMPS: ITensorMPS, MPO, MPS, apply, inner, siteinds
 using NDTensors: datatype
 
 function ChainRulesCore.rrule(
@@ -196,7 +186,7 @@ function ChainRulesCore.rrule(
   end
   y = typeof(x)(y_data)
   if !set_limits
-    y = ITensors.set_ortho_lims(y, ortho_lims(x))
+    y = ITensorMPS.set_ortho_lims(y, ortho_lims(x))
   end
   return y, map_pullback
 end
