@@ -123,14 +123,26 @@ function check_siteindex!_expr(expr, macroname=:macro)
   try
     @assert expr.head == :(=) && expr.args[1] isa Expr && expr.args[1].head == :(ref)
   catch
-    error(
-      "$macroname must be used with setindex! syntax (as @$macroname a[i,j,...] = value)"
-    )
   end
 end
 
+function is_setindex!_expr(expr::Expr)
+  return is_assignment_expr(expr) && is_getindex_expr(first(expr.args))
+end
+is_setindex!_expr(x) = false
+
+is_getindex_expr(expr::Expr) = (expr.head === :ref)
+is_getindex_expr(x) = false
+
+is_assignment_expr(expr::Expr) = (expr.head === :(=))
+is_assignment_expr(expr) = false
+
 macro maybe_grow(expr)
-  check_siteindex!_expr(expr, :maybe_grow)
+  if !is_setindex!_expr(expr)
+    error(
+      "@maybe_grow must be used with setindex! syntax (as @maybe_grow a[i,j,...] = value)"
+    )
+  end
   @capture(expr, array_[indices__] = value_)
   return :(setindex_maybe_grow!($(esc(array)), $value, $indices...))
 end
