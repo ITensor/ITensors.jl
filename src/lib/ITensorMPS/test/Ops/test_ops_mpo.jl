@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using Test
 using ITensors
 using ITensors.Ops
@@ -94,4 +95,5 @@ end
   H² = MPO(ℋ², s)
   @test norm(replaceprime(H' * H, 2 => 1) - H²) ≈ 0 atol = 1e-14
   @test norm(H(H) - H²) ≈ 0 atol = 1e-14
+end
 end

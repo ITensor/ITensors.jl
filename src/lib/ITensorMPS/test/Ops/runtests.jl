@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using ITensors
 using Test
 
@@ -13,4 +14,5 @@ ITensors.disable_threaded_blocksparse()
     println("Running $(@__DIR__)/$filename")
     @time include(filename)
   end
+end
 end
