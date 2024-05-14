@@ -3,28 +3,32 @@ using ITensors: contract, hassameinds, inner, mapprime
 using ITensors.ITensorMPS: MPO, MPS, firstsiteinds, siteinds
 using LinearAlgebra: tr
 
-function ChainRulesCore.rrule(::typeof(contract), x1::MPO, x2::MPO; kwargs...)
-  y = contract(x1, x2; kwargs...)
+function ChainRulesCore.rrule(
+  ::typeof(contract), alg::Algorithm, x1::MPO, x2::MPO; kwargs...
+)
+  y = contract(alg, x1, x2; kwargs...)
   function contract_pullback(ȳ)
-    x̄1 = contract(ȳ, dag(x2); kwargs...)
-    x̄2 = contract(dag(x1), ȳ; kwargs...)
+    x̄1 = contract(alg, ȳ, dag(x2); kwargs...)
+    x̄2 = contract(alg, dag(x1), ȳ; kwargs...)
     return (NoTangent(), x̄1, x̄2)
   end
   return y, contract_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(contract), x1::MPO, x2::MPS; kwargs...)
-  y = contract(x1, x2; kwargs...)
+function ChainRulesCore.rrule(
+  ::typeof(contract), alg::Algorithm, x1::MPO, x2::MPS; kwargs...
+)
+  y = contract(alg, x1, x2; kwargs...)
   function contract_pullback(ȳ)
     x̄1 = _contract(MPO, ȳ, dag(x2); kwargs...)
-    x̄2 = contract(dag(x1), ȳ; kwargs...)
+    x̄2 = contract(alg, dag(x1), ȳ; kwargs...)
     return (NoTangent(), x̄1, x̄2)
   end
   return y, contract_pullback
 end
 
 function ChainRulesCore.rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
-  return ChainRulesCore.rrule(contract, x1, x2; kwargs...)
+  return ChainRulesCore.rrule(contract, alg, x1, x2; kwargs...)
 end
 
 function ChainRulesCore.rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
