@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using ITensors, HDF5, Test
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
@@ -35,4 +36,5 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   # Clean up the test hdf5 file
   #
   rm("data.h5"; force=true)
+end
 end

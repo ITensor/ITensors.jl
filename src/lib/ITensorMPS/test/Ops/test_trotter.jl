@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using Test
 using ITensors
 using ITensors.Ops
@@ -35,4 +36,5 @@ end
       @test prod(U(ψ₀)) ≈ Uʳᵉᶠψ₀ atol = atol
     end
   end
+end
 end

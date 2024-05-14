@@ -596,8 +596,12 @@ Equivalent to `replaceprime(contract(A, x; kwargs...), 2 => 1)`.
 
 See also [`contract`](@ref) for details about the arguments available.
 """
-function apply(A::MPO, ψ::MPS; kwargs...)
-  Aψ = contract(A, ψ; kwargs...)
+function apply(A::MPO, ψ::MPS; alg=Algorithm"densitymatrix"(), kwargs...)
+  return apply(Algorithm(alg), A, ψ; kwargs...)
+end
+
+function apply(alg::Algorithm, A::MPO, ψ::MPS; kwargs...)
+  Aψ = contract(alg, A, ψ; kwargs...)
   return replaceprime(Aψ, 1 => 0)
 end
 

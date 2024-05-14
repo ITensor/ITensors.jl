@@ -260,11 +260,11 @@ import ITensors: Out, In
       # Reference state |110⟩
       ψ110 = MPS(s, n -> n == 1 || n == 2 ? "1" : "0")
 
-      function ITensors.op(::OpName"CdagC", ::SiteType, s1::Index, s2::Index)
+      function ITensors.op(::OpName"CdagC3", ::SiteType, s1::Index, s2::Index)
         return op("Cdag", s1) * op("C", s2)
       end
 
-      os = [("CdagC", 1, 3)]
+      os = [("CdagC3", 1, 3)]
       Os = ops(os, s)
 
       # Results in -|110⟩

@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using ITensors, Test, Random, JLD2
 using NDTensors: scalartype
 
@@ -1248,4 +1249,5 @@ end
     os += (5.555, "Cdag", 4, "Cdag", 4, "C", 2, "C", 2)
     @test_nowarn H = MPO(os, sites)
   end
+end
 end
