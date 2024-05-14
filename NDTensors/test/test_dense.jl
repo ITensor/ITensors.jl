@@ -38,6 +38,11 @@ NDTensors.dim(i::MyInd) = i.dim
 
       Aview = A[2:3, 2:3]
       @test dims(Aview) == (2, 2)
+      ## Added for issue 1431 create a tensor from 
+      ## a sliced view of another tensor
+      Acopy = Tensor(NDTensors.storage(Aview), (1,4))
+      @test @allowscalar data(Acopy) == data(Aview)
+      @test dims(Acopy) == (1,4)
 
       B = dev(Tensor(elt, undef, (3, 4)))
       randn!(B)
