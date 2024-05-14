@@ -119,12 +119,18 @@ function setindex_maybe_grow!(a::SparseArrayDOK{<:Any,N}, value, I::Vararg{Int,N
   return a
 end
 
-macro maybe_grow(ex)
-  if !(ex.head == :(=) && ex.args[1] isa Expr && ex.args[1].head == :(ref))
+function check_siteindex!_expr(expr, macroname=:macro)
+  try
+    @assert expr.head == :(=) && expr.args[1] isa Expr && expr.args[1].head == :(ref)
+  catch
     error(
-      "@maybe_grow must be used with setindex! syntax (as @maybe_grow a[i,j,...] = value)"
+      "$macroname must be used with setindex! syntax (as @$macroname a[i,j,...] = value)"
     )
   end
-  @capture(ex, array_[indices__] = value_)
+end
+
+macro maybe_grow(expr)
+  check_siteindex!_expr(expr, :maybe_grow)
+  @capture(expr, array_[indices__] = value_)
   return :(setindex_maybe_grow!($(esc(array)), $value, $indices...))
 end
