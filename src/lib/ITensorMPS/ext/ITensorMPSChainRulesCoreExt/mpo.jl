@@ -1,5 +1,5 @@
 using ChainRulesCore: ChainRulesCore, NoTangent
-using ITensors: contract, hassameinds, inner, mapprime
+using ITensors: Algorithm, contract, hassameinds, inner, mapprime
 using ITensors.ITensorMPS: MPO, MPS, firstsiteinds, siteinds
 using LinearAlgebra: tr
 
