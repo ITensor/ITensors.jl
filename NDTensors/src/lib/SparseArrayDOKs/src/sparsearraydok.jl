@@ -144,5 +144,5 @@ macro maybe_grow(expr)
     )
   end
   @capture(expr, array_[indices__] = value_)
-  return :(setindex_maybe_grow!($(esc(array)), $value, $indices...))
+  return :(setindex_maybe_grow!($(esc(array)), $(esc(value)), $(esc.(indices)...)))
 end
