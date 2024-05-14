@@ -1,7 +1,17 @@
 using Adapt: adapt
 using ChainRulesCore: ChainRulesCore, HasReverseMode, NoTangent, RuleConfig
 using ITensors:
-  ITensor, apply, dag, hassameinds, inds, inner, itensor, mapprime, replaceprime, swapprime
+  ITensors,
+  ITensor,
+  apply,
+  dag,
+  hassameinds,
+  inds,
+  inner,
+  itensor,
+  mapprime,
+  replaceprime,
+  swapprime
 using ITensors.ITensorMPS: MPO, MPS, siteinds
 using NDTensors: datatype
 
