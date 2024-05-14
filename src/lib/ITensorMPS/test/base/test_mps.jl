@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using Combinatorics
 using ITensors
 using ITensors: ITensorMPS
@@ -2005,4 +2006,5 @@ end
     @test ITensorMPS.hasdefaultlinktags(Mt)
     @test norm(M - Mt) ≈ 0 atol = 1e-12
   end
+end
 end
