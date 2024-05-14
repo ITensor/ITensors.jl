@@ -1,5 +1,5 @@
 using Adapt: adapt
-using ChainRulesCore: ChainRulesCore, HasReverseMode, NoTangent, RuleConfig
+using ChainRulesCore: ChainRulesCore, HasReverseMode, NoTangent, RuleConfig, rrule_via_ad
 using ITensors:
   ITensors,
   ITensor,
