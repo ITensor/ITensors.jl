@@ -5,8 +5,10 @@
 # Custom zero type
 # Slicing
 
+using Dictionaries: Dictionary
 using Test: @test, @testset, @test_broken
-using NDTensors.SparseArrayDOKs: SparseArrayDOK, SparseMatrixDOK
+using NDTensors.SparseArrayDOKs:
+  SparseArrayDOKs, SparseArrayDOK, SparseMatrixDOK, @maybe_grow
 using NDTensors.SparseArrayInterface: storage_indices, nstored
 using SparseArrays: SparseMatrixCSC, nnz
 @testset "SparseArrayDOK (eltype=$elt)" for elt in
@@ -93,6 +95,36 @@ using SparseArrays: SparseMatrixCSC, nnz
         end
       end
     end
+  end
+  @testset "Maybe Grow Feature" begin
+    a = SparseArrayDOK{elt,2}((0, 0))
+    SparseArrayDOKs.setindex_maybe_grow!(a, 230, 2, 3)
+    @test size(a) == (2, 3)
+    @test a[2, 3] == 230
+    # Test @maybe_grow macro
+    @maybe_grow a[5, 5] = 550
+    @test size(a) == (5, 5)
+    @test a[2, 3] == 230
+    @test a[5, 5] == 550
+    # Test that size remains same
+    # if we set at an index smaller than
+    # the maximum size:
+    @maybe_grow a[3, 4] = 340
+    @test size(a) == (5, 5)
+    @test a[2, 3] == 230
+    @test a[5, 5] == 550
+    @test a[3, 4] == 340
+    # Test vector case
+    v = SparseArrayDOK{elt,1}((0,))
+    @maybe_grow v[5] = 50
+    @test size(v) == (5,)
+    @test v[5] == 50
+  end
+  @testset "Test Lower Level Constructor" begin
+    d = Dictionary{CartesianIndex{2},elt}()
+    a = SparseArrayDOK(d, (2, 2), zero(elt))
+    a[1, 2] = 12.0
+    @test a[1, 2] == 12.0
   end
 end
 end
