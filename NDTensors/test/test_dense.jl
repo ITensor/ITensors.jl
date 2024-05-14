@@ -41,7 +41,7 @@ NDTensors.dim(i::MyInd) = i.dim
       ## Added for issue 1431 create a tensor from 
       ## a sliced view of another tensor
       Acopy = Tensor(NDTensors.storage(Aview), (1, 4))
-      @test @allowscalar data(Acopy) == data(Aview)
+      @test NDTensors.cpu(data(Acopy)) == NDTensors.cpu(data(Aview))
       @test dims(Acopy) == (1, 4)
 
       B = dev(Tensor(elt, undef, (3, 4)))
