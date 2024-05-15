@@ -261,10 +261,14 @@ function directsum_projectors(
   return D1, D2
 end
 
-function directsum_projectors(::Type{<:EmptyNumber}, ::Type{<:EmptyNumber}, ::Index, ::Index, ::Index)
-  error("It is not possible to call directsum on two tensors with element type EmptyNumber.
-  If you are inputting ITensors constructor like ITensor(i, j), try specifying the element type, 
-  e.g. ITensor(Float64, i, j), or filling them with zero value, e.g. ITensor(0.0, i, j).")
+function directsum_projectors(
+  ::Type{<:EmptyNumber}, ::Type{<:EmptyNumber}, ::Index, ::Index, ::Index
+)
+  return error(
+    "It is not possible to call directsum on two tensors with element type EmptyNumber.
+If you are inputting ITensors constructor like ITensor(i, j), try specifying the element type, 
+e.g. ITensor(Float64, i, j), or filling them with zero value, e.g. ITensor(0.0, i, j).",
+  )
 end
 
 function check_directsum_inds(A::ITensor, I, B::ITensor, J)
