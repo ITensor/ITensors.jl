@@ -22,7 +22,7 @@
 @deprecate randomMPO(args...; kwargs...) random_mpo(args...; kwargs...)
 
 # mps/mps.jl
-@deprecate randomMPS(args...; kwargs...) = random_mps(args...; kwargs...)
+@deprecate randomMPS(args...; kwargs...) random_mps(args...; kwargs...)
 
 # Pass throughs of old name to new name:
 
