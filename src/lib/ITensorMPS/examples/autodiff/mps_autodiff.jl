@@ -31,7 +31,7 @@ h = 0.5
 
 # Loss function only works with `Vector{ITensor}`,
 # extract with `ITensors.data`.
-ψ0 = ITensors.data(randomMPS(s; linkdims=10))
+ψ0 = ITensors.data(random_mps(s; linkdims=10))
 H = ITensors.data(MPO(ising(n; J, h), s))
 
 loss(ψ) = loss(H, ψ)

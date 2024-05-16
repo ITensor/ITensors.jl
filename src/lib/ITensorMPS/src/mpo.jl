@@ -123,17 +123,17 @@ end
 
 MPO(sites::Vector{<:Index}, op::Matrix{ElT}) where {ElT<:Number} = MPO(ElT, sites, op)
 
-function randomMPO(sites::Vector{<:Index}, m::Int=1)
-  return randomMPO(Random.default_rng(), sites, m)
+function random_mpo(sites::Vector{<:Index}, m::Int=1)
+  return random_mpo(Random.default_rng(), sites, m)
 end
 
-function randomMPO(rng::AbstractRNG, sites::Vector{<:Index}, m::Int=1)
+function random_mpo(rng::AbstractRNG, sites::Vector{<:Index}, m::Int=1)
   M = MPO(sites, "Id")
   for i in eachindex(sites)
     randn!(rng, M[i])
     normalize!(M[i])
   end
-  m > 1 && throw(ArgumentError("randomMPO: currently only m==1 supported"))
+  m > 1 && throw(ArgumentError("random_mpo: currently only m==1 supported"))
   return M
 end
 
@@ -171,8 +171,8 @@ For example:
 
 ```julia
 s = siteinds("S=1/2", 5)
-x = randomMPS(s)
-y = randomMPS(s)
+x = random_mps(s)
+y = random_mps(s)
 outer(x, y) # Incorrect! Site indices must be unique.
 outer(x', y) # Results in an MPO with pairs of primed and unprimed indices.
 ```
@@ -295,7 +295,7 @@ function inner_mps_mpo_mps_deprecation_warning()
 
  ```julia
  s = siteinds("S=1/2")
- psi = randomMPS(s)
+ psi = random_mps(s)
  H = MPO(s, "Id")
  inner(psi, H, psi)
  ```

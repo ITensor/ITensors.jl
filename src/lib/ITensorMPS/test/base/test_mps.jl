@@ -183,9 +183,9 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     end
   end
 
-  @testset "randomMPS with chi==1" begin
-    phi = randomMPS(sites)
-    phic = randomMPS(ComplexF64, sites)
+  @testset "random_mps with chi==1" begin
+    phi = random_mps(sites)
+    phic = random_mps(ComplexF64, sites)
 
     @test maxlinkdim(phi) == 1
     @test maxlinkdim(phic) == 1
@@ -199,34 +199,34 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test norm(phic[4]) ≈ 1.0
   end
 
-  @testset "randomMPS with chi>1" for linkdims in [1, 4]
-    phi = randomMPS(Float32, sites; linkdims)
+  @testset "random_mps with chi>1" for linkdims in [1, 4]
+    phi = random_mps(Float32, sites; linkdims)
     @test LinearAlgebra.promote_leaf_eltypes(phi) === Float32
     @test all(x -> eltype(x) === Float32, phi)
     @test maxlinkdim(phi) == linkdims
-    phic = randomMPS(ComplexF32, sites; linkdims)
+    phic = random_mps(ComplexF32, sites; linkdims)
     @test LinearAlgebra.promote_leaf_eltypes(phic) === ComplexF32
     @test maxlinkdim(phic) == linkdims
     @test all(x -> eltype(x) === ComplexF32, phic)
   end
 
-  @testset "randomMPS with nonuniform dimensions" begin
+  @testset "random_mps with nonuniform dimensions" begin
     _linkdims = [2, 3, 4, 2, 4, 3, 2, 2, 2]
-    phi = randomMPS(sites; linkdims=_linkdims)
+    phi = random_mps(sites; linkdims=_linkdims)
     @test linkdims(phi) == _linkdims
   end
 
-  @testset "QN randomMPS" begin
+  @testset "QN random_mps" begin
     s = siteinds("S=1/2", 5; conserve_qns=true)
-    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=2)
+    ψ = random_mps(s, n -> isodd(n) ? "↑" : "↓"; linkdims=2)
     @test linkdims(ψ) == [2, 2, 2, 2]
-    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=[2, 3, 2, 2])
+    ψ = random_mps(s, n -> isodd(n) ? "↑" : "↓"; linkdims=[2, 3, 2, 2])
     @test linkdims(ψ) == [2, 3, 2, 2]
   end
 
   @testset "inner different MPS" begin
-    phi = randomMPS(sites)
-    psi = randomMPS(sites)
+    phi = random_mps(sites)
+    psi = random_mps(sites)
     phipsi = dag(phi[1]) * psi[1]
     for j in 2:length(psi)
       phipsi *= dag(phi[j]) * psi[j]
@@ -234,7 +234,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test phipsi[] ≈ inner(phi, psi)
 
     badsites = [Index(2) for n in 1:(length(psi) + 1)]
-    badpsi = randomMPS(badsites)
+    badpsi = random_mps(badsites)
     @test_throws DimensionMismatch inner(phi, badpsi)
   end
 
@@ -243,7 +243,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     c = 2
 
     s = siteinds("S=1/2", n)
-    ψ = c .* randomMPS(s; linkdims=4)
+    ψ = c .* random_mps(s; linkdims=4)
     @test exp(loginner(ψ, ψ)) ≈ c^(2n)
     @test exp(loginner(ψ, -ψ)) ≈ -c^(2n)
 
@@ -252,7 +252,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   end
 
   @testset "broadcasting" begin
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     orthogonalize!(psi, 1)
     @test ortho_lims(psi) == 1:1
     @test dim.(psi) == fill(2, length(psi))
@@ -273,7 +273,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
 
   @testset "copy and deepcopy" begin
     s = siteinds("S=1/2", 3)
-    M1 = randomMPS(s; linkdims=3)
+    M1 = random_mps(s; linkdims=3)
     @test norm(M1) ≈ 1
 
     M2 = deepcopy(M1)
@@ -293,7 +293,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   end
 
   @testset "inner same MPS" begin
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     psidag = dag(psi)
     #ITensors.prime_linkinds!(psidag)
     psipsi = psidag[1] * psi[1]
@@ -306,7 +306,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   @testset "norm MPS (eltype=$elt)" for elt in (
     Float32, Float64, Complex{Float32}, Complex{Float64}
   )
-    psi = randomMPS(elt, sites; linkdims=10)
+    psi = random_mps(elt, sites; linkdims=10)
     psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
     for j in 1:length(psi)
@@ -315,12 +315,12 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test psi²[] ≈ psi ⋅ psi
     @test sqrt(psi²[]) ≈ norm(psi)
 
-    psi = randomMPS(elt, sites; linkdims=10)
+    psi = random_mps(elt, sites; linkdims=10)
     psi .*= 1:length(psi)
     @test norm(psi) ≈ factorial(length(psi))
     @test norm(psi) isa real(elt)
 
-    psi = randomMPS(elt, sites; linkdims=10)
+    psi = random_mps(elt, sites; linkdims=10)
     for j in 1:length(psi)
       psi[j] .*= j
     end
@@ -330,7 +330,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     reset_ortho_lims!(psi)
     @test norm(psi) ≈ factorial(length(psi))
 
-    psi = randomMPS(elt, sites; linkdims=10)
+    psi = random_mps(elt, sites; linkdims=10)
 
     norm_psi = norm(psi)
     @test norm_psi ≈ 1
@@ -358,13 +358,13 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     # up to a certain tolerance
     Random.seed!(1234)
     s = siteinds("S=1/2", 10)
-    ψ = randomMPS(ComplexF64, s; linkdims=4)
+    ψ = random_mps(ComplexF64, s; linkdims=4)
     reset_ortho_lims!(ψ)
     @test exp(lognorm(ψ)) ≈ 1
   end
 
   @testset "normalize/normalize! MPS" begin
-    psi = randomMPS(sites; linkdims=10)
+    psi = random_mps(sites; linkdims=10)
 
     @test norm(psi) ≈ 1
     @test norm(normalize(psi)) ≈ 1
@@ -394,7 +394,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test norm(normalize(0phi)) == 0
 
     # Large number of sites
-    psi = randomMPS(siteinds("S=1/2", 1_000); linkdims=10)
+    psi = random_mps(siteinds("S=1/2", 1_000); linkdims=10)
 
     @test norm(psi) ≈ 1.0
     @test lognorm(psi) ≈ 0.0 atol = 1e-15
@@ -410,7 +410,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test norm(phi) ≈ 1
 
     # Test scaling only a subset of sites
-    psi = randomMPS(siteinds("S=1/2", 10); linkdims=10)
+    psi = random_mps(siteinds("S=1/2", 10); linkdims=10)
 
     @test norm(psi) ≈ 1.0
     @test lognorm(psi) ≈ 0.0 atol = 1e-15
@@ -431,7 +431,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
 
     # Output the lognorm
     α = 2
-    psi = randomMPS(siteinds("S=1/2", 30); linkdims=10)
+    psi = random_mps(siteinds("S=1/2", 30); linkdims=10)
     psi = α .* psi
     @test norm(psi) ≈ α^length(psi)
     @test lognorm(psi) ≈ length(psi) * log(α)
@@ -443,7 +443,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   end
 
   @testset "lognorm MPS" begin
-    psi = randomMPS(sites; linkdims=10)
+    psi = random_mps(sites; linkdims=10)
     for j in eachindex(psi)
       psi[j] .*= j
     end
@@ -463,26 +463,26 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   end
 
   @testset "scaling MPS" begin
-    psi = randomMPS(sites; linkdims=4)
+    psi = random_mps(sites; linkdims=4)
     twopsidag = 2.0 * dag(psi)
     #ITensors.prime_linkinds!(twopsidag)
     @test inner(twopsidag, psi) ≈ 2.0 * inner(psi, psi)
   end
 
   @testset "flip sign of MPS" begin
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     minuspsidag = -dag(psi)
     #ITensors.primelinkinds!(minuspsidag)
     @test inner(minuspsidag, psi) ≈ -inner(psi, psi)
   end
 
   @testset "add MPS" begin
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     phi = deepcopy(psi)
     xi = add(psi, phi)
     @test inner(xi, xi) ≈ 4.0 * inner(psi, psi)
     # sum of many MPSs
-    Ks = [randomMPS(sites) for i in 1:3]
+    Ks = [random_mps(sites) for i in 1:3]
     K12 = add(Ks[1], Ks[2])
     K123 = add(K12, Ks[3])
     @test inner(sum(Ks), K123) ≈ inner(K123, K123)
@@ -491,20 +491,20 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   end
 
   @testset "+ MPS" begin
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     phi = deepcopy(psi)
     xi = psi + phi
     @test inner(xi, xi) ≈ 4.0 * inner(psi, psi)
     # sum of many MPSs
-    Ks = [randomMPS(sites) for i in 1:3]
+    Ks = [random_mps(sites) for i in 1:3]
     K12 = Ks[1] + Ks[2]
     K123 = K12 + Ks[3]
     @test inner(sum(Ks), K123) ≈ inner(K123, K123)
 
     χ1 = 2
     χ2 = 3
-    ψ1 = randomMPS(sites; linkdims=χ1)
-    ψ2 = 0.0 * randomMPS(sites; linkdims=χ2)
+    ψ1 = random_mps(sites; linkdims=χ1)
+    ψ2 = 0.0 * random_mps(sites; linkdims=χ2)
 
     ϕ1 = +(ψ1, ψ2; alg="densitymatrix", cutoff=nothing)
     for j in 2:7
@@ -527,9 +527,9 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     s = siteinds("S=1/2", 20; conserve_qns=conserve_qns)
     state = n -> isodd(n) ? "↑" : "↓"
 
-    ψ₁ = randomMPS(s, state; linkdims=4)
-    ψ₂ = randomMPS(s, state; linkdims=4)
-    ψ₃ = randomMPS(s, state; linkdims=4)
+    ψ₁ = random_mps(s, state; linkdims=4)
+    ψ₂ = random_mps(s, state; linkdims=4)
+    ψ₃ = random_mps(s, state; linkdims=4)
 
     ψ = ψ₁ + ψ₂
 
@@ -580,7 +580,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   @test length(psi) == 10 # just make sure this works
   @test length(siteinds(psi)) == length(psi)
 
-  psi = randomMPS(sites)
+  psi = random_mps(sites)
   l0s = linkinds(psi)
   orthogonalize!(psi, length(psi) - 1)
   ls = linkinds(psi)
@@ -592,7 +592,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   orthogonalize!(psi, 2)
   @test ITensorMPS.leftlim(psi) == 1
   @test ITensorMPS.rightlim(psi) == 3
-  psi = randomMPS(sites)
+  psi = random_mps(sites)
   ITensorMPS.setrightlim!(psi, length(psi) + 1) # do this to test qr
   # from rightmost tensor
   orthogonalize!(psi, div(length(psi), 2))
@@ -603,7 +603,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
 
   @testset "replacebond!" begin
     # make sure factorization preserves the bond index tags
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     phi = psi[1] * psi[2]
     bondindtags = tags(linkind(psi, 1))
     replacebond!(psi, 1, phi)
@@ -629,7 +629,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test ITensorMPS.rightlim(psi) == 7
 
     # check that replacebond! runs with svd kwargs
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     phi = psi[1] * psi[2]
     replacebond!(psi, 1, phi; ortho="left", which_decomp="svd", use_relative_cutoff=true)
     phi = psi[5] * psi[6]
@@ -749,7 +749,7 @@ end
 @testset "Other MPS methods" begin
   @testset "sample! method" begin
     sites = [Index(3, "Site,n=$n") for n in 1:10]
-    psi = randomMPS(sites; linkdims=3)
+    psi = random_mps(sites; linkdims=3)
     nrm2 = inner(psi, psi)
     psi[1] *= (1.0 / sqrt(nrm2))
 
@@ -776,10 +776,10 @@ end
     @test length(s) == length(psi)
   end
 
-  @testset "randomMPS with chi > 1" begin
+  @testset "random_mps with chi > 1" begin
     chi = 8
     sites = siteinds(2, 20)
-    M = randomMPS(sites; linkdims=chi)
+    M = random_mps(sites; linkdims=chi)
 
     @test ITensorMPS.leftlim(M) == 0
     @test ITensorMPS.rightlim(M) == 2
@@ -799,17 +799,17 @@ end
     end
 
     # Complex case
-    Mc = randomMPS(sites; linkdims=chi)
+    Mc = random_mps(sites; linkdims=chi)
     @test inner(Mc, Mc) ≈ 1.0 + 0.0im
   end
 
-  @testset "randomMPS from initial state (QN case)" begin
+  @testset "random_mps from initial state (QN case)" begin
     chi = 8
     sites = siteinds("S=1/2", 20; conserve_qns=true)
 
     # Make flux-zero random MPS
     state = [isodd(n) ? 1 : 2 for n in 1:length(sites)]
-    M = randomMPS(sites, state; linkdims=chi)
+    M = random_mps(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", 0)
 
     @test ITensorMPS.leftlim(M) == 0
@@ -822,17 +822,17 @@ end
 
     # Test making random MPS with different flux
     state[1] = 2
-    M = randomMPS(sites, state; linkdims=chi)
+    M = random_mps(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", -2)
     state[3] = 2
-    M = randomMPS(sites, state; linkdims=chi)
+    M = random_mps(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", -4)
   end
 
   @testset "expect Function" begin
     N = 8
     s = siteinds("S=1/2", N)
-    psi = randomMPS(ComplexF64, s; linkdims=2)
+    psi = random_mps(ComplexF64, s; linkdims=2)
 
     eSz = zeros(N)
     eSx = zeros(N)
@@ -891,7 +891,7 @@ end
 
     # Non-fermionic real case - spin system with QNs (very restrictive on allowed ops)
     s = siteinds("S=1/2", 4; conserve_qns=true)
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
+    psi = random_mps(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(psi, [("S-", "S+"), ("S+", "S-")])
 
     @test correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) ≈
@@ -901,7 +901,7 @@ end
     @test expect(psi, [[1/2 0; 0 -1/2], [1/2 0; 0 -1/2]]) ≈ expect(psi, ["Sz", "Sz"])
 
     s = siteinds("S=1/2", length(s); conserve_qns=false)
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
+    psi = random_mps(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(
       psi,
       [
@@ -927,7 +927,7 @@ end
 
     #Test sites feature
     s = siteinds("S=1/2", 8; conserve_qns=false)
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
+    psi = random_mps(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     PM = expect(psi, "S+ * S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
@@ -938,7 +938,7 @@ end
 
     # With start_site, end_site arguments:
     s = siteinds("S=1/2", 8)
-    psi = randomMPS(ComplexF64, s; linkdims=m)
+    psi = random_mps(ComplexF64, s; linkdims=m)
     ss, es = 3, 6
     Nb = es - ss + 1
     Cpm = correlation_matrix(psi, "S+", "S-"; sites=ss:es)
@@ -953,13 +953,13 @@ end
 
     # Electron case
     s = siteinds("Electron", 8)
-    psi = randomMPS(s; linkdims=m)
+    psi = random_mps(s; linkdims=m)
     test_correlation_matrix(
       psi, [("Cdagup", "Cup"), ("Cup", "Cdagup"), ("Cup", "Cdn"), ("Cdagdn", "Cdn")]
     )
 
     s = siteinds("Electron", 8; conserve_qns=false)
-    psi = randomMPS(s; linkdims=m)
+    psi = random_mps(s; linkdims=m)
     test_correlation_matrix(
       psi,
       [
@@ -990,11 +990,11 @@ end
 
     # Fermion case
     s = siteinds("Fermion", 8)
-    psi = randomMPS(s; linkdims=m)
+    psi = random_mps(s; linkdims=m)
     test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
 
     s = siteinds("Fermion", 8; conserve_qns=false)
-    psi = randomMPS(s; linkdims=m)
+    psi = random_mps(s; linkdims=m)
     test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
 
     #
@@ -1044,7 +1044,7 @@ end
 
   @testset "expect regression test for in-place modification of input MPS" begin
     s = siteinds("S=1/2", 5)
-    psi = randomMPS(s; linkdims=3)
+    psi = random_mps(s; linkdims=3)
     orthogonalize!(psi, 1)
     expect_init = expect(psi, "Sz")
     norm_scale = 10
@@ -1060,7 +1060,7 @@ end
 
   @testset "correlation_matrix regression test for in-place modification of input MPS" begin
     s = siteinds("S=1/2", 5)
-    psi = randomMPS(s; linkdims=3)
+    psi = random_mps(s; linkdims=3)
     orthogonalize!(psi, 1)
     correlation_matrix_init = correlation_matrix(psi, "Sz", "Sz")
     norm_scale = 10
@@ -1076,7 +1076,7 @@ end
 
   @testset "swapbondsites" begin
     sites = siteinds("S=1/2", 5)
-    ψ0 = randomMPS(sites)
+    ψ0 = random_mps(sites)
     ψ = replacebond(ψ0, 3, ψ0[3] * ψ0[4]; swapsites=true, cutoff=1e-15)
     @test siteind(ψ, 1) == siteind(ψ0, 1)
     @test siteind(ψ, 2) == siteind(ψ0, 2)
@@ -1131,14 +1131,14 @@ end
 
   @testset "setindex!(::MPS, _, ::Colon)" begin
     s = siteinds("S=½", 4)
-    ψ = randomMPS(s)
+    ψ = random_mps(s)
     ϕ = MPS(s, "↑")
     orthogonalize!(ϕ, 1)
     ψ[:] = ϕ
     @test ITensorMPS.orthocenter(ψ) == 1
     @test inner(ψ, ϕ) ≈ 1
 
-    ψ = randomMPS(s)
+    ψ = random_mps(s)
     ϕ = MPS(s, "↑")
     orthogonalize!(ϕ, 1)
     ψ[:] = ITensorMPS.data(ϕ)
@@ -1149,7 +1149,7 @@ end
 
   @testset "findsite[s](::MPS/MPO, is)" begin
     s = siteinds("S=1/2", 5)
-    ψ = randomMPS(s)
+    ψ = random_mps(s)
     l = linkinds(ψ)
 
     A = randomITensor(s[4]', s[2]', dag(s[4]), dag(s[2]))
@@ -1165,7 +1165,7 @@ end
     @test findsites(ψ, (l[2], l[3])) == [2, 3, 4]
     @test findsites(ψ, A) == [2, 4]
 
-    M = randomMPO(s)
+    M = random_mpo(s)
     lM = linkinds(M)
 
     @test findsite(M, s[4]) == 4
@@ -1185,14 +1185,14 @@ end
 
   @testset "[first]siteind[s](::MPS/MPO, j::Int)" begin
     s = siteinds("S=1/2", 5)
-    ψ = randomMPS(s)
+    ψ = random_mps(s)
     @test siteind(first, ψ, 3) == s[3]
     @test siteind(ψ, 4) == s[4]
     @test isnothing(siteind(ψ, 4; plev=1))
     @test siteinds(ψ, 3) == IndexSet(s[3])
     @test siteinds(ψ, 3; plev=1) == IndexSet()
 
-    M = randomMPO(s)
+    M = random_mpo(s)
     @test noprime(siteind(first, M, 4)) == s[4]
     @test siteind(first, M, 4; plev=0) == s[4]
     @test siteind(first, M, 4; plev=1) == s[4]'
@@ -1249,7 +1249,7 @@ end
     @test ITensorMPS.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 1
 
-    ψ0 = randomMPS(s; linkdims=2)
+    ψ0 = random_mps(s; linkdims=2)
     A = prod(ψ0)
     ψ = MPS(A, s; cutoff=1e-15, orthocenter=2)
     @test prod(ψ) ≈ A
@@ -1289,7 +1289,7 @@ end
   @testset "Set range of MPS tensors" begin
     N = 5
     s = siteinds("S=1/2", N)
-    ψ0 = randomMPS(s; linkdims=3)
+    ψ0 = random_mps(s; linkdims=3)
 
     ψ = orthogonalize(ψ0, 2)
     A = prod(ITensorMPS.data(ψ)[2:(N - 1)])
@@ -1317,7 +1317,7 @@ end
   @testset "movesites reverse sites" begin
     N = 6
     s = siteinds("S=1/2", N)
-    ψ0 = randomMPS(s)
+    ψ0 = random_mps(s)
     ψ = movesites(ψ0, 1:N .=> reverse(1:N))
     for n in 1:N
       @test siteind(ψ, n) == s[N - n + 1]
@@ -1327,7 +1327,7 @@ end
   @testset "movesites subsets of sites" begin
     N = 6
     s = siteinds("S=1/2", N)
-    ψ = randomMPS(s)
+    ψ = random_mps(s)
 
     for i in 1:N, j in 1:N
       ns = [i, j]
@@ -1881,7 +1881,7 @@ end
     @testset "Spinful Fermions (Electron) gate evolution" begin
       N = 8
       s = siteinds("Electron", N; conserve_qns=true)
-      ψ0 = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
+      ψ0 = random_mps(s, n -> isodd(n) ? "↑" : "↓")
       t = 1.0
       U = 1.0
       opsum = OpSum()
@@ -1919,7 +1919,7 @@ end
   @testset "dense conversion of MPS" begin
     N = 4
     s = siteinds("S=1/2", N; conserve_qns=true)
-    QM = randomMPS(s, ["Up", "Dn", "Up", "Dn"]; linkdims=4)
+    QM = random_mps(s, ["Up", "Dn", "Up", "Dn"]; linkdims=4)
     qsz1 = scalar(QM[1] * op("Sz", s[1]) * dag(prime(QM[1], "Site")))
 
     M = dense(QM)
@@ -1935,7 +1935,7 @@ end
     sinds = IndexSet.(sout, sin)
     Cs = combiner.(sinds)
     cinds = combinedind.(Cs)
-    ψ = randomMPS(cinds)
+    ψ = random_mps(cinds)
     @test norm(ψ) ≈ 1
     @test inner(ψ, ψ) ≈ 1
     ψ .*= dag.(Cs)
@@ -1953,7 +1953,7 @@ end
       a .+= "Sz", j, "Sz", j + 1
     end
     H = MPO(a, s)
-    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=10)
+    ψ = random_mps(s, n -> isodd(n) ? "↑" : "↓"; linkdims=10)
     # Create MPO/MPS with pairs of sites merged
     H2 = MPO([H[b] * H[b + 1] for b in 1:2:N])
     ψ2 = MPS([ψ[b] * ψ[b + 1] for b in 1:2:N])

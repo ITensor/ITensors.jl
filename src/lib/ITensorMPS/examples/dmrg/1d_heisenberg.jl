@@ -23,7 +23,7 @@ let
   H = MPO(os, sites)
 
   # Create an initial random matrix product state
-  psi0 = randomMPS(sites; linkdims=10)
+  psi0 = random_mps(sites; linkdims=10)
 
   # Plan to do 5 DMRG sweeps:
   nsweeps = 5

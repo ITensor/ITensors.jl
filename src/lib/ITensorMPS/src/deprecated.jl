@@ -19,17 +19,22 @@
 
 # mps/mpo.jl
 @deprecate MPO(A::MPS; kwargs...) outer(A', A; kwargs...)
+@deprecate randomMPO(args...; kwargs...) random_mpo(args...; kwargs...)
 
 # mps/mps.jl
-@deprecate randomMPS(sites::Vector{<:Index}, linkdims::Integer) randomMPS(
-  sites; linkdims=linkdims
+@deprecate randomMPS(args...; kwargs...) random_mps(args...; kwargs...)
+
+# Deprecated syntax for specifying link dimensions.
+@deprecate randomMPS(elt::Type{<:Number}, sites::Vector{<:Index}, state, linkdims::Integer) random_mps(
+  elt, sites, state; linkdims
 )
-@deprecate randomMPS(ElType::Type, sites::Vector{<:Index}, linkdims::Integer) randomMPS(
-  ElType, sites; linkdims=linkdims
+@deprecate randomMPS(elt::Type{<:Number}, sites::Vector{<:Index}, linkdims::Integer) random_mps(
+  elt, sites; linkdims
 )
-@deprecate randomMPS(sites::Vector{<:Index}, state, linkdims::Integer) randomMPS(
-  sites, state; linkdims=linkdims
+@deprecate randomMPS(sites::Vector{<:Index}, state, linkdims::Integer) random_mps(
+  sites, state; linkdims
 )
+@deprecate randomMPS(sites::Vector{<:Index}, linkdims::Integer) random_mps(sites; linkdims)
 
 # Pass throughs of old name to new name:
 

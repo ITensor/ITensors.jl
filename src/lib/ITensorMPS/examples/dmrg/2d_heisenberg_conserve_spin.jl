@@ -22,7 +22,7 @@ let
   # Initialize wavefunction to a random MPS
   # of bond-dimension 10 with same quantum
   # numbers as `state`
-  psi0 = randomMPS(sites, state; linkdims=20)
+  psi0 = random_mps(sites, state; linkdims=20)
 
   nsweeps = 10
   maxdim = [20, 60, 100, 100, 200, 400, 800]

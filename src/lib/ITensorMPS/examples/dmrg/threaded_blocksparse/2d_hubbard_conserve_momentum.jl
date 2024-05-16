@@ -58,7 +58,7 @@ function main(;
   end
   display(state)
 
-  psi0 = randomMPS(sites, state; linkdims=10)
+  psi0 = random_mps(sites, state; linkdims=10)
 
   energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel)
 

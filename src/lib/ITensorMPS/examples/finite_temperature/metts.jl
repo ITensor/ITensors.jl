@@ -51,7 +51,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
   Ry_gates = ops([("Ry", n, (θ=π / 2,)) for n in 1:N], s)
 
   # Arbitrary initial state
-  psi = randomMPS(s)
+  psi = random_mps(s)
 
   # Make H for measuring the energy
   terms = OpSum()
