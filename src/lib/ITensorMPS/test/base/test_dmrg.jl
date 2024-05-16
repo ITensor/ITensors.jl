@@ -386,7 +386,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     state[3] = 2
     state[5] = 2
     state[7] = 2
-    psi0 = productMPS(s, state)
+    psi0 = MPS(s, state)
 
     os = OpSum()
     for j in 1:(N - 1)

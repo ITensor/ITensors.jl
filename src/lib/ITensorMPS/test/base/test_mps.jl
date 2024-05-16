@@ -61,7 +61,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test psi ⋅ psi ≈ *(dag(psi)..., psi...)[]
   end
 
-  @testset "productMPS" begin
+  @testset "MPS" begin
     @testset "vector of string input" begin
       sites = siteinds("S=1/2", 10)
       state = fill("", length(sites))
@@ -73,13 +73,13 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, state)
+      psi = MPS(sites, state)
       for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       @test_throws DimensionMismatch MPS(sites, fill("", length(psi) - 1))
-      @test_throws DimensionMismatch productMPS(sites, fill("", length(psi) - 1))
+      @test_throws DimensionMismatch MPS(sites, fill("", length(psi) - 1))
     end
 
     @testset "String input" begin
@@ -89,7 +89,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, "Dn")
+      psi = MPS(sites, "Dn")
       for j in 1:length(psi)
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -108,7 +108,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, 2)
+      psi = MPS(sites, 2)
       for j in 1:length(psi)
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -126,7 +126,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, state)
+      psi = MPS(sites, state)
       for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -145,7 +145,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(ivals)
+      psi = MPS(ivals)
       for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -157,7 +157,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
         for j in 1:length(psi)
           @test eltype(psi[j]) == ComplexF64
         end
-        psi = productMPS(ComplexF64, sites, fill(1, length(psi)))
+        psi = MPS(ComplexF64, sites, fill(1, length(psi)))
         for j in 1:length(psi)
           @test eltype(psi[j]) == ComplexF64
         end
@@ -171,13 +171,13 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
       psi = MPS([site], [1])
       @test psi[1][1] ≈ 1.0
       @test psi[1][2] ≈ 0.0
-      psi = productMPS([site], [1])
+      psi = MPS([site], [1])
       @test psi[1][1] ≈ 1.0
       @test psi[1][2] ≈ 0.0
       psi = MPS([site], [2])
       @test psi[1][1] ≈ 0.0
       @test psi[1][2] ≈ 1.0
-      psi = productMPS([site], [2])
+      psi = MPS([site], [2])
       @test psi[1][1] ≈ 0.0
       @test psi[1][2] ≈ 1.0
     end
