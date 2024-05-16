@@ -266,8 +266,8 @@ function directsum_projectors(
 )
   return error(
     "It is not possible to call directsum on two tensors with element type EmptyNumber.
-If you are inputting ITensors constructor like ITensor(i, j), try specifying the element type, 
-e.g. ITensor(Float64, i, j), or filling them with zero value, e.g. ITensor(0.0, i, j).",
+If you are inputting ITensors constructed like `ITensor(i, j)`, try specifying the element type, 
+e.g. `ITensor(Float64, i, j)`, or fill them with zero values, e.g. `ITensor(zero(Float64), i, j)`.",
   )
 end
 
