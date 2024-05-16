@@ -47,7 +47,7 @@ The random starting wavefunction `psi0` must be defined in the same Hilbert spac
 as the Hamiltonian, so we construct it using the same collection of site indices:
 
 ```julia
-psi0 = randomMPS(sites,2)
+psi0 = randomMPS(sites;linkdims=2)
 ```
 
 Here we have made a random MPS of bond dimension 2. We could have used a random product
@@ -58,7 +58,7 @@ stuck in local minima. We could also set psi to some specific initial state usin
 Finally, we are ready to call DMRG:
 
 ```julia
-energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 ```
 
 When the algorithm is done, it returns the ground state energy as the variable `energy` and an MPS
@@ -85,9 +85,9 @@ let
   maxdim = [10,20,100,100,200] # gradually increase states kept
   cutoff = [1E-10] # desired truncation error
 
-  psi0 = randomMPS(sites,2)
+  psi0 = randomMPS(sites;linkdims=2)
 
-  energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+  energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 
   return
 end
@@ -158,9 +158,9 @@ let
   maxdim = [10,10,20,40,80,100,140,180,200]
   cutoff = [1E-8]
 
-  psi0 = randomMPS(sites,4)
+  psi0 = randomMPS(sites;linkdims=4)
 
-  energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+  energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 
   return
 end
@@ -178,7 +178,7 @@ more efficient than if the MPOs had been summed together into a single MPO.
 To use this version of DMRG, say you have MPOs `H1`, `H2`, and `H3`.
 Then call DMRG like this:
 ```julia
-energy,psi = dmrg([H1,H2,H3],psi0; nsweeps, maxdim, cutoff)
+energy,psi = dmrg([H1,H2,H3],psi0;nsweeps,maxdim,cutoff)
 ```
 
 ## Make a 2D Hamiltonian for DMRG
@@ -238,13 +238,13 @@ let
   # Initialize wavefunction to a random MPS
   # of bond-dimension 10 with same quantum
   # numbers as `state`
-  psi0 = randomMPS(sites,state,20)
+  psi0 = randomMPS(sites,state;linkdims=20)
 
   nsweeps = 10
   maxdim = [20,60,100,100,200,400,800]
   cutoff = [1E-8]
 
-  energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+  energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 
   return
 end
@@ -257,7 +257,7 @@ These additional 'penalty states' are provided as an array of MPS just
 after the Hamiltonian, like this:
 
 ```julia
-energy,psi3 = dmrg(H,[psi0,psi1,psi2],psi3_init; nsweeps, maxdim, cutoff)
+energy,psi3 = dmrg(H,[psi0,psi1,psi2],psi3_init;nsweeps,maxdim,cutoff)
 ```
 
 Here the penalty states are `[psi0,psi1,psi2]`.
@@ -328,16 +328,16 @@ let
   #
   # Compute the ground state psi0
   #
-  psi0_init = randomMPS(sites,linkdims=2)
-  energy0,psi0 = dmrg(H,psi0_init; nsweeps, maxdim, cutoff, noise)
+  psi0_init = randomMPS(sites;linkdims=2)
+  energy0,psi0 = dmrg(H,psi0_init;nsweeps,maxdim,cutoff,noise)
 
   println()
 
   #
   # Compute the first excited state psi1
   #
-  psi1_init = randomMPS(sites,linkdims=2)
-  energy1,psi1 = dmrg(H,[psi0],psi1_init; nsweeps, maxdim, cutoff, noise, weight)
+  psi1_init = randomMPS(sites;linkdims=2)
+  energy1,psi1 = dmrg(H,[psi0],psi1_init;nsweeps,maxdim,cutoff,noise,weight)
 
   # Check psi1 is orthogonal to psi0
   @show inner(psi1,psi0)
@@ -357,8 +357,8 @@ let
   #
   # Compute the second excited state psi2
   #
-  psi2_init = randomMPS(sites,linkdims=2)
-  energy2,psi2 = dmrg(H,[psi0,psi1],psi2_init; nsweeps, maxdim, cutoff, noise, weight)
+  psi2_init = randomMPS(sites;linkdims=2)
+  energy2,psi2 = dmrg(H,[psi0,psi1],psi2_init;nsweeps,maxdim,cutoff,noise,weight)
 
   # Check psi2 is orthogonal to psi0 and psi1
   @show inner(psi2,psi0)
@@ -429,7 +429,7 @@ let
     a += 0.5,"S-",n,"S+",n+1
   end
   H = MPO(a,s)
-  psi0 = randomMPS(s,linkdims=4)
+  psi0 = randomMPS(s;linkdims=4)
 
   nsweeps = 5
   maxdim = [10,20,80,160]
@@ -437,7 +437,7 @@ let
 
   observer = EntanglementObserver()
 
-  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff, observer, outputlevel=2)
+  energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff,observer,outputlevel=2)
 
   return
 end
@@ -523,7 +523,7 @@ let
     a += 0.5,"S-",n,"S+",n+1
   end
   H = MPO(a,s)
-  psi0 = randomMPS(s,linkdims=4)
+  psi0 = randomMPS(s;linkdims=4)
 
   nsweeps = 5
   maxdim = [10,20,80,160]
@@ -531,7 +531,7 @@ let
 
   obs = SizeObserver()
 
-  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff, observer=obs)
+  energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff,observer=obs)
 
   return
 end

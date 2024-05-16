@@ -12,9 +12,9 @@ let
 
   os = OpSum()
   for b in lattice
-    os .+= 0.5, "S+", b.s1, "S-", b.s2
-    os .+= 0.5, "S-", b.s1, "S+", b.s2
-    os .+= "Sz", b.s1, "Sz", b.s2
+    os += 0.5, "S+", b.s1, "S-", b.s2
+    os += 0.5, "S-", b.s1, "S+", b.s2
+    os += "Sz", b.s1, "Sz", b.s2
   end
   H = MPO(os, sites)
 
@@ -22,7 +22,7 @@ let
   # Initialize wavefunction to a random MPS
   # of bond-dimension 10 with same quantum
   # numbers as `state`
-  psi0 = randomMPS(sites, state, 20)
+  psi0 = randomMPS(sites, state; linkdims=20)
 
   nsweeps = 10
   maxdim = [20, 60, 100, 100, 200, 400, 800]

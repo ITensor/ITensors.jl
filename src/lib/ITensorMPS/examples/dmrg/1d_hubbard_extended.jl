@@ -54,7 +54,7 @@ let
   # Initialize wavefunction to be bond
   # dimension 10 random MPS with number
   # of particles the same as `state`
-  psi0 = randomMPS(sites, state, 10)
+  psi0 = randomMPS(sites, state; linkdims=10)
 
   # Check total number of particles:
   @show flux(psi0)

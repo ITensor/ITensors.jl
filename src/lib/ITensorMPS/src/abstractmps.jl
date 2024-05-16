@@ -179,8 +179,8 @@ should be preserved.
 s = siteinds("S=1/2", 4)
 
 # Make random MPS with bond dimension 2
-ψ₁ = randomMPS(s, "↑", 2)
-ψ₂ = randomMPS(s, "↑", 2)
+ψ₁ = randomMPS(s, "↑"; linkdims=2)
+ψ₂ = randomMPS(s, "↑"; linkdims=2)
 ψ₁ = orthogonalize(ψ₁, 1)
 ψ₂ = orthogonalize(ψ₂, 1)
 
@@ -1518,9 +1518,9 @@ N = 10
 s = siteinds("S=1/2", N; conserve_qns = true)
 
 state = n -> isodd(n) ? "↑" : "↓"
-ψ₁ = randomMPS(s, state, 2)
-ψ₂ = randomMPS(s, state, 2)
-ψ₃ = randomMPS(s, state, 2)
+ψ₁ = randomMPS(s, state; linkdims=2)
+ψ₂ = randomMPS(s, state; linkdims=2)
+ψ₃ = randomMPS(s, state; linkdims=2)
 
 ψ = +(ψ₁, ψ₂; cutoff = 1e-8)
 
