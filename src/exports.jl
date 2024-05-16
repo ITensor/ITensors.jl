@@ -122,7 +122,7 @@ export
   denseblocks,
   δ,
   diagitensor,
-  diagITensor,
+  diag_itensor,
   directsum,
   eachnzblock,
   firstind,

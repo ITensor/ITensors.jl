@@ -455,8 +455,8 @@ end
 #
 
 """
-    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
-    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
+    diag_itensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
+    diag_itensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
 
 Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements
 `zero(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
@@ -464,18 +464,18 @@ Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements
 If the element type is not specified, it defaults to `Float64`. If theflux
 is not specified, it defaults to `QN()`.
 """
-function diagITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+function diag_itensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   is = Tuple(inds)
   blocks = nzdiagblocks(flux, is)
   T = DiagBlockSparseTensor(ElT, blocks, is)
   return itensor(T)
 end
 
-function diagITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
-  return diagITensor(ElT, flux, indices(is...))
+function diag_itensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
+  return diag_itensor(ElT, flux, indices(is...))
 end
 
-function diagITensor(x::ElT, flux::QN, inds::QNIndices) where {ElT<:Number}
+function diag_itensor(x::ElT, flux::QN, inds::QNIndices) where {ElT<:Number}
   is = Tuple(inds)
   blocks = nzdiagblocks(flux, is)
   T = DiagBlockSparseTensor(float(ElT), blocks, is)
@@ -483,25 +483,25 @@ function diagITensor(x::ElT, flux::QN, inds::QNIndices) where {ElT<:Number}
   return itensor(T)
 end
 
-function diagITensor(x::Number, flux::QN, is...)
-  return diagITensor(x, flux, indices(is...))
+function diag_itensor(x::Number, flux::QN, is...)
+  return diag_itensor(x, flux, indices(is...))
 end
 
-diagITensor(x::Number, is::QNIndices) = diagITensor(x, QN(), is)
+diag_itensor(x::Number, is::QNIndices) = diag_itensor(x, QN(), is)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-diagITensor(x::Number, is::QNIndex...) = diagITensor(x, indices(is...))
+diag_itensor(x::Number, is::QNIndex...) = diag_itensor(x, indices(is...))
 
-diagITensor(flux::QN, is::Indices) = diagITensor(Float64, flux, is)
+diag_itensor(flux::QN, is::Indices) = diag_itensor(Float64, flux, is)
 
-diagITensor(flux::QN, is...) = diagITensor(Float64, flux, indices(is...))
+diag_itensor(flux::QN, is...) = diag_itensor(Float64, flux, indices(is...))
 
-function diagITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
-  return diagITensor(ElT, QN(), inds)
+function diag_itensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
+  return diag_itensor(ElT, QN(), inds)
 end
 
-function diagITensor(inds::QNIndices)
-  return diagITensor(Float64, QN(), inds)
+function diag_itensor(inds::QNIndices)
+  return diag_itensor(Float64, QN(), inds)
 end
 
 """

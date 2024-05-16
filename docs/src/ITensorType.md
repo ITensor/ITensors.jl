@@ -34,16 +34,16 @@ ITensor(::Type{<:Number}, ::UndefInitializer, ::QN, ::ITensors.Indices)
 ## Diagonal constructors
 
 ```@docs
-diagITensor(::Type{<:Number}, ::ITensors.Indices)
-diagITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Vector{<:Number}, ::ITensors.Indices)
-diagITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Number, ::ITensors.Indices)
+diag_itensor(::Type{<:Number}, ::ITensors.Indices)
+diag_itensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Vector{<:Number}, ::ITensors.Indices)
+diag_itensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Number, ::ITensors.Indices)
 delta(::Type{<:Number}, ::ITensors.Indices)
 ```
 
 ## QN Diagonal constructors
 
 ```@docs
-diagITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
+diag_itensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
 delta(::Type{<:Number}, ::QN, ::ITensors.Indices)
 ```
 

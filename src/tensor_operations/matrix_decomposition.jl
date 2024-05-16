@@ -580,8 +580,8 @@ end
 function sqrt_decomp(D::ITensor, u::Index, v::Index)
   (storage(D) isa Union{Diag,DiagBlockSparse}) ||
     error("Must be a diagonal matrix ITensor.")
-  sqrtDL = diagITensor(u, dag(u)')
-  sqrtDR = diagITensor(v, dag(v)')
+  sqrtDL = diag_itensor(u, dag(u)')
+  sqrtDR = diag_itensor(v, dag(v)')
   map_diag!(sqrt ∘ abs, sqrtDL, D)
   map_diag!(sqrt ∘ abs, sqrtDR, D)
   δᵤᵥ = copy(D)

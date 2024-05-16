@@ -122,8 +122,8 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     # Diag ITensor
     #
     dk = dim(k)
-    D = diagITensor(randn(dk), k, k')
-    C = diagITensor(randn(ComplexF64, dk), k, k')
+    D = diag_itensor(randn(dk), k, k')
+    C = diag_itensor(randn(ComplexF64, dk), k, k')
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
       fo["diag_tensor"] = D
       fo["c_diag_tensor"] = C

@@ -3,7 +3,7 @@ using ITensors.NDTensors
 using LinearAlgebra
 using Test
 
-@testset "diagITensor" begin
+@testset "diag_itensor" begin
   d = 3
   i = Index(d, "i")
   j = Index(d, "j")
@@ -19,8 +19,8 @@ using Test
   vr = randn(d)
 
   @testset "non-uniform diagonal values" begin
-    @testset "diagITensor constructor (no vector, order 2)" begin
-      D = diagITensor(i, j)
+    @testset "diag_itensor constructor (no vector, order 2)" begin
+      D = diag_itensor(i, j)
 
       @test eltype(D) == Float64
       for ii in 1:d, jj in 1:d
@@ -32,8 +32,8 @@ using Test
       end
     end
 
-    @testset "diagITensor constructor (no vector, order 3)" begin
-      D = diagITensor(i, j, k)
+    @testset "diag_itensor constructor (no vector, order 3)" begin
+      D = diag_itensor(i, j, k)
 
       @test eltype(D) == Float64
       for ii in 1:d, jj in 1:d, kk in 1:d
@@ -45,8 +45,8 @@ using Test
       end
     end
 
-    @testset "diagITensor constructor (no vector, complex)" begin
-      D = diagITensor(ComplexF64, i, j)
+    @testset "diag_itensor constructor (no vector, complex)" begin
+      D = diag_itensor(ComplexF64, i, j)
 
       @test eltype(D) == ComplexF64
       for ii in 1:d, jj in 1:d
@@ -59,15 +59,15 @@ using Test
     end
 
     @testset "diag" for ElType in (Float64, ComplexF64)
-      A = diagITensor(randn(ElType, d), i, j)
+      A = diag_itensor(randn(ElType, d), i, j)
       dA = diag(A)
       @test dA isa DenseTensor{ElType,1}
       @test dA[1] == A[1, 1]
       @test dA[2] == A[2, 2]
     end
 
-    @testset "diagITensor constructor (vector, order 2)" begin
-      D = diagITensor(v, i, j)
+    @testset "diag_itensor constructor (vector, order 2)" begin
+      D = diag_itensor(v, i, j)
 
       @test eltype(D) == Float64
       for ii in 1:d, jj in 1:d
@@ -79,8 +79,8 @@ using Test
       end
     end
 
-    @testset "diagITensor constructor (vector, order 3)" begin
-      D = diagITensor(v, i, j, k)
+    @testset "diag_itensor constructor (vector, order 3)" begin
+      D = diag_itensor(v, i, j, k)
 
       @test eltype(D) == Float64
       for ii in 1:d, jj in 1:d, kk in 1:d
@@ -92,9 +92,9 @@ using Test
       end
     end
 
-    @testset "diagITensor constructor (complex)" begin
+    @testset "diag_itensor constructor (complex)" begin
       vc = v + im * v
-      D = diagITensor(vc, i, j, k)
+      D = diag_itensor(vc, i, j, k)
 
       @test eltype(D) == ComplexF64
       for ii in 1:d, jj in 1:d, kk in 1:d
@@ -109,7 +109,7 @@ using Test
     @testset "Complex operations" begin
       xr = randn(d)
       xi = randn(d)
-      D = diagITensor(xr + im * xi, i, j, k)
+      D = diag_itensor(xr + im * xi, i, j, k)
       @test eltype(D) == ComplexF64
       rD = real(D)
       iD = imag(D)
@@ -121,21 +121,21 @@ using Test
 
     @testset "Constructor AllowAlias/NeverAlias" begin
       vv = ones(d)
-      D = diagITensor(vv, i, j)
+      D = diag_itensor(vv, i, j)
       @test eltype(D) === Float64
       D[1, 1] = 5.0
       @test vv[1] == 1.0
       @test vv[1] != D[1, 1]
 
       vv = ones(Int, d)
-      D = diagITensor(vv, i, j)
+      D = diag_itensor(vv, i, j)
       @test eltype(D) === Float64
       D[1, 1] = 5.0
       @test vv[1] == 1.0
       @test vv[1] != D[1, 1]
 
       vv = ones(Int, d)
-      D = diagITensor(Int, vv, i, j)
+      D = diag_itensor(Int, vv, i, j)
       @test eltype(D) === Int
       D[1, 1] = 5
       @test vv[1] == 1
@@ -162,19 +162,19 @@ using Test
       @test vv[1] == 5
       @test vv[1] == D[1, 1]
 
-      D = diagITensor(1, i, j)
+      D = diag_itensor(1, i, j)
       @test eltype(D) === Float64
       D[1, 1] = 5
       @test D[1, 1] == 5
 
-      D = diagITensor(Int, 1, i, j)
+      D = diag_itensor(Int, 1, i, j)
       @test eltype(D) === Int
       D[1, 1] = 5
       @test D[1, 1] == 5
     end
 
     @testset "fill!" begin
-      D = diagITensor(ones(d), i, j, k)
+      D = diag_itensor(ones(d), i, j, k)
       D = fill!(D, 2.0)
       for ii in 1:d
         @test D[i => ii, j => ii, k => ii] == 2.0
@@ -184,7 +184,7 @@ using Test
     end
 
     @testset "Set elements" begin
-      D = diagITensor(i, j, k)
+      D = diag_itensor(i, j, k)
 
       for ii in 1:d
         D[i => ii, j => ii, k => ii] = ii
@@ -205,7 +205,7 @@ using Test
     end
 
     @testset "Convert diag to dense" begin
-      D = diagITensor(v, i, j, k)
+      D = diag_itensor(v, i, j, k)
       T = dense(D)
 
       @test storage(T) isa NDTensors.Dense{Float64}
@@ -219,7 +219,7 @@ using Test
     end
 
     @testset "Convert diag to dense with denseblocks" begin
-      D = diagITensor(v, i, j, k)
+      D = diag_itensor(v, i, j, k)
       T = denseblocks(D)
 
       @test storage(T) isa NDTensors.Dense{Float64}
@@ -235,8 +235,8 @@ using Test
     @testset "Add (Diag + Diag)" begin
       v1 = randn(d)
       v2 = randn(d)
-      D1 = diagITensor(v1, i, j, k)
-      D2 = diagITensor(v2, k, i, j)
+      D1 = diag_itensor(v1, i, j, k)
+      D2 = diag_itensor(v2, k, i, j)
 
       v3 = v1 + v2
       D3 = D1 + D2
@@ -250,8 +250,8 @@ using Test
     @testset "Add ( number * Diag + Diag)" begin
       v1 = randn(d)
       v2 = randn(d)
-      D1 = Float32(2.0) * diagITensor(v1, i, j, k)
-      D2 = diagITensor(v2, k, i, j)
+      D1 = Float32(2.0) * diag_itensor(v1, i, j, k)
+      D2 = diag_itensor(v2, k, i, j)
 
       v3 = 2 * v1 + v2
       D3 = D1 + D2
@@ -272,7 +272,7 @@ using Test
     end
 
     @testset "Add (Diag + Dense)" begin
-      D = diagITensor(vr, i, j, k)
+      D = diag_itensor(vr, i, j, k)
       A = random_itensor(k, j, i)
 
       R = D + A
@@ -284,7 +284,7 @@ using Test
     end
 
     @testset "Add (Dense + Diag)" begin
-      D = diagITensor(vr, i, j, k)
+      D = diag_itensor(vr, i, j, k)
       A = random_itensor(i, k, j)
 
       R = A + D
@@ -296,7 +296,7 @@ using Test
     end
 
     @testset "Contraction (all contracted)" begin
-      D = diagITensor(v, i, j, k)
+      D = diag_itensor(v, i, j, k)
       A = random_itensor(j, k, i)
 
       @test D * A ≈ dense(D) * A
@@ -304,13 +304,13 @@ using Test
     end
 
     @testset "Contraction (all contracted) with different types" begin
-      D = diagITensor(v, i, j, k)
+      D = diag_itensor(v, i, j, k)
       A = random_itensor(Float32, j, k, i)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
 
-      D = diagITensor(v, i, j, k)
+      D = diag_itensor(v, i, j, k)
       A = random_itensor(ComplexF32, j, k, i)
 
       @test D * A ≈ dense(D) * A
@@ -318,7 +318,7 @@ using Test
     end
 
     @testset "Contraction (all dense contracted)" begin
-      D = diagITensor(v, j, k, i)
+      D = diag_itensor(v, j, k, i)
       A = random_itensor(i, j)
 
       @test D * A ≈ dense(D) * A
@@ -326,7 +326,7 @@ using Test
     end
 
     @testset "Contraction Diag*Dense (general)" begin
-      D = diagITensor(v, l, i, k, j)
+      D = diag_itensor(v, l, i, k, j)
       A = random_itensor(m, k, n, l)
 
       @test D * A ≈ dense(D) * A
@@ -334,7 +334,7 @@ using Test
     end
 
     @testset "Contraction Diag*Dense (outer)" begin
-      D = diagITensor(v, l, i, k, j)
+      D = diag_itensor(v, l, i, k, j)
       A = random_itensor(m, n)
 
       @test order(D * A) == 6
@@ -342,39 +342,39 @@ using Test
     end
 
     @testset "Contraction Diag*Diag (outer)" begin
-      D1 = diagITensor(v, l, i)
-      D2 = diagITensor(v, m, n)
+      D1 = diag_itensor(v, l, i)
+      D2 = diag_itensor(v, m, n)
 
       @test order(D1 * D2) == 4
       @test D1 * D2 ≈ dense(D1) * dense(D2)
     end
 
     @testset "Contraction Diag*Diag (all contracted)" begin
-      D1 = diagITensor(v, l, i, k, j)
-      D2 = diagITensor(vr, j, l, i, k)
+      D1 = diag_itensor(v, l, i, k, j)
+      D2 = diag_itensor(vr, j, l, i, k)
 
       @test D1 * D2 ≈ dense(D1) * dense(D2)
       @test D2 * D1 ≈ dense(D1) * dense(D2)
     end
 
     @testset "Contraction Diag*Diag (general)" begin
-      D1 = diagITensor(v, l, i, k, j)
-      D2 = diagITensor(vr, m, k, n, l)
+      D1 = diag_itensor(v, l, i, k, j)
+      D2 = diag_itensor(vr, m, k, n, l)
 
       @test D1 * D2 ≈ dense(D1) * dense(D2)
       @test D2 * D1 ≈ dense(D1) * dense(D2)
     end
 
     @testset "Contraction Diag*Diag (no contracted)" begin
-      D1 = diagITensor(v, i, j)
-      D2 = diagITensor(vr, k, l)
+      D1 = diag_itensor(v, i, j)
+      D2 = diag_itensor(vr, k, l)
 
       @test D1 * D2 ≈ dense(D1) * dense(D2)
       @test D2 * D1 ≈ dense(D1) * dense(D2)
     end
 
     @testset "Contraction Diag*Scalar" begin
-      D = diagITensor(v, i, j)
+      D = diag_itensor(v, i, j)
       x = 2.0
 
       @test x * D ≈ x * dense(D)

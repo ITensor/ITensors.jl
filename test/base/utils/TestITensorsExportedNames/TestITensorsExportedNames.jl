@@ -102,6 +102,7 @@ const ITENSORS_EXPORTED_NAMES = [
   :denseblocks,
   :diag,
   :diagITensor,
+  :diag_itensor,
   :diagitensor,
   :dim,
   :dims,
