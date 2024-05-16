@@ -24,6 +24,18 @@
 # mps/mps.jl
 @deprecate randomMPS(args...; kwargs...) random_mps(args...; kwargs...)
 
+# Deprecated syntax for specifying link dimensions.
+@deprecate randomMPS(elt::Type{<:Number}, sites::Vector{<:Index}, state, linkdims::Integer) random_mps(
+  elt, sites, state; linkdims
+)
+@deprecate randomMPS(elt::Type{<:Number}, sites::Vector{<:Index}, linkdims::Integer) random_mps(
+  elt, sites; linkdims
+)
+@deprecate randomMPS(sites::Vector{<:Index}, state, linkdims::Integer) random_mps(
+  sites, state; linkdims
+)
+@deprecate randomMPS(sites::Vector{<:Index}, linkdims::Integer) random_mps(sites; linkdims)
+
 # Pass throughs of old name to new name:
 
 unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer) = siteinds(uniqueind, A, B, j)
