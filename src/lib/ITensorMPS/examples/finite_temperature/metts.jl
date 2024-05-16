@@ -108,7 +108,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
       samp = sample!(psi)
       new_state = [samp[j] == 1 ? "Z+" : "Z-" for j in 1:N]
     end
-    psi = productMPS(s, new_state)
+    psi = MPS(s, new_state)
   end
 
   return nothing

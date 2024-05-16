@@ -31,7 +31,7 @@ function main(; N=10, cutoff=1E-8, δt=0.1, ttotal=5.0)
   end
 
   # Initialize psi to be a product state (alternating up and down)
-  psi0 = productMPS(s, n -> isodd(n) ? "Up" : "Dn")
+  psi0 = MPS(s, n -> isodd(n) ? "Up" : "Dn")
 
   c = div(N, 2)
 
