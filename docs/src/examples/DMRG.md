@@ -228,9 +228,9 @@ let
   # Define the Heisenberg spin Hamiltonian on this lattice
   os = OpSum()
   for b in lattice
-    os .+= 0.5, "S+", b.s1, "S-", b.s2
-    os .+= 0.5, "S-", b.s1, "S+", b.s2
-    os .+=      "Sz", b.s1, "Sz", b.s2
+    os += 0.5, "S+", b.s1, "S-", b.s2
+    os += 0.5, "S-", b.s1, "S+", b.s2
+    os +=      "Sz", b.s1, "Sz", b.s2
   end
   H = MPO(os,sites)
 
