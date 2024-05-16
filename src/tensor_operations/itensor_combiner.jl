@@ -57,7 +57,7 @@ with the conjugate or `dag` of the combiner. (If the combiner is an ITensor
 ### Example
 ```
 # Combine indices i and k into a new Index ci
-T = randomITensor(i,j,k)
+T = random_itensor(i,j,k)
 C = combiner(i,k)
 CT = C * T
 ci = combinedind(C)

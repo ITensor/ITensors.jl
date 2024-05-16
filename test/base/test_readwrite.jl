@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using HDF5: h5open, read, write
-using ITensors: Index, prime, randomITensor
+using ITensors: Index, prime, random_itensor
 using Test: @test, @testset
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
@@ -74,7 +74,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     end
 
     # real case
-    T = randomITensor(i, j, k)
+    T = random_itensor(i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
       write(fo, "T", T)
@@ -86,7 +86,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     end
 
     # complex case
-    T = randomITensor(ComplexF64, i, j, k)
+    T = random_itensor(ComplexF64, i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
       write(fo, "complexT", T)
@@ -143,7 +143,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     k = Index(QN("A", -1) => 1, QN("A", 0) => 1, QN("A", +1) => 1; tags="k")
 
     # real case
-    T = randomITensor(QN("A", 1), i, j, k)
+    T = random_itensor(QN("A", 1), i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
       write(fo, "T", T)
@@ -155,7 +155,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     end
 
     # complex case
-    T = randomITensor(ComplexF64, i, j, k)
+    T = random_itensor(ComplexF64, i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
       write(fo, "complexT", T)

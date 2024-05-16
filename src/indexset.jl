@@ -461,7 +461,7 @@ of the provided `Index` objects.
 ```julia
 i = Index(3; tags="i")
 j = Index(2; tags="j")
-T = randomITensor(j, i)
+T = random_itensor(j, i)
 for iv in eachindval(i, j)
   @show T[iv...]
 end

@@ -115,7 +115,7 @@ s = siteinds("S=½", 5)
 # ortho_lims(ψ) = 3:3
 @show ortho_lims(ψ)
 
-ψ[2] = randomITensor(inds(ψ[2]))
+ψ[2] = random_itensor(inds(ψ[2]))
 
 # ortho_lims(ψ) = 2:3
 @show ortho_lims(ψ)

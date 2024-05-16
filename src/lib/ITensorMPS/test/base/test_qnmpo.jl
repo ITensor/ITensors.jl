@@ -18,7 +18,7 @@ end
   #O = MPO(sites)
   O = MPO(N)
   for i in 1:length(O)
-    O[i] = randomITensor(QN(), sites[i], sites[i]')
+    O[i] = random_itensor(QN(), sites[i], sites[i]')
   end
   @test length(O) == N
 
@@ -31,42 +31,42 @@ end
   # test constructor from Vector{ITensor}
 
   K = MPO(N)
-  K[1] = randomITensor(QN(), dag(sites[1]), sites[1]', links[1])
+  K[1] = random_itensor(QN(), dag(sites[1]), sites[1]', links[1])
   for i in 2:(N - 1)
-    K[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
+    K[i] = random_itensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
-  K[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
+  K[N] = random_itensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   J = MPO(N)
-  J[1] = randomITensor(QN(), dag(sites[1]), sites[1]', links[1])
+  J[1] = random_itensor(QN(), dag(sites[1]), sites[1]', links[1])
   for i in 2:(N - 1)
-    J[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
+    J[i] = random_itensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
-  J[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
+  J[N] = random_itensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   L = MPO(N)
-  L[1] = randomITensor(QN(), dag(sites[1]), sites[1]', links[1])
+  L[1] = random_itensor(QN(), dag(sites[1]), sites[1]', links[1])
   for i in 2:(N - 1)
-    L[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
+    L[i] = random_itensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
-  L[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
+  L[N] = random_itensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   @test length(K) == N
   @test ITensors.data(MPO(copy(ITensors.data(K)))) == ITensors.data(K)
 
   phi = MPS(N)
-  phi[1] = randomITensor(QN(-1), sites[1], links[1])
+  phi[1] = random_itensor(QN(-1), sites[1], links[1])
   for i in 2:(N - 1)
-    phi[i] = randomITensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
+    phi[i] = random_itensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
   end
-  phi[N] = randomITensor(QN(-1), sites[N], dag(links[N - 1]))
+  phi[N] = random_itensor(QN(-1), sites[N], dag(links[N - 1]))
 
   psi = MPS(N)
-  psi[1] = randomITensor(QN(-1), sites[1], links[1])
+  psi[1] = random_itensor(QN(-1), sites[1], links[1])
   for i in 2:(N - 1)
-    psi[i] = randomITensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
+    psi[i] = random_itensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
   end
-  psi[N] = randomITensor(QN(-1), sites[N], dag(links[N - 1]))
+  psi[N] = random_itensor(QN(-1), sites[N], dag(links[N - 1]))
 
   @testset "orthogonalize!" begin
     orthogonalize!(phi, 1)

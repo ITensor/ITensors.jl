@@ -64,7 +64,7 @@ and start typing ITensor commands. For example:
 julia> i = Index(2, "i")
 (dim=2|id=355|"i")
 
-julia> A = randomITensor(i, i')
+julia> A = random_itensor(i, i')
 ITensor ord=2 (dim=2|id=355|"i") (dim=2|id=355|"i")'
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -182,7 +182,7 @@ Julia provides many tools for searching for documentation interactively at the R
 julia> using ITensors
 
 julia> ?ITensor
-search: ITensor ITensors itensor randomITensor
+search: ITensor ITensors itensor random_itensor
 
   An ITensor is a tensor whose interface is independent of its
   memory layout. Therefore it is not necessary to know the ordering
@@ -196,7 +196,7 @@ search: ITensor ITensors itensor randomITensor
   julia> i = Index(2, "i")
   (dim=2|id=287|"i")
 
-  julia> A = randomITensor(i', i)
+  julia> A = random_itensor(i', i)
   ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
   NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -334,7 +334,7 @@ julia> include("my_itensor_script.jl");
 
 julia> i = Index(2; tags="i");
 
-julia> A = randomITensor(i', i);
+julia> A = random_itensor(i', i);
 
 julia> norm2(A)
 [...]
@@ -375,7 +375,7 @@ julia> include("my_itensor_project.jl");
 
 julia> i = Index(2; tags="i");
 
-julia> A = randomITensor(i', i);
+julia> A = random_itensor(i', i);
 
 julia> norm2(A)
 [...]
@@ -509,7 +509,7 @@ julia> using ITensors
 julia> i = Index(2)
 (dim=2|id=263)
 
-julia> A = randomITensor(i)
+julia> A = random_itensor(i)
 ITensor ord=1 (dim=2|id=263)
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -544,7 +544,7 @@ using Test
 
 @testset "MyITensorsPkg.jl" begin
   i = Index(2)
-  A = randomITensor(i)
+  A = random_itensor(i)
   @test isapprox(norm2(A), norm(A)^2)
 end
 ```
@@ -804,7 +804,7 @@ julia> @time using ITensors
 julia> @time i = Index(2);
   0.000684 seconds (23 allocations: 20.328 KiB)
 
-julia> @time A = randomITensor(i', i);
+julia> @time A = random_itensor(i', i);
   0.071022 seconds (183.24 k allocations: 9.715 MiB)
 
 julia> @time svd(A, i');
@@ -835,7 +835,7 @@ julia> @time using ITensors
 julia> @time i = Index(2);
   0.000656 seconds (23 allocations: 20.328 KiB)
 
-julia> @time A = randomITensor(i', i);
+julia> @time A = random_itensor(i', i);
   0.000007 seconds (7 allocations: 576 bytes)
 
 julia> @time svd(A, i');
@@ -863,7 +863,7 @@ julia> using BenchmarkTools;
 
 julia> i = Index(100, "i");
 
-julia> A = randomITensor(i, i');
+julia> A = random_itensor(i, i');
 
 julia> @btime 2*$A;
   4.279 μs (8 allocations: 78.73 KiB)
@@ -892,7 +892,7 @@ type stable, like `getindex`, is not, for example:
 ```julia
 julia> i = Index(2, "i");
 
-julia> A = randomITensor(i, i');
+julia> A = random_itensor(i, i');
 
 julia> @code_warntype A[i=>1, i'=>2]
 Variables
@@ -971,7 +971,7 @@ julia> d = 10_000;
 
 julia> i = Index(d);
 
-julia> @btime myscale!(A, 2) setup = (A = randomITensor(i));
+julia> @btime myscale!(A, 2) setup = (A = random_itensor(i));
   2.169 ms (117958 allocations: 3.48 MiB)
 ```
 However, this is fast:
@@ -988,7 +988,7 @@ julia> @btime myscale!(A, 2) setup = (A = randn(d));
 julia> myscale2!(A::ITensor, x::Number) = myscale!(array(A), x)
 myscale2! (generic function with 1 method)
 
-julia> @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+julia> @btime myscale2!(A, 2) setup = (A = random_itensor(i));
   3.571 μs (2 allocations: 112 bytes)
 ```
 How does this work? It relies on a "function barrier" technique.
@@ -1019,8 +1019,8 @@ memory of the output tensor of an operation is preallocated.
 The main way to access this in ITensor is through broadcasting.
 For example:
 ```julia
-A = randomITensor(i, i')
-B = randomITensor(i', i)
+A = random_itensor(i, i')
+B = random_itensor(i', i)
 A .+= 2 .* B
 ```
 Internally, this is rewritten by Julia as a call to `broadcast!`.
@@ -1101,7 +1101,7 @@ julia> @btime myscale!(A, 2) setup = (A = Tensor(d));
 julia> myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
 myscale2! (generic function with 1 method)
 
-julia> @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+julia> @btime myscale2!(A, 2) setup = (A = random_itensor(i));
   3.549 μs (2 allocations: 112 bytes)
 ```
 A very efficient function is written for the Tensor type. Then,

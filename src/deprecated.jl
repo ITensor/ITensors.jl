@@ -21,6 +21,7 @@
 @deprecate findinds(args...; kwargs...) inds(args...; kwargs...)
 @deprecate linkindex(args...; kwargs...) linkind(args...; kwargs...)
 @deprecate matmul(A::ITensor, B::ITensor) product(A, B)
+@deprecate randomITensor(args...; kwargs...) random_itensor(args...; kwargs...)
 @deprecate replaceindex!(args...; kwargs...) replaceind!(args...; kwargs...)
 @deprecate siteindex(args...; kwargs...) siteind(args...; kwargs...)
 @deprecate store(A::ITensor) storage(A)

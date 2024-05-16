@@ -4,8 +4,8 @@ using Test
 
 @testset "ITensors priming and tagging" begin
   i = Index(2)
-  T1 = randomITensor(i'', i')
-  T2 = randomITensor(i', i)
+  T1 = random_itensor(i'', i')
+  T2 = random_itensor(i', i)
 
   @test inds(@inferred(adjoint(T1))) == (i''', i'')
   @test inds(@inferred(prime(T1, 2))) == (i'''', i''')
@@ -48,9 +48,9 @@ end
 
 @testset "NDTensors BlockSparse contract" begin
   i = Index([QN(0) => 2, QN(1) => 2])
-  IT1 = randomITensor(i'', dag(i)')
-  IT2 = randomITensor(i', dag(i))
-  IR = randomITensor(i'', dag(i))
+  IT1 = random_itensor(i'', dag(i)')
+  IT2 = random_itensor(i', dag(i))
+  IR = random_itensor(i'', dag(i))
   T1, T2, R = Tensor.((IT1, IT2, IR))
 
   labelsT1 = (1, -1)

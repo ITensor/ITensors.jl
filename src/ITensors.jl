@@ -26,7 +26,7 @@ Set the i==2,j==1 element to -2.6
 
 Make an ITensor with random elements
 
-    B = randomITensor(j,i)
+    B = random_itensor(j,i)
 
 Add ITensors A and B together (ok that indices in different order)
 

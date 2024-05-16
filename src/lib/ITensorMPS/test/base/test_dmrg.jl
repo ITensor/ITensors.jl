@@ -461,7 +461,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
 
     # Test that input works with no ortho center:
     for j in 1:N
-      psi0[j] = randomITensor(inds(psi0[j]))
+      psi0[j] = random_itensor(inds(psi0[j]))
     end
     energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
   end

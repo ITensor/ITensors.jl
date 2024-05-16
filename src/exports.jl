@@ -155,7 +155,7 @@ export
   prime!,
   product,
   randn!,
-  randomITensor,
+  random_itensor,
   removetags!,
   replacetags!,
   replaceind!,

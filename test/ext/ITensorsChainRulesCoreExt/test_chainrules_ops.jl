@@ -11,7 +11,7 @@ using Zygote: ZygoteRuleConfig, gradient
   s = siteinds("S=1/2", 4)
 
   x = 2.4
-  V = randomITensor(s[1], s[2])
+  V = random_itensor(s[1], s[2])
 
   f = function (x)
     y = ITensor(Op("Ry", 1; θ=x), s)

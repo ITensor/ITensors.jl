@@ -133,7 +133,7 @@ let
 
   @show hasinds(C,i,k,l) # = true
 
-  D = randomITensor(k,j,i) # ITensor with random elements
+  D = random_itensor(k,j,i) # ITensor with random elements
 
   # Add two ITensors
   # must have same set of indices
@@ -163,7 +163,7 @@ using ITensors
 let
   i = Index(10)           # index of dimension 10
   j = Index(20)           # index of dimension 20
-  M = randomITensor(i,j)  # random matrix, indices i,j
+  M = random_itensor(i,j)  # random matrix, indices i,j
   U,S,V = svd(M,i)        # compute SVD with i as row index
   @show M ≈ U*S*V         # = true
 
@@ -195,7 +195,7 @@ let
   j = Index(4,"j")
   k = Index(4,"k")
   l = Index(4,"l")
-  T = randomITensor(i,j,k,l)
+  T = random_itensor(i,j,k,l)
   U,S,V = svd(T,i,k)   # compute SVD with (i,k) as row indices (indices of U)
   @show hasinds(U,i,k) # = true
   @show hasinds(V,j,l) # = true

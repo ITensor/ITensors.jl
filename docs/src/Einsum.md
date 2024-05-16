@@ -36,7 +36,7 @@ The different metadata that are stored inside of ITensor indices that determine 
 ```@repl itensor
 i = Index(2, "i")
 j = Index(2, "j")
-A = randomITensor(i, j)
+A = random_itensor(i, j)
 U, S, V = svd(A, i; lefttags="i", righttags="j");
 inds(U)
 inds(S)
@@ -49,9 +49,9 @@ In contrast, using multiple indices with the same Index ID but different prime l
 ```repl itensor
 i = Index(2, "i")
 j = Index(3, "j")
-A = randomITensor(i', j', dag(i), dag(j))
+A = random_itensor(i', j', dag(i), dag(j))
 H = 0.5 * (A + swapprime(dag(A), 0 => 1))
-v = randomITensor(i, j)
+v = random_itensor(i, j)
 Hv = noprime(H * v)
 vH = dag(v)' * H
 norm(Hv - dag(vH))
@@ -63,9 +63,9 @@ i = Index(2, "i")
 j = Index(3, "j")
 ip = Index(2, "i")
 jp = Index(3, "jp")
-A = randomITensor(ip, jp, dag(i), dag(j))
+A = random_itensor(ip, jp, dag(i), dag(j))
 H = 0.5 * (A + swapinds(dag(A), (i, j), (ip, jp)))
-v = randomITensor(i, j)
+v = random_itensor(i, j)
 Hv = replaceinds(H * v, (ip, jp) => (i, j))
 vH = replaceinds(dag(v), (i, j) => (ip, jp)) * H
 norm(Hv - dag(vH))
@@ -82,9 +82,9 @@ db, dd = da, dc;
 tags = ("a", "b", "c", "d");
 dims = (da, db, dc, dd);
 a, b, c, d = Index.(dims, tags);
-Aab = randomITensor(a, b)
-Bbc = randomITensor(b, c)
-Ccd = randomITensor(c, d)
+Aab = random_itensor(a, b)
+Bbc = random_itensor(b, c)
+Ccd = random_itensor(c, d)
 
 # "ab,bc,cd->ad"
 out1 = Aab * Bbc * Ccd
@@ -124,9 +124,9 @@ out2 = Aba * Bbc * Cdc
 a = Index(da, "a")
 c = Index(dc, "c")
 b, d = a', c'
-Aab = randomITensor(a, b)
-Bbc = randomITensor(b, c)
-Ccd = randomITensor(c, d)
+Aab = random_itensor(a, b)
+Bbc = random_itensor(b, c)
+Ccd = random_itensor(c, d)
 out1 = Aab * Bbc * Ccd
 @show hassameinds(out1, (a, d))
 
@@ -144,9 +144,9 @@ out2 = Aba * Bbc * Cdc
 a = Index(da, "a")
 c = Index(dc, "c")
 b, d = settags(a, "b"), settags(c, "d")
-Aab = randomITensor(a, b)
-Bbc = randomITensor(b, c)
-Ccd = randomITensor(c, d)
+Aab = random_itensor(a, b)
+Bbc = random_itensor(b, c)
+Ccd = random_itensor(c, d)
 out1 = Aab * Bbc * Ccd
 @show hassameinds(out1, (a, d))
 

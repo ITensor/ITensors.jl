@@ -30,7 +30,7 @@ you can create an MPS approximation of `T` where the MPS has site indices
 ```julia
 cutoff = 1E-8
 maxdim = 10
-T = randomITensor(i,j,k,l,m)
+T = random_itensor(i,j,k,l,m)
 M = MPS(T,(i,j,k,l,m);cutoff=cutoff,maxdim=maxdim)
 ```
 

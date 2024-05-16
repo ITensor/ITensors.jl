@@ -98,7 +98,7 @@ function randomU(rng::AbstractRNG, eltype::Type{<:Number}, s1::Index, s2::Index)
     Q, _ = NDTensors.qr_positive(RM)
     G = itensor(Q, dag(s1), dag(s2), s1', s2')
   else
-    M = randomITensor(rng, eltype, QN(), s1', s2', dag(s1), dag(s2))
+    M = random_itensor(rng, eltype, QN(), s1', s2', dag(s1), dag(s2))
     U, S, V = svd(M, (s1', s2'))
     u = commonind(U, S)
     v = commonind(S, V)

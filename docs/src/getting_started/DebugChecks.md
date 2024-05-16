@@ -22,7 +22,7 @@ julia> using ITensors
 julia> i = Index(2)
 (dim=2|id=913)
 
-julia> A = randomITensor(i', i)
+julia> A = random_itensor(i', i)
 ITensor ord=2 (dim=2|id=913)' (dim=2|id=913)
 NDTensors.Dense{Float64, Vector{Float64}}
 

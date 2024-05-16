@@ -73,7 +73,7 @@ using Test
     @test order(E) == 0
     @test_throws MethodError E[i' => 1, i => 3] = 0
 
-    A = randomITensor(i', dag(i))
+    A = random_itensor(i', dag(i))
     E += A
 
     @test norm(E - A) < 1E-8

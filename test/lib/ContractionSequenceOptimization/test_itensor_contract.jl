@@ -9,7 +9,7 @@ using ITensors.ContractionSequenceOptimization: optimal_contraction_sequence, de
 @testset "ITensor contraction sequence optimization" begin
   d = 100
   i = Index(d, "i")
-  A = randomITensor(i', dag(i))
+  A = random_itensor(i', dag(i))
 
   # Low level functions
   @test dim([1, 2], [4, 5, 6]) == 4 * 5
@@ -112,7 +112,7 @@ end
   t = ["$n" for n in 1:ntensors]
   is = Index.(d, t)
 
-  As = [randomITensor(ElType, is[n], is[mod1(n + 1, ntensors)]) for n in 1:ntensors]
+  As = [random_itensor(ElType, is[n], is[mod1(n + 1, ntensors)]) for n in 1:ntensors]
 
   # Warmup
   contract(As)

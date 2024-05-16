@@ -13,7 +13,7 @@ ITensor(::Type{<:Number}, ::ITensors.Indices)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::ITensors.Indices)
 ITensor(::Type{<:Number}, ::Number, ::ITensors.Indices)
 ITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Array{<:Number}, ::ITensors.Indices{Index{Int}}; kwargs...)
-randomITensor(::Type{<:Number}, ::ITensors.Indices)
+random_itensor(::Type{<:Number}, ::ITensors.Indices)
 onehot
 ```
 

@@ -174,7 +174,7 @@ end
     ITensors.space(::SiteType"qubit") = 2
 
     function ITensors.op(::OpName"rand", ::SiteType"qubit", s::Index...)
-      return randomITensor(prime.(s)..., dag.(s)...)
+      return random_itensor(prime.(s)..., dag.(s)...)
     end
 
     s = siteinds("qubit", 4)

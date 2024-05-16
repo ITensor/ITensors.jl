@@ -273,7 +273,7 @@ using Test
 
     @testset "Add (Diag + Dense)" begin
       D = diagITensor(vr, i, j, k)
-      A = randomITensor(k, j, i)
+      A = random_itensor(k, j, i)
 
       R = D + A
 
@@ -285,7 +285,7 @@ using Test
 
     @testset "Add (Dense + Diag)" begin
       D = diagITensor(vr, i, j, k)
-      A = randomITensor(i, k, j)
+      A = random_itensor(i, k, j)
 
       R = A + D
 
@@ -297,7 +297,7 @@ using Test
 
     @testset "Contraction (all contracted)" begin
       D = diagITensor(v, i, j, k)
-      A = randomITensor(j, k, i)
+      A = random_itensor(j, k, i)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -305,13 +305,13 @@ using Test
 
     @testset "Contraction (all contracted) with different types" begin
       D = diagITensor(v, i, j, k)
-      A = randomITensor(Float32, j, k, i)
+      A = random_itensor(Float32, j, k, i)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
 
       D = diagITensor(v, i, j, k)
-      A = randomITensor(ComplexF32, j, k, i)
+      A = random_itensor(ComplexF32, j, k, i)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -319,7 +319,7 @@ using Test
 
     @testset "Contraction (all dense contracted)" begin
       D = diagITensor(v, j, k, i)
-      A = randomITensor(i, j)
+      A = random_itensor(i, j)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -327,7 +327,7 @@ using Test
 
     @testset "Contraction Diag*Dense (general)" begin
       D = diagITensor(v, l, i, k, j)
-      A = randomITensor(m, k, n, l)
+      A = random_itensor(m, k, n, l)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -335,7 +335,7 @@ using Test
 
     @testset "Contraction Diag*Dense (outer)" begin
       D = diagITensor(v, l, i, k, j)
-      A = randomITensor(m, n)
+      A = random_itensor(m, n)
 
       @test order(D * A) == 6
       @test D * A ≈ dense(D) * A
@@ -443,7 +443,7 @@ using Test
 
     @testset "Add (Diag uniform + Dense)" begin
       D = δ(i, j, k)
-      A = randomITensor(k, j, i)
+      A = random_itensor(k, j, i)
 
       R = D + A
 
@@ -455,7 +455,7 @@ using Test
 
     @testset "Contraction (Diag uniform * Dense, all contracted)" begin
       D = δ(i, j, k)
-      A = randomITensor(j, k, i)
+      A = random_itensor(j, k, i)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -463,7 +463,7 @@ using Test
 
     @testset "Contraction (Diag uniform * Dense, all dense contracted)" begin
       D = δ(j, k, i)
-      A = randomITensor(i, j)
+      A = random_itensor(i, j)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -471,7 +471,7 @@ using Test
 
     @testset "Contraction (Diag uniform * Dense, general)" begin
       D = δ(l, i, k, j)
-      A = randomITensor(m, k, n, l)
+      A = random_itensor(m, k, n, l)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -484,7 +484,7 @@ using Test
       i = Index(idim, "i")
       m = Index(mdim, "m")
 
-      A = randomITensor(i, i', m)
+      A = random_itensor(i, i', m)
       D = δ(i, i')
 
       @test D * A ≈ dense(D) * A
@@ -493,7 +493,7 @@ using Test
 
     @testset "Contraction (Diag uniform * Dense, replace index)" begin
       D = δ(i, k)
-      A = randomITensor(m, k, n, l)
+      A = random_itensor(m, k, n, l)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -501,7 +501,7 @@ using Test
 
     @testset "Contraction (Diag uniform * Dense, replace index 2)" begin
       D = δ(k, i)
-      A = randomITensor(m, n, k, l)
+      A = random_itensor(m, n, k, l)
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
@@ -534,7 +534,7 @@ using Test
     @testset "Rectangular Diag * Dense regression test (#969)" begin
       i = Index(3)
       j = Index(2)
-      A = randomITensor(i)
+      A = random_itensor(i)
       B = delta(i, j)
       C = A * B
       @test hassameinds(C, j)

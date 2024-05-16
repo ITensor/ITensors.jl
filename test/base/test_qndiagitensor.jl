@@ -40,7 +40,7 @@ using ITensors, Test
     ĩ = sim(i; tags="i_sim")
     j = Index(QN(0) => 2, QN(1) => 3, QN(2) => 4; tags="j")
 
-    A = randomITensor(QN(), i, dag(j))
+    A = random_itensor(QN(), i, dag(j))
 
     δiĩ = δ(dag(i), ĩ)
 
@@ -118,7 +118,7 @@ using ITensors, Test
   @testset "Regression test for printing a QN Diag ITensor" begin
     # https://github.com/ITensor/NDTensors.jl/issues/61
     i = Index([QN() => 2])
-    A = randomITensor(i', dag(i))
+    A = random_itensor(i', dag(i))
     U, S, V = svd(A, i')
     # Test printing S
     io = IOBuffer()

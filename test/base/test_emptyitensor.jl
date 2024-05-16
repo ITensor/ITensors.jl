@@ -43,7 +43,7 @@ end
   i, j = Index.((2, 3))
 
   A = ITensor(i, j)
-  B = randomITensor(j, i)
+  B = random_itensor(j, i)
 
   C = A + B
   @test inds(C) == (i, j)
@@ -69,7 +69,7 @@ end
     ITensors.EmptyNumber,<:ITensors.BlockSparse{ITensors.EmptyNumber}
   }
 
-  B = randomITensor(dag(i), i')
+  B = random_itensor(dag(i), i')
 
   C = A' * B
 

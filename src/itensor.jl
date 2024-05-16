@@ -23,7 +23,7 @@ julia> i = Index(2, "i")
 #
 # Make an ITensor with random elements:
 #
-julia> A = randomITensor(i', i)
+julia> A = random_itensor(i', i)
 ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -56,7 +56,7 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 julia> @show storage(A);
 storage(A) = [0.28358594718392427, 1.0, 1.4342219756446355, -0.40952231269251566]
 
-julia> B = randomITensor(i, i');
+julia> B = random_itensor(i, i');
 
 julia> @show B;
 B = ITensor ord=2
@@ -582,8 +582,8 @@ function dense(A::ITensor)
 end
 
 """
-    randomITensor([rng=Random.default_rng()], [ElT=Float64], inds)
-    randomITensor([rng=Random.default_rng()], [ElT=Float64], inds::Index...)
+    random_itensor([rng=Random.default_rng()], [ElT=Float64], inds)
+    random_itensor([rng=Random.default_rng()], [ElT=Float64], inds::Index...)
 
 Construct an ITensor with type `ElT` and indices `inds`, whose elements are
 normally distributed random numbers. If the element type is not specified,
@@ -596,68 +596,68 @@ i = Index(2,"index_i")
 j = Index(4,"index_j")
 k = Index(3,"index_k")
 
-A = randomITensor(i,j)
-B = randomITensor(ComplexF64,undef,k,j)
+A = random_itensor(i,j)
+B = random_itensor(ComplexF64,undef,k,j)
 ```
 """
-function randomITensor(::Type{S}, is::Indices) where {S<:Number}
-  return randomITensor(Random.default_rng(), S, is)
+function random_itensor(::Type{S}, is::Indices) where {S<:Number}
+  return random_itensor(Random.default_rng(), S, is)
 end
 
-function randomITensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
+function random_itensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
   T = ITensor(S, undef, is)
   randn!(rng, T)
   return T
 end
 
-function randomITensor(::Type{S}, is...) where {S<:Number}
-  return randomITensor(Random.default_rng(), S, is...)
+function random_itensor(::Type{S}, is...) where {S<:Number}
+  return random_itensor(Random.default_rng(), S, is...)
 end
 
-function randomITensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
-  return randomITensor(rng, S, indices(is...))
-end
-
-# To fix ambiguity with QN version
-function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, is)
+function random_itensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
+  return random_itensor(rng, S, indices(is...))
 end
 
 # To fix ambiguity with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return randomITensor(rng, ElT, Index{Int}[])
+function random_itensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT, is)
 end
 
 # To fix ambiguity with QN version
-function randomITensor(is::Tuple{})
-  return randomITensor(Random.default_rng(), is)
+function random_itensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return random_itensor(rng, ElT, Index{Int}[])
 end
 
 # To fix ambiguity with QN version
-function randomITensor(rng::AbstractRNG, is::Tuple{})
-  return randomITensor(rng, Float64, is)
+function random_itensor(is::Tuple{})
+  return random_itensor(Random.default_rng(), is)
+end
+
+# To fix ambiguity with QN version
+function random_itensor(rng::AbstractRNG, is::Tuple{})
+  return random_itensor(rng, Float64, is)
 end
 
 # To fix ambiguity errors with QN version
-function randomITensor(::Type{ElT}) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT)
+function random_itensor(::Type{ElT}) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT)
 end
 
 # To fix ambiguity errors with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
-  return randomITensor(rng, ElT, ())
+function random_itensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
+  return random_itensor(rng, ElT, ())
 end
 
-randomITensor(is::Indices) = randomITensor(Random.default_rng(), is)
-randomITensor(rng::AbstractRNG, is::Indices) = randomITensor(rng, Float64, is)
-randomITensor(is...) = randomITensor(Random.default_rng(), is...)
-randomITensor(rng::AbstractRNG, is...) = randomITensor(rng, Float64, indices(is...))
+random_itensor(is::Indices) = random_itensor(Random.default_rng(), is)
+random_itensor(rng::AbstractRNG, is::Indices) = random_itensor(rng, Float64, is)
+random_itensor(is...) = random_itensor(Random.default_rng(), is...)
+random_itensor(rng::AbstractRNG, is...) = random_itensor(rng, Float64, indices(is...))
 
 # To fix ambiguity errors with QN version
-randomITensor() = randomITensor(Random.default_rng())
+random_itensor() = random_itensor(Random.default_rng())
 
 # To fix ambiguity errors with QN version
-randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
+random_itensor(rng::AbstractRNG) = random_itensor(rng, Float64, ())
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
@@ -895,7 +895,7 @@ julia> i = Index(2, "i")
 julia> j = Index(3, "j")
 (dim=3|id=554|"j")
 
-julia> A = randomITensor(i, j)
+julia> A = random_itensor(i, j)
 ITensor ord=2 (dim=2|id=90|"i") (dim=3|id=554|"j")
 Dense{Float64,Array{Float64,1}}
 

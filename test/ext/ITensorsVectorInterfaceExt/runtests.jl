@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using ITensors: Index, dag, inds, randomITensor
+using ITensors: Index, dag, inds, random_itensor
 using Test: @test, @testset
 using VectorInterface:
   add,
@@ -17,8 +17,8 @@ using VectorInterface:
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 @testset "ITensorsVectorInterfaceExt (eltype=$elt)" for elt in elts
   i, j, k = Index.((2, 2, 2))
-  a = randomITensor(elt, i, j, k)
-  b = randomITensor(elt, k, i, j)
+  a = random_itensor(elt, i, j, k)
+  b = random_itensor(elt, k, i, j)
   α = randn(elt)
   β = randn(elt)
   αᶜ = randn(complex(elt))

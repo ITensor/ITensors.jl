@@ -12,7 +12,7 @@ let
   # For example:
   i = Index(2,"i")
   j = Index(3,"j")
-  T = randomITensor(i,j)
+  T = random_itensor(i,j)
   @show T
 end
 ```
@@ -30,7 +30,7 @@ function main(; d1 = 2, d2 = 3)
   # For example:
   i = Index(d1,"i")
   j = Index(d2,"j")
-  T = randomITensor(i,j)
+  T = random_itensor(i,j)
   @show T
 end
 

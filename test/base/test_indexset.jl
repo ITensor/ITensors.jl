@@ -330,7 +330,7 @@ using Compat
     sk = [QN(0) => 3, QN(1) => 4, QN(2) => 5]
     sl = [QN(0) => 2]
     i, j, k, l = Index.((si, sj, sk, sl), ("i", "j", "k", "l"))
-    T = randomITensor(dag(j), k', i', dag(k), j', dag(i))
+    T = random_itensor(dag(j), k', i', dag(k), j', dag(i))
     ip = ITensors.indpairs(T)
     i1 = first.(ip)
     i2 = last.(ip)
