@@ -99,7 +99,7 @@ Random.seed!(1234)
     ϵ = 1e-10
     @test f'(x) ≈ (f(x + ϵ) - f(x)) / ϵ atol = 1e-6
 
-    ρ = randomMPO(s)
+    ρ = random_mpo(s)
     f = function (x)
       ψ̃tensors = [x^j * ψtensors[j] for j in 1:length(ψtensors)]
       ψ̃ = MPS(ψ̃tensors)
@@ -112,7 +112,7 @@ Random.seed!(1234)
   #  Random.seed!(1234)
   #  s = siteinds("S=1/2", 2)
   #
-  #  #ρ = randomMPO(s)
+  #  #ρ = random_mpo(s)
   #  #ρtensors = ITensors.data(ρ)
   #  #ϕ = random_mps(ComplexF64, s)
   #  #f = function (x)
@@ -128,7 +128,7 @@ Random.seed!(1234)
   #  ##@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6
   #  #
   #
-  #  #ϕ = randomMPO(s)
+  #  #ϕ = random_mpo(s)
   #  #f = function (x)
   #  #  ψ̃tensors  = [2 * x * ψtensors[1],  log(x) * ψtensors[2]]
   #  #  ψ̃ = MPS(ψ̃tensors)
@@ -138,7 +138,7 @@ Random.seed!(1234)
   #  #ϵ = 1e-8
   #  #@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6
   #
-  #  #ρ = randomMPO(s)
+  #  #ρ = random_mpo(s)
   #end
   @testset "MPO: apply" begin
     Random.seed!(1234)
@@ -155,7 +155,7 @@ Random.seed!(1234)
       return os
     end
     H = MPO(ising(n, 1.0), s)
-    A = randomMPO(s)
+    A = random_mpo(s)
     ϕ = random_mps(ComplexF64, s; linkdims=10)
 
     # apply on mpo with apply_dag=true
@@ -204,7 +204,7 @@ Random.seed!(1234)
     @test ∇f ≈ ∇num atol = 1e-5
 
     # multiply two MPOs
-    V = randomMPO(s)
+    V = random_mpo(s)
     f = function (x)
       U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
       Hθ = apply(U, H; apply_dag=false)
@@ -218,8 +218,8 @@ Random.seed!(1234)
     @test ∇f ≈ ∇num atol = 1e-5
 
     # trace(MPO)
-    V1 = randomMPO(s)
-    V2 = randomMPO(s)
+    V1 = random_mpo(s)
+    V2 = random_mpo(s)
     f = function (x)
       U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
       Hθ = apply(U, H; apply_dag=false)
@@ -237,8 +237,8 @@ Random.seed!(1234)
       z = x + y
       return inner(z, z)
     end
-    V1 = randomMPO(s)
-    V2 = randomMPO(s)
+    V1 = random_mpo(s)
+    V2 = random_mpo(s)
     g1, g2 = gradient(f, V1, V2)
     @test g1 ≈ 2 * (V1 + V2)
     @test g2 ≈ 2 * (V1 + V2)
@@ -248,8 +248,8 @@ Random.seed!(1234)
       z = x - y
       return inner(z, z)
     end
-    V1 = randomMPO(s)
-    V2 = randomMPO(s)
+    V1 = random_mpo(s)
+    V2 = random_mpo(s)
     g1, g2 = gradient(f, V1, V2)
     @test g1 ≈ 2 * (V1 - V2)
     @test g2 ≈ -2 * (V1 - V2)

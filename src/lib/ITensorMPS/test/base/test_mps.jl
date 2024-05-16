@@ -1165,7 +1165,7 @@ end
     @test findsites(ψ, (l[2], l[3])) == [2, 3, 4]
     @test findsites(ψ, A) == [2, 4]
 
-    M = randomMPO(s)
+    M = random_mpo(s)
     lM = linkinds(M)
 
     @test findsite(M, s[4]) == 4
@@ -1192,7 +1192,7 @@ end
     @test siteinds(ψ, 3) == IndexSet(s[3])
     @test siteinds(ψ, 3; plev=1) == IndexSet()
 
-    M = randomMPO(s)
+    M = random_mpo(s)
     @test noprime(siteind(first, M, 4)) == s[4]
     @test siteind(first, M, 4; plev=0) == s[4]
     @test siteind(first, M, 4; plev=1) == s[4]'

@@ -19,6 +19,7 @@
 
 # mps/mpo.jl
 @deprecate MPO(A::MPS; kwargs...) outer(A', A; kwargs...)
+@deprecate randomMPO(args...; kwargs...) = random_mpo(args...; kwargs...)
 
 # mps/mps.jl
 @deprecate randomMPS(args...; kwargs...) = random_mps(args...; kwargs...)

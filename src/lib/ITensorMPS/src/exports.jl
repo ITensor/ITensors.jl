@@ -42,7 +42,7 @@ export
   orthogonalize!,
   outer,
   projector,
-  randomMPO,
+  random_mpo,
   truncate,
   truncate!,
   unique_siteind,

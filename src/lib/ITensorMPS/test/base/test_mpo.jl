@@ -21,7 +21,7 @@ end
 @testset "[first]siteinds(::MPO)" begin
   N = 5
   s = siteinds("S=1/2", N)
-  M = randomMPO(s)
+  M = random_mpo(s)
   v = siteinds(M)
   for n in 1:N
     @test hassameinds(v[n], (s[n], s[n]'))
@@ -48,12 +48,12 @@ end
   @test hasind(P[1], sites[1])
   @test hasind(P[1], prime(sites[1]))
   # test constructor from Vector{ITensor}
-  K = randomMPO(sites)
+  K = random_mpo(sites)
   @test ITensors.data(MPO(copy(ITensors.data(K)))) == ITensors.data(K)
 
   @testset "orthogonalize!" begin
     phi = random_mps(sites)
-    K = randomMPO(sites)
+    K = random_mpo(sites)
     orthogonalize!(phi, 1)
     orthogonalize!(K, 1)
     orig_inner = ⋅(phi', K, phi)
@@ -63,7 +63,7 @@ end
   end
 
   @testset "norm MPO" begin
-    A = randomMPO(sites)
+    A = random_mpo(sites)
     Adag = sim(linkinds, dag(A))
     A² = ITensor(1)
     for j in 1:N
@@ -79,7 +79,7 @@ end
   end
 
   @testset "lognorm MPO" begin
-    A = randomMPO(sites)
+    A = random_mpo(sites)
     for j in 1:N
       A[j] .*= j
     end
@@ -96,7 +96,7 @@ end
 
   @testset "inner <y|A|x>" begin
     phi = random_mps(sites)
-    K = randomMPO(sites)
+    K = random_mpo(sites)
     @test maxlinkdim(K) == 1
     psi = random_mps(sites)
     phidag = dag(phi)
@@ -156,7 +156,7 @@ end
     s = siteinds("S=1/2", n)
     ψ = c .* random_mps(s; linkdims=4)
     Φ = c .* random_mps(s; linkdims=4)
-    K = randomMPO(s)
+    K = random_mpo(s)
 
     @test log(complex(inner(ψ', K, Φ))) ≈ loginner(ψ', K, Φ)
   end
@@ -240,7 +240,7 @@ end
 
   @testset "contract" begin
     phi = random_mps(sites)
-    K = randomMPO(sites)
+    K = random_mpo(sites)
     @test maxlinkdim(K) == 1
     psi = random_mps(sites)
     psi_out = contract(K, psi; maxdim=1)
@@ -290,8 +290,8 @@ end
 
   @testset "add(::MPO, ::MPO)" begin
     shsites = siteinds("S=1/2", N)
-    K = randomMPO(shsites)
-    L = randomMPO(shsites)
+    K = random_mpo(shsites)
+    L = random_mpo(shsites)
     M = add(K, L)
     @test length(M) == N
     psi = random_mps(shsites)
@@ -352,8 +352,8 @@ end
 
   @testset "contract(::MPO, ::MPO)" begin
     psi = random_mps(sites)
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
     KL = contract(prime(K), L; maxdim=1)
@@ -363,8 +363,8 @@ end
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
     othersitesl = [Index(2, "Site,bbb") for n in 1:N]
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     for ii in 1:N
       replaceind!(K[ii], sites[ii]', othersitesk[ii])
       replaceind!(L[ii], sites[ii]', othersitesl[ii])
@@ -376,14 +376,14 @@ end
     @test inner(psik, KL, psil) ≈ inner(psik, psi_kl_out) atol = 5e-3
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badL = randomMPO(badsites)
+    badL = random_mpo(badsites)
     @test_throws DimensionMismatch contract(K, badL)
   end
 
   @testset "*(::MPO, ::MPO)" begin
     psi = random_mps(sites)
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
     KL = *(prime(K), L; maxdim=1)
@@ -399,8 +399,8 @@ end
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
     othersitesl = [Index(2, "Site,bbb") for n in 1:N]
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     for ii in 1:N
       replaceind!(K[ii], sites[ii]', othersitesk[ii])
       replaceind!(L[ii], sites[ii]', othersitesl[ii])
@@ -412,7 +412,7 @@ end
     @test dot(psik, KL, psil) ≈ psik ⋅ psi_kl_out atol = 5e-3
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badL = randomMPO(badsites)
+    badL = random_mpo(badsites)
     @test_throws DimensionMismatch K * badL
   end
 
@@ -428,7 +428,7 @@ end
   O = MPO(sites, "Sz")
   @test length(O) == N # just make sure this works
 
-  @test_throws ArgumentError randomMPO(sites, 2)
+  @test_throws ArgumentError random_mpo(sites, 2)
   @test isnothing(linkind(MPO(fill(ITensor(), N), 0, N + 1), 1))
 
   @testset "movesites $N sites" for N in 1:7
@@ -436,7 +436,7 @@ end
     ψ0 = MPO(s0, "Id")
     for perm in permutations(1:N)
       s = s0[perm]
-      ψ = randomMPO(s)
+      ψ = random_mpo(s)
       ns′ = [findsite(ψ0, i) for i in s]
       @test ns′ == perm
       ψ′ = movesites(ψ, 1:N .=> ns′)
@@ -537,7 +537,7 @@ end
   @testset "Set range of MPO tensors" begin
     N = 5
     s = siteinds("S=1/2", N)
-    ψ0 = randomMPO(s)
+    ψ0 = random_mpo(s)
 
     ψ = orthogonalize(ψ0, 2)
     A = prod(ITensors.data(ψ)[2:(N - 1)])
@@ -565,7 +565,7 @@ end
   @testset "swapbondsites MPO" begin
     N = 5
     sites = siteinds("S=1/2", N)
-    ψ0 = randomMPO(sites)
+    ψ0 = random_mpo(sites)
 
     # TODO: implement this?
     #ψ = replacebond(ψ0, 3, ψ0[3] * ψ0[4];
@@ -680,8 +680,8 @@ end
   @testset "unsupported kwarg in dot, logdot" begin
     N = 6
     sites = [Index(2, "Site,n=$n") for n in 1:N]
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     @test_throws ErrorException dot(K, L, make_inds_match=true)
     @test_throws ErrorException logdot(K, L, make_inds_match=true)
   end
@@ -768,8 +768,8 @@ end
     # MPO not an MPS
     N = 8
     s = siteinds(2, N)
-    A = randomMPO(s)
-    B = randomMPO(s)
+    A = random_mpo(s)
+    B = random_mpo(s)
     C = apply(A, B; alg="naive")
     @test C isa MPO
   end
@@ -800,8 +800,8 @@ end
   @testset "consistent precision of apply" for T in
                                                (Float32, Float64, ComplexF32, ComplexF64)
     sites = siteinds("S=1/2", 4)
-    A = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
-    B = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
+    A = randn(T) * convert_leaf_eltype(T, random_mpo(sites))
+    B = randn(T) * convert_leaf_eltype(T, random_mpo(sites))
     @test scalartype(apply(A, B)) == T
   end
   @testset "sample" begin

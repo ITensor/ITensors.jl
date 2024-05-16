@@ -190,7 +190,7 @@ end
   O = MPO(sites, "Sz")
   @test length(O) == N # just make sure this works
 
-  @test_throws ArgumentError randomMPO(sites, 2)
+  @test_throws ArgumentError random_mpo(sites, 2)
   @test isnothing(linkind(MPO(fill(ITensor(), N), 0, N + 1), 1))
 end
 
