@@ -109,7 +109,7 @@ Returns the range of sites of the orthogonality center of the MPS/MPO.
 
 ```julia
 s = siteinds("S=½", 5)
-ψ = randomMPS(s)
+ψ = random_mps(s)
 ψ = orthogonalize(ψ, 3)
 
 # ortho_lims(ψ) = 3:3
@@ -179,8 +179,8 @@ should be preserved.
 s = siteinds("S=1/2", 4)
 
 # Make random MPS with bond dimension 2
-ψ₁ = randomMPS(s, "↑"; linkdims=2)
-ψ₂ = randomMPS(s, "↑"; linkdims=2)
+ψ₁ = random_mps(s, "↑"; linkdims=2)
+ψ₂ = random_mps(s, "↑"; linkdims=2)
 ψ₁ = orthogonalize(ψ₁, 1)
 ψ₂ = orthogonalize(ψ₂, 1)
 
@@ -256,7 +256,7 @@ julia> using ITensors, ITensorMPS
 
 julia> s = siteinds("S=1/2", 3);
 
-julia> M1 = randomMPS(s; linkdims=3);
+julia> M1 = random_mps(s; linkdims=3);
 
 julia> norm(M1)
 0.9999999999999999
@@ -304,7 +304,7 @@ julia> using ITensors, ITensorMPS
 
 julia> s = siteinds("S=1/2", 3);
 
-julia> M1 = randomMPS(s; linkdims=3);
+julia> M1 = random_mps(s; linkdims=3);
 
 julia> norm(M1)
 1.0
@@ -541,7 +541,7 @@ To find all sites with common indices with `is`, use the
 # Examples
 ```julia
 s = siteinds("S=1/2", 5)
-ψ = randomMPS(s)
+ψ = random_mps(s)
 findsite(ψ, s[3]) == 3
 findsite(ψ, (s[3], s[4])) == 3
 
@@ -572,7 +572,7 @@ indices in common with the collection of site indices
 # Examples
 ```julia
 s = siteinds("S=1/2", 5)
-ψ = randomMPS(s)
+ψ = random_mps(s)
 findsites(ψ, s[3]) == [3]
 findsites(ψ, (s[4], s[1])) == [1, 4]
 
@@ -998,7 +998,7 @@ with mismatched prime levels. The most common cause of this is something like th
 
  ```julia
  s = siteinds("S=1/2")
- psi = randomMPS(s)
+ psi = random_mps(s)
  H = MPO(s, "Id")
  Hpsi = contract(H, psi; cutoff=1e-8) # or `Hpsi = *(H, psi; cutoff=1e-8)`
  inner(psi, Hpsi)
@@ -1323,7 +1323,7 @@ case, we just return the original MPS or MPO. You can check for this case as fol
 
 ```julia
 s = siteinds("S=1/2", 4)
-ψ = 0 * randomMPS(s)
+ψ = 0 * random_mps(s)
 lognorm_ψ = []
 normalize!(ψ; (lognorm!)=lognorm_ψ)
 lognorm_ψ[1] == -Inf # There was an infinite norm
@@ -1518,9 +1518,9 @@ N = 10
 s = siteinds("S=1/2", N; conserve_qns = true)
 
 state = n -> isodd(n) ? "↑" : "↓"
-ψ₁ = randomMPS(s, state; linkdims=2)
-ψ₂ = randomMPS(s, state; linkdims=2)
-ψ₃ = randomMPS(s, state; linkdims=2)
+ψ₁ = random_mps(s, state; linkdims=2)
+ψ₂ = random_mps(s, state; linkdims=2)
+ψ₃ = random_mps(s, state; linkdims=2)
 
 ψ = +(ψ₁, ψ₂; cutoff = 1e-8)
 
@@ -2259,7 +2259,7 @@ end
 # For example:
 #
 # s = siteinds("Qubit", 1)
-# ψ = randomMPS(s)
+# ψ = random_mps(s)
 #
 # # U = Z₁X₁
 # U = Prod{Op}()

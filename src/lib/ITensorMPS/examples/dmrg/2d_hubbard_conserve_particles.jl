@@ -30,7 +30,7 @@ function main(; Nx=6, Ny=3, U=4.0, t=1.0)
   # Initialize wavefunction to a random MPS
   # of bond-dimension 10 with same quantum
   # numbers as `state`
-  psi0 = randomMPS(sites, state)
+  psi0 = random_mps(sites, state)
 
   energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, noise)
   @show t, U

@@ -17,7 +17,7 @@ end
 
 inner_add(ψ⃗...) = inner_add(fill_trivial_coefficients.(ψ⃗)...)
 
-# TODO: this is no longer needed, use randomMPS
+# TODO: this is no longer needed, use random_mps
 function makeRandomMPS(sites; chi::Int=4)::MPS
   N = length(sites)
   v = Vector{ITensor}(undef, N)

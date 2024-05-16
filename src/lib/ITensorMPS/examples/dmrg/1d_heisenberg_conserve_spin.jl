@@ -24,7 +24,7 @@ let
   H = MPO(os, sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-  psi0 = randomMPS(sites, state; linkdims=10)
+  psi0 = random_mps(sites, state; linkdims=10)
 
   # Plan to do 5 DMRG sweeps:
   nsweeps = 5

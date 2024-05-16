@@ -47,7 +47,7 @@ The random starting wavefunction `psi0` must be defined in the same Hilbert spac
 as the Hamiltonian, so we construct it using the same collection of site indices:
 
 ```julia
-psi0 = randomMPS(sites;linkdims=2)
+psi0 = random_mps(sites;linkdims=2)
 ```
 
 Here we have made a random MPS of bond dimension 2. We could have used a random product
@@ -85,7 +85,7 @@ let
   maxdim = [10,20,100,100,200] # gradually increase states kept
   cutoff = [1E-10] # desired truncation error
 
-  psi0 = randomMPS(sites;linkdims=2)
+  psi0 = random_mps(sites;linkdims=2)
 
   energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 
@@ -158,7 +158,7 @@ let
   maxdim = [10,10,20,40,80,100,140,180,200]
   cutoff = [1E-8]
 
-  psi0 = randomMPS(sites;linkdims=4)
+  psi0 = random_mps(sites;linkdims=4)
 
   energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 
@@ -238,7 +238,7 @@ let
   # Initialize wavefunction to a random MPS
   # of bond-dimension 10 with same quantum
   # numbers as `state`
-  psi0 = randomMPS(sites,state;linkdims=20)
+  psi0 = random_mps(sites,state;linkdims=20)
 
   nsweeps = 10
   maxdim = [20,60,100,100,200,400,800]
@@ -328,7 +328,7 @@ let
   #
   # Compute the ground state psi0
   #
-  psi0_init = randomMPS(sites;linkdims=2)
+  psi0_init = random_mps(sites;linkdims=2)
   energy0,psi0 = dmrg(H,psi0_init;nsweeps,maxdim,cutoff,noise)
 
   println()
@@ -336,7 +336,7 @@ let
   #
   # Compute the first excited state psi1
   #
-  psi1_init = randomMPS(sites;linkdims=2)
+  psi1_init = random_mps(sites;linkdims=2)
   energy1,psi1 = dmrg(H,[psi0],psi1_init;nsweeps,maxdim,cutoff,noise,weight)
 
   # Check psi1 is orthogonal to psi0
@@ -357,7 +357,7 @@ let
   #
   # Compute the second excited state psi2
   #
-  psi2_init = randomMPS(sites;linkdims=2)
+  psi2_init = random_mps(sites;linkdims=2)
   energy2,psi2 = dmrg(H,[psi0,psi1],psi2_init;nsweeps,maxdim,cutoff,noise,weight)
 
   # Check psi2 is orthogonal to psi0 and psi1
@@ -429,7 +429,7 @@ let
     a += 0.5,"S-",n,"S+",n+1
   end
   H = MPO(a,s)
-  psi0 = randomMPS(s;linkdims=4)
+  psi0 = random_mps(s;linkdims=4)
 
   nsweeps = 5
   maxdim = [10,20,80,160]
@@ -523,7 +523,7 @@ let
     a += 0.5,"S-",n,"S+",n+1
   end
   H = MPO(a,s)
-  psi0 = randomMPS(s;linkdims=4)
+  psi0 = random_mps(s;linkdims=4)
 
   nsweeps = 5
   maxdim = [10,20,80,160]

@@ -10,7 +10,7 @@ Random.seed!(1234)
     # https://github.com/ITensor/ITensors.jl/issues/936
     n = 2
     s = siteinds("S=1/2", n)
-    x = (x -> outer(x', x))(randomMPS(s))
+    x = (x -> outer(x', x))(random_mps(s))
     f1 = x -> tr(x)
     f2 = x -> 2tr(x)
     f3 = x -> -tr(x)
@@ -34,7 +34,7 @@ Random.seed!(1234)
       return os
     end
     H = MPO(heisenberg(n), s)
-    ψ = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=2)
+    ψ = random_mps(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=2)
 
     f = x -> inner(x, x)
     args = (ψ,)
@@ -56,8 +56,8 @@ Random.seed!(1234)
 
     # apply on MPS
     s = siteinds("S=1/2", n)
-    ϕ = randomMPS(ElType, s)
-    ψ = randomMPS(ElType, s)
+    ϕ = random_mps(ElType, s)
+    ψ = random_mps(ElType, s)
     f = function (x)
       U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
       ψθ = apply(U, ψ)
@@ -72,7 +72,7 @@ Random.seed!(1234)
   @testset "MPS rrules" begin
     Random.seed!(1234)
     s = siteinds("S=1/2", 4)
-    ψ = randomMPS(s)
+    ψ = random_mps(s)
     args = (ψ,)
     f = x -> inner(x, x)
     # TODO: Need to make MPS type compatible with FiniteDifferences.
@@ -87,9 +87,9 @@ Random.seed!(1234)
     d_args = gradient(f, args...)
     @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
 
-    ψ = randomMPS(ComplexF64, s)
+    ψ = random_mps(ComplexF64, s)
     ψtensors = ITensors.data(ψ)
-    ϕ = randomMPS(ComplexF64, s)
+    ϕ = random_mps(ComplexF64, s)
     f = function (x)
       ψ̃tensors = [x^j * ψtensors[j] for j in 1:length(ψtensors)]
       ψ̃ = MPS(ψ̃tensors)
@@ -114,7 +114,7 @@ Random.seed!(1234)
   #
   #  #ρ = randomMPO(s)
   #  #ρtensors = ITensors.data(ρ)
-  #  #ϕ = randomMPS(ComplexF64, s)
+  #  #ϕ = random_mps(ComplexF64, s)
   #  #f = function (x)
   #  #  ρ̃tensors  = [2 * x * ρtensors[1],  log(x) * ρtensors[2]]
   #  #  ρ̃ = MPO(ρ̃tensors)
@@ -156,7 +156,7 @@ Random.seed!(1234)
     end
     H = MPO(ising(n, 1.0), s)
     A = randomMPO(s)
-    ϕ = randomMPS(ComplexF64, s; linkdims=10)
+    ϕ = random_mps(ComplexF64, s; linkdims=10)
 
     # apply on mpo with apply_dag=true
     f = function (x)
@@ -258,7 +258,7 @@ Random.seed!(1234)
   @testset "contract/apply MPOs" begin
     n = 2
     s = siteinds("S=1/2", n)
-    x = (x -> outer(x', x))(randomMPS(s; linkdims=4))
+    x = (x -> outer(x', x))(random_mps(s; linkdims=4))
     x_itensor = contract(x)
 
     f = x -> tr(apply(x, x))
@@ -277,9 +277,9 @@ Random.seed!(1234)
   @testset "contract/apply MPOs on MPSs" begin
     n = 2
     s = siteinds("S=1/2", n)
-    x = (x -> outer(x', x))(randomMPS(s; linkdims=4))
+    x = (x -> outer(x', x))(random_mps(s; linkdims=4))
     x_itensor = contract(x)
-    y = randomMPS(s; linkdims=4)
+    y = random_mps(s; linkdims=4)
     y_itensor = contract(y)
 
     f = x -> inner(apply(x, y), apply(x, y))

@@ -1,4 +1,4 @@
-using ITensors.ITensorMPS: MPO, OpSum, dmrg, randomMPS, siteinds
+using ITensors.ITensorMPS: MPO, OpSum, dmrg, random_mps, siteinds
 
 # TODO: This uses all of the tests to make
 # precompile statements, but takes a long time
@@ -19,7 +19,7 @@ function main(; N, dmrg_kwargs)
   for conserve_qns in (false, true)
     sites = siteinds("S=1", N; conserve_qns)
     H = MPO(opsum, sites)
-    ψ0 = randomMPS(sites, j -> isodd(j) ? "↑" : "↓"; linkdims=2)
+    ψ0 = random_mps(sites, j -> isodd(j) ? "↑" : "↓"; linkdims=2)
     dmrg(H, ψ0; outputlevel=0, dmrg_kwargs...)
   end
   return nothing

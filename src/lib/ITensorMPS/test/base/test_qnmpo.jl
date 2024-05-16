@@ -107,7 +107,7 @@ end
     @test phiJdagKpsi[] ≈ inner(J, phi, K, psi)
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badpsi = randomMPS(badsites)
+    badpsi = random_mps(badsites)
     @test_throws DimensionMismatch inner(J, phi, K, badpsi)
   end
 
@@ -140,12 +140,12 @@ end
   #    L = basicRandomMPO(N, shsites; dim=dim)
   #    M = K + L
   #    @test length(M) == N
-  #    psi = randomMPS(shsites)
+  #    psi = random_mps(shsites)
   #    k_psi = contract(K, psi)
   #    l_psi = contract(L, psi)
   #    @test inner(psi, k_psi + l_psi) ≈ dot(psi, M, psi) atol=5e-3
   #    @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
-  #    psi = randomMPS(shsites)
+  #    psi = random_mps(shsites)
   #    M = add(K, L; cutoff=1E-9)
   #    k_psi = contract(K, psi)
   #    l_psi = contract(L, psi)
@@ -257,9 +257,9 @@ end
     end
     H = MPO(a, s)
     if conserve_szparity
-      ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
+      ψ = random_mps(s, n -> isodd(n) ? "↑" : "↓")
     else
-      ψ = randomMPS(s)
+      ψ = random_mps(s)
     end
 
     # MPO * MPS

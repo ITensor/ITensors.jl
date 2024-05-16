@@ -38,7 +38,7 @@ let
   end
   H = MPO(os,sites)
 
-  psi0 = randomMPS(sites;linkdims=10)
+  psi0 = random_mps(sites;linkdims=10)
 
   nsweeps = 5
   maxdim = [10,20,100,100,200]
@@ -92,7 +92,7 @@ physical indices given by the array `sites`.
 The line
 
 ```julia
-psi0 = randomMPS(sites;linkdims=10)
+psi0 = random_mps(sites;linkdims=10)
 ```
 
 constructs an MPS `psi0` which has the physical indices `sites` and a bond dimension of 10.

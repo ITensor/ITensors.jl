@@ -171,8 +171,8 @@ For example:
 
 ```julia
 s = siteinds("S=1/2", 5)
-x = randomMPS(s)
-y = randomMPS(s)
+x = random_mps(s)
+y = random_mps(s)
 outer(x, y) # Incorrect! Site indices must be unique.
 outer(x', y) # Results in an MPO with pairs of primed and unprimed indices.
 ```
@@ -295,7 +295,7 @@ function inner_mps_mpo_mps_deprecation_warning()
 
  ```julia
  s = siteinds("S=1/2")
- psi = randomMPS(s)
+ psi = random_mps(s)
  H = MPO(s, "Id")
  inner(psi, H, psi)
  ```

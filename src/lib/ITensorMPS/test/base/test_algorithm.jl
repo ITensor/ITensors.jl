@@ -9,7 +9,7 @@ using Test
 
   s = siteinds("S=1/2", 4)
   A = MPO(s, "Id")
-  ψ = randomMPS(s)
+  ψ = random_mps(s)
 
   @test_throws MethodError contract(alg, A, ψ)
   @test_throws MethodError contract(A, ψ; method="X")

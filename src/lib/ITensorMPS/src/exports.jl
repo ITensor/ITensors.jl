@@ -62,7 +62,7 @@ export
   linkind,
   linkinds,
   productMPS,
-  randomMPS,
+  random_mps,
   replacebond,
   replacebond!,
   sample,

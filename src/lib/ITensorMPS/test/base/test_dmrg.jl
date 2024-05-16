@@ -14,7 +14,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     end
     H = MPO(os, sites)
 
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
@@ -41,7 +41,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     H = MPO(os, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state; linkdims=4)
+    psi = random_mps(sites, state; linkdims=4)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
@@ -68,7 +68,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     H = MPO(os, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state; linkdims=4)
+    psi = random_mps(sites, state; linkdims=4)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
@@ -95,7 +95,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     H = MPO(os, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state; linkdims=4)
+    psi = random_mps(sites, state; linkdims=4)
     PH = ProjMPO(H)
 
     PHc = copy(PH)
@@ -109,7 +109,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     @test length(PHdisk) == N
     @test site_range(PH) == n:(n + 1)
     @test eltype(PH) == Float64
-    ## TODO sometimes randomMPS gives a linkdim value of 3
+    ## TODO sometimes random_mps gives a linkdim value of 3
     ## which causes an error in `calculated_dim = 3^2 * 4^2`
     calculated_dim =
       linkdim(psi, n - 1) *
@@ -146,7 +146,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     HB = MPO(osB, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state; linkdims=4)
+    psi = random_mps(sites, state; linkdims=4)
 
     energy, psi = dmrg(
       [HA, HB], psi; nsweeps=3, maxdim=[10, 20, 30], write_when_maxdim_exceeds=10
@@ -171,7 +171,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     H2 = MPO(os2, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state; linkdims=4)
+    psi = random_mps(sites, state; linkdims=4)
     PH1 = ProjMPO(H1)
     PH = ProjMPOSum([H1, H2])
     PH1c = copy(PH1)
@@ -196,7 +196,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     N = 32
     sites = siteinds("S=1/2", N)
     Random.seed!(432)
-    psi0 = randomMPS(sites)
+    psi0 = random_mps(sites)
 
     os = OpSum()
     for j in 1:N
@@ -221,7 +221,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     N = 32
     sites = siteinds("S=1/2", N)
     Random.seed!(432)
-    psi0 = randomMPS(sites)
+    psi0 = random_mps(sites)
 
     function ising(N; h=1.0)
       os = OpSum()
@@ -248,7 +248,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     Random.seed!(432)
 
     state = [isodd(j) ? "↑" : "↓" for j in 1:N]
-    psi0 = randomMPS(sites, state)
+    psi0 = random_mps(sites, state)
 
     os = OpSum()
     for j in 1:N
@@ -279,7 +279,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     N = 10
     sites = siteinds("S=1/2", N)
     Random.seed!(42)
-    psi0 = randomMPS(sites)
+    psi0 = random_mps(sites)
 
     os = OpSum()
     for j in 1:(N - 1)
@@ -328,7 +328,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     end
     HXY = MPO(osXY, sites)
 
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
 
     sweeps = Sweeps(3)
     maxdim!(sweeps, 10, 20, 40)
@@ -355,7 +355,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     end
     H = MPO(os, sites)
 
-    psi0i = randomMPS(sites; linkdims=10)
+    psi0i = random_mps(sites; linkdims=10)
 
     sweeps = Sweeps(4)
     maxdim!(sweeps, 10, 20, 100, 100)
@@ -365,7 +365,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     energy0, psi0 = dmrg(H, psi0i, sweeps; outputlevel=0)
     @test energy0 < -11.5
 
-    psi1i = randomMPS(sites; linkdims=10)
+    psi1i = random_mps(sites; linkdims=10)
     energy1, psi1 = dmrg(H, [psi0], psi1i, sweeps; outputlevel=0, weight=weight)
 
     @test energy1 > energy0
@@ -432,7 +432,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     maxdim!(sweeps, 50, 100, 200, 400, 800, 800)
     cutoff!(sweeps, 1E-10)
     state = ["Up", "Dn", "Dn", "Up", "Emp", "Up", "Up", "Emp", "Dn", "Dn"]
-    psi0 = randomMPS(sites, state; linkdims=10)
+    psi0 = random_mps(sites, state; linkdims=10)
     energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
     @test (-8.02 < energy < -8.01)
   end
@@ -453,7 +453,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     maxdim!(sweeps, 10)
     cutoff!(sweeps, 1E-11)
 
-    psi0 = randomMPS(sites; linkdims=4)
+    psi0 = random_mps(sites; linkdims=4)
 
     # Test that input works with wrong ortho center:
     orthogonalize!(psi0, 5)

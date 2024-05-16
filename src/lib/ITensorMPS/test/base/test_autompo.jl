@@ -865,7 +865,7 @@ end
       Ha = MPO(os, sites)
 
       He = NNheisenbergMPO(sites, J1, J2)
-      psi = randomMPS(sites, [isodd(n) ? "Up" : "Dn" for n in 1:N])
+      psi = random_mps(sites, [isodd(n) ? "Up" : "Dn" for n in 1:N])
       Oa = inner(psi', Ha, psi)
       Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
@@ -1071,7 +1071,7 @@ end
 
     @test norm(prod(W) - prod(M)) < 1E-10
 
-    psi = randomMPS(s, [isodd(n) ? "1" : "0" for n in 1:length(s)]; linkdims=4)
+    psi = random_mps(s, [isodd(n) ? "1" : "0" for n in 1:length(s)]; linkdims=4)
     Mpsi = apply(M, psi; alg="naive")
     Wpsi = apply(M, psi; alg="naive")
     @test abs(inner(Mpsi, Wpsi) / inner(Mpsi, Mpsi) - 1.0) < 1E-10

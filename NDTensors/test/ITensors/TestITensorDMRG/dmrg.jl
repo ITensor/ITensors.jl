@@ -1,4 +1,4 @@
-using ITensors: MPO, OpSum, dmrg, randomMPS, siteinds
+using ITensors: MPO, OpSum, dmrg, random_mps, siteinds
 using Random: Random
 using Test: @test
 include("../../NDTensorsTestUtils/NDTensorsTestUtils.jl")
@@ -19,7 +19,7 @@ function test_dmrg(
 
   Random.seed!(1234)
   init = j -> isodd(j) ? "↑" : "↓"
-  psi0 = dev(randomMPS(elt, sites, init; linkdims=4))
+  psi0 = dev(random_mps(elt, sites, init; linkdims=4))
   H = dev(MPO(elt, os, sites))
 
   nsweeps = 3
