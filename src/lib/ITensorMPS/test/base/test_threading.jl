@@ -44,7 +44,7 @@ end
     H = MPO(opsum, sites)
     Hsplit = splitblocks(linkinds, H)
     state = [isodd(n) ? "↑" : "↓" for n in 1:N]
-    ψ0 = productMPS(sites, state)
+    ψ0 = MPS(sites, state)
     enabled = ITensors.enable_threaded_blocksparse(true)
     energy, _ = dmrg(H, ψ0, sweeps; outputlevel=outputlevel)
     energy_split, _ = dmrg(Hsplit, ψ0, sweeps; outputlevel=outputlevel)

@@ -38,13 +38,13 @@ let
   end
   H = MPO(os,sites)
 
-  psi0 = randomMPS(sites,10)
+  psi0 = randomMPS(sites;linkdims=10)
 
   nsweeps = 5
   maxdim = [10,20,100,100,200]
   cutoff = [1E-10]
 
-  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+  energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 
   return
 end
@@ -92,7 +92,7 @@ physical indices given by the array `sites`.
 The line
 
 ```julia
-psi0 = randomMPS(sites,10)
+psi0 = randomMPS(sites;linkdims=10)
 ```
 
 constructs an MPS `psi0` which has the physical indices `sites` and a bond dimension of 10.
@@ -116,7 +116,7 @@ specified than sweeps, the last value is used for all remaining sweeps).
 Finally the call
 
 ```julia
-energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 ```
 
 runs the DMRG algorithm included in ITensor, using `psi0` as an

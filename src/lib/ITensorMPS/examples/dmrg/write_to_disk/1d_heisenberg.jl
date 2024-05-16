@@ -14,14 +14,14 @@ let
 
   os = OpSum()
   for j in 1:(N - 1)
-    os .+= 0.5, "S+", j, "S-", j + 1
-    os .+= 0.5, "S-", j, "S+", j + 1
-    os .+= "Sz", j, "Sz", j + 1
+    os += 0.5, "S+", j, "S-", j + 1
+    os += 0.5, "S-", j, "S+", j + 1
+    os += "Sz", j, "Sz", j + 1
   end
   H = MPO(os, sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-  psi0 = randomMPS(sites, state, 10)
+  psi0 = randomMPS(sites, state; linkdims=10)
 
   # Plan to do 5 DMRG sweeps:
   nsweeps = 5
