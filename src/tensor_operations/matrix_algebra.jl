@@ -6,10 +6,7 @@ function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   Tᶜ = T * Cᴸ * Cᴿ
   cᴸ = uniqueind(Cᴸ, T)
   cᴿ = uniqueind(Cᴿ, T)
-  ## deafult eltype for delta is Float64 so this 
-  ## can promote eltype from F32 to F64
-  elt = eltype(T)
-  Tᶜ *= δ(elt, dag((cᴸ, cᴿ)))
+  Tᶜ *= δ(eltype(T), dag((cᴸ, cᴿ)))
   if order(Tᶜ) == 0
     return Tᶜ[]
   end
