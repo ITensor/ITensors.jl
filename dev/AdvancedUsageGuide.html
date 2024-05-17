@@ -4,7 +4,7 @@
 pkg&gt; add ITensors</code></pre><p>Or, equivalently, via the <code>Pkg</code> API:</p><pre><code class="language-julia hljs">julia&gt; import Pkg; Pkg.add(&quot;ITensors&quot;)</code></pre><p>We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace the current BLAS and LAPACK implementation used by Julia with MKL by using the MKL.jl package. Please follow the instructions <a href="https://github.com/JuliaComputing/MKL.jl">here</a>.</p><p>To use the latest registered (stable) version of ITensors.jl, use <code>update ITensors</code> in <code>Pkg</code> mode or <code>import Pkg; Pkg.update(&quot;ITensors&quot;)</code>. We will commonly release new patch versions (such as updating from <code>v0.1.12</code> to <code>v0.1.13</code>) with bug fixes and improvements. However, make sure to double check before updating between minor versions (such as from <code>v0.1.41</code> to <code>v0.2.0</code>) because new minor releases may be breaking.</p><p>Remember that if you are compiling system images of ITensors.jl, such as with the <code>ITensors.compile()</code> command, you will need to rerurn this command to compile the new version of ITensor after an update.</p><p>To try the &quot;development branch&quot; of ITensors.jl (for example, if there is a feature or fix we added that hasn&#39;t been released yet), you can do <code>add ITensors#main</code>. You can switch back to the latest released version with <code>add ITensors</code>. Using the development/main branch is generally not encouraged unless you know what you are doing.</p><h2 id="Using-ITensors.jl-in-the-REPL"><a class="docs-heading-anchor" href="#Using-ITensors.jl-in-the-REPL">Using ITensors.jl in the REPL</a><a id="Using-ITensors.jl-in-the-REPL-1"></a><a class="docs-heading-anchor-permalink" href="#Using-ITensors.jl-in-the-REPL" title="Permalink"></a></h2><p>There are many ways you can write code based on ITensors.jl, ranging from using it in the REPL to writing a small script to making a package that depends on it.</p><p>For example, you can just start the REPL from your command line like:</p><pre><code class="nohighlight hljs">$ julia</code></pre><p>assuming you have an available version of Julia with the ITensors.jl package installed. Then just type:</p><pre><code class="language-julia hljs">julia&gt; using ITensors</code></pre><p>and start typing ITensor commands. For example:</p><pre><code class="language-julia hljs">julia&gt; i = Index(2, &quot;i&quot;)
 (dim=2|id=355|&quot;i&quot;)
 
-julia&gt; A = randomITensor(i, i&#39;)
+julia&gt; A = random_itensor(i, i&#39;)
 ITensor ord=2 (dim=2|id=355|&quot;i&quot;) (dim=2|id=355|&quot;i&quot;)&#39;
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -77,7 +77,7 @@ Stacktrace:
  [5] top-level scope at none:0</code></pre><p>In this case, you can use <code>os .+= (&quot;Sz&quot;, j, &quot;Sz&quot;, j+1)</code>, <code>add!(os, &quot;Sz&quot;, j, &quot;Sz&quot;, j+1)</code>, or wrap your code in a let-block or function.</p><p>Take a look at Julia&#39;s documentation <a href="https://docs.julialang.org/en/v1/manual/variables-and-scoping/">here</a> for rules on scoping. Also note that this behavior is particular to Julia v1.4 and below, and is expected to change in v1.5.</p><p>Note that the REPL is very useful for prototyping code quickly, but working directly in the REPL and outside of functions can cause sub-optimal performance. See Julia&#39;s <a href="https://docs.julialang.org/en/v1/manual/performance-tips/index.html">performance tips</a> for more information.</p><p>We recommend the package <a href="https://kristofferc.github.io/OhMyREPL.jl/latest/">OhMyREPL</a> which adds syntax highlighting to the Julia REPL.</p><h2 id="Finding-documentation-interactively"><a class="docs-heading-anchor" href="#Finding-documentation-interactively">Finding documentation interactively</a><a id="Finding-documentation-interactively-1"></a><a class="docs-heading-anchor-permalink" href="#Finding-documentation-interactively" title="Permalink"></a></h2><p>Julia provides many tools for searching for documentation interactively at the REPL. Say that you want to learn more about how to use an ITensor from the command line. You can start by typing <code>?</code> followed by <code>ITensor</code>:</p><pre><code class="language-julia hljs">julia&gt; using ITensors
 
 julia&gt; ?ITensor
-search: ITensor ITensors itensor randomITensor
+search: ITensor ITensors itensor random_itensor
 
   An ITensor is a tensor whose interface is independent of its
   memory layout. Therefore it is not necessary to know the ordering
@@ -91,7 +91,7 @@ search: ITensor ITensors itensor randomITensor
   julia&gt; i = Index(2, &quot;i&quot;)
   (dim=2|id=287|&quot;i&quot;)
 
-  julia&gt; A = randomITensor(i&#39;, i)
+  julia&gt; A = random_itensor(i&#39;, i)
   ITensor ord=2 (dim=2|id=287|&quot;i&quot;)&#39; (dim=2|id=287|&quot;i&quot;)
   NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -176,7 +176,7 @@ end</code></pre><p>Then, in the same directory as your script <code>my_itensor_s
 
 julia&gt; i = Index(2; tags=&quot;i&quot;);
 
-julia&gt; A = randomITensor(i&#39;, i);
+julia&gt; A = random_itensor(i&#39;, i);
 
 julia&gt; norm2(A)
 [...]</code></pre><p>As your code gets longer, you can split it into multiple files and <code>include</code> this files into one main project file, for example if you have two files with functions in them:</p><pre><code class="language-julia hljs"># file1.jl
@@ -197,7 +197,7 @@ include(&quot;file2.jl&quot;)</code></pre><p>Then, as before, you can use your f
 
 julia&gt; i = Index(2; tags=&quot;i&quot;);
 
-julia&gt; A = randomITensor(i&#39;, i);
+julia&gt; A = random_itensor(i&#39;, i);
 
 julia&gt; norm2(A)
 [...]
@@ -238,7 +238,7 @@ end</code></pre><p>The export command makes <code>norm2</code> available in the 
 julia&gt; i = Index(2)
 (dim=2|id=263)
 
-julia&gt; A = randomITensor(i)
+julia&gt; A = random_itensor(i)
 ITensor ord=1 (dim=2|id=263)
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -258,7 +258,7 @@ using Test
 
 @testset &quot;MyITensorsPkg.jl&quot; begin
   i = Index(2)
-  A = randomITensor(i)
+  A = random_itensor(i)
   @test isapprox(norm2(A), norm(A)^2)
 end</code></pre><p>Now when you test your package you should see:</p><pre><code class="language-julia hljs">pkg&gt; test MyITensorsPkg
 [...]
@@ -324,7 +324,7 @@ true</code></pre><p>This will automatically change the style of the code accordi
 julia&gt; @time i = Index(2);
   0.000684 seconds (23 allocations: 20.328 KiB)
 
-julia&gt; @time A = randomITensor(i&#39;, i);
+julia&gt; @time A = random_itensor(i&#39;, i);
   0.071022 seconds (183.24 k allocations: 9.715 MiB)
 
 julia&gt; @time svd(A, i&#39;);
@@ -338,7 +338,7 @@ julia&gt; @time svd(A, i&#39;);
 julia&gt; @time i = Index(2);
   0.000656 seconds (23 allocations: 20.328 KiB)
 
-julia&gt; @time A = randomITensor(i&#39;, i);
+julia&gt; @time A = random_itensor(i&#39;, i);
   0.000007 seconds (7 allocations: 576 bytes)
 
 julia&gt; @time svd(A, i&#39;);
@@ -351,7 +351,7 @@ julia&gt; using BenchmarkTools;
 
 julia&gt; i = Index(100, &quot;i&quot;);
 
-julia&gt; A = randomITensor(i, i&#39;);
+julia&gt; A = random_itensor(i, i&#39;);
 
 julia&gt; @btime 2*$A;
   4.279 μs (8 allocations: 78.73 KiB)</code></pre><p>We recommend packages like <a href="https://github.com/timholy/ProfileView.jl">ProfileView</a> to get detailed profiles of your code, in order to pinpoint functions or lines of code that are slower than they should be.</p><h2 id="ITensor-type-design-and-writing-performant-code"><a class="docs-heading-anchor" href="#ITensor-type-design-and-writing-performant-code">ITensor type design and writing performant code</a><a id="ITensor-type-design-and-writing-performant-code-1"></a><a class="docs-heading-anchor-permalink" href="#ITensor-type-design-and-writing-performant-code" title="Permalink"></a></h2><p>Advanced users might notice something strange about the definition of the ITensor type, that it is often not &quot;type stable&quot;. Some of this is by design. The definition for ITensor is:</p><pre><code class="language-julia hljs">mutable struct ITensor
@@ -359,7 +359,7 @@ julia&gt; @btime 2*$A;
   store::TensorStorage
 end</code></pre><p>These are both abstract types, which is something that is generally discouraged for peformance.</p><p>This has a few disadvantages. Some code that you might expect to be type stable, like <code>getindex</code>, is not, for example:</p><pre><code class="language-julia hljs">julia&gt; i = Index(2, &quot;i&quot;);
 
-julia&gt; A = randomITensor(i, i&#39;);
+julia&gt; A = random_itensor(i, i&#39;);
 
 julia&gt; @code_warntype A[i=&gt;1, i&#39;=&gt;2]
 Variables
@@ -418,7 +418,7 @@ julia&gt; d = 10_000;
 
 julia&gt; i = Index(d);
 
-julia&gt; @btime myscale!(A, 2) setup = (A = randomITensor(i));
+julia&gt; @btime myscale!(A, 2) setup = (A = random_itensor(i));
   2.169 ms (117958 allocations: 3.48 MiB)</code></pre><p>However, this is fast:</p><pre><code class="nohighlight hljs">julia&gt; function myscale!(A::Array, x::Number)
          for n in 1:length(A)
            A[n] = x * A[n]
@@ -431,9 +431,9 @@ julia&gt; @btime myscale!(A, 2) setup = (A = randn(d));
 julia&gt; myscale2!(A::ITensor, x::Number) = myscale!(array(A), x)
 myscale2! (generic function with 1 method)
 
-julia&gt; @btime myscale2!(A, 2) setup = (A = randomITensor(i));
-  3.571 μs (2 allocations: 112 bytes)</code></pre><p>How does this work? It relies on a &quot;function barrier&quot; technique. Julia compiles functions &quot;just-in-time&quot;, so that calls to an inner function written in terms of a type-stable type are still fast. That inner function is compiled to very fast code. The main overhead is that Julia has to determine which function to call at runtime.</p><p>Therefore, users should keep this in mind when they are writing ITensors.jl code, and we warn that explicitly looping over large ITensors by individual elements should be done with caution in performance critical sections of your code. However, be sure to benchmark and profile your code before prematurely optimizing, since you may be surprised about what are the fast and slow parts of your code.</p><p>Some strategies for avoiding ITensor loops are:</p><ul><li>Use broadcasting and other built-in ITensor functionality that makes use of function barriers.</li><li>Convert ITensors to type-stable collections like the Tensor type of NDTensors.jl and write functions in terms of the Tensor type (i.e. the function barrier techique that is used throughout ITensors.jl).</li><li>When initializing very large ITensors elementwise, use built-in ITensor constructors, or first construct an equivalent tensor as an Array or Tensor and then convert it to an ITensor.</li></ul><h2 id="ITensor-in-place-operations"><a class="docs-heading-anchor" href="#ITensor-in-place-operations">ITensor in-place operations</a><a id="ITensor-in-place-operations-1"></a><a class="docs-heading-anchor-permalink" href="#ITensor-in-place-operations" title="Permalink"></a></h2><p>In-place operations can help with optimizing code, when the memory of the output tensor of an operation is preallocated.</p><p>The main way to access this in ITensor is through broadcasting. For example:</p><pre><code class="language-julia hljs">A = randomITensor(i, i&#39;)
-B = randomITensor(i&#39;, i)
+julia&gt; @btime myscale2!(A, 2) setup = (A = random_itensor(i));
+  3.571 μs (2 allocations: 112 bytes)</code></pre><p>How does this work? It relies on a &quot;function barrier&quot; technique. Julia compiles functions &quot;just-in-time&quot;, so that calls to an inner function written in terms of a type-stable type are still fast. That inner function is compiled to very fast code. The main overhead is that Julia has to determine which function to call at runtime.</p><p>Therefore, users should keep this in mind when they are writing ITensors.jl code, and we warn that explicitly looping over large ITensors by individual elements should be done with caution in performance critical sections of your code. However, be sure to benchmark and profile your code before prematurely optimizing, since you may be surprised about what are the fast and slow parts of your code.</p><p>Some strategies for avoiding ITensor loops are:</p><ul><li>Use broadcasting and other built-in ITensor functionality that makes use of function barriers.</li><li>Convert ITensors to type-stable collections like the Tensor type of NDTensors.jl and write functions in terms of the Tensor type (i.e. the function barrier techique that is used throughout ITensors.jl).</li><li>When initializing very large ITensors elementwise, use built-in ITensor constructors, or first construct an equivalent tensor as an Array or Tensor and then convert it to an ITensor.</li></ul><h2 id="ITensor-in-place-operations"><a class="docs-heading-anchor" href="#ITensor-in-place-operations">ITensor in-place operations</a><a id="ITensor-in-place-operations-1"></a><a class="docs-heading-anchor-permalink" href="#ITensor-in-place-operations" title="Permalink"></a></h2><p>In-place operations can help with optimizing code, when the memory of the output tensor of an operation is preallocated.</p><p>The main way to access this in ITensor is through broadcasting. For example:</p><pre><code class="language-julia hljs">A = random_itensor(i, i&#39;)
+B = random_itensor(i&#39;, i)
 A .+= 2 .* B</code></pre><p>Internally, this is rewritten by Julia as a call to <code>broadcast!</code>. ITensors.jl overloads this call (or more specifically, a lower level function <code>copyto!</code> written in terms of a special lazy type that saves all of the objects and operations). Then, this call is rewritten as</p><pre><code class="language-julia hljs">map!((x,y) -&gt; x+2*y, A, A, B)</code></pre><p>This is mostly an optimization to use when you can preallocate storage that can be used multiple times.</p><p>Additionally, ITensors makes the unique choice that:</p><pre><code class="language-julia hljs">C .= A .* B</code></pre><p>is interpreted as an in-place tensor contraction. What this means is that this calls a function:</p><pre><code class="language-julia hljs">mul!(C, A, B)</code></pre><p>(likely to be given an alternative name <code>contract!</code>) which contracts <code>A</code> and <code>B</code> into the pre-allocated memory <code>C</code>.</p><p>Because of the design of the ITensor type (see the section above), there is some flexibility we take in allocating memory for users. For example, if the storage type is more narrow than the result, for convenience we might expand it in-place. If you are worried about memory allocations, we recommend using benchmarking and profiling to pinpoint slow parts of your code (often times, you may be surprised by what is actually slow).</p><h2 id="NDTensors-and-ITensors"><a class="docs-heading-anchor" href="#NDTensors-and-ITensors">NDTensors and ITensors</a><a id="NDTensors-and-ITensors-1"></a><a class="docs-heading-anchor-permalink" href="#NDTensors-and-ITensors" title="Permalink"></a></h2><p>ITensors.jl is built on top of another, more traditional tensor library called NDTensors. NDTensors implements AbstractArrays with a variety of sparse storage types, with more to come in the future.</p><p>NDTensors implements functionality like permutation of dimensions, fast get and set index, broadcasting, and tensor contraction (where labels of the dimensions must be specified).</p><p>For example:</p><pre><code class="language-julia hljs">using ITensors
 using NDTensors
 
@@ -460,5 +460,5 @@ julia&gt; @btime myscale!(A, 2) setup = (A = Tensor(d));
 julia&gt; myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
 myscale2! (generic function with 1 method)
 
-julia&gt; @btime myscale2!(A, 2) setup = (A = randomITensor(i));
-  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Einsum.html">« ITensor indices and Einstein notation</a><a class="docs-footer-nextpage" href="Multithreading.html">Multithreading »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 17 May 2024 00:00">Friday 17 May 2024</span>. Using Julia version 1.10.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+julia&gt; @btime myscale2!(A, 2) setup = (A = random_itensor(i));
+  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Einsum.html">« ITensor indices and Einstein notation</a><a class="docs-footer-nextpage" href="Multithreading.html">Multithreading »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 17 May 2024 02:01">Friday 17 May 2024</span>. Using Julia version 1.10.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
