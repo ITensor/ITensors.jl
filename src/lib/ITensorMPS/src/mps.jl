@@ -516,8 +516,8 @@ SiteTypes.siteinds(M::MPS; kwargs...) = siteinds(first, M; kwargs...)
 
 function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)
-    sj = siteind(only, M, j)
-    replaceind!(M[j], sj, sites[j])
+    sj = only(siteinds(M, j))
+    M[j] = replaceinds(M[j], sj => sites[j])
   end
   return M
 end

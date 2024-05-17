@@ -271,6 +271,17 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     end
   end
 
+  @testset "replace_siteinds" begin
+    s = siteinds("S=1/2", 4)
+    x = MPS(s, j -> isodd(j) ? "↑" : "↓")
+    @test siteinds(x) == s
+    t = sim.(s)
+    y = replace_siteinds(x, t)
+    @test siteinds(y) == t
+    # Regression test for https://github.com/ITensor/ITensors.jl/issues/1439.
+    @test siteinds(x) == s
+  end
+
   @testset "copy and deepcopy" begin
     s = siteinds("S=1/2", 3)
     M1 = random_mps(s; linkdims=3)
