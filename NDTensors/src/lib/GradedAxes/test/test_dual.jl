@@ -1,7 +1,14 @@
 @eval module $(gensym())
 using BlockArrays: Block, blockaxes, blockfirsts, blocklasts, blocklength, blocks, findblock
 using NDTensors.GradedAxes:
-  GradedAxes, UnitRangeDual, blockmergesortperm, blocksortperm, dual, gradedrange, nondual
+  GradedAxes,
+  UnitRangeDual,
+  blockmergesortperm,
+  blocksortperm,
+  dual,
+  gradedrange,
+  isdual,
+  nondual
 using NDTensors.LabelledNumbers: LabelledInteger, label, labelled
 using Test: @test, @test_broken, @testset
 struct U1
@@ -16,6 +23,8 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   @test dual(ad) == a
   @test nondual(ad) == a
   @test nondual(a) == a
+  @test isdual(ad)
+  @test !isdual(a)
   @test blockfirsts(ad) == [labelled(1, U1(0)), labelled(3, U1(-1))]
   @test blocklasts(ad) == [labelled(2, U1(0)), labelled(5, U1(-1))]
   @test findblock(ad, 4) == Block(2)
