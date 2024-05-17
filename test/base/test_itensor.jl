@@ -316,7 +316,7 @@ end
       @test ndims(A) == 0
     end
 
-    @testset "trace (tr)" for ElType in (Float32, Float64, ComplexF32, ComplexF64)
+    @testset "trace (tr) (eltype=$elt)" for elt in (Float32, Float64, Complex{Float32}, Complex{Float64})
       i, j, k, l = Index.((2, 3, 4, 5), ("i", "j", "k", "l"))
       T = random_itensor(ElType, j, k', i', k, j', i)
       trT1 = tr(T)
