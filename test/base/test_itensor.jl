@@ -316,16 +316,16 @@ end
       @test ndims(A) == 0
     end
 
-    @testset "trace (tr)" begin
+    @testset "trace (tr)" for ElType in (Float32, Float64, ComplexF32, ComplexF64)
       i, j, k, l = Index.((2, 3, 4, 5), ("i", "j", "k", "l"))
-      T = random_itensor(j, k', i', k, j', i)
+      T = random_itensor(ElType, j, k', i', k, j', i)
       trT1 = tr(T)
-      trT2 = (T * δ(i, i') * δ(j, j') * δ(k, k'))[]
+      trT2 = (T * δ(ElType, i, i') * δ(ElType, j, j') * δ(ElType, k, k'))[]
       @test trT1 ≈ trT2
 
-      T = random_itensor(j, k', i', l, k, j', i)
+      T = random_itensor(ElType, j, k', i', l, k, j', i)
       trT1 = tr(T)
-      trT2 = T * δ(i, i') * δ(j, j') * δ(k, k')
+      trT2 = T * δ(ElType, i, i') * δ(ElType, j, j') * δ(ElType, k, k')
       @test trT1 ≈ trT2
     end
 
