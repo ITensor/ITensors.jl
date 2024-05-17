@@ -316,16 +316,20 @@ end
       @test ndims(A) == 0
     end
 
-    @testset "trace (tr)" begin
+    @testset "trace (tr) (eltype=$elt)" for elt in (
+      Float32, Float64, Complex{Float32}, Complex{Float64}
+    )
       i, j, k, l = Index.((2, 3, 4, 5), ("i", "j", "k", "l"))
-      T = random_itensor(j, k', i', k, j', i)
+      T = random_itensor(elt, j, k', i', k, j', i)
       trT1 = tr(T)
-      trT2 = (T * δ(i, i') * δ(j, j') * δ(k, k'))[]
+      @test eltype(trT1) === elt
+      trT2 = (T * δ(elt, i, i') * δ(elt, j, j') * δ(elt, k, k'))[]
       @test trT1 ≈ trT2
 
-      T = random_itensor(j, k', i', l, k, j', i)
+      T = random_itensor(elt, j, k', i', l, k, j', i)
       trT1 = tr(T)
-      trT2 = T * δ(i, i') * δ(j, j') * δ(k, k')
+      @test eltype(trT1) === elt
+      trT2 = T * δ(elt, i, i') * δ(elt, j, j') * δ(elt, k, k')
       @test trT1 ≈ trT2
     end
 
