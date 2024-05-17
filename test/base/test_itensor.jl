@@ -325,6 +325,7 @@ end
 
       T = random_itensor(ElType, j, k', i', l, k, j', i)
       trT1 = tr(T)
+      @test eltype(trT1) === elt
       trT2 = T * δ(ElType, i, i') * δ(ElType, j, j') * δ(ElType, k, k')
       @test trT1 ≈ trT2
     end
