@@ -322,6 +322,7 @@ end
       i, j, k, l = Index.((2, 3, 4, 5), ("i", "j", "k", "l"))
       T = random_itensor(elt, j, k', i', k, j', i)
       trT1 = tr(T)
+      @test eltype(trT1) === elt
       trT2 = (T * δ(elt, i, i') * δ(elt, j, j') * δ(elt, k, k'))[]
       @test trT1 ≈ trT2
 
