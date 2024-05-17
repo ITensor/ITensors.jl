@@ -81,7 +81,7 @@ To make change (2), instead of constructing the initial MPS `psi0` to be an arbi
 So we will replace the line
 
 ```julia
-psi0 = randomMPS(sites;linkdims=10)
+psi0 = random_mps(sites;linkdims=10)
 ```
 
 by the lines

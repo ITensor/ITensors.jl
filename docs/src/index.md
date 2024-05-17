@@ -294,7 +294,7 @@ let
   H = MPO(os,sites)
 
   # Create an initial random matrix product state
-  psi0 = randomMPS(sites)
+  psi0 = random_mps(sites)
 
   # Plan to do 5 passes or 'sweeps' of DMRG,
   # setting maximum MPS internal dimensions

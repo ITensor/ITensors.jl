@@ -12,7 +12,7 @@ using Test
     opsum += 0.5, "S-", j, "S+", j + 1
   end
   H = MPO(opsum, sites)
-  psi0 = randomMPS(sites; linkdims=10)
+  psi0 = random_mps(sites; linkdims=10)
   sweeps = Sweeps(5)
   setmaxdim!(sweeps, 10, 20, 100, 100, 200)
   setcutoff!(sweeps, 1E-11)

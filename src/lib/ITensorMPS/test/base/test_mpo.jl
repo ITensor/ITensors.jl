@@ -21,7 +21,7 @@ end
 @testset "[first]siteinds(::MPO)" begin
   N = 5
   s = siteinds("S=1/2", N)
-  M = randomMPO(s)
+  M = random_mpo(s)
   v = siteinds(M)
   for n in 1:N
     @test hassameinds(v[n], (s[n], s[n]'))
@@ -48,12 +48,12 @@ end
   @test hasind(P[1], sites[1])
   @test hasind(P[1], prime(sites[1]))
   # test constructor from Vector{ITensor}
-  K = randomMPO(sites)
+  K = random_mpo(sites)
   @test ITensors.data(MPO(copy(ITensors.data(K)))) == ITensors.data(K)
 
   @testset "orthogonalize!" begin
-    phi = randomMPS(sites)
-    K = randomMPO(sites)
+    phi = random_mps(sites)
+    K = random_mpo(sites)
     orthogonalize!(phi, 1)
     orthogonalize!(K, 1)
     orig_inner = ⋅(phi', K, phi)
@@ -63,7 +63,7 @@ end
   end
 
   @testset "norm MPO" begin
-    A = randomMPO(sites)
+    A = random_mpo(sites)
     Adag = sim(linkinds, dag(A))
     A² = ITensor(1)
     for j in 1:N
@@ -79,7 +79,7 @@ end
   end
 
   @testset "lognorm MPO" begin
-    A = randomMPO(sites)
+    A = random_mpo(sites)
     for j in 1:N
       A[j] .*= j
     end
@@ -95,10 +95,10 @@ end
   end
 
   @testset "inner <y|A|x>" begin
-    phi = randomMPS(sites)
-    K = randomMPO(sites)
+    phi = random_mps(sites)
+    K = random_mpo(sites)
     @test maxlinkdim(K) == 1
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     phidag = dag(phi)
     prime!(phidag)
     phiKpsi = phidag[1] * K[1] * psi[1]
@@ -108,7 +108,7 @@ end
     @test phiKpsi[] ≈ inner(phi', K, psi)
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badpsi = randomMPS(badsites)
+    badpsi = random_mps(badsites)
     @test_throws DimensionMismatch inner(phi', K, badpsi)
 
     # make bigger random MPO...
@@ -156,9 +156,9 @@ end
     c = 2
 
     s = siteinds("S=1/2", n)
-    ψ = c .* randomMPS(s; linkdims=4)
-    Φ = c .* randomMPS(s; linkdims=4)
-    K = randomMPO(s)
+    ψ = c .* random_mps(s; linkdims=4)
+    Φ = c .* random_mps(s; linkdims=4)
+    K = random_mpo(s)
 
     @test log(complex(inner(ψ', K, Φ))) ≈ loginner(ψ', K, Φ)
   end
@@ -188,7 +188,7 @@ end
     @test phiJdagKpsi[] ≈ inner(J, phi, K, psi)
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badpsi = randomMPS(badsites)
+    badpsi = random_mps(badsites)
     @test_throws DimensionMismatch inner(J, phi, K, badpsi)
 
     # generic tags and prime levels
@@ -230,7 +230,7 @@ end
     @test dist ≈ error_contract(phi, K, psi)
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badpsi = randomMPS(badsites)
+    badpsi = random_mps(badsites)
     # Apply K to phi and check that error_contract is close to 0.
     Kphi = contract(K, phi; method="naive", cutoff=1E-8)
     @test error_contract(noprime(Kphi), K, phi) ≈ 0.0 atol = 1e-4
@@ -241,10 +241,10 @@ end
   end
 
   @testset "contract" begin
-    phi = randomMPS(sites)
-    K = randomMPO(sites)
+    phi = random_mps(sites)
+    K = random_mpo(sites)
     @test maxlinkdim(K) == 1
-    psi = randomMPS(sites)
+    psi = random_mps(sites)
     psi_out = contract(K, psi; maxdim=1)
     @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     psi_out = contract(psi, K; maxdim=1)
@@ -254,7 +254,7 @@ end
     @test_throws MethodError contract(K, psi; method="fakemethod")
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badpsi = randomMPS(badsites)
+    badpsi = random_mps(badsites)
     @test_throws DimensionMismatch contract(K, badpsi)
 
     # make bigger random MPO...
@@ -294,11 +294,11 @@ end
 
   @testset "add(::MPO, ::MPO)" begin
     shsites = siteinds("S=1/2", N)
-    K = randomMPO(shsites)
-    L = randomMPO(shsites)
+    K = random_mpo(shsites)
+    L = random_mpo(shsites)
     M = add(K, L)
     @test length(M) == N
-    psi = randomMPS(shsites)
+    psi = random_mps(shsites)
     k_psi = contract(K, psi; maxdim=1)
     l_psi = contract(L, psi; maxdim=1)
     @test inner(psi', k_psi + l_psi) ≈ ⋅(psi', M, psi) atol = 5e-3
@@ -309,12 +309,12 @@ end
       L = basicRandomMPO(shsites; dim=dim)
       M = K + L
       @test length(M) == N
-      psi = randomMPS(shsites)
+      psi = random_mps(shsites)
       k_psi = contract(K, psi)
       l_psi = contract(L, psi)
       @test inner(psi', k_psi + l_psi) ≈ dot(psi', M, psi) atol = 5e-3
       @test inner(psi', sum([k_psi, l_psi])) ≈ inner(psi', M, psi) atol = 5e-3
-      psi = randomMPS(shsites)
+      psi = random_mps(shsites)
       M = add(K, L; cutoff=1E-9)
       k_psi = contract(K, psi)
       l_psi = contract(L, psi)
@@ -355,9 +355,9 @@ end
   end
 
   @testset "contract(::MPO, ::MPO)" begin
-    psi = randomMPS(sites)
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    psi = random_mps(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
     KL = contract(prime(K), L; maxdim=1)
@@ -367,27 +367,27 @@ end
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
     othersitesl = [Index(2, "Site,bbb") for n in 1:N]
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     for ii in 1:N
       replaceind!(K[ii], sites[ii]', othersitesk[ii])
       replaceind!(L[ii], sites[ii]', othersitesl[ii])
     end
     KL = contract(K, L; maxdim=1)
-    psik = randomMPS(othersitesk)
-    psil = randomMPS(othersitesl)
+    psik = random_mps(othersitesk)
+    psil = random_mps(othersitesl)
     psi_kl_out = contract(K, contract(L, psil; maxdim=1); maxdim=1)
     @test inner(psik, KL, psil) ≈ inner(psik, psi_kl_out) atol = 5e-3
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badL = randomMPO(badsites)
+    badL = random_mpo(badsites)
     @test_throws DimensionMismatch contract(K, badL)
   end
 
   @testset "*(::MPO, ::MPO)" begin
-    psi = randomMPS(sites)
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    psi = random_mps(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
     KL = *(prime(K), L; maxdim=1)
@@ -403,27 +403,27 @@ end
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
     othersitesl = [Index(2, "Site,bbb") for n in 1:N]
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     for ii in 1:N
       replaceind!(K[ii], sites[ii]', othersitesk[ii])
       replaceind!(L[ii], sites[ii]', othersitesl[ii])
     end
     KL = *(K, L; maxdim=1)
-    psik = randomMPS(othersitesk)
-    psil = randomMPS(othersitesl)
+    psik = random_mps(othersitesk)
+    psil = random_mps(othersitesl)
     psi_kl_out = *(K, *(L, psil; maxdim=1); maxdim=1)
     @test dot(psik, KL, psil) ≈ psik ⋅ psi_kl_out atol = 5e-3
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
-    badL = randomMPO(badsites)
+    badL = random_mpo(badsites)
     @test_throws DimensionMismatch K * badL
   end
 
   @testset "Multi-arg apply(::MPO...)" begin
-    ρ1 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
-    ρ2 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
-    ρ3 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
+    ρ1 = (x -> outer(x', x; maxdim=4))(random_mps(sites; linkdims=2))
+    ρ2 = (x -> outer(x', x; maxdim=4))(random_mps(sites; linkdims=2))
+    ρ3 = (x -> outer(x', x; maxdim=4))(random_mps(sites; linkdims=2))
     @test apply(ρ1, ρ2, ρ3; cutoff=1e-8) ≈
       apply(apply(ρ1, ρ2; cutoff=1e-8), ρ3; cutoff=1e-8)
   end
@@ -432,7 +432,7 @@ end
   O = MPO(sites, "Sz")
   @test length(O) == N # just make sure this works
 
-  @test_throws ArgumentError randomMPO(sites, 2)
+  @test_throws ArgumentError random_mpo(sites, 2)
   @test isnothing(linkind(MPO(fill(ITensor(), N), 0, N + 1), 1))
 
   @testset "movesites $N sites" for N in 1:7
@@ -440,7 +440,7 @@ end
     ψ0 = MPO(s0, "Id")
     for perm in permutations(1:N)
       s = s0[perm]
-      ψ = randomMPO(s)
+      ψ = random_mpo(s)
       ns′ = [findsite(ψ0, i) for i in s]
       @test ns′ == perm
       ψ′ = movesites(ψ, 1:N .=> ns′)
@@ -541,7 +541,7 @@ end
   @testset "Set range of MPO tensors" begin
     N = 5
     s = siteinds("S=1/2", N)
-    ψ0 = randomMPO(s)
+    ψ0 = random_mpo(s)
 
     ψ = orthogonalize(ψ0, 2)
     A = prod(ITensors.data(ψ)[2:(N - 1)])
@@ -569,7 +569,7 @@ end
   @testset "swapbondsites MPO" begin
     N = 5
     sites = siteinds("S=1/2", N)
-    ψ0 = randomMPO(sites)
+    ψ0 = random_mpo(sites)
 
     # TODO: implement this?
     #ψ = replacebond(ψ0, 3, ψ0[3] * ψ0[4];
@@ -614,9 +614,9 @@ end
     s = siteinds("S=1/2", N; conserve_qns=true)
     state(n) = isodd(n) ? "Up" : "Dn"
     χψ = 3
-    ψ = randomMPS(ComplexF64, s, state; linkdims=χψ)
+    ψ = random_mps(ComplexF64, s, state; linkdims=χψ)
     χϕ = 4
-    ϕ = randomMPS(ComplexF64, s, state; linkdims=χϕ)
+    ϕ = random_mps(ComplexF64, s, state; linkdims=χϕ)
 
     ψ[only(ortho_lims(ψ))] *= 2
 
@@ -665,8 +665,8 @@ end
     N = 4
     s1 = siteinds("S=1/2", N)
     s2 = siteinds("S=1/2", N)
-    psi1 = randomMPS(s1)
-    psi2 = randomMPS(s2)
+    psi1 = random_mps(s1)
+    psi2 = random_mps(s2)
     H1 = MPO(OpSum() + ("Id", 1), s1)
     H2 = MPO(OpSum() + ("Id", 1), s2)
 
@@ -684,8 +684,8 @@ end
   @testset "unsupported kwarg in dot, logdot" begin
     N = 6
     sites = [Index(2, "Site,n=$n") for n in 1:N]
-    K = randomMPO(sites)
-    L = randomMPO(sites)
+    K = random_mpo(sites)
+    L = random_mpo(sites)
     @test_throws ErrorException dot(K, L, make_inds_match=true)
     @test_throws ErrorException logdot(K, L, make_inds_match=true)
   end
@@ -752,7 +752,7 @@ end
       M
     end
 
-    psi = randomMPS(s; linkdims=chi2)
+    psi = random_mps(s; linkdims=chi2)
 
     Apsi = contract(A, psi)
 
@@ -772,8 +772,8 @@ end
     # MPO not an MPS
     N = 8
     s = siteinds(2, N)
-    A = randomMPO(s)
-    B = randomMPO(s)
+    A = random_mpo(s)
+    B = random_mpo(s)
     C = apply(A, B; alg="naive")
     @test C isa MPO
   end
@@ -797,15 +797,15 @@ end
     @test linkdims(H²) == fill(1, length(s) - 1)
     @test H² ≈ H̃²
 
-    e, ψ = dmrg(H, randomMPS(s, n -> isodd(n) ? "↑" : "↓"); nsweeps=2, outputlevel=0)
+    e, ψ = dmrg(H, random_mps(s, n -> isodd(n) ? "↑" : "↓"); nsweeps=2, outputlevel=0)
     @test e ≈ 1
   end
 
   @testset "consistent precision of apply" for T in
                                                (Float32, Float64, ComplexF32, ComplexF64)
     sites = siteinds("S=1/2", 4)
-    A = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
-    B = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
+    A = randn(T) * convert_leaf_eltype(T, random_mpo(sites))
+    B = randn(T) * convert_leaf_eltype(T, random_mpo(sites))
     @test scalartype(apply(A, B)) == T
   end
   @testset "sample" begin
@@ -813,7 +813,7 @@ end
     sites = [Index(2, "Site,n=$n") for n in 1:N]
     seed = 623
     mt = MersenneTwister(seed)
-    K = randomMPS(mt, sites)
+    K = random_mps(mt, sites)
     L = MPO(K)
     result = sample(mt, L)
     @test result ≈ [1, 2, 1, 1, 2, 2]

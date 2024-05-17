@@ -250,6 +250,8 @@ const ITENSORS_EXPORTED_NAMES = [
   :random_itensor,
   :randomMPO,
   :randomMPS,
+  :random_mpo,
+  :random_mps,
   :readcpp,
   :removeqn,
   :removeqns,

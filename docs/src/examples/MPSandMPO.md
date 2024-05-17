@@ -88,7 +88,7 @@ let # hide
 N = 10
 s = siteinds(2,N)
 chi = 4
-psi = randomMPS(s;linkdims=chi)
+psi = random_mps(s;linkdims=chi)
 
 # Make an array of integers of the element we
 # want to obtain
@@ -143,7 +143,7 @@ using ITensors, ITensorMPS
 N = 10
 chi = 4
 sites = siteinds("S=1/2",N)
-psi = randomMPS(sites;linkdims=chi)
+psi = random_mps(sites;linkdims=chi)
 magz = expect(psi,"Sz")
 for (j,mz) in enumerate(magz)
     println("$j $mz")
@@ -362,7 +362,7 @@ N = 10 # number of sites
 d = 3  # dimension of each site
 chi = 16 # bond dimension of the MPS
 s = siteinds(d,N)
-psi = randomMPS(s;linkdims=chi)
+psi = random_mps(s;linkdims=chi)
 ```
 
 We can now draw some samples from this MPS as

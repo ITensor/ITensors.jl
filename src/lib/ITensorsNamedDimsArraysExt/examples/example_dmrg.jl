@@ -1,5 +1,5 @@
 using Adapt: adapt
-using ITensors: MPO, dmrg, randomMPS, siteinds
+using ITensors: MPO, dmrg, random_mps, siteinds
 using ITensors.Ops: OpSum
 using ITensors.ITensorsNamedDimsArraysExt: to_nameddimsarray
 
@@ -10,7 +10,7 @@ function main(; n, conserve_qns=false, nsweeps=3, cutoff=1e-4, arraytype=Array)
   ℋ = sum(j -> ("S-", j, "S+", j + 1), 1:(n - 1); init=ℋ)
   ℋ = sum(j -> ("Sz", j, "Sz", j + 1), 1:(n - 1); init=ℋ)
   H = MPO(ℋ, s)
-  ψ₀ = randomMPS(s, j -> isodd(j) ? "↑" : "↓")
+  ψ₀ = random_mps(s, j -> isodd(j) ? "↑" : "↓")
 
   H = adapt(arraytype, H)
   ψ = adapt(arraytype, ψ₀)

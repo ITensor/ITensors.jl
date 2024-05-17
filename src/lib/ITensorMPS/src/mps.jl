@@ -225,7 +225,7 @@ function _fill_linkdims(linkdims::Integer, sites::Vector{<:Index})
 end
 
 """
-    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
+    random_mps(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
 Construct a random MPS with link dimension `linkdims` of
 type `eltype`.
@@ -234,13 +234,13 @@ type `eltype`.
 `length(linkdims) == length(sites) - 1` for constructing an
 MPS with non-uniform bond dimension.
 """
-function randomMPS(
+function random_mps(
   ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
 ) where {ElT<:Number}
-  return randomMPS(Random.default_rng(), ElT, sites; linkdims)
+  return random_mps(Random.default_rng(), ElT, sites; linkdims)
 end
 
-function randomMPS(
+function random_mps(
   rng::AbstractRNG,
   ::Type{ElT},
   sites::Vector{<:Index};
@@ -248,7 +248,7 @@ function randomMPS(
 ) where {ElT<:Number}
   _linkdims = _fill_linkdims(linkdims, sites)
   if any(hasqns, sites)
-    error("initial state required to use randomMPS with QNs")
+    error("initial state required to use random_mps with QNs")
   end
 
   # For non-QN-conserving MPS, instantiate
@@ -257,8 +257,8 @@ function randomMPS(
 end
 
 """
-    randomMPS(sites::Vector{<:Index}; linkdims=1)
-    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
+    random_mps(sites::Vector{<:Index}; linkdims=1)
+    random_mps(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
 Construct a random MPS with link dimension `linkdims` which by
 default has element type `Float64`.
@@ -267,41 +267,41 @@ default has element type `Float64`.
 `length(linkdims) == length(sites) - 1` for constructing an
 MPS with non-uniform bond dimension.
 """
-function randomMPS(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
-  return randomMPS(Random.default_rng(), sites; linkdims)
+function random_mps(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
+  return random_mps(Random.default_rng(), sites; linkdims)
 end
 
-function randomMPS(
+function random_mps(
   rng::AbstractRNG, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
 )
-  return randomMPS(rng, Float64, sites; linkdims)
+  return random_mps(rng, Float64, sites; linkdims)
 end
 
-function randomMPS(
+function random_mps(
   sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
 )
-  return randomMPS(Random.default_rng(), sites, state; linkdims)
+  return random_mps(Random.default_rng(), sites, state; linkdims)
 end
 
-function randomMPS(
+function random_mps(
   rng::AbstractRNG,
   sites::Vector{<:Index},
   state;
   linkdims::Union{Integer,Vector{<:Integer}}=1,
 )
-  return randomMPS(rng, Float64, sites, state; linkdims)
+  return random_mps(rng, Float64, sites, state; linkdims)
 end
 
-function randomMPS(
+function random_mps(
   eltype::Type{<:Number},
   sites::Vector{<:Index},
   state;
   linkdims::Union{Integer,Vector{<:Integer}}=1,
 )
-  return randomMPS(Random.default_rng(), eltype, sites, state; linkdims)
+  return random_mps(Random.default_rng(), eltype, sites, state; linkdims)
 end
 
-function randomMPS(
+function random_mps(
   rng::AbstractRNG,
   eltype::Type{<:Number},
   sites::Vector{<:Index},
@@ -316,15 +316,15 @@ function randomMPS(
 end
 
 @doc """
-    randomMPS(sites::Vector{<:Index}, state; linkdims=1)
+    random_mps(sites::Vector{<:Index}, state; linkdims=1)
 
 Construct a real, random MPS with link dimension `linkdims`,
 made by randomizing an initial product state specified by
-`state`. This version of `randomMPS` is necessary when creating
+`state`. This version of `random_mps` is necessary when creating
 QN-conserving random MPS (consisting of QNITensors). The initial
 `state` array provided determines the total QN of the resulting
 random MPS.
-""" randomMPS(::Vector{<:Index}, ::Any)
+""" random_mps(::Vector{<:Index}, ::Any)
 
 """
     MPS(::Type{T<:Number}, ivals::Vector{<:Pair{<:Index}})
@@ -725,12 +725,12 @@ N = 30
 m = 4
 
 s = siteinds("S=1/2", N)
-psi = randomMPS(s; linkdims=m)
+psi = random_mps(s; linkdims=m)
 Czz = correlation_matrix(psi, "Sz", "Sz")
 Czz = correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) # same as above
 
 s = siteinds("Electron", N; conserve_qns=true)
-psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
+psi = random_mps(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
 Cuu = correlation_matrix(psi, "Cdagup", "Cup"; sites=2:8)
 ```
 """
@@ -967,7 +967,7 @@ of expectation values.
 N = 10
 
 s = siteinds("S=1/2", N)
-psi = randomMPS(s; linkdims=8)
+psi = random_mps(s; linkdims=8)
 Z = expect(psi, "Sz") # compute for all sites
 Z = expect(psi, "Sz"; sites=2:4) # compute for sites 2,3,4
 Z3 = expect(psi, "Sz"; sites=3)  # compute for site 3 only (output will be a scalar)
@@ -975,7 +975,7 @@ XZ = expect(psi, ["Sx", "Sz"]) # compute Sx and Sz for all sites
 Z = expect(psi, [1/2 0; 0 -1/2]) # same as expect(psi,"Sz")
 
 s = siteinds("Electron", N)
-psi = randomMPS(s; linkdims=8)
+psi = random_mps(s; linkdims=8)
 dens = expect(psi, "Ntot")
 updens, dndens = expect(psi, "Nup", "Ndn") # pass more than one operator
 ```

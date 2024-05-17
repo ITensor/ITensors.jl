@@ -91,7 +91,7 @@ When DMRG is failing to converge, here are some of the steps you can take to imp
   up on the left-hand side only, it can take DMRG a very long time to converge.
 
 * Try using a random MPS with a modestly large bond dimension. ITensor offers a function
-  called [`randomMPS`](@ref) which can be used to make random MPS in both the quantum number (QN)
+  called [`random_mps`](@ref) which can be used to make random MPS in both the quantum number (QN)
   conserving and non-QN conserving cases. Because random MPS have properties
   which are "typical" of most ground states, they can be good initial states for DMRG.
 

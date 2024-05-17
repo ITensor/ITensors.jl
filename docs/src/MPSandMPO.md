@@ -12,9 +12,9 @@ MPO
 ```@docs
 MPS(::Int)
 MPS(::Type{<:Number}, ::Vector{<:Index})
-randomMPS(sites::Vector{<:Index})
-randomMPS(::Type{<:Number}, sites::Vector{<:Index})
-randomMPS(::Vector{<:Index}, ::Any)
+random_mps(sites::Vector{<:Index})
+random_mps(::Type{<:Number}, sites::Vector{<:Index})
+random_mps(::Vector{<:Index}, ::Any)
 MPS(::Vector{<:Index}, ::Any)
 MPS(::Type{<:Number}, ::Vector{<:Index}, ::Any)
 MPS(::Vector{<:Pair{<:Index}})

@@ -30,7 +30,7 @@ function main(n; blas_num_threads=Sys.CPU_THREADS, fuse=true, binary=true)
   s = siteinds("S=1/2", n; conserve_qns=true)
   H = MPO(heisenberg(n), s)
   initstate(j) = isodd(j) ? "↑" : "↓"
-  ψ0 = randomMPS(s, initstate; linkdims=10)
+  ψ0 = random_mps(s, initstate; linkdims=10)
 
   edmrg, ψdmrg = dmrg(H, ψ0; nsweeps=10, cutoff=1e-6)
 

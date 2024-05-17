@@ -184,7 +184,7 @@ let
     a += 0.5,"S-",n,"S+",n+1
   end
   H = MPO(a,s)
-  psi0 = randomMPS(s;linkdims=4)
+  psi0 = random_mps(s;linkdims=4)
 
   nsweeps = 5
   cutoff = 1E-8

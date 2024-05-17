@@ -85,7 +85,7 @@ using ITensors, Test
     H = MPO(opsum, sites)
 
     # Create an initial random matrix product state
-    psi0 = randomMPS(sites)
+    psi0 = random_mps(sites)
 
     sweeps = Sweeps(2)
     maxdim!(sweeps, 10, 20, 100, 100, 200)

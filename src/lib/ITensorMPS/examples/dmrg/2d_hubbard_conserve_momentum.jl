@@ -79,7 +79,7 @@ function main(;
   display(state)
 
   psi0 = if random_init
-    randomMPS(itensor_rng, sites, state; linkdims=2)
+    random_mps(itensor_rng, sites, state; linkdims=2)
   else
     MPS(sites, state)
   end
