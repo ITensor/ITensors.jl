@@ -10,8 +10,8 @@ For example, you can load CUDA.jl to perform tensor operations on NVIDIA GPUs or
 using ITensors
 
 i, j, k = Index.((2, 2, 2))
-A = randomITensor(i, j)
-B = randomITensor(j, k)
+A = random_itensor(i, j)
+B = random_itensor(j, k)
 
 # Perform tensor operations on CPU
 A * B

@@ -20,7 +20,7 @@ using ITensors, Test
 
     @test hasinds(C, i, k, l) == true
 
-    D = randomITensor(k, j, i) # ITensor with random elements
+    D = random_itensor(k, j, i) # ITensor with random elements
 
     # Add two ITensors
     # must have same set of indices
@@ -31,7 +31,7 @@ using ITensors, Test
   @testset "SVD of a Matrix" begin
     i = Index(10)
     j = Index(20)
-    M = randomITensor(i, j)
+    M = random_itensor(i, j)
     U, S, V = svd(M, i)
     @test norm(M - U * S * V) < 1E-12
   end
@@ -41,7 +41,7 @@ using ITensors, Test
     j = Index(4, "j")
     k = Index(4, "k")
     l = Index(4, "l")
-    T = randomITensor(i, j, k, l)
+    T = random_itensor(i, j, k, l)
     U, S, V = svd(T, i, k)
     @test hasinds(U, i, k)
     @test hasinds(V, j, l)

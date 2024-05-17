@@ -13,12 +13,12 @@ Random.seed!(1234)
 @testset "ChainRules rrules: basic ITensor operations" begin
   i = Index(2, "i")
   j = Index(2, "j")
-  A = randomITensor(i', dag(i))
-  V = randomITensor(i)
-  Ac = randomITensor(ComplexF64, i', dag(i))
-  B = randomITensor(i', dag(i))
+  A = random_itensor(i', dag(i))
+  V = random_itensor(i)
+  Ac = random_itensor(ComplexF64, i', dag(i))
+  B = random_itensor(i', dag(i))
   C = ITensor(3.4)
-  D = randomITensor(i', j)
+  D = random_itensor(i', j)
 
   @testset "getindex, priming, tagging, ITensor constructors, dag, etc." begin
     test_rrule(getindex, ITensor(3.4); check_inferred=false)
@@ -46,12 +46,12 @@ Random.seed!(1234)
     test_rrule(settags, A, "x"; fkwargs=(; plev=1), check_inferred=false)
     test_rrule(
       swaptags,
-      randomITensor(Index(2, "i"), Index(2, "j")),
+      random_itensor(Index(2, "i"), Index(2, "j")),
       "i" => "j";
       check_inferred=false,
     )
     test_rrule(
-      swaptags, randomITensor(Index(2, "i"), Index(2, "j")), "i", "j"; check_inferred=false
+      swaptags, random_itensor(Index(2, "i"), Index(2, "j")), "i", "j"; check_inferred=false
     )
     test_rrule(replaceind, A, i' => sim(i); check_inferred=false)
     test_rrule(replaceind, A, i', sim(i); check_inferred=false)
@@ -88,12 +88,12 @@ Random.seed!(1234)
   @testset "contraction sequence" begin
     a, b, k, l, m, n, u, v = Index.([2, 3, 2, 3, 2, 3, 2, 3])
     args = (
-      randomITensor(a, b, k),
-      randomITensor(a, l, m),
-      randomITensor(b, u, n),
-      randomITensor(u, v),
-      randomITensor(k, v),
-      randomITensor(l, m, n),
+      random_itensor(a, b, k),
+      random_itensor(a, l, m),
+      random_itensor(b, u, n),
+      random_itensor(u, v),
+      random_itensor(k, v),
+      random_itensor(l, m, n),
     )
     f = (args...) -> contract([args...])[] # Left associative
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
@@ -331,10 +331,10 @@ Random.seed!(1234)
       y = a + im * x
       return real(dag(y) * y)[]
     end
-    a = randomITensor()
+    a = random_itensor()
     f_itensor = x -> f2(x, a)
     f_number = x -> f2(x, a[])
-    x = randomITensor()
+    x = random_itensor()
     @test f_number(x[]) ≈ f_itensor(x)
     @test f_number'(x[]) ≈ f_itensor'(x)[]
     @test isreal(f_itensor'(x))
@@ -343,8 +343,8 @@ Random.seed!(1234)
   @testset "issue 969" begin
     i = Index(2)
     j = Index(3)
-    A = randomITensor(i)
-    B = randomITensor(j)
+    A = random_itensor(i)
+    B = random_itensor(j)
     f = function (x, y)
       d = δ(ind(x, 1), ind(y, 1))
       return (x * d * y)[]
@@ -359,8 +359,8 @@ Random.seed!(1234)
       Index([QN(0) => 1, QN(1) => 1]),
       Index([QN("SzParity", 1, 2) => 1, QN("SzParity", 0, 2) => 1]),
     )
-      A = randomITensor(i', dag(i))
-      B = randomITensor(i', dag(i))
+      A = random_itensor(i', dag(i))
+      B = random_itensor(i', dag(i))
 
       f(A, B) = dot(A, B)
       grad = gradient(f, A, B)

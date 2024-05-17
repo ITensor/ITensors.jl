@@ -104,8 +104,8 @@ function main(; d = 20, order = 4)
 
   i(n) = Index(QN(0) => d, QN(1) => d; tags = "i$n")
   is = IndexSet(i, order ÷ 2)
-  A = randomITensor(is'..., dag(is)...)
-  B = randomITensor(is'..., dag(is)...)
+  A = random_itensor(is'..., dag(is)...)
+  B = random_itensor(is'..., dag(is)...)
 
   ITensors.enable_threaded_blocksparse(false)
 

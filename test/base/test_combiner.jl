@@ -7,7 +7,7 @@ using Combinatorics: permutations
   k = Index(4, "k")
   l = Index(5, "l")
 
-  A = randomITensor(i, j, k, l)
+  A = random_itensor(i, j, k, l)
 
   @testset "Basic combiner properties" begin
     C = combiner(i, j, k)
@@ -248,7 +248,7 @@ using Combinatorics: permutations
   @testset "mult/Combiner should play nice" begin
     C = combiner(i, j, k)
     Ac = A * C
-    B = randomITensor(l)
+    B = random_itensor(l)
     AB = Ac * B
     @test AB * C ≈ A * B
   end

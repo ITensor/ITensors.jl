@@ -11,7 +11,7 @@ function basicRandomMPO(sites; dim=4)
   N = length(M)
   links = [Index(dim, "n=$(n-1),Link") for n in 1:(N + 1)]
   for n in 1:N
-    M[n] = randomITensor(links[n], sites[n], sites[n]', links[n + 1])
+    M[n] = random_itensor(links[n], sites[n], sites[n]', links[n + 1])
   end
   M[1] *= delta(links[1])
   M[N] *= delta(links[N + 1])
@@ -118,21 +118,23 @@ end
       mps_tensors2 = ITensor[ITensor() for ii in 1:N]
       mpo_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:(N - 1)]
       mps_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:(N - 1)]
-      mpo_tensors[1] = randomITensor(mpo_link_inds[1], sites[1], sites[1]')
-      mps_tensors[1] = randomITensor(mps_link_inds[1], sites[1])
-      mps_tensors2[1] = randomITensor(mps_link_inds[1], sites[1])
+      mpo_tensors[1] = random_itensor(mpo_link_inds[1], sites[1], sites[1]')
+      mps_tensors[1] = random_itensor(mps_link_inds[1], sites[1])
+      mps_tensors2[1] = random_itensor(mps_link_inds[1], sites[1])
       for ii in 2:(N - 1)
-        mpo_tensors[ii] = randomITensor(
+        mpo_tensors[ii] = random_itensor(
           mpo_link_inds[ii], mpo_link_inds[ii - 1], sites[ii], sites[ii]'
         )
-        mps_tensors[ii] = randomITensor(mps_link_inds[ii], mps_link_inds[ii - 1], sites[ii])
-        mps_tensors2[ii] = randomITensor(
+        mps_tensors[ii] = random_itensor(
+          mps_link_inds[ii], mps_link_inds[ii - 1], sites[ii]
+        )
+        mps_tensors2[ii] = random_itensor(
           mps_link_inds[ii], mps_link_inds[ii - 1], sites[ii]
         )
       end
-      mpo_tensors[N] = randomITensor(mpo_link_inds[N - 1], sites[N], sites[N]')
-      mps_tensors[N] = randomITensor(mps_link_inds[N - 1], sites[N])
-      mps_tensors2[N] = randomITensor(mps_link_inds[N - 1], sites[N])
+      mpo_tensors[N] = random_itensor(mpo_link_inds[N - 1], sites[N], sites[N]')
+      mps_tensors[N] = random_itensor(mps_link_inds[N - 1], sites[N])
+      mps_tensors2[N] = random_itensor(mps_link_inds[N - 1], sites[N])
       K = MPO(mpo_tensors, 0, N + 1)
       psi = MPS(mps_tensors, 0, N + 1)
       phi = MPS(mps_tensors2, 0, N + 1)
@@ -262,21 +264,23 @@ end
       mps_tensors2 = ITensor[ITensor() for ii in 1:N]
       mpo_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:(N - 1)]
       mps_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:(N - 1)]
-      mpo_tensors[1] = randomITensor(mpo_link_inds[1], sites[1], sites[1]')
-      mps_tensors[1] = randomITensor(mps_link_inds[1], sites[1])
-      mps_tensors2[1] = randomITensor(mps_link_inds[1], sites[1])
+      mpo_tensors[1] = random_itensor(mpo_link_inds[1], sites[1], sites[1]')
+      mps_tensors[1] = random_itensor(mps_link_inds[1], sites[1])
+      mps_tensors2[1] = random_itensor(mps_link_inds[1], sites[1])
       for ii in 2:(N - 1)
-        mpo_tensors[ii] = randomITensor(
+        mpo_tensors[ii] = random_itensor(
           mpo_link_inds[ii], mpo_link_inds[ii - 1], sites[ii], sites[ii]'
         )
-        mps_tensors[ii] = randomITensor(mps_link_inds[ii], mps_link_inds[ii - 1], sites[ii])
-        mps_tensors2[ii] = randomITensor(
+        mps_tensors[ii] = random_itensor(
+          mps_link_inds[ii], mps_link_inds[ii - 1], sites[ii]
+        )
+        mps_tensors2[ii] = random_itensor(
           mps_link_inds[ii], mps_link_inds[ii - 1], sites[ii]
         )
       end
-      mpo_tensors[N] = randomITensor(mpo_link_inds[N - 1], sites[N], sites[N]')
-      mps_tensors[N] = randomITensor(mps_link_inds[N - 1], sites[N])
-      mps_tensors2[N] = randomITensor(mps_link_inds[N - 1], sites[N])
+      mpo_tensors[N] = random_itensor(mpo_link_inds[N - 1], sites[N], sites[N]')
+      mps_tensors[N] = random_itensor(mps_link_inds[N - 1], sites[N])
+      mps_tensors2[N] = random_itensor(mps_link_inds[N - 1], sites[N])
       K = MPO(mpo_tensors, 0, N + 1)
       psi = MPS(mps_tensors, 0, N + 1)
       phi = MPS(mps_tensors2, 0, N + 1)
@@ -455,7 +459,7 @@ end
 
     sis = [[sₙ', sₙ] for sₙ in s]
 
-    A = randomITensor(s..., prime.(s)...)
+    A = random_itensor(s..., prime.(s)...)
     ψ = MPO(A, sis; orthocenter=4)
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (s[1], s[1]', ls[1]))
@@ -464,7 +468,7 @@ end
     @test ITensors.orthocenter(ψ) == 4
     @test maxlinkdim(ψ) == 16
 
-    A = randomITensor(s..., prime.(s)...)
+    A = random_itensor(s..., prime.(s)...)
     ψ = MPO(A, s; orthocenter=4)
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (s[1], s[1]', ls[1]))
@@ -497,7 +501,7 @@ end
     @test ITensors.orthocenter(ψ) == 3
     @test maxlinkdim(ψ) == 1
 
-    A = randomITensor(s..., prime.(s)..., l[1], r[1])
+    A = random_itensor(s..., prime.(s)..., l[1], r[1])
     ψ = MPO(A, sis; leftinds=l[1])
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l[1], s[1], s[1]', ls[1]))
@@ -506,7 +510,7 @@ end
     @test ITensors.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 48
 
-    A = randomITensor(s..., prime.(s)..., l[1], r[1])
+    A = random_itensor(s..., prime.(s)..., l[1], r[1])
     ψ = MPO(A, s; leftinds=l[1])
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l[1], s[1], s[1]', ls[1]))
@@ -515,7 +519,7 @@ end
     @test ITensors.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 48
 
-    A = randomITensor(s..., prime.(s)..., l..., r...)
+    A = random_itensor(s..., prime.(s)..., l..., r...)
     ψ = MPO(A, sis; leftinds=l, orthocenter=2)
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l..., s[1], s[1]', ls[1]))
@@ -524,7 +528,7 @@ end
     @test ITensors.orthocenter(ψ) == 2
     @test maxlinkdim(ψ) == 144
 
-    A = randomITensor(s..., prime.(s)..., l..., r...)
+    A = random_itensor(s..., prime.(s)..., l..., r...)
     ψ = MPO(A, s; leftinds=l, orthocenter=2)
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l..., s[1], s[1]', ls[1]))
@@ -592,7 +596,7 @@ end
   @testset "MPO(::MPS)" begin
     i = Index(QN(0, 2) => 1, QN(1, 2) => 1; tags="i")
     j = settags(i, "j")
-    A = randomITensor(ComplexF64, i, j)
+    A = random_itensor(ComplexF64, i, j)
     M = A' * dag(A)
     ψ = MPS(A, [i, j])
     @test prod(ψ) ≈ A
@@ -735,11 +739,11 @@ end
     A = begin
       l = [Index(chi1, "n=$n,Link") for n in 1:N]
       M = MPO(N)
-      M[1] = randomITensor(dag(s[1]), l[1], s'[1])
+      M[1] = random_itensor(dag(s[1]), l[1], s'[1])
       for n in 2:(N - 1)
-        M[n] = randomITensor(dag(s[n]), dag(l[n - 1]), l[n], s'[n])
+        M[n] = random_itensor(dag(s[n]), dag(l[n - 1]), l[n], s'[n])
       end
-      M[N] = randomITensor(dag(s[N]), dag(l[N - 1]), s'[N])
+      M[N] = random_itensor(dag(s[N]), dag(l[N - 1]), s'[N])
       nrm = inner(M, M)
       for n in 1:N
         M[n] ./= (nrm)^(1 / (2N))

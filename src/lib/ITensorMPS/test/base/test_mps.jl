@@ -53,7 +53,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   end
 
   @testset "Missing links" begin
-    psi = MPS([randomITensor(sites[i]) for i in 1:10])
+    psi = MPS([random_itensor(sites[i]) for i in 1:10])
     @test isnothing(linkind(psi, 1))
     @test isnothing(linkind(psi, 5))
     @test isnothing(linkind(psi, length(psi)))
@@ -660,7 +660,7 @@ function basicRandomMPS(N::Int; dim=4)
   M = MPS(sites)
   links = [Index(dim, "n=$(n-1),Link") for n in 1:(N + 1)]
   for n in 1:N
-    M[n] = randomITensor(links[n], sites[n], links[n + 1])
+    M[n] = random_itensor(links[n], sites[n], links[n + 1])
   end
   M[1] *= delta(links[1])
   M[N] *= delta(links[N + 1])
@@ -1022,11 +1022,11 @@ end
     s1 = Index(2, "Qubit")
     s2 = Index(2, "Qubit")
     s3 = Index(2, "Qubit")
-    b01 = randomITensor(l01, l̃01)
-    A1 = randomITensor(l̃01, s1, l12)
-    A2 = randomITensor(l12, s2, l23)
-    A3 = randomITensor(l23, s3, l̃34)
-    b34 = randomITensor(l̃34, l34)
+    b01 = random_itensor(l01, l̃01)
+    A1 = random_itensor(l̃01, s1, l12)
+    A2 = random_itensor(l12, s2, l23)
+    A3 = random_itensor(l23, s3, l̃34)
+    b34 = random_itensor(l̃34, l34)
     ψ = MPS([b01, A1, A2, A3, b34])
     sites = 1:3
     C = correlation_matrix(ψ, "Z", "Z"; sites=(sites .+ 1))
@@ -1152,7 +1152,7 @@ end
     ψ = random_mps(s)
     l = linkinds(ψ)
 
-    A = randomITensor(s[4]', s[2]', dag(s[4]), dag(s[2]))
+    A = random_itensor(s[4]', s[2]', dag(s[4]), dag(s[2]))
 
     @test findsite(ψ, s[3]) == 3
     @test findsite(ψ, (s[3], s[5])) == 3
@@ -1236,7 +1236,7 @@ end
     # MPS
     #
 
-    A = randomITensor(s...)
+    A = random_itensor(s...)
     ψ = MPS(A, s)
     @test prod(ψ) ≈ A
     @test ITensorMPS.orthocenter(ψ) == N
@@ -1256,7 +1256,7 @@ end
     @test ITensorMPS.orthocenter(ψ) == 2
     @test maxlinkdim(ψ) == 2
 
-    A = randomITensor(s..., l[1], r[1])
+    A = random_itensor(s..., l[1], r[1])
     ψ = MPS(A, s; leftinds=l[1], orthocenter=3)
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l[1], s[1], ls[1]))
@@ -1265,7 +1265,7 @@ end
     @test ITensorMPS.orthocenter(ψ) == 3
     @test maxlinkdim(ψ) == 12
 
-    A = randomITensor(s..., l..., r...)
+    A = random_itensor(s..., l..., r...)
     ψ = MPS(A, s; leftinds=l)
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l..., s[1], ls[1]))

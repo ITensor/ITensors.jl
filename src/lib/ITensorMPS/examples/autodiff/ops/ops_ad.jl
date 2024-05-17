@@ -104,7 +104,7 @@ end
 @show f10(x)
 @show f10'(x)
 
-V = randomITensor(s[1], s[2])
+V = random_itensor(s[1], s[2])
 
 function f11(x)
   y = exp(-x * Op("X", 1) * Op("X", 2))

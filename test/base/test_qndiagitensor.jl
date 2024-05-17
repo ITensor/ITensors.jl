@@ -1,10 +1,10 @@
 using ITensors, Test
 
-@testset "diagITensor (DiagBlockSparse)" begin
-  @testset "diagITensor get and set elements" begin
+@testset "diag_itensor (DiagBlockSparse)" begin
+  @testset "diag_itensor get and set elements" begin
     i = Index(QN(0) => 2, QN(1) => 3; tags="i")
 
-    D = diagITensor(QN(), i, dag(i'))
+    D = diag_itensor(QN(), i, dag(i'))
 
     for b in eachnzblock(D)
       @test flux(D, b) == QN()
@@ -25,10 +25,10 @@ using ITensors, Test
     @test D[i => 5, i' => 5] == 5
   end
 
-  @testset "diagITensor Tuple constructor" begin
+  @testset "diag_itensor Tuple constructor" begin
     i = Index(QN(0) => 2, QN(1) => 3; tags="i")
 
-    D = diagITensor((i, dag(i')))
+    D = diag_itensor((i, dag(i')))
 
     for b in eachnzblock(D)
       @test flux(D, b) == QN()
@@ -40,7 +40,7 @@ using ITensors, Test
     ĩ = sim(i; tags="i_sim")
     j = Index(QN(0) => 2, QN(1) => 3, QN(2) => 4; tags="j")
 
-    A = randomITensor(QN(), i, dag(j))
+    A = random_itensor(QN(), i, dag(j))
 
     δiĩ = δ(dag(i), ĩ)
 
@@ -67,7 +67,7 @@ using ITensors, Test
 
   @testset "denseblocks: convert DiagBlockSparse to BlockSparse" begin
     i = Index([QN(0) => 2, QN(1) => 3])
-    A = diagITensor(i', dag(i))
+    A = diag_itensor(i', dag(i))
     randn!(ITensors.data(A))
     B = denseblocks(A)
     for n in 1:dim(i)
@@ -118,7 +118,7 @@ using ITensors, Test
   @testset "Regression test for printing a QN Diag ITensor" begin
     # https://github.com/ITensor/NDTensors.jl/issues/61
     i = Index([QN() => 2])
-    A = randomITensor(i', dag(i))
+    A = random_itensor(i', dag(i))
     U, S, V = svd(A, i')
     # Test printing S
     io = IOBuffer()

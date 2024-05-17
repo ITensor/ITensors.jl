@@ -122,9 +122,9 @@ j = Index(10, "index_j")
 k = Index(40, "index_k")
 l = Index(40, "index_l")
 m = Index(40, "index_m")
-A = randomITensor(i, j, k)
-B = randomITensor(i, j, l, m)
-C = randomITensor(k, l)
+A = random_itensor(i, j, k)
+B = random_itensor(i, j, l, m)
+C = random_itensor(k, l)
 
 # Contract the tensors over the common indices
 # and visualize the results

@@ -110,7 +110,7 @@ end
   @testset "factorize" begin
     i = Index(2, "i")
     j = Index(2, "j")
-    A = randomITensor(i, j)
+    A = random_itensor(i, j)
     @test_throws ErrorException factorize(A, i; ortho="fakedir")
   end
 
@@ -120,9 +120,9 @@ end
     s2 = Index(2, "s2")
     r = Index(4, "r")
 
-    phi = randomITensor(l, s1, s2, r)
+    phi = random_itensor(l, s1, s2, r)
 
-    drho = randomITensor(l', s1', l, s1)
+    drho = random_itensor(l', s1', l, s1)
     drho += swapprime(drho, 0, 1)
     drho .*= 1E-5
 
@@ -143,8 +143,8 @@ end
     maxdim = di - 1
     i = Index(di, "i")
     j = Index(dj, "j")
-    a = randomITensor(elt, i, j)
-    δ = randomITensor(elt, i, j)
+    a = random_itensor(elt, i, j)
+    δ = random_itensor(elt, i, j)
     δ² = prime(δ, i) * dag(δ)
     a² = prime(a, i) * dag(a)
     x, y = factorize(a, i; ortho="left", which_decomp="eigen", maxdim)
@@ -166,7 +166,7 @@ end
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(5, "r")
-    A = randomITensor(elt, l, s, r)
+    A = random_itensor(elt, l, s, r)
     Ainds = inds(A)
     Linds = Ainds[1:ninds]
     Rinds = uniqueinds(A, Linds...)
@@ -248,7 +248,7 @@ end
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
-    A = randomITensor(l, s, s', r)
+    A = random_itensor(l, s, s', r)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
@@ -272,7 +272,7 @@ end
     l = dag(Index(QN("Sz", 0) => 1, QN("Sz", 1) => 1, QN("Sz", -1) => 1; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 1, QN("Sz", 1) => 1, QN("Sz", -1) => 1; tags="r")
-    A = randomITensor(l, s, r)
+    A = random_itensor(l, s, r)
     @test flux(A) == QN("Sz", 0)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
@@ -320,7 +320,7 @@ end
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
-    A = randomITensor(l, s, dag(s'), r)
+    A = random_itensor(l, s, dag(s'), r)
     @test flux(A) == QN("Sz", 0)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
@@ -347,7 +347,7 @@ end
     l = Index(3, "l")
     s = Index(5, "s")
     r = Index(7, "r")
-    A = randomITensor(l, s, s', r)
+    A = random_itensor(l, s, s', r)
     Ainds = inds(A)
 
     Q, R, q = qr(A, Ainds[1:ninds]; positive=true)
@@ -373,7 +373,7 @@ end
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
-    A = randomITensor(l, s, dag(s'), r)
+    A = random_itensor(l, s, dag(s'), r)
     Q, R, q = qr(A, l, s, dag(s'); positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
@@ -386,7 +386,7 @@ end
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
-    A = randomITensor(l, s, r)
+    A = random_itensor(l, s, r)
     Q, R, = factorize(A, l, s; which_decomp="qr")
     q = commonind(Q, R)
     @test A ≈ Q * R atol = 1e-13
@@ -401,7 +401,7 @@ end
   @testset "eigen" begin
     i = Index(2, "i")
     j = Index(2, "j")
-    A = randomITensor(i, i')
+    A = random_itensor(i, i')
     eigA = eigen(A)
     Dt, Ut = eigen(NDTensors.tensor(A))
     eigArr = eigen(array(A))
@@ -454,7 +454,7 @@ end
     cutoff = 1E-12
     N = 4
     s = siteinds("S=1", N; conserve_qns=true)
-    A = randomITensor(QN("Sz", 2), s[1], s[2], s[3])
+    A = random_itensor(QN("Sz", 2), s[1], s[2], s[3])
 
     R = A * dag(prime(A, s[1], s[2]))
     F = eigen(R, (s[1], s[2]), (s[1]', s[2]'))
@@ -474,7 +474,7 @@ end
       "i",
     )
     j = sim(i)
-    X = randomITensor(QN("Sz", 0), i, j)
+    X = random_itensor(QN("Sz", 0), i, j)
 
     min_blockdim = 2
     U, S, V = svd(X, i; cutoff=1E-1, min_blockdim)
@@ -492,7 +492,7 @@ end
     s2 = Index(2, "s2")
     r = Index(2, "r")
 
-    phi = randomITensor(l, s1, s2, r)
+    phi = random_itensor(l, s1, s2, r)
 
     U, B = factorize(phi, (l, s1); ortho="left", mindim=8, which_decomp="eigen")
 

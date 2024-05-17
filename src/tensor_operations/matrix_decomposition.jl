@@ -51,7 +51,7 @@ i and k end up on U and j ends up on V
 i = Index(2)
 j = Index(5)
 k = Index(2)
-A = randomITensor(i, j, k)
+A = random_itensor(i, j, k)
 U, S, V = svd(A, i, k);
 @show norm(A - U * S * V) <= 10 * eps() * norm(A)
 ```
@@ -277,7 +277,7 @@ positive semidefinite matrices.
 
 ```julia
 i, j, k, l = Index(2, "i"), Index(2, "j"), Index(2, "k"), Index(2, "l")
-A = randomITensor(i, j, k, l)
+A = random_itensor(i, j, k, l)
 Linds = (i, k)
 Rinds = (j, l)
 D, U = eigen(A, Linds, Rinds)
@@ -580,8 +580,8 @@ end
 function sqrt_decomp(D::ITensor, u::Index, v::Index)
   (storage(D) isa Union{Diag,DiagBlockSparse}) ||
     error("Must be a diagonal matrix ITensor.")
-  sqrtDL = diagITensor(u, dag(u)')
-  sqrtDR = diagITensor(v, dag(v)')
+  sqrtDL = diag_itensor(u, dag(u)')
+  sqrtDR = diag_itensor(v, dag(v)')
   map_diag!(sqrt ∘ abs, sqrtDL, D)
   map_diag!(sqrt ∘ abs, sqrtDR, D)
   δᵤᵥ = copy(D)

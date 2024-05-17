@@ -5,7 +5,7 @@ using ITensors, Test
   j = Index(2, "j")
   k = Index(2, "k")
 
-  A = randomITensor(i, j, k')
+  A = random_itensor(i, j, k')
 
   Ap = prime(A, not("j"))
 

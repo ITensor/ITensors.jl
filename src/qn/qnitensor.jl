@@ -368,19 +368,19 @@ end
 emptyITensor(flux::QN, is...) = emptyITensor(EmptyNumber, flux, is...)
 
 """
-    randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
-    randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)
+    random_itensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
+    random_itensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)
 
 Construct an ITensor with `NDTensors.BlockSparse` storage filled with random
 elements of type `ElT` where the nonzero blocks are determined by `flux`.
 
 If `ElT` is not specified it defaults to `Float64`. If the flux is not specified it defaults to `QN()`.
 """
-function randomITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, flux, inds)
+function random_itensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT, flux, inds)
 end
 
-function randomITensor(
+function random_itensor(
   rng::AbstractRNG, ::Type{ElT}, flux::QN, inds::Indices
 ) where {ElT<:Number}
   T = ITensor(ElT, undef, flux, inds)
@@ -388,57 +388,59 @@ function randomITensor(
   return T
 end
 
-function randomITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, flux, is...)
+function random_itensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT, flux, is...)
 end
 
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, flux::QN, is...) where {ElT<:Number}
-  return randomITensor(rng, ElT, flux, indices(is...))
+function random_itensor(rng::AbstractRNG, ::Type{ElT}, flux::QN, is...) where {ElT<:Number}
+  return random_itensor(rng, ElT, flux, indices(is...))
 end
 
-function randomITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, inds)
+function random_itensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT, inds)
 end
 
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndices) where {ElT<:Number}
-  return randomITensor(rng, ElT, QN(), inds)
+function random_itensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndices) where {ElT<:Number}
+  return random_itensor(rng, ElT, QN(), inds)
 end
 
-function randomITensor(flux::QN, inds::Indices)
-  return randomITensor(Random.default_rng(), flux, inds)
+function random_itensor(flux::QN, inds::Indices)
+  return random_itensor(Random.default_rng(), flux, inds)
 end
 
-function randomITensor(rng::AbstractRNG, flux::QN, inds::Indices)
-  return randomITensor(rng, Float64, flux, inds)
+function random_itensor(rng::AbstractRNG, flux::QN, inds::Indices)
+  return random_itensor(rng, Float64, flux, inds)
 end
 
-function randomITensor(flux::QN, is...)
-  return randomITensor(Random.default_rng(), flux, is...)
+function random_itensor(flux::QN, is...)
+  return random_itensor(Random.default_rng(), flux, is...)
 end
 
-function randomITensor(rng::AbstractRNG, flux::QN, is...)
-  return randomITensor(rng, Float64, flux, indices(is...))
-end
-
-# TODO: generalize to list of Tuple, Vector, and QNIndex
-function randomITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, inds...)
+function random_itensor(rng::AbstractRNG, flux::QN, is...)
+  return random_itensor(rng, Float64, flux, indices(is...))
 end
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndex...) where {ElT<:Number}
-  return randomITensor(rng, ElT, QN(), inds)
+function random_itensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT, inds...)
 end
 
-randomITensor(inds::QNIndices) = randomITensor(Random.default_rng(), inds)
+# TODO: generalize to list of Tuple, Vector, and QNIndex
+function random_itensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndex...) where {ElT<:Number}
+  return random_itensor(rng, ElT, QN(), inds)
+end
 
-randomITensor(rng::AbstractRNG, inds::QNIndices) = randomITensor(rng, Float64, QN(), inds)
+random_itensor(inds::QNIndices) = random_itensor(Random.default_rng(), inds)
+
+random_itensor(rng::AbstractRNG, inds::QNIndices) = random_itensor(rng, Float64, QN(), inds)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-randomITensor(inds::QNIndex...) = randomITensor(Random.default_rng(), inds...)
+random_itensor(inds::QNIndex...) = random_itensor(Random.default_rng(), inds...)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-randomITensor(rng::AbstractRNG, inds::QNIndex...) = randomITensor(rng, Float64, QN(), inds)
+function random_itensor(rng::AbstractRNG, inds::QNIndex...)
+  return random_itensor(rng, Float64, QN(), inds)
+end
 
 function combiner(inds::QNIndices; dir=nothing, tags="CMB,Link")
   # TODO: support combining multiple set of indices
@@ -453,8 +455,8 @@ end
 #
 
 """
-    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
-    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
+    diag_itensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
+    diag_itensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
 
 Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements
 `zero(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
@@ -462,18 +464,18 @@ Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements
 If the element type is not specified, it defaults to `Float64`. If theflux
 is not specified, it defaults to `QN()`.
 """
-function diagITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+function diag_itensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   is = Tuple(inds)
   blocks = nzdiagblocks(flux, is)
   T = DiagBlockSparseTensor(ElT, blocks, is)
   return itensor(T)
 end
 
-function diagITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
-  return diagITensor(ElT, flux, indices(is...))
+function diag_itensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
+  return diag_itensor(ElT, flux, indices(is...))
 end
 
-function diagITensor(x::ElT, flux::QN, inds::QNIndices) where {ElT<:Number}
+function diag_itensor(x::ElT, flux::QN, inds::QNIndices) where {ElT<:Number}
   is = Tuple(inds)
   blocks = nzdiagblocks(flux, is)
   T = DiagBlockSparseTensor(float(ElT), blocks, is)
@@ -481,25 +483,25 @@ function diagITensor(x::ElT, flux::QN, inds::QNIndices) where {ElT<:Number}
   return itensor(T)
 end
 
-function diagITensor(x::Number, flux::QN, is...)
-  return diagITensor(x, flux, indices(is...))
+function diag_itensor(x::Number, flux::QN, is...)
+  return diag_itensor(x, flux, indices(is...))
 end
 
-diagITensor(x::Number, is::QNIndices) = diagITensor(x, QN(), is)
+diag_itensor(x::Number, is::QNIndices) = diag_itensor(x, QN(), is)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-diagITensor(x::Number, is::QNIndex...) = diagITensor(x, indices(is...))
+diag_itensor(x::Number, is::QNIndex...) = diag_itensor(x, indices(is...))
 
-diagITensor(flux::QN, is::Indices) = diagITensor(Float64, flux, is)
+diag_itensor(flux::QN, is::Indices) = diag_itensor(Float64, flux, is)
 
-diagITensor(flux::QN, is...) = diagITensor(Float64, flux, indices(is...))
+diag_itensor(flux::QN, is...) = diag_itensor(Float64, flux, indices(is...))
 
-function diagITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
-  return diagITensor(ElT, QN(), inds)
+function diag_itensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
+  return diag_itensor(ElT, QN(), inds)
 end
 
-function diagITensor(inds::QNIndices)
-  return diagITensor(Float64, QN(), inds)
+function diag_itensor(inds::QNIndices)
+  return diag_itensor(Float64, QN(), inds)
 end
 
 """

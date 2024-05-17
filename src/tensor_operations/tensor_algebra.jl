@@ -40,20 +40,20 @@ information see the documentation on Index objects.
 ```julia
 i = Index(2,"index_i"); j = Index(4,"index_j"); k = Index(3,"index_k")
 
-A = randomITensor(i,j)
-B = randomITensor(j,k)
+A = random_itensor(i,j)
+B = random_itensor(j,k)
 C = A * B # contract over Index j
 
-A = randomITensor(i,i')
-B = randomITensor(i,i'')
+A = random_itensor(i,i')
+B = random_itensor(i,i'')
 C = A * B # contract over Index i
 
-A = randomITensor(i)
-B = randomITensor(j)
+A = random_itensor(i)
+B = random_itensor(j)
 C = A * B # outer product of A and B, no contraction
 
-A = randomITensor(i,j,k)
-B = randomITensor(k,i,j)
+A = random_itensor(i,j,k)
+B = random_itensor(k,i,j)
 C = A * B # inner product of A and B, all indices contracted
 ```
 """
@@ -266,7 +266,7 @@ function directsum_projectors(
 )
   return error(
     "It is not possible to call directsum on two tensors with element type EmptyNumber.
-If you are inputting ITensors constructed like `ITensor(i, j)`, try specifying the element type, 
+If you are inputting ITensors constructed like `ITensor(i, j)`, try specifying the element type,
 e.g. `ITensor(Float64, i, j)`, or fill them with zero values, e.g. `ITensor(zero(Float64), i, j)`.",
   )
 end
@@ -399,8 +399,8 @@ j1 = Index(4, "j1")
 i2 = Index(5, "i2")
 j2 = Index(6, "j2")
 
-A1 = randomITensor(x, i1)
-A2 = randomITensor(x, i2)
+A1 = random_itensor(x, i1)
+A2 = random_itensor(x, i2)
 S, s = directsum(A1 => i1, A2 => i2)
 dim(s) == dim(i1) + dim(i2)
 
@@ -408,12 +408,12 @@ i1i2 = directsum(i1, i2)
 S = directsum(i1i2, A1 => i1, A2 => i2)
 hasind(S, i1i2)
 
-A3 = randomITensor(x, j1)
+A3 = random_itensor(x, j1)
 S, s = directsum(A1 => i1, A2 => i2, A3 => j1)
 dim(s) == dim(i1) + dim(i2) + dim(j1)
 
-A1 = randomITensor(i1, x, j1)
-A2 = randomITensor(x, j2, i2)
+A1 = random_itensor(i1, x, j1)
+A2 = random_itensor(x, j2, i2)
 S, s = directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
 length(s) == 2
 dim(s[1]) == dim(i1) + dim(i2)

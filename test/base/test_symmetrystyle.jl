@@ -34,8 +34,8 @@ using Test
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle([i', i, iqn])) ==
     ITensors.HasQNs()
 
-  A = randomITensor(i', dag(i))
-  Aqn = randomITensor(iqn', dag(iqn))
+  A = random_itensor(i', dag(i))
+  Aqn = random_itensor(iqn', dag(iqn))
 
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(A)) == ITensors.NonQN()
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(Aqn)) == ITensors.HasQNs()

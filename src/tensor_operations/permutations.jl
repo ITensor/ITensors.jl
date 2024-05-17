@@ -17,7 +17,7 @@ returns an alias of the input ITensor.
 
 ```julia
 i = Index(2, "index_i"); j = Index(4, "index_j"); k = Index(3, "index_k");
-T = randomITensor(i, j, k)
+T = random_itensor(i, j, k)
 
 pT_1 = permute(T, k, i, j)
 pT_2 = permute(T, j, i, k)

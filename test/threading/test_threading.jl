@@ -30,7 +30,7 @@ end
 
   @testset "Threaded contraction" begin
     i = Index([QN(0) => 500, QN(1) => 500])
-    A = randomITensor(i', dag(i))
+    A = random_itensor(i', dag(i))
 
     enabled = ITensors.disable_threaded_blocksparse()
     R = A' * A

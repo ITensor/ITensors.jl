@@ -116,7 +116,7 @@ julia> i = Index(2)
 julia> j = Index(3)
 (dim=3|id=272)
 
-julia> A = randomITensor(i, j)
+julia> A = random_itensor(i, j)
 ITensor ord=2 (dim=2|id=770) (dim=3|id=272)
 ITensors.NDTensors.Dense{Float64, Vector{Float64}}
 
@@ -130,7 +130,7 @@ while before it returned an `IndexSet` (in fact, the `IndexSet` type has been re
 The ITensor type no longer has separate field `inds` and `store`, just a single field `tensor` (PR #626). In general you should not be accessing the fields directly, instead you should be using the functions `inds(A::ITensor)` and `storage(A::ITensor)`, so this should not affect most code. However, in case you have code like:
 ```julia
 i = Index(2)
-A = randomITensor(i)
+A = random_itensor(i)
 A.inds
 ```
 this will error in v0.2 with:
@@ -212,7 +212,7 @@ The `IndexSet` type has been removed in favor of Julia's `Tuple` and `Vector` ty
 julia> i = Index(2)
 (dim=2|id=320)
 
-julia> A = randomITensor(i', i)
+julia> A = random_itensor(i', i)
 ITensor ord=2 (dim=2|id=320)' (dim=2|id=320)
 ITensors.NDTensors.Dense{Float64, Vector{Float64}}
 

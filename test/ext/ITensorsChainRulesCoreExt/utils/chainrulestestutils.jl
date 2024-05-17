@@ -36,7 +36,7 @@ end
 
 function ChainRulesTestUtils.rand_tangent(rng::AbstractRNG, A::ITensor)
   # TODO: generalize to sparse tensors
-  return isempty(inds(A)) ? ITensor(randn(eltype(A))) : randomITensor(eltype(A), inds(A))
+  return isempty(inds(A)) ? ITensor(randn(eltype(A))) : random_itensor(eltype(A), inds(A))
 end
 
 function ChainRulesTestUtils.rand_tangent(rng::AbstractRNG, x::Index)

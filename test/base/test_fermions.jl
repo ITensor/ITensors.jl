@@ -335,7 +335,7 @@ import ITensors: Out, In
       C13 = combiner(s1, s3)
       C31 = combiner(s3, s1)
 
-      T = randomITensor(QN("Nf", 3, -1), s1, s2, s3, s4)
+      T = random_itensor(QN("Nf", 3, -1), s1, s2, s3, s4)
       T .= abs.(T)
 
       #
@@ -411,8 +411,8 @@ import ITensors: Out, In
       s3 = Index([q1 => 1]; tags="s3")
       s4 = Index([q1 => 1]; tags="s4")
 
-      A = randomITensor(QN("Nf", 0, -1), s0, s1, dag(s2), dag(s3))
-      B = randomITensor(QN("Nf", 0, -1), s3, s2, dag(s1), dag(s4))
+      A = random_itensor(QN("Nf", 0, -1), s0, s1, dag(s2), dag(s3))
+      B = random_itensor(QN("Nf", 0, -1), s3, s2, dag(s1), dag(s4))
       A .= one.(A)
       B .= one.(B)
       @test norm(A) ≈ 1.0
@@ -437,8 +437,8 @@ import ITensors: Out, In
       s3 = Index([q1 => 1]; tags="s3")
       s4 = Index([q1 => 1]; tags="s4")
 
-      A = randomITensor(QN("Nf", 2, -1), s0, s1, s2, dag(s3))
-      B = randomITensor(QN("Nf", -2, -1), s3, dag(s2), dag(s1), dag(s4))
+      A = random_itensor(QN("Nf", 2, -1), s0, s1, s2, dag(s3))
+      B = random_itensor(QN("Nf", -2, -1), s3, dag(s2), dag(s1), dag(s4))
       A .= one.(A)
       B .= one.(B)
       @test norm(A) ≈ 1.0
@@ -476,7 +476,7 @@ import ITensors: Out, In
     N = 4
     s = siteinds("Fermion", N; conserve_qns=true)
 
-    A = randomITensor(QN("Nf", 2, -1), s[1], s[2], s[3], s[4])
+    A = random_itensor(QN("Nf", 2, -1), s[1], s[2], s[3], s[4])
     for n1 in 1:4, n2 in 1:4
       (n1 == n2) && continue
       U, S, V = svd(A, (s[n1], s[n2]))
@@ -490,7 +490,7 @@ import ITensors: Out, In
       @test norm(U * S * V - A) < 1E-10
     end
 
-    B = randomITensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
+    B = random_itensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
     for n1 in 1:4, n2 in 1:4
       (n1 == n2) && continue
       U, S, V = svd(B, (s[n1], s[n2]))
@@ -603,7 +603,7 @@ import ITensors: Out, In
       r1, r2, r3 = Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags="r1", dir=ITensors.Out),
       Index(QN("Nf", 2) => 1, QN("Nf", 1) => 1; tags="r2", dir=ITensors.In),
       Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags="r3", dir=ITensors.In)
-      A = randomITensor(l1, l2, r1, r2, r3)
+      A = random_itensor(l1, l2, r1, r2, r3)
 
       for dir in [ITensors.Out, ITensors.In]
         L, R, spec = ITensors.factorize_svd(A, l1, l2; dir, ortho="none")
@@ -617,8 +617,8 @@ import ITensors: Out, In
     s = siteinds("Fermion", N; conserve_qns=true)
 
     begin
-      A = randomITensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
-      B = randomITensor(QN("Nf", 2, -1), s[1], s[3], s[4])
+      A = random_itensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
+      B = random_itensor(QN("Nf", 2, -1), s[1], s[3], s[4])
 
       CC = combiner(s[1], s[3])
 
@@ -632,8 +632,8 @@ import ITensors: Out, In
     end
 
     begin
-      A = randomITensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
-      B = randomITensor(QN("Nf", 2, -1), s[1], s[3], s[4])
+      A = random_itensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
+      B = random_itensor(QN("Nf", 2, -1), s[1], s[3], s[4])
 
       CC = combiner(s[1], s[3])
 
@@ -647,8 +647,8 @@ import ITensors: Out, In
     end
 
     begin
-      A = randomITensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
-      B = randomITensor(QN("Nf", 2, -1), s[1], s[3], s[4])
+      A = random_itensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
+      B = random_itensor(QN("Nf", 2, -1), s[1], s[3], s[4])
 
       CC = combiner(s[1], s[4], s[3])
 
@@ -665,8 +665,8 @@ import ITensors: Out, In
       CC = combiner(s[3], s[4])
       c = combinedind(CC)
 
-      A = randomITensor(QN("Nf", 3, -1), c, s[1], s[2])
-      B = randomITensor(QN("Nf", 2, -1), s[1], c, s[5])
+      A = random_itensor(QN("Nf", 3, -1), c, s[1], s[2])
+      B = random_itensor(QN("Nf", 2, -1), s[1], c, s[5])
 
       uA = dag(CC) * A
       uB = dag(CC) * B
@@ -678,7 +678,7 @@ import ITensors: Out, In
     end
 
     @testset "Combiner Regression Test" begin
-      T = randomITensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
+      T = random_itensor(QN("Nf", 3, -1), s[1], s[2], s[3], s[4])
 
       C12 = combiner(s[1], s[2])
       c12 = combinedind(C12)
@@ -697,7 +697,7 @@ import ITensors: Out, In
       s3 = Index(QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 1; tags="Site,n=3")
       l3 = Index(QN("Nf", 2, -1) => 1; tags="Link,l=3")
 
-      phi = randomITensor(QN("Nf", 4, -1), l1, s2, s3, l3)
+      phi = random_itensor(QN("Nf", 4, -1), l1, s2, s3, l3)
 
       U, S, V = svd(phi, (l1, s2))
 
@@ -760,7 +760,7 @@ import ITensors: Out, In
       s1 = Index([Pf0 => 1, Pf1 => 1, Pf1 => 1, Pf0 => 1], "Site,n=1")
       l11 = Index([Pf0 => 1, Pf1 => 1], "Link,dir=1,n=1")
 
-      T = randomITensor(dag(l22), dag(l23), s1, l11)
+      T = random_itensor(dag(l22), dag(l23), s1, l11)
 
       U, S, V = svd(T, dag(l22), dag(l23), s1)
 
@@ -772,7 +772,7 @@ import ITensors: Out, In
     # Test that non-QN eigen runs properly
     # with auto-fermion enabled.
     i = Index(2)
-    a = randomITensor(i', i)
+    a = random_itensor(i', i)
     d, u = eigen(a)
     @test norm(a * u - u' * d) ≈ 0 atol = √(eps(real(eltype(a))))
   end
