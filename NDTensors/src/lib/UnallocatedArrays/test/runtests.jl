@@ -14,6 +14,7 @@ using .NDTensorsTestUtils: devices_list
   @testset "Basic funcitonality" begin
     z = Zeros{elt}((2, 3))
     Z = UnallocatedZeros(z, dev(Matrix{elt}))
+    Z = UnallocatedZeros{elt}(z, dev(Matrix{elt}))
 
     @test Z isa AbstractFill
     @test size(Z) == (2, 3)
@@ -44,6 +45,8 @@ using .NDTensorsTestUtils: devices_list
     # UnallocatedFill
     f = Fill{elt}(3, (2, 3, 4))
     F = UnallocatedFill(f, Array{elt,ndims(f)})
+    F = UnallocatedFill{elt}(f, Array{elt,ndims(f)})
+
     @test F isa AbstractFill
     @test size(F) == (2, 3, 4)
     @test length(F) == 24
