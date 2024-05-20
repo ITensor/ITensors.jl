@@ -1,6 +1,6 @@
 using CUDA: CuArray
 using GPUArraysCore: @allowscalar
-using NDTensors: NDTensors
+using NDTensors: NDTensors, getdiagindex
 using NDTensors.Expose: Exposed, expose, unexpose
 
 function Base.getindex(E::Exposed{<:CuArray})
@@ -14,6 +14,10 @@ end
 
 function Base.getindex(E::Exposed{<:CuArray,<:Adjoint}, i, j)
   return (expose(parent(E))[j, i])'
+end
+
+function NDTensors.getdiagindex(T::Exposed{<:CuArray}, ind::Int)
+  @allowscalar getdiagindex(unexpose(T), ind)
 end
 
 Base.any(f, E::Exposed{<:CuArray,<:NDTensors.Tensor}) = any(f, data(unexpose(E)))
