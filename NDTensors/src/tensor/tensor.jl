@@ -352,11 +352,6 @@ end
 
 insertblock!!(T::Tensor, block) = insertblock!(T, block)
 
-using NDTensors.Expose: Exposed, unexpose
-using GPUArraysCore: @allowscalar
-function getdiagindex(T::Exposed, ind::Int)
-  return getdiagindex(unexpose(T), ind)
-end
 """
 getdiagindex
 

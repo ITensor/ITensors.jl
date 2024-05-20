@@ -129,7 +129,7 @@ function contract!(
       # Assumes C starts set to 0
       c₁ = zero(ElC)
       for i in 1:min_dim
-        c₁ += getdiagindex(expose(A), i) * getdiagindex(expose(B), i)
+        c₁ += getdiagindex(A, i) * getdiagindex(B, i)
       end
       setdiagindex!(C, α * c₁ + β * getdiagindex(C, 1), 1)
     else
@@ -138,10 +138,7 @@ function contract!(
       # TODO: should we make this return a Diag storage?
       for i in 1:min_dim
         setdiagindex!(
-          C,
-          α * getdiagindex(expose(A), i) * getdiagindex(expose(B), i) +
-          β * getdiagindex(expose(C), i),
-          i,
+          C, α * getdiagindex(A, i) * getdiagindex(B, i) + β * getdiagindex(C, i), i
         )
       end
     end
