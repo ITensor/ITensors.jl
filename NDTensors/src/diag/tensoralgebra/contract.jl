@@ -138,7 +138,10 @@ function contract!(
       # TODO: should we make this return a Diag storage?
       for i in 1:min_dim
         setdiagindex!(
-          C, α * getdiagindex(expose(A), i) * getdiagindex(expose(B), i) + β * getdiagindex(expose(C), i), i
+          C,
+          α * getdiagindex(expose(A), i) * getdiagindex(expose(B), i) +
+          β * getdiagindex(expose(C), i),
+          i,
         )
       end
     end
