@@ -7,7 +7,7 @@ struct UnallocatedFill{ElT,N,Axes,Alloc} <: AbstractFill{ElT,N,Axes}
 end
 
 function UnallocatedFill{ElT,N,Axes}(f::Fill, alloc::Type) where {ElT,N,Axes}
-  return new{ElT,N,Axes,Type{alloc}}(f, alloc)
+  return UnallocatedFill{ElT,N,Axes,Type{alloc}}(f, alloc)
 end
 
 function UnallocatedFill{ElT,N}(f::Fill, alloc) where {ElT,N}

@@ -22,6 +22,8 @@ using .NDTensorsTestUtils: devices_list
     @test iszero(norm(Z))
     @test iszero(Z[2, 3])
     @test allocate(Z) isa dev(Matrix{elt})
+    Zp = UnallocatedZeros{elt}(Zeros(2, 3), dev(Matrix{elt}))
+    @test Zp == Z
     Zp = set_alloctype(z, dev(Matrix{elt}))
     @test Zp == Z
     Zc = copy(Z)
@@ -44,6 +46,7 @@ using .NDTensorsTestUtils: devices_list
     # UnallocatedFill
     f = Fill{elt}(3, (2, 3, 4))
     F = UnallocatedFill(f, Array{elt,ndims(f)})
+
     @test F isa AbstractFill
     @test size(F) == (2, 3, 4)
     @test length(F) == 24
@@ -51,6 +54,8 @@ using .NDTensorsTestUtils: devices_list
     @test norm(F) ≈ sqrt(elt(3)^2 * 24)
     @test F[2, 3, 1] == elt(3)
     @test allocate(F) isa Array{elt,3}
+    Fp = UnallocatedFill{elt}(Fill(3, (2, 3, 4)), Array{elt,ndims(f)})
+    @test Fp == F
     Fp = allocate(F)
     @test norm(Fp) ≈ norm(F)
     Fs = similar(F)
