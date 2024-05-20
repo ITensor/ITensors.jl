@@ -67,7 +67,7 @@ end
 
   ## Testing sparse contractions on GPU
   t = tensor(Diag(one(Float64)), (3, 3))
-  contract(t, (-1, -2), dev(A), (-1, -2))[] == dot(t, A)
+  @test contract(t, (-1, -2), dev(A), (-1, -2))[] == dot(t, A)
 end
 nothing
 end
