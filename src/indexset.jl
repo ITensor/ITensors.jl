@@ -614,7 +614,9 @@ function replaceinds(is::Indices, inds1, inds2; ignoreSpaceError::Bool=false)
   return (is_tuple)
 end
 
-replaceind(is::Indices, i1::Index, i2::Index; ignoreSpaceError::Bool=false) = replaceinds(is, (i1,), (i2,); ignoreSpaceError)
+function replaceind(is::Indices, i1::Index, i2::Index; ignoreSpaceError::Bool=false)
+  return replaceinds(is, (i1,), (i2,); ignoreSpaceError)
+end
 
 function replaceind(is::Indices, i1::Index, i2::Indices)
   length(i2) != 1 &&
