@@ -597,7 +597,7 @@ function replaceinds_space_error(is, inds1, inds2, i1, i2)
                """)
 end
 
-function replaceinds(is::Indices, inds1, inds2)
+function replaceinds(is::Indices, inds1, inds2; ignoreSpaceError::Bool=false)
   is1 = inds1
   poss = indexin(is1, is)
   is_tuple = Tuple(is)
@@ -606,7 +606,7 @@ function replaceinds(is::Indices, inds1, inds2)
     i1 = is_tuple[pos]
     i2 = inds2[j]
     i2 = setdir(i2, dir(i1))
-    if space(i1) ≠ space(i2)
+    if !ignoreSpaceError && space(i1) ≠ space(i2)
       replaceinds_space_error(is, inds1, inds2, i1, i2)
     end
     is_tuple = setindex(is_tuple, i2, pos)
@@ -614,7 +614,7 @@ function replaceinds(is::Indices, inds1, inds2)
   return (is_tuple)
 end
 
-replaceind(is::Indices, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
+replaceind(is::Indices, i1::Index, i2::Index; ignoreSpaceError::Bool=false) = replaceinds(is, (i1,), (i2,); ignoreSpaceError)
 
 function replaceind(is::Indices, i1::Index, i2::Indices)
   length(i2) != 1 &&
