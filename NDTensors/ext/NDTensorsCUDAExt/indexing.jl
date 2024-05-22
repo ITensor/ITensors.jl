@@ -1,6 +1,6 @@
 using CUDA: CuArray
 using GPUArraysCore: @allowscalar
-using NDTensors: NDTensors, getdiagindex
+using NDTensors: NDTensors
 using NDTensors.Expose: Exposed, expose, unexpose
 
 function Base.getindex(E::Exposed{<:CuArray})
