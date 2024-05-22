@@ -33,10 +33,10 @@ end
     lattice = square_lattice(Nx, Ny; yperiodic=true)
     opsum = OpSum()
     for b in lattice
-      opsum .+= -t, "Cdagup", b.s1, "Cup", b.s2
-      opsum .+= -t, "Cdagup", b.s2, "Cup", b.s1
-      opsum .+= -t, "Cdagdn", b.s1, "Cdn", b.s2
-      opsum .+= -t, "Cdagdn", b.s2, "Cdn", b.s1
+      opsum .-= t, "Cdagup", b.s1, "Cup", b.s2
+      opsum .-= t, "Cdagup", b.s2, "Cup", b.s1
+      opsum .-= t, "Cdagdn", b.s1, "Cdn", b.s2
+      opsum .-= t, "Cdagdn", b.s2, "Cdn", b.s1
     end
     for n in 1:N
       opsum .+= U, "Nupdn", n

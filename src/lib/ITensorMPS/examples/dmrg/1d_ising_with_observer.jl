@@ -11,7 +11,7 @@ function tfimMPO(sites, h::Float64)
   N = length(sites)
   os = OpSum()
   for j in 1:(N - 1)
-    os += -1, "Z", j, "Z", j + 1
+    os -= 1, "Z", j, "Z", j + 1
   end
   for j in 1:N
     os += h, "X", j

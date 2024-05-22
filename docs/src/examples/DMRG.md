@@ -308,10 +308,10 @@ let
   #
   os = OpSum()
   for j=1:N-1
-    os += -4,"Sz",j,"Sz",j+1
+    os -= 4,"Sz",j,"Sz",j+1
   end
   for j=1:N
-    os += -2*h,"Sx",j;
+    os -= 2*h,"Sx",j;
   end
   H = MPO(os,sites)
 

@@ -283,10 +283,10 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
 
     os = OpSum()
     for j in 1:(N - 1)
-      os += -1, "Sz", j, "Sz", j + 1
+      os -= 1, "Sz", j, "Sz", j + 1
     end
     for j in 1:N
-      os += -0.2, "Sx", j
+      os -= 0.2, "Sx", j
     end
     H = MPO(os, sites)
 
@@ -390,13 +390,13 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
 
     os = OpSum()
     for j in 1:(N - 1)
-      os += -t1, "Cdag", j, "C", j + 1
-      os += -t1, "Cdag", j + 1, "C", j
+      os -= t1, "Cdag", j, "C", j + 1
+      os -= t1, "Cdag", j + 1, "C", j
       os += V, "N", j, "N", j + 1
     end
     for j in 1:(N - 2)
-      os += -t2, "Cdag", j, "C", j + 2
-      os += -t2, "Cdag", j + 2, "C", j
+      os -= t2, "Cdag", j, "C", j + 2
+      os -= t2, "Cdag", j + 2, "C", j
     end
     H = MPO(os, s)
 
@@ -421,10 +421,10 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
       os += (U, "Nupdn", i)
     end
     for b in 1:(N - 1)
-      os += -t1, "Cdagup", b, "Cup", b + 1
-      os += -t1, "Cdagup", b + 1, "Cup", b
-      os += -t1, "Cdagdn", b, "Cdn", b + 1
-      os += -t1, "Cdagdn", b + 1, "Cdn", b
+      os -= t1, "Cdagup", b, "Cup", b + 1
+      os -= t1, "Cdagup", b + 1, "Cup", b
+      os -= t1, "Cdagdn", b, "Cdn", b + 1
+      os -= t1, "Cdagdn", b + 1, "Cdn", b
       os += V1, "Ntot", b, "Ntot", b + 1
     end
     H = MPO(os, sites)
