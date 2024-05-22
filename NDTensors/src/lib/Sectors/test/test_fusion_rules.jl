@@ -1,7 +1,8 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes:
   dual, fusion_product, gradedisequal, gradedrange, label_dual, tensor_product
-using NDTensors.Sectors: ⊗, Fib, Ising, SU, SU2, U1, Z, quantum_dimension, trivial
+using NDTensors.Sectors:
+  ⊗, Fib, Ising, SU, SU2, U1, Z, block_boundaries, quantum_dimension, trivial
 using Test: @inferred, @test, @testset, @test_throws
 
 @testset "Simple object fusion rules" begin
@@ -17,6 +18,7 @@ using Test: @inferred, @test, @testset, @test_throws
     # using GradedAxes interface
     @test gradedisequal(fusion_product(z0, z0), gradedrange([z0 => 1]))
     @test gradedisequal(fusion_product(z0, z1), gradedrange([z1 => 1]))
+    @test block_boundaries(gradedrange([z1 => 1])) == [1]
   end
   @testset "U(1) fusion rules" begin
     q1 = U1(1)
@@ -41,6 +43,7 @@ using Test: @inferred, @test, @testset, @test_throws
     @test gradedisequal(j3 ⊗ j3, gradedrange([j1 => 1, j3 => 1, j5 => 1]))
     @test gradedisequal((@inferred j1 ⊗ j2), gradedrange([j2 => 1]))
     @test (@inferred quantum_dimension(j1 ⊗ j2)) == 2
+    @test block_boundaries(j1 ⊗ j2) == [2]
   end
 
   @testset "Fibonacci fusion rules" begin
@@ -85,6 +88,7 @@ end
     g2 = gradedrange([U1(-2) => 2, U1(0) => 1, U1(1) => 2])
 
     @test gradedisequal(label_dual(g1), gradedrange([U1(1) => 1, U1(0) => 1, U1(-1) => 2]))
+    @test block_boundaries(g1) == [1, 1, 2]
 
     gt = gradedrange([
       U1(-3) => 2,
@@ -171,6 +175,7 @@ end
       (@inferred fusion_product(g3, g4)),
       gradedrange([SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2]),
     )
+    @test block_boundaries(g3) == [1, 4, 3]
 
     # test dual on non self-conjugate non-abelian representations
     s1 = SU{3}((0, 0))

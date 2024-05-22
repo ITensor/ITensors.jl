@@ -30,6 +30,13 @@ function GradedAxes.dual(category_type::Type{<:AbstractCategory})
   return error("`dual` not defined for type $(category_type).")
 end
 
+block_boundaries(g::AbstractUnitRange) = block_boundaries(SymmetryStyle(g), g)
+block_boundaries(::AbelianGroup, g) = GradedAxes.unlabel.(BlockArrays.blocklengths(g))
+function block_boundaries(::NonAbelianGroup, g)
+  return Sectors.quantum_dimension.(GradedAxes.blocklabels(g)) .*
+         BlockArrays.blocklengths(g)
+end
+
 quantum_dimension(x) = quantum_dimension(SymmetryStyle(x), x)
 
 function quantum_dimension(::SymmetryStyle, c::AbstractCategory)
