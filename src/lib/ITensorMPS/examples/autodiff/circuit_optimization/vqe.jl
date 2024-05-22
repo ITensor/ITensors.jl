@@ -11,7 +11,7 @@ gradtol = 1e-4 # Tolerance for stopping gradient descent
 function ising_hamiltonian(nsites; h)
   ℋ = OpSum()
   for j in 1:(nsites - 1)
-    ℋ += -1, "Z", j, "Z", j + 1
+    ℋ -= 1, "Z", j, "Z", j + 1
   end
   for j in 1:nsites
     ℋ += h, "X", j

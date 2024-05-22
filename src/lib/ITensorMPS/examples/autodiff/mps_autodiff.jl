@@ -5,10 +5,10 @@ using Zygote
 function ising(n; J, h)
   os = OpSum()
   for j in 1:(n - 1)
-    os += -J, "Z", j, "Z", j + 1
+    os -= J, "Z", j, "Z", j + 1
   end
   for j in 1:n
-    os += -h, "X", j
+    os -= h, "X", j
   end
   return os
 end

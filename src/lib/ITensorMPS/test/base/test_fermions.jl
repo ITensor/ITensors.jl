@@ -50,8 +50,8 @@ import ITensors: Out, In
       t1 = 1.0
       os = OpSum()
       for b in 1:(N - 1)
-        os += -t1, "Cdag", b, "C", b + 1
-        os += -t1, "Cdag", b + 1, "C", b
+        os -= t1, "Cdag", b, "C", b + 1
+        os -= t1, "Cdag", b + 1, "C", b
       end
       H = MPO(os, sites)
 
@@ -72,8 +72,8 @@ import ITensors: Out, In
 
       os = OpSum()
       for b in 1:(N - 1)
-        os += -t1, "Cdag", b, "C", b + 1
-        os += -t1, "Cdag", b + 1, "C", b
+        os -= t1, "Cdag", b, "C", b + 1
+        os -= t1, "Cdag", b + 1, "C", b
         os += V1, "N", b, "N", b + 1
       end
       H = MPO(os, sites)
@@ -110,12 +110,12 @@ import ITensors: Out, In
       s = siteinds("Fermion", N; conserve_qns=true)
       os = OpSum()
       for n in 1:(N - 1)
-        os += -t1, "Cdag", n, "C", n + 1
-        os += -t1, "Cdag", n + 1, "C", n
+        os -= t1, "Cdag", n, "C", n + 1
+        os -= t1, "Cdag", n + 1, "C", n
       end
       for n in 1:(N - 2)
-        os += -t2, "Cdag", n, "C", n + 2
-        os += -t2, "Cdag", n + 2, "C", n
+        os -= t2, "Cdag", n, "C", n + 2
+        os -= t2, "Cdag", n + 2, "C", n
       end
       H = MPO(os, s)
 
@@ -173,8 +173,8 @@ import ITensors: Out, In
       ost = OpSum()
       osV = OpSum()
       for b in 1:(N - 1)
-        ost += -t1, "Cdag", b, "C", b + 1
-        ost += -t1, "Cdag", b + 1, "C", b
+        ost -= t1, "Cdag", b, "C", b + 1
+        ost -= t1, "Cdag", b + 1, "C", b
         osV += V1, "N", b, "N", b + 1
       end
       Ht = MPO(ost, s)
@@ -213,12 +213,12 @@ import ITensors: Out, In
 
       ost = OpSum()
       for b in 1:(N - 1)
-        ost += -t1, "Cdag", b, "C", b + 1
-        ost += -t1, "Cdag", b + 1, "C", b
+        ost -= t1, "Cdag", b, "C", b + 1
+        ost -= t1, "Cdag", b + 1, "C", b
       end
       for b in 1:(N - 2)
-        ost += -t2, "Cdag", b, "C", b + 2
-        ost += -t2, "Cdag", b + 2, "C", b
+        ost -= t2, "Cdag", b, "C", b + 2
+        ost -= t2, "Cdag", b + 2, "C", b
       end
       Ht = MPO(ost, s)
 
