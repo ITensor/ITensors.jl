@@ -148,10 +148,10 @@ Random.seed!(1234)
     function ising(n, h)
       os = OpSum()
       for j in 1:(n - 1)
-        os += -1, "Z", j, "Z", j + 1
-        os += -h, "X", j
+        os -= 1, "Z", j, "Z", j + 1
+        os -= h, "X", j
       end
-      os += -h, "X", n
+      os -= h, "X", n
       return os
     end
     H = MPO(ising(n, 1.0), s)

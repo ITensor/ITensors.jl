@@ -1811,8 +1811,8 @@ end
       U = 1.0
       opsum = OpSum()
       for b in 1:(N - 1)
-        opsum .+= -t, "Cdag", b, "C", b + 1
-        opsum .+= -t, "Cdag", b + 1, "C", b
+        opsum .-= t, "Cdag", b, "C", b + 1
+        opsum .-= t, "Cdag", b + 1, "C", b
         opsum .+= U, "N", b, "N", b + 1
       end
       H = MPO(opsum, s)
@@ -1897,10 +1897,10 @@ end
       U = 1.0
       opsum = OpSum()
       for b in 1:(N - 1)
-        opsum .+= -t, "Cdagup", b, "Cup", b + 1
-        opsum .+= -t, "Cdagup", b + 1, "Cup", b
-        opsum .+= -t, "Cdagdn", b, "Cdn", b + 1
-        opsum .+= -t, "Cdagdn", b + 1, "Cdn", b
+        opsum .-= t, "Cdagup", b, "Cup", b + 1
+        opsum .-= t, "Cdagup", b + 1, "Cup", b
+        opsum .-= t, "Cdagdn", b, "Cdn", b + 1
+        opsum .-= t, "Cdagdn", b + 1, "Cdn", b
       end
       for n in 1:N
         opsum .+= U, "Nupdn", n

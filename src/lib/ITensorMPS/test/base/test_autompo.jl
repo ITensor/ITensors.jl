@@ -905,7 +905,7 @@ end
     M1 = MPO(a1, s)
 
     a2 = OpSum()
-    a2 += -1, "C", 3, "Cdag", 1
+    a2 -= 1, "C", 3, "Cdag", 1
     M2 = MPO(a2, s)
 
     a3 = OpSum()
@@ -938,7 +938,7 @@ end
     M1 = MPO(a1, s)
 
     a2 = OpSum()
-    a2 += -1, "Cdn", 3, "Cdagdn", 1
+    a2 -= 1, "Cdn", 3, "Cdagdn", 1
     M2 = MPO(a2, s)
 
     p0uu = MPS(s, [1, 2, 2, 1, 1])
@@ -1013,9 +1013,9 @@ end
           if m == i && n == j && p == l && q == k
             exact_val += V[i, j, l, k]
           elseif m == i && n == j && p == k && q == l
-            exact_val += -V[i, j, k, l]
+            exact_val -= V[i, j, k, l]
           elseif m == j && n == i && p == l && q == k
-            exact_val += -V[j, i, l, k]
+            exact_val -= V[j, i, l, k]
           elseif m == j && n == i && p == k && q == l
             exact_val += V[j, i, k, l]
           end
@@ -1036,7 +1036,7 @@ end
       os = OpSum()
       for i in 1:(N - 1)
         os += +1im, "S+", i, "S-", i + 1
-        os += -1im, "S-", i, "S+", i + 1
+        os -= 1im, "S-", i, "S+", i + 1
       end
       H = MPO(os, sites)
       psiud = MPS(sites, [1, 2, 1, 2])
@@ -1100,8 +1100,8 @@ end
     t = 1.0
     os = OpSum()
     for n in 1:(N - 1)
-      os .+= -t, "Cdag", n, "C", n + 1
-      os .+= -t, "Cdag", n + 1, "C", n
+      os .-= t, "Cdag", n, "C", n + 1
+      os .-= t, "Cdag", n + 1, "C", n
     end
     s = siteinds("Fermion", N; conserve_qns=true)
     os_original = deepcopy(os)
@@ -1138,8 +1138,8 @@ end
 
     os = OpSum()
     for j in 1:(N - 1)
-      os += -t, "Adag", j, "A", j + 1
-      os += -t, "A", j, "Adag", j + 1
+      os -= t, "Adag", j, "A", j + 1
+      os -= t, "A", j, "Adag", j + 1
       os += V1, "N", j, "N", j + 1
     end
     for j in 1:(N - 2)

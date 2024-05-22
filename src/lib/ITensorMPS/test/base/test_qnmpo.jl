@@ -250,7 +250,7 @@ end
     a = OpSum()
     h = 0.5
     for j in 1:(N - 1)
-      a .+= -1, "Sx", j, "Sx", j + 1
+      a .-= 1, "Sx", j, "Sx", j + 1
     end
     for j in 1:N
       a .+= h, "Sz", j
@@ -323,10 +323,10 @@ function make_hubbard_opsum(
   for dn in 1:NNN
     tj, Vj = t / dn, V / dn
     for n in 1:(N - dn)
-      os += -tj, "Cdagup", n, "Cup", n + dn
-      os += -tj, "Cdagup", n + dn, "Cup", n
-      os += -tj, "Cdagdn", n, "Cdn", n + dn
-      os += -tj, "Cdagdn", n + dn, "Cdn", n
+      os -= tj, "Cdagup", n, "Cup", n + dn
+      os -= tj, "Cdagup", n + dn, "Cup", n
+      os -= tj, "Cdagdn", n, "Cdn", n + dn
+      os -= tj, "Cdagdn", n + dn, "Cdn", n
       os += Vj, "Ntot", n, "Ntot", n + dn
     end
   end

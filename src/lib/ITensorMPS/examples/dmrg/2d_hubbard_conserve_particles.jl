@@ -14,10 +14,10 @@ function main(; Nx=6, Ny=3, U=4.0, t=1.0)
 
   os = OpSum()
   for b in lattice
-    os += -t, "Cdagup", b.s1, "Cup", b.s2
-    os += -t, "Cdagup", b.s2, "Cup", b.s1
-    os += -t, "Cdagdn", b.s1, "Cdn", b.s2
-    os += -t, "Cdagdn", b.s2, "Cdn", b.s1
+    os -= t, "Cdagup", b.s1, "Cup", b.s2
+    os -= t, "Cdagup", b.s2, "Cup", b.s1
+    os -= t, "Cdagdn", b.s1, "Cdn", b.s2
+    os -= t, "Cdagdn", b.s2, "Cdn", b.s1
   end
   for n in 1:N
     os += U, "Nupdn", n
