@@ -9,7 +9,7 @@ using BlockArrays:
   blocklengths,
   blocks
 using NDTensors.GradedAxes: GradedUnitRange, blocklabels, gradedrange
-using NDTensors.LabelledNumbers: LabelledUnitRange, label, labelled, unlabel
+using NDTensors.LabelledNumbers: LabelledUnitRange, islabelled, label, labelled, unlabel
 using Test: @test, @test_broken, @testset
 @testset "GradedAxes basics" begin
   for a in (
@@ -18,7 +18,30 @@ using Test: @test, @test_broken, @testset
     gradedrange(["x" => 2, "y" => 3]),
   )
     @test a isa GradedUnitRange
+    for x in iterate(a)
+      @test x == 1
+      @test label(x) == "x"
+    end
+    for x in iterate(a, labelled(1, "x"))
+      @test x == 2
+      @test label(x) == "x"
+    end
+    for x in iterate(a, labelled(2, "x"))
+      @test x == 3
+      @test label(x) == "y"
+    end
+    for x in iterate(a, labelled(3, "y"))
+      @test x == 4
+      @test label(x) == "y"
+    end
+    for x in iterate(a, labelled(4, "y"))
+      @test x == 5
+      @test label(x) == "y"
+    end
+    @test isnothing(iterate(a, labelled(5, "y")))
     @test length(a) == 5
+    @test step(a) == 1
+    @test !islabelled(step(a))
     @test length(blocks(a)) == 2
     @test blocks(a)[1] == 1:2
     @test label(blocks(a)[1]) == "x"
