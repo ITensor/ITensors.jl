@@ -10,7 +10,7 @@ struct BlockSparseArray{
   N,
   A<:AbstractArray{T,N},
   Blocks<:AbstractArray{A,N},
-  Axes<:NTuple{N,AbstractUnitRange{Int}},
+  Axes<:Tuple{Vararg{AbstractUnitRange,N}},
 } <: AbstractBlockSparseArray{T,N}
   blocks::Blocks
   axes::Axes
