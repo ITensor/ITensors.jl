@@ -116,6 +116,10 @@ end
 function SparseArrayInterface.stored_indices(a::SparsePermutedDimsArrayBlocks)
   return map(I -> _getindices(I, _perm(a.array)), stored_indices(blocks(parent(a.array))))
 end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparsePermutedDimsArrayBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparsePermutedDimsArrayBlocks)
   return error("Not implemented")
 end
@@ -140,6 +144,10 @@ end
 function SparseArrayInterface.stored_indices(a::SparseTransposeBlocks)
   return map(reverse_index, stored_indices(blocks(parent(a.array))))
 end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparseTransposeBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparseTransposeBlocks)
   return error("Not implemented")
 end
@@ -161,6 +169,10 @@ end
 function SparseArrayInterface.stored_indices(a::SparseAdjointBlocks)
   return map(reverse_index, stored_indices(blocks(parent(a.array))))
 end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparseAdjointBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparseAdjointBlocks)
   return error("Not implemented")
 end
@@ -242,6 +254,10 @@ end
 function SparseArrayInterface.stored_indices(a::SparseSubArrayBlocks)
   return stored_indices(view(blocks(parent(a.array)), axes(a)...))
 end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparseSubArrayBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
   return error("Not implemented")
 end
