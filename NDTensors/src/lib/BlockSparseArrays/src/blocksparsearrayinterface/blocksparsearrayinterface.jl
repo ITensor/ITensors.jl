@@ -8,6 +8,7 @@ using BlockArrays:
   blocks,
   blocklengths,
   findblockindex
+using LinearAlgebra: Adjoint, Transpose
 using ..SparseArrayInterface: perm, iperm, nstored
 ## using MappedArrays: mappedarray
 
@@ -86,10 +87,15 @@ end
 
 # BlockArrays
 
-using ..SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
+using ..SparseArrayInterface:
+  SparseArrayInterface, AbstractSparseArray, AbstractSparseMatrix
 
-# Represents the array of arrays of a `SubArray`
-# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
+_perm(::PermutedDimsArray{<:Any,<:Any,P}) where {P} = P
+_getindices(t::Tuple, indices) = map(i -> t[i], indices)
+_getindices(i::CartesianIndex, indices) = CartesianIndex(_getindices(Tuple(i), indices))
+
+# Represents the array of arrays of a `PermutedDimsArray`
+# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `PermutedDimsArray`.
 struct SparsePermutedDimsArrayBlocks{T,N,Array<:PermutedDimsArray{T,N}} <:
        AbstractSparseArray{T,N}
   array::Array
@@ -97,21 +103,77 @@ end
 function blocksparse_blocks(a::PermutedDimsArray)
   return SparsePermutedDimsArrayBlocks(a)
 end
-_perm(::PermutedDimsArray{<:Any,<:Any,P}) where {P} = P
-_getindices(t::Tuple, indices) = map(i -> t[i], indices)
-_getindices(i::CartesianIndex, indices) = CartesianIndex(_getindices(Tuple(i), indices))
-function SparseArrayInterface.stored_indices(a::SparsePermutedDimsArrayBlocks)
-  return map(I -> _getindices(I, _perm(a.array)), stored_indices(blocks(parent(a.array))))
-end
 function Base.size(a::SparsePermutedDimsArrayBlocks)
   return _getindices(size(blocks(parent(a.array))), _perm(a.array))
 end
-function Base.getindex(a::SparsePermutedDimsArrayBlocks, index::Vararg{Int})
+function Base.getindex(
+  a::SparsePermutedDimsArrayBlocks{<:Any,N}, index::Vararg{Int,N}
+) where {N}
   return PermutedDimsArray(
     blocks(parent(a.array))[_getindices(index, _perm(a.array))...], _perm(a.array)
   )
 end
+function SparseArrayInterface.stored_indices(a::SparsePermutedDimsArrayBlocks)
+  return map(I -> _getindices(I, _perm(a.array)), stored_indices(blocks(parent(a.array))))
+end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparsePermutedDimsArrayBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparsePermutedDimsArrayBlocks)
+  return error("Not implemented")
+end
+
+reverse_index(index) = reverse(index)
+reverse_index(index::CartesianIndex) = CartesianIndex(reverse(Tuple(index)))
+
+# Represents the array of arrays of a `Transpose`
+# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Transpose`.
+struct SparseTransposeBlocks{T,Array<:Transpose{T}} <: AbstractSparseMatrix{T}
+  array::Array
+end
+function blocksparse_blocks(a::Transpose)
+  return SparseTransposeBlocks(a)
+end
+function Base.size(a::SparseTransposeBlocks)
+  return reverse(size(blocks(parent(a.array))))
+end
+function Base.getindex(a::SparseTransposeBlocks, index::Vararg{Int,2})
+  return transpose(blocks(parent(a.array))[reverse(index)...])
+end
+function SparseArrayInterface.stored_indices(a::SparseTransposeBlocks)
+  return map(reverse_index, stored_indices(blocks(parent(a.array))))
+end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparseTransposeBlocks) = length(stored_indices(a))
+function SparseArrayInterface.sparse_storage(a::SparseTransposeBlocks)
+  return error("Not implemented")
+end
+
+# Represents the array of arrays of a `Adjoint`
+# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Adjoint`.
+struct SparseAdjointBlocks{T,Array<:Adjoint{T}} <: AbstractSparseMatrix{T}
+  array::Array
+end
+function blocksparse_blocks(a::Adjoint)
+  return SparseAdjointBlocks(a)
+end
+function Base.size(a::SparseAdjointBlocks)
+  return reverse(size(blocks(parent(a.array))))
+end
+function Base.getindex(a::SparseAdjointBlocks, index::Vararg{Int,2})
+  return blocks(parent(a.array))[reverse(index)...]'
+end
+function SparseArrayInterface.stored_indices(a::SparseAdjointBlocks)
+  return map(reverse_index, stored_indices(blocks(parent(a.array))))
+end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparseAdjointBlocks) = length(stored_indices(a))
+function SparseArrayInterface.sparse_storage(a::SparseAdjointBlocks)
   return error("Not implemented")
 end
 
@@ -167,9 +229,6 @@ end
 function Base.size(a::SparseSubArrayBlocks)
   return length.(axes(a))
 end
-function SparseArrayInterface.stored_indices(a::SparseSubArrayBlocks)
-  return stored_indices(view(blocks(parent(a.array)), axes(a)...))
-end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
   return a[Tuple(I)...]
 end
@@ -192,6 +251,13 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
   # TODO: Implement this properly.
   return true
 end
+function SparseArrayInterface.stored_indices(a::SparseSubArrayBlocks)
+  return stored_indices(view(blocks(parent(a.array)), axes(a)...))
+end
+# TODO: Either make this the generic interface or define
+# `SparseArrayInterface.sparse_storage`, which is used
+# to defined this.
+SparseArrayInterface.nstored(a::SparseSubArrayBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
   return error("Not implemented")
 end

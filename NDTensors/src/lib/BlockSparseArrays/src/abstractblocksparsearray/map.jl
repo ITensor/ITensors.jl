@@ -1,5 +1,6 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
+using LinearAlgebra: Adjoint, Transpose
 using ..SparseArrayInterface:
   SparseArrayInterface,
   SparseArrayStyle,
@@ -69,6 +70,20 @@ end
 
 # Fix ambiguity error
 function Base.copyto!(a_dest::LayoutArray, a_src::BlockSparseArrayLike)
+  sparse_copyto!(a_dest, a_src)
+  return a_dest
+end
+
+function Base.copyto!(
+  a_dest::AbstractMatrix, a_src::Transpose{T,<:AbstractBlockSparseMatrix{T}}
+) where {T}
+  sparse_copyto!(a_dest, a_src)
+  return a_dest
+end
+
+function Base.copyto!(
+  a_dest::AbstractMatrix, a_src::Adjoint{T,<:AbstractBlockSparseMatrix{T}}
+) where {T}
   sparse_copyto!(a_dest, a_src)
   return a_dest
 end
