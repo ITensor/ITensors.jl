@@ -1,4 +1,5 @@
-using Metal: @allowscalar, MtlArray
+using Metal: MtlArray
+using Metal.GPUArraysCore: @allowscalar
 using LinearAlgebra: Adjoint
 using NDTensors.Expose: Exposed, expose, unexpose
 

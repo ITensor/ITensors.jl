@@ -1,4 +1,5 @@
-using CUDA: @allowscalar, CuArray
+using CUDA: CuArray
+using CUDA.GPUArraysCore: @allowscalar
 using NDTensors.Expose: Exposed, unexpose
 
 ## Warning this append function uses scalar indexing and is therefore extremely slow

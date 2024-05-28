@@ -1,6 +1,7 @@
 ## Right now append! is broken on metal because of a missing resize! function
 ## but make this available in the next release this will allow metal to work working
-using Metal: @allowscalar, MtlArray
+using Metal: Metal, MtlArray
+using Metal.GPUArraysCore: @allowscalar
 using NDTensors.Expose: Exposed, unexpose
 
 ## Warning this append function uses scalar indexing and is therefore extremely slow
