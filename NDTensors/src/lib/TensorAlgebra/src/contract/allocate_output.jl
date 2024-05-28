@@ -30,9 +30,41 @@ function output_axes(
   α::Number=true,
 )
   axes_contracted = blockpermute(axes(a1), perm1)
-  axes_contracted2 = blockpermute(axes(a2), perm2)
-  @assert axes_contracted == axes_contracted2
+  axes_contracted′ = blockpermute(axes(a2), perm2)
+  @assert axes_contracted == axes_contracted′
   return ()
+end
+
+# Vec-mat.
+function output_axes(
+  ::typeof(contract),
+  perm_dest::BlockedPermutation{1},
+  a1::AbstractArray,
+  perm1::BlockedPermutation{1},
+  a2::AbstractArray,
+  biperm2::BlockedPermutation{2},
+  α::Number=true,
+)
+  (axes_contracted,) = blockpermute(axes(a1), perm1)
+  axes_contracted′, axes_dest = blockpermute(axes(a2), biperm2)
+  @assert axes_contracted == axes_contracted′
+  return genperm((axes_dest...,), invperm(Tuple(perm_dest)))
+end
+
+# Mat-vec.
+function output_axes(
+  ::typeof(contract),
+  perm_dest::BlockedPermutation{1},
+  a1::AbstractArray,
+  perm1::BlockedPermutation{2},
+  a2::AbstractArray,
+  biperm2::BlockedPermutation{1},
+  α::Number=true,
+)
+  axes_dest, axes_contracted = blockpermute(axes(a1), perm1)
+  (axes_contracted′,) = blockpermute(axes(a2), biperm2)
+  @assert axes_contracted == axes_contracted′
+  return genperm((axes_dest...,), invperm(Tuple(perm_dest)))
 end
 
 # TODO: Use `ArrayLayouts`-like `MulAdd` object,
