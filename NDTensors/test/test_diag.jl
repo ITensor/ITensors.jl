@@ -2,8 +2,10 @@
 using NDTensors
 using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
+using Adapt: adapt
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list, is_supported_eltype
+using LinearAlgebra: dot
 
 @testset "DiagTensor basic functionality" begin
   @testset "test device: $dev" for dev in devices_list(copy(ARGS)),
@@ -58,15 +60,16 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
 end
 @testset "DiagTensor contractions" for dev in devices_list(copy(ARGS))
   ## TODO add more GPU tests
-  t = tensor(Diag([1.0, 1.0, 1.0]), (3, 3))
-  A = randomTensor(Dense, (3, 3))
+  elt = (dev == NDTensors.mtl ? Float32 : Float64)
+  t = tensor(Diag(elt[1.0, 1.0, 1.0]), (3, 3))
+  A = randomTensor(Dense{elt}, (3, 3))
 
   @test contract(t, (1, -2), t, (-2, 3)) == t
   @test contract(A, (1, -2), t, (-2, 3)) == A
   @test contract(A, (-2, 1), t, (-2, 3)) == transpose(A)
 
   ## Testing sparse contractions on GPU
-  t = tensor(Diag(one(Float64)), (3, 3))
+  t = tensor(Diag(one(elt)), (3, 3))
   @test contract(t, (-1, -2), dev(A), (-1, -2))[] == dot(t, A)
 end
 nothing

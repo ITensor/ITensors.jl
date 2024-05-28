@@ -2,7 +2,7 @@ using Adapt: adapt
 using GPUArraysCore: AbstractGPUArray
 using NDTensors: NDTensors, DenseTensor, DiagTensor, contract!, dense, inds, Tensor
 using NDTensors.Expose: Exposed, expose, unexpose
-using NDTensors.TypeParameterAccessors: parenttype
+using NDTensors.TypeParameterAccessors: parenttype, set_ndims
 
 ## In this function we convert the DiagTensor to a dense tensor and
 ## Feed it back into contract
@@ -18,7 +18,7 @@ function NDTensors.contract!(
 )
   tensor1 = unexpose(tensor1)
   ## convert tensor1 to a dense
-  tensor1 = adapt(parenttype(typeof(tensor2)), dense(tensor1))
+  tensor1 = adapt(set_ndims(parenttype(typeof(tensor2)), 1), dense(tensor1))
   return contract!(
     output_tensor,
     labelsoutput_tensor,
