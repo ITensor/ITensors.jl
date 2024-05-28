@@ -22,6 +22,18 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   @test blocklasts(p) == (3, 5)
   @test invperm(p) == blockedperm((5, 4, 1), (2, 3))
 
+  # Empty block.
+  p = blockedperm((3, 2), (), (1,))
+  @test Tuple(p) === (3, 2, 1)
+  @test isperm(p)
+  @test length(p) == 3
+  @test blocks(p) == ((3, 2), (), (1,))
+  @test blocklength(p) == 3
+  @test blocklengths(p) == (2, 0, 1)
+  @test blockfirsts(p) == (1, 3, 3)
+  @test blocklasts(p) == (2, 2, 3)
+  @test invperm(p) == blockedperm((3, 2), (), (1,))
+
   # Split collection into `BlockedPermutation`.
   p = blockedperm_indexin(("a", "b", "c", "d"), ("c", "a"), ("b", "d"))
   @test p == blockedperm((3, 1), (2, 4))
@@ -120,6 +132,8 @@ end
       for (d1s, d2s, d_dests) in (
         ((1, 2), (1, 2), ()),
         ((1, 2), (2, 1), ()),
+        ((1, 2), (2, 1, 3), (3,)),
+        ((1, 2, 3), (2, 1), (3,)),
         ((1, 2), (2, 3), (1, 3)),
         ((1, 2), (2, 3), (3, 1)),
         ((2, 1), (2, 3), (3, 1)),
