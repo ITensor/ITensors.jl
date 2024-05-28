@@ -3,8 +3,8 @@ using SplitApplyCombine: groupcount
 
 using Adapt: Adapt, WrappedArray
 
-const WrappedAbstractBlockSparseArray{T,N,A} = WrappedArray{
-  T,N,<:AbstractBlockSparseArray,<:AbstractBlockSparseArray{T,N}
+const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
+  T,N,AbstractBlockSparseArray,AbstractBlockSparseArray{T,N}
 }
 
 # TODO: Rename `AnyBlockSparseArray`.

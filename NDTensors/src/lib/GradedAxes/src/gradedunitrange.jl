@@ -161,6 +161,13 @@ function Base.first(a::GradedUnitRange)
   return labelled(first(unlabel_blocks(a)), label(a[Block(1)]))
 end
 
+Base.iterate(a::GradedUnitRange) = isempty(a) ? nothing : (first(a), first(a))
+function Base.iterate(a::GradedUnitRange, i)
+  i == last(a) && return nothing
+  next = a[i + step(a)]
+  return (next, next)
+end
+
 function firstblockindices(a::GradedUnitRange)
   return labelled.(firstblockindices(unlabel_blocks(a)), blocklabels(a))
 end
