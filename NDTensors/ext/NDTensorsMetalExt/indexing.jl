@@ -1,5 +1,5 @@
 using Metal: MtlArray
-using Metal.GPUArraysCore: @allowscalar
+using GPUArraysCore: @allowscalar
 using LinearAlgebra: Adjoint
 using NDTensors.Expose: Exposed, expose, unexpose
 

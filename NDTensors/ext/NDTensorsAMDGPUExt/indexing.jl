@@ -1,5 +1,5 @@
 using AMDGPU: AMDGPU, ROCArray
-using AMDGPU.GPUArraysCore: @allowscalar
+using GPUArraysCore: @allowscalar
 using NDTensors.Expose: Exposed, expose, parent, unexpose
 using NDTensors.GPUArraysCoreExtensions: cpu
 

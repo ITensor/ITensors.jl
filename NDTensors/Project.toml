@@ -42,11 +42,11 @@ TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
 cuTENSOR = "011b41b2-24ef-40a8-b3eb-fa098493e9e1"
 
 [extensions]
-NDTensorsAMDGPUExt = "AMDGPU"
-NDTensorsCUDAExt = "CUDA"
+NDTensorsAMDGPUExt = ["AMDGPU","GPUArraysCore"]
+NDTensorsCUDAExt = ["CUDA","GPUArraysCore"]
 NDTensorsGPUArraysCoreExt = "GPUArraysCore"
 NDTensorsHDF5Ext = "HDF5"
-NDTensorsMetalExt = "Metal"
+NDTensorsMetalExt = ["GPUArraysCore", "Metal"]
 NDTensorsOctavianExt = "Octavian"
 NDTensorsTBLISExt = "TBLIS"
 NDTensorscuTENSORExt = "cuTENSOR"
