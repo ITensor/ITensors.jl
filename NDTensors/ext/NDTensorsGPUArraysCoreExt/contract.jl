@@ -9,7 +9,7 @@ using NDTensors.TypeParameterAccessors: parenttype, set_ndims
 function NDTensors.contract!(
   output_tensor::Exposed{<:AbstractGPUArray,<:DenseTensor},
   labelsoutput_tensor,
-  tensor1::Exposed{<:Number, <:DiagTensor},
+  tensor1::Exposed{<:Number,<:DiagTensor},
   labelstensor1,
   tensor2::Exposed{<:AbstractGPUArray,<:DenseTensor},
   labelstensor2,
