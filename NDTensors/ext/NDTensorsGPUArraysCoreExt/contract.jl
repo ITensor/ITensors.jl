@@ -18,7 +18,7 @@ function NDTensors.contract!(
 )
   tensor1 = unexpose(tensor1)
   ## convert tensor1 to a dense
-  tensor1 = adapt(set_ndims(parenttype(typeof(tensor2)),1), dense(tensor1))
+  tensor1 = adapt(set_ndims(parenttype(typeof(tensor2)), 1), dense(tensor1))
   return contract!(
     output_tensor,
     labelsoutput_tensor,
