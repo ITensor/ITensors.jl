@@ -36,7 +36,7 @@ function NDTensors.contract!(
   labelsoutput_tensor,
   tensor1::Exposed{<:AbstractGPUArray,<:DenseTensor},
   labelstensor1,
-  tensor2::Exposed{<:Any,<:DiagTensor},
+  tensor2::Exposed{<:Number,<:DiagTensor},
   labelstensor2,
   α::Number=one(Bool),
   β::Number=zero(Bool),
