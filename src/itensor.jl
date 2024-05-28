@@ -1,3 +1,5 @@
+using .TagSets: TagSets, hastags, replacetags
+
 # Private inner constructor
 function _ITensor end
 
@@ -21,7 +23,7 @@ julia> i = Index(2, "i")
 #
 # Make an ITensor with random elements:
 #
-julia> A = randomITensor(i', i)
+julia> A = random_itensor(i', i)
 ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -54,7 +56,7 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 julia> @show storage(A);
 storage(A) = [0.28358594718392427, 1.0, 1.4342219756446355, -0.40952231269251566]
 
-julia> B = randomITensor(i, i');
+julia> B = random_itensor(i, i');
 
 julia> @show B;
 B = ITensor ord=2
@@ -427,8 +429,8 @@ end
 #
 
 """
-    diagITensor([::Type{ElT} = Float64, ]inds)
-    diagITensor([::Type{ElT} = Float64, ]inds::Index...)
+    diag_itensor([::Type{ElT} = Float64, ]inds)
+    diag_itensor([::Type{ElT} = Float64, ]inds::Index...)
 
 Make a sparse ITensor of element type `ElT` with only elements
 along the diagonal stored. Defaults to having `zero(T)` along
@@ -436,17 +438,17 @@ the diagonal.
 
 The storage will have `NDTensors.Diag` type.
 """
-function diagITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
+function diag_itensor(::Type{ElT}, is::Indices) where {ElT<:Number}
   return itensor(Diag(ElT, mindim(is)), is)
 end
 
-diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is...))
+diag_itensor(::Type{ElT}, is...) where {ElT<:Number} = diag_itensor(ElT, indices(is...))
 
-diagITensor(is::Indices) = diagITensor(Float64, is)
-diagITensor(is...) = diagITensor(indices(is...))
+diag_itensor(is::Indices) = diag_itensor(Float64, is)
+diag_itensor(is...) = diag_itensor(indices(is...))
 
 """
-    diagITensor([ElT::Type, ]v::Vector, inds...)
+    diag_itensor([ElT::Type, ]v::Vector, inds...)
     diagitensor([ElT::Type, ]v::Vector, inds...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal.
@@ -458,13 +460,13 @@ In the case when `eltype(v) isa Union{Int, Complex{Int}}`, by default it will
 be converted to `float(v)`. Note that this behavior is subject to change
 in the future.
 
-The version `diagITensor` will never output an ITensor whose storage data
+The version `diag_itensor` will never output an ITensor whose storage data
 is an alias of the input vector data.
 
 The version `diagitensor` might output an ITensor whose storage data
 is an alias of the input vector data in order to minimize operations.
 """
-function diagITensor(
+function diag_itensor(
   as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is::Indices
 )
   length(v) ≠ mindim(is) && error(
@@ -474,29 +476,29 @@ function diagITensor(
   return itensor(Diag(data), is)
 end
 
-function diagITensor(as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is...)
-  return diagITensor(as, eltype, v, indices(is...))
+function diag_itensor(as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+  return diag_itensor(as, eltype, v, indices(is...))
 end
 
-function diagITensor(as::AliasStyle, v::Vector, is...)
-  return diagITensor(as, eltype(v), v, is...)
+function diag_itensor(as::AliasStyle, v::Vector, is...)
+  return diag_itensor(as, eltype(v), v, is...)
 end
 
-function diagITensor(as::AliasStyle, v::Vector{<:RealOrComplex{Int}}, is...)
-  return diagITensor(AllowAlias(), float(eltype(v)), v, is...)
+function diag_itensor(as::AliasStyle, v::Vector{<:RealOrComplex{Int}}, is...)
+  return diag_itensor(AllowAlias(), float(eltype(v)), v, is...)
 end
 
-diagITensor(v::Vector{<:Number}, is...) = diagITensor(NeverAlias(), v, is...)
-function diagITensor(eltype::Type{<:Number}, v::Vector{<:Number}, is...)
-  return diagITensor(NeverAlias(), eltype, v, is...)
+diag_itensor(v::Vector{<:Number}, is...) = diag_itensor(NeverAlias(), v, is...)
+function diag_itensor(eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+  return diag_itensor(NeverAlias(), eltype, v, is...)
 end
 
-diagitensor(args...; kwargs...) = diagITensor(AllowAlias(), args...; kwargs...)
+diagitensor(args...; kwargs...) = diag_itensor(AllowAlias(), args...; kwargs...)
 
 # XXX TODO: explain conversion from Int
 # XXX TODO: proper conversion
 """
-    diagITensor([ElT::Type, ]x::Number, inds...)
+    diag_itensor([ElT::Type, ]x::Number, inds...)
     diagitensor([ElT::Type, ]x::Number, inds...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal.
@@ -508,27 +510,27 @@ In the case when `x isa Union{Int, Complex{Int}}`, by default it will
 be converted to `float(x)`. Note that this behavior is subject to change
 in the future.
 """
-function diagITensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is::Indices)
-  return diagITensor(AllowAlias(), eltype, fill(eltype(x), mindim(is)), is...)
+function diag_itensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is::Indices)
+  return diag_itensor(AllowAlias(), eltype, fill(eltype(x), mindim(is)), is...)
 end
 
-function diagITensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is...)
-  return diagITensor(as, eltype, x, indices(is...))
+function diag_itensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is...)
+  return diag_itensor(as, eltype, x, indices(is...))
 end
 
-function diagITensor(as::AliasStyle, x::Number, is...)
-  return diagITensor(as, typeof(x), x, is...)
+function diag_itensor(as::AliasStyle, x::Number, is...)
+  return diag_itensor(as, typeof(x), x, is...)
 end
 
-function diagITensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
-  return diagITensor(as, float(typeof(x)), x, is...)
+function diag_itensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
+  return diag_itensor(as, float(typeof(x)), x, is...)
 end
 
-function diagITensor(eltype::Type{<:Number}, x::Number, is...)
-  return diagITensor(NeverAlias(), eltype, x, is...)
+function diag_itensor(eltype::Type{<:Number}, x::Number, is...)
+  return diag_itensor(NeverAlias(), eltype, x, is...)
 end
 
-diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
+diag_itensor(x::Number, is...) = diag_itensor(NeverAlias(), x, is...)
 
 """
     delta([::Type{ElT} = Float64, ]inds)
@@ -550,35 +552,6 @@ end
 delta(is...) = delta(Float64, is...)
 
 const δ = delta
-
-"""
-    onehot(ivs...)
-    setelt(ivs...)
-    onehot(::Type, ivs...)
-    setelt(::Type, ivs...)
-
-Create an ITensor with all zeros except the specified value,
-which is set to 1.
-
-# Examples
-```julia
-i = Index(2,"i")
-A = onehot(i=>2)
-# A[i=>2] == 1, all other elements zero
-
-# Specify the element type
-A = onehot(Float32, i=>2)
-
-j = Index(3,"j")
-B = onehot(i=>1,j=>3)
-# B[i=>1,j=>3] == 1, all other element zero
-```
-"""
-function onehot(datatype::Type{<:AbstractArray}, ivs::Pair{<:Index}...)
-  A = ITensor(eltype(datatype), ind.(ivs)...)
-  A[val.(ivs)...] = one(eltype(datatype))
-  return Adapt.adapt(datatype, A)
-end
 
 function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
   return onehot(NDTensors.default_datatype(eltype), ivs...)
@@ -609,8 +582,8 @@ function dense(A::ITensor)
 end
 
 """
-    randomITensor([::Type{ElT <: Number} = Float64, ]inds)
-    randomITensor([::Type{ElT <: Number} = Float64, ]inds::Index...)
+    random_itensor([rng=Random.default_rng()], [ElT=Float64], inds)
+    random_itensor([rng=Random.default_rng()], [ElT=Float64], inds::Index...)
 
 Construct an ITensor with type `ElT` and indices `inds`, whose elements are
 normally distributed random numbers. If the element type is not specified,
@@ -623,68 +596,68 @@ i = Index(2,"index_i")
 j = Index(4,"index_j")
 k = Index(3,"index_k")
 
-A = randomITensor(i,j)
-B = randomITensor(ComplexF64,undef,k,j)
+A = random_itensor(i,j)
+B = random_itensor(ComplexF64,undef,k,j)
 ```
 """
-function randomITensor(::Type{S}, is::Indices) where {S<:Number}
-  return randomITensor(Random.default_rng(), S, is)
+function random_itensor(::Type{S}, is::Indices) where {S<:Number}
+  return random_itensor(Random.default_rng(), S, is)
 end
 
-function randomITensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
+function random_itensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
   T = ITensor(S, undef, is)
   randn!(rng, T)
   return T
 end
 
-function randomITensor(::Type{S}, is...) where {S<:Number}
-  return randomITensor(Random.default_rng(), S, is...)
+function random_itensor(::Type{S}, is...) where {S<:Number}
+  return random_itensor(Random.default_rng(), S, is...)
 end
 
-function randomITensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
-  return randomITensor(rng, S, indices(is...))
-end
-
-# To fix ambiguity with QN version
-function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT, is)
+function random_itensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
+  return random_itensor(rng, S, indices(is...))
 end
 
 # To fix ambiguity with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return randomITensor(rng, ElT, Index{Int}[])
+function random_itensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT, is)
 end
 
 # To fix ambiguity with QN version
-function randomITensor(is::Tuple{})
-  return randomITensor(Random.default_rng(), is)
+function random_itensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return random_itensor(rng, ElT, Index{Int}[])
 end
 
 # To fix ambiguity with QN version
-function randomITensor(rng::AbstractRNG, is::Tuple{})
-  return randomITensor(rng, Float64, is)
+function random_itensor(is::Tuple{})
+  return random_itensor(Random.default_rng(), is)
+end
+
+# To fix ambiguity with QN version
+function random_itensor(rng::AbstractRNG, is::Tuple{})
+  return random_itensor(rng, Float64, is)
 end
 
 # To fix ambiguity errors with QN version
-function randomITensor(::Type{ElT}) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), ElT)
+function random_itensor(::Type{ElT}) where {ElT<:Number}
+  return random_itensor(Random.default_rng(), ElT)
 end
 
 # To fix ambiguity errors with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
-  return randomITensor(rng, ElT, ())
+function random_itensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
+  return random_itensor(rng, ElT, ())
 end
 
-randomITensor(is::Indices) = randomITensor(Random.default_rng(), is)
-randomITensor(rng::AbstractRNG, is::Indices) = randomITensor(rng, Float64, is)
-randomITensor(is...) = randomITensor(Random.default_rng(), is...)
-randomITensor(rng::AbstractRNG, is...) = randomITensor(rng, Float64, indices(is...))
+random_itensor(is::Indices) = random_itensor(Random.default_rng(), is)
+random_itensor(rng::AbstractRNG, is::Indices) = random_itensor(rng, Float64, is)
+random_itensor(is...) = random_itensor(Random.default_rng(), is...)
+random_itensor(rng::AbstractRNG, is...) = random_itensor(rng, Float64, indices(is...))
 
 # To fix ambiguity errors with QN version
-randomITensor() = randomITensor(Random.default_rng())
+random_itensor() = random_itensor(Random.default_rng())
 
 # To fix ambiguity errors with QN version
-randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
+random_itensor(rng::AbstractRNG) = random_itensor(rng, Float64, ())
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
@@ -922,7 +895,7 @@ julia> i = Index(2, "i")
 julia> j = Index(3, "j")
 (dim=3|id=554|"j")
 
-julia> A = randomITensor(i, j)
+julia> A = random_itensor(i, j)
 ITensor ord=2 (dim=2|id=90|"i") (dim=3|id=554|"j")
 Dense{Float64,Array{Float64,1}}
 
@@ -1126,14 +1099,6 @@ end
 # CartesianIndices
 @propagate_inbounds getindex(T::ITensor, I::CartesianIndex)::Any = T[Tuple(I)...]
 
-@propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{Any,N}) where {N}
-  # Tried ind.(ivs), val.(ivs) but it is slower
-  p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
-  return fac *
-         _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
-end
-
 """
     getindex(T::ITensor, ivs...)
 
@@ -1160,10 +1125,6 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
     )
   end
   return tensor(T)[]
-end
-
-function _vals(is::Indices, I::String...)
-  return val.(is, I)
 end
 
 function _vals(T::ITensor, I::String...)
@@ -1247,29 +1208,10 @@ end
   return setindex!(T, x, Tuple(I)...)
 end
 
-@propagate_inbounds @inline function _setindex!!(
-  T::Tensor, x::Number, ivs::Vararg{Any,N}
-) where {N}
-  # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
-  # but it was slower.
-  p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
-  return _setindex!!(
-    T, fac * x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
-  )
-end
-
 @propagate_inbounds @inline function setindex!(
   T::ITensor, x::Number, I::Vararg{Any,N}
 ) where {N}
   return settensor!(T, _setindex!!(tensor(T), x, I...))
-end
-
-@propagate_inbounds @inline function setindex!(
-  T::ITensor, x::Number, I1::Pair{<:Index,String}, I::Pair{<:Index,String}...
-)
-  Iv = map(i -> i.first => val(i.first, i.second), (I1, I...))
-  return setindex!(T, x, Iv...)
 end
 
 # XXX: what is this definition for?
@@ -1523,22 +1465,22 @@ filterinds(is::Indices) = is
 inds(A...; kwargs...) = filterinds(A...; kwargs...)
 
 # in-place versions of priming and tagging
-for fname in (
-  :prime,
-  :setprime,
-  :noprime,
-  :replaceprime,
-  :swapprime,
-  :addtags,
-  :removetags,
-  :replacetags,
-  :settags,
-  :swaptags,
-  :replaceind,
-  :replaceinds,
-  :swapind,
-  :swapinds,
-)
+for (fname, fname!) in [
+  (:(prime), :(prime!)),
+  (:(setprime), :(setprime!)),
+  (:(noprime), :(noprime!)),
+  (:(replaceprime), :(replaceprime!)),
+  (:(swapprime), :(swapprime!)),
+  (:(TagSets.addtags), :(addtags!)),
+  (:(TagSets.removetags), :(removetags!)),
+  (:(TagSets.replacetags), :(replacetags!)),
+  (:(settags), :(settags!)),
+  (:(swaptags), :(swaptags!)),
+  (:(replaceind), :(replaceind!)),
+  (:(replaceinds), :(replaceinds!)),
+  (:(swapind), :(swapind!)),
+  (:(swapinds), :(swapinds!)),
+]
   @eval begin
     $fname(f::Function, A::ITensor, args...) = ITensor($fname(f, tensor(A), args...))
 
@@ -1547,7 +1489,7 @@ for fname in (
       return setinds(A, $fname(f, inds(A), args...))
     end
 
-    function $(Symbol(fname, :!))(f::Function, A::ITensor, args...)
+    function $(fname!)(f::Function, A::ITensor, args...)
       return settensor!(A, $fname(f, tensor(A), args...))
     end
 
@@ -1558,7 +1500,7 @@ for fname in (
       return setinds(A, $fname(inds(A), args...; kwargs...))
     end
 
-    function $(Symbol(fname, :!))(A::ITensor, args...; kwargs...)
+    function $(fname!)(A::ITensor, args...; kwargs...)
       return settensor!(A, $fname(tensor(A), args...; kwargs...))
     end
   end
@@ -1642,7 +1584,7 @@ $priming_tagging_doc
 Add the tags `ts` to the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
-""" addtags(::ITensor, ::Any...)
+""" TagSets.addtags(::ITensor, ::Any...)
 
 @doc """
     removetags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
@@ -1652,7 +1594,7 @@ $priming_tagging_doc
 Remove the tags `ts` from the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
-""" removetags(::ITensor, ::Any...)
+""" TagSets.removetags(::ITensor, ::Any...)
 
 @doc """
     settags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
@@ -1672,7 +1614,7 @@ $priming_tagging_doc
 Replace the tags `tsold` with `tsnew` for the indices of an ITensor.
 
 $priming_tagging_doc
-""" replacetags(::ITensor, ::Any...)
+""" TagSets.replacetags(::ITensor, ::Any...)
 
 @doc """
     swaptags[!](A::ITensor, ts1::String, ts2::String; <keyword arguments>) -> ITensor
@@ -1740,7 +1682,7 @@ Check if any of the indices in the ITensor have the specified tags.
 """
 anyhastags(A::ITensor, ts) = anyhastags(inds(A), ts)
 
-hastags(A::ITensor, ts) = hastags(inds(A), ts)
+TagSets.hastags(A::ITensor, ts) = hastags(inds(A), ts)
 
 # XXX: rename to:
 # hastags(all, A, ts)

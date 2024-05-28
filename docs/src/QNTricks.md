@@ -14,7 +14,7 @@ using ITensors
 # can be used to "flip" the direction of an Index
 i = Index([QN(0) => 2, QN(1) => 3], "i")
 j = Index([QN(0) => 2, QN(1) => 3], "j")
-A = randomITensor(i, dag(j))
+A = random_itensor(i, dag(j))
 C = combiner(i, dag(j); tags = "c", dir = dir(i))
 inds(A)
 inds(A * C)
@@ -29,7 +29,7 @@ using ITensors
 # can be used to "flip" the direction of an Index
 i = Index([QN(0) => 2, QN(1) => 3], "i")
 j = dag(Index([QN(0) => 2, QN(1) => 3], "j"))
-A = randomITensor(i, j)
+A = random_itensor(i, j)
 C = combiner(j; tags = "jflip", dir = -dir(j))
 inds(A)
 inds(A * C)

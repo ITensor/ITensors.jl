@@ -1,4 +1,3 @@
-
 default_compile_dir() = joinpath(homedir(), ".julia", "sysimages")
 
 default_compile_filename() = "sys_itensors.so"
@@ -37,26 +36,14 @@ function compile_note(; dir=default_compile_dir(), filename=default_compile_file
   """
 end
 
-function compile(;
-  dir::AbstractString=default_compile_dir(),
-  filename::AbstractString=default_compile_filename(),
-)
-  if !isdir(dir)
-    println("""The directory "$dir" doesn't exist yet, creating it now.""")
-    println()
-    mkdir(dir)
-  end
-  path = joinpath(dir, filename)
-  println(
-    """Creating the system image "$path" containing the compiled version of ITensors. This may take a few minutes.""",
+function compile(; backend=Algorithm"PackageCompiler"(), kwargs...)
+  return compile(backend; kwargs...)
+end
+
+function compile(::Algorithm; kwargs...)
+  return error(
+    "As of ITensors v0.5, you must install `PackageCompiler.jl` (`using Pkg: Pkg; Pkg.add(\"PackageCompiler\")`) and execute `using PackageCompiler` to use `ITensors.compile`.",
   )
-  create_sysimage(
-    :ITensors;
-    sysimage_path=path,
-    precompile_execution_file=joinpath(@__DIR__, "precompile_itensors.jl"),
-  )
-  println(compile_note(; dir=dir, filename=filename))
-  return path
 end
 
 @doc """

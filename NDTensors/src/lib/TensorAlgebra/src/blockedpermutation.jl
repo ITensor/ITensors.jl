@@ -160,9 +160,7 @@ end
 
 BlockArrays.blocks(blockedperm::BlockedPermutation) = getfield(blockedperm, :blocks)
 
-function blockedperm(length::Val, permblocks_maybe_empty::Tuple{Vararg{Int}}...)
-  # Drop empty blocks
-  permblocks = filter(!isempty, permblocks_maybe_empty)
+function blockedperm(length::Val, permblocks::Tuple{Vararg{Int}}...)
   @assert value(length) == sum(Base.length, permblocks; init=zero(Bool))
   blockedperm = _BlockedPermutation(permblocks)
   @assert isperm(blockedperm)

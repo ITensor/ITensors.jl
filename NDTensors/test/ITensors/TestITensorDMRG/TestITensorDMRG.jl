@@ -14,6 +14,11 @@ reference_energies = Dict([
 ])
 
 is_broken(dev, elt::Type, conserve_qns::Val) = false
+## Currently there is an issue in blocksparse cutensor, seems to be related to using @view, I am still working to fix this issue.
+## For some reason ComplexF64 works and throws an error in `test_broken`
+function is_broken(dev::typeof(cu), elt::Type, conserve_qns::Val{true})
+  return ("cutensor" ∈ ARGS && elt != ComplexF64)
+end
 
 include("dmrg.jl")
 

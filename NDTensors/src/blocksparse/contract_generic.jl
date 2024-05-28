@@ -104,6 +104,7 @@ function contract!(
   return R
 end
 
+using NDTensors.Expose: expose
 # Function barrier to improve type stability,
 # since `Folds`/`FLoops` is not type stable:
 # https://discourse.julialang.org/t/type-instability-in-floop-reduction/68598
@@ -139,11 +140,11 @@ function _contract!(
       )
 
       contract!(
-        R[blockR],
+        expose(R[blockR]),
         labelsR,
-        tensor1[blocktensor1],
+        expose(tensor1[blocktensor1]),
         labelstensor1,
-        tensor2[blocktensor2],
+        expose(tensor2[blocktensor2]),
         labelstensor2,
         α,
         β,

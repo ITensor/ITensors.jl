@@ -5,11 +5,11 @@ i = Index([QN(0, 2) => d, QN(1, 2) => d], "i")
 
 # Parity conserving ITensors
 # By default they have flux 0
-@show A = randomITensor(i', dag(i))
+@show A = random_itensor(i', dag(i))
 println()
-@show B = randomITensor(i', dag(i))
+@show B = random_itensor(i', dag(i))
 println()
-@show C = randomITensor(QN(1, 2), i', dag(i))
+@show C = random_itensor(QN(1, 2), i', dag(i))
 println()
 
 # Add them

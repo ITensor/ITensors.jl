@@ -1,4 +1,4 @@
-using ..AlgorithmSelection: Algorithm, @Algorithm_str
+using ..BackendSelection: Algorithm, @Algorithm_str
 
 # TODO: Add `contract!!` definitions as pass-throughs to `contract!`.
 

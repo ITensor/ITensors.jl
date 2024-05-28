@@ -23,36 +23,6 @@ function _contract(A::ITensor, B::ITensor)::ITensor
   return C
 end
 
-_contract(T::ITensor, ::Nothing) = T
-
-function can_combine_contract(A::ITensor, B::ITensor)::Bool
-  return hasqns(A) &&
-         hasqns(B) &&
-         !iscombiner(A) &&
-         !iscombiner(B) &&
-         !isdiag(A) &&
-         !isdiag(B)
-end
-
-function combine_contract(A::ITensor, B::ITensor)::ITensor
-  # Combine first before contracting
-  C::ITensor = if can_combine_contract(A, B)
-    uniqueindsA = uniqueinds(A, B)
-    uniqueindsB = uniqueinds(B, A)
-    commonindsAB = commoninds(A, B)
-    combinerA = isempty(uniqueindsA) ? nothing : combiner(uniqueindsA)
-    combinerB = isempty(uniqueindsB) ? nothing : combiner(uniqueindsB)
-    combinerAB = isempty(commonindsAB) ? nothing : combiner(commonindsAB)
-    AC = _contract(_contract(A, combinerA), combinerAB)
-    BC = _contract(_contract(B, combinerB), dag(combinerAB))
-    CC = _contract(AC, BC)
-    _contract(_contract(CC, dag(combinerA)), dag(combinerB))
-  else
-    _contract(A, B)
-  end
-  return C
-end
-
 """
     A::ITensor * B::ITensor
     contract(A::ITensor, B::ITensor)
@@ -70,20 +40,20 @@ information see the documentation on Index objects.
 ```julia
 i = Index(2,"index_i"); j = Index(4,"index_j"); k = Index(3,"index_k")
 
-A = randomITensor(i,j)
-B = randomITensor(j,k)
+A = random_itensor(i,j)
+B = random_itensor(j,k)
 C = A * B # contract over Index j
 
-A = randomITensor(i,i')
-B = randomITensor(i,i'')
+A = random_itensor(i,i')
+B = random_itensor(i,i'')
 C = A * B # contract over Index i
 
-A = randomITensor(i)
-B = randomITensor(j)
+A = random_itensor(i)
+B = random_itensor(j)
 C = A * B # outer product of A and B, no contraction
 
-A = randomITensor(i,j,k)
-B = randomITensor(k,i,j)
+A = random_itensor(i,j,k)
+B = random_itensor(k,i,j)
 C = A * B # inner product of A and B, all indices contracted
 ```
 """
@@ -100,10 +70,8 @@ function contract(A::ITensor, B::ITensor)::ITensor
     return iscombiner(A) ? _contract(A, B) : A[] * B
   elseif NB == 0
     return iscombiner(B) ? _contract(B, A) : B[] * A
-  else
-    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
-    return C
   end
+  return _contract(A, B)
 end
 
 function optimal_contraction_sequence(A::Union{Vector{<:ITensor},Tuple{Vararg{ITensor}}})
@@ -286,10 +254,21 @@ function directsum_projectors(
   # Or with new notation:
   # D1 = zeros(elt1, dag(i), ij)
   # D2 = zeros(elt1, dag(j), ij)
-  D1 = zeros_itensor(elt1, dag(i), ij)
-  D2 = zeros_itensor(elt1, dag(j), ij)
+  elt = promote_type(elt1, elt2)
+  D1 = zeros_itensor(elt, dag(i), ij)
+  D2 = zeros_itensor(elt, dag(j), ij)
   directsum_projectors!(tensor(D1), tensor(D2))
   return D1, D2
+end
+
+function directsum_projectors(
+  ::Type{<:EmptyNumber}, ::Type{<:EmptyNumber}, ::Index, ::Index, ::Index
+)
+  return error(
+    "It is not possible to call directsum on two tensors with element type EmptyNumber.
+If you are inputting ITensors constructed like `ITensor(i, j)`, try specifying the element type,
+e.g. `ITensor(Float64, i, j)`, or fill them with zero values, e.g. `ITensor(zero(Float64), i, j)`.",
+  )
 end
 
 function check_directsum_inds(A::ITensor, I, B::ITensor, J)
@@ -420,8 +399,8 @@ j1 = Index(4, "j1")
 i2 = Index(5, "i2")
 j2 = Index(6, "j2")
 
-A1 = randomITensor(x, i1)
-A2 = randomITensor(x, i2)
+A1 = random_itensor(x, i1)
+A2 = random_itensor(x, i2)
 S, s = directsum(A1 => i1, A2 => i2)
 dim(s) == dim(i1) + dim(i2)
 
@@ -429,12 +408,12 @@ i1i2 = directsum(i1, i2)
 S = directsum(i1i2, A1 => i1, A2 => i2)
 hasind(S, i1i2)
 
-A3 = randomITensor(x, j1)
+A3 = random_itensor(x, j1)
 S, s = directsum(A1 => i1, A2 => i2, A3 => j1)
 dim(s) == dim(i1) + dim(i2) + dim(j1)
 
-A1 = randomITensor(i1, x, j1)
-A2 = randomITensor(x, j2, i2)
+A1 = random_itensor(i1, x, j1)
+A2 = random_itensor(x, j2, i2)
 S, s = directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
 length(s) == 2
 dim(s[1]) == dim(i1) + dim(i2)

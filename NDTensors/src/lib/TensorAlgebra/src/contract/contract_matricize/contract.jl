@@ -1,4 +1,4 @@
-using ..AlgorithmSelection: @Algorithm_str
+using ..BackendSelection: @Algorithm_str
 using LinearAlgebra: mul!
 
 function contract!(
@@ -37,5 +37,21 @@ function _mul!(
   β::Number,
 )
   a_dest[] = transpose(a1) * a2 * α + a_dest[] * β
+  return a_dest
+end
+
+# Vec-mat.
+function _mul!(
+  a_dest::AbstractVector, a1::AbstractVector, a2::AbstractMatrix, α::Number, β::Number
+)
+  mul!(transpose(a_dest), transpose(a1), a2, α, β)
+  return a_dest
+end
+
+# Mat-vec.
+function _mul!(
+  a_dest::AbstractVector, a1::AbstractMatrix, a2::AbstractVector, α::Number, β::Number
+)
+  mul!(a_dest, a1, a2, α, β)
   return a_dest
 end

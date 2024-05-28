@@ -1,7 +1,7 @@
 name: CompatHelper
 on:
   schedule:
-    - cron: '00 00 * * *'
+    - cron: 0 0 * * *
   workflow_dispatch:
 jobs:
   CompatHelper:
@@ -12,4 +12,5 @@ jobs:
       - name: CompatHelper.main()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: julia -e 'using CompatHelper; CompatHelper.main(; subdirs=["", "ITensorGaussianMPS", "ITensorGLMakie", "ITensorMakie", "ITensorUnicodePlots", "ITensorVisualizationBase", "NDTensors"])'
+          COMPATHELPER_PRIV: ${{ secrets.DOCUMENTER_KEY }}
+        run: julia -e 'using CompatHelper; CompatHelper.main(; subdirs=["", "NDTensors"])'

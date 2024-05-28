@@ -81,7 +81,7 @@ To make change (2), instead of constructing the initial MPS `psi0` to be an arbi
 So we will replace the line
 
 ```julia
-psi0 = randomMPS(sites,10)
+psi0 = random_mps(sites;linkdims=10)
 ```
 
 by the lines
@@ -153,7 +153,7 @@ to turn it into a code which conserves the total ``S^z`` quantum
 number throughout the DMRG calculation. The resulting code is:
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 let
   N = 100
   sites = siteinds("S=1",N;conserve_qns=true)

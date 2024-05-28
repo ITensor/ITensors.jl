@@ -26,7 +26,7 @@ Set the i==2,j==1 element to -2.6
 
 Make an ITensor with random elements
 
-    B = randomITensor(j,i)
+    B = random_itensor(j,i)
 
 Add ITensors A and B together (ok that indices in different order)
 
@@ -49,168 +49,149 @@ ITensor website: https://itensor.org/
 Documentation: https://itensor.github.io/ITensors.jl/stable/
 """
 module ITensors
-
-#####################################
-# External packages
-#
 include("usings.jl")
-
-#####################################
-# General utility functions
-#
 include("utils.jl")
-
-#####################################
-# ContractionSequenceOptimization
-#
-include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
+include("lib/ContractionSequenceOptimization/src/ContractionSequenceOptimization.jl")
+# TODO: `using .ContractionSequenceOptimization: ContractionSequenceOptimization, ...`.
 using .ContractionSequenceOptimization
-
-#####################################
-# LazyApply
-#
-include("LazyApply/LazyApply.jl")
+include("lib/LazyApply/src/LazyApply.jl")
+# TODO: `using .LazyApply: LazyApply, ...`.
 using .LazyApply
-
-#####################################
-# Ops
-#
-include("Ops/Ops.jl")
+using .LazyApply: Prod, Scaled, Sum, coefficient
+export Prod, Scaled, Sum, coefficient
+include("lib/Ops/src/Ops.jl")
+# TODO: `using .Ops: Ops, ...`.
 using .Ops
+using .Ops: Ops, Op, Trotter
 import .Ops: sites, name
-
-#####################################
-# Exports
-#
+export Ops, Op, Trotter
 include("exports.jl")
-
-#####################################
-# Imports
-#
 include("imports.jl")
-
-#####################################
-# Global Variables
-#
 include("global_variables.jl")
-
-#####################################
-# Index and IndexSet
-#
+# TODO: Move to `lib/LastVals/src/LastVals.jl`.
 include("lastval.jl")
-include("smallstring.jl") # Not currently using in TagSet
+include("lib/SmallStrings/src/SmallStrings.jl")
+using .SmallStrings: SmallStrings, IntChar, SmallString, Tag, isint, isnull
 include("readwrite.jl")
+export readcpp
+# TODO: Move to `lib/Nots/src/Nots.jl`.
 include("not.jl")
-include("tagset.jl")
-include("arrow.jl")
+export not
+include("lib/TagSets/src/TagSets.jl")
+using .TagSets: TagSets, set_strict_tags!, using_strict_tags
+# TODO: Move to `lib/Names/src/Names.jl`.
+include("name.jl")
+# TODO: Move to `lib/Vals/src/Vals.jl`.
+include("val.jl")
+export val
+include("lib/QuantumNumbers/src/QuantumNumbers.jl")
+using .QuantumNumbers:
+  Arrow,
+  In,
+  Neither,
+  Out,
+  QN,
+  QNVal,
+  hasname,
+  have_same_mods,
+  have_same_qns,
+  isactive,
+  maxQNs,
+  modulus,
+  nactive
+export QN, isactive, modulus
 include("symmetrystyle.jl")
 include("index.jl")
 include("set_operations.jl")
 include("indexset.jl")
-
-#####################################
-# ITensor
-#
 include("itensor.jl")
+include("qn/flux.jl")
 include("oneitensor.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
+include("lib/SiteTypes/src/SiteTypes.jl")
+using .SiteTypes:
+  SiteTypes,
+  OpName,
+  SiteType,
+  StateName,
+  TagType,
+  ValName,
+  @OpName_str,
+  @SiteType_str,
+  @StateName_str,
+  @TagType_str,
+  @ValName_str,
+  alias,
+  has_fermion_string,
+  op,
+  op!,
+  ops,
+  state
+export OpName,
+  SiteType,
+  StateName,
+  TagType,
+  ValName,
+  @OpName_str,
+  @SiteType_str,
+  @StateName_str,
+  @TagType_str,
+  @ValName_str,
+  has_fermion_string,
+  op,
+  ops,
+  state,
+  val
+include("lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
 include("adapt.jl")
 include("set_types.jl")
-
-#####################################
-# Experimental ITensor Functions
-#
 include("tensor_operations/itensor_combiner.jl")
-# include("experimental/ops_mpo.jl") #Ops to MPO conversions
-
-#####################################
-# QNs
-#
-include("qn/flux.jl")
-include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 include("nullspace.jl")
-
-#####################################
-# Ops to ITensor conversions
-#
-include("Ops/ops_itensor.jl")
-
-#####################################
-# Physics
-#
-include("physics/sitetype.jl")
-include("physics/lattices.jl")
-include("physics/site_types/aliases.jl")
-include("physics/site_types/generic_sites.jl")
-include("physics/site_types/qubit.jl")
-include("physics/site_types/spinhalf.jl")
-include("physics/site_types/spinone.jl")
-include("physics/site_types/fermion.jl")
-include("physics/site_types/electron.jl")
-include("physics/site_types/tj.jl")
-include("physics/site_types/qudit.jl") # EXPERIMENTAL
-include("physics/site_types/boson.jl") # EXPERIMENTAL
-include("physics/fermions.jl")
-
-#####################################
-# MPS/MPO
-#
-include("ITensorMPS/ITensorMPS.jl")
-@reexport using .ITensorMPS
-
-#####################################
-# ITensorsNamedDimsArraysExt
-# Requires `AbstractMPS`.
-include("ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
+include("lib/ITensorsOpsExt/src/ITensorsOpsExt.jl")
+include("fermions/fermions.jl")
+export fparity, isfermionic
+include("lib/ITensorMPS/src/ITensorMPS.jl")
+using .ITensorMPS: ITensorMPS
+# Reexport everything exported by `ITensors.ITensorMPS`
+# except for `ITensorMPS` itself. Ideally we would use
+# `Reexport.jl` but that is not supported right now:
+# https://github.com/simonster/Reexport.jl/issues/27
+# https://github.com/simonster/Reexport.jl/issues/39
+for name in names(ITensorMPS)
+  if name ≠ :ITensorMPS
+    @eval using .ITensorMPS: $name
+    @eval export $name
+  end
+end
+include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
 using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
-
-#####################################
-# Trotter-Suzuki decomposition
-#
-include("Ops/trotter.jl")
-
-#####################################
-# ITensorChainRules
-#
-include("ITensorChainRules/ITensorChainRules.jl")
-
-#####################################
-# ITensorNetworkMaps
-#
-include("ITensorNetworkMaps/ITensorNetworkMaps.jl")
-
-#####################################
-# ITensorVisualizationCore
-#
-include("ITensorVisualizationCore/ITensorVisualizationCore.jl")
+include("../ext/ITensorsChainRulesCoreExt/ITensorsChainRulesCoreExt.jl")
+include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
+# TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore, ...`.
 using .ITensorVisualizationCore
-
-#####################################
-# Deprecations
-#
+using .ITensorVisualizationCore:
+  @visualize,
+  @visualize!,
+  @visualize_noeval,
+  @visualize_noeval!,
+  @visualize_sequence,
+  @visualize_sequence_noeval
+export @visualize,
+  @visualize!,
+  @visualize_noeval,
+  @visualize_noeval!,
+  @visualize_sequence,
+  @visualize_sequence_noeval
 include("deprecated.jl")
-
-#####################################
-# Argument parsing
-#
 include("argsdict/argsdict.jl")
-
-#####################################
-# Package compilation
-#
 include("packagecompile/compile.jl")
-
-#####################################
-# Developer tools, for internal
-# use only
-#
 include("developer_tools.jl")
 
 using PackageExtensionCompat: @require_extensions
@@ -218,13 +199,4 @@ function __init__()
   @require_extensions
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 end
-
-#####################################
-# Precompile certain functions
-#
-#if Base.VERSION >= v"1.4.2"
-#  include("precompile.jl")
-#  _precompile_()
-#end
-
-end # module ITensors
+end

@@ -6,7 +6,6 @@
 # to automate the process.
 using Adapt
 using BitIntegers
-using ChainRulesCore
 using Compat
 using DocStringExtensions
 using Functors
@@ -14,11 +13,9 @@ using IsApprox
 using LinearAlgebra
 using NDTensors
 using NDTensors.RankFactorization: Spectrum, eigs, entropy, truncerror
-using PackageCompiler
 using Pkg
 using Printf
 using Random
-using Reexport
 using SerializedElementArrays
 using StaticArrays
 using TimerOutputs

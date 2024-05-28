@@ -30,7 +30,7 @@ end
 
   @testset "Threaded contraction" begin
     i = Index([QN(0) => 500, QN(1) => 500])
-    A = randomITensor(i', dag(i))
+    A = random_itensor(i', dag(i))
 
     enabled = ITensors.disable_threaded_blocksparse()
     R = A' * A
@@ -60,8 +60,8 @@ end
 
   @testset "Contraction resulting in no blocks with threading bug" begin
     i = Index([QN(0) => 1, QN(1) => 1])
-    A = emptyITensor(i', dag(i))
-    B = emptyITensor(i', dag(i))
+    A = ITensor(i', dag(i))
+    B = ITensor(i', dag(i))
     A[i' => 1, i => 1] = 11.0
     B[i' => 2, i => 2] = 22.0
 

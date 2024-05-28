@@ -104,12 +104,12 @@ using ITensors # hide
 k = Index(4,"index_k")
 m = Index(2,"index_m")
 
-T = randomITensor(k,m)
+T = random_itensor(k,m)
 @show T
 display(T) # hide
 ```
 
-Here we used the `randomITensor` constructor to fill T with random elements
+Here we used the `random_itensor` constructor to fill T with random elements
 but we could make an ITensor some other way too.
 
 Now to convert `T` into a regular Julia array `A`, use the [`Array`](@ref) constructor
@@ -144,9 +144,9 @@ i = Index(3,"i")
 j = Index(2,"j")
 k = Index(4,"k")
 
-A = randomITensor(i,j,k)
-B = randomITensor(i,j,k)
-C = randomITensor(k,i,j)
+A = random_itensor(i,j,k)
+B = random_itensor(i,j,k)
+C = random_itensor(k,i,j)
 ```
 Above we have initialized these ITensors to have random elements, just for the sake of this example.
 
@@ -174,7 +174,7 @@ ITensors support Julia broadcasting operations, making it quite easy to carry ou
 i = Index(2,"i")
 j = Index(3,"j")
 
-A = randomITensor(i,j)
+A = random_itensor(i,j)
 ```
 
 Here are some examples of basic element-wise operations we can do using Julia's dotted operator broadcasting syntax.
@@ -267,7 +267,7 @@ i = Index(4,"i")
 j = Index(3,"j")
 l = Index(4,"l")
 
-A = randomITensor(i,j,l)
+A = random_itensor(i,j,l)
 ```
 
 and we want to trace `A` by summing over the indices `i` and `l` locked together,
@@ -354,7 +354,7 @@ i = Index(3,"i")
 j = Index(4,"j")
 k = Index(5,"k")
 
-T = randomITensor(i,j,k)
+T = random_itensor(i,j,k)
 
 U,S,V = svd(T,(i,k))
 
@@ -388,7 +388,7 @@ Let us revisit the example above, but also provide some of these accuracy parame
 i = Index(10,"i")
 j = Index(40,"j")
 k = Index(20,"k")
-T = randomITensor(i,j,k)
+T = random_itensor(i,j,k)
 
 U,S,V = svd(T,(i,k),cutoff=1E-2)
 ```
@@ -412,7 +412,7 @@ i = Index(10,"i");
 j = Index(40,"j");
 k = Index(20,"k");
 
-T = randomITensor(i,j,k)
+T = random_itensor(i,j,k)
 
 U,S,V = svd(T,(i,k),cutoff=1E-2)
 
@@ -434,7 +434,7 @@ can do this as follows:
 ![](itensor_factorization_figures/QR_Ex1.png)
 
 ```julia
-T = randomITensor(i,j,k)
+T = random_itensor(i,j,k)
 Q,R = qr(T,(i,k);positive=true)
 ```
 
@@ -463,7 +463,7 @@ nothing # hide
 
 Then if we have an ITensor
 ```@example combiner
-T = randomITensor(i,j,k)
+T = random_itensor(i,j,k)
 @show inds(T)
 ```
 we can combine indices `i` and `k` by contracting with the combiner:
@@ -503,7 +503,7 @@ UT = dag(C) * CT
 
 
 
-!!! info 
+!!! info
     Make sure to install the HDF5 package to use this feature. (Run `julia> ] add HDF5` in the Julia REPL console.)
 
 Saving ITensors to disk can be very useful. For example, you

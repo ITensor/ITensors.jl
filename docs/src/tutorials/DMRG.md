@@ -25,7 +25,7 @@ discuss the main steps. If you need help running the code below, see the getting
 started page on [Running ITensor and Julia Codes](@ref).
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 let
   N = 100
   sites = siteinds("S=1",N)
@@ -38,13 +38,13 @@ let
   end
   H = MPO(os,sites)
 
-  psi0 = randomMPS(sites,10)
+  psi0 = random_mps(sites;linkdims=10)
 
   nsweeps = 5
   maxdim = [10,20,100,100,200]
   cutoff = [1E-10]
 
-  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+  energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 
   return
 end
@@ -56,7 +56,7 @@ end
 The first two lines
 
 ```@example siteinds; continued=true
-using ITensors # hide
+using ITensors, ITensorMPS
 N = 100
 sites = siteinds("S=1",N)
 ```
@@ -92,7 +92,7 @@ physical indices given by the array `sites`.
 The line
 
 ```julia
-psi0 = randomMPS(sites,10)
+psi0 = random_mps(sites;linkdims=10)
 ```
 
 constructs an MPS `psi0` which has the physical indices `sites` and a bond dimension of 10.
@@ -116,7 +116,7 @@ specified than sweeps, the last value is used for all remaining sweeps).
 Finally the call
 
 ```julia
-energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+energy,psi = dmrg(H,psi0;nsweeps,maxdim,cutoff)
 ```
 
 runs the DMRG algorithm included in ITensor, using `psi0` as an

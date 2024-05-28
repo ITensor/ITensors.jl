@@ -6,11 +6,6 @@ for DMRG calculations such as measuring custom
 local observables at each step and stopping DMRG
 early if certain energy convergence conditions are met.
 
-In addition to the example code below, more detailed
-example code showing sample usage of DMRGObserver is included
-in the ITensor source, in the file `1d_ising_with_observer.jl`
-under the folder `examples/dmrg`.
-
 ## Sample Usage
 
 In the following example, we have already made a Hamiltonian MPO `H`

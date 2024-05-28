@@ -12,17 +12,17 @@ Random.seed!(1234)
 
   is = (i, j, k)
 
-  A = randomITensor(is..., dag(α))
+  A = random_itensor(is..., dag(α))
   B = ITensor(2, α, α', α'')
 
   C = A * B
   @test C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
 
-  C = emptyITensor(is..., α', α'')
+  C = ITensor(is..., α', α'')
   C .= A .* B
   @test C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
 
-  C = emptyITensor(shuffle([(is..., α', α'')...])...)
+  C = ITensor(shuffle([(is..., α', α'')...])...)
   C .= A .* B
   @test C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
 end
@@ -33,8 +33,8 @@ end
     i = Index(2, "i")
     j = Index(3, "j")
     α = Index(1, "α")
-    A = randomITensor(ElA, i, j, α')
-    B = randomITensor(ElB, dag(α)', α)
+    A = random_itensor(ElA, i, j, α')
+    B = random_itensor(ElB, dag(α)', α)
     R = ITensor(promote_type(ElA, ElB), i, j, α)
 
     R .= NaN
@@ -56,8 +56,8 @@ end
     i = Index(2, "i")
     j = Index(3, "j")
     α = Index(1, "α")
-    A = randomITensor(ElA, i, j, α')
-    B = randomITensor(ElB, dag(α)', α)
+    A = random_itensor(ElA, i, j, α')
+    B = random_itensor(ElB, dag(α)', α)
     R = ITensor(promote_type(ElA, ElB), j, i, α)
 
     R .= NaN
@@ -79,8 +79,8 @@ end
     i = Index(2, "i")
     j = Index(3, "j")
     α = Index(2, "α")
-    A = randomITensor(ElA, i, j, α')
-    B = randomITensor(ElB, dag(α)', α)
+    A = random_itensor(ElA, i, j, α')
+    B = random_itensor(ElB, dag(α)', α)
     R = ITensor(promote_type(ElA, ElB), j, i, α)
 
     R .= NaN

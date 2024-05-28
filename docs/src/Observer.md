@@ -30,6 +30,8 @@ For example, let's make a type called `DemoObserver`
 as:
 
 ```julia
+using ITensors, ITensorMPS
+
 mutable struct DemoObserver <: AbstractObserver
    energy_tol::Float64
    last_energy::Float64
@@ -137,7 +139,7 @@ energy, psi = dmrg(H,psi0,sweeps; observer=obs, outputlevel=1)
 ## Complete Sample Code
 
 ```julia
-using ITensors
+using ITensors, ITensorMPS
 
 mutable struct DemoObserver <: AbstractObserver
    energy_tol::Float64
@@ -182,7 +184,7 @@ let
     a += 0.5,"S-",n,"S+",n+1
   end
   H = MPO(a,s)
-  psi0 = randomMPS(s,4)
+  psi0 = random_mps(s;linkdims=4)
 
   nsweeps = 5
   cutoff = 1E-8

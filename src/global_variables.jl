@@ -167,24 +167,6 @@ $(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
 disable_threaded_blocksparse() = NDTensors._disable_threaded_blocksparse()
 
 #
-# Turn enable or disable combining QN ITensors before contracting
-#
-
-const _using_combine_contract = Ref(false)
-
-using_combine_contract() = _using_combine_contract[]
-
-function enable_combine_contract()
-  _using_combine_contract[] = true
-  return nothing
-end
-
-function disable_combine_contract()
-  _using_combine_contract[] = false
-  return nothing
-end
-
-#
 # Turn debug checks on and off
 #
 
@@ -226,39 +208,4 @@ end
 function disable_contraction_sequence_optimization()
   _using_contraction_sequence_optimization[] = false
   return nothing
-end
-
-#
-# Turn the strict tags checking on and off
-#
-
-const _using_strict_tags = Ref(false)
-
-"""
-$(TYPEDSIGNATURES)
-See if checking for overflow of the number of tags of a TagSet
-or the number of characters of a tag is enabled or disabled.
-
-See also [`ITensors.set_strict_tags!`](@ref).
-"""
-function using_strict_tags()
-  return _using_strict_tags[]
-end
-
-"""
-$(TYPEDSIGNATURES)
-Enable or disable checking for overflow of the number of tags of a TagSet
-or the number of characters of a tag. If enabled (set to `true`), an error
-will be thrown if overflow occurs, otherwise the overflow will be ignored
-and the extra tags or tag characters will be dropped. This could cause
-unexpected bugs if tags are being used to distinguish Index objects that
-have the same ids and prime levels, but that is generally discouraged and
-should only be used if you know what you are doing.
-
-See also [`ITensors.using_strict_tags`](@ref).
-"""
-function set_strict_tags!(enable::Bool)
-  previous = using_strict_tags()
-  _using_strict_tags[] = enable
-  return previous
 end

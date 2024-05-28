@@ -79,7 +79,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
 
     i = Index(space)
     j = Index(space)
-    A = randomITensor(_eltype, i, j)
+    A = random_itensor(_eltype, i, j)
 
     U, S, V = svd(A, i, j; cutoff)
     @test eltype(U) <: _eltype
@@ -119,7 +119,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
 
     i = Index(space)
     j = Index(space)
-    A = randomITensor(i, j)
+    A = random_itensor(i, j)
 
     X, Y = factorize(A, i, j; cutoff)
     @test X * Y ≈ A
@@ -178,7 +178,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     space in (2, [QN(0) => 1, QN(1) => 1])
 
     i = Index(space)
-    A = randomITensor(eltype, i', dag(i))
+    A = random_itensor(eltype, i', dag(i))
     @test Base.eltype(A) === eltype
     U, S, V = svd(A, i'; maxdim=1)
     @test Base.eltype(U) === eltype
@@ -192,7 +192,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     r1, r2, r3 = Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags="r1", dir=ITensors.Out),
     Index(QN("Sz", 2) => 1, QN("Sz", 1) => 1; tags="r2", dir=ITensors.In),
     Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags="r3", dir=ITensors.In)
-    A = randomITensor(l1, l2, r1, r2, r3)
+    A = random_itensor(l1, l2, r1, r2, r3)
 
     for leftdir in [ITensors.Out, ITensors.In]
       for rightdir in [ITensors.Out, ITensors.In]

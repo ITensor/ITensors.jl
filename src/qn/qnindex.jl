@@ -1,3 +1,7 @@
+using .QuantumNumbers:
+  QuantumNumbers, Arrow, Neither, Out, have_same_mods, have_same_qns, removeqn
+using .SiteTypes: SiteTypes
+using .TagSets: TagSets
 
 const QNBlock = Pair{QN,Int64}
 
@@ -37,7 +41,7 @@ function (qn1::QNBlock + qn2::QNBlock)
   return QNBlock(qn(qn1), blockdim(qn1) + blockdim(qn2))
 end
 
-function removeqn(qn_block::QNBlock, qn_name::String)
+function QuantumNumbers.removeqn(qn_block::QNBlock, qn_name::String)
   return removeqn(qn(qn_block), qn_name) => blockdim(qn_block)
 end
 
@@ -65,7 +69,7 @@ function mergeblocks(qns::QNBlocks)
   return qnsC
 end
 
-function removeqn(space::QNBlocks, qn_name::String; mergeblocks=true)
+function QuantumNumbers.removeqn(space::QNBlocks, qn_name::String; mergeblocks=true)
   space = QNBlocks([removeqn(qn_block, qn_name) for qn_block in space])
   if mergeblocks
     space = ITensors.mergeblocks(space)
@@ -93,7 +97,7 @@ symmetrystyle(::NonQN, ::HasQNs) = HasQNs()
 
 hasqns(::QNBlocks) = true
 
-function have_same_qns(qnblocks::QNBlocks)
+function QuantumNumbers.have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks, 1)
   for n in 2:nblocks(qnblocks)
     !have_same_qns(qn1, qn(qnblocks, n)) && return false
@@ -101,7 +105,7 @@ function have_same_qns(qnblocks::QNBlocks)
   return true
 end
 
-function have_same_mods(qnblocks::QNBlocks)
+function QuantumNumbers.have_same_mods(qnblocks::QNBlocks)
   qn1 = qn(qnblocks, 1)
   for n in 2:nblocks(qnblocks)
     !have_same_mods(qn1, qn(qnblocks, n)) && return false
@@ -210,7 +214,7 @@ end
 
 function block(iv::Pair{<:Index})
   i = ind(iv)
-  v = val(iv)
+  v = SiteTypes.val(iv)
   return block(space(i), v)
 end
 
@@ -478,7 +482,7 @@ function combineblocks(i::QNIndex)
 end
 
 removeqns(i::QNIndex) = setdir(setspace(i, dim(i)), Neither)
-function removeqn(i::QNIndex, qn_name::String; mergeblocks=true)
+function QuantumNumbers.removeqn(i::QNIndex, qn_name::String; mergeblocks=true)
   return setspace(i, removeqn(space(i), qn_name; mergeblocks))
 end
 mergeblocks(i::QNIndex) = setspace(i, mergeblocks(space(i)))
@@ -534,7 +538,8 @@ function show(io::IO, i::QNIndex)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
     print(
-      io, "(dim=$(dim(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))"
+      io,
+      "(dim=$(dim(i))|id=$(idstr)|\"$(TagSets.tagstring(tags(i)))\")$(primestring(plev(i)))",
     )
   else
     print(io, "(dim=$(dim(i))|id=$(idstr))$(primestring(plev(i)))")

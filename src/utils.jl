@@ -17,8 +17,8 @@ end
 # Directory helper functions (useful for
 # running examples)
 src_dir() = dirname(pathof(@__MODULE__))
-pkg_dir() = joinpath(src_dir(), "..")
-examples_dir() = joinpath(pkg_dir(), "examples")
+pkg_dir() = joinpath(dirname(pathof(@__MODULE__)), "..")
+examples_dir() = joinpath(dirname(pathof(@__MODULE__)), "lib", "ITensorMPS", "examples")
 
 # Determine version and uuid of the package
 function _parse_project_toml(field::String)

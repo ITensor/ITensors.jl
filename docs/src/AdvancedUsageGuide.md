@@ -64,7 +64,7 @@ and start typing ITensor commands. For example:
 julia> i = Index(2, "i")
 (dim=2|id=355|"i")
 
-julia> A = randomITensor(i, i')
+julia> A = random_itensor(i, i')
 ITensor ord=2 (dim=2|id=355|"i") (dim=2|id=355|"i")'
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -141,6 +141,8 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 A common place you might accidentally come across this is when
 you are creating a Hamiltonian with `OpSum`:
 ```julia
+julia> using ITensors, ITensorMPS
+
 julia> N = 4;
 
 julia> sites = siteinds("S=1/2",N);
@@ -180,7 +182,7 @@ Julia provides many tools for searching for documentation interactively at the R
 julia> using ITensors
 
 julia> ?ITensor
-search: ITensor ITensors itensor emptyITensor randomITensor
+search: ITensor ITensors itensor random_itensor
 
   An ITensor is a tensor whose interface is independent of its
   memory layout. Therefore it is not necessary to know the ordering
@@ -194,7 +196,7 @@ search: ITensor ITensors itensor emptyITensor randomITensor
   julia> i = Index(2, "i")
   (dim=2|id=287|"i")
 
-  julia> A = randomITensor(i', i)
+  julia> A = random_itensor(i', i)
   ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
   NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -220,27 +222,7 @@ julia> fieldnames(ITensor)
 ```
 which shows the fields of a type. Note that in general the specific names of the fields and structures of types may change (we consider those to be internal details), however we often make functions to access the fields of a type that have the same name as the field, so it is a good place to get started. For example, you can access the storage and indices of an ITensor `A` with the functions `store(A)` and `inds(A)`.
 
-Another helpful function is `apropos`, which search through all documentation for a string (ignoring the case) and prints a list of all types and methods with documentation that contain the string. For example:
-```julia
-julia> apropos("IndexSet")
-ITensors.IndexSet
-ITensors.push
-ITensors.insertat
-ITensors.getfirst
-ITensors.commoninds
-ITensors.pushfirst
-NDTensors.mindim
-[...]
-```
-This can often return too much information. A helpful way to narrow down the search is with regular expressions, for example:
-```julia
-julia> apropos(r"ITensor.*IndexSet")
-ITensors.block
-ITensors.hasinds
-ITensors.ITensor
-NDTensors.inds
-```
-where the notation `r"..."` is Julia notation for making a string that will be interpreted as a [regular expression](https://docs.julialang.org/en/v1/manual/strings/#Regular-Expressions). Here, we are searching for any documentation that contains the string "ITensor" followed at some point by "IndexSet". The notation `.*` is regular expression notation for matching any number of any type of character.
+Another helpful function is `apropos`, which search through all documentation for a string (ignoring the case) and prints a list of all types and methods with documentation that contain the string.
 
 Based on the `apropos` function, we can make some helper functions that may be useful. For example:
 ```julia
@@ -352,7 +334,7 @@ julia> include("my_itensor_script.jl");
 
 julia> i = Index(2; tags="i");
 
-julia> A = randomITensor(i', i);
+julia> A = random_itensor(i', i);
 
 julia> norm2(A)
 [...]
@@ -393,7 +375,7 @@ julia> include("my_itensor_project.jl");
 
 julia> i = Index(2; tags="i");
 
-julia> A = randomITensor(i', i);
+julia> A = random_itensor(i', i);
 
 julia> norm2(A)
 [...]
@@ -527,7 +509,7 @@ julia> using ITensors
 julia> i = Index(2)
 (dim=2|id=263)
 
-julia> A = randomITensor(i)
+julia> A = random_itensor(i)
 ITensor ord=1 (dim=2|id=263)
 NDTensors.Dense{Float64,Array{Float64,1}}
 
@@ -562,7 +544,7 @@ using Test
 
 @testset "MyITensorsPkg.jl" begin
   i = Index(2)
-  A = randomITensor(i)
+  A = random_itensor(i)
   @test isapprox(norm2(A), norm(A)^2)
 end
 ```
@@ -822,7 +804,7 @@ julia> @time using ITensors
 julia> @time i = Index(2);
   0.000684 seconds (23 allocations: 20.328 KiB)
 
-julia> @time A = randomITensor(i', i);
+julia> @time A = random_itensor(i', i);
   0.071022 seconds (183.24 k allocations: 9.715 MiB)
 
 julia> @time svd(A, i');
@@ -853,7 +835,7 @@ julia> @time using ITensors
 julia> @time i = Index(2);
   0.000656 seconds (23 allocations: 20.328 KiB)
 
-julia> @time A = randomITensor(i', i);
+julia> @time A = random_itensor(i', i);
   0.000007 seconds (7 allocations: 576 bytes)
 
 julia> @time svd(A, i');
@@ -881,7 +863,7 @@ julia> using BenchmarkTools;
 
 julia> i = Index(100, "i");
 
-julia> A = randomITensor(i, i');
+julia> A = random_itensor(i, i');
 
 julia> @btime 2*$A;
   4.279 μs (8 allocations: 78.73 KiB)
@@ -910,7 +892,7 @@ type stable, like `getindex`, is not, for example:
 ```julia
 julia> i = Index(2, "i");
 
-julia> A = randomITensor(i, i');
+julia> A = random_itensor(i, i');
 
 julia> @code_warntype A[i=>1, i'=>2]
 Variables
@@ -949,7 +931,7 @@ This allows us to have code like:
 julia> i = Index(2, "i")
 (dim=2|id=811|"i")
 
-julia> A = emptyITensor(i', i);
+julia> A = ITensor(i', i);
 
 julia> @show A;
 A = ITensor ord=2
@@ -989,7 +971,7 @@ julia> d = 10_000;
 
 julia> i = Index(d);
 
-julia> @btime myscale!(A, 2) setup = (A = randomITensor(i));
+julia> @btime myscale!(A, 2) setup = (A = random_itensor(i));
   2.169 ms (117958 allocations: 3.48 MiB)
 ```
 However, this is fast:
@@ -1006,7 +988,7 @@ julia> @btime myscale!(A, 2) setup = (A = randn(d));
 julia> myscale2!(A::ITensor, x::Number) = myscale!(array(A), x)
 myscale2! (generic function with 1 method)
 
-julia> @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+julia> @btime myscale2!(A, 2) setup = (A = random_itensor(i));
   3.571 μs (2 allocations: 112 bytes)
 ```
 How does this work? It relies on a "function barrier" technique.
@@ -1037,8 +1019,8 @@ memory of the output tensor of an operation is preallocated.
 The main way to access this in ITensor is through broadcasting.
 For example:
 ```julia
-A = randomITensor(i, i')
-B = randomITensor(i', i)
+A = random_itensor(i, i')
+B = random_itensor(i', i)
 A .+= 2 .* B
 ```
 Internally, this is rewritten by Julia as a call to `broadcast!`.
@@ -1119,7 +1101,7 @@ julia> @btime myscale!(A, 2) setup = (A = Tensor(d));
 julia> myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
 myscale2! (generic function with 1 method)
 
-julia> @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+julia> @btime myscale2!(A, 2) setup = (A = random_itensor(i));
   3.549 μs (2 allocations: 112 bytes)
 ```
 A very efficient function is written for the Tensor type. Then,

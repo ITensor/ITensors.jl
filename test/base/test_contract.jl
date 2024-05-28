@@ -12,22 +12,22 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
   l = Index(ml, "l")
   α = Index(mα, "alpha")
   @testset "Test contract ITensors" begin
-    A = randomITensor(T)
-    B = randomITensor(T)
-    Ai = randomITensor(T, i)
-    Bi = randomITensor(T, i)
-    Aj = randomITensor(T, j)
-    Aij = randomITensor(T, i, j)
-    Bij = randomITensor(T, i, j)
-    Aik = randomITensor(T, i, k)
-    Ajk = randomITensor(T, j, k)
-    Ajl = randomITensor(T, j, l)
-    Akl = randomITensor(T, k, l)
-    Aijk = randomITensor(T, i, j, k)
-    Ajkl = randomITensor(T, j, k, l)
-    Aikl = randomITensor(T, i, k, l)
-    Aklα = randomITensor(T, k, l, α)
-    Aijkl = randomITensor(T, i, j, k, l)
+    A = random_itensor(T)
+    B = random_itensor(T)
+    Ai = random_itensor(T, i)
+    Bi = random_itensor(T, i)
+    Aj = random_itensor(T, j)
+    Aij = random_itensor(T, i, j)
+    Bij = random_itensor(T, i, j)
+    Aik = random_itensor(T, i, k)
+    Ajk = random_itensor(T, j, k)
+    Ajl = random_itensor(T, j, l)
+    Akl = random_itensor(T, k, l)
+    Aijk = random_itensor(T, i, j, k)
+    Ajkl = random_itensor(T, j, k, l)
+    Aikl = random_itensor(T, i, k, l)
+    Aklα = random_itensor(T, k, l, α)
+    Aijkl = random_itensor(T, i, j, k, l)
     @testset "Test contract ITensor (Scalar*Scalar -> Scalar)" begin
       C = A * B
       @test scalar(C) ≈ scalar(A) * scalar(B)
@@ -242,8 +242,8 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       end
     end
     @testset "Test contract in-place ITensors (4-Tensor*Matrix -> 4-Tensor)" begin
-      A = randomITensor(T, (j, i))
-      B = randomITensor(T, (j, k, l, α))
+      A = random_itensor(T, (j, i))
+      B = random_itensor(T, (j, k, l, α))
       C = ITensor(zero(T), (i, k, α, l))
       ITensors.contract!(C, B, A, 1.0, 0.0)
       ITensors.contract!(C, B, A, 1.0, 1.0)
@@ -259,7 +259,7 @@ end
     i = Index(2, "i")
     j = Index(2, "j")
     x = rand(Float64)
-    A = randomITensor(ComplexF64, i, j)
+    A = random_itensor(ComplexF64, i, j)
     B = x * A
     for ii in dim(i), jj in dim(j)
       @test B[i => ii, j => jj] == x * A[i => ii, j => jj]
@@ -269,7 +269,7 @@ end
     i = Index(2, "i")
     j = Index(2, "j")
     x = rand(ComplexF64)
-    A = randomITensor(Float64, i, j)
+    A = random_itensor(Float64, i, j)
     B = x * A
     for ii in dim(i), jj in dim(j)
       @test B[i => ii, j => jj] == x * A[i => ii, j => jj]
@@ -279,8 +279,8 @@ end
     i = Index(2, "i")
     j = Index(2, "j")
     k = Index(2, "k")
-    A = randomITensor(Float64, i, j)
-    B = randomITensor(ComplexF64, j, k)
+    A = random_itensor(Float64, i, j)
+    B = random_itensor(ComplexF64, j, k)
     C = A * B
     @test array(permute(C, i, k)) ≈ array(A) * array(B)
   end
@@ -288,8 +288,8 @@ end
     i = Index(2, "i")
     j = Index(2, "j")
     k = Index(2, "k")
-    A = randomITensor(ComplexF64, i, j)
-    B = randomITensor(Float64, j, k)
+    A = random_itensor(ComplexF64, i, j)
+    B = random_itensor(Float64, j, k)
     C = A * B
     @test array(permute(C, i, k)) ≈ array(A) * array(B)
   end
@@ -297,8 +297,8 @@ end
   @testset "Outer Product Real ITensor * Complex ITensor" begin
     i = Index(2, "i")
     j = Index(2, "j")
-    A = randomITensor(Float64, i)
-    B = randomITensor(ComplexF64, j)
+    A = random_itensor(Float64, i)
+    B = random_itensor(ComplexF64, j)
     C = A * B
     @test array(permute(C, i, j)) ≈ kron(array(A), transpose(array(B)))
   end
@@ -306,8 +306,8 @@ end
   @testset "Outer Product: Complex ITensor * Real ITensor" begin
     i = Index(2, "i")
     j = Index(2, "j")
-    A = randomITensor(ComplexF64, i)
-    B = randomITensor(Float64, j)
+    A = random_itensor(ComplexF64, i)
+    B = random_itensor(Float64, j)
     C = A * B
     @test array(permute(C, i, j)) ≈ kron(array(A), transpose(array(B)))
   end

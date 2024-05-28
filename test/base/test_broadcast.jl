@@ -2,8 +2,8 @@ using ITensors, Test
 
 @testset "ITensor broadcast syntax" begin
   i = Index(2, "i")
-  A = randomITensor(i, i')
-  B = randomITensor(i', i)
+  A = random_itensor(i, i')
+  B = random_itensor(i', i)
   α = 2
   β = 3
 
@@ -152,7 +152,7 @@ using ITensors, Test
   end
 
   @testset "Addition errors" begin
-    C = randomITensor(i, i')
+    C = random_itensor(i, i')
     @test_throws ErrorException C .= A .+ B
     @test_throws ErrorException C = A .+ B
     @test_throws ErrorException C .= A .* B
@@ -163,9 +163,9 @@ using ITensors, Test
     jj = Index(2; tags="jj")
     kk = Index(2; tags="kk")
 
-    AA = randomITensor(ii, jj)
-    BB = randomITensor(kk, jj)
-    CC = randomITensor(kk, ii)
+    AA = random_itensor(ii, jj)
+    BB = random_itensor(kk, jj)
+    CC = random_itensor(kk, ii)
 
     R = copy(CC)
     R .= AA .* BB
@@ -213,8 +213,8 @@ using ITensors, Test
 
   @testset "Some other operations" begin
     i = Index(2)
-    A = randomITensor(i)
-    B = randomITensor(i)
+    A = random_itensor(i)
+    B = random_itensor(i)
 
     absA = abs.(A)
 
@@ -286,8 +286,8 @@ using ITensors, Test
 
   @testset "Hadamard product" begin
     i = Index(2, "i")
-    A = randomITensor(i, i')
-    B = randomITensor(i', i)
+    A = random_itensor(i, i')
+    B = random_itensor(i', i)
 
     C = A ⊙ B
     @test C[1, 1] ≈ A[1, 1] * B[1, 1]
@@ -302,7 +302,7 @@ using ITensors, Test
     @test C[2, 1] ≈ A[2, 1] * B[1, 2]
     @test C[2, 2] ≈ A[2, 2] * B[2, 2]
 
-    D = randomITensor(i', Index(2))
+    D = random_itensor(i', Index(2))
     @test_throws ErrorException A ⊙ D
   end
 end

@@ -1,4 +1,4 @@
-using ITensors
+using ITensors, ITensorMPS
 
 let
   N = 100

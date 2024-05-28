@@ -10,7 +10,7 @@ seed!(12345)
   k = Index(4)
   l = Index(5)
 
-  A₀ = randomITensor(i, j, k, l)
+  A₀ = random_itensor(i, j, k, l)
   a = randn(dim(l), dim(k))
 
   A = copy(A₀)
