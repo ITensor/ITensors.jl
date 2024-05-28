@@ -1,16 +1,17 @@
+using Adapt: adapt
+using GPUArraysCore: AbstractGPUArray
 using NDTensors: NDTensors, DenseTensor, DiagTensor, contract!, dense, inds, Tensor
 using NDTensors.Expose: Exposed, expose, unexpose
 using NDTensors.TypeParameterAccessors: parenttype
-using CUDA: CuArray
 
 ## In this function we convert the DiagTensor to a dense tensor and
 ## Feed it back into contract
 function NDTensors.contract!(
-  output_tensor::Exposed{<:CuArray,<:DenseTensor},
+  output_tensor::Exposed{<:AbstractGPUArray,<:DenseTensor},
   labelsoutput_tensor,
   tensor1::Exposed{<:Any,<:DiagTensor},
   labelstensor1,
-  tensor2::Exposed{<:CuArray,<:DenseTensor},
+  tensor2::Exposed{<:AbstractGPUArray,<:DenseTensor},
   labelstensor2,
   α::Number=one(Bool),
   β::Number=zero(Bool),
@@ -31,9 +32,9 @@ function NDTensors.contract!(
 end
 
 function NDTensors.contract!(
-  output_tensor::Exposed{<:CuArray,<:DenseTensor},
+  output_tensor::Exposed{<:AbstractGPUArray,<:DenseTensor},
   labelsoutput_tensor,
-  tensor1::Exposed{<:CuArray,<:DenseTensor},
+  tensor1::Exposed{<:AbstractGPUArray,<:DenseTensor},
   labelstensor1,
   tensor2::Exposed{<:Any,<:DiagTensor},
   labelstensor2,

@@ -1,4 +1,3 @@
-using GPUArraysCore: AbstractGPUArray, @allowscalar
 using NDTensors.Expose: Exposed, unexpose
 using NDTensors.TypeParameterAccessors:
   TypeParameterAccessors, type_parameter, set_type_parameter

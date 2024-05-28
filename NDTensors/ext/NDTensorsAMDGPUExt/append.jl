@@ -1,5 +1,4 @@
-using GPUArraysCore: @allowscalar
-using AMDGPU: ROCArray
+using AMDGPU: @allowscalar, ROCArray
 using NDTensors.Expose: Exposed, unexpose
 
 ## Warning this append function uses scalar indexing and is therefore extremely slow

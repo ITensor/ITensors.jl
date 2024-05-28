@@ -1,5 +1,4 @@
-using CUDA: CuArray
-using GPUArraysCore: @allowscalar
+using CUDA: @allowscalar, CuArray
 using NDTensors: NDTensors
 using NDTensors.Expose: Exposed, expose, unexpose
 

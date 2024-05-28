@@ -2,7 +2,6 @@ module NDTensorsCUDAExt
 include("append.jl")
 include("default_kwargs.jl")
 include("copyto.jl")
-include("contract.jl")
 include("set_types.jl")
 include("iscu.jl")
 include("adapt.jl")
