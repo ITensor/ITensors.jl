@@ -26,7 +26,7 @@ for type in (:Algorithm, :Backend)
     parameters(backend::$type) = getfield(backend, :kwargs)
 
     function Base.show(io::IO, backend::$type)
-      return print(io, "$type type ", backend_string(backend), ", ", parameters(backend))
+      return print(io, "$($type) type ", backend_string(backend), ", ", parameters(backend))
     end
     Base.print(io::IO, backend::$type) =
       print(io, backend_string(backend), ", ", parameters(backend))
