@@ -18,6 +18,11 @@ using Test: @inferred, @test, @testset, @test_throws
     # using GradedAxes interface
     @test gradedisequal(fusion_product(z0, z0), gradedrange([z0 => 1]))
     @test gradedisequal(fusion_product(z0, z1), gradedrange([z1 => 1]))
+
+    # test different input number
+    @test gradedisequal(fusion_product(z0), gradedrange([z0 => 1]))
+    @test gradedisequal(fusion_product(z0, z0, z0), gradedrange([z0 => 1]))
+    @test gradedisequal(fusion_product(z0, z0, z0, z0), gradedrange([z0 => 1]))
     @test block_boundaries(gradedrange([z1 => 1])) == [1]
   end
   @testset "U(1) fusion rules" begin
@@ -44,6 +49,10 @@ using Test: @inferred, @test, @testset, @test_throws
     @test gradedisequal((@inferred j1 ⊗ j2), gradedrange([j2 => 1]))
     @test (@inferred quantum_dimension(j1 ⊗ j2)) == 2
     @test block_boundaries(j1 ⊗ j2) == [2]
+
+    @test gradedisequal(fusion_product(j2), gradedrange([j2 => 1]))
+    @test gradedisequal(fusion_product(j2, j1), gradedrange([j2 => 1]))
+    @test gradedisequal(fusion_product(j2, j1, j1), gradedrange([j2 => 1]))
   end
 
   @testset "Fibonacci fusion rules" begin

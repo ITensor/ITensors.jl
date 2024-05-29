@@ -115,8 +115,13 @@ end
 
 # fusion_product generalizes tensor_product to non-abelian groups and fusion categories
 # in the case of abelian groups, it is equivalent to tensor_product + applying blockmergesortperm
-function fusion_product(a1::AbstractUnitRange, a2::AbstractUnitRange)
+function fusion_product(::AbstractUnitRange, ::AbstractUnitRange)
   return error("Not implemented")
+end
+
+# recursive fusion_product. Simpler than reduce + fix type stability issues with reduce
+function fusion_product(g1, g2, g3...)
+  return fusion_product(fusion_product(g1, g2), g3...)
 end
 
 # Handle dual. Always return a non-dual GradedUnitRange.

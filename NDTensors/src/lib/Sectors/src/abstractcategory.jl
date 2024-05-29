@@ -120,6 +120,13 @@ function GradedAxes.fusion_product(a, b)
   return GradedAxes.fusion_product(to_graded_axis(a), to_graded_axis(b))
 end
 
+# fusion_product with one input to be used in generic fusion_product(Tuple...)
+# TBD define fusion_product() = gradedrange([sector(())=>1])?
+GradedAxes.fusion_product(x) = GradedAxes.fusion_product(to_graded_axis(x))
+
+# product with trivial = easy handling of UnitRangeDual + sort and merge blocks
+GradedAxes.fusion_product(g::AbstractUnitRange) = GradedAxes.fusion_product(trivial(g), g)
+
 function GradedAxes.fusion_product(
   g1::BlockArrays.BlockedUnitRange, g2::BlockArrays.BlockedUnitRange
 )
