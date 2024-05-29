@@ -8,6 +8,7 @@ using NDTensors:
   blockdims,
   blockoffsets,
   blockview,
+  contract,
   data,
   dense,
   dims,
