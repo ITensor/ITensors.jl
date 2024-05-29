@@ -24,5 +24,6 @@ using NDTensors.AlgorithmSelection: AlgorithmSelection
   # Macro syntax.
   @test Algorithm"backend"(; x=2, y=3) === Algorithm("backend"; x=2, y=3)
   @test Backend"backend"(; x=2, y=3) === Backend("backend"; x=2, y=3)
+  @test isnothing(show(Algorithm("")))
 end
 end
