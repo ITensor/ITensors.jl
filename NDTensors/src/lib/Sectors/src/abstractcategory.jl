@@ -20,7 +20,7 @@ function trivial(type::Type)
   return error("`trivial` not defined for type $(type).")
 end
 
-istrivial(c::AbstractCategory) = (c == trivial(typeof(c)))
+istrivial(c::AbstractCategory) = (c == trivial(c))
 
 function category_label(c::AbstractCategory)
   return error("method `category_label` not defined for type $(typeof(c))")
