@@ -103,11 +103,11 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
   end
 
   @testset "Empty category" begin
-    s = CategoryProduct(())
+    s = sector(())
     @test (@inferred dual(s)) == s
     @test (@inferred s × s) == s
     @test (@inferred s ⊗ s) == s
-    @test (@inferred quantum_dimension(s)) == 0
+    @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred trivial(typeof(s))) == s
   end
 
@@ -363,7 +363,7 @@ end
     @test (@inferred dual(s)) == s
     @test (@inferred s × s) == s
     @test (@inferred s ⊗ s) == s
-    @test (@inferred quantum_dimension(s)) == 0
+    @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred trivial(typeof(s))) == s
   end
 
