@@ -26,9 +26,9 @@ function category_label(c::AbstractCategory)
   return error("method `category_label` not defined for type $(typeof(c))")
 end
 
-block_boundaries(g::AbstractUnitRange) = block_boundaries(SymmetryStyle(g), g)
-block_boundaries(::AbelianGroup, g) = GradedAxes.unlabel.(BlockArrays.blocklengths(g))
-function block_boundaries(::NonAbelianGroup, g)
+block_dimensions(g::AbstractUnitRange) = block_dimensions(SymmetryStyle(g), g)
+block_dimensions(::AbelianGroup, g) = GradedAxes.unlabel.(BlockArrays.blocklengths(g))
+function block_dimensions(::NonAbelianGroup, g)
   return Sectors.quantum_dimension.(GradedAxes.blocklabels(g)) .*
          BlockArrays.blocklengths(g)
 end
