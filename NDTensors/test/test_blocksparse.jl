@@ -284,7 +284,8 @@ using Test: @test, @test_throws, @testset
       A = dev(BlockSparseTensor{elt}([(2, 1), (1, 2)], [2, 2], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      Asvd = contract(contract(U, (1,-2), S, (-2, 3)), (1,-2), V, (3,-2))
+      @test @allowscalar Asvd ≈ A
       atol = default_rtol(elt)
     end
 
@@ -292,7 +293,8 @@ using Test: @test, @test_throws, @testset
       A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      Asvd = contract(contract(U, (1,-2), S, (-2, 3)), (1,-2), V, (3,-2))
+      @test @allowscalar Asvd ≈ A
       atol = default_rtol(elt)
     end
 
@@ -300,7 +302,8 @@ using Test: @test, @test_throws, @testset
       A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      Asvd = contract(contract(U, (1,-2), S, (-2, 3)), (1,-2), V, (3,-2))
+      @test @allowscalar Asvd ≈ A
       atol = default_rtol(elt)
     end
 
@@ -308,7 +311,8 @@ using Test: @test, @test_throws, @testset
       A = dev(BlockSparseTensor{elt}([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      Asvd = contract(contract(U, (1,-2), S, (-2, 3)), (1,-2), V, (3,-2))
+      @test @allowscalar Asvd ≈ A
       atol = default_rtol(elt)
     end
 
@@ -316,7 +320,8 @@ using Test: @test, @test_throws, @testset
       A = dev(BlockSparseTensor{elt}([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
       randn!(A)
       U, S, V = svd(A)
-      @test @allowscalar array(U) * array(S) * array(V)' ≈ array(A)
+      Asvd = contract(contract(U, (1,-2), S, (-2, 3)), (1,-2), V, (3,-2))
+      @test @allowscalar Asvd ≈ A
       atol = default_rtol(elt)
     end
   end
