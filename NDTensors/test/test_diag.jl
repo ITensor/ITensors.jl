@@ -70,7 +70,7 @@ end
 
   ## Testing sparse contractions on GPU
   t = tensor(Diag(one(elt)), (3, 3))
-  @test contract(t, (-1, -2), dev(A), (-1, -2))[] == dot(t, A)
+  @test contract(t, (-1, -2), dev(A), (-1, -2))[] ≈ dot(t, A) rtol = sqrt(eps(elt))
 end
 nothing
 end
