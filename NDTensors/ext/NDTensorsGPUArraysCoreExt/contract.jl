@@ -18,6 +18,7 @@ function NDTensors.contract!(
 )
   tensor1 = unexpose(tensor1)
   ## convert tensor1 to a dense
+  ## TODO this allocates on CPU first then moves over to GPU which could be slow
   tensor1 = adapt(set_ndims(parenttype(typeof(tensor2)), 1), dense(tensor1))
   return contract!(
     output_tensor,
