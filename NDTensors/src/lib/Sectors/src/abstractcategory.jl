@@ -26,10 +26,6 @@ function category_label(c::AbstractCategory)
   return error("method `category_label` not defined for type $(typeof(c))")
 end
 
-function GradedAxes.dual(category_type::Type{<:AbstractCategory})
-  return error("`dual` not defined for type $(category_type).")
-end
-
 block_boundaries(g::AbstractUnitRange) = block_boundaries(SymmetryStyle(g), g)
 block_boundaries(::AbelianGroup, g) = GradedAxes.unlabel.(BlockArrays.blocklengths(g))
 function block_boundaries(::NonAbelianGroup, g)
