@@ -54,13 +54,13 @@ function Base.show(io::IO, s::SU)
 end
 
 # display SU(N) irrep as a Young tableau with utf8 box char
-function Base.show(io::IO, ::MIME"text/plain", s::SU{N}) where {N}
-  l = category_label(s)
-  if l[1] == 0  # singlet = no box
-    println(io, "●")
-    return nothing
+function Base.show(io::IO, ::MIME"text/plain", s::SU)
+  if istrivial(s)   # singlet = no box
+    return print(io, "●")
   end
 
+  N = groupdim(s)
+  l = category_label(s)
   println(io, "┌─" * "┬─"^(l[1] - 1) * "┐")
   i = 1
   while i < N - 1 && l[i + 1] != 0
@@ -103,8 +103,7 @@ function Base.show(io::IO, s::SU{2})
 end
 
 function Base.show(io::IO, ::MIME"text/plain", s::SU{2})
-  print(io, "S = ", HalfIntegers.half(quantum_dimension(s) - 1))
-  return nothing
+  return print(io, "S = ", HalfIntegers.half(quantum_dimension(s) - 1))
 end
 
 #
