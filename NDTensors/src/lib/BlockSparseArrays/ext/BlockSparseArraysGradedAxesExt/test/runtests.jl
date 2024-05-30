@@ -5,7 +5,6 @@ using BlockArrays: Block, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
 using NDTensors.GradedAxes: GradedAxes, GradedUnitRange, dual, gradedrange
 using NDTensors.LabelledNumbers: label
-## using NDTensors.Sectors: U1
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
 using Random: randn!
