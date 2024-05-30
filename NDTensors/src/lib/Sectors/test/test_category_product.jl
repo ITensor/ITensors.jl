@@ -14,7 +14,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test (@inferred quantum_dimension(s)) == 1
     @test dual(s) == sector(U1(-1))
     @test categories(s)[1] == U1(1)
-    @test (@inferred trivial(s)) == sector(U1(0))
+    @test trivial(s) == sector(U1(0))  # need julia 1.10 for type stability
 
     s = sector(U1(1), U1(2))
     @test length(categories(s)) == 2
@@ -22,7 +22,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test dual(s) == sector(U1(-1), U1(-2))
     @test categories(s)[1] == U1(1)
     @test categories(s)[2] == U1(2)
-    @test (@inferred trivial(s)) == sector(U1(0), U1(0))
+    @test trivial(s) == sector(U1(0), U1(0))  # need julia 1.10 for type stability
 
     s = U1(1) × SU2(1//2) × U1(3)
     @test length(categories(s)) == 3
@@ -31,7 +31,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test categories(s)[1] == U1(1)
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == U1(3)
-    @test (@inferred trivial(s)) == sector(U1(0), SU2(0), U1(0))
+    @test trivial(s) == sector(U1(0), SU2(0), U1(0))  # need julia 1.10 for type stability
 
     s = U1(3) × SU2(1//2) × Fib("τ")
     @test length(categories(s)) == 3
@@ -40,7 +40,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test categories(s)[1] == U1(3)
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == Fib("τ")
-    @test (@inferred trivial(s)) == sector(U1(0), SU2(0), Fib("1"))
+    @test trivial(s) == sector(U1(0), SU2(0), Fib("1"))    # need julia 1.10
   end
 
   @testset "Quantum dimension and GradedUnitRange" begin
@@ -96,7 +96,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test (@inferred s × s) == s
     @test (@inferred s ⊗ s) == s
     @test (@inferred quantum_dimension(s)) == 1
-    @test (@inferred trivial(s)) == s
+    @test trivial(s) == s  # need julia 1.10 for type stability
     @test typeof(s) == typeof(sector(()))
     @test typeof(s) == typeof(sector((;)))  # empty NamedTuple is cast to Tuple{}
 

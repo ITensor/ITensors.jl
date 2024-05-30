@@ -150,16 +150,26 @@ function fusion_rule(::AbelianGroup, c1::CategoryProduct, ::CategoryProduct{Tupl
   return c1
 end
 
+# ===================================  shared  =============================================
+# there are 2 implementations for CategoryProduct
+# - ordered-like with a Tuple
+# - dictionary-like with a NamedTuple
+categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
+
+function trivial(type::Type{<:CategoryProduct})
+  return sector(categories_trivial(categories_type(type)))
+end
+
+sector(args...; kws...) = CategoryProduct(args...; kws...)
+
 # ==============  Ordered implementation  =================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
 CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
 
 categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
-sector(args...; kws...) = CategoryProduct(args...; kws...)
-
-function trivial(::Type{<:CategoryProduct{T}}) where {T<:Tuple}
-  return sector(ntuple(i -> trivial(fieldtype(T, i)), fieldcount(T)))
+function categories_trivial(type::Type{<:Tuple})
+  return trivial.(fieldtypes(type))
 end
 
 # allow additional categories at one end
@@ -195,12 +205,8 @@ function categories_equal(A::NamedTuple, B::NamedTuple)
   return common_categories_match && unique_categories_zero
 end
 
-function trivial(::Type{<:CategoryProduct{NT}}) where {Keys,NT<:NamedTuple{Keys}}
-  return reduce(
-    ×,
-    (ntuple(i -> (; Keys[i] => trivial(fieldtype(NT, i))), fieldcount(NT)));
-    init=sector(),
-  )
+function categories_trivial(type::Type{<:NamedTuple{Keys}}) where {Keys}
+  return NamedTuple{Keys}(trivial.(fieldtypes(type)))
 end
 
 # allow ⊗ for different types in NamedTuple
