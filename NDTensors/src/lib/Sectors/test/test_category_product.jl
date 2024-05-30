@@ -1,18 +1,6 @@
 @eval module $(gensym())
 using NDTensors.Sectors:
-  ×,
-  ⊗,
-  CategoryProduct,
-  Fib,
-  Ising,
-  SU,
-  SU2,
-  U1,
-  Z,
-  categories,
-  sector,
-  quantum_dimension,
-  trivial
+  ×, ⊗, Fib, Ising, SU, SU2, U1, Z, categories, sector, quantum_dimension, trivial
 using NDTensors.GradedAxes: dual, fusion_product, gradedisequal, gradedrange
 using Test: @inferred, @test, @testset, @test_broken, @test_throws
 
@@ -26,7 +14,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test (@inferred quantum_dimension(s)) == 1
     @test dual(s) == sector(U1(-1))
     @test categories(s)[1] == U1(1)
-    @test (@inferred trivial(typeof((s)))) == sector(U1(0))
+    @test (@inferred trivial(s)) == sector(U1(0))
 
     s = sector(U1(1), U1(2))
     @test length(categories(s)) == 2
@@ -34,7 +22,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test dual(s) == sector(U1(-1), U1(-2))
     @test categories(s)[1] == U1(1)
     @test categories(s)[2] == U1(2)
-    @test (@inferred trivial(typeof((s)))) == sector(U1(0), U1(0))
+    @test (@inferred trivial(s)) == sector(U1(0), U1(0))
 
     s = U1(1) × SU2(1//2) × U1(3)
     @test length(categories(s)) == 3
@@ -43,7 +31,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test categories(s)[1] == U1(1)
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == U1(3)
-    @test (@inferred trivial(typeof((s)))) == sector(U1(0), SU2(0), U1(0))
+    @test (@inferred trivial(s)) == sector(U1(0), SU2(0), U1(0))
 
     s = U1(3) × SU2(1//2) × Fib("τ")
     @test length(categories(s)) == 3
@@ -52,7 +40,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test categories(s)[1] == U1(3)
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == Fib("τ")
-    @test (@inferred trivial(typeof((s)))) == sector(U1(0), SU2(0), Fib("1"))
+    @test (@inferred trivial(s)) == sector(U1(0), SU2(0), Fib("1"))
   end
 
   @testset "Quantum dimension and GradedUnitRange" begin
@@ -103,12 +91,27 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
   end
 
   @testset "Empty category" begin
-    s = sector(())
+    s = sector()
     @test (@inferred dual(s)) == s
     @test (@inferred s × s) == s
     @test (@inferred s ⊗ s) == s
     @test (@inferred quantum_dimension(s)) == 1
-    @test (@inferred trivial(typeof(s))) == s
+    @test (@inferred trivial(s)) == s
+    @test typeof(s) == typeof(sector(()))
+    @test typeof(s) == typeof(sector((;)))  # empty NamedTuple is cast to Tuple{}
+
+    # Empty acts as trivial
+    @test (@inferred U1(1) ⊗ s) == U1(1)
+    @test (@inferred SU2(0) ⊗ s) == gradedrange([SU2(0) => 1])
+    @test (@inferred Fib("τ") ⊗ s) == gradedrange([Fib("τ") => 1])
+    @test (@inferred s ⊗ U1(1)) == U1(1)
+    @test (@inferred s ⊗ SU2(0)) == gradedrange([SU2(0) => 1])
+    @test (@inferred s ⊗ Fib("τ")) == gradedrange([Fib("τ") => 1])
+
+    @test (@inferred sector(U1(1)) ⊗ s) == sector(U1(1))
+    @test (@inferred sector(SU2(0)) ⊗ s) == gradedrange([sector(SU2(0)) => 1])
+    @test (@inferred sector(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
+      gradedrange([sector(Fib("τ"), SU2(1), U1(2)) => 1])
   end
 
   @testset "Fusion of Abelian products" begin
@@ -258,7 +261,7 @@ end
     @test categories(s)[:B] == Z{2}(0)
     @test (@inferred quantum_dimension(s)) == 1
     @test dual(s) == (A=U1(-1),) × (B=Z{2}(0),)
-    @test trivial(typeof(s)) == (A=U1(0),) × (B=Z{2}(0),)
+    @test trivial(s) == (A=U1(0),) × (B=Z{2}(0),)
 
     s = (A=U1(1),) × (B=SU2(2),)
     @test length(categories(s)) == 2
@@ -266,7 +269,7 @@ end
     @test categories(s)[:B] == SU2(2)
     @test (@inferred quantum_dimension(s)) == 5
     @test dual(s) == (A=U1(-1),) × (B=SU2(2),)
-    @test trivial(typeof(s)) == (A=U1(0),) × (B=SU2(0),)
+    @test trivial(s) == (A=U1(0),) × (B=SU2(0),)
 
     s = s × (C=Ising("ψ"),)
     @test length(categories(s)) == 3
@@ -286,7 +289,7 @@ end
     @test s == sector(; A=U1(2))
     @test (@inferred quantum_dimension(s)) == 1
     @test dual(s) == sector("A" => U1(-2))
-    @test trivial(typeof(s)) == (A=U1(0),)
+    @test trivial(s) == sector(; A=U1(0))
 
     s = sector("B" => Ising("ψ"), :C => Z{2}(1))
     @test length(categories(s)) == 2
@@ -356,15 +359,6 @@ end
       sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
-  end
-
-  @testset "Empty category" begin
-    s = sector()
-    @test (@inferred dual(s)) == s
-    @test (@inferred s × s) == s
-    @test (@inferred s ⊗ s) == s
-    @test (@inferred quantum_dimension(s)) == 1
-    @test (@inferred trivial(typeof(s))) == s
   end
 
   @testset "Fusion of Abelian products" begin

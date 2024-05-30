@@ -109,9 +109,45 @@ function fusion_rule(::AbelianGroup, s1::CategoryProduct, s2::CategoryProduct)
   return categories_fusion_rule(categories(s1), categories(s2))
 end
 
-# Empty case: use × cast conventions between NamedTupled and ordered implem
-function fusion_rule(::EmptyCategory, s1::CategoryProduct, s2::CategoryProduct)
-  return s1 × s2
+# Empty case
+function fusion_rule(
+  ::EmptyCategory, ::CategoryProduct{Tuple{}}, ::CategoryProduct{Tuple{}}
+)
+  return sector()
+end
+
+# EmptyCategory acts as trivial on any AbstractCategory, not just CategoryProduct
+function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c2::AbstractCategory)
+  return to_graded_axis(c2)
+end
+
+function fusion_rule(::SymmetryStyle, c1::AbstractCategory, ::CategoryProduct{Tuple{}})
+  return to_graded_axis(c1)
+end
+
+function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c2::CategoryProduct)
+  return to_graded_axis(c2)
+end
+
+function fusion_rule(::SymmetryStyle, c1::CategoryProduct, ::CategoryProduct{Tuple{}})
+  return to_graded_axis(c1)
+end
+
+# abelian case: return Category
+function fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c2::AbstractCategory)
+  return c2
+end
+
+function fusion_rule(::AbelianGroup, c1::AbstractCategory, ::CategoryProduct{Tuple{}})
+  return c1
+end
+
+function fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c2::CategoryProduct)
+  return c2
+end
+
+function fusion_rule(::AbelianGroup, c1::CategoryProduct, ::CategoryProduct{Tuple{}})
+  return c1
 end
 
 # ==============  Ordered implementation  =================
@@ -141,6 +177,9 @@ function CategoryProduct(nt::NamedTuple)
   return _CategoryProduct(categories)
 end
 
+# avoid having 2 different kinds of EmptyCategory: cast empty NamedTuple to Tuple{}
+CategoryProduct(::NamedTuple{()}) = CategoryProduct(())
+
 CategoryProduct(; kws...) = CategoryProduct((; kws...))
 
 function CategoryProduct(pairs::Pair...)
@@ -157,9 +196,12 @@ function categories_equal(A::NamedTuple, B::NamedTuple)
 end
 
 function trivial(::Type{<:CategoryProduct{NT}}) where {Keys,NT<:NamedTuple{Keys}}
-  return reduce(×, (ntuple(i -> (; Keys[i] => trivial(fieldtype(NT, i))), fieldcount(NT))))
+  return reduce(
+    ×,
+    (ntuple(i -> (; Keys[i] => trivial(fieldtype(NT, i))), fieldcount(NT)));
+    init=sector(),
+  )
 end
-trivial(::Type{<:CategoryProduct{<:NamedTuple{()}}}) = sector()  # Empty NamedTuple
 
 # allow ⊗ for different types in NamedTuple
 function categories_fusion_rule(cats1::NamedTuple, cats2::NamedTuple)

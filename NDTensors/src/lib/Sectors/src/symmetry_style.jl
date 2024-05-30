@@ -20,6 +20,7 @@ combine_styles(::NonAbelianGroup, ::AbelianGroup) = NonAbelianGroup()
 combine_styles(::NonAbelianGroup, ::NonAbelianGroup) = NonAbelianGroup()
 combine_styles(::NonAbelianGroup, ::NonGroupCategory) = NonGroupCategory()
 combine_styles(::NonGroupCategory, ::SymmetryStyle) = NonGroupCategory()
+combine_styles(::NonGroupCategory, ::EmptyCategory) = NonGroupCategory()
 combine_styles(::EmptyCategory, s::SymmetryStyle) = s
 combine_styles(s::SymmetryStyle, ::EmptyCategory) = s
 combine_styles(::EmptyCategory, ::EmptyCategory) = EmptyCategory()
