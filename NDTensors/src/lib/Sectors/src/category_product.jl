@@ -70,12 +70,11 @@ function categories_product(l1::NamedTuple, l2::NamedTuple)
   end
   return union_keys(l1, l2)
 end
+categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
 # edge cases
-categories_product(l1::NamedTuple, l2::Tuple{}) = l1
-categories_product(l1::Tuple{}, l2::NamedTuple) = l2
-
-categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
+categories_product(l1::NamedTuple, ::Tuple{}) = l1
+categories_product(::Tuple{}, l2::NamedTuple) = l2
 
 ×(a, g::AbstractUnitRange) = ×(to_graded_axis(a), g)
 ×(g::AbstractUnitRange, b) = ×(g, to_graded_axis(b))
@@ -90,10 +89,12 @@ function ×(l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInt
 end
 
 function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)
-  # keep F convention in loop order
-  v = [
-    l1 × l2 for l2 in BlockArrays.blocklengths(g2) for l1 in BlockArrays.blocklengths(g1)
-  ]
+  v = map(
+    ((l1, l2),) -> l1 × l2,
+    Iterators.flatten((
+      Iterators.product(BlockArrays.blocklengths(g1), BlockArrays.blocklengths(g2)),
+    ),),
+  )
   return GradedAxes.gradedrange(v)
 end
 
