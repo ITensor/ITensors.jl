@@ -90,30 +90,6 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test (@inferred quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
   end
 
-  @testset "Empty category" begin
-    s = sector()
-    @test (@inferred dual(s)) == s
-    @test (@inferred s × s) == s
-    @test (@inferred s ⊗ s) == s
-    @test (@inferred quantum_dimension(s)) == 1
-    @test trivial(s) == s  # need julia 1.10 for type stability
-    @test typeof(s) == typeof(sector(()))
-    @test typeof(s) == typeof(sector((;)))  # empty NamedTuple is cast to Tuple{}
-
-    # Empty acts as trivial
-    @test (@inferred U1(1) ⊗ s) == U1(1)
-    @test (@inferred SU2(0) ⊗ s) == gradedrange([SU2(0) => 1])
-    @test (@inferred Fib("τ") ⊗ s) == gradedrange([Fib("τ") => 1])
-    @test (@inferred s ⊗ U1(1)) == U1(1)
-    @test (@inferred s ⊗ SU2(0)) == gradedrange([SU2(0) => 1])
-    @test (@inferred s ⊗ Fib("τ")) == gradedrange([Fib("τ") => 1])
-
-    @test (@inferred sector(U1(1)) ⊗ s) == sector(U1(1))
-    @test (@inferred sector(SU2(0)) ⊗ s) == gradedrange([sector(SU2(0)) => 1])
-    @test (@inferred sector(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
-      gradedrange([sector(Fib("τ"), SU2(1), U1(2)) => 1])
-  end
-
   @testset "Fusion of Abelian products" begin
     p1 = sector(U1(1))
     p2 = sector(U1(2))
@@ -500,5 +476,41 @@ end
     gB = gradedrange([sB => 1])
     @test gradedisequal((@inferred fusion_product(gA, gB)), gradedrange([sAB => 2]))
   end
+end
+
+@testset "Empty category" begin
+  s = sector()
+  @test (@inferred dual(s)) == s
+  @test (@inferred s × s) == s
+  @test (@inferred s ⊗ s) == s
+  @test (@inferred quantum_dimension(s)) == 1
+  @test trivial(s) == s  # need julia 1.10 for type stability
+  @test typeof(s) == typeof(sector(()))
+  @test typeof(s) == typeof(sector((;)))  # empty NamedTuple is cast to Tuple{}
+
+  @test s × U1(1) == sector(U1(1))
+  @test s × sector(U1(1)) == sector(U1(1))
+  @test s × sector(; A=U1(1)) == sector(; A=U1(1))
+  @test U1(1) × s == sector(U1(1))
+  @test sector(U1(1)) × s == sector(U1(1))
+  @test sector(; A=U1(1)) × s == sector(; A=U1(1))
+
+  # Empty acts as trivial
+  @test (@inferred U1(1) ⊗ s) == U1(1)
+  @test (@inferred SU2(0) ⊗ s) == gradedrange([SU2(0) => 1])
+  @test (@inferred Fib("τ") ⊗ s) == gradedrange([Fib("τ") => 1])
+  @test (@inferred s ⊗ U1(1)) == U1(1)
+  @test (@inferred s ⊗ SU2(0)) == gradedrange([SU2(0) => 1])
+  @test (@inferred s ⊗ Fib("τ")) == gradedrange([Fib("τ") => 1])
+
+  @test (@inferred sector(U1(1)) ⊗ s) == sector(U1(1))
+  @test (@inferred sector(SU2(0)) ⊗ s) == gradedrange([sector(SU2(0)) => 1])
+  @test (@inferred sector(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
+    gradedrange([sector(Fib("τ"), SU2(1), U1(2)) => 1])
+
+  @test (@inferred sector(; A=U1(1)) ⊗ s) == sector(; A=U1(1))
+  @test (@inferred sector(; A=SU2(0)) ⊗ s) == gradedrange([sector(; A=SU2(0)) => 1])
+  @test (@inferred sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
+    gradedrange([sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
 end
 end
