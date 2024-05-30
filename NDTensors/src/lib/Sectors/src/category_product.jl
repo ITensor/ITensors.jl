@@ -33,7 +33,7 @@ GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categ
 
 # ==============  Base interface  =================
 function Base.:(==)(A::CategoryProduct, B::CategoryProduct)
-  return categories_equal(categories(A), categories(B))
+  return categories_isequal(categories(A), categories(B))
 end
 
 function Base.show(io::IO, s::CategoryProduct)
@@ -166,7 +166,7 @@ sector(args...; kws...) = CategoryProduct(args...; kws...)
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
 CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
 
-categories_equal(o1::Tuple, o2::Tuple) = (o1 == o2)
+categories_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
 function categories_trivial(type::Type{<:Tuple})
   return trivial.(fieldtypes(type))
@@ -198,7 +198,7 @@ function CategoryProduct(pairs::Pair...)
   return CategoryProduct(NamedTuple{keys}(vals))
 end
 
-function categories_equal(A::NamedTuple, B::NamedTuple)
+function categories_isequal(A::NamedTuple, B::NamedTuple)
   common_categories = zip(pairs(intersect_keys(A, B)), pairs(intersect_keys(B, A)))
   common_categories_match = all(nl -> (nl[1] == nl[2]), common_categories)
   unique_categories_zero = all(l -> istrivial(l), symdiff_keys(A, B))
