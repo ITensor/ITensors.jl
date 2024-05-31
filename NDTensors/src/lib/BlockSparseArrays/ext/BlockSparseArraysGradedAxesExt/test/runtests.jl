@@ -3,9 +3,8 @@ using Compat: Returns
 using Test: @test, @testset, @test_broken
 using BlockArrays: Block, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
-using NDTensors.GradedAxes: GradedUnitRange, gradedrange
+using NDTensors.GradedAxes: GradedAxes, GradedUnitRange, dual, gradedrange
 using NDTensors.LabelledNumbers: label
-using NDTensors.Sectors: U1
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
 using Random: randn!
@@ -16,6 +15,14 @@ function blockdiagonal!(f, a::AbstractArray)
   end
   return a
 end
+
+struct U1
+  n::Int
+end
+GradedAxes.dual(c::U1) = U1(-c.n)
+GradedAxes.fuse_labels(c1::U1, c2::U1) = U1(c1.n + c2.n)
+Base.isless(c1::U1, c2::U1) = isless(c1.n, c2.n)
+
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 @testset "BlockSparseArraysGradedAxesExt (eltype=$elt)" for elt in elts
   @testset "map" begin
@@ -69,6 +76,19 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     # common sectors, need to fix.
     @test_broken blocksize(m) == (3, 3)
     @test a == splitdims(m, (d1, d2), (d1, d2))
+  end
+  @testset "dual axes" begin
+    r = gradedrange([U1(0) => 2, U1(1) => 2])
+    a = BlockSparseArray{elt}(dual(r), r)
+    a[Block(1, 1)] = randn(size(a[Block(1, 1)]))
+    a[Block(2, 2)] = randn(size(a[Block(2, 2)]))
+    a_dense = Array(a)
+    @test eachindex(a) == CartesianIndices(size(a))
+    for I in eachindex(a)
+      @test a[I] == a_dense[I]
+    end
+
+    @test isnothing(show(devnull, MIME("text/plain"), a))
   end
 end
 end
