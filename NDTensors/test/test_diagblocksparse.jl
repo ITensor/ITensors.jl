@@ -5,13 +5,13 @@ using NDTensors:
   NDTensors,
   Block,
   BlockSparseTensor,
-  dense,
-  DiagBlockSparse,
   Diag,
-  inds,
+  DiagBlockSparse,
   Tensor,
   blockoffsets,
   contract,
+  dense,
+  inds,
   nzblocks
 using Random: randn!
 using Test: @test, @test_broken, @test_throws, @testset
