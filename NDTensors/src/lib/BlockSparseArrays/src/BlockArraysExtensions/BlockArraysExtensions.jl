@@ -131,6 +131,10 @@ function blockrange(axis::AbstractUnitRange, r::BlockSlice)
   return blockrange(axis, r.block)
 end
 
+function blockrange(axis::AbstractUnitRange, r::Block{1})
+  return r:r
+end
+
 function blockrange(axis::AbstractUnitRange, r)
   return error("Slicing not implemented for range of type `$(typeof(r))`.")
 end

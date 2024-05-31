@@ -19,6 +19,14 @@ function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where
   return a[findblockindex.(axes(a), I)...]
 end
 
+function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
+  return blocksparse_getindex(a, Tuple(I)...)
+end
+function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
+  # TODO: Avoid copy if the block isn't stored.
+  return copy(blocks(a)[Int.(I)...])
+end
+
 # TODO: Implement as `copy(@view a[I...])`, which is then implemented
 # through `ArrayLayouts.sub_materialize`.
 using ..SparseArrayInterface: set_getindex_zero_function
@@ -67,11 +75,26 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::BlockIndex{N
 end
 
 function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Block{N}) where {N}
-  # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
-  i = I.n
+  blocksparse_setindex!(a, value, Tuple(I)...)
+  return a
+end
+function blocksparse_setindex!(
+  a::AbstractArray{<:Any,N}, value, I::Vararg{Block{1},N}
+) where {N}
+  i = Int.(I)
   @boundscheck blockcheckbounds(a, i...)
+  # TODO: Use `blocksizes(a)[i...]` when we upgrade to
+  # BlockArrays.jl v1.
+  @assert size(value) == size(view(a, I))
   blocks(a)[i...] = value
   return a
+end
+
+function blocksparse_view(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
+  return blocksparse_view(a, Tuple(I)...)
+end
+function blocksparse_view(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
+  return SubArray(a, to_indices(a, I))
 end
 
 function blocksparse_viewblock(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
