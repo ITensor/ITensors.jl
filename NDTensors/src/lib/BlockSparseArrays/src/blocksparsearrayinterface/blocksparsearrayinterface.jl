@@ -141,6 +141,15 @@ end
 function Base.getindex(a::SparseTransposeBlocks, index::Vararg{Int,2})
   return transpose(blocks(parent(a.array))[reverse(index)...])
 end
+# TODO: This should be handled by generic `AbstractSparseArray` code.
+function Base.getindex(a::SparseTransposeBlocks, index::CartesianIndex{2})
+  return a[Tuple(index)...]
+end
+# TODO: Create a generic `parent_index` function to map an index
+# a parent index.
+function Base.isassigned(a::SparseTransposeBlocks, index::Vararg{Int,2})
+  return isassigned(blocks(parent(a.array)), reverse(index)...)
+end
 function SparseArrayInterface.stored_indices(a::SparseTransposeBlocks)
   return map(reverse_index, stored_indices(blocks(parent(a.array))))
 end
@@ -163,8 +172,21 @@ end
 function Base.size(a::SparseAdjointBlocks)
   return reverse(size(blocks(parent(a.array))))
 end
+# TODO: Create a generic `parent_index` function to map an index
+# a parent index.
 function Base.getindex(a::SparseAdjointBlocks, index::Vararg{Int,2})
   return blocks(parent(a.array))[reverse(index)...]'
+end
+# TODO: Create a generic `parent_index` function to map an index
+# a parent index.
+# TODO: This should be handled by generic `AbstractSparseArray` code.
+function Base.getindex(a::SparseAdjointBlocks, index::CartesianIndex{2})
+  return a[Tuple(index)...]
+end
+# TODO: Create a generic `parent_index` function to map an index
+# a parent index.
+function Base.isassigned(a::SparseAdjointBlocks, index::Vararg{Int,2})
+  return isassigned(blocks(parent(a.array)), reverse(index)...)
 end
 function SparseArrayInterface.stored_indices(a::SparseAdjointBlocks)
   return map(reverse_index, stored_indices(blocks(parent(a.array))))
@@ -229,15 +251,16 @@ end
 function Base.size(a::SparseSubArrayBlocks)
   return length.(axes(a))
 end
-function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
-  return a[Tuple(I)...]
-end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
   parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
   parent_block = parent_blocks[I...]
   # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
   block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
   return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
+end
+# TODO: This should be handled by generic `AbstractSparseArray` code.
+function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
+  return a[Tuple(I)...]
 end
 function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N}) where {N}
   parent_blocks = view(blocks(parent(a.array)), axes(a)...)
