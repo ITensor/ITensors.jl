@@ -83,10 +83,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     a[Block(1, 1)] = randn(size(a[Block(1, 1)]))
     a[Block(2, 2)] = randn(size(a[Block(2, 2)]))
     a_dense = Array(a)
-    if VERSION ≥ v"1.10"
-      for I in eachindex(a)
-        @test a[I] == a_dense[I]
-      end
+    @test eachindex(a) == CartesianIndices(size(a))
+    for I in eachindex(a)
+      @test a[I] == a_dense[I]
     end
   end
 end

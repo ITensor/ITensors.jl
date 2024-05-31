@@ -1,8 +1,14 @@
 module BlockSparseArraysGradedAxesExt
 using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange
-using ..BlockSparseArrays: BlockSparseArrays, block_merge
+using ..BlockSparseArrays: BlockSparseArrays, AbstractBlockSparseArray, block_merge
 using ...GradedAxes:
-  GradedUnitRange, OneToOne, blockmergesortperm, blocksortperm, invblockperm, tensor_product
+  GradedUnitRange,
+  OneToOne,
+  blockmergesortperm,
+  blocksortperm,
+  invblockperm,
+  nondual,
+  tensor_product
 using ...TensorAlgebra:
   TensorAlgebra, FusionStyle, BlockReshapeFusion, SectorFusion, fusedims, splitdims
 
@@ -44,5 +50,13 @@ function TensorAlgebra.splitdims(
   blockperms = invblockperm.(blocksortperm.(axes_prod))
   a_blockpermed = a[blockperms...]
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
+end
+
+# This is a temporary fix for `eachindex` being broken for BlockSparseArrays
+# with mixed dual and non-dual axes. This shouldn't be needed once
+# GradedAxes is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedAxes is rewritten.
+function Base.eachindex(a::AbstractBlockSparseArray)
+  return CartesianIndices(nondual.(axes(a)))
 end
 end

@@ -48,19 +48,6 @@ end
 
 Base.axes(a::UnitRangeDual) = axes(nondual(a))
 
-if VERSION ≥ v"1.10"
-  # This fixes an issue in `eachindex(::BlockSparseArray)`
-  # when it has axes that are a mixture of non-dual
-  # and dual axes.
-  # TODO: This is a hack that won't be needed once we   rewrite
-  # GradedAxes using BlockArrays v1, delete this once it is
-  # not needed anymore.
-  Base.AbstractUnitRange{T}(a::UnitRangeDual{T}) where {T} = a
-  function Base.AbstractUnitRange{T}(a::UnitRangeDual) where {T}
-    return AbstractUnitRange{T}(nondual(a))
-  end
-end
-
 using BlockArrays: BlockArrays, Block, BlockSlice
 using NDTensors.LabelledNumbers: LabelledUnitRange
 function BlockArrays.BlockSlice(b::Block, a::LabelledUnitRange)
