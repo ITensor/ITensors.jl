@@ -3,6 +3,7 @@ using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange, blocks
 using ..BlockSparseArrays:
   BlockSparseArrays,
   AbstractBlockSparseArray,
+  AbstractBlockSparseMatrix,
   BlockSparseArray,
   BlockSparseMatrix,
   block_merge
@@ -67,8 +68,11 @@ function Base.eachindex(a::AbstractBlockSparseArray)
   return CartesianIndices(nondual.(axes(a)))
 end
 
-function Base.adjoint(a::BlockSparseMatrix)
-  return Adjoint(BlockSparseArray(blocks(a), dual.(axes(a))))
+# TODO: Handle this through some kind of trait dispatch, maybe
+# a `SymmetryStyle`-like trait to check if the block sparse
+# matrix has graded axes.
+function Base.axes(a::Adjoint{<:Any,<:AbstractBlockSparseMatrix})
+  return dual.(reverse(axes(a')))
 end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
