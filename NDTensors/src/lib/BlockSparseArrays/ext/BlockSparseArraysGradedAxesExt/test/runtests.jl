@@ -3,7 +3,7 @@ using Compat: Returns
 using Test: @test, @testset, @test_broken
 using BlockArrays: Block, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
-using NDTensors.GradedAxes: GradedAxes, GradedUnitRange, dual, gradedrange
+using NDTensors.GradedAxes: GradedAxes, GradedUnitRange, UnitRangeDual, dual, gradedrange
 using NDTensors.LabelledNumbers: label
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
@@ -87,8 +87,28 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     for I in eachindex(a)
       @test a[I] == a_dense[I]
     end
-
+    @test axes(a') == dual.(reverse(axes(a)))
+    # TODO: Define and use `isdual` here.
+    @test axes(a', 1) isa UnitRangeDual
+    @test !(axes(a', 2) isa UnitRangeDual)
     @test isnothing(show(devnull, MIME("text/plain"), a))
+  end
+  @testset "Matrix multiplication" begin
+    r = gradedrange([U1(0) => 2, U1(1) => 3])
+    a1 = BlockSparseArray{elt}(dual(r), r)
+    a1[Block(1, 2)] = randn(elt, size(@view(a1[Block(1, 2)])))
+    a1[Block(2, 1)] = randn(elt, size(@view(a1[Block(2, 1)])))
+    a2 = BlockSparseArray{elt}(dual(r), r)
+    a2[Block(1, 2)] = randn(elt, size(@view(a2[Block(1, 2)])))
+    a2[Block(2, 1)] = randn(elt, size(@view(a2[Block(2, 1)])))
+    @test Array(a1 * a2) ≈ Array(a1) * Array(a2)
+    @test Array(a1' * a2') ≈ Array(a1') * Array(a2')
+
+    a2 = BlockSparseArray{elt}(r, dual(r))
+    a2[Block(1, 2)] = randn(elt, size(@view(a2[Block(1, 2)])))
+    a2[Block(2, 1)] = randn(elt, size(@view(a2[Block(2, 1)])))
+    @test Array(a1' * a2) ≈ Array(a1') * Array(a2)
+    @test Array(a1 * a2') ≈ Array(a1) * Array(a2')
   end
 end
 end
