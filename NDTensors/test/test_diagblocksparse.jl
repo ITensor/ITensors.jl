@@ -59,27 +59,30 @@ using .NDTensorsTestUtils: devices_list
   elt = dev == NDTensors.mtl ? Float32 : Float64
   A = dev(BlockSparseTensor{elt}([(1, 1), (2, 2)], [2, 2], [2, 2]))
   randn!(A)
-  t = Tensor(DiagBlockSparse(one(elt),blockoffsets(A)), inds(A))
+  t = Tensor(DiagBlockSparse(one(elt), blockoffsets(A)), inds(A))
   tdense = Tensor(Diag(one(elt)), inds(A))
- 
-  a = dense(contract(A, (1, -2), t, (3,-2)))
-  b = contract(dense(A), (1, -2), tdense, (3,-2))
+
+  a = dense(contract(A, (1, -2), t, (3, -2)))
+  b = contract(dense(A), (1, -2), tdense, (3, -2))
   @test @allowscalar a ≈ b
-  
-  a = dense(contract(A, (-2, 1), t, (-2,3)))
-  b = contract(dense(A), (-2, 1), tdense, (-2,3))
+
+  a = dense(contract(A, (-2, 1), t, (-2, 3)))
+  b = contract(dense(A), (-2, 1), tdense, (-2, 3))
   @test @allowscalar a ≈ b
-  
-  a = contract(A, (-1,-2), t, (-1,-2))[]
-  b = contract(dense(A), (-1,-2), tdense, (-1,-2))[]
+
+  a = contract(A, (-1, -2), t, (-1, -2))[]
+  b = contract(dense(A), (-1, -2), tdense, (-1, -2))[]
   @test @allowscalar a ≈ b
 
   ## TODO fix these kinds of contractions
   A = BlockSparseTensor{elt}([(1, 1), (2, 2)], [3, 2, 3], [2, 2])
   randn!(A)
-  t = Tensor(DiagBlockSparse(one(elt),blockoffsets(A)), inds(A))
-  @test_broken dense(contract(A, (1, -2), (t), (3,-2))) ≈ contract(dense(A), (1, -2), dense(t), (3,-2))
-  @test_broken dense(contract(A, (-2, 1), t, (-2,3))) ≈ contract(dense(A), (-2, 1), dense(t), (-2,3))
-  @test_broken contract(dev(A), (-1,-2), dev(t), (-1,-2))[] ≈ contract(dense(A), (-1,-2), dense(t), (-1,-2))[]
+  t = Tensor(DiagBlockSparse(one(elt), blockoffsets(A)), inds(A))
+  @test_broken dense(contract(A, (1, -2), (t), (3, -2))) ≈
+    contract(dense(A), (1, -2), dense(t), (3, -2))
+  @test_broken dense(contract(A, (-2, 1), t, (-2, 3))) ≈
+    contract(dense(A), (-2, 1), dense(t), (-2, 3))
+  @test_broken contract(dev(A), (-1, -2), dev(t), (-1, -2))[] ≈
+    contract(dense(A), (-1, -2), dense(t), (-1, -2))[]
 end
 end
