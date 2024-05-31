@@ -1,7 +1,7 @@
-using NDTensors.Expose: Exposed, expose, parent, unexpose
-using NDTensors.GPUArraysCoreExtensions: cpu
 using AMDGPU: AMDGPU, ROCArray
 using GPUArraysCore: @allowscalar
+using NDTensors.Expose: Exposed, expose, parent, unexpose
+using NDTensors.GPUArraysCoreExtensions: cpu
 
 function Base.getindex(E::Exposed{<:ROCArray})
   return @allowscalar unexpose(E)[]

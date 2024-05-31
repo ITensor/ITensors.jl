@@ -666,7 +666,9 @@ function contract!(
       # Overwrite the block of R
       β = zero(ElR)
     end
-    contract!(Rblock, labelsR, T1block, labelsT1, T2block, labelsT2, α, β)
+    contract!(
+      expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2, α, β
+    )
   end
   return R
 end

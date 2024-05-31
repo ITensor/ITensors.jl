@@ -9,7 +9,6 @@ using Base.Threads
 using Compat
 using Dictionaries
 using Folds
-using GPUArraysCore
 using InlineStrings
 using Random
 using LinearAlgebra
