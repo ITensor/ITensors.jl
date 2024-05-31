@@ -87,6 +87,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     for I in eachindex(a)
       @test a[I] == a_dense[I]
     end
+
+    @test isnothing(show(devnull, MIME("text/plain"), a))
   end
 end
 end
