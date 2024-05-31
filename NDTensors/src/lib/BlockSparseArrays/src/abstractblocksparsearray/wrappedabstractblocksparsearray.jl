@@ -88,6 +88,24 @@ function Base.similar(
   return similar(arraytype, eltype(arraytype), axes)
 end
 
+# Needed by `BlockArrays` matrix multiplication interface
+# Fixes ambiguity error with `BlockArrays.jl`.
+function Base.similar(
+  arraytype::Type{<:BlockSparseArrayLike},
+  axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
+)
+  return similar(arraytype, eltype(arraytype), axes)
+end
+
+# Needed by `BlockArrays` matrix multiplication interface
+# Fixes ambiguity error with `BlockArrays.jl`.
+function Base.similar(
+  arraytype::Type{<:BlockSparseArrayLike},
+  axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
+)
+  return similar(arraytype, eltype(arraytype), axes)
+end
+
 # Needed for disambiguation
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{BlockedUnitRange}}

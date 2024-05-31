@@ -266,6 +266,18 @@ include("TestBlockSparseArraysUtils.jl")
     @test a_dest isa BlockSparseArray{elt}
     @test block_nstored(a_dest) == 1
   end
+  @testset "Matrix multiplication" begin
+    a1 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a1[Block(1, 2)] = randn(elt, size(@view(a1[Block(1, 2)])))
+    a1[Block(2, 1)] = randn(elt, size(@view(a1[Block(2, 1)])))
+    a2 = BlockSparseArray{elt}([2, 3], [2, 3])
+    a2[Block(1, 2)] = randn(elt, size(@view(a2[Block(1, 2)])))
+    a2[Block(2, 1)] = randn(elt, size(@view(a2[Block(2, 1)])))
+    @test Array(a1 * a2) ≈ Array(a1) * Array(a2)
+    @test Array(a1' * a2) ≈ Array(a1') * Array(a2)
+    @test Array(a1 * a2') ≈ Array(a1) * Array(a2')
+    @test Array(a1' * a2') ≈ Array(a1') * Array(a2')
+  end
   @testset "TensorAlgebra" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])
     a1[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
