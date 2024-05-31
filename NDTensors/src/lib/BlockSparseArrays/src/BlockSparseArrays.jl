@@ -1,6 +1,5 @@
 module BlockSparseArrays
 include("blocksparsearrayinterface/blocksparsearrayinterface.jl")
-include("blocksparsearrayinterface/linearalgebra.jl")
 include("blocksparsearrayinterface/blockzero.jl")
 include("blocksparsearrayinterface/broadcast.jl")
 include("blocksparsearrayinterface/arraylayouts.jl")
