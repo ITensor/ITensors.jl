@@ -67,10 +67,11 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Vararg{Int,N
 end
 
 function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::BlockIndex{N}) where {N}
-  a_b = view(a, block(I))
+  i = Int.(Tuple(block(I)))
+  a_b = blocks(a)[i...]
   a_b[I.α...] = value
-  # Set the block, required if it is structurally zero
-  a[block(I)] = a_b
+  # Set the block, required if it is structurally zero.
+  blocks(a)[i...] = a_b
   return a
 end
 
@@ -85,7 +86,7 @@ function blocksparse_setindex!(
   @boundscheck blockcheckbounds(a, i...)
   # TODO: Use `blocksizes(a)[i...]` when we upgrade to
   # BlockArrays.jl v1.
-  @assert size(value) == size(view(a, I))
+  @assert size(value) == size(view(a, I...))
   blocks(a)[i...] = value
   return a
 end
