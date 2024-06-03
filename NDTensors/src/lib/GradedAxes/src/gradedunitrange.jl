@@ -222,6 +222,11 @@ function blockedunitrange_getindices(
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
+function blockedunitrange_getindices(a::BlockedUnitRange, indices::Block{1})
+  return a[indices]
+end
+
+# TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::BlockedUnitRange, indices)
   return error("Not implemented.")
 end

@@ -16,7 +16,18 @@ end
 
 # Materialize a SubArray view.
 function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, axes)
+  # TODO: Make more generic for GPU.
   a_dest = BlockSparseArray{eltype(a)}(axes)
+  a_dest .= a
+  return a_dest
+end
+
+# Materialize a SubArray view.
+function ArrayLayouts.sub_materialize(
+  layout::BlockLayout{<:SparseLayout}, a, axes::Tuple{Vararg{Base.OneTo}}
+)
+  # TODO: Make more generic for GPU.
+  a_dest = Array{eltype(a)}(undef, length.(axes))
   a_dest .= a
   return a_dest
 end

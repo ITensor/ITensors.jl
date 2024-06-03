@@ -252,6 +252,24 @@ include("TestBlockSparseArraysUtils.jl")
     # BlockArrays.jl v1.
     @test b[Block(1, 1)] == trues(size(@view(b[Block(1, 1)])))
 
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    x = randn(elt, 1, 2)
+    @view(a[Block(2, 2)])[1:1, 1:2] = x
+    @test @view(a[Block(2, 2)])[1:1, 1:2] == x
+    @test a[Block(2, 2)][1:1, 1:2] == x
+
+    # TODO: This is broken, fix!
+    @test_broken a[3:3, 4:5] == x
+
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    x = randn(elt, 1, 2)
+    @views a[Block(2, 2)][1:1, 1:2] = x
+    @test @view(a[Block(2, 2)])[1:1, 1:2] == x
+    @test a[Block(2, 2)][1:1, 1:2] == x
+
+    # TODO: This is broken, fix!
+    @test_broken a[3:3, 4:5] == x
+
     ## Broken, need to fix.
 
     # This is outputting only zero blocks.
