@@ -1,7 +1,7 @@
 # This files defines a structure for Cartesian product of 2 or more fusion categories
 # e.g. U(1)×U(1), U(1)×SU2(2)×SU(3)
 
-# ==============  Definition and getters  =================
+# =====================================  Definition  =======================================
 struct CategoryProduct{Categories} <: AbstractCategory
   cats::Categories
   global _CategoryProduct(l) = new{typeof(l)}(l)
@@ -11,7 +11,7 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-# ==============  SymmetryStyle ==============================
+# ===================================  SymmetryStyle  ======================================
 function SymmetryStyle(c::CategoryProduct)
   return reduce(combine_styles, map(SymmetryStyle, categories(c)); init=EmptyCategory())
 end
@@ -20,7 +20,7 @@ function SymmetryStyle(nt::NamedTuple)
   return reduce(combine_styles, map(SymmetryStyle, values(nt)); init=EmptyCategory())
 end
 
-# ==============  Sector interface  =================
+# ==================================  Sector interface  ====================================
 function quantum_dimension(::NonAbelianGroup, s::CategoryProduct)
   return prod(map(quantum_dimension, categories(s)))
 end
@@ -31,7 +31,11 @@ end
 
 GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categories(s)))
 
-# ==============  Base interface  =================
+function trivial(type::Type{<:CategoryProduct})
+  return sector(categories_trivial(categories_type(type)))
+end
+
+# ===================================  Base interface  =====================================
 function Base.:(==)(A::CategoryProduct, B::CategoryProduct)
   return categories_isequal(categories(A), categories(B))
 end
@@ -48,7 +52,7 @@ function Base.show(io::IO, s::CategoryProduct)
   return print(io, ")")
 end
 
-category_show(io::IO, k, v) = print(io, v)
+category_show(io::IO, ::Int, v) = print(io, v)
 
 category_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
@@ -58,7 +62,21 @@ function Base.isless(s1::C, s2::C) where {C<:CategoryProduct}
   )
 end
 
-# ==============  Cartesian product  =================
+# =======================================  shared  =========================================
+# there are 2 implementations for CategoryProduct
+# - ordered-like with a Tuple
+# - dictionary-like with a NamedTuple
+
+categories_isequal(::Tuple, ::NamedTuple) = false
+categories_isequal(::NamedTuple, ::Tuple) = false
+
+categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
+
+sector(T::Type{<:CategoryProduct}, cats::Tuple) = sector(categories_type(T), cats)
+sector(T::Type, cats::Tuple) = sector(T(cats))  # recover NamedTuple
+sector(args...; kws...) = CategoryProduct(args...; kws...)
+
+# =================================  Cartesian Product  ====================================
 ×(c1::AbstractCategory, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
 function ×(p1::CategoryProduct, p2::CategoryProduct)
   return CategoryProduct(categories_product(categories(p1), categories(p2)))
@@ -98,7 +116,7 @@ function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)
   return GradedAxes.gradedrange(v)
 end
 
-# ===================  Fusion rules  ====================
+# ====================================  Fusion rules  ======================================
 # generic case: fusion returns a GradedAxes, even for fusion with Empty
 function fusion_rule(::SymmetryStyle, s1::CategoryProduct, s2::CategoryProduct)
   return to_graded_axis(categories_fusion_rule(categories(s1), categories(s2)))
@@ -150,21 +168,7 @@ function fusion_rule(::AbelianGroup, c1::CategoryProduct, ::CategoryProduct{Tupl
   return c1
 end
 
-# ===================================  shared  =============================================
-# there are 2 implementations for CategoryProduct
-# - ordered-like with a Tuple
-# - dictionary-like with a NamedTuple
-categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
-
-function trivial(type::Type{<:CategoryProduct})
-  return sector(categories_trivial(categories_type(type)))
-end
-
-sector(T::Type{<:CategoryProduct}, cats::Tuple) = sector(categories_type(T), cats)
-sector(T::Type, cats::Tuple) = sector(T(cats))  # recover NamedTuple
-sector(args...; kws...) = CategoryProduct(args...; kws...)
-
-# ==============  Ordered implementation  =================
+# ===============================  Ordered implementation  =================================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
 CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
 
@@ -183,7 +187,7 @@ function categories_fusion_rule(cats1::Tuple, cats2::Tuple)
   return reduce(×, (shared..., sup1, sup2))
 end
 
-# ==============  Dictionary-like implementation  =================
+# ===========================  Dictionary-like implementation  =============================
 function CategoryProduct(nt::NamedTuple)
   categories = sort_keys(nt)
   return _CategoryProduct(categories)
