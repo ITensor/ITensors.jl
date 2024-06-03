@@ -4,7 +4,7 @@ using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored, block_reshape
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
-using Test: @test, @testset, @test_broken
+using Test: @test, @test_broken, @test_throws, @testset
 include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
@@ -20,6 +20,7 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(a) == 0
     @test iszero(a)
     @test all(I -> iszero(a[I]), eachindex(a))
+    @test_throws DimensionMismatch a[Block(1, 1)] = randn(elt, 2, 3)
 
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     a[3, 3] = 33

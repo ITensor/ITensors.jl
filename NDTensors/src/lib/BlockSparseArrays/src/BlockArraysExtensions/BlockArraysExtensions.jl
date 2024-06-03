@@ -30,8 +30,16 @@ function sub_axis(a::AbstractUnitRange, indices::AbstractUnitRange)
   return only(axes(blockedunitrange_getindices(a, indices)))
 end
 
-function sub_axis(a::AbstractUnitRange, indices::BlockSlice)
-  return sub_axis(a, block(indices))
+# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# Outputs a `BlockUnitRange`.
+function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:BlockRange{1}})
+  return sub_axis(a, indices.block)
+end
+
+# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# Outputs a `BlockUnitRange`.
+function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:Block{1}})
+  return sub_axis(a, Block(indices))
 end
 
 # TODO: Use `GradedAxes.blockedunitrange_getindices`.

@@ -86,7 +86,11 @@ function blocksparse_setindex!(
   @boundscheck blockcheckbounds(a, i...)
   # TODO: Use `blocksizes(a)[i...]` when we upgrade to
   # BlockArrays.jl v1.
-  @assert size(value) == size(view(a, I...))
+  if size(value) ≠ size(view(a, I...))
+    return throw(
+      DimensionMismatch("Trying to set a block with an array of the wrong size.")
+    )
+  end
   blocks(a)[i...] = value
   return a
 end
