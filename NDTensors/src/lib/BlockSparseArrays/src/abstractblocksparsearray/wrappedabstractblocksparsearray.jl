@@ -55,7 +55,20 @@ function Base.getindex(a::BlockSparseArrayLike{<:Any,2}, I::Vararg{AbstractUnitR
   return ArrayLayouts.layout_getindex(a, I...)
 end
 
-function Base.isassigned(a::BlockSparseArrayLike, index::Vararg{Block})
+function Base.getindex(a::BlockSparseArrayLike{<:Any,N}, block::Block{N}) where {N}
+  return blocksparse_getindex(a, block)
+end
+function Base.getindex(
+  a::BlockSparseArrayLike{<:Any,N}, block::Vararg{Block{1},N}
+) where {N}
+  return blocksparse_getindex(a, block...)
+end
+
+# TODO: Define `issasigned(a, ::Block{N})`.
+function Base.isassigned(
+  a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
+) where {N}
+  # TODO: Define `blocksparse_isassigned`.
   return isassigned(blocks(a), Int.(index)...)
 end
 
@@ -64,6 +77,12 @@ function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N
   return a
 end
 
+function Base.setindex!(
+  a::BlockSparseArrayLike{<:Any,N}, value, I::Vararg{Block{1},N}
+) where {N}
+  a[Block(Int.(I))] = value
+  return a
+end
 function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::Block{N}) where {N}
   blocksparse_setindex!(a, value, I)
   return a

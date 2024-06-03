@@ -38,6 +38,11 @@ function unitrangedual_getindices_blocks(a, indices)
   return mortar([dual(b) for b in blocks(a_indices)])
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
+function blockedunitrange_getindices(a::UnitRangeDual, indices::Block{1})
+  return a[indices]
+end
+
 function Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
@@ -52,6 +57,12 @@ using BlockArrays: BlockArrays, Block, BlockSlice
 using NDTensors.LabelledNumbers: LabelledUnitRange
 function BlockArrays.BlockSlice(b::Block, a::LabelledUnitRange)
   return BlockSlice(b, unlabel(a))
+end
+
+using BlockArrays: BlockArrays, BlockSlice
+using NDTensors.GradedAxes: UnitRangeDual, dual
+function BlockArrays.BlockSlice(b::Block, r::UnitRangeDual)
+  return BlockSlice(b, dual(r))
 end
 
 using NDTensors.LabelledNumbers: LabelledNumbers, label

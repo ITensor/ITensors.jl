@@ -86,3 +86,32 @@ Base.:-(x::LabelledInteger) = labelled_minus(x)
 # TODO: This is only needed for older Julia versions, like Julia 1.6.
 # Delete once we drop support for older Julia versions.
 Base.hash(x::LabelledInteger, h::UInt64) = labelled_hash(x, h)
+
+using Random: AbstractRNG, default_rng
+default_eltype() = Float64
+for f in [:rand, :randn]
+  @eval begin
+    function Base.$f(
+      rng::AbstractRNG,
+      elt::Type{<:Number},
+      dims::Tuple{LabelledInteger,Vararg{LabelledInteger}},
+    )
+      return a = $f(rng, elt, unlabel.(dims))
+    end
+    function Base.$f(
+      rng::AbstractRNG,
+      elt::Type{<:Number},
+      dim1::LabelledInteger,
+      dims::Vararg{LabelledInteger},
+    )
+      return $f(rng, elt, (dim1, dims...))
+    end
+    Base.$f(elt::Type{<:Number}, dims::Tuple{LabelledInteger,Vararg{LabelledInteger}}) =
+      $f(default_rng(), elt, dims)
+    Base.$f(elt::Type{<:Number}, dim1::LabelledInteger, dims::Vararg{LabelledInteger}) =
+      $f(elt, (dim1, dims...))
+    Base.$f(dims::Tuple{LabelledInteger,Vararg{LabelledInteger}}) =
+      $f(default_eltype(), dims)
+    Base.$f(dim1::LabelledInteger, dims::Vararg{LabelledInteger}) = $f((dim1, dims...))
+  end
+end

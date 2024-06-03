@@ -1,4 +1,5 @@
 @eval module $(gensym())
+using LinearAlgebra: norm
 using NDTensors.LabelledNumbers: LabelledInteger, islabelled, label, labelled, unlabel
 using Test: @test, @testset
 @testset "LabelledNumbers" begin
@@ -47,6 +48,29 @@ using Test: @test, @testset
     @test islabelled(oneunit(x))
     @test one(typeof(x)) == true
     @test !islabelled(one(typeof(x)))
+  end
+  @testset "randn" begin
+    d = labelled(2, "x")
+
+    a = randn(Float32, d, d)
+    @test eltype(a) === Float32
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = rand(Float32, d, d)
+    @test eltype(a) === Float32
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = randn(d, d)
+    @test eltype(a) === Float64
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = rand(d, d)
+    @test eltype(a) === Float64
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
   end
   @testset "Labelled array ($a)" for a in (collect(2:5), 2:5)
     x = labelled(a, "x")
