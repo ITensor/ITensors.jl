@@ -6,6 +6,7 @@ using BlockArrays:
   BlockRange,
   BlockedUnitRange,
   BlockVector,
+  BlockSlice,
   block,
   blockaxes,
   blockedrange,
@@ -27,6 +28,16 @@ end
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::AbstractUnitRange)
   return only(axes(blockedunitrange_getindices(a, indices)))
+end
+
+function sub_axis(a::AbstractUnitRange, indices::BlockSlice)
+  return sub_axis(a, block(indices))
+end
+
+# TODO: Use `GradedAxes.blockedunitrange_getindices`.
+# Outputs a `BlockUnitRange`.
+function sub_axis(a::AbstractUnitRange, indices::Block)
+  return sub_axis(a, [indices])
 end
 
 # TODO: Use `GradedAxes.blockedunitrange_getindices`.
