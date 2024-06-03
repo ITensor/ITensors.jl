@@ -160,6 +160,8 @@ function trivial(type::Type{<:CategoryProduct})
   return sector(categories_trivial(categories_type(type)))
 end
 
+sector(T::Type{<:CategoryProduct}, cats::Tuple) = sector(categories_type(T), cats)
+sector(T::Type, cats::Tuple) = sector(T(cats))  # recover NamedTuple
 sector(args...; kws...) = CategoryProduct(args...; kws...)
 
 # ==============  Ordered implementation  =================
