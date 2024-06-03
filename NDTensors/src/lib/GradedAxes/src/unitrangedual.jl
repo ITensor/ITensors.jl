@@ -38,6 +38,11 @@ function unitrangedual_getindices_blocks(a, indices)
   return mortar([dual(b) for b in blocks(a_indices)])
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
+function blockedunitrange_getindices(a::UnitRangeDual, indices::Block{1})
+  return a[indices]
+end
+
 function Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
