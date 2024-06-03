@@ -225,12 +225,33 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(c) == 2
     @test Array(c) == 2 * transpose(Array(a))
 
-    ## Broken, need to fix.
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
+    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
+    b = a[Block(1), Block(1):Block(2)]
+    @test size(b) == (2, 7)
+    @test blocksize(b) == (1, 2)
+    @test b[Block(1, 1)] == a[Block(1, 1)]
+    @test b[Block(1, 2)] == a[Block(1, 2)]
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
     a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
-    @test_broken a[Block(1), Block(1):Block(2)]
+    b = copy(a)
+    x = randn(elt, size(@view(a[Block(2, 2)])))
+    b[Block(2), Block(2)] = x
+    @test b[Block(2, 2)] == x
+
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
+    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
+    b = copy(a)
+    b[Block(1, 1)] .= 1
+    # TODO: Use `blocksizes(b)[1, 1]` once we upgrade to
+    # BlockArrays.jl v1.
+    @test b[Block(1, 1)] == trues(size(@view(b[Block(1, 1)])))
+
+    ## Broken, need to fix.
 
     # This is outputting only zero blocks.
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
@@ -239,22 +260,6 @@ include("TestBlockSparseArraysUtils.jl")
     b = a[Block(2):Block(2), Block(1):Block(2)]
     @test_broken block_nstored(b) == 1
     @test_broken b == Array(a)[3:5, 1:end]
-
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
-    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
-    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
-    b = copy(a)
-    x = randn(size(@view(a[Block(2, 2)])))
-    b[Block(2), Block(2)] = x
-    @test_broken b[Block(2, 2)] == x
-
-    # Doesnt' set the block
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
-    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
-    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
-    b = copy(a)
-    b[Block(1, 1)] .= 1
-    @test_broken b[1, 1] == trues(size(@view(b[1, 1])))
   end
   @testset "LinearAlgebra" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])
