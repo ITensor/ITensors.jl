@@ -1,8 +1,22 @@
 module BlockSparseArraysGradedAxesExt
-using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange
-using ..BlockSparseArrays: BlockSparseArrays, block_merge
+using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange, blocks
+using ..BlockSparseArrays:
+  BlockSparseArrays,
+  AbstractBlockSparseArray,
+  AbstractBlockSparseMatrix,
+  BlockSparseArray,
+  BlockSparseMatrix,
+  block_merge
 using ...GradedAxes:
-  GradedUnitRange, OneToOne, blockmergesortperm, blocksortperm, invblockperm, tensor_product
+  GradedUnitRange,
+  OneToOne,
+  blockmergesortperm,
+  blocksortperm,
+  dual,
+  invblockperm,
+  nondual,
+  tensor_product
+using LinearAlgebra: Adjoint, Transpose
 using ...TensorAlgebra:
   TensorAlgebra, FusionStyle, BlockReshapeFusion, SectorFusion, fusedims, splitdims
 
@@ -44,5 +58,69 @@ function TensorAlgebra.splitdims(
   blockperms = invblockperm.(blocksortperm.(axes_prod))
   a_blockpermed = a[blockperms...]
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
+end
+
+# This is a temporary fix for `eachindex` being broken for BlockSparseArrays
+# with mixed dual and non-dual axes. This shouldn't be needed once
+# GradedAxes is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedAxes is rewritten.
+function Base.eachindex(a::AbstractBlockSparseArray)
+  return CartesianIndices(nondual.(axes(a)))
+end
+
+# TODO: Handle this through some kind of trait dispatch, maybe
+# a `SymmetryStyle`-like trait to check if the block sparse
+# matrix has graded axes.
+function Base.axes(a::Adjoint{<:Any,<:AbstractBlockSparseMatrix})
+  return dual.(reverse(axes(a')))
+end
+
+# This is a temporary fix for `show` being broken for BlockSparseArrays
+# with mixed dual and non-dual axes. This shouldn't be needed once
+# GradedAxes is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedAxes is rewritten.
+function blocksparse_show(
+  io::IO, mime::MIME"text/plain", a::AbstractArray, axes_a::Tuple; kwargs...
+)
+  println(io, "typeof(axes) = ", typeof(axes_a), "\n")
+  println(
+    io,
+    "Warning: To temporarily circumvent a bug in printing BlockSparseArrays with mixtures of dual and non-dual axes, the types of the dual axes printed below might not be accurate. The types printed above this message are the correct ones.\n",
+  )
+  return invoke(show, Tuple{IO,MIME"text/plain",AbstractArray}, io, mime, a; kwargs...)
+end
+
+# This is a temporary fix for `show` being broken for BlockSparseArrays
+# with mixed dual and non-dual axes. This shouldn't be needed once
+# GradedAxes is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedAxes is rewritten.
+function Base.show(io::IO, mime::MIME"text/plain", a::BlockSparseArray; kwargs...)
+  axes_a = axes(a)
+  a_nondual = BlockSparseArray(blocks(a), nondual.(axes(a)))
+  return blocksparse_show(io, mime, a_nondual, axes_a; kwargs...)
+end
+
+# This is a temporary fix for `show` being broken for BlockSparseArrays
+# with mixed dual and non-dual axes. This shouldn't be needed once
+# GradedAxes is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedAxes is rewritten.
+function Base.show(
+  io::IO, mime::MIME"text/plain", a::Adjoint{<:Any,<:BlockSparseMatrix}; kwargs...
+)
+  axes_a = axes(a)
+  a_nondual = BlockSparseArray(blocks(a'), dual.(nondual.(axes(a))))'
+  return blocksparse_show(io, mime, a_nondual, axes_a; kwargs...)
+end
+
+# This is a temporary fix for `show` being broken for BlockSparseArrays
+# with mixed dual and non-dual axes. This shouldn't be needed once
+# GradedAxes is rewritten using BlockArrays v1.
+# TODO: Delete this once GradedAxes is rewritten.
+function Base.show(
+  io::IO, mime::MIME"text/plain", a::Transpose{<:Any,<:BlockSparseMatrix}; kwargs...
+)
+  axes_a = axes(a)
+  a_nondual = tranpose(BlockSparseArray(transpose(blocks(a)), nondual.(axes(a))))
+  return blocksparse_show(io, mime, a_nondual, axes_a; kwargs...)
 end
 end

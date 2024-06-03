@@ -639,6 +639,11 @@ function contract!(
   labelsT2,
   contraction_plan,
 ) where {ElR<:Number,NR}
+  if any(b -> !allequal(Tuple(b)), nzblocks(T2))
+    return error(
+      "When contracting a BlockSparse tensor with a DiagBlockSparse tensor, the DiagBlockSparse tensor must be block diagonal for the time being.",
+    )
+  end
   already_written_to = Dict{Block{NR},Bool}()
   indsR = inds(R)
   indsT1 = inds(T1)
@@ -661,7 +666,9 @@ function contract!(
       # Overwrite the block of R
       β = zero(ElR)
     end
-    contract!(Rblock, labelsR, T1block, labelsT1, T2block, labelsT2, α, β)
+    contract!(
+      expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2, α, β
+    )
   end
   return R
 end
