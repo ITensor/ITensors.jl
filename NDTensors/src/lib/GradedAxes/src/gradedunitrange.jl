@@ -184,6 +184,20 @@ using BlockArrays: block, blockindex
 function blockedunitrange_getindices(
   a::BlockedUnitRange, indices::AbstractUnitRange{<:Integer}
 )
+  return indices
+end
+
+# TODO: Move this to a `BlockArraysExtensions` library.
+# Slice a BlockedUnitRange, preserving the blocking.
+# See https://github.com/JuliaArrays/BlockArrays.jl/issues/347.
+function blocked_getindex(a::AbstractUnitRange, indices)
+  return a[indices]
+end
+
+# TODO: Move this to a `BlockArraysExtensions` library.
+# Slice a BlockedUnitRange, preserving the blocking.
+# See https://github.com/JuliaArrays/BlockArrays.jl/issues/347.
+function blocked_getindex(a::BlockedUnitRange, indices::AbstractUnitRange{<:Integer})
   first_blockindex = blockedunitrange_findblockindex(a, first(indices))
   last_blockindex = blockedunitrange_findblockindex(a, last(indices))
   first_block = block(first_blockindex)

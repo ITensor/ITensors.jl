@@ -1,4 +1,5 @@
 using BlockArrays:
+  AbstractBlockArray,
   AbstractBlockVector,
   Block,
   BlockedUnitRange,
@@ -265,12 +266,13 @@ end
 
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
-struct SparseSubArrayBlocks{T,N,Array<:SubArray{T,N}} <: AbstractSparseArray{T,N}
+# TODO: Define `blockstype`.
+struct SparseSubArrayBlocks{T,N,Array<:AbstractArray{T,N}} <: AbstractSparseArray{T,N}
   array::Array
 end
 # TODO: Define this as `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
 function blockrange(a::SparseSubArrayBlocks)
-  blockranges = blockrange.(axes(parent(a.array)), a.array.indices)
+  blockranges = blockrange.(axes(parent(a.array)), parentindices(a.array))
   return map(blockrange -> Int.(blockrange), blockranges)
 end
 function Base.axes(a::SparseSubArrayBlocks)
@@ -284,7 +286,7 @@ function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where
   parent_block = parent_blocks[I...]
   # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
   block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
-  return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
+  return @view parent_block[blockindices(parent(a.array), block, parentindices(a.array))...]
 end
 # TODO: This should be handled by generic `AbstractSparseArray` code.
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
@@ -292,8 +294,9 @@ function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) w
 end
 function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N}) where {N}
   parent_blocks = view(blocks(parent(a.array)), axes(a)...)
-  return parent_blocks[I...][blockindices(parent(a.array), Block(I), a.array.indices)...] =
-    value
+  return parent_blocks[I...][blockindices(
+    parent(a.array), Block(I), parentindices(a.array)
+  )...] = value
 end
 function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
   if CartesianIndex(I) ∉ CartesianIndices(a)
@@ -313,8 +316,41 @@ function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
   return error("Not implemented")
 end
 
-function blocksparse_blocks(a::SubArray)
+# An alternative to `SubArray` where the blocking
+# is determined from the parent.
+# See https://github.com/JuliaArrays/BlockArrays.jl/issues/347.
+struct BlockedSubArray{T,N,P,I} <: AbstractBlockArray{T,N}
+  parent::P
+  indices::I
+  function BlockedSubArray(parent, indices)
+    return new{eltype(parent),ndims(parent),typeof(parent),typeof(indices)}(parent, indices)
+  end
+end
+Base.parent(a::BlockedSubArray) = getfield(a, :parent)
+Base.parentindices(a::BlockedSubArray) = getfield(a, :indices)
+to_subarray(a::BlockedSubArray) = view(parent(a), parentindices(a)...)
+function Base.axes(a::BlockedSubArray)
+  return ntuple(ndims(a)) do dim
+    return only(axes(blocked_getindex(axes(parent(a), dim), parentindices(a)[dim])))
+  end
+end
+Base.size(a::BlockedSubArray) = map(length, axes(a))
+function Base.getindex(a::BlockedSubArray{<:Any,N}, I::Vararg{Int,N}) where {N}
+  return to_subarray(a)[I...]
+end
+
+function blocked_view(
+  a::AbstractArray{<:Any,N}, indices::Vararg{AbstractUnitRange,N}
+) where {N}
+  return BlockedSubArray(a, indices)
+end
+
+function blocksparse_blocks(a::BlockedSubArray)
   return SparseSubArrayBlocks(a)
+end
+
+function blocksparse_blocks(a::SubArray)
+  return BlocksView(a)
 end
 
 using BlockArrays: BlocksView
