@@ -1,37 +1,53 @@
 @eval module $(gensym())
 using NDTensors.Sectors:
-  ×, ⊗, Fib, Ising, SU, SU2, U1, Z, categories, sector, quantum_dimension, trivial
+  ×,
+  ⊗,
+  Fib,
+  Ising,
+  SU,
+  SU2,
+  U1,
+  Z,
+  block_dimensions,
+  categories,
+  quantum_dimension,
+  sector,
+  trivial
 using NDTensors.GradedAxes: dual, fusion_product, gradedisequal, gradedrange
-using Test: @inferred, @test, @testset, @test_broken, @test_throws
+using Test: @inferred, @test, @testset, @test_throws
 
-# some types are not correctly inferred on julia 1.6
-# every operation is type stable on julia 1.10
+macro inferred_latest(ex)
+  if VERSION < v"1.10"
+    return esc(:($ex))
+  end
+  return esc(:(@inferred $ex))
+end
 
 @testset "Test Ordered Products" begin
   @testset "Ordered Constructor" begin
     s = sector(U1(1))
     @test length(categories(s)) == 1
     @test (@inferred quantum_dimension(s)) == 1
-    @test dual(s) == sector(U1(-1))
+    @test (@inferred dual(s)) == sector(U1(-1))
     @test categories(s)[1] == U1(1)
-    @test trivial(s) == sector(U1(0))  # need julia 1.10 for type stability
+    @test (@inferred_latest trivial(s)) == sector(U1(0))
 
     s = sector(U1(1), U1(2))
     @test length(categories(s)) == 2
     @test (@inferred quantum_dimension(s)) == 1
-    @test dual(s) == sector(U1(-1), U1(-2))
+    @test (@inferred dual(s)) == sector(U1(-1), U1(-2))
     @test categories(s)[1] == U1(1)
     @test categories(s)[2] == U1(2)
-    @test trivial(s) == sector(U1(0), U1(0))  # need julia 1.10 for type stability
+    @test (@inferred_latest trivial(s)) == sector(U1(0), U1(0))
 
     s = U1(1) × SU2(1//2) × U1(3)
     @test length(categories(s)) == 3
     @test (@inferred quantum_dimension(s)) == 2
-    @test dual(s) == U1(-1) × SU2(1//2) × U1(-3)
+    @test (@inferred dual(s)) == U1(-1) × SU2(1//2) × U1(-3)
     @test categories(s)[1] == U1(1)
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == U1(3)
-    @test trivial(s) == sector(U1(0), SU2(0), U1(0))  # need julia 1.10 for type stability
+    @test (@inferred_latest trivial(s)) == sector(U1(0), SU2(0), U1(0))
     @test (@inferred sector(typeof(categories(s)), categories(s))) == s
     @test (@inferred sector(typeof(s), categories(s))) == s
 
@@ -42,7 +58,7 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test categories(s)[1] == U1(3)
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == Fib("τ")
-    @test trivial(s) == sector(U1(0), SU2(0), Fib("1"))    # need julia 1.10
+    @test (@inferred_latest trivial(s)) == sector(U1(0), SU2(0), Fib("1"))
   end
 
   @testset "Quantum dimension and GradedUnitRange" begin
@@ -56,12 +72,15 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
       (SU2(1) × SU2(1)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 16
+    @test (@inferred block_dimensions(g)) == [1, 3, 3, 9]
 
     # mixed group
     g = gradedrange([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1])
     @test (@inferred quantum_dimension(g)) == 4
+    @test (@inferred block_dimensions(g)) == [1, 3]
     g = gradedrange([(SU2(0) × U1(0) × SU2(1//2)) => 1, (SU2(0) × U1(1) × SU2(1//2)) => 1])
     @test (@inferred quantum_dimension(g)) == 4
+    @test (@inferred block_dimensions(g)) == [2, 2]
 
     # NonGroupCategory
     g_fib = gradedrange([(Fib("1") × Fib("1")) => 1])
@@ -70,6 +89,8 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
     @test (@inferred quantum_dimension(g_fib)) == 1.0
     @test (@inferred quantum_dimension(g_ising)) == 1.0
     @test (@inferred quantum_dimension((Ising("1") × Ising("1")))) == 1.0
+    @test (@inferred block_dimensions(g_fib)) == [1.0]
+    @test (@inferred block_dimensions(g_ising)) == [1.0]
 
     @test (@inferred quantum_dimension(U1(1) × Fib("1"))) == 1.0
     @test (@inferred quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
@@ -82,14 +103,17 @@ using Test: @inferred, @test, @testset, @test_broken, @test_throws
       (U1(2) × SU2(1) × Ising("ψ")) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 8.0
+    @test (@inferred block_dimensions(g)) == [1.0, 3.0, 1.0, 3.0]
 
+    ϕ = (1 + √5) / 2
     g = gradedrange([
       (Fib("1") × SU2(0) × U1(2)) => 1,
       (Fib("1") × SU2(1) × U1(2)) => 1,
       (Fib("τ") × SU2(0) × U1(2)) => 1,
       (Fib("τ") × SU2(1) × U1(2)) => 1,
     ])
-    @test (@inferred quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
+    @test (@inferred quantum_dimension(g)) == 4.0 + 4.0ϕ
+    @test (@inferred block_dimensions(g)) == [1.0, 3.0, 1.0ϕ, 3.0ϕ]
   end
 
   @testset "Fusion of Abelian products" begin
@@ -238,24 +262,24 @@ end
     @test categories(s)[:A] == U1(1)
     @test categories(s)[:B] == Z{2}(0)
     @test (@inferred quantum_dimension(s)) == 1
-    @test dual(s) == (A=U1(-1),) × (B=Z{2}(0),)
-    @test trivial(s) == (A=U1(0),) × (B=Z{2}(0),)
+    @test (@inferred dual(s)) == (A=U1(-1),) × (B=Z{2}(0),)
+    @test (@inferred_latest trivial(s)) == (A=U1(0),) × (B=Z{2}(0),)
 
     s = (A=U1(1),) × (B=SU2(2),)
     @test length(categories(s)) == 2
     @test categories(s)[:A] == U1(1)
     @test categories(s)[:B] == SU2(2)
     @test (@inferred quantum_dimension(s)) == 5
-    @test dual(s) == (A=U1(-1),) × (B=SU2(2),)
-    @test trivial(s) == (A=U1(0),) × (B=SU2(0),)
+    @test (@inferred dual(s)) == (A=U1(-1),) × (B=SU2(2),)
+    @test (@inferred_latest trivial(s)) == (A=U1(0),) × (B=SU2(0),)
     @test (@inferred sector(typeof(categories(s)), Tuple(categories(s)))) == s
     @test (@inferred sector(typeof(s), Tuple(categories(s)))) == s
 
     s = s × (C=Ising("ψ"),)
     @test length(categories(s)) == 3
     @test categories(s)[:C] == Ising("ψ")
-    @test quantum_dimension(s) == 5.0  # type not inferred for Julia 1.6 only
-    @test dual(s) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
+    @test (@inferred_latest quantum_dimension(s)) == 5.0
+    @test (@inferred dual(s)) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
 
     s1 = (A=U1(1),) × (B=Z{2}(0),)
     s2 = (A=U1(1),) × (C=Z{2}(0),)
@@ -268,8 +292,8 @@ end
     @test categories(s)[:A] == U1(2)
     @test s == sector(; A=U1(2))
     @test (@inferred quantum_dimension(s)) == 1
-    @test dual(s) == sector("A" => U1(-2))
-    @test trivial(s) == sector(; A=U1(0))
+    @test (@inferred dual(s)) == sector("A" => U1(-2))
+    @test (@inferred_latest trivial(s)) == sector(; A=U1(0))
 
     s = sector("B" => Ising("ψ"), :C => Z{2}(1))
     @test length(categories(s)) == 2
@@ -330,7 +354,7 @@ end
       sector(; A=U1(2), B=SU2(0), C=Ising("ψ")) => 1,
       sector(; A=U1(2), B=SU2(1), C=Ising("ψ")) => 1,
     ])
-    @test quantum_dimension(g) == 8.0
+    @test (@inferred_latest quantum_dimension(g)) == 8.0
 
     g = gradedrange([
       sector(; A=Fib("1"), B=SU2(0), C=U1(2)) => 1,
