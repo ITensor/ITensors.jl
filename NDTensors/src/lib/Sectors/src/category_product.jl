@@ -219,26 +219,26 @@ end
 function categories_fusion_rule(cats1::NamedTuple, cats2::NamedTuple)
   diff_cat = CategoryProduct(symdiff_keys(cats1, cats2))
   nt1 = intersect_keys(cats1, cats2)
-  shared1 = ntuple(i -> (; keys(nt1)[i] => values(nt1)[i]), length(nt1))
   nt2 = intersect_keys(cats2, cats1)
-  shared2 = ntuple(i -> (; keys(nt2)[i] => values(nt2)[i]), length(nt2))
-  return diff_cat × categories_fusion_rule(shared1, shared2)
+  fused = map(fusion_rule, values(nt1), values(nt2))
+  return diff_cat × recover_key(typeof(nt1), fused)
 end
 
-# abelian fusion of one category
-function fusion_rule(::AbelianGroup, cats1::NT, cats2::NT) where {NT<:NamedTuple}
-  fused = fusion_rule(only(values(cats1)), only(values(cats2)))
-  return sector(only(keys(cats1)) => fused)
+function recover_key(NT::Type, fused::Tuple{Vararg{<:AbstractCategory}})
+  return sector(NT, fused)
 end
 
-# generic fusion of one category
-function fusion_rule(::SymmetryStyle, cats1::NT, cats2::NT) where {NT<:NamedTuple}
-  fused = fusion_rule(only(values(cats1)), only(values(cats2)))
-  key = only(keys(cats1))
-  v = Vector{Pair{CategoryProduct{NT},Int64}}()
-  for la in BlockArrays.blocklengths(fused)
-    push!(v, sector(key => LabelledNumbers.label(la)) => LabelledNumbers.unlabel(la))
-  end
-  g = GradedAxes.gradedrange(v)
-  return g
+function recover_key(NT::Type, fused::AbstractCategory)
+  return recover_key(NT, (fused,))
+end
+
+function recover_key(NT::Type, fused::CategoryProduct)
+  return recover_key(NT, categories(fused))
+end
+
+function recover_key(NT::Type, fused::Tuple)
+  g0 = reduce(×, fused)
+  blocklabels_key = recover_key.(NT, GradedAxes.blocklabels(g0))
+  pairs_key = blocklabels_key .=> LabelledNumbers.unlabel.(BlockArrays.blocklengths(g0))
+  return GradedAxes.gradedrange(pairs_key)
 end
