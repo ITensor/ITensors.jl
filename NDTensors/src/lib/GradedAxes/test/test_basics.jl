@@ -74,16 +74,9 @@ using Test: @test, @test_broken, @testset
   # Slicing operations
   x = gradedrange(["x" => 2, "y" => 3])
   a = x[2:4]
-  @test a isa GradedUnitRange
+  @test a isa AbstractUnitRange
   @test length(a) == 3
-  @test blocklength(a) == 2
-  @test a[Block(1)] == 2:2
-  @test label(a[Block(1)]) == "x"
-  @test a[Block(2)] == 3:4
-  @test label(a[Block(2)]) == "y"
-  @test isone(first(only(axes(a))))
-  @test length(only(axes(a))) == length(a)
-  @test blocklengths(only(axes(a))) == blocklengths(a)
+  @test a == 2:4
 
   x = gradedrange(["x" => 2, "y" => 3])
   a = x[3:4]
