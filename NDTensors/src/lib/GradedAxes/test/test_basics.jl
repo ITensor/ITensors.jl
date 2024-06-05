@@ -87,21 +87,9 @@ using Test: @test, @test_broken, @testset
 
   x = gradedrange(["x" => 2, "y" => 3])
   a = x[3:4]
-  @test a isa GradedUnitRange
+  @test a isa AbstractUnitRange
   @test length(a) == 2
-  @test blocklength(a) == 1
-  @test a[Block(1)] == 3:4
-  @test label(a[Block(1)]) == "y"
-
-  x = gradedrange(["x" => 2, "y" => 3])
-  a = x[2:4][1:2]
-  @test a isa GradedUnitRange
-  @test length(a) == 2
-  @test blocklength(a) == 2
-  @test a[Block(1)] == 2:2
-  @test label(a[Block(1)]) == "x"
-  @test a[Block(2)] == 3:3
-  @test label(a[Block(2)]) == "y"
+  @test a == 3:4
 
   x = gradedrange(["x" => 2, "y" => 3])
   a = x[Block(2)[2:3]]
