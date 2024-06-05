@@ -1,4 +1,4 @@
-using NDTensors: NDTensors, DenseTensor, array
+using NDTensors: NDTensors, DenseTensor, array, data
 using NDTensors.Expose: Exposed, unexpose
 using cuTENSOR: cuTENSOR, CuArray, CuTensor
 
@@ -12,9 +12,12 @@ function NDTensors.contract!(
   α::Number=one(Bool),
   β::Number=zero(Bool),
 )
-  cuR = CuTensor(array(unexpose(R)), collect(labelsR))
-  cuT1 = CuTensor(array(unexpose(T1)), collect(labelsT1))
-  cuT2 = CuTensor(array(unexpose(T2)), collect(labelsT2))
+  ## TODO for now a hack to get cuTENSOR working with blocksparse
+  R = unexpose(R)
+  cuR = CuTensor(copy(array(R)), collect(labelsR))
+  cuT1 = CuTensor(copy(array(unexpose(T1))), collect(labelsT1))
+  cuT2 = CuTensor(copy(array(unexpose(T2))), collect(labelsT2))
   cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
+  copyto!(data(R), cuR.data)
   return R
 end
