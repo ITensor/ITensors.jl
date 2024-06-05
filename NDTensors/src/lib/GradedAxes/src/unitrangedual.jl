@@ -65,7 +65,10 @@ BlockArrays.blockfirsts(a::UnitRangeDual) = label_dual.(blockfirsts(nondual(a)))
 BlockArrays.blocklasts(a::UnitRangeDual) = label_dual.(blocklasts(nondual(a)))
 BlockArrays.findblock(a::UnitRangeDual, index::Integer) = findblock(nondual(a), index)
 
-blocklabels(a::UnitRangeDual) = blocklabels(nondual(a))
+blocklabels(a::UnitRangeDual) = dual.(blocklabels(nondual(a)))
+
+gradedisequal(a1::UnitRangeDual, a2::GradedUnitRange) = false
+gradedisequal(a1::GradedUnitRange, a2::UnitRangeDual) = false
 function gradedisequal(a1::UnitRangeDual, a2::UnitRangeDual)
   return gradedisequal(nondual(a1), nondual(a2))
 end
