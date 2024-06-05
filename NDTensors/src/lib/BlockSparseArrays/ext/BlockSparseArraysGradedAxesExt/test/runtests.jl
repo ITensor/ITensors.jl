@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using Compat: Returns
 using Test: @test, @testset, @test_broken
-using BlockArrays: Block, blocksize
+using BlockArrays: Block, blocklength, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
 using NDTensors.GradedAxes: GradedAxes, GradedUnitRange, UnitRangeDual, dual, gradedrange
 using NDTensors.LabelledNumbers: label
@@ -50,14 +50,12 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 
     b = a[2:3, 2:3, 2:3, 2:3]
     @test size(b) == (2, 2, 2, 2)
-    @test blocksize(b) == (2, 2, 2, 2)
-    @test nstored(b) == 2
-    @test block_nstored(b) == 2
+    @test blocksize(b) == (1, 1, 1, 1)
+    @test nstored(b) == length(b)
+    @test block_nstored(b) == blocklength(b)
     for i in 1:ndims(a)
-      @test axes(b, i) isa GradedUnitRange
+      @test axes(b, i) isa Base.OneTo{Int}
     end
-    @test label(axes(b, 1)[Block(1)]) == U1(0)
-    @test label(axes(b, 1)[Block(2)]) == U1(1)
     @test Array(a) isa Array{elt}
     @test Array(a) == a
   end

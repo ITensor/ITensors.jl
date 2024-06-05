@@ -28,14 +28,15 @@ end
 ## Base.promote_shape(a1::Tuple{Vararg{BlockedUnitRange}}, a2::Tuple{Vararg{BlockedUnitRange}}) = combine_axes(a1, a2)
 
 # Work around issue that:
-#
+# ```julia
 # julia> using BlockArrays: blocks
 #
 # julia> blocks(randn(2, 2))[1, 1]
 # 2×2 view(::Matrix{Float64}, BlockSlice(Block(1),Base.OneTo(2)), BlockSlice(Block(1),Base.OneTo(2))) with eltype Float64:
 #   0.0534014  -1.1738
 #  -0.649799    0.128661
-#
+# ```
+# TODO: Raise an issue with BlockArrays.jl.
 function blocks_getindex(a::AbstractArray{<:Any,N}, index::Vararg{Integer,N}) where {N}
   return a[index...]
 end

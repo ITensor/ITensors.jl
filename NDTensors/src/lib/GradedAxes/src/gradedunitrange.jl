@@ -261,13 +261,6 @@ function blocklabels(a::AbstractUnitRange, indices)
   end
 end
 
-function blockedunitrange_getindices(
-  ga::GradedUnitRange, indices::AbstractUnitRange{<:Integer}
-)
-  a_indices = blockedunitrange_getindices(unlabel_blocks(ga), indices)
-  return labelled_blocks(a_indices, blocklabels(ga, indices))
-end
-
 function blockedunitrange_getindices(ga::GradedUnitRange, indices::BlockRange)
   return labelled_blocks(unlabel_blocks(ga)[indices], blocklabels(ga, indices))
 end

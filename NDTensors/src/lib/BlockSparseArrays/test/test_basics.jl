@@ -153,6 +153,10 @@ include("TestBlockSparseArraysUtils.jl")
     @test blocksize(b) == (2, 2)
     @test nstored(b) == nstored(a)
     @test block_nstored(b) == 2
+    b_view = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+
+    # TODO: Fix this!
+    @test_broken show(devnull, MIME("text/plain"), b_view)
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
@@ -182,9 +186,9 @@ include("TestBlockSparseArraysUtils.jl")
     b = a[2:4, 2:4]
     @test b == Array(a)[2:4, 2:4]
     @test size(b) == (3, 3)
-    @test blocksize(b) == (2, 2)
-    @test nstored(b) == 1 * 1 + 2 * 2
-    @test block_nstored(b) == 2
+    @test blocksize(b) == (1, 1)
+    @test nstored(b) == length(b)
+    @test block_nstored(b) == blocklength(b)
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
@@ -257,18 +261,14 @@ include("TestBlockSparseArraysUtils.jl")
     @view(a[Block(2, 2)])[1:1, 1:2] = x
     @test @view(a[Block(2, 2)])[1:1, 1:2] == x
     @test a[Block(2, 2)][1:1, 1:2] == x
-
-    # TODO: This is broken, fix!
-    @test_broken a[3:3, 4:5] == x
+    @test a[3:3, 4:5] == x
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     x = randn(elt, 1, 2)
     @views a[Block(2, 2)][1:1, 1:2] = x
     @test @view(a[Block(2, 2)])[1:1, 1:2] == x
     @test a[Block(2, 2)][1:1, 1:2] == x
-
-    # TODO: This is broken, fix!
-    @test_broken a[3:3, 4:5] == x
+    @test a[3:3, 4:5] == x
 
     ## Broken, need to fix.
 

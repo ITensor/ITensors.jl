@@ -345,12 +345,25 @@ function blocked_view(
   return BlockedSubArray(a, indices)
 end
 
+function blocked_view(a::AbstractArray{<:Any,N}, indices::Vararg{Any,N}) where {N}
+  return view(a, indices...)
+end
+
 function blocksparse_blocks(a::BlockedSubArray)
   return SparseSubArrayBlocks(a)
 end
 
+# TODO: Restrict to:
+# SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{AbstractVector{<:Integer}}}}
+# and consider making a trait, like `is_blocked_slice`.
 function blocksparse_blocks(a::SubArray)
   return BlocksView(a)
+end
+
+function blocksparse_blocks(
+  a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{AbstractVector{<:Block}}}}
+)
+  return SparseSubArrayBlocks(a)
 end
 
 using BlockArrays: BlocksView
