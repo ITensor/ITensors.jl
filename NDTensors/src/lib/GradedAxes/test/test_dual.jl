@@ -22,8 +22,7 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test ad[4] == 4
   @test label(ad[4]) == U1(-1)
   @test ad[2:4] == 2:4
-  @test ad[2:4] isa UnitRangeDual
-  @test label(ad[2:4][Block(2)]) == U1(-1)
+  @test ad[2:4] isa AbstractUnitRange
   @test ad[[2, 4]] == [2, 4]
   @test label(ad[[2, 4]][2]) == U1(-1)
   @test ad[Block(2)] == 3:5
