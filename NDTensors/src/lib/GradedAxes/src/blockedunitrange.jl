@@ -36,6 +36,10 @@ function blockedunitrange_findblockindex(a::BlockedUnitRange, index::Integer)
   return @inbounds findblockindex(a, index + first(a) - 1)
 end
 
+function blockedunitrange_getindices(a::AbstractUnitRange, indices)
+  return a[indices]
+end
+
 # TODO: Move this to a `BlockArraysExtensions` library.
 # Like `a[indices]` but preserves block structure.
 function blockedunitrange_getindices(

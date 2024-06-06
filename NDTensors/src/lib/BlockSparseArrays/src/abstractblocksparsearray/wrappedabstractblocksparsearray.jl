@@ -11,26 +11,39 @@ const BlockSparseArrayLike{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
 
-# AbstractArray interface
-# TODO: Use `BlockSparseArrayLike`.
-# TODO: Need to handle block indexing.
-function Base.axes(a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray})
-  return ntuple(i -> sub_axis(axes(parent(a), i), a.indices[i]), ndims(a))
-end
-
 # Used when making views.
 function Base.to_indices(
   a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
 )
   return (unblock(a, inds, I), to_indices(a, BlockArrays._maybetail(inds), Base.tail(I))...)
 end
+
 function Base.to_indices(a::BlockSparseArrayLike, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
   return to_indices(a, axes(a), I)
+end
+
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
+)
+  return (unblock(a, inds, I), to_indices(a, BlockArrays._maybetail(inds), Base.tail(I))...)
+end
+
+function Base.to_indices(
+  a::BlockSparseArrayLike, r::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
+)
+  return to_indices(a, axes(a), r)
 end
 
 # Used inside `Base.to_indices` when making views.
 function BlockArrays.unblock(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
   return BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+end
+
+function BlockArrays.unblock(
+  a::BlockSparseArrayLike, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
+)
+  bs = blockrange(inds[1], I[1])
+  return BlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
 end
 
 # BlockArrays `AbstractBlockArray` interface
