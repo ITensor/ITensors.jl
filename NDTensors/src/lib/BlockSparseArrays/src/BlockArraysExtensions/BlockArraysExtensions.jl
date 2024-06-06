@@ -19,7 +19,7 @@ using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: stored_indices
 
-struct BlockIndices{B,I<:AbstractVector{Int}} <: AbstractVector{Int}
+struct BlockIndices{B,T<:Integer,I<:AbstractVector{T}} <: AbstractVector{T}
   blocks::B
   indices::I
 end
