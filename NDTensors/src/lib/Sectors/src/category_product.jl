@@ -98,7 +98,7 @@ categories_product(::Tuple{}, l2::NamedTuple) = l2
 function ×(l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger)
   c3 = LabelledNumbers.label(l1) × LabelledNumbers.label(l2)
   m3 = LabelledNumbers.unlabel(l1) * LabelledNumbers.unlabel(l2)
-  return LabelledNumbers.LabelledInteger(m3, c3)
+  return LabelledNumbers.labelled(m3, c3)
 end
 
 function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)

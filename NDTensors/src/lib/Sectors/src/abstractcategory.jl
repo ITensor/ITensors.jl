@@ -53,7 +53,7 @@ end
 
 function fusion_rule(::SymmetryStyle, c1::C, c2::C) where {C<:AbstractCategory}
   degen, labels = label_fusion_rule(C, category_label(c1), category_label(c2))
-  return GradedAxes.gradedrange(LabelledNumbers.LabelledInteger.(degen, C.(labels)))
+  return GradedAxes.gradedrange(LabelledNumbers.labelled.(degen, C.(labels)))
 end
 
 # abelian case: return Category
@@ -64,9 +64,11 @@ end
 function fusion_rule(
   ::SymmetryStyle, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )
-  blocks12 = BlockArrays.blocklengths(LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2))
+  fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
   v =
-    LabelledNumbers.LabelledInteger.(l1 * l2 .* blocks12, LabelledNumbers.label.(blocks12))
+    LabelledNumbers.labelled.(
+      l1 * l2 .* BlockArrays.blocklengths(fused), GradedAxes.blocklabels(fused)
+    )
   return GradedAxes.gradedrange(v)
 end
 
@@ -74,13 +76,13 @@ function fusion_rule(
   ::AbelianGroup, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )
   fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
-  return LabelledNumbers.LabelledInteger(l1 * l2, fused)
+  return LabelledNumbers.labelled(l1 * l2, fused)
 end
 
 function fusion_rule(
   ::EmptyCategory, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )
-  return LabelledNumbers.LabelledInteger(l1 * l2, sector())
+  return LabelledNumbers.labelled(l1 * l2, sector())
 end
 
 function label_fusion_rule(category_type::Type{<:AbstractCategory}, ::Any, ::Any)
@@ -105,7 +107,7 @@ function GradedAxes.fuse_labels(::EmptyCategory, c1::AbstractCategory, c2::Abstr
 end
 
 # cast to range
-to_graded_axis(c::AbstractCategory) = to_graded_axis(LabelledNumbers.LabelledInteger(1, c))
+to_graded_axis(c::AbstractCategory) = to_graded_axis(LabelledNumbers.labelled(1, c))
 to_graded_axis(l::LabelledNumbers.LabelledInteger) = GradedAxes.gradedrange([l])
 to_graded_axis(g::AbstractUnitRange) = g
 
