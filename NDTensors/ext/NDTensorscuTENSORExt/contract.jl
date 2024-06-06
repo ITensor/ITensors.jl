@@ -22,9 +22,7 @@ function NDTensors.contract!(
   cuT2 = CuTensor(arrayT2, collect(labelsT2))
   cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
   if !zoffR
-    ## use vec to flatten cuR.data which could be multidimensional but
-    ## tensor data is currently a vector
-    data(R) .= vec(cuR.data)
+    array(R) .= cuR.data
   end
   return R
 end
