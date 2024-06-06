@@ -1,7 +1,6 @@
-using BlockArrays: BlockedUnitRange, blockedrange
-using SplitApplyCombine: groupcount
-
 using Adapt: Adapt, WrappedArray
+using BlockArrays: BlockArrays, BlockedUnitRange, blockedrange, unblock
+using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
   T,N,AbstractBlockSparseArray,AbstractBlockSparseArray{T,N}
@@ -17,6 +16,21 @@ const BlockSparseArrayLike{T,N} = Union{
 # TODO: Need to handle block indexing.
 function Base.axes(a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray})
   return ntuple(i -> sub_axis(axes(parent(a), i), a.indices[i]), ndims(a))
+end
+
+# Used when making views.
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
+)
+  return (unblock(a, inds, I), to_indices(a, BlockArrays._maybetail(inds), Base.tail(I))...)
+end
+function Base.to_indices(a::BlockSparseArrayLike, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
+  return to_indices(a, axes(a), I)
+end
+
+# Used inside `Base.to_indices` when making views.
+function BlockArrays.unblock(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
+  return BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
 end
 
 # BlockArrays `AbstractBlockArray` interface

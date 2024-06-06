@@ -19,6 +19,15 @@ using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: stored_indices
 
+struct BlockIndices{B,T<:Integer,I<:AbstractVector{T}} <: AbstractVector{T}
+  blocks::B
+  indices::I
+end
+for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe_length)
+  @eval Base.$f(S::BlockIndices) = Base.$f(S.indices)
+end
+Base.getindex(S::BlockIndices, i::Integer) = getindex(S.indices, i)
+
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices)
   return error("Not implemented")
@@ -46,6 +55,10 @@ end
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices::BlockSlice{<:BlockIndexRange{1}})
   return sub_axis(a, indices.block)
+end
+
+function sub_axis(a::AbstractUnitRange, indices::BlockIndices)
+  return sub_axis(a, indices.blocks)
 end
 
 # TODO: Use `GradedAxes.blockedunitrange_getindices`.
@@ -162,6 +175,10 @@ function blockrange(axis::AbstractUnitRange, r::BlockSlice)
   return blockrange(axis, r.block)
 end
 
+function blockrange(a::AbstractUnitRange, r::BlockIndices)
+  return blockrange(a, r.blocks)
+end
+
 function blockrange(axis::AbstractUnitRange, r::Block{1})
   return r:r
 end
@@ -172,6 +189,43 @@ end
 
 function blockrange(axis::AbstractUnitRange, r)
   return error("Slicing not implemented for range of type `$(typeof(r))`.")
+end
+
+# This takes a range of indices `indices` of array `a`
+# and maps it to the range of indices within block `block`.
+function blockindices(a::AbstractArray, block::Block, indices::Tuple)
+  return blockindices(axes(a), block, indices)
+end
+
+function blockindices(axes::Tuple, block::Block, indices::Tuple)
+  return blockindices.(axes, Tuple(block), indices)
+end
+
+function blockindices(axis::AbstractUnitRange, block::Block, indices::AbstractUnitRange)
+  indices_within_block = intersect(indices, axis[block])
+  if iszero(length(indices_within_block))
+    # Falls outside of block
+    return 1:0
+  end
+  return only(blockindexrange(axis, indices_within_block).indices)
+end
+
+# This catches the case of `Vector{<:Block{1}}`.
+# `BlockRange` gets wrapped in a `BlockSlice`, which is handled properly
+#  by the version with `indices::AbstractUnitRange`.
+#  TODO: This should get fixed in a better way inside of `BlockArrays`.
+function blockindices(
+  axis::AbstractUnitRange, block::Block, indices::AbstractVector{<:Block{1}}
+)
+  if block ∉ indices
+    # Falls outside of block
+    return 1:0
+  end
+  return Base.OneTo(length(axis[block]))
+end
+
+function blockindices(a::AbstractUnitRange, b::Block, r::BlockIndices)
+  return blockindices(a, b, r.blocks)
 end
 
 function cartesianindices(a::AbstractArray, b::Block)

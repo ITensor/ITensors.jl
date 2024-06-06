@@ -12,6 +12,22 @@ using Test: @test, @testset
     @test unlabel(x) == 2
     @test !islabelled(unlabel(x))
 
+    @test labelled(1, "x") < labelled(2, "x")
+    @test !(labelled(2, "x") < labelled(2, "x"))
+    @test !(labelled(3, "x") < labelled(2, "x"))
+
+    @test !(labelled(1, "x") > labelled(2, "x"))
+    @test !(labelled(2, "x") > labelled(2, "x"))
+    @test labelled(3, "x") > labelled(2, "x")
+
+    @test labelled(1, "x") <= labelled(2, "x")
+    @test labelled(2, "x") <= labelled(2, "x")
+    @test !(labelled(3, "x") <= labelled(2, "x"))
+
+    @test !(labelled(1, "x") >= labelled(2, "x"))
+    @test labelled(2, "x") >= labelled(2, "x")
+    @test labelled(3, "x") >= labelled(2, "x")
+
     @test x * 2 == 4
     @test !islabelled(x * 2)
     @test 2 * x == 4
