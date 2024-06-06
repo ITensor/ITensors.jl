@@ -83,6 +83,12 @@ function fusion_rule(
   return LabelledNumbers.LabelledInteger(l1 * l2, fused)
 end
 
+function fusion_rule(
+  ::EmptyCategory, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
+)
+  return LabelledNumbers.LabelledInteger(l1 * l2, sector())
+end
+
 # =============  fusion rule and gradedunitrange ===================
 # GradedAxes.tensor_product interface. Only for abelian groups.
 function GradedAxes.fuse_labels(c1::AbstractCategory, c2::AbstractCategory)
@@ -94,6 +100,9 @@ function GradedAxes.fuse_labels(::SymmetryStyle, c1::AbstractCategory, c2::Abstr
   return error("`fuse_labels` is only defined for abelian groups")
 end
 function GradedAxes.fuse_labels(::AbelianGroup, c1::AbstractCategory, c2::AbstractCategory)
+  return fusion_rule(c1, c2)
+end
+function GradedAxes.fuse_labels(::EmptyCategory, c1::AbstractCategory, c2::AbstractCategory)
   return fusion_rule(c1, c2)
 end
 
