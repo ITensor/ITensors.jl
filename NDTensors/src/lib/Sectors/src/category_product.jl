@@ -11,16 +11,11 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-# ===================================  SymmetryStyle  ======================================
+# =================================  Sectors interface  ====================================
 function SymmetryStyle(c::CategoryProduct)
   return reduce(combine_styles, map(SymmetryStyle, categories(c)); init=EmptyCategory())
 end
 
-function SymmetryStyle(nt::NamedTuple)
-  return reduce(combine_styles, map(SymmetryStyle, values(nt)); init=EmptyCategory())
-end
-
-# ==================================  Sector interface  ====================================
 function quantum_dimension(::NonAbelianGroup, s::CategoryProduct)
   return prod(map(quantum_dimension, categories(s)))
 end

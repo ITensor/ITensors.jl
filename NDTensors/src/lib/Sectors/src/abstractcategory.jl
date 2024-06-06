@@ -3,12 +3,12 @@
 
 abstract type AbstractCategory end
 
-# ============  Base interface  =================
+# ===================================  Base interface  =====================================
 function Base.isless(c1::C, c2::C) where {C<:AbstractCategory}
   return isless(category_label(c1), category_label(c2))
 end
 
-# =================  Misc  ======================
+# =================================  Sectors interface  ====================================
 trivial(x) = trivial(typeof(x))
 function trivial(axis_type::Type{<:AbstractUnitRange})
   return GradedAxes.gradedrange([trivial(eltype(axis_type))])  # always returns nondual
@@ -44,7 +44,7 @@ quantum_dimension(::EmptyCategory, ::AbstractCategory) = 1
 quantum_dimension(::SymmetryStyle, g::AbstractUnitRange) = sum(block_dimensions(g))
 quantum_dimension(::AbelianGroup, g::AbstractUnitRange) = length(g)
 
-# ================  fusion rule interface ====================
+# ===============================  Fusion rule interface  ==================================
 ⊗(c1::AbstractCategory, c2::AbstractCategory) = fusion_rule(c1, c2)
 
 function fusion_rule(c1, c2)
@@ -61,12 +61,6 @@ function fusion_rule(::AbelianGroup, c1::C, c2::C) where {C<:AbstractCategory}
   return C(label_fusion_rule(C, category_label(c1), category_label(c2)))
 end
 
-function label_fusion_rule(category_type::Type{<:AbstractCategory}, l1, l2)
-  return error("`label_fusion_rule` not defined for type $(category_type).")
-end
-
-# convenient to define fusion rule for LabelledInteger too
-# TBD expose this through ⊗? Currently not accessible.
 function fusion_rule(
   ::SymmetryStyle, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )
@@ -89,7 +83,11 @@ function fusion_rule(
   return LabelledNumbers.LabelledInteger(l1 * l2, sector())
 end
 
-# =============  fusion rule and gradedunitrange ===================
+function label_fusion_rule(category_type::Type{<:AbstractCategory}, ::Any, ::Any)
+  return error("`label_fusion_rule` not defined for type $(category_type).")
+end
+
+# ================================  GradedAxes interface  ==================================
 # GradedAxes.tensor_product interface. Only for abelian groups.
 function GradedAxes.fuse_labels(c1::AbstractCategory, c2::AbstractCategory)
   return GradedAxes.fuse_labels(
@@ -107,7 +105,7 @@ function GradedAxes.fuse_labels(::EmptyCategory, c1::AbstractCategory, c2::Abstr
 end
 
 # cast to range
-to_graded_axis(c::AbstractCategory) = GradedAxes.gradedrange([c => 1])
+to_graded_axis(c::AbstractCategory) = to_graded_axis(LabelledNumbers.LabelledInteger(1, c))
 to_graded_axis(l::LabelledNumbers.LabelledInteger) = GradedAxes.gradedrange([l])
 to_graded_axis(g::AbstractUnitRange) = g
 
@@ -124,7 +122,7 @@ GradedAxes.fusion_product(x) = GradedAxes.fusion_product(to_graded_axis(x))
 GradedAxes.fusion_product(g::AbstractUnitRange) = GradedAxes.fusion_product(trivial(g), g)
 
 function GradedAxes.fusion_product(
-  g1::BlockArrays.BlockedUnitRange, g2::BlockArrays.BlockedUnitRange
+  g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange
 )
   blocks12 = Vector{eltype(to_graded_axis(fusion_rule(first(g1), first(g2))))}()
   for l1 in BlockArrays.blocklengths(g1)
