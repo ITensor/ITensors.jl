@@ -227,42 +227,6 @@ function SparseArrayInterface.sparse_storage(a::SparseAdjointBlocks)
   return error("Not implemented")
 end
 
-# TODO: Move to `BlockArraysExtensions`.
-# This takes a range of indices `indices` of array `a`
-# and maps it to the range of indices within block `block`.
-function blockindices(a::AbstractArray, block::Block, indices::Tuple)
-  return blockindices(axes(a), block, indices)
-end
-
-# TODO: Move to `BlockArraysExtensions`.
-function blockindices(axes::Tuple, block::Block, indices::Tuple)
-  return blockindices.(axes, Tuple(block), indices)
-end
-
-# TODO: Move to `BlockArraysExtensions`.
-function blockindices(axis::AbstractUnitRange, block::Block, indices::AbstractUnitRange)
-  indices_within_block = intersect(indices, axis[block])
-  if iszero(length(indices_within_block))
-    # Falls outside of block
-    return 1:0
-  end
-  return only(blockindexrange(axis, indices_within_block).indices)
-end
-
-# This catches the case of `Vector{<:Block{1}}`.
-# `BlockRange` gets wrapped in a `BlockSlice`, which is handled properly
-#  by the version with `indices::AbstractUnitRange`.
-#  TODO: This should get fixed in a better way inside of `BlockArrays`.
-function blockindices(
-  axis::AbstractUnitRange, block::Block, indices::AbstractVector{<:Block{1}}
-)
-  if block ∉ indices
-    # Falls outside of block
-    return 1:0
-  end
-  return Base.OneTo(length(axis[block]))
-end
-
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
 struct SparseSubArrayBlocks{T,N,Array<:SubArray{T,N}} <: AbstractSparseArray{T,N}
