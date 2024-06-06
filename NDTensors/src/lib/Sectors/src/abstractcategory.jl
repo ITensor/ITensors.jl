@@ -124,12 +124,11 @@ GradedAxes.fusion_product(g::AbstractUnitRange) = GradedAxes.fusion_product(triv
 function GradedAxes.fusion_product(
   g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange
 )
-  blocks12 = Vector{eltype(to_graded_axis(fusion_rule(first(g1), first(g2))))}()
-  for l1 in BlockArrays.blocklengths(g1)
-    for l2 in BlockArrays.blocklengths(g2)
-      append!(blocks12, BlockArrays.blocklengths(to_graded_axis(fusion_rule(l1, l2))))
-    end
-  end
+  nested_blocks = map(
+    ((l1, l2),) -> to_graded_axis(fusion_rule(l1, l2)),
+    Iterators.product(BlockArrays.blocklengths(g1), BlockArrays.blocklengths(g2)),
+  )
+  blocks12 = reduce(vcat, BlockArrays.blocklengths.(nested_blocks))
   la3 = LabelledNumbers.label.(blocks12)
   pairs3 = [r => sum(blocks12[findall(==(r), la3)]; init=0) for r in sort(unique(la3))]
   out = GradedAxes.gradedrange(pairs3)
