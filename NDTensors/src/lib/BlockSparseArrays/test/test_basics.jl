@@ -283,6 +283,21 @@ include("TestBlockSparseArraysUtils.jl")
       @test b[block] == a[block]
     end
 
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    @views for b in [Block(1, 1), Block(2, 2)]
+      # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
+      a[b] = randn(elt, size(a[b]))
+    end
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    @test b[Block(1, 1)] == a[Block(2, 2)]
+    @test b[Block(2, 1)] == a[Block(1, 2)]
+    @test b[Block(1, 2)] == a[Block(2, 1)]
+    @test b[Block(2, 2)] == a[Block(1, 1)]
+    @test b[1, 1] == a[3, 3]
+    @test b[4, 4] == a[1, 1]
+    b[4, 4] = 44
+    @test b[4, 4] == 44
+
     ## Broken, need to fix.
 
     # This is outputting only zero blocks.
