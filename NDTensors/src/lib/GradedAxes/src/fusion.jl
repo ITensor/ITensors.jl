@@ -6,6 +6,10 @@ OneToOne() = OneToOne{Bool}()
 Base.first(a::OneToOne) = one(eltype(a))
 Base.last(a::OneToOne) = one(eltype(a))
 
+gradedisequal(::AbstractUnitRange, ::OneToOne) = false
+gradedisequal(::OneToOne, ::AbstractUnitRange) = false
+gradedisequal(::OneToOne, ::OneToOne) = true
+
 # https://github.com/ITensor/ITensors.jl/blob/v0.3.57/NDTensors/src/lib/GradedAxes/src/tensor_product.jl
 # https://en.wikipedia.org/wiki/Tensor_product
 # https://github.com/KeitaNakamura/Tensorial.jl
@@ -122,13 +126,14 @@ function blockmergesort(g::GradedUnitRange)
 end
 
 blockmergesort(g::UnitRangeDual) = dual(blockmergesort(nondual(g)))
+blockmergesort(g::OneToOne) = g
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
 function fusion_product(g1, g2)
   return blockmergesort(tensor_product(g1, g2))
 end
 
-fusion_product(g::GradedUnitRange) = blockmergesort(g)
+fusion_product(g::AbstractUnitRange) = blockmergesort(g)
 fusion_product(g::UnitRangeDual) = fusion_product(label_dual(nondual(g)))
 
 # recursive fusion_product. Simpler than reduce + fix type stability issues with reduce

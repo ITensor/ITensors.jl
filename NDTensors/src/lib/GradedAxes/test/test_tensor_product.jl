@@ -1,11 +1,21 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes:
-  GradedAxes, GradedUnitRange, fusion_product, gradedrange, gradedisequal, tensor_product
+  GradedAxes,
+  GradedUnitRange,
+  OneToOne,
+  fusion_product,
+  gradedrange,
+  gradedisequal,
+  tensor_product
 using BlockArrays: blocklength, blocklengths
 using Test: @test, @testset
 
 @testset "GradedAxes.tensor_product" begin
   GradedAxes.fuse_labels(x::String, y::String) = x * y
+
+  g0 = OneToOne()
+  @test gradedisequal(tensor_product(g0, g0), g0)
+
   a = gradedrange(["x" => 2, "y" => 3])
   b = tensor_product(a, a)
   @test b isa GradedUnitRange
@@ -22,6 +32,10 @@ end
 
 @testset "GradedAxes.fusion_product" begin
   GradedAxes.fuse_labels(i::Int, j::Int) = i + j
+
+  g0 = OneToOne()
+  @test gradedisequal(fusion_product(g0, g0), g0)
+
   a = gradedrange([1 => 1, 2 => 3, 1 => 1])
 
   b = fusion_product(a)
