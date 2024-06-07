@@ -59,9 +59,19 @@ end
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == Fib("τ")
     @test (@inferred_latest trivial(s)) == sector(U1(0), SU2(0), Fib("1"))
+  end
 
+  @testset "Ordered comparisons" begin
     # convention: categories must have same length to evaluate as equal
+    @test sector(U1(1), SU2(1)) == sector(U1(1), SU2(1))
+    @test sector(U1(1), SU2(0)) != sector(U1(1), SU2(1))
+    @test sector(U1(0), SU2(1)) != sector(U1(1), SU2(1))
     @test sector(U1(1)) != sector(U1(1), U1(0))
+
+    # convention: categories must have same length to be compared
+    @test sector(U1(0)) < sector((U1(1)))
+    @test sector(U1(0), U1(2)) < sector((U1(1)), U1(0))
+    @test_throws ArgumentError sector(U1(0)) < sector(U1(1), U1(2))
   end
 
   @testset "Quantum dimension and GradedUnitRange" begin
@@ -289,7 +299,7 @@ end
 
     s1 = (A=U1(1),) × (B=Z{2}(0),)
     s2 = (A=U1(1),) × (C=Z{2}(0),)
-    @test_throws ErrorException s1 × s2
+    @test_throws ArgumentError s1 × s2
   end
 
   @testset "Construct from Pairs" begin
@@ -314,9 +324,13 @@ end
     q2 = sector(; N=U1(2))
     q20 = (N=U1(2),) × (J=SU2(0),)
     @test q20 == q2
+    @test !(q20 < q2)
+    @test !(q2 < q20)
 
     q21 = (N=U1(2),) × (J=SU2(1),)
     @test q21 != q2
+    @test q20 < q21
+    @test q2 < q21
 
     a = (A=U1(0),) × (B=U1(2),)
     b = (B=U1(2),) × (C=U1(0),)
@@ -517,6 +531,7 @@ end
 
 @testset "Empty category" begin
   s = sector()
+  @test s == s
   @test (@inferred dual(s)) == s
   @test (@inferred s × s) == s
   @test (@inferred s ⊗ s) == s
@@ -550,9 +565,18 @@ end
   @test (@inferred sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
     gradedrange([sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
 
-  # Empty evaluates equal to itself only
+  # Empty behaves as empty NamedTuple
   @test s != U1(0)
   @test s != sector(U1(0))
-  @test s != sector(; A=U1(0))
+  @test s != sector(; A=U1(1))
+  @test s == sector(; A=U1(0))
+  @test sector(; A=U1(0)) == s
+
+  @test !(s < s)
+  @test_throws ArgumentError s < sector(U1(0))
+  @test s < sector(; A=U1(1))
+  @test s > sector(; A=U1(-1))
+  @test !(s < sector(; A=U1(0)))
+  @test !(s > sector(; A=U1(0)))
 end
 end

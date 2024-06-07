@@ -26,10 +26,7 @@ end
 
 GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categories(s)))
 
-function trivial(type::Type{<:CategoryProduct})
-  cat_type = categories_type(type)
-  return recover_key(cat_type, categories_trivial(cat_type))
-end
+trivial(type::Type{<:CategoryProduct}) = sector(categories_trivial(categories_type(type)))
 
 # ===================================  Base interface  =====================================
 function Base.:(==)(A::CategoryProduct, B::CategoryProduct)
@@ -52,9 +49,10 @@ category_show(io::IO, ::Int, v) = print(io, v)
 category_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
 function Base.isless(s1::C, s2::C) where {C<:CategoryProduct}
-  return isless(
-    category_label.(values(categories(s1))), category_label.(values(categories(s2)))
-  )
+  return categories_isless(categories(s1), categories(s2))
+end
+function Base.isless(s1::CategoryProduct, s2::CategoryProduct)
+  return categories_isless(categories(s1), categories(s2))
 end
 
 # =======================================  shared  =========================================
@@ -64,22 +62,23 @@ end
 
 function categories_fusion_rule(cats1, cats2)
   diff_cat = CategoryProduct(find_diff(cats1, cats2))
-  nt1, nt2 = find_common(cats1, cats2)
-  fused = map(fusion_rule, values(nt1), values(nt2))
-  return recover_key(typeof(nt1), fused) × diff_cat
+  shared1, shared2 = find_common(cats1, cats2)
+  fused = map(fusion_rule, values(shared1), values(shared2))
+  return recover_key(typeof(shared1), fused) × diff_cat
 end
 
+# get clean results when mixing implementations
 categories_isequal(::Tuple, ::NamedTuple) = false
 categories_isequal(::NamedTuple, ::Tuple) = false
 
-categories_trivial(cat_type::Type) = trivial.(fieldtypes(cat_type))
+categories_isless(::NamedTuple, ::Tuple) = throw(ArgumentError("Not implemented"))
+categories_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"))
 
 categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
 
 recover_key(T::Type, t::Tuple{Vararg{<:AbstractCategory}}) = sector(T, t)
 recover_key(T::Type, c::AbstractCategory) = recover_key(T, (c,))
 recover_key(T::Type, c::CategoryProduct) = recover_key(T, categories(c))
-
 function recover_key(T::Type, fused::Tuple)
   # here fused contains at leat one GradedUnitRange
   g0 = reduce(×, fused)
@@ -99,18 +98,6 @@ sector(args...; kws...) = CategoryProduct(args...; kws...)
 function ×(p1::CategoryProduct, p2::CategoryProduct)
   return CategoryProduct(categories_product(categories(p1), categories(p2)))
 end
-
-function categories_product(l1::NamedTuple, l2::NamedTuple)
-  if length(intersect_keys(l1, l2)) > 0
-    throw(error("Cannot define product of shared keys"))
-  end
-  return union_keys(l1, l2)
-end
-categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
-
-# edge cases
-categories_product(l1::NamedTuple, ::Tuple{}) = l1
-categories_product(::Tuple{}, l2::NamedTuple) = l2
 
 ×(a, g::AbstractUnitRange) = ×(to_graded_axis(a), g)
 ×(g::AbstractUnitRange, b) = ×(g, to_graded_axis(b))
@@ -178,6 +165,13 @@ CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
 
 categories_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
+categories_isless(::Tuple, ::Tuple) = throw(ArgumentError("Not implemented"))
+categories_isless(t1::T, t2::T) where {T<:Tuple} = t1 < t2
+
+categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
+
+categories_trivial(type::Type{<:Tuple}) = trivial.(fieldtypes(type))
+
 function find_common(t1::Tuple, t2::Tuple)
   n = min(length(t1), length(t2))
   return t1[begin:n], t2[begin:n]
@@ -195,10 +189,10 @@ function CategoryProduct(nt::NamedTuple)
   return _CategoryProduct(categories)
 end
 
+CategoryProduct(; kws...) = CategoryProduct((; kws...))
+
 # avoid having 2 different kinds of EmptyCategory: cast empty NamedTuple to Tuple{}
 CategoryProduct(::NamedTuple{()}) = CategoryProduct(())
-
-CategoryProduct(; kws...) = CategoryProduct((; kws...))
 
 function CategoryProduct(pairs::Pair...)
   keys = ntuple(n -> Symbol(pairs[n][1]), length(pairs))
@@ -206,11 +200,47 @@ function CategoryProduct(pairs::Pair...)
   return CategoryProduct(NamedTuple{keys}(vals))
 end
 
-function categories_isequal(A::NamedTuple, B::NamedTuple)
-  sharedA, sharedB = find_common(A, B)
-  common_categories_match = sharedA == sharedB
-  unique_categories_zero = all(map(istrivial, find_diff(A, B)))
-  return common_categories_match && unique_categories_zero
+# sector() acts as empty NamedTuple
+function categories_isequal(nt::NamedTuple, ::Tuple{})
+  return categories_isequal(nt, categories_trivial(typeof(nt)))
+end
+function categories_isequal(::Tuple{}, nt::NamedTuple)
+  return categories_isequal(categories_trivial(typeof(nt)), nt)
+end
+function categories_isequal(nt1::NamedTuple, nt2::NamedTuple)
+  return ==(sym_categories_insert_unspecified(nt1, nt2)...)
+end
+
+function categories_isless(nt::NamedTuple, ::Tuple{})
+  return categories_isless(nt, categories_trivial(typeof(nt)))
+end
+function categories_isless(::Tuple{}, nt::NamedTuple)
+  return categories_isless(categories_trivial(typeof(nt)), nt)
+end
+function categories_isless(nt1::NamedTuple, nt2::NamedTuple)
+  return isless(sym_categories_insert_unspecified(nt1, nt2)...)
+end
+
+function sym_categories_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
+  return categories_insert_unspecified(nt1, nt2), categories_insert_unspecified(nt2, nt1)
+end
+
+function categories_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
+  diff1 = categories_trivial(typeof(setdiff_keys(nt2, nt1)))
+  return sort_keys(union_keys(nt1, diff1))
+end
+
+categories_product(l1::NamedTuple, ::Tuple{}) = l1
+categories_product(::Tuple{}, l2::NamedTuple) = l2
+function categories_product(l1::NamedTuple, l2::NamedTuple)
+  if length(intersect_keys(l1, l2)) > 0
+    throw(ArgumentError("Cannot define product of shared keys"))
+  end
+  return union_keys(l1, l2)
+end
+
+function categories_trivial(type::Type{<:NamedTuple{Keys}}) where {Keys}
+  return NamedTuple{Keys}(trivial.(fieldtypes(type)))
 end
 
 function find_common(nt1::NamedTuple, nt2::NamedTuple)
