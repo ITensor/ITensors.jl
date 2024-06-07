@@ -36,8 +36,15 @@ function blockedunitrange_findblockindex(a::BlockedUnitRange, index::Integer)
   return @inbounds findblockindex(a, index + first(a) - 1)
 end
 
+function blockedunitrange_getindices(a::AbstractUnitRange, indices)
+  return a[indices]
+end
+
 # TODO: Move this to a `BlockArraysExtensions` library.
 # Like `a[indices]` but preserves block structure.
+# TODO: Consider calling this something else, for example
+# `blocked_getindex`. See the discussion here:
+# https://github.com/JuliaArrays/BlockArrays.jl/issues/347
 function blockedunitrange_getindices(
   a::BlockedUnitRange, indices::AbstractUnitRange{<:Integer}
 )
@@ -72,10 +79,21 @@ function blockedunitrange_getindices(a::BlockedUnitRange, indices::Vector{<:Inte
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
+# TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
+# to merge blocks.
 function blockedunitrange_getindices(
-  a::BlockedUnitRange, indices::Vector{<:Union{Block{1},BlockIndexRange{1}}}
+  a::BlockedUnitRange, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
 )
-  return mortar(map(index -> a[index], indices))
+  # Without converting `indices` to `Vector`,
+  # mapping `indices` outputs a `BlockVector`
+  # which is harder to reason about.
+  blocks = map(index -> a[index], Vector(indices))
+  # We pass `length.(blocks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  return mortar(blocks, length.(blocks))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
