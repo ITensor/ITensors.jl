@@ -27,7 +27,8 @@ end
 GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categories(s)))
 
 function trivial(type::Type{<:CategoryProduct})
-  return sector(categories_trivial(categories_type(type)))
+  cat_type = categories_type(type)
+  return recover_key(cat_type, categories_trivial(cat_type))
 end
 
 # ===================================  Base interface  =====================================
@@ -62,10 +63,33 @@ end
 # - ordered-like with a Tuple
 # - dictionary-like with a NamedTuple
 
+function categories_fusion_rule(cats1, cats2)
+  diff_cat = CategoryProduct(find_diff(cats1, cats2))
+  nt1, nt2 = find_common(cats1, cats2)
+  fused = map(fusion_rule, values(nt1), values(nt2))
+  return recover_key(typeof(nt1), fused) × diff_cat
+end
+
 categories_isequal(::Tuple, ::NamedTuple) = false
 categories_isequal(::NamedTuple, ::Tuple) = false
 
+categories_trivial(cat_type::Type) = trivial.(fieldtypes(cat_type))
+
 categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
+
+recover_key(T::Type, t::Tuple{Vararg{<:AbstractCategory}}) = sector(T, t)
+recover_key(T::Type, c::AbstractCategory) = recover_key(T, (c,))
+recover_key(T::Type, c::CategoryProduct) = recover_key(T, categories(c))
+
+function recover_key(T::Type, fused::Tuple)
+  # here fused contains at leat one GradedUnitRange
+  g0 = reduce(×, fused)
+  # convention: keep unsorted blocklabels as produced by F order loops in ×
+  new_labels = recover_key.(T, GradedAxes.blocklabels(g0))
+  new_blocklengths =
+    LabelledNumbers.labelled.(GradedAxes.unlabel.(BlockArrays.blocklengths(g0)), new_labels)
+  return GradedAxes.gradedrange(new_blocklengths)
+end
 
 sector(T::Type{<:CategoryProduct}, cats::Tuple) = sector(categories_type(T), cats)
 sector(T::Type, cats::Tuple) = sector(T(cats))  # recover NamedTuple
@@ -169,19 +193,16 @@ CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
 
 categories_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
-function categories_trivial(type::Type{<:Tuple})
-  return trivial.(fieldtypes(type))
+function find_common(t1::Tuple, t2::Tuple)
+  n = min(length(t1), length(t2))
+  return t1[begin:n], t2[begin:n]
 end
 
-# allow additional categories at one end
-function categories_fusion_rule(cats1::Tuple, cats2::Tuple)
-  n = min(length(cats1), length(cats2))
-  shared = map(fusion_rule, cats1[begin:n], cats2[begin:n])
-  sup1 = CategoryProduct(cats1[(n + 1):end])
-  sup2 = CategoryProduct(cats2[(n + 1):end])
-  return reduce(×, (shared..., sup1, sup2))
+function find_diff(t1::Tuple, t2::Tuple)
+  n1 = length(t1)
+  n2 = length(t2)
+  return n1 < n2 ? t2[(n1 + 1):end] : t1[(n2 + 1):end]
 end
-
 # ===========================  Dictionary-like implementation  =============================
 function CategoryProduct(nt::NamedTuple)
   categories = sort_keys(nt)
@@ -200,40 +221,14 @@ function CategoryProduct(pairs::Pair...)
 end
 
 function categories_isequal(A::NamedTuple, B::NamedTuple)
-  common_categories = zip(pairs(intersect_keys(A, B)), pairs(intersect_keys(B, A)))
-  common_categories_match = all(nl -> (nl[1] == nl[2]), common_categories)
-  unique_categories_zero = all(l -> istrivial(l), symdiff_keys(A, B))
+  sharedA, sharedB = find_common(A, B)
+  common_categories_match = sharedA == sharedB
+  unique_categories_zero = all(map(istrivial, find_diff(A, B)))
   return common_categories_match && unique_categories_zero
 end
 
-function categories_trivial(type::Type{<:NamedTuple{Keys}}) where {Keys}
-  return NamedTuple{Keys}(trivial.(fieldtypes(type)))
+function find_common(nt1::NamedTuple, nt2::NamedTuple)
+  return intersect_keys(nt1, nt2), intersect_keys(nt2, nt1)
 end
 
-# allow ⊗ for different types in NamedTuple
-function categories_fusion_rule(cats1::NamedTuple, cats2::NamedTuple)
-  diff_cat = CategoryProduct(symdiff_keys(cats1, cats2))
-  nt1 = intersect_keys(cats1, cats2)
-  nt2 = intersect_keys(cats2, cats1)
-  fused = map(fusion_rule, values(nt1), values(nt2))
-  return diff_cat × recover_key(typeof(nt1), fused)
-end
-
-function recover_key(NT::Type, fused::Tuple{Vararg{<:AbstractCategory}})
-  return sector(NT, fused)
-end
-
-function recover_key(NT::Type, fused::AbstractCategory)
-  return recover_key(NT, (fused,))
-end
-
-function recover_key(NT::Type, fused::CategoryProduct)
-  return recover_key(NT, categories(fused))
-end
-
-function recover_key(NT::Type, fused::Tuple)
-  g0 = reduce(×, fused)
-  blocklabels_key = recover_key.(NT, GradedAxes.blocklabels(g0))
-  pairs_key = blocklabels_key .=> LabelledNumbers.unlabel.(BlockArrays.blocklengths(g0))
-  return GradedAxes.gradedrange(pairs_key)
-end
+find_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)

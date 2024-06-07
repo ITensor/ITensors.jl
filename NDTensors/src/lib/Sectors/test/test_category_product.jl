@@ -59,6 +59,9 @@ end
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == Fib("τ")
     @test (@inferred_latest trivial(s)) == sector(U1(0), SU2(0), Fib("1"))
+
+    # convention: categories must have same length to evaluate as equal
+    @test sector(U1(1)) != sector(U1(1), U1(0))
   end
 
   @testset "Quantum dimension and GradedUnitRange" begin
@@ -306,6 +309,8 @@ end
   end
 
   @testset "Comparisons with unspecified labels" begin
+    # convention: categories evaluate as equal if unmatched labels are trivial
+    # this is different from ordered tuple convention
     q2 = sector(; N=U1(2))
     q20 = (N=U1(2),) × (J=SU2(0),)
     @test q20 == q2
@@ -544,5 +549,10 @@ end
   @test (@inferred sector(; A=SU2(0)) ⊗ s) == gradedrange([sector(; A=SU2(0)) => 1])
   @test (@inferred sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
     gradedrange([sector(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
+
+  # Empty evaluates equal to itself only
+  @test s != U1(0)
+  @test s != sector(U1(0))
+  @test s != sector(; A=U1(0))
 end
 end
