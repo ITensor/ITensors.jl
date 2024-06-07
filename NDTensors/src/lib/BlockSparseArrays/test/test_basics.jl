@@ -9,6 +9,27 @@ using Test: @test, @test_broken, @test_throws, @testset
 include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
+  @testset "Broken" begin
+    # TODO: These are broken, need to fix.
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    for I in (Block.(1:2), [Block(1), Block(2)])
+      b = @view a[I, I]
+      x = randn(elt, 2, 2)
+      b[Block(1, 1)] = x
+      # These outputs a block of zeros,
+      # for some reason the block
+      # is not getting set.
+      # I think the issue is that:
+      # ```julia
+      # @view(@view(a[I, I]))[Block(1, 1)]
+      # ```
+      # creates a doubly-wrapped SubArray
+      # instead of flattening down to a
+      # single SubArray wrapper.
+      @test_broken a[Block(1, 1)] == x
+      @test_broken b[Block(1, 1)] == x
+    end
+  end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     @test a == BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
