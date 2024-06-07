@@ -113,7 +113,7 @@ function GradedAxes.tensor_product(g::AbstractUnitRange, c::AbstractCategory)
 end
 
 function GradedAxes.tensor_product(c1::AbstractCategory, c2::AbstractCategory)
-  return GradedAxes.tensor_product(to_graded_axis(c1), to_graded_axis(c2))
+  return to_graded_axis(fusion_rule(c1, c2))
 end
 
 function GradedAxes.fusion_product(c::AbstractCategory)
