@@ -18,7 +18,7 @@ function tensor_product(
   return foldl(tensor_product, (a1, a2, a3, a_rest...))
 end
 
-function tensor_product(a1::AbstractUnitRange, a2::AbstractUnitRange)
+function tensor_product(::AbstractUnitRange, ::AbstractUnitRange)
   return error("Not implemented yet.")
 end
 
@@ -26,15 +26,15 @@ function tensor_product(a1::Base.OneTo, a2::Base.OneTo)
   return Base.OneTo(length(a1) * length(a2))
 end
 
-function tensor_product(a1::OneToOne, a2::AbstractUnitRange)
+function tensor_product(::OneToOne, a2::AbstractUnitRange)
   return a2
 end
 
-function tensor_product(a1::AbstractUnitRange, a2::OneToOne)
+function tensor_product(a1::AbstractUnitRange, ::OneToOne)
   return a1
 end
 
-function tensor_product(a1::OneToOne, a2::OneToOne)
+function tensor_product(::OneToOne, ::OneToOne)
   return OneToOne()
 end
 
@@ -66,11 +66,16 @@ function fuse_blocklengths(x::LabelledInteger, y::LabelledInteger)
   return labelled(unlabel(x) * unlabel(y), fuse_labels(label(x), label(y)))
 end
 
+flatten_maybe_nested(v::Vector{<:Integer}) = v
+flatten_maybe_nested(v::Vector{<:GradedUnitRange}) = reduce(vcat, blocklengths.(v))
+
 using BlockArrays: blockedrange, blocks
 function tensor_product(a1::BlockedUnitRange, a2::BlockedUnitRange)
-  blocklengths = map(vec(collect(Iterators.product(blocks(a1), blocks(a2))))) do x
-    return mapreduce(length, fuse_blocklengths, x)
-  end
+  maybe_nested = map(
+    it -> mapreduce(length, fuse_blocklengths, it),
+    Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),)),
+  )
+  blocklengths = flatten_maybe_nested(maybe_nested)
   return blockedrange(blocklengths)
 end
 
@@ -78,11 +83,9 @@ function blocksortperm(a::BlockedUnitRange)
   return Block.(sortperm(blocklabels(a)))
 end
 
+# convention: sort UnitRangeDual according to nondual blocks
 function blocksortperm(a::UnitRangeDual)
-  # If it is dual, reverse the sorting so the sectors
-  # end up sorted in the same way whether or not the space
-  # is dual.
-  return Block.(sortperm(blocklabels(label_dual(dual(a)))))
+  return Block.(sortperm(blocklabels(nondual(a))))
 end
 
 using BlockArrays: Block, BlockVector
@@ -97,8 +100,6 @@ function groupsortperm(v; kwargs...)
 end
 
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
-# Get the permutation for sorting, then group by common elements.
-# groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
 function blockmergesortperm(a::BlockedUnitRange)
   return Block.(groupsortperm(blocklabels(a)))
 end
@@ -107,17 +108,28 @@ end
 invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
 
 function blockmergesortperm(a::UnitRangeDual)
-  # If it is dual, reverse the sorting so the sectors
-  # end up sorted in the same way whether or not the space
-  # is dual.
-  return Block.(groupsortperm(blocklabels(label_dual(dual(a)))))
+  return Block.(groupsortperm(blocklabels(nondual(a))))
 end
 
-# fusion_product generalizes tensor_product to non-abelian groups and fusion categories
-# in the case of abelian groups, it is equivalent to tensor_product + applying blockmergesortperm
-function fusion_product(::AbstractUnitRange, ::AbstractUnitRange)
-  return error("Not implemented")
+function blockmergesort(g::GradedUnitRange)
+  glabels = blocklabels(g)
+  gblocklengths = blocklengths(g)
+  new_blocklengths = map(
+    la -> labelled(sum(gblocklengths[findall(==(la), glabels)]; init=0), la),
+    sort(unique(glabels)),
+  )
+  return GradedAxes.gradedrange(new_blocklengths)
 end
+
+blockmergesort(g::UnitRangeDual) = dual(blockmergesort(nondual(g)))
+
+# fusion_product produces a sorted, non-dual GradedUnitRange
+function fusion_product(g1, g2)
+  return blockmergesort(tensor_product(g1, g2))
+end
+
+fusion_product(g::GradedUnitRange) = blockmergesort(g)
+fusion_product(g::UnitRangeDual) = fusion_product(label_dual(nondual(g)))
 
 # recursive fusion_product. Simpler than reduce + fix type stability issues with reduce
 function fusion_product(g1, g2, g3...)

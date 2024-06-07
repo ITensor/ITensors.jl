@@ -90,20 +90,12 @@ function label_fusion_rule(category_type::Type{<:AbstractCategory}, ::Any, ::Any
 end
 
 # ================================  GradedAxes interface  ==================================
-# GradedAxes.tensor_product interface. Only for abelian groups.
-function GradedAxes.fuse_labels(c1::AbstractCategory, c2::AbstractCategory)
-  return GradedAxes.fuse_labels(
-    combine_styles(SymmetryStyle(c1), SymmetryStyle(c2)), c1, c2
-  )
-end
-function GradedAxes.fuse_labels(::SymmetryStyle, c1::AbstractCategory, c2::AbstractCategory)
-  return error("`fuse_labels` is only defined for abelian groups")
-end
-function GradedAxes.fuse_labels(::AbelianGroup, c1::AbstractCategory, c2::AbstractCategory)
-  return fusion_rule(c1, c2)
-end
-function GradedAxes.fuse_labels(::EmptyCategory, c1::AbstractCategory, c2::AbstractCategory)
-  return fusion_rule(c1, c2)
+# tensor_product interface
+function GradedAxes.fuse_blocklengths(
+  l1::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+  l2::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+)
+  return fusion_rule(l1, l2)
 end
 
 # cast to range
@@ -112,27 +104,18 @@ to_graded_axis(l::LabelledNumbers.LabelledInteger) = GradedAxes.gradedrange([l])
 to_graded_axis(g::AbstractUnitRange) = g
 
 # allow to fuse a category with a GradedUnitRange
-function GradedAxes.fusion_product(a, b)
-  return GradedAxes.fusion_product(to_graded_axis(a), to_graded_axis(b))
+function GradedAxes.tensor_product(c::AbstractCategory, g::AbstractUnitRange)
+  return GradedAxes.tensor_product(to_graded_axis(c), g)
 end
 
-# fusion_product with one input to be used in generic fusion_product(Tuple...)
-# TBD define fusion_product() = gradedrange([sector(())=>1])?
-GradedAxes.fusion_product(x) = GradedAxes.fusion_product(to_graded_axis(x))
+function GradedAxes.tensor_product(g::AbstractUnitRange, c::AbstractCategory)
+  return GradedAxes.tensor_product(c, g)
+end
 
-# product with trivial = easy handling of UnitRangeDual + sort and merge blocks
-GradedAxes.fusion_product(g::AbstractUnitRange) = GradedAxes.fusion_product(trivial(g), g)
+function GradedAxes.tensor_product(c1::AbstractCategory, c2::AbstractCategory)
+  return GradedAxes.tensor_product(to_graded_axis(c1), to_graded_axis(c2))
+end
 
-function GradedAxes.fusion_product(
-  g1::GradedAxes.GradedUnitRange, g2::GradedAxes.GradedUnitRange
-)
-  blocks12 = mapreduce(
-    ((l1, l2),) -> BlockArrays.blocklengths(to_graded_axis(fusion_rule(l1, l2))),
-    vcat,
-    Iterators.product(BlockArrays.blocklengths(g1), BlockArrays.blocklengths(g2)),
-  )
-  la3 = LabelledNumbers.label.(blocks12)
-  pairs3 = [r => sum(blocks12[findall(==(r), la3)]; init=0) for r in sort(unique(la3))]
-  out = GradedAxes.gradedrange(pairs3)
-  return out
+function GradedAxes.fusion_product(c::AbstractCategory)
+  return GradedAxes.fusion_product(to_graded_axis(c))
 end

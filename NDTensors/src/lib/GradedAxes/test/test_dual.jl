@@ -46,10 +46,10 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   @test ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)] == 3:4
   @test label(ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)]) == U1(-1)
   @test blocksortperm(a) == [Block(1), Block(2)]
-  @test blocksortperm(ad) == [Block(2), Block(1)]
+  @test blocksortperm(ad) == [Block(1), Block(2)]
   @test blocklength(blockmergesortperm(a)) == 2
   @test blocklength(blockmergesortperm(ad)) == 2
   @test blockmergesortperm(a) == [Block(1), Block(2)]
-  @test blockmergesortperm(ad) == [Block(2), Block(1)]
+  @test blockmergesortperm(ad) == [Block(1), Block(2)]
 end
 end

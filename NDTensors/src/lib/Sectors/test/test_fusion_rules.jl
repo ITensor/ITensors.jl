@@ -175,9 +175,21 @@ end
   @testset "GradedUnitRange non-abelian fusion rules" begin
     g3 = gradedrange([SU2(0) => 1, SU2(1//2) => 2, SU2(1) => 1])
     g4 = gradedrange([SU2(1//2) => 1, SU2(1) => 2])
+    g34 = gradedrange([
+      SU2(1//2) => 1,
+      SU2(0) => 2,
+      SU2(1) => 2,
+      SU2(1//2) => 1,
+      SU2(3//2) => 1,
+      SU2(1) => 2,
+      SU2(1//2) => 4,
+      SU2(3//2) => 4,
+      SU2(0) => 2,
+      SU2(1) => 2,
+      SU2(2) => 2,
+    ])
 
-    # test tensor_product not defined for abelian
-    @test_throws ErrorException tensor_product(g3, g4)
+    @test gradedisequal(tensor_product(g3, g4), g34)
 
     @test gradedisequal(label_dual(g3), g3)  # trivial for SU(2)
     @test gradedisequal(
