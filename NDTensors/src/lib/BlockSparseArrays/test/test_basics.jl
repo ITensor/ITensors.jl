@@ -257,19 +257,15 @@ include("TestBlockSparseArraysUtils.jl")
     x = randn(elt, 1, 2)
     @view(a[Block(2, 2)])[1:1, 1:2] = x
     @test a[Block(2, 2)][1:1, 1:2] == x
-
-    # TODO: This is broken, fix!
-    @test_broken @view(a[Block(2, 2)])[1:1, 1:2] == x
-    @test_broken a[3:3, 4:5] == x
+    @test @view(a[Block(2, 2)])[1:1, 1:2] == x
+    @test a[3:3, 4:5] == x
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     x = randn(elt, 1, 2)
     @views a[Block(2, 2)][1:1, 1:2] = x
     @test a[Block(2, 2)][1:1, 1:2] == x
-
-    # TODO: This is broken, fix!
-    @test_broken @view(a[Block(2, 2)])[1:1, 1:2] == x
-    @test_broken a[3:3, 4:5] == x
+    @test @view(a[Block(2, 2)])[1:1, 1:2] == x
+    @test a[3:3, 4:5] == x
 
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
@@ -314,15 +310,13 @@ include("TestBlockSparseArraysUtils.jl")
       @test b[4, 4] == 44
     end
 
-    ## Broken, need to fix.
-
     # This is outputting only zero blocks.
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
     a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
     b = a[Block(2):Block(2), Block(1):Block(2)]
-    @test_broken block_nstored(b) == 1
-    @test_broken b == Array(a)[3:5, 1:end]
+    @test block_nstored(b) == 1
+    @test b == Array(a)[3:5, 1:end]
   end
   @testset "LinearAlgebra" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])

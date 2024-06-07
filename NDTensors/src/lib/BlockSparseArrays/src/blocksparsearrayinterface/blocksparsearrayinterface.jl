@@ -267,7 +267,7 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
   return true
 end
 function SparseArrayInterface.stored_indices(a::SparseSubArrayBlocks)
-  return stored_indices(view(blocks(parent(a.array)), axes(a)...))
+  return stored_indices(view(blocks(parent(a.array)), blockrange(a)...))
 end
 # TODO: Either make this the generic interface or define
 # `SparseArrayInterface.sparse_storage`, which is used
