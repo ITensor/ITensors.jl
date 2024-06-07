@@ -1,5 +1,5 @@
 using Adapt: Adapt, WrappedArray
-using BlockArrays: BlockArrays, BlockedUnitRange, blockedrange, unblock
+using BlockArrays: BlockArrays, BlockedUnitRange, BlockRange, blockedrange, unblock
 using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
@@ -12,38 +12,73 @@ const BlockSparseArrayLike{T,N} = Union{
 }
 
 # Used when making views.
-function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
-)
+# TODO: Move to blocksparsearrayinterface.
+function blocksparse_to_indices(a, inds, I)
   return (unblock(a, inds, I), to_indices(a, BlockArrays._maybetail(inds), Base.tail(I))...)
 end
 
-function Base.to_indices(a::BlockSparseArrayLike, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
+# TODO: Move to blocksparsearrayinterface.
+function blocksparse_to_indices(a, I)
   return to_indices(a, axes(a), I)
+end
+
+# Used when making views.
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}}
+)
+  return blocksparse_to_indices(a, inds, I)
 end
 
 function Base.to_indices(
   a::BlockSparseArrayLike, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
 )
-  return (unblock(a, inds, I), to_indices(a, BlockArrays._maybetail(inds), Base.tail(I))...)
+  return blocksparse_to_indices(a, inds, I)
+end
+
+# Fixes ambiguity error with BlockArrays.
+function Base.to_indices(a::BlockSparseArrayLike, inds, I::Tuple{BlockRange{1},Vararg{Any}})
+  return blocksparse_to_indices(a, inds, I)
 end
 
 function Base.to_indices(
-  a::BlockSparseArrayLike, r::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
+  a::BlockSparseArrayLike, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}}
 )
-  return to_indices(a, axes(a), r)
+  return blocksparse_to_indices(a, I)
+end
+
+# Fixes ambiguity error with BlockArrays.
+function Base.to_indices(a::BlockSparseArrayLike, I::Tuple{BlockRange{1},Vararg{Any}})
+  return blocksparse_to_indices(a, I)
+end
+
+function Base.to_indices(
+  a::BlockSparseArrayLike, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
+)
+  return blocksparse_to_indices(a, I)
 end
 
 # Used inside `Base.to_indices` when making views.
-function BlockArrays.unblock(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
+# TODO: Move to blocksparsearrayinterface.
+# TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
+# to merge blocks.
+function blocksparse_unblock(a, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}})
   return BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+end
+
+# TODO: Move to blocksparsearrayinterface.
+function blocksparse_unblock(a, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}})
+  bs = blockrange(inds[1], I[1])
+  return BlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
+end
+
+function BlockArrays.unblock(a, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}})
+  return blocksparse_unblock(a, inds, I)
 end
 
 function BlockArrays.unblock(
   a::BlockSparseArrayLike, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
 )
-  bs = blockrange(inds[1], I[1])
-  return BlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
+  return blocksparse_unblock(a, inds, I)
 end
 
 # BlockArrays `AbstractBlockArray` interface

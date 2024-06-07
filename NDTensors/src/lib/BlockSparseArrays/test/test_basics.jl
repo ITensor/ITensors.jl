@@ -1,5 +1,6 @@
 @eval module $(gensym())
-using BlockArrays: Block, BlockRange, BlockedUnitRange, blockedrange, blocklength, blocksize
+using BlockArrays:
+  Block, BlockRange, BlockedUnitRange, BlockVector, blockedrange, blocklength, blocksize
 using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored, block_reshape
 using NDTensors.SparseArrayInterface: nstored
@@ -275,12 +276,20 @@ include("TestBlockSparseArraysUtils.jl")
       # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
       a[b] = randn(elt, size(a[b]))
     end
-    b = @view a[[Block(1), Block(2)], [Block(1), Block(2)]]
-    for I in CartesianIndices(a)
-      @test b[I] == a[I]
-    end
-    for block in BlockRange(a)
-      @test b[block] == a[block]
+    for I in (
+      Block.(1:2),
+      [Block(1), Block(2)],
+      BlockVector([Block(1), Block(2)], [1, 1]),
+      # TODO: This should merge blocks.
+      BlockVector([Block(1), Block(2)], [2]),
+    )
+      b = @view a[I, I]
+      for I in CartesianIndices(a)
+        @test b[I] == a[I]
+      end
+      for block in BlockRange(a)
+        @test b[block] == a[block]
+      end
     end
 
     a = BlockSparseArray{elt}([2, 3], [2, 3])
@@ -288,15 +297,22 @@ include("TestBlockSparseArraysUtils.jl")
       # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
       a[b] = randn(elt, size(a[b]))
     end
-    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
-    @test b[Block(1, 1)] == a[Block(2, 2)]
-    @test b[Block(2, 1)] == a[Block(1, 2)]
-    @test b[Block(1, 2)] == a[Block(2, 1)]
-    @test b[Block(2, 2)] == a[Block(1, 1)]
-    @test b[1, 1] == a[3, 3]
-    @test b[4, 4] == a[1, 1]
-    b[4, 4] = 44
-    @test b[4, 4] == 44
+    for I in (
+      [Block(2), Block(1)],
+      BlockVector([Block(2), Block(1)], [1, 1]),
+      # TODO: This should merge blocks.
+      BlockVector([Block(2), Block(1)], [2]),
+    )
+      b = @view a[I, I]
+      @test b[Block(1, 1)] == a[Block(2, 2)]
+      @test b[Block(2, 1)] == a[Block(1, 2)]
+      @test b[Block(1, 2)] == a[Block(2, 1)]
+      @test b[Block(2, 2)] == a[Block(1, 1)]
+      @test b[1, 1] == a[3, 3]
+      @test b[4, 4] == a[1, 1]
+      b[4, 4] = 44
+      @test b[4, 4] == 44
+    end
 
     ## Broken, need to fix.
 

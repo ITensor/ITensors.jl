@@ -76,8 +76,10 @@ function blockedunitrange_getindices(a::BlockedUnitRange, indices::Vector{<:Inte
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
+# TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
+# to merge blocks.
 function blockedunitrange_getindices(
-  a::BlockedUnitRange, indices::Vector{<:Union{Block{1},BlockIndexRange{1}}}
+  a::BlockedUnitRange, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
 )
   return mortar(map(index -> a[index], indices))
 end
