@@ -49,7 +49,6 @@ function Base.show(io::IO, s::CategoryProduct)
 end
 
 category_show(io::IO, ::Int, v) = print(io, v)
-
 category_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
 function Base.isless(s1::C, s2::C) where {C<:CategoryProduct}
@@ -154,38 +153,24 @@ function fusion_rule(
 end
 
 # EmptyCategory acts as trivial on any AbstractCategory, not just CategoryProduct
-function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c2::AbstractCategory)
-  return to_graded_axis(c2)
+function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c::AbstractCategory)
+  return to_graded_axis(c)
 end
-
-function fusion_rule(::SymmetryStyle, c1::AbstractCategory, ::CategoryProduct{Tuple{}})
-  return to_graded_axis(c1)
+function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c::CategoryProduct)
+  return to_graded_axis(c)
 end
-
-function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c2::CategoryProduct)
-  return to_graded_axis(c2)
+function fusion_rule(::SymmetryStyle, c::AbstractCategory, ::CategoryProduct{Tuple{}})
+  return to_graded_axis(c)
 end
-
-function fusion_rule(::SymmetryStyle, c1::CategoryProduct, ::CategoryProduct{Tuple{}})
-  return to_graded_axis(c1)
+function fusion_rule(::SymmetryStyle, c::CategoryProduct, ::CategoryProduct{Tuple{}})
+  return to_graded_axis(c)
 end
 
 # abelian case: return Category
-function fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c2::AbstractCategory)
-  return c2
-end
-
-function fusion_rule(::AbelianGroup, c1::AbstractCategory, ::CategoryProduct{Tuple{}})
-  return c1
-end
-
-function fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c2::CategoryProduct)
-  return c2
-end
-
-function fusion_rule(::AbelianGroup, c1::CategoryProduct, ::CategoryProduct{Tuple{}})
-  return c1
-end
+fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c::AbstractCategory) = c
+fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c::CategoryProduct) = c
+fusion_rule(::AbelianGroup, c::AbstractCategory, ::CategoryProduct{Tuple{}}) = c
+fusion_rule(::AbelianGroup, c::CategoryProduct, ::CategoryProduct{Tuple{}}) = c
 
 # ===============================  Ordered implementation  =================================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
@@ -203,6 +188,7 @@ function find_diff(t1::Tuple, t2::Tuple)
   n2 = length(t2)
   return n1 < n2 ? t2[(n1 + 1):end] : t1[(n2 + 1):end]
 end
+
 # ===========================  Dictionary-like implementation  =============================
 function CategoryProduct(nt::NamedTuple)
   categories = sort_keys(nt)
