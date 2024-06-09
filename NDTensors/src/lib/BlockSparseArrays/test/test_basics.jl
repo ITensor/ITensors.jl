@@ -6,6 +6,7 @@ using BlockArrays:
   BlockVector,
   blockedrange,
   blocklength,
+  blocklengths,
   blocksize,
   mortar
 using LinearAlgebra: mul!
@@ -359,6 +360,22 @@ include("TestBlockSparseArraysUtils.jl")
       @test b[Block(1, 1)] == a[Block(2, 2)[2:3, 2:3]]
       @test b[Block(2, 2)] == a[Block(3, 3)[1:3, 2:3]]
     end
+
+    a = BlockSparseArray{elt}(undef, ([3, 3], [3, 3]))
+    # TODO: Define `block_diagindices`.
+    @views for b in [Block(1, 1), Block(2, 2)]
+      a[b] = randn(elt, size(a[b]))
+    end
+    I = mortar([Block(1)[1:2], Block(2)[1:2]])
+    b = a[:, I]
+    @test b[Block(1, 1)] == a[Block(1, 1)][:, 1:2]
+    @test b[Block(2, 1)] == a[Block(2, 1)][:, 1:2]
+    @test b[Block(1, 2)] == a[Block(1, 2)][:, 1:2]
+    @test b[Block(2, 2)] == a[Block(2, 2)][:, 1:2]
+    @test blocklengths.(axes(b)) == ([3, 3], [2, 2])
+    # TODO: Rename `block_stored_length`.
+    @test blocksize(b) == (2, 2)
+    @test block_nstored(b) == 2
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]

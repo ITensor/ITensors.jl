@@ -198,6 +198,13 @@ function blockrange(
   return map(b -> Block(b), blocks(r))
 end
 
+# This handles slicing with `:`/`Colon()`.
+function blockrange(axis::AbstractUnitRange, r::Base.Slice)
+  # TODO: Maybe use `BlockRange`, but that doesn't output
+  # the same thing.
+  return only(blockaxes(axis))
+end
+
 function blockrange(axis::AbstractUnitRange, r)
   return error("Slicing not implemented for range of type `$(typeof(r))`.")
 end
