@@ -129,7 +129,7 @@ function cartesianindices(axes::Tuple, b::Block)
 end
 
 # Get the range within a block.
-function blockindexrange(axis::AbstractUnitRange, r::UnitRange)
+function blockindexrange(axis::AbstractUnitRange, r::AbstractUnitRange)
   bi1 = findblockindex(axis, first(r))
   bi2 = findblockindex(axis, last(r))
   b = block(bi1)

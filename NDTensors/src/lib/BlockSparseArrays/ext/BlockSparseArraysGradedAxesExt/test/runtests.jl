@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using Compat: Returns
 using Test: @test, @testset, @test_broken
-using BlockArrays: Block, blocksize
+using BlockArrays: Block, blockedrange, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
 using NDTensors.GradedAxes:
   GradedAxes, GradedUnitRange, UnitRangeDual, blocklabels, dual, gradedrange
@@ -73,6 +73,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     # be the real test.
     for ax in axes(m)
       @test ax isa GradedUnitRange
+      # TODO: Current `fusedims` doesn't merge
+      # common sectors, need to fix.
       @test_broken blocklabels(ax) == [U1(0), U1(1), U1(2)]
       @test blocklabels(ax) == [U1(0), U1(1), U1(1), U1(2)]
     end
@@ -94,8 +96,13 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   @testset "dual axes" begin
     r = gradedrange([U1(0) => 2, U1(1) => 2])
     a = BlockSparseArray{elt}(dual(r), r)
-    a[Block(1, 1)] = randn(elt, size(a[Block(1, 1)]))
-    a[Block(2, 2)] = randn(elt, size(a[Block(2, 2)]))
+    @views for b in [Block(1, 1), Block(2, 2)]
+      a[b] = randn(elt, size(a[b]))
+    end
+    # TODO: Define and use `isdual` here.
+    @test axes(a, 1) isa UnitRangeDual
+    @test axes(a, 2) isa GradedUnitRange
+    @test !(axes(a, 2) isa UnitRangeDual)
     a_dense = Array(a)
     @test eachindex(a) == CartesianIndices(size(a))
     for I in eachindex(a)
@@ -104,8 +111,50 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test axes(a') == dual.(reverse(axes(a)))
     # TODO: Define and use `isdual` here.
     @test axes(a', 1) isa UnitRangeDual
+    @test axes(a', 2) isa GradedUnitRange
     @test !(axes(a', 2) isa UnitRangeDual)
     @test isnothing(show(devnull, MIME("text/plain"), a))
+
+    # Check preserving dual in tensor algebra.
+    for b in (a + a, 2 * a, 3 * a - a)
+      @test Array(b) ≈ 2 * Array(a)
+      # TODO: Define and use `isdual` here.
+      @test axes(b, 1) isa UnitRangeDual
+      @test axes(b, 2) isa GradedUnitRange
+      @test !(axes(b, 2) isa UnitRangeDual)
+    end
+
+    @test isnothing(show(devnull, MIME("text/plain"), @view(a[Block(1, 1)])))
+    @test @view(a[Block(1, 1)]) == a[Block(1, 1)]
+
+    # Test case when all axes are dual.
+    for r in (gradedrange([U1(0) => 2, U1(1) => 2]), blockedrange([2, 2]))
+      a = BlockSparseArray{elt}(dual(r), dual(r))
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)
+      for ax in axes(b)
+        @test ax isa UnitRangeDual
+      end
+    end
+
+    # Test case when all axes are dual
+    # from taking the adjoint.
+    for r in (gradedrange([U1(0) => 2, U1(1) => 2]), blockedrange([2, 2]))
+      a = BlockSparseArray{elt}(r, r)
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a'
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)'
+      for ax in axes(b)
+        @test ax isa UnitRangeDual
+      end
+    end
   end
   @testset "Matrix multiplication" begin
     r = gradedrange([U1(0) => 2, U1(1) => 3])
