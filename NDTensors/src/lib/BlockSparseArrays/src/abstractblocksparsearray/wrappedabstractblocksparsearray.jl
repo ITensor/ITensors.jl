@@ -126,12 +126,23 @@ function Base.getindex(
   return blocksparse_getindex(a, block...)
 end
 
-# TODO: Define `issasigned(a, ::Block{N})`.
+# TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
   a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
 ) where {N}
-  # TODO: Define `blocksparse_isassigned`.
   return isassigned(blocks(a), Int.(index)...)
+end
+
+function Base.isassigned(a::BlockSparseArrayLike{<:Any,N}, index::Block{N}) where {N}
+  return isassigned(a, Tuple(index)...)
+end
+
+# TODO: Define `blocksparse_isassigned`.
+function Base.isassigned(
+  a::BlockSparseArrayLike{<:Any,N}, index::Vararg{BlockIndex{1},N}
+) where {N}
+  b = block.(index)
+  return isassigned(a, b...) && isassigned(@view(a[b...]), blockindex.(index)...)
 end
 
 function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N}) where {N}
