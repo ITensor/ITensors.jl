@@ -1,4 +1,5 @@
 @eval module $(gensym())
+using LinearAlgebra: norm
 using NDTensors.LabelledNumbers: LabelledInteger, islabelled, label, labelled, unlabel
 using Test: @test, @testset
 @testset "LabelledNumbers" begin
@@ -10,6 +11,22 @@ using Test: @test, @testset
     @test label(x) == "x"
     @test unlabel(x) == 2
     @test !islabelled(unlabel(x))
+
+    @test labelled(1, "x") < labelled(2, "x")
+    @test !(labelled(2, "x") < labelled(2, "x"))
+    @test !(labelled(3, "x") < labelled(2, "x"))
+
+    @test !(labelled(1, "x") > labelled(2, "x"))
+    @test !(labelled(2, "x") > labelled(2, "x"))
+    @test labelled(3, "x") > labelled(2, "x")
+
+    @test labelled(1, "x") <= labelled(2, "x")
+    @test labelled(2, "x") <= labelled(2, "x")
+    @test !(labelled(3, "x") <= labelled(2, "x"))
+
+    @test !(labelled(1, "x") >= labelled(2, "x"))
+    @test labelled(2, "x") >= labelled(2, "x")
+    @test labelled(3, "x") >= labelled(2, "x")
 
     @test x * 2 == 4
     @test !islabelled(x * 2)
@@ -47,6 +64,29 @@ using Test: @test, @testset
     @test islabelled(oneunit(x))
     @test one(typeof(x)) == true
     @test !islabelled(one(typeof(x)))
+  end
+  @testset "randn" begin
+    d = labelled(2, "x")
+
+    a = randn(Float32, d, d)
+    @test eltype(a) === Float32
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = rand(Float32, d, d)
+    @test eltype(a) === Float32
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = randn(d, d)
+    @test eltype(a) === Float64
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = rand(d, d)
+    @test eltype(a) === Float64
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
   end
   @testset "Labelled array ($a)" for a in (collect(2:5), 2:5)
     x = labelled(a, "x")

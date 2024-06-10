@@ -1,13 +1,43 @@
 @eval module $(gensym())
-using BlockArrays: Block, BlockedUnitRange, blockedrange, blocklength, blocksize
+using BlockArrays:
+  Block,
+  BlockRange,
+  BlockedUnitRange,
+  BlockVector,
+  blockedrange,
+  blocklength,
+  blocklengths,
+  blocksize,
+  mortar
 using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored, block_reshape
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
-using Test: @test, @testset, @test_broken
+using Test: @test, @test_broken, @test_throws, @testset
 include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
+  @testset "Broken" begin
+    # TODO: These are broken, need to fix.
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    for I in (Block.(1:2), [Block(1), Block(2)])
+      b = @view a[I, I]
+      x = randn(elt, 2, 2)
+      b[Block(1, 1)] = x
+      # These outputs a block of zeros,
+      # for some reason the block
+      # is not getting set.
+      # I think the issue is that:
+      # ```julia
+      # @view(@view(a[I, I]))[Block(1, 1)]
+      # ```
+      # creates a doubly-wrapped SubArray
+      # instead of flattening down to a
+      # single SubArray wrapper.
+      @test_broken a[Block(1, 1)] == x
+      @test_broken b[Block(1, 1)] == x
+    end
+  end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     @test a == BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
@@ -20,6 +50,7 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(a) == 0
     @test iszero(a)
     @test all(I -> iszero(a[I]), eachindex(a))
+    @test_throws DimensionMismatch a[Block(1, 1)] = randn(elt, 2, 3)
 
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     a[3, 3] = 33
@@ -225,36 +256,152 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(c) == 2
     @test Array(c) == 2 * transpose(Array(a))
 
-    ## Broken, need to fix.
-
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
     a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
-    @test_broken a[Block(1), Block(1):Block(2)]
-
-    # This is outputting only zero blocks.
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
-    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
-    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
-    b = a[Block(2):Block(2), Block(1):Block(2)]
-    @test_broken block_nstored(b) == 1
-    @test_broken b == Array(a)[3:5, 1:end]
+    b = a[Block(1), Block(1):Block(2)]
+    @test size(b) == (2, 7)
+    @test blocksize(b) == (1, 2)
+    @test b[Block(1, 1)] == a[Block(1, 1)]
+    @test b[Block(1, 2)] == a[Block(1, 2)]
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
     a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
     b = copy(a)
-    x = randn(size(@view(a[Block(2, 2)])))
+    x = randn(elt, size(@view(a[Block(2, 2)])))
     b[Block(2), Block(2)] = x
-    @test_broken b[Block(2, 2)] == x
+    @test b[Block(2, 2)] == x
 
-    # Doesnt' set the block
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
     a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
     b = copy(a)
     b[Block(1, 1)] .= 1
-    @test_broken b[1, 1] == trues(size(@view(b[1, 1])))
+    # TODO: Use `blocksizes(b)[1, 1]` once we upgrade to
+    # BlockArrays.jl v1.
+    @test b[Block(1, 1)] == trues(size(@view(b[Block(1, 1)])))
+
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    x = randn(elt, 1, 2)
+    @view(a[Block(2, 2)])[1:1, 1:2] = x
+    @test a[Block(2, 2)][1:1, 1:2] == x
+    @test @view(a[Block(2, 2)])[1:1, 1:2] == x
+    @test a[3:3, 4:5] == x
+
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    x = randn(elt, 1, 2)
+    @views a[Block(2, 2)][1:1, 1:2] = x
+    @test a[Block(2, 2)][1:1, 1:2] == x
+    @test @view(a[Block(2, 2)])[1:1, 1:2] == x
+    @test a[3:3, 4:5] == x
+
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    @views for b in [Block(1, 1), Block(2, 2)]
+      # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
+      a[b] = randn(elt, size(a[b]))
+    end
+    for I in (
+      Block.(1:2),
+      [Block(1), Block(2)],
+      BlockVector([Block(1), Block(2)], [1, 1]),
+      # TODO: This should merge blocks.
+      BlockVector([Block(1), Block(2)], [2]),
+    )
+      b = @view a[I, I]
+      for I in CartesianIndices(a)
+        @test b[I] == a[I]
+      end
+      for block in BlockRange(a)
+        @test b[block] == a[block]
+      end
+    end
+
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    @views for b in [Block(1, 1), Block(2, 2)]
+      # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
+      a[b] = randn(elt, size(a[b]))
+    end
+    for I in (
+      [Block(2), Block(1)],
+      BlockVector([Block(2), Block(1)], [1, 1]),
+      # TODO: This should merge blocks.
+      BlockVector([Block(2), Block(1)], [2]),
+    )
+      b = @view a[I, I]
+      @test b[Block(1, 1)] == a[Block(2, 2)]
+      @test b[Block(2, 1)] == a[Block(1, 2)]
+      @test b[Block(1, 2)] == a[Block(2, 1)]
+      @test b[Block(2, 2)] == a[Block(1, 1)]
+      @test b[1, 1] == a[3, 3]
+      @test b[4, 4] == a[1, 1]
+      b[4, 4] = 44
+      @test b[4, 4] == 44
+    end
+
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    @views for b in [Block(1, 2), Block(2, 1)]
+      a[b] = randn(elt, size(a[b]))
+    end
+    b = a[Block(2):Block(2), Block(1):Block(2)]
+    @test block_nstored(b) == 1
+    @test b == Array(a)[3:5, 1:end]
+
+    a = BlockSparseArray{elt}(undef, ([2, 3, 4], [2, 3, 4]))
+    # TODO: Define `block_diagindices`.
+    @views for b in [Block(1, 1), Block(2, 2), Block(3, 3)]
+      a[b] = randn(elt, size(a[b]))
+    end
+    for (I1, I2) in (
+      (mortar([Block(2)[2:3], Block(3)[1:3]]), mortar([Block(2)[2:3], Block(3)[2:3]])),
+      ([Block(2)[2:3], Block(3)[1:3]], [Block(2)[2:3], Block(3)[2:3]]),
+    )
+      for b in (a[I1, I2], @view(a[I1, I2]))
+        # TODO: Rename `block_stored_length`.
+        @test block_nstored(b) == 2
+        @test b[Block(1, 1)] == a[Block(2, 2)[2:3, 2:3]]
+        @test b[Block(2, 2)] == a[Block(3, 3)[1:3, 2:3]]
+      end
+    end
+
+    a = BlockSparseArray{elt}(undef, ([3, 3], [3, 3]))
+    # TODO: Define `block_diagindices`.
+    @views for b in [Block(1, 1), Block(2, 2)]
+      a[b] = randn(elt, size(a[b]))
+    end
+    I = mortar([Block(1)[1:2], Block(2)[1:2]])
+    b = a[:, I]
+    @test b[Block(1, 1)] == a[Block(1, 1)][:, 1:2]
+    @test b[Block(2, 1)] == a[Block(2, 1)][:, 1:2]
+    @test b[Block(1, 2)] == a[Block(1, 2)][:, 1:2]
+    @test b[Block(2, 2)] == a[Block(2, 2)][:, 1:2]
+    @test blocklengths.(axes(b)) == ([3, 3], [2, 2])
+    # TODO: Rename `block_stored_length`.
+    @test blocksize(b) == (2, 2)
+    @test block_nstored(b) == 2
+
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    @views for b in [Block(1, 2), Block(2, 1)]
+      a[b] = randn(elt, size(a[b]))
+    end
+    @test isassigned(a, 1, 1)
+    @test isassigned(a, 5, 7)
+    @test !isassigned(a, 0, 1)
+    @test !isassigned(a, 5, 8)
+    @test isassigned(a, Block(1), Block(1))
+    @test isassigned(a, Block(2), Block(2))
+    @test !isassigned(a, Block(1), Block(0))
+    @test !isassigned(a, Block(3), Block(2))
+    @test isassigned(a, Block(1, 1))
+    @test isassigned(a, Block(2, 2))
+    @test !isassigned(a, Block(1, 0))
+    @test !isassigned(a, Block(3, 2))
+    @test isassigned(a, Block(1)[1], Block(1)[1])
+    @test isassigned(a, Block(2)[3], Block(2)[4])
+    @test !isassigned(a, Block(1)[0], Block(1)[1])
+    @test !isassigned(a, Block(2)[3], Block(2)[5])
+    @test !isassigned(a, Block(1)[1], Block(0)[1])
+    @test !isassigned(a, Block(3)[3], Block(2)[4])
   end
   @testset "LinearAlgebra" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])

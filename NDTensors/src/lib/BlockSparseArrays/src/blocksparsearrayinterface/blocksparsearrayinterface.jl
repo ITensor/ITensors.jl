@@ -19,6 +19,14 @@ function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where
   return a[findblockindex.(axes(a), I)...]
 end
 
+function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
+  return blocksparse_getindex(a, Tuple(I)...)
+end
+function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
+  # TODO: Avoid copy if the block isn't stored.
+  return copy(blocks(a)[Int.(I)...])
+end
+
 # TODO: Implement as `copy(@view a[I...])`, which is then implemented
 # through `ArrayLayouts.sub_materialize`.
 using ..SparseArrayInterface: set_getindex_zero_function
@@ -59,19 +67,39 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Vararg{Int,N
 end
 
 function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::BlockIndex{N}) where {N}
-  a_b = view(a, block(I))
+  i = Int.(Tuple(block(I)))
+  a_b = blocks(a)[i...]
   a_b[I.α...] = value
-  # Set the block, required if it is structurally zero
-  a[block(I)] = a_b
+  # Set the block, required if it is structurally zero.
+  blocks(a)[i...] = a_b
   return a
 end
 
 function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Block{N}) where {N}
-  # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
-  i = I.n
+  blocksparse_setindex!(a, value, Tuple(I)...)
+  return a
+end
+function blocksparse_setindex!(
+  a::AbstractArray{<:Any,N}, value, I::Vararg{Block{1},N}
+) where {N}
+  i = Int.(I)
   @boundscheck blockcheckbounds(a, i...)
+  # TODO: Use `blocksizes(a)[i...]` when we upgrade to
+  # BlockArrays.jl v1.
+  if size(value) ≠ size(view(a, I...))
+    return throw(
+      DimensionMismatch("Trying to set a block with an array of the wrong size.")
+    )
+  end
   blocks(a)[i...] = value
   return a
+end
+
+function blocksparse_view(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
+  return blocksparse_view(a, Tuple(I)...)
+end
+function blocksparse_view(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
+  return SubArray(a, to_indices(a, I))
 end
 
 function blocksparse_viewblock(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
@@ -199,42 +227,6 @@ function SparseArrayInterface.sparse_storage(a::SparseAdjointBlocks)
   return error("Not implemented")
 end
 
-# TODO: Move to `BlockArraysExtensions`.
-# This takes a range of indices `indices` of array `a`
-# and maps it to the range of indices within block `block`.
-function blockindices(a::AbstractArray, block::Block, indices::Tuple)
-  return blockindices(axes(a), block, indices)
-end
-
-# TODO: Move to `BlockArraysExtensions`.
-function blockindices(axes::Tuple, block::Block, indices::Tuple)
-  return blockindices.(axes, Tuple(block), indices)
-end
-
-# TODO: Move to `BlockArraysExtensions`.
-function blockindices(axis::AbstractUnitRange, block::Block, indices::AbstractUnitRange)
-  indices_within_block = intersect(indices, axis[block])
-  if iszero(length(indices_within_block))
-    # Falls outside of block
-    return 1:0
-  end
-  return only(blockindexrange(axis, indices_within_block).indices)
-end
-
-# This catches the case of `Vector{<:Block{1}}`.
-# `BlockRange` gets wrapped in a `BlockSlice`, which is handled properly
-#  by the version with `indices::AbstractUnitRange`.
-#  TODO: This should get fixed in a better way inside of `BlockArrays`.
-function blockindices(
-  axis::AbstractUnitRange, block::Block, indices::AbstractVector{<:Block{1}}
-)
-  if block ∉ indices
-    # Falls outside of block
-    return 1:0
-  end
-  return Base.OneTo(length(axis[block]))
-end
-
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
 struct SparseSubArrayBlocks{T,N,Array<:SubArray{T,N}} <: AbstractSparseArray{T,N}
@@ -275,7 +267,7 @@ function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) whe
   return true
 end
 function SparseArrayInterface.stored_indices(a::SparseSubArrayBlocks)
-  return stored_indices(view(blocks(parent(a.array)), axes(a)...))
+  return stored_indices(view(blocks(parent(a.array)), blockrange(a)...))
 end
 # TODO: Either make this the generic interface or define
 # `SparseArrayInterface.sparse_storage`, which is used
