@@ -22,8 +22,8 @@ using Test: @test, @testset
     @test iszero(a)
   end
   for I in CartesianIndices(a)
-    @test iassigned(a, Tuple(I)...)
-    @test iassigned(a, I)
+    @test isassigned(a, Tuple(I)...)
+    @test isassigned(a, I)
   end
   @test !isassigned(a, 0, 1)
   @test !isassigned(a, CartesianIndex(0, 1))
@@ -69,8 +69,8 @@ using Test: @test, @testset
     end
   end
   for I in CartesianIndices(a)
-    @test iassigned(a, Tuple(I)...)
-    @test iassigned(a, I)
+    @test isassigned(a, Tuple(I)...)
+    @test isassigned(a, I)
   end
   @test !isassigned(a, 0, 1)
   @test !isassigned(a, CartesianIndex(0, 1))
