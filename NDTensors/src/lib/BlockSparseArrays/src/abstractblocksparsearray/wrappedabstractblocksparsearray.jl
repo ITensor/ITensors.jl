@@ -1,5 +1,6 @@
 using Adapt: Adapt, WrappedArray
-using BlockArrays: BlockArrays, BlockedUnitRange, BlockRange, blockedrange, mortar, unblock
+using BlockArrays:
+  BlockArrays, BlockedUnitRange, BlockIndexRange, BlockRange, blockedrange, mortar, unblock
 using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
