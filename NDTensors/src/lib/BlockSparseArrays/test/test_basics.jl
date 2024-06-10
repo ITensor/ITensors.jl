@@ -352,13 +352,16 @@ include("TestBlockSparseArraysUtils.jl")
     @views for b in [Block(1, 1), Block(2, 2), Block(3, 3)]
       a[b] = randn(elt, size(a[b]))
     end
-    I1 = mortar([Block(2)[2:3], Block(3)[1:3]])
-    I2 = mortar([Block(2)[2:3], Block(3)[2:3]])
-    for b in (a[I1, I2], @view(a[I1, I2]))
-      # TODO: Rename `block_stored_length`.
-      @test block_nstored(b) == 2
-      @test b[Block(1, 1)] == a[Block(2, 2)[2:3, 2:3]]
-      @test b[Block(2, 2)] == a[Block(3, 3)[1:3, 2:3]]
+    for (I1, I2) in (
+      (mortar([Block(2)[2:3], Block(3)[1:3]]), mortar([Block(2)[2:3], Block(3)[2:3]])),
+      ([Block(2)[2:3], Block(3)[1:3]], [Block(2)[2:3], Block(3)[2:3]]),
+    )
+      for b in (a[I1, I2], @view(a[I1, I2]))
+        # TODO: Rename `block_stored_length`.
+        @test block_nstored(b) == 2
+        @test b[Block(1, 1)] == a[Block(2, 2)[2:3, 2:3]]
+        @test b[Block(2, 2)] == a[Block(3, 3)[1:3, 2:3]]
+      end
     end
 
     a = BlockSparseArray{elt}(undef, ([3, 3], [3, 3]))

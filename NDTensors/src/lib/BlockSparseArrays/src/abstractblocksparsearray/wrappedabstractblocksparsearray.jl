@@ -1,5 +1,5 @@
 using Adapt: Adapt, WrappedArray
-using BlockArrays: BlockArrays, BlockedUnitRange, BlockRange, blockedrange, unblock
+using BlockArrays: BlockArrays, BlockedUnitRange, BlockRange, blockedrange, mortar, unblock
 using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
@@ -44,6 +44,15 @@ function Base.to_indices(
   a::BlockSparseArrayLike, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}}
 )
   return blocksparse_to_indices(a, I)
+end
+
+# Handle case of indexing with `[Block(1)[1:2], Block(2)[1:2]]`
+# by converting it to a `BlockVector` with
+# `mortar([Block(1)[1:2], Block(2)[1:2]])`.
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{AbstractVector{<:BlockIndexRange{1}},Vararg{Any}}
+)
+  return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
 end
 
 # Fixes ambiguity error with BlockArrays.
