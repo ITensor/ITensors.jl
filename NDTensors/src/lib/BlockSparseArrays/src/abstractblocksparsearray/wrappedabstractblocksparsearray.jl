@@ -1,5 +1,6 @@
 using Adapt: Adapt, WrappedArray
-using BlockArrays: BlockArrays, BlockedUnitRange, BlockRange, blockedrange, unblock
+using BlockArrays:
+  BlockArrays, BlockedUnitRange, BlockIndexRange, BlockRange, blockedrange, mortar, unblock
 using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
@@ -44,6 +45,15 @@ function Base.to_indices(
   a::BlockSparseArrayLike, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}}
 )
   return blocksparse_to_indices(a, I)
+end
+
+# Handle case of indexing with `[Block(1)[1:2], Block(2)[1:2]]`
+# by converting it to a `BlockVector` with
+# `mortar([Block(1)[1:2], Block(2)[1:2]])`.
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{AbstractVector{<:BlockIndexRange{1}},Vararg{Any}}
+)
+  return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
 end
 
 # Fixes ambiguity error with BlockArrays.
@@ -126,12 +136,23 @@ function Base.getindex(
   return blocksparse_getindex(a, block...)
 end
 
-# TODO: Define `issasigned(a, ::Block{N})`.
+# TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
   a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
 ) where {N}
-  # TODO: Define `blocksparse_isassigned`.
   return isassigned(blocks(a), Int.(index)...)
+end
+
+function Base.isassigned(a::BlockSparseArrayLike{<:Any,N}, index::Block{N}) where {N}
+  return isassigned(a, Tuple(index)...)
+end
+
+# TODO: Define `blocksparse_isassigned`.
+function Base.isassigned(
+  a::BlockSparseArrayLike{<:Any,N}, index::Vararg{BlockIndex{1},N}
+) where {N}
+  b = block.(index)
+  return isassigned(a, b...) && isassigned(@view(a[b...]), blockindex.(index)...)
 end
 
 function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N}) where {N}

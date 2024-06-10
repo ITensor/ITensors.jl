@@ -21,6 +21,14 @@ using Test: @test, @testset
   for I in eachindex(a)
     @test iszero(a)
   end
+  for I in CartesianIndices(a)
+    @test isassigned(a, Tuple(I)...)
+    @test isassigned(a, I)
+  end
+  @test !isassigned(a, 0, 1)
+  @test !isassigned(a, CartesianIndex(0, 1))
+  @test !isassigned(a, 1, 4)
+  @test !isassigned(a, CartesianIndex(1, 4))
 
   a = SparseArray{elt}(2, 3)
   fill!(a, 0)
@@ -60,6 +68,14 @@ using Test: @test, @testset
       @test iszero(a[I])
     end
   end
+  for I in CartesianIndices(a)
+    @test isassigned(a, Tuple(I)...)
+    @test isassigned(a, I)
+  end
+  @test !isassigned(a, 0, 1)
+  @test !isassigned(a, CartesianIndex(0, 1))
+  @test !isassigned(a, 1, 4)
+  @test !isassigned(a, CartesianIndex(1, 4))
 
   a = SparseArray{elt}(2, 3)
   a[1, 2] = 12
