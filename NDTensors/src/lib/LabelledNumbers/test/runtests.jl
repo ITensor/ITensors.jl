@@ -51,8 +51,12 @@ using Test: @test, @testset
     @test !islabelled(x - x)
 
     @test x / 2 == 1
+    @test x / 2 isa AbstractFloat
+    @test x / 2 isa Float64
     @test !islabelled(x / 2)
     @test x ÷ 2 == 1
+    @test x ÷ 2 isa Integer
+    @test x ÷ 2 isa Int
     @test !islabelled(x ÷ 2)
     @test -x == -2
     @test hash(x) == hash(2)
