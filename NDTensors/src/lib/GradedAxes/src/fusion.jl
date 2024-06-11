@@ -1,4 +1,4 @@
-using BlockArrays: BlockedUnitRange
+using BlockArrays: AbstractBlockedUnitRange
 
 # Represents the range `1:1` or `Base.OneTo(1)`.
 struct OneToOne{T} <: AbstractUnitRange{T} end
@@ -54,14 +54,14 @@ function fuse_blocklengths(x::LabelledInteger, y::LabelledInteger)
 end
 
 using BlockArrays: blockedrange, blocks
-function tensor_product(a1::BlockedUnitRange, a2::BlockedUnitRange)
+function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
   blocklengths = map(vec(collect(Iterators.product(blocks(a1), blocks(a2))))) do x
     return mapreduce(length, fuse_blocklengths, x)
   end
   return blockedrange(blocklengths)
 end
 
-function blocksortperm(a::BlockedUnitRange)
+function blocksortperm(a::AbstractBlockedUnitRange)
   # TODO: Figure out how to deal with dual sectors.
   # TODO: `rev=isdual(a)`  may not be correct for symmetries beyond `U(1)`.
   ## return Block.(sortperm(nondual_sectors(a); rev=isdual(a)))
@@ -82,7 +82,7 @@ end
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
-function blockmergesortperm(a::BlockedUnitRange)
+function blockmergesortperm(a::AbstractBlockedUnitRange)
   # If it is dual, reverse the sorting so the sectors
   # end up sorted in the same way whether or not the space
   # is dual.

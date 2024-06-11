@@ -27,6 +27,10 @@ const GradedUnitRange{T<:LabelledInteger,BlockLasts<:Vector{T}} = BlockedUnitRan
 
 const GradedOneTo{T<:LabelledInteger,BlockLasts<:Vector{T}} = BlockedOneTo{T,BlockLasts}
 
+function AbstractUnitRange{Int}(a::GradedOneTo{<:LabelledInteger{Int}})
+  return unlabel_blocks(a)
+end
+
 # TODO: Use `TypeParameterAccessors`.
 Base.eltype(::Type{<:GradedUnitRange{T}}) where {T} = T
 
