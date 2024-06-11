@@ -1,4 +1,4 @@
-using BlockArrays: Block
+using BlockArrays: BlockArrays, Block, blockaxes, blockfirsts, blocklasts
 
 # Fixes ambiguity error with:
 # ```julia
@@ -12,5 +12,11 @@ function Base.getindex(a::LabelledUnitRange, index::Block{1})
 end
 
 function BlockArrays.blockaxes(a::LabelledUnitRange)
-  return (Block.(Base.OneTo(1)),)
+  return blockaxes(unlabel(a))
+end
+function BlockArrays.blockfirsts(a::LabelledUnitRange)
+  return blockfirsts(unlabel(a))
+end
+function BlockArrays.blocklasts(a::LabelledUnitRange)
+  return blocklasts(unlabel(a))
 end

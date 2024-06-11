@@ -96,8 +96,9 @@ using Test: @test, @test_broken, @testset
   @test blocklength(a) == 1
   # TODO: Should this be a `GradedUnitRange`,
   # or maybe just a `LabelledUnitRange`?
-  @test a isa GradedUnitRange
+  @test a isa LabelledUnitRange
   @test length(a[Block(1)]) == 2
+  @test label(a) == "x"
   @test a[Block(1)] == 1:2
   @test label(a[Block(1)]) == "x"
 
