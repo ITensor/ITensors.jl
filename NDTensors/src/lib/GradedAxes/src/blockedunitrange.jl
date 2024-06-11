@@ -76,7 +76,8 @@ end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::BlockedUnitRange, indices::BlockSlice)
-  return a[Block(indices)][indices.indices]
+  # TODO: Is this a good definition? It ignores `indices.indices`.
+  return a[indices.block]
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
