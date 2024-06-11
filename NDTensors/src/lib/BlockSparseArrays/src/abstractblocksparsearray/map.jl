@@ -14,10 +14,9 @@ using ..SparseArrayInterface:
 
 # Returns `Vector{<:CartesianIndices}`
 function union_stored_blocked_cartesianindices(as::Vararg{AbstractArray})
+  combined_axes = combine_axes(axes.(as)...)
   stored_blocked_cartesianindices_as = map(as) do a
-    return blocked_cartesianindices(
-      axes(a), combine_axes(axes.(as)...), block_stored_indices(a)
-    )
+    return blocked_cartesianindices(axes(a), combined_axes, block_stored_indices(a))
   end
   return ∪(stored_blocked_cartesianindices_as...)
 end
@@ -32,8 +31,14 @@ function SparseArrayInterface.sparse_map!(
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
     BI_dest = blockindexrange(a_dest, I)
     BI_srcs = map(a_src -> blockindexrange(a_src, I), a_srcs)
-    block_dest = @view a_dest[_block(BI_dest)]
-    block_srcs = ntuple(i -> @view(a_srcs[i][_block(BI_srcs[i])]), length(a_srcs))
+    # TODO: Investigate why this doesn't work:
+    # block_dest = @view a_dest[_block(BI_dest)]
+    block_dest = blocks(a_dest)[Int.(Tuple(_block(BI_dest)))...]
+    # TODO: Investigate why this doesn't work:
+    # block_srcs = ntuple(i -> @view(a_srcs[i][_block(BI_srcs[i])]), length(a_srcs))
+    block_srcs = ntuple(length(a_srcs)) do i
+      return blocks(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
+    end
     subblock_dest = @view block_dest[BI_dest.indices...]
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
     # TODO: Use `map!!` to handle immutable blocks.

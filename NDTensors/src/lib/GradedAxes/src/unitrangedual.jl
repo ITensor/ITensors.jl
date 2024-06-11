@@ -38,6 +38,11 @@ function unitrangedual_getindices_blocks(a, indices)
   return mortar([dual(b) for b in blocks(a_indices)])
 end
 
+# TODO: Move this to a `BlockArraysExtensions` library.
+function blockedunitrange_getindices(a::UnitRangeDual, indices::Block{1})
+  return a[indices]
+end
+
 function Base.getindex(a::UnitRangeDual, indices::Vector{<:Block{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
@@ -54,11 +59,33 @@ function BlockArrays.BlockSlice(b::Block, a::LabelledUnitRange)
   return BlockSlice(b, unlabel(a))
 end
 
+using BlockArrays: BlockArrays, BlockSlice
+using NDTensors.GradedAxes: UnitRangeDual, dual
+function BlockArrays.BlockSlice(b::Block, r::UnitRangeDual)
+  return BlockSlice(b, dual(r))
+end
+
 using NDTensors.LabelledNumbers: LabelledNumbers, label
 LabelledNumbers.label(a::UnitRangeDual) = dual(label(nondual(a)))
 
-using BlockArrays: BlockArrays, blockaxes, blocklasts, findblock
+using BlockArrays: BlockArrays, blockaxes, blocklasts, combine_blockaxes, findblock
 BlockArrays.blockaxes(a::UnitRangeDual) = blockaxes(nondual(a))
 BlockArrays.blockfirsts(a::UnitRangeDual) = label_dual.(blockfirsts(nondual(a)))
 BlockArrays.blocklasts(a::UnitRangeDual) = label_dual.(blocklasts(nondual(a)))
 BlockArrays.findblock(a::UnitRangeDual, index::Integer) = findblock(nondual(a), index)
+function BlockArrays.combine_blockaxes(a1::UnitRangeDual, a2::UnitRangeDual)
+  return dual(combine_blockaxes(dual(a1), dual(a2)))
+end
+
+# This is needed when constructing `CartesianIndices` from
+# a tuple of unit ranges that have this kind of dual unit range.
+# TODO: See if we can find some more elegant way of constructing
+# `CartesianIndices`, maybe by defining conversion of `LabelledInteger`
+# to `Int`, defining a more general `convert` function, etc.
+function Base.OrdinalRange{Int,Int}(
+  r::UnitRangeDual{<:LabelledInteger{Int},<:LabelledUnitRange{Int,UnitRange{Int}}}
+)
+  # TODO: Implement this broadcasting operation and use it here.
+  # return Int.(r)
+  return unlabel(nondual(r))
+end

@@ -1,5 +1,7 @@
 @eval module $(gensym())
-using NDTensors.LabelledNumbers: LabelledInteger, islabelled, label, labelled, unlabel
+using LinearAlgebra: norm
+using NDTensors.LabelledNumbers:
+  LabelledInteger, LabelledUnitRange, islabelled, label, labelled, unlabel
 using Test: @test, @testset
 @testset "LabelledNumbers" begin
   @testset "Labelled number ($n)" for n in (2, 2.0)
@@ -10,6 +12,22 @@ using Test: @test, @testset
     @test label(x) == "x"
     @test unlabel(x) == 2
     @test !islabelled(unlabel(x))
+
+    @test labelled(1, "x") < labelled(2, "x")
+    @test !(labelled(2, "x") < labelled(2, "x"))
+    @test !(labelled(3, "x") < labelled(2, "x"))
+
+    @test !(labelled(1, "x") > labelled(2, "x"))
+    @test !(labelled(2, "x") > labelled(2, "x"))
+    @test labelled(3, "x") > labelled(2, "x")
+
+    @test labelled(1, "x") <= labelled(2, "x")
+    @test labelled(2, "x") <= labelled(2, "x")
+    @test !(labelled(3, "x") <= labelled(2, "x"))
+
+    @test !(labelled(1, "x") >= labelled(2, "x"))
+    @test labelled(2, "x") >= labelled(2, "x")
+    @test labelled(3, "x") >= labelled(2, "x")
 
     @test x * 2 == 4
     @test !islabelled(x * 2)
@@ -48,6 +66,29 @@ using Test: @test, @testset
     @test one(typeof(x)) == true
     @test !islabelled(one(typeof(x)))
   end
+  @testset "randn" begin
+    d = labelled(2, "x")
+
+    a = randn(Float32, d, d)
+    @test eltype(a) === Float32
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = rand(Float32, d, d)
+    @test eltype(a) === Float32
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = randn(d, d)
+    @test eltype(a) === Float64
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+
+    a = rand(d, d)
+    @test eltype(a) === Float64
+    @test size(a) == (2, 2)
+    @test norm(a) > 0
+  end
   @testset "Labelled array ($a)" for a in (collect(2:5), 2:5)
     x = labelled(a, "x")
     @test eltype(x) == LabelledInteger{Int,String}
@@ -71,5 +112,17 @@ using Test: @test, @testset
       @test label(step(x)) == "x"
     end
   end
+end
+
+using BlockArrays: Block, blockaxes, blocklength, blocklengths
+@testset "LabelledNumbersBlockArraysExt" begin
+  x = labelled(1:2, "x")
+  @test blockaxes(x) == (Block.(1:1),)
+  @test blocklength(x) == 1
+  @test blocklengths(x) == [2]
+  a = x[Block(1)]
+  @test a == 1:2
+  @test a isa LabelledUnitRange
+  @test label(a) == "x"
 end
 end

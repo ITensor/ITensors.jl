@@ -1,9 +1,5 @@
 using BlockArrays: BlockIndexRange, BlockRange, BlockSlice, block
 
-function blocksparse_view(a::AbstractArray, index::Block)
-  return blocks(a)[Int.(Tuple(index))...]
-end
-
 # TODO: Define `AnyBlockSparseVector`.
 function Base.view(a::BlockSparseArrayLike{<:Any,N}, index::Block{N}) where {N}
   return blocksparse_view(a, index)
