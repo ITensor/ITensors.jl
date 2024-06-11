@@ -112,4 +112,13 @@ using Test: @test, @testset
     end
   end
 end
+
+using BlockArrays: Block
+@testset "LabelledNumbersBlockArraysExt" begin
+  x = labelled(1:2, "x")
+  a = x[Block(1)]
+  @test a == 1:2
+  @test a isa LabelledUnitRange
+  @test label(a) == "x"
+end
 end

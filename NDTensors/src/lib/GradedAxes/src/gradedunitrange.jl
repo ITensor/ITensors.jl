@@ -166,6 +166,15 @@ function blockedunitrange_getindices(
   return labelled_blocks(a_indices, blocklabels(ga, indices))
 end
 
+# Fixes ambiguity error with:
+# ```julia
+# blockedunitrange_getindices(::GradedUnitRange, ::AbstractUnitRange{<:Integer})
+# ```
+# TODO: Try removing once GradedAxes is rewritten for BlockArrays v1.
+function blockedunitrange_getindices(a::GradedUnitRange, indices::BlockSlice)
+  return a[Block(indices)][indices.indices]
+end
+
 function blockedunitrange_getindices(ga::GradedUnitRange, indices::BlockRange)
   return labelled_blocks(unlabel_blocks(ga)[indices], blocklabels(ga, indices))
 end

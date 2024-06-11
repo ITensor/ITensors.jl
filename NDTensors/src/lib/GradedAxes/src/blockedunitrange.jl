@@ -3,6 +3,7 @@ using BlockArrays:
   Block,
   BlockIndexRange,
   BlockRange,
+  BlockSlice,
   BlockedUnitRange,
   block,
   blockindex,
@@ -71,6 +72,11 @@ end
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::BlockedUnitRange, indices::BlockIndexRange)
   return a[block(indices)][only(indices.indices)]
+end
+
+# TODO: Move this to a `BlockArraysExtensions` library.
+function blockedunitrange_getindices(a::BlockedUnitRange, indices::BlockSlice)
+  return a[Block(indices)][indices.indices]
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
