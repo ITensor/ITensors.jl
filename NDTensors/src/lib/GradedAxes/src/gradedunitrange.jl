@@ -4,6 +4,7 @@ using BlockArrays:
   BlockedUnitRange,
   BlockIndex,
   BlockRange,
+  BlockSlice,
   BlockVector,
   blockedrange,
   BlockIndexRange,
@@ -197,6 +198,19 @@ function Base.getindex(a::GradedUnitRange, indices::BlockRange{1,Tuple{Base.OneT
 end
 
 function Base.getindex(a::GradedUnitRange, indices::BlockIndex{1})
+  return blockedunitrange_getindices(a, indices)
+end
+
+# Fixes ambiguity issues with:
+# ```julia
+# getindex(::BlockedUnitRange, ::BlockSlice)
+# getindex(::GradedUnitRange, ::AbstractUnitRange{<:Integer})
+# getindex(::GradedUnitRange, ::Any)
+# getindex(::AbstractUnitRange, ::AbstractUnitRange{<:Integer})
+# ```
+# TODO: Maybe not needed once GradedAxes is rewritten
+# for BlockArrays v1.
+function Base.getindex(a::GradedUnitRange, indices::BlockSlice)
   return blockedunitrange_getindices(a, indices)
 end
 

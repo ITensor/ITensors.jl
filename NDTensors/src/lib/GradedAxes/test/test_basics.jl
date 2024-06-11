@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using BlockArrays:
   Block,
+  BlockSlice,
   BlockVector,
   blockedrange,
   blockfirsts,
@@ -86,6 +87,14 @@ using Test: @test, @test_broken, @testset
   @test length(ax) == length(a)
   @test blocklengths(ax) == blocklengths(a)
   @test blocklabels(ax) == blocklabels(a)
+
+  # Regression test for ambiguity error.
+  x = gradedrange(["x" => 2, "y" => 3])
+  a = x[BlockSlice(Block(1), Base.OneTo(2))]
+  @test length(a) == 2
+  @test a == 1:2
+  # TODO: Should this have a label?
+  @test_broken label(a) == "x"
 
   x = gradedrange(["x" => 2, "y" => 3])
   a = x[3:4]

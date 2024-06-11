@@ -95,37 +95,48 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   end
   @testset "dual axes" begin
     r = gradedrange([U1(0) => 2, U1(1) => 2])
-    a = BlockSparseArray{elt}(dual(r), r)
-    @views for b in [Block(1, 1), Block(2, 2)]
-      a[b] = randn(elt, size(a[b]))
-    end
-    # TODO: Define and use `isdual` here.
-    @test axes(a, 1) isa UnitRangeDual
-    @test axes(a, 2) isa GradedUnitRange
-    @test !(axes(a, 2) isa UnitRangeDual)
-    a_dense = Array(a)
-    @test eachindex(a) == CartesianIndices(size(a))
-    for I in eachindex(a)
-      @test a[I] == a_dense[I]
-    end
-    @test axes(a') == dual.(reverse(axes(a)))
-    # TODO: Define and use `isdual` here.
-    @test axes(a', 1) isa UnitRangeDual
-    @test axes(a', 2) isa GradedUnitRange
-    @test !(axes(a', 2) isa UnitRangeDual)
-    @test isnothing(show(devnull, MIME("text/plain"), a))
-
-    # Check preserving dual in tensor algebra.
-    for b in (a + a, 2 * a, 3 * a - a)
-      @test Array(b) ≈ 2 * Array(a)
+    for ax in ((r, r), (dual(r), r), (r, dual(r)), (dual(r), dual(r)))
+      a = BlockSparseArray{elt}(ax...)
+      @views for b in [Block(1, 1), Block(2, 2)]
+        a[b] = randn(elt, size(a[b]))
+      end
       # TODO: Define and use `isdual` here.
-      @test axes(b, 1) isa UnitRangeDual
-      @test axes(b, 2) isa GradedUnitRange
-      @test !(axes(b, 2) isa UnitRangeDual)
-    end
+      for dim in 1:ndims(a)
+        @test typeof(ax[dim]) === typeof(axes(a, dim))
+      end
+      @test @view(a[Block(1, 1)])[1, 1] == a[1, 1]
+      @test @view(a[Block(1, 1)])[2, 1] == a[2, 1]
+      @test @view(a[Block(1, 1)])[1, 2] == a[1, 2]
+      @test @view(a[Block(1, 1)])[2, 2] == a[2, 2]
+      @test @view(a[Block(2, 2)])[1, 1] == a[3, 3]
+      @test @view(a[Block(2, 2)])[2, 1] == a[4, 3]
+      @test @view(a[Block(2, 2)])[1, 2] == a[3, 4]
+      @test @view(a[Block(2, 2)])[2, 2] == a[4, 4]
+      @test @view(a[Block(1, 1)])[1:2, 1:2] == a[1:2, 1:2]
+      @test @view(a[Block(2, 2)])[1:2, 1:2] == a[3:4, 3:4]
+      a_dense = Array(a)
+      @test eachindex(a) == CartesianIndices(size(a))
+      for I in eachindex(a)
+        @test a[I] == a_dense[I]
+      end
+      @test axes(a') == dual.(reverse(axes(a)))
+      # TODO: Define and use `isdual` here.
+      @test typeof(axes(a', 1)) === typeof(dual(axes(a, 2)))
+      @test typeof(axes(a', 2)) === typeof(dual(axes(a, 1)))
+      @test isnothing(show(devnull, MIME("text/plain"), a))
 
-    @test isnothing(show(devnull, MIME("text/plain"), @view(a[Block(1, 1)])))
-    @test @view(a[Block(1, 1)]) == a[Block(1, 1)]
+      # Check preserving dual in tensor algebra.
+      for b in (a + a, 2 * a, 3 * a - a)
+        @test Array(b) ≈ 2 * Array(a)
+        # TODO: Define and use `isdual` here.
+        for dim in 1:ndims(a)
+          @test typeof(axes(b, dim)) === typeof(axes(b, dim))
+        end
+      end
+
+      @test isnothing(show(devnull, MIME("text/plain"), @view(a[Block(1, 1)])))
+      @test @view(a[Block(1, 1)]) == a[Block(1, 1)]
+    end
 
     # Test case when all axes are dual.
     for r in (gradedrange([U1(0) => 2, U1(1) => 2]), blockedrange([2, 2]))

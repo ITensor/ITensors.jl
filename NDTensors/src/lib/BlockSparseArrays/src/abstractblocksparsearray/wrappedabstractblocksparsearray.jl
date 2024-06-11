@@ -78,7 +78,10 @@ end
 # TODO: Move to blocksparsearrayinterface.
 function blocksparse_unblock(a, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}})
   bs = blockrange(inds[1], I[1])
-  return BlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
+  # GenericBlockSlice works around an issue that the indices of BlockSlice
+  # are restricted to Int element type.
+  # TODO: Raise an issue/make a pull request in BlockArrays.jl.
+  return GenericBlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
 end
 
 function BlockArrays.unblock(a, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}})
