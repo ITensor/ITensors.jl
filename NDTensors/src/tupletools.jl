@@ -182,7 +182,7 @@ Remove the value at pos and insert the elements in val
 """
 function insertat(t::Tuple, val::Tuple, pos::Integer)
   N, M = length(t), length(val)
-  @boundscheck checkbounds(Base.OneTo(length(t)), pos)
+  @boundscheck checkbounds(Base.OneTo(N), pos)
   return ntuple(i -> _insertat(t, pos, M, val, i), Val(N + M - 1))
 end
 
