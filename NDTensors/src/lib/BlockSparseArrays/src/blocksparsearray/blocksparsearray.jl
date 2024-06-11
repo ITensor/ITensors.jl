@@ -41,6 +41,11 @@ function BlockSparseArray{T,N}(
   return BlockSparseArray{T,N,eltype(blocks),typeof(blocks),typeof(axes)}(blocks, axes)
 end
 
+function BlockArrays.mortar(blocks::SparseArrayDOK)
+  axes = BlockArrays.sizes_from_blocks(blocks)
+  return BlockSparseArray{eltype(eltype(a)),ndims(a)}(blocks, axes)
+end
+
 function BlockSparseArray{T,N}(
   block_data::Dictionary{Block{N,Int},<:AbstractArray{T,N}},
   axes::Tuple{Vararg{AbstractUnitRange,N}},

@@ -3,10 +3,12 @@ using BlockArrays:
   AbstractBlockArray,
   AbstractBlockVector,
   Block,
+  BlockIndex,
+  BlockIndexRange,
   BlockRange,
-  BlockedUnitRange,
-  BlockVector,
   BlockSlice,
+  BlockVector,
+  BlockedUnitRange,
   block,
   blockaxes,
   blockedrange,
@@ -289,7 +291,7 @@ function combine_axes(as::Vararg{Tuple})
   end
 end
 
-# Returns `BlockRange`
+# Returns `BlockRange`.
 # Convert the block of the axes to blocks of the subaxes.
 function subblocks(axes::Tuple, subaxes::Tuple, block::Block)
   @assert length(axes) == length(subaxes)

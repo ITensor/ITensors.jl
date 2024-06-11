@@ -1,6 +1,13 @@
 using Adapt: Adapt, WrappedArray
 using BlockArrays:
-  BlockArrays, BlockedUnitRange, BlockIndexRange, BlockRange, blockedrange, mortar, unblock
+  BlockArrays,
+  AbstractBlockVector,
+  BlockedUnitRange,
+  BlockIndexRange,
+  BlockRange,
+  blockedrange,
+  mortar,
+  unblock
 using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
@@ -72,6 +79,10 @@ end
 # TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
 # to merge blocks.
 function blocksparse_unblock(a, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}})
+  return BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+end
+
+function blocksparse_unblock(a, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}})
   return BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
 end
 

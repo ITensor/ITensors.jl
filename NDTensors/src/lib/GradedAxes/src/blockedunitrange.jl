@@ -1,5 +1,6 @@
 using BlockArrays:
   BlockArrays,
+  AbstractBlockVector,
   Block,
   BlockIndexRange,
   BlockRange,
@@ -94,6 +95,15 @@ function blockedunitrange_getindices(
   # `only(axes(a[indices])) isa `GradedUnitRange`
   # if `a isa `GradedUnitRange`, for example.
   return mortar(blocks, length.(blocks))
+end
+
+function blockedunitrange_getindices(
+  a::BlockedUnitRange, indices::AbstractBlockVector{<:Block{1}}
+)
+  blks = map(blocks(indices)) do block
+    blockedunitrange_getindices(a, block)
+  end
+  return mortar(blks, length.(blks))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.

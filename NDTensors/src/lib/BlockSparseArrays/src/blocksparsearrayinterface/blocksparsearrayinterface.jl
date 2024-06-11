@@ -244,10 +244,10 @@ function Base.size(a::SparseSubArrayBlocks)
   return length.(axes(a))
 end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
-  parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
-  parent_block = parent_blocks[I...]
+  blockrange_a = blockrange(a)
+  parent_block = @view(blocks(parent(a.array))[blockrange_a...])[I...]
   # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
-  block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
+  block = Block(ntuple(i -> blockrange_a[i][I[i]], ndims(a)))
   return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
 end
 # TODO: This should be handled by generic `AbstractSparseArray` code.
@@ -259,6 +259,71 @@ function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N
   return parent_blocks[I...][blockindices(parent(a.array), Block(I), a.array.indices)...] =
     value
 end
+
+function blocked_getindex(a::AbstractVector, index)
+  display(a)
+  display(index)
+  display(a[index])
+  return a[index]
+end
+
+function blocked_to_index(a::AbstractArray, index)
+  return blocked_getindex(axes(a, 1), index)
+end
+
+blocked_to_indices(a::AbstractArray, axes, ::Tuple{}) = ()
+
+function blocked_to_indices(a::AbstractArray, axes, indices::Tuple)
+  return (
+    blocked_to_index(a, indices[1]),
+    blocked_to_indices(a, Base.tail(axes), Base.tail(indices))...,
+  )
+end
+
+function blocked_to_indices(
+  a::AbstractArray{<:Any,N}, indices::Tuple{Vararg{Any,N}}
+) where {N}
+  return blocked_to_indices(a, axes(a), indices)
+end
+
+function blocked_view(a::AbstractArray{<:Any,N}, indices::Vararg{Any,N}) where {N}
+  return SubArray(a, blocked_to_indices(a, indices))
+end
+
+# This is the case of grouping blocks.
+# TODO: Incorporate this into the generic `getindex(::SparseSubArrayBlocks, ...)`
+# function or handle dispatch using a trait.
+function Base.getindex(
+  a::SparseSubArrayBlocks{
+    <:Any,
+    N,
+    <:SubArray{
+      <:Any,<:Any,<:Any,<:Tuple{Vararg{BlockIndices{<:AbstractBlockVector{<:Block{1}}}}}
+    },
+  },
+  I::Vararg{Int,N},
+) where {N}
+  blockrange_a = blockrange(a)
+  # This ignores the blocking in `blockrange_a`:
+  # ```julia
+  # parent_blocks = @view blocks(parent(a.array))[blockrange_a...]
+  # ```
+  # Maybe related to:
+  # https://github.com/JuliaArrays/BlockArrays.jl/issues/367
+  ## parent_blocks = blocked_view(blocks(parent(a.array)), blockrange_a...)
+
+  parent_blocks = @view blocks(parent(a.array))[blockrange_a...]
+  parent_block = parent_blocks[Block(I)]
+
+  println("\ngetindex(a::SparseSubArrayBlocks, ...)")
+  println("\naxes(a.array)")
+  foreach(display, axes(a.array))
+
+  return mortar(parent_block, axes(a.array))
+  ## block = Block(ntuple(i -> blockrange_a[i][I[i]], ndims(a)))
+  ## return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
+end
+
 function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
   if CartesianIndex(I) ∉ CartesianIndices(a)
     return false
