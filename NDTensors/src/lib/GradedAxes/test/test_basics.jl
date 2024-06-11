@@ -9,7 +9,7 @@ using BlockArrays:
   blocklength,
   blocklengths,
   blocks
-using NDTensors.GradedAxes: GradedUnitRange, blocklabels, gradedrange
+using NDTensors.GradedAxes: GradedOneTo, GradedUnitRange, blocklabels, gradedrange
 using NDTensors.LabelledNumbers: LabelledUnitRange, islabelled, label, labelled, unlabel
 using Test: @test, @test_broken, @testset
 @testset "GradedAxes basics" begin
@@ -18,7 +18,7 @@ using Test: @test, @test_broken, @testset
     gradedrange([labelled(2, "x"), labelled(3, "y")]),
     gradedrange(["x" => 2, "y" => 3]),
   )
-    @test a isa GradedUnitRange
+    @test a isa GradedOneTo
     for x in iterate(a)
       @test x == 1
       @test label(x) == "x"
@@ -175,7 +175,10 @@ using Test: @test, @test_broken, @testset
   # @test blocklengths(ax) == blocklengths(a)
   # once `blocklengths(::BlockVector)` is defined.
   @test blocklengths(ax) == [4, 3]
-  @test blocklabels(ax) == blocklabels(a)
+
+  # TODO: Fix this once `BlockArray` axes
+  # type is generalized in BlockArrays.jl.
+  @test_broken blocklabels(ax) == blocklabels(a)
 
   x = gradedrange(["x" => 2, "y" => 3, "z" => 4])
   a = x[[Block(3)[2:3], Block(2)[2:3]]]
@@ -195,6 +198,9 @@ using Test: @test, @test_broken, @testset
   # @test blocklengths(ax) == blocklengths(a)
   # once `blocklengths(::BlockVector)` is defined.
   @test blocklengths(ax) == [2, 2]
-  @test blocklabels(ax) == blocklabels(a)
+
+  # TODO: Fix this once `BlockArray` axes
+  # type is generalized in BlockArrays.jl.
+  @test_broken blocklabels(ax) == blocklabels(a)
 end
 end

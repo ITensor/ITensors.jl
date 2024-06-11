@@ -1,5 +1,5 @@
 module BlockSparseArraysGradedAxesExt
-using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange, blocks
+using BlockArrays: AbstractBlockVector, AbstractBlockedUnitRange, Block, blocks
 using ..BlockSparseArrays:
   BlockSparseArrays,
   AbstractBlockSparseArray,
@@ -8,7 +8,7 @@ using ..BlockSparseArrays:
   BlockSparseMatrix,
   block_merge
 using ...GradedAxes:
-  GradedUnitRange,
+  AbstractGradedUnitRange,
   OneToOne,
   blockmergesortperm,
   blocksortperm,
@@ -23,11 +23,13 @@ using ...TensorAlgebra:
 # TODO: Make a `ReduceWhile` library.
 include("reducewhile.jl")
 
-TensorAlgebra.FusionStyle(::GradedUnitRange) = SectorFusion()
+TensorAlgebra.FusionStyle(::AbstractGradedUnitRange) = SectorFusion()
 
 # TODO: Need to implement this! Will require implementing
 # `block_merge(a::AbstractUnitRange, blockmerger::BlockedUnitRange)`.
-function BlockSparseArrays.block_merge(a::GradedUnitRange, blockmerger::BlockedUnitRange)
+function BlockSparseArrays.block_merge(
+  a::AbstractGradedUnitRange, blockmerger::AbstractBlockedUnitRange
+)
   return a
 end
 
