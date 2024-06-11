@@ -145,8 +145,8 @@ function _deleteat(t, pos, i)
   return t[i + 1]
 end
 
-function deleteat(t::NTuple{N}, pos::Integer) where {N}
-  return ntuple(i -> _deleteat(t, pos, i), Val(N - 1))
+function deleteat(t::Tuple, pos::Integer) #where {N}
+  return ntuple(i -> _deleteat(t, pos, i), Val(length(t) - 1))
 end
 
 deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
@@ -180,13 +180,13 @@ end
 
 Remove the value at pos and insert the elements in val
 """
-function insertat(t::NTuple{N}, val::NTuple{M}, pos::Integer) where {N,M}
+function insertat(t::Tuple, val::Tuple, pos::Integer)
+  N, M = length(t), length(val)
+  @assert pos <= N
   return ntuple(i -> _insertat(t, pos, M, val, i), Val(N + M - 1))
 end
 
-function insertat(t::NTuple{N}, val, pos::Integer) where {N}
-  return insertat(t, tuple(val), pos)
-end
+insertat(t::Tuple, val, pos::Integer) = insertat(t, tuple(val), pos)
 
 function _insertafter(t, pos, n_insert, val, i)
   if i <= pos
