@@ -172,7 +172,7 @@ end
 # ```
 # TODO: Try removing once GradedAxes is rewritten for BlockArrays v1.
 function blockedunitrange_getindices(a::GradedUnitRange, indices::BlockSlice)
-  return a[Block(indices)][indices.indices]
+  return a[indices.block]
 end
 
 function blockedunitrange_getindices(ga::GradedUnitRange, indices::BlockRange)
