@@ -145,7 +145,7 @@ function _deleteat(t, pos, i)
   return t[i + 1]
 end
 
-function deleteat(t::Tuple, pos::Integer) #where {N}
+function deleteat(t::Tuple, pos::Integer)
   return ntuple(i -> _deleteat(t, pos, i), Val(length(t) - 1))
 end
 
