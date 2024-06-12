@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using Compat: Returns
 using Test: @test, @testset, @test_broken
-using BlockArrays: Block, blockedrange, blocksize
+using BlockArrays: Block, BlockedOneTo, blockedrange, blocklengths, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
 using NDTensors.GradedAxes:
   GradedAxes, GradedOneTo, UnitRangeDual, blocklabels, dual, gradedrange
@@ -32,9 +32,10 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     a = BlockSparseArray{elt}(d1, d2, d1, d2)
     blockdiagonal!(randn!, a)
 
-    for b in (a + a, 2 * a, a + Array(a), Array(a) + a)
+    for b in (a + a, 2 * a)
       @test size(b) == (4, 4, 4, 4)
       @test blocksize(b) == (2, 2, 2, 2)
+      @test blocklengths.(axes(b)) == ([2, 2], [2, 2], [2, 2], [2, 2])
       @test nstored(b) == 32
       @test block_nstored(b) == 2
       # TODO: Have to investigate why this fails
@@ -44,6 +45,24 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       end
       @test label(axes(b, 1)[Block(1)]) == U1(0)
       @test label(axes(b, 1)[Block(2)]) == U1(1)
+      @test Array(b) isa Array{elt}
+      @test Array(b) == b
+      @test 2 * Array(a) == b
+    end
+
+    # Test mixing graded axes and dense axes
+    # in addition/broadcasting.
+    for b in (a + Array(a), Array(a) + a)
+      @test size(b) == (4, 4, 4, 4)
+      @test blocksize(b) == (2, 2, 2, 2)
+      @test blocklengths.(axes(b)) == ([2, 2], [2, 2], [2, 2], [2, 2])
+      # TODO: Fix this for `BlockedArray`.
+      @test_broken nstored(b) == 256
+      # TODO: Fix this for `BlockedArray`.
+      @test_broken block_nstored(b) == 16
+      for i in 1:ndims(a)
+        @test axes(b, i) isa BlockedOneTo{Int}
+      end
       @test Array(a) isa Array{elt}
       @test Array(a) == a
       @test 2 * Array(a) == b
