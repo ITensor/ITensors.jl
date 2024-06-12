@@ -32,7 +32,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     a = BlockSparseArray{elt}(d1, d2, d1, d2)
     blockdiagonal!(randn!, a)
 
-    for b in (a + a, 2 * a)
+    for b in (a + a, 2 * a, a + Array(a), Array(a) + a)
       @test size(b) == (4, 4, 4, 4)
       @test blocksize(b) == (2, 2, 2, 2)
       @test nstored(b) == 32
