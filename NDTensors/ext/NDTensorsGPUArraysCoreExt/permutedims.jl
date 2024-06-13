@@ -1,4 +1,4 @@
-using NDTensors: NDTensors, array
+using NDTensors: NDTensors, data
 using GPUArraysCore: @allowscalar, AbstractGPUArray
 using NDTensors.Adapt
 function NDTensors.permutedims!(
@@ -10,6 +10,6 @@ function NDTensors.permutedims!(
   R = unexpose(Rexposed)
   t = unexpose(texposed)
 
-  array(R) .= f.(array(R), array(t))
+  data(R) .= f.(data(R), data(t))
   return R
 end
