@@ -356,3 +356,13 @@ function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) w
   r = map(index -> only(index.indices), index)
   return @view b[r...]
 end
+
+using MacroTools: @capture
+using NDTensors.SparseArrayDOKs: is_getindex_expr
+macro view!(expr)
+  if !is_getindex_expr(expr)
+    error("@view must be used with getindex syntax (as `@view! a[i,j,...]`)")
+  end
+  @capture(expr, array_[indices__])
+  return :(view!($(esc(array)), $(esc.(indices)...)))
+end
