@@ -1,6 +1,5 @@
 using NDTensors: NDTensors, data
 using GPUArraysCore: @allowscalar, AbstractGPUArray
-using NDTensors.Adapt
 function NDTensors.permutedims!(
   Rexposed::Exposed{<:AbstractGPUArray,<:DiagTensor},
   texposed::Exposed{<:AbstractGPUArray,<:DiagTensor},
