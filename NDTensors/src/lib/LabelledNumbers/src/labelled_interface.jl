@@ -50,8 +50,8 @@ for (fname, f) in [
   (:mul, :*),
   (:add, :+),
   (:minus, :-),
-  (:div, :/),
-  (:division, :÷),
+  (:division, :/),
+  (:div, :÷),
   (:isequal, :isequal),
   (:isless, :isless),
 ]

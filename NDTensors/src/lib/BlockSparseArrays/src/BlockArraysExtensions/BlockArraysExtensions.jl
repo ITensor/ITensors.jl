@@ -19,6 +19,21 @@ using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: stored_indices
 
+# GenericBlockSlice works around an issue that the indices of BlockSlice
+# are restricted to Int element type.
+# TODO: Raise an issue/make a pull request in BlockArrays.jl.
+struct GenericBlockSlice{B,T<:Integer,I<:AbstractUnitRange{T}} <: AbstractUnitRange{T}
+  block::B
+  indices::I
+end
+BlockArrays.Block(bs::GenericBlockSlice{<:Block}) = bs.block
+for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe_length)
+  @eval Base.$f(S::GenericBlockSlice) = Base.$f(S.indices)
+end
+Base.getindex(S::GenericBlockSlice, i::Integer) = getindex(S.indices, i)
+
+# BlockIndices works around an issue that the indices of BlockSlice
+# are restricted to AbstractUnitRange{Int}.
 struct BlockIndices{B,T<:Integer,I<:AbstractVector{T}} <: AbstractVector{T}
   blocks::B
   indices::I
@@ -129,7 +144,7 @@ function cartesianindices(axes::Tuple, b::Block)
 end
 
 # Get the range within a block.
-function blockindexrange(axis::AbstractUnitRange, r::UnitRange)
+function blockindexrange(axis::AbstractUnitRange, r::AbstractUnitRange)
   bi1 = findblockindex(axis, first(r))
   bi2 = findblockindex(axis, last(r))
   b = block(bi1)
@@ -159,8 +174,8 @@ function blockrange(axis::AbstractUnitRange, r::UnitRange)
 end
 
 function blockrange(axis::AbstractUnitRange, r::Int)
-  error("Slicing with integer values isn't supported.")
-  return findblock(axis, r)
+  ## return findblock(axis, r)
+  return error("Slicing with integer values isn't supported.")
 end
 
 function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Block{1}})
@@ -175,6 +190,13 @@ function blockrange(axis::AbstractUnitRange, r::BlockSlice)
   return blockrange(axis, r.block)
 end
 
+# GenericBlockSlice works around an issue that the indices of BlockSlice
+# are restricted to Int element type.
+# TODO: Raise an issue/make a pull request in BlockArrays.jl.
+function blockrange(axis::AbstractUnitRange, r::GenericBlockSlice)
+  return blockrange(axis, r.block)
+end
+
 function blockrange(a::AbstractUnitRange, r::BlockIndices)
   return blockrange(a, r.blocks)
 end
@@ -185,6 +207,24 @@ end
 
 function blockrange(axis::AbstractUnitRange, r::BlockIndexRange)
   return Block(r):Block(r)
+end
+
+function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:BlockIndexRange{1}})
+  return error("Slicing not implemented for range of type `$(typeof(r))`.")
+end
+
+function blockrange(
+  axis::AbstractUnitRange,
+  r::BlockVector{BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
+)
+  return map(b -> Block(b), blocks(r))
+end
+
+# This handles slicing with `:`/`Colon()`.
+function blockrange(axis::AbstractUnitRange, r::Base.Slice)
+  # TODO: Maybe use `BlockRange`, but that doesn't output
+  # the same thing.
+  return only(blockaxes(axis))
 end
 
 function blockrange(axis::AbstractUnitRange, r)
@@ -226,6 +266,22 @@ end
 
 function blockindices(a::AbstractUnitRange, b::Block, r::BlockIndices)
   return blockindices(a, b, r.blocks)
+end
+
+function blockindices(
+  a::AbstractUnitRange,
+  b::Block,
+  r::BlockVector{BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
+)
+  # TODO: Change to iterate over `BlockRange(r)`
+  # once https://github.com/JuliaArrays/BlockArrays.jl/issues/404
+  # is fixed.
+  for bl in blocks(r)
+    if b == Block(bl)
+      return only(bl.indices)
+    end
+  end
+  return error("Block not found.")
 end
 
 function cartesianindices(a::AbstractArray, b::Block)

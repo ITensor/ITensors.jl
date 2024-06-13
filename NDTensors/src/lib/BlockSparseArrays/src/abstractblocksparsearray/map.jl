@@ -14,10 +14,9 @@ using ..SparseArrayInterface:
 
 # Returns `Vector{<:CartesianIndices}`
 function union_stored_blocked_cartesianindices(as::Vararg{AbstractArray})
+  combined_axes = combine_axes(axes.(as)...)
   stored_blocked_cartesianindices_as = map(as) do a
-    return blocked_cartesianindices(
-      axes(a), combine_axes(axes.(as)...), block_stored_indices(a)
-    )
+    return blocked_cartesianindices(axes(a), combined_axes, block_stored_indices(a))
   end
   return ∪(stored_blocked_cartesianindices_as...)
 end

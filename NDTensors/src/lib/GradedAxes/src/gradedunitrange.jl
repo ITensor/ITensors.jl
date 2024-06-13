@@ -4,6 +4,7 @@ using BlockArrays:
   BlockedUnitRange,
   BlockIndex,
   BlockRange,
+  BlockSlice,
   BlockVector,
   blockedrange,
   BlockIndexRange,
@@ -165,6 +166,15 @@ function blockedunitrange_getindices(
   return labelled_blocks(a_indices, blocklabels(ga, indices))
 end
 
+# Fixes ambiguity error with:
+# ```julia
+# blockedunitrange_getindices(::GradedUnitRange, ::AbstractUnitRange{<:Integer})
+# ```
+# TODO: Try removing once GradedAxes is rewritten for BlockArrays v1.
+function blockedunitrange_getindices(a::GradedUnitRange, indices::BlockSlice)
+  return a[indices.block]
+end
+
 function blockedunitrange_getindices(ga::GradedUnitRange, indices::BlockRange)
   return labelled_blocks(unlabel_blocks(ga)[indices], blocklabels(ga, indices))
 end
@@ -197,6 +207,19 @@ function Base.getindex(a::GradedUnitRange, indices::BlockRange{1,Tuple{Base.OneT
 end
 
 function Base.getindex(a::GradedUnitRange, indices::BlockIndex{1})
+  return blockedunitrange_getindices(a, indices)
+end
+
+# Fixes ambiguity issues with:
+# ```julia
+# getindex(::BlockedUnitRange, ::BlockSlice)
+# getindex(::GradedUnitRange, ::AbstractUnitRange{<:Integer})
+# getindex(::GradedUnitRange, ::Any)
+# getindex(::AbstractUnitRange, ::AbstractUnitRange{<:Integer})
+# ```
+# TODO: Maybe not needed once GradedAxes is rewritten
+# for BlockArrays v1.
+function Base.getindex(a::GradedUnitRange, indices::BlockSlice)
   return blockedunitrange_getindices(a, indices)
 end
 
