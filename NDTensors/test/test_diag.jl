@@ -31,20 +31,28 @@ using LinearAlgebra: dot
     @test complex(D) == Diag(one(complex(elt)))
     @test similar(D) == Diag(0.0)
 
-    D = Tensor(Diag(1), (2, 2))
+    D = dev(Tensor(Diag(1), (2, 2)))
     @test norm(D) == √2
     d = 3
     vr = rand(elt, d)
     D = dev(tensor(Diag(vr), (d, d)))
     Da = Array(D)
     Dm = Matrix(D)
+    Da = permutedims(D, (2, 1))
     @allowscalar begin
       @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
       @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
 
-      ## TODO Currently this permutedims requires scalar indexing on GPU.
-      Da = permutedims(D, (2, 1))
       @test Da == D
+    end
+
+    if (dev == NDTensors.mtl && elt != ComplexF32)
+      S = permutedims(dev(D), (1, 2), sqrt)
+      @allowscalar begin
+        for i in 1:diaglength(S)
+          @test S[i, i] == sqrt(D[i, i])
+        end
+      end
     end
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199

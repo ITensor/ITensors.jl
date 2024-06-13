@@ -1,4 +1,4 @@
-using .DiagonalArrays: diaglength
+using .DiagonalArrays: diaglength, diagview
 
 const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
 const NonuniformDiagTensor{ElT,N,StoreT,IndsT} =
@@ -9,9 +9,7 @@ const UniformDiagTensor{ElT,N,StoreT,IndsT} =
 function diag(tensor::DiagTensor)
   tensor_diag = NDTensors.similar(dense(typeof(tensor)), (diaglength(tensor),))
   # TODO: Define `eachdiagindex`.
-  for j in 1:diaglength(tensor)
-    tensor_diag[j] = getdiagindex(tensor, j)
-  end
+  diagview(array(tensor_diag)) .= diagview(array(tensor))
   return tensor_diag
 end
 
@@ -145,16 +143,14 @@ function permutedims!(
   f::Function=(r, t) -> t,
 ) where {N}
   # TODO: check that inds(R)==permute(inds(T),perm)?
-  for i in 1:diaglength(R)
-    @inbounds setdiagindex!(R, f(getdiagindex(R, i), getdiagindex(T, i)), i)
-  end
+  diagview(data(R)) .= f.(diagview(data(R)), diagview(data(T)))
   return R
 end
 
 function permutedims(
   T::DiagTensor{<:Number,N}, perm::NTuple{N,Int}, f::Function=identity
 ) where {N}
-  R = NDTensors.similar(T, permute(inds(T), perm))
+  R = NDTensors.similar(T)
   g(r, t) = f(t)
   permutedims!(R, T, perm, g)
   return R
@@ -175,7 +171,7 @@ function permutedims!!(
   f::Function=(r, t) -> t,
 ) where {N}
   R = convert(promote_type(typeof(R), typeof(T)), R)
-  permutedims!(expose(R), expose(T), perm, f)
+  permutedims!(R, T, perm, f)
   return R
 end
 
@@ -190,21 +186,12 @@ function permutedims!!(
   return R
 end
 
-function NDTensors.permutedims!(
-  Rexposed::Exposed{<:Array,<:DiagTensor},
-  texposed::Exposed{<:Array,<:DiagTensor},
-  perm::NTuple{N,Int},
-  f::Function=(r, t) -> t,
-) where {N}
-  return permutedims!(unexpose(Rexposed), unexpose(texposed), perm, f)
-end
-
 function permutedims!(
   R::DenseTensor{ElR,N}, T::DiagTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=(r, t) -> t
 ) where {ElR,ElT,N}
-  for i in 1:diaglength(T)
-    @inbounds setdiagindex!(R, f(getdiagindex(R, i), getdiagindex(T, i)), i)
-  end
+  rview = diagview(array(R))
+  tview = diagview(T)
+  rview .= f.(rview, tview)
   return R
 end
 
