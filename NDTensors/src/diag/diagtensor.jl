@@ -191,12 +191,12 @@ function permutedims!!(
 end
 
 function NDTensors.permutedims!(
-  Rexposed::Exposed{<:Array, <:DiagTensor},
-  texposed::Exposed{<:Array, <:DiagTensor},
+  Rexposed::Exposed{<:Array,<:DiagTensor},
+  texposed::Exposed{<:Array,<:DiagTensor},
   perm::NTuple{N,Int},
   f::Function=(r, t) -> t,
 ) where {N}
-  permutedims!(unexpose(Rexposed),  unexpose(texposed), perm, f)
+  return permutedims!(unexpose(Rexposed), unexpose(texposed), perm, f)
 end
 
 function permutedims!(
