@@ -369,7 +369,7 @@ function diag(tensor::Tensor)
   tensordiag = NDTensors.similar(
     dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
   )
-  data(tensordiag) .= diagview(tensor)
+  diagview(tensordiag) .= diagview(tensor)
   return tensordiag
 end
 
