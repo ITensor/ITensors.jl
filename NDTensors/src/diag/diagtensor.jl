@@ -9,7 +9,7 @@ const UniformDiagTensor{ElT,N,StoreT,IndsT} =
 function diag(tensor::DiagTensor)
   tensor_diag = NDTensors.similar(dense(typeof(tensor)), (diaglength(tensor),))
   # TODO: Define `eachdiagindex`.
-  diagview(array(tensor_diag)) .= diagview(array(tensor))
+  diagview(tensor_diag) .= diagview(tensor)
   return tensor_diag
 end
 
@@ -29,6 +29,19 @@ end
 
 function Array(T::DiagTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
+end
+
+function DiagonalArrays.diagview(T::NonuniformDiagTensor)
+  return data(T)
+end
+
+function DiagonalArrays.diagview(T::UniformDiagTensor)
+  return array(T)
+end
+
+## Should this go in dense.jl or here since its related to diag?
+function DiagonalArrays.diagview(T::DenseTensor)
+  return diagview(array(T))
 end
 
 function zeros(tensortype::Type{<:DiagTensor}, inds)
@@ -143,7 +156,7 @@ function permutedims!(
   f::Function=(r, t) -> t,
 ) where {N}
   # TODO: check that inds(R)==permute(inds(T),perm)?
-  diagview(data(R)) .= f.(diagview(data(R)), diagview(data(T)))
+  data(R) .= f.(diagview(R), diagview(T))
   return R
 end
 
@@ -190,8 +203,7 @@ function permutedims!(
   R::DenseTensor{ElR,N}, T::DiagTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=(r, t) -> t
 ) where {ElR,ElT,N}
   rview = diagview(array(R))
-  tview = diagview(T)
-  rview .= f.(rview, tview)
+  rview .= f.(rview, diagview(T))
   return R
 end
 
