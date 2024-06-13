@@ -31,7 +31,7 @@ using LinearAlgebra: dot
     @test complex(D) == Diag(one(complex(elt)))
     @test similar(D) == Diag(0.0)
 
-    D = dev(Tensor(Diag(1), (2, 2)))
+    D = Tensor(Diag(1), (2, 2))
     @test norm(D) == √2
     d = 3
     vr = rand(elt, d)
