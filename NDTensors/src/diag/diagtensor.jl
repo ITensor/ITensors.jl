@@ -35,10 +35,6 @@ function DiagonalArrays.diagview(T::NonuniformDiagTensor)
   return data(T)
 end
 
-function DiagonalArrays.diagview(T::DenseTensor)
-  return diagview(array(T))
-end
-
 function zeros(tensortype::Type{<:DiagTensor}, inds)
   return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
