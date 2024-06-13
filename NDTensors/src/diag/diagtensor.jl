@@ -175,7 +175,7 @@ function permutedims!!(
   f::Function=(r, t) -> t,
 ) where {N}
   R = convert(promote_type(typeof(R), typeof(T)), R)
-  permutedims!(R, T, perm, f)
+  permutedims!(expose(R), expose(T), perm, f)
   return R
 end
 
