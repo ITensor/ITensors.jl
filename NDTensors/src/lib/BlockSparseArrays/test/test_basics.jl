@@ -404,6 +404,34 @@ include("TestBlockSparseArraysUtils.jl")
     @test !isassigned(a, Block(2)[3], Block(2)[5])
     @test !isassigned(a, Block(1)[1], Block(0)[1])
     @test !isassigned(a, Block(3)[3], Block(2)[4])
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    fill!(a, 0)
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    fill!(a, 2)
+    @test !iszero(a)
+    @test all(==(2), a)
+    @test block_nstored(a) == 4
+    fill!(a, 0)
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    a .= 0
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    a .= 2
+    @test !iszero(a)
+    @test all(==(2), a)
+    @test block_nstored(a) == 4
+    a .= 0
+    @test iszero(a)
+    @test iszero(block_nstored(a))
   end
   @testset "view!" begin
     for blk in ((Block(2, 2),), (Block(2), Block(2)))
@@ -459,9 +487,7 @@ include("TestBlockSparseArraysUtils.jl")
     a_dest = a1 * a2
     @test Array(a_dest) ≈ Array(a1) * Array(a2)
     @test a_dest isa BlockSparseArray{elt}
-
-    # TODO: Fix this.
-    @test_broken block_nstored(a_dest) == 1
+    @test block_nstored(a_dest) == 1
   end
   @testset "Matrix multiplication" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])
