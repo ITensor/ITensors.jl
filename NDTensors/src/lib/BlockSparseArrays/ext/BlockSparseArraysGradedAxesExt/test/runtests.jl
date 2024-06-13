@@ -91,15 +91,11 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     # TODO: Once block merging is implemented, this should
     # be the real test.
     for ax in axes(m)
-      # TODO: Fix once BlockArray type is generalized
-      # to allow axes that have Integer element types.
-      @test_broken ax isa GradedOneTo
+      @test ax isa GradedOneTo
       # TODO: Current `fusedims` doesn't merge
       # common sectors, need to fix.
       @test_broken blocklabels(ax) == [U1(0), U1(1), U1(2)]
-      # TODO: Fix once BlockArray type is generalized
-      # to allow axes that have Integer element types.
-      @test_broken blocklabels(ax) == [U1(0), U1(1), U1(1), U1(2)]
+      @test blocklabels(ax) == [U1(0), U1(1), U1(1), U1(2)]
     end
     for I in CartesianIndices(m)
       if I ∈ CartesianIndex.([(1, 1), (4, 4)])
