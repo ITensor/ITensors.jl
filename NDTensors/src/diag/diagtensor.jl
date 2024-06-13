@@ -190,6 +190,15 @@ function permutedims!!(
   return R
 end
 
+function NDTensors.permutedims!(
+  Rexposed::Exposed{<:Array, <:DiagTensor},
+  texposed::Exposed{<:Array, <:DiagTensor},
+  perm::NTuple{N,Int},
+  f::Function=(r, t) -> t,
+) where {N}
+  permutedims!(unexpose(Rexposed),  unexpose(texposed), perm, f)
+end
+
 function permutedims!(
   R::DenseTensor{ElR,N}, T::DiagTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=(r, t) -> t
 ) where {ElR,ElT,N}
