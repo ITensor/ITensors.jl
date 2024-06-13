@@ -335,3 +335,24 @@ function blocked_cartesianindices(axes::Tuple, subaxes::Tuple, blocks)
     return cartesianindices(subaxes, block)
   end
 end
+
+function view!(a::BlockSparseArray{<:Any,N}, index::Block{N}) where {N}
+  return view!(a, Tuple(index)...)
+end
+function view!(a::AbstractArray{<:Any,N}, index::Vararg{Block{1},N}) where {N}
+  blocks(a)[Int.(index)...] = blocks(a)[Int.(index)...]
+  return blocks(a)[Int.(index)...]
+end
+
+function view!(a::AbstractArray{<:Any,N}, index::BlockIndexRange{N}) where {N}
+  # TODO: Is there a better code pattern for this?
+  indices = ntuple(N) do dim
+    return Tuple(Block(index))[dim][index.indices[dim]]
+  end
+  return view!(a, indices...)
+end
+function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) where {N}
+  b = view!(a, Block.(index)...)
+  r = map(index -> only(index.indices), index)
+  return @view b[r...]
+end
