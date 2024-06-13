@@ -193,7 +193,7 @@ end
 function permutedims!(
   R::DenseTensor{ElR,N}, T::DiagTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=(r, t) -> t
 ) where {ElR,ElT,N}
-  diagview(array(R)) .= f.(diagview(array(R)), diagview(T))
+  diagview(R) .= f.(diagview(R), diagview(T))
   return R
 end
 
