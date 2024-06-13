@@ -1,5 +1,6 @@
 using BlockArrays:
   BlockArrays,
+  AbstractBlockVector,
   AbstractBlockedUnitRange,
   Block,
   BlockIndex,
@@ -111,7 +112,7 @@ function get_label(a::AbstractUnitRange, index::Integer)
   return get_label(a, blockedunitrange_findblock(a, index))
 end
 
-function blocklabels(a::BlockVector)
+function blocklabels(a::AbstractBlockVector)
   return map(BlockRange(a)) do block
     return label(@view(a[block]))
   end

@@ -12,6 +12,7 @@ using ..BlockSparseArrays:
   AbstractBlockSparseMatrix,
   BlockSparseArray,
   BlockSparseMatrix,
+  BlockSparseVector,
   block_merge
 using ...GradedAxes:
   GradedAxes,
@@ -102,7 +103,24 @@ function GradedAxes.blockedunitrange_getindices(
   # if `a isa `GradedUnitRange`, for example.
   # TODO: Remove `unlabel` once `BlockArray` axes
   # type is generalized in BlockArrays.jl.
+  # TODO: Support using `BlockSparseVector`, need
+  # to make more `BlockSparseArray` constructors.
   return BlockSparseArray(blocks, (blockedrange(length.(blocks)),))
+end
+
+# This definition is only needed since calls like
+# `a[[Block(1), Block(2)]]` where `a isa AbstractGradedUnitRange`
+# returns a `BlockSparseVector` instead of a `BlockVector`
+# due to limitations in the `BlockArray` type not allowing
+# axes with non-Int element types.
+# TODO: Remove this once that issue is fixed,
+# see https://github.com/JuliaArrays/BlockArrays.jl/pull/405.
+using BlockArrays: BlockRange
+using NDTensors.LabelledNumbers: label
+function GradedAxes.blocklabels(a::BlockSparseVector)
+  return map(BlockRange(a)) do block
+    return label(blocks(a)[Int(block)])
+  end
 end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays
