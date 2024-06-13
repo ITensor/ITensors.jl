@@ -1,6 +1,12 @@
 using Adapt: Adapt, WrappedArray
 using BlockArrays:
-  BlockArrays, BlockedUnitRange, BlockIndexRange, BlockRange, blockedrange, mortar, unblock
+  BlockArrays,
+  AbstractBlockedUnitRange,
+  BlockIndexRange,
+  BlockRange,
+  blockedrange,
+  mortar,
+  unblock
 using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
@@ -208,7 +214,7 @@ end
 # Fixes ambiguity error with `BlockArrays.jl`.
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike},
-  axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
+  axes::Tuple{AbstractBlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
@@ -217,14 +223,27 @@ end
 # Fixes ambiguity error with `BlockArrays.jl`.
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike},
-  axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
+  axes::Tuple{
+    AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{AbstractUnitRange{Int}}
+  },
+)
+  return similar(arraytype, eltype(arraytype), axes)
+end
+
+# Needed by `BlockArrays` matrix multiplication interface
+# Fixes ambiguity error with `BlockArrays.jl`.
+function Base.similar(
+  arraytype::Type{<:BlockSparseArrayLike},
+  axes::Tuple{
+    AbstractUnitRange{Int},AbstractBlockedUnitRange,Vararg{AbstractUnitRange{Int}}
+  },
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
 
 # Needed for disambiguation
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{BlockedUnitRange}}
+  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{AbstractBlockedUnitRange}}
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
@@ -251,7 +270,9 @@ end
 # TODO: Define a `blocksparse_similar` function.
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
-  a::BlockSparseArrayLike, elt::Type, axes::Tuple{BlockedUnitRange,Vararg{BlockedUnitRange}}
+  a::BlockSparseArrayLike,
+  elt::Type,
+  axes::Tuple{AbstractBlockedUnitRange,Vararg{AbstractBlockedUnitRange}},
 )
   # TODO: Make generic for GPU, maybe using `blocktype`.
   # TODO: For non-block axes this should output `Array`.

@@ -9,7 +9,8 @@ using BlockArrays:
   blocklength,
   blocklengths,
   blocks
-using NDTensors.GradedAxes: GradedUnitRange, blocklabels, gradedrange
+using NDTensors.BlockSparseArrays: BlockSparseVector
+using NDTensors.GradedAxes: GradedOneTo, GradedUnitRange, blocklabels, gradedrange
 using NDTensors.LabelledNumbers: LabelledUnitRange, islabelled, label, labelled, unlabel
 using Test: @test, @test_broken, @testset
 @testset "GradedAxes basics" begin
@@ -18,7 +19,7 @@ using Test: @test, @test_broken, @testset
     gradedrange([labelled(2, "x"), labelled(3, "y")]),
     gradedrange(["x" => 2, "y" => 3]),
   )
-    @test a isa GradedUnitRange
+    @test a isa GradedOneTo
     for x in iterate(a)
       @test x == 1
       @test label(x) == "x"
@@ -158,7 +159,14 @@ using Test: @test, @test_broken, @testset
 
   x = gradedrange(["x" => 2, "y" => 3, "z" => 4])
   a = x[[Block(3), Block(2)]]
-  @test a isa BlockVector
+  # This is a BlockSparseArray since BlockArray
+  # doesn't support axes with general integer
+  # element types. That is being fixed in:
+  # https://github.com/JuliaArrays/BlockArrays.jl/pull/405
+  # TODO: Change to `BlockVector` once we update
+  # `GradedAxes` once the axes of `BlockArray`
+  # are generalized.
+  @test a isa BlockSparseVector
   @test length(a) == 7
   @test blocklength(a) == 2
   # TODO: `BlockArrays` doesn't define `blocklengths`
@@ -179,7 +187,14 @@ using Test: @test, @test_broken, @testset
 
   x = gradedrange(["x" => 2, "y" => 3, "z" => 4])
   a = x[[Block(3)[2:3], Block(2)[2:3]]]
-  @test a isa BlockVector
+  # This is a BlockSparseArray since BlockArray
+  # doesn't support axes with general integer
+  # element types. That is being fixed in:
+  # https://github.com/JuliaArrays/BlockArrays.jl/pull/405
+  # TODO: Change to `BlockVector` once we update
+  # `GradedAxes` once the axes of `BlockArray`
+  # are generalized.
+  @test a isa BlockSparseVector
   @test length(a) == 4
   @test blocklength(a) == 2
   # TODO: `BlockArrays` doesn't define `blocklengths`
