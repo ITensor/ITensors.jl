@@ -27,7 +27,14 @@ const GradedUnitRange{T<:LabelledInteger,BlockLasts<:Vector{T}} = BlockedUnitRan
 
 const GradedOneTo{T<:LabelledInteger,BlockLasts<:Vector{T}} = BlockedOneTo{T,BlockLasts}
 
-function AbstractUnitRange{Int}(a::GradedOneTo{<:LabelledInteger{Int}})
+## # This is only needed in certain Julia versions below 1.10
+## # (for example Julia 1.6).
+## # TODO: Delete this once we drop Julia 1.6 support.
+## function Base.OrdinalRange{T,T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
+##   return unlabel_blocks(a)
+## end
+
+function Base.AbstractUnitRange{T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
   return unlabel_blocks(a)
 end
 
