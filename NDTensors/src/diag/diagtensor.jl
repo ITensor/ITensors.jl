@@ -35,7 +35,6 @@ function DiagonalArrays.diagview(T::NonuniformDiagTensor)
   return data(T)
 end
 
-## Should this go in dense.jl or here since its related to diag?
 function DiagonalArrays.diagview(T::DenseTensor)
   return diagview(array(T))
 end
