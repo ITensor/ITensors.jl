@@ -49,7 +49,8 @@ Base.zero(lobject::LabelledInteger) = labelled_zero(lobject)
 Base.one(lobject::LabelledInteger) = labelled_one(lobject)
 Base.one(type::Type{<:LabelledInteger}) = labelled_one(type)
 Base.oneunit(lobject::LabelledInteger) = labelled_oneunit(lobject)
-Base.oneunit(type::Type{<:LabelledInteger}) = error("Not implemented.")
+Base.oneunit(type::Type{<:LabelledInteger}) = oneunit(unlabel_type(type))
+Base.zero(type::Type{<:LabelledInteger}) = zero(unlabel_type(type))
 
 Base.Int(x::LabelledInteger) = Int(unlabel(x))
 

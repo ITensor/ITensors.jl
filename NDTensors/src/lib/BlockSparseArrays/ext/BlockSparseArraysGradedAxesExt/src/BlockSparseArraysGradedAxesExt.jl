@@ -1,14 +1,22 @@
 module BlockSparseArraysGradedAxesExt
-using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange, blocks
+using BlockArrays:
+  AbstractBlockVector,
+  AbstractBlockedUnitRange,
+  Block,
+  BlockIndexRange,
+  blockedrange,
+  blocks
 using ..BlockSparseArrays:
   BlockSparseArrays,
   AbstractBlockSparseArray,
   AbstractBlockSparseMatrix,
   BlockSparseArray,
   BlockSparseMatrix,
+  BlockSparseVector,
   block_merge
 using ...GradedAxes:
-  GradedUnitRange,
+  GradedAxes,
+  AbstractGradedUnitRange,
   OneToOne,
   blockmergesortperm,
   blocksortperm,
@@ -23,11 +31,13 @@ using ...TensorAlgebra:
 # TODO: Make a `ReduceWhile` library.
 include("reducewhile.jl")
 
-TensorAlgebra.FusionStyle(::GradedUnitRange) = SectorFusion()
+TensorAlgebra.FusionStyle(::AbstractGradedUnitRange) = SectorFusion()
 
 # TODO: Need to implement this! Will require implementing
 # `block_merge(a::AbstractUnitRange, blockmerger::BlockedUnitRange)`.
-function BlockSparseArrays.block_merge(a::GradedUnitRange, blockmerger::BlockedUnitRange)
+function BlockSparseArrays.block_merge(
+  a::AbstractGradedUnitRange, blockmerger::AbstractBlockedUnitRange
+)
   return a
 end
 
@@ -73,6 +83,44 @@ end
 # matrix has graded axes.
 function Base.axes(a::Adjoint{<:Any,<:AbstractBlockSparseMatrix})
   return dual.(reverse(axes(a')))
+end
+
+# TODO: Delete this definition in favor of the one in
+# GradedAxes once https://github.com/JuliaArrays/BlockArrays.jl/pull/405 is merged.
+# TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
+# to merge blocks.
+function GradedAxes.blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
+)
+  # Without converting `indices` to `Vector`,
+  # mapping `indices` outputs a `BlockVector`
+  # which is harder to reason about.
+  blocks = map(index -> a[index], Vector(indices))
+  # We pass `length.(blocks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  # TODO: Remove `unlabel` once `BlockArray` axes
+  # type is generalized in BlockArrays.jl.
+  # TODO: Support using `BlockSparseVector`, need
+  # to make more `BlockSparseArray` constructors.
+  return BlockSparseArray(blocks, (blockedrange(length.(blocks)),))
+end
+
+# This definition is only needed since calls like
+# `a[[Block(1), Block(2)]]` where `a isa AbstractGradedUnitRange`
+# returns a `BlockSparseVector` instead of a `BlockVector`
+# due to limitations in the `BlockArray` type not allowing
+# axes with non-Int element types.
+# TODO: Remove this once that issue is fixed,
+# see https://github.com/JuliaArrays/BlockArrays.jl/pull/405.
+using BlockArrays: BlockRange
+using NDTensors.LabelledNumbers: label
+function GradedAxes.blocklabels(a::BlockSparseVector)
+  return map(BlockRange(a)) do block
+    return label(blocks(a)[Int(block)])
+  end
 end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays

@@ -2,6 +2,7 @@
 using BlockArrays:
   Block,
   BlockRange,
+  BlockedOneTo,
   BlockedUnitRange,
   BlockVector,
   blockedrange,
@@ -43,7 +44,7 @@ include("TestBlockSparseArraysUtils.jl")
     @test a == BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
     @test eltype(a) === elt
     @test axes(a) == (1:5, 1:5)
-    @test all(aᵢ -> aᵢ isa BlockedUnitRange, axes(a))
+    @test all(aᵢ -> aᵢ isa BlockedOneTo, axes(a))
     @test blocklength.(axes(a)) == (2, 2)
     @test blocksize(a) == (2, 2)
     @test size(a) == (5, 5)
@@ -56,7 +57,7 @@ include("TestBlockSparseArraysUtils.jl")
     a[3, 3] = 33
     @test eltype(a) === elt
     @test axes(a) == (1:5, 1:5)
-    @test all(aᵢ -> aᵢ isa BlockedUnitRange, axes(a))
+    @test all(aᵢ -> aᵢ isa BlockedOneTo, axes(a))
     @test blocklength.(axes(a)) == (2, 2)
     @test blocksize(a) == (2, 2)
     @test size(a) == (5, 5)

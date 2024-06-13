@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using LinearAlgebra: norm
-using NDTensors.LabelledNumbers: LabelledInteger, islabelled, label, labelled, unlabel
+using NDTensors.LabelledNumbers:
+  LabelledInteger, LabelledUnitRange, islabelled, label, labelled, unlabel
 using Test: @test, @testset
 @testset "LabelledNumbers" begin
   @testset "Labelled number ($n)" for n in (2, 2.0)
@@ -50,8 +51,12 @@ using Test: @test, @testset
     @test !islabelled(x - x)
 
     @test x / 2 == 1
+    @test x / 2 isa AbstractFloat
+    @test x / 2 isa Float64
     @test !islabelled(x / 2)
     @test x ÷ 2 == 1
+    @test x ÷ 2 isa Integer
+    @test x ÷ 2 isa Int
     @test !islabelled(x ÷ 2)
     @test -x == -2
     @test hash(x) == hash(2)
@@ -111,5 +116,17 @@ using Test: @test, @testset
       @test label(step(x)) == "x"
     end
   end
+end
+
+using BlockArrays: Block, blockaxes, blocklength, blocklengths
+@testset "LabelledNumbersBlockArraysExt" begin
+  x = labelled(1:2, "x")
+  @test blockaxes(x) == (Block.(1:1),)
+  @test blocklength(x) == 1
+  @test blocklengths(x) == [2]
+  a = x[Block(1)]
+  @test a == 1:2
+  @test a isa LabelledUnitRange
+  @test label(a) == "x"
 end
 end
