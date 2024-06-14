@@ -62,9 +62,14 @@ The table below summarizes each backend's current capabilities.
 
 |                              | CUDA |  cuTENSOR  | ROCm   | Metal  | oneAPI |
 |------------------------------|------|------------|--------|--------|--------|
-| Contractions (dense)         |   ✓ (cuBLAS)  |    ✓    |   ✓    |   ✓    |  N/A   |
-| QR (dense)                   |   ✓ (cuSOLVER)  |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
-| SVD (dense)                  |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
-| Eigendecomposition (dense)   |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU | On CPU |  N/A   |
-| Double precision (`Float64`) |   ✓ (cuSOLVER) |  ✓  |   ✓    |  N/A   |  N/A   |
-| Block sparse                 |  In progress |  In progress  |  In progress   |  In progress   |  N/A   |
+| Contractions (dense)         |   ✓ (cuBLAS)  |    ✓    |   ✓    |   ✓    |  N/A[^oneapi]   |
+| QR (dense)                   |   ✓ (cuSOLVER)  |  ✓ (cuSOLVER)  | On CPU[^linalg] | On CPU[^linalg] |  N/A[^oneapi]   |
+| SVD (dense)                  |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU[^linalg] | On CPU[^linalg] |  N/A[^oneapi]   |
+| Eigendecomposition (dense)   |   ✓ (cuSOLVER) |  ✓ (cuSOLVER)  | On CPU[^linalg] | On CPU[^linalg] |  N/A[^oneapi]   |
+| Double precision (`Float64`) |   ✓   |   ✓   |    ✓   |  N/A[^metal]   |  N/A[^oneapi]   |
+| Block sparse                 |   ✓[^blocksparse]  |  ✓[^blocksparse]  |  ✓[^blocksparse]  |  ✓[^blocksparse]  |  N/A[^oneapi]   |
+
+[^linalg]: Some GPU vendors have not implemented certain matrix factorizations, or the ones they have implemented are not efficient compared to running on CPU, so as a workaround we perform those operations on CPU by transferring the data back and forth from GPU to CPU. We will add support for running those operations on GPU as they become available. If your algorithm's cost is dominated by those operations you won't see any speedup by trying to run it on those kinds of GPUs.
+[^blocksparse]: Support is experimental. Operations may not be fully optimized and could have bugs.
+[^oneapi]: We plan to add Intel GPU support through Julia's oneAPI.jl interface but don't have any Intel GPUs to test on right now.
+[^metal]: Apple doesn't support double precision floating point operations on their GPUs, see Section 2.1 of the [Metal Shading Language Specification](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf). Until it does, we can't support double precision operations on Apple GPUs.
