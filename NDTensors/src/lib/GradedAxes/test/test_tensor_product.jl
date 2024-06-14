@@ -1,14 +1,26 @@
 @eval module $(gensym())
+using Test: @test, @testset
+
+using BlockArrays: blocklength, blocklengths
+
 using NDTensors.GradedAxes:
   GradedAxes,
   GradedOneTo,
   OneToOne,
+  dual,
   fusion_product,
+  flip,
   gradedrange,
   gradedisequal,
+  isdual,
   tensor_product
-using BlockArrays: blocklength, blocklengths
-using Test: @test, @testset
+
+struct U1
+  n::Int
+end
+GradedAxes.dual(c::U1) = U1(-c.n)
+Base.isless(c1::U1, c2::U1) = c1.n < c2.n
+GradedAxes.fuse_labels(x::U1, y::U1) = U1(x.n + y.n)
 
 @testset "GradedAxes.tensor_product" begin
   GradedAxes.fuse_labels(x::String, y::String) = x * y
@@ -31,20 +43,41 @@ using Test: @test, @testset
 end
 
 @testset "GradedAxes.fusion_product" begin
-  GradedAxes.fuse_labels(i::Int, j::Int) = i + j
-
   g0 = OneToOne()
   @test gradedisequal(fusion_product(g0, g0), g0)
 
-  a = gradedrange([1 => 1, 2 => 3, 1 => 1])
+  a = gradedrange([U1(1) => 1, U1(2) => 3, U1(1) => 1])
 
   b = fusion_product(a)
-  @test gradedisequal(b, gradedrange([1 => 2, 2 => 3]))
+  @test gradedisequal(b, gradedrange([U1(1) => 2, U1(2) => 3]))
 
   c = fusion_product(a, a)
-  @test gradedisequal(c, gradedrange([2 => 4, 3 => 12, 4 => 9]))
+  @test gradedisequal(c, gradedrange([U1(2) => 4, U1(3) => 12, U1(4) => 9]))
 
   d = fusion_product(a, a, a)
-  @test gradedisequal(d, gradedrange([3 => 8, 4 => 36, 5 => 54, 6 => 27]))
+  @test gradedisequal(d, gradedrange([U1(3) => 8, U1(4) => 36, U1(5) => 54, U1(6) => 27]))
+end
+
+@testset "dual and tensor_product" begin
+  a = gradedrange([U1(1) => 1, U1(2) => 3, U1(1) => 1])
+  ad = dual(a)
+
+  b = fusion_product(ad)
+  @test b isa GradedOneTo
+  @test !isdual(b)
+  @test gradedisequal(b, gradedrange([U1(-2) => 3, U1(-1) => 2]))
+
+  c = fusion_product(ad, ad)
+  @test c isa GradedOneTo
+  @test !isdual(c)
+  @test gradedisequal(c, gradedrange([U1(-4) => 9, U1(-3) => 12, U1(-2) => 4]))
+
+  d = fusion_product(ad, a)
+  @test !isdual(d)
+  @test gradedisequal(d, gradedrange([U1(-1) => 6, U1(0) => 13, U1(1) => 6]))
+
+  e = fusion_product(a, ad)
+  @test !isdual(d)
+  @test gradedisequal(e, d)
 end
 end

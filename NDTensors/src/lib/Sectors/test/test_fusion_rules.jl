@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes:
-  dual, fusion_product, gradedisequal, gradedrange, label_dual, tensor_product
+  dual, fusion_product, gradedisequal, gradedrange, flip, tensor_product
 using NDTensors.Sectors:
   ⊗, Fib, Ising, SU, SU2, U1, Z, block_dimensions, quantum_dimension, trivial
 using Test: @inferred, @test, @testset, @test_throws
@@ -96,7 +96,7 @@ end
     g1 = gradedrange([U1(-1) => 1, U1(0) => 1, U1(1) => 2])
     g2 = gradedrange([U1(-2) => 2, U1(0) => 1, U1(1) => 2])
 
-    @test gradedisequal(label_dual(g1), gradedrange([U1(1) => 1, U1(0) => 1, U1(-1) => 2]))
+    @test gradedisequal(flip(dual(g1)), gradedrange([U1(1) => 1, U1(0) => 1, U1(-1) => 2]))
     @test (@inferred block_dimensions(g1)) == [1, 1, 2]
 
     gt = gradedrange([
@@ -191,7 +191,7 @@ end
 
     @test gradedisequal(tensor_product(g3, g4), g34)
 
-    @test gradedisequal(label_dual(g3), g3)  # trivial for SU(2)
+    @test gradedisequal(dual(flip(g3)), g3)  # trivial for SU(2)
     @test gradedisequal(
       (@inferred fusion_product(g3, g4)),
       gradedrange([SU2(0) => 4, SU2(1//2) => 6, SU2(1) => 6, SU2(3//2) => 5, SU2(2) => 2]),
@@ -206,7 +206,7 @@ end
 
     g5 = gradedrange([s1 => 1, f3 => 1])
     g6 = gradedrange([s1 => 1, c3 => 1])
-    @test gradedisequal(label_dual(g5), g6)
+    @test gradedisequal(dual(flip(g5)), g6)
     @test gradedisequal(
       fusion_product(g5, g6), gradedrange([s1 => 2, f3 => 1, c3 => 1, ad8 => 1])
     )
