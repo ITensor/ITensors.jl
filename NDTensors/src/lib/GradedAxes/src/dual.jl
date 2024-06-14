@@ -6,5 +6,4 @@ label_dual(x) = label_dual(LabelledStyle(x), x)
 label_dual(::NotLabelled, x) = x
 label_dual(::IsLabelled, x) = labelled(unlabel(x), dual(label(x)))
 
-# TBD rename deepdual? yet another name?
-label_dual(g::AbstractGradedUnitRange) = gradedrange(label_dual.(blocklengths(g)))
+flip(g::AbstractGradedUnitRange) = dual(gradedrange(label_dual.(blocklengths(g))))

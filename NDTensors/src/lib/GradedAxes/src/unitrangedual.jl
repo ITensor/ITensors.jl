@@ -6,6 +6,7 @@ UnitRangeDual(a::AbstractUnitRange) = UnitRangeDual{eltype(a),typeof(a)}(a)
 dual(a::AbstractUnitRange) = UnitRangeDual(a)
 nondual(a::UnitRangeDual) = a.nondual_unitrange
 dual(a::UnitRangeDual) = nondual(a)
+flip(a::UnitRangeDual) = dual(flip(nondual(a)))
 nondual(a::AbstractUnitRange) = a
 isdual(::AbstractGradedUnitRange) = false
 isdual(::UnitRangeDual) = true

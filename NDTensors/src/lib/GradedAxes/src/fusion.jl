@@ -44,15 +44,15 @@ end
 
 # Handle dual. Always return a non-dual GradedUnitRange.
 function tensor_product(a1::AbstractUnitRange, a2::UnitRangeDual)
-  return tensor_product(a1, label_dual(dual(a2)))
+  return tensor_product(a1, flip(dual(a2)))
 end
 
 function tensor_product(a1::UnitRangeDual, a2::AbstractUnitRange)
-  return tensor_product(label_dual(dual(a1)), a2)
+  return tensor_product(flip(dual(a1)), a2)
 end
 
 function tensor_product(a1::UnitRangeDual, a2::UnitRangeDual)
-  return tensor_product(label_dual(dual(a1)), label_dual(dual(a2)))
+  return tensor_product(flip(dual(a1)), flip(dual(a2)))
 end
 
 function fuse_labels(x, y)
@@ -136,20 +136,9 @@ function fusion_product(g1, g2)
 end
 
 fusion_product(g::AbstractUnitRange) = blockmergesort(g)
-fusion_product(g::UnitRangeDual) = fusion_product(label_dual(nondual(g)))
+fusion_product(g::UnitRangeDual) = fusion_product(flip(nondual(g)))
 
 # recursive fusion_product. Simpler than reduce + fix type stability issues with reduce
 function fusion_product(g1, g2, g3...)
   return fusion_product(fusion_product(g1, g2), g3...)
-end
-
-# Handle dual. Always return a non-dual GradedUnitRange.
-function fusion_product(g1::UnitRangeDual, g2::AbstractUnitRange)
-  return fusion_product(label_dual(dual(g1)), g2)
-end
-function fusion_product(g1::AbstractUnitRange, g2::UnitRangeDual)
-  return fusion_product(g1, label_dual(dual(g2)))
-end
-function fusion_product(g1::UnitRangeDual, g2::UnitRangeDual)
-  return fusion_product(label_dual(dual(g1)), label_dual(dual(g2)))
 end
