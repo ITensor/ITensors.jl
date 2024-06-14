@@ -9,7 +9,7 @@ using BlockArrays:
   blocklengths,
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
-using ..SparseArrayInterface: perm, iperm, nstored
+using ..SparseArrayInterface: perm, iperm, nstored, sparse_zero!
 ## using MappedArrays: mappedarray
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
@@ -92,6 +92,18 @@ function blocksparse_setindex!(
     )
   end
   blocks(a)[i...] = value
+  return a
+end
+
+function blocksparse_fill!(a::AbstractArray, value)
+  if iszero(value)
+    # This drops all of the blocks.
+    sparse_zero!(blocks(a))
+    return a
+  end
+  for b in BlockRange(a)
+    a[b] .= value
+  end
   return a
 end
 

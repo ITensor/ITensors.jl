@@ -29,3 +29,7 @@ end
 function Base.setindex!(a::AbstractSparseArray, I...)
   return SparseArrayInterface.sparse_setindex!(a, I...)
 end
+
+function Base.fill!(a::AbstractSparseArray, value)
+  return SparseArrayInterface.sparse_fill!(a, value)
+end

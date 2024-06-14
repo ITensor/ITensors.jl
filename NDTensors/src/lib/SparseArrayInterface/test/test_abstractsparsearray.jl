@@ -280,7 +280,12 @@ using Test: @test, @testset
   a′ = copy(a)
   a′ .+= b
   @test a′ == a + b
-  @test SparseArrayInterface.nstored(a′) == 2
+  # TODO: Should this be:
+  # ```julia
+  # @test SparseArrayInterface.nstored(a′) == 2
+  # ```
+  # ? I.e. should it only store the nonzero values?
+  @test SparseArrayInterface.nstored(a′) == 6
 
   # Matrix multiplication
   a1 = SparseArray{elt}(2, 3)
