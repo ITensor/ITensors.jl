@@ -1,4 +1,5 @@
 module SparseArrays
+using LinearAlgebra: LinearAlgebra
 using NDTensors.SparseArrayInterface: SparseArrayInterface
 
 struct SparseArray{T,N} <: AbstractArray{T,N}
@@ -19,6 +20,18 @@ function SparseArray{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}) where {T}
 end
 SparseArray{T}(dims::Vararg{Int}) where {T} = SparseArray{T}(dims)
 
+# LinearAlgebra interface
+function LinearAlgebra.mul!(
+  a_dest::AbstractMatrix,
+  a1::SparseArray{<:Any,2},
+  a2::SparseArray{<:Any,2},
+  α::Number,
+  β::Number,
+)
+  SparseArrayInterface.sparse_mul!(a_dest, a1, a2, α, β)
+  return a_dest
+end
+
 # AbstractArray interface
 Base.size(a::SparseArray) = a.dims
 function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})
@@ -28,8 +41,11 @@ end
 function Base.getindex(a::SparseArray, I...)
   return SparseArrayInterface.sparse_getindex(a, I...)
 end
-function Base.setindex!(a::SparseArray, I...)
-  return SparseArrayInterface.sparse_setindex!(a, I...)
+function Base.setindex!(a::SparseArray, value, I...)
+  return SparseArrayInterface.sparse_setindex!(a, value, I...)
+end
+function Base.fill!(a::SparseArray, value)
+  return SparseArrayInterface.sparse_fill!(a, value)
 end
 
 # Minimal interface
