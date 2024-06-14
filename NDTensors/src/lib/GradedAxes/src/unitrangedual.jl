@@ -19,6 +19,16 @@ Base.step(a::UnitRangeDual) = label_dual(step(nondual(a)))
 
 Base.view(a::UnitRangeDual, index::Block{1}) = a[index]
 
+function Base.show(io::IO, a::UnitRangeDual)
+  return print(io, UnitRangeDual, "(", blocklasts(a), ")")
+end
+
+function Base.show(io::IO, mimetype::MIME"text/plain", a::UnitRangeDual)
+  return Base.invoke(
+    show, Tuple{typeof(io),MIME"text/plain",AbstractArray}, io, mimetype, a
+  )
+end
+
 function Base.getindex(a::UnitRangeDual, indices::AbstractUnitRange{<:Integer})
   return dual(getindex(nondual(a), indices))
 end
