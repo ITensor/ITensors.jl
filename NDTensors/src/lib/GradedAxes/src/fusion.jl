@@ -71,7 +71,7 @@ function fuse_blocklengths(x::LabelledInteger, y::LabelledInteger)
 end
 
 flatten_maybe_nested(v::Vector{<:Integer}) = v
-flatten_maybe_nested(v::Vector{<:GradedUnitRange}) = reduce(vcat, blocklengths.(v))
+flatten_maybe_nested(v::Vector{<:AbstractGradedUnitRange}) = reduce(vcat, blocklengths.(v))
 
 using BlockArrays: blockedrange, blocks
 function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
@@ -117,7 +117,7 @@ function blockmergesortperm(a::UnitRangeDual)
   return Block.(groupsortperm(blocklabels(nondual(a))))
 end
 
-function blockmergesort(g::GradedUnitRange)
+function blockmergesort(g::AbstractGradedUnitRange)
   glabels = blocklabels(g)
   gblocklengths = blocklengths(g)
   new_blocklengths = map(
