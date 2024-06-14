@@ -51,7 +51,9 @@ function sparse_fill!(a::AbstractArray, x)
     sparse_zero!(a)
     return a
   end
-  fill!(sparse_storage(a), x)
+  for I in eachindex(a)
+    a[I] = x
+  end
   return a
 end
 
