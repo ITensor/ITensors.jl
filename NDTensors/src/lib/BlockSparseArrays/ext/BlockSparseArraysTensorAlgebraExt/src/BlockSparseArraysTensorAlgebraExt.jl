@@ -1,12 +1,14 @@
 module BlockSparseArraysTensorAlgebraExt
-using BlockArrays: BlockedUnitRange
+using BlockArrays: AbstractBlockedUnitRange
 using ..BlockSparseArrays: AbstractBlockSparseArray, block_reshape
 using ...GradedAxes: tensor_product
 using ...TensorAlgebra: TensorAlgebra, FusionStyle, BlockReshapeFusion
 
-TensorAlgebra.:⊗(a1::BlockedUnitRange, a2::BlockedUnitRange) = tensor_product(a1, a2)
+function TensorAlgebra.:⊗(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
+  return tensor_product(a1, a2)
+end
 
-TensorAlgebra.FusionStyle(::BlockedUnitRange) = BlockReshapeFusion()
+TensorAlgebra.FusionStyle(::AbstractBlockedUnitRange) = BlockReshapeFusion()
 
 function TensorAlgebra.fusedims(
   ::BlockReshapeFusion, a::AbstractArray, axes::AbstractUnitRange...

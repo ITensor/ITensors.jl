@@ -1,6 +1,12 @@
 using Adapt: Adapt, WrappedArray
 using BlockArrays:
-  BlockArrays, BlockedUnitRange, BlockIndexRange, BlockRange, blockedrange, mortar, unblock
+  BlockArrays,
+  AbstractBlockedUnitRange,
+  BlockIndexRange,
+  BlockRange,
+  blockedrange,
+  mortar,
+  unblock
 using SplitApplyCombine: groupcount
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
@@ -78,7 +84,10 @@ end
 # TODO: Move to blocksparsearrayinterface.
 function blocksparse_unblock(a, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}})
   bs = blockrange(inds[1], I[1])
-  return BlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
+  # GenericBlockSlice works around an issue that the indices of BlockSlice
+  # are restricted to Int element type.
+  # TODO: Raise an issue/make a pull request in BlockArrays.jl.
+  return GenericBlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
 end
 
 function BlockArrays.unblock(a, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}})
@@ -177,6 +186,11 @@ function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::Block{1})
   return a
 end
 
+function Base.fill!(a::BlockSparseArrayLike, value)
+  blocksparse_fill!(a, value)
+  return a
+end
+
 # `BlockArrays` interface
 # TODO: Is this needed if `blocks` is defined?
 function BlockArrays.viewblock(a::BlockSparseArrayLike{<:Any,N}, I::Block{N,Int}) where {N}
@@ -205,7 +219,7 @@ end
 # Fixes ambiguity error with `BlockArrays.jl`.
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike},
-  axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
+  axes::Tuple{AbstractBlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
@@ -214,14 +228,27 @@ end
 # Fixes ambiguity error with `BlockArrays.jl`.
 function Base.similar(
   arraytype::Type{<:BlockSparseArrayLike},
-  axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}},
+  axes::Tuple{
+    AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{AbstractUnitRange{Int}}
+  },
+)
+  return similar(arraytype, eltype(arraytype), axes)
+end
+
+# Needed by `BlockArrays` matrix multiplication interface
+# Fixes ambiguity error with `BlockArrays.jl`.
+function Base.similar(
+  arraytype::Type{<:BlockSparseArrayLike},
+  axes::Tuple{
+    AbstractUnitRange{Int},AbstractBlockedUnitRange,Vararg{AbstractUnitRange{Int}}
+  },
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
 
 # Needed for disambiguation
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{BlockedUnitRange}}
+  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{AbstractBlockedUnitRange}}
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
@@ -248,7 +275,9 @@ end
 # TODO: Define a `blocksparse_similar` function.
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
-  a::BlockSparseArrayLike, elt::Type, axes::Tuple{BlockedUnitRange,Vararg{BlockedUnitRange}}
+  a::BlockSparseArrayLike,
+  elt::Type,
+  axes::Tuple{AbstractBlockedUnitRange,Vararg{AbstractBlockedUnitRange}},
 )
   # TODO: Make generic for GPU, maybe using `blocktype`.
   # TODO: For non-block axes this should output `Array`.

@@ -1,12 +1,6 @@
 @eval module $(gensym())
-using NDTensors.GradedAxes:
-  GradedAxes,
-  GradedUnitRange,
-  OneToOne,
-  fusion_product,
-  gradedrange,
-  gradedisequal,
-  tensor_product
+using NDTensors.GradedAxes: GradedAxes, GradedOneTo
+GradedUnitRange, OneToOne, fusion_product, gradedrange, gradedisequal, tensor_product
 using BlockArrays: blocklength, blocklengths
 using Test: @test, @testset
 
@@ -19,6 +13,7 @@ using Test: @test, @testset
   a = gradedrange(["x" => 2, "y" => 3])
   b = tensor_product(a, a)
   @test b isa GradedUnitRange
+  @test b isa GradedOneTo
   @test length(b) == 25
   @test blocklength(b) == 4
   @test blocklengths(b) == [4, 6, 6, 9]

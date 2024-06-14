@@ -19,6 +19,21 @@ using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: stored_indices
 
+# GenericBlockSlice works around an issue that the indices of BlockSlice
+# are restricted to Int element type.
+# TODO: Raise an issue/make a pull request in BlockArrays.jl.
+struct GenericBlockSlice{B,T<:Integer,I<:AbstractUnitRange{T}} <: AbstractUnitRange{T}
+  block::B
+  indices::I
+end
+BlockArrays.Block(bs::GenericBlockSlice{<:Block}) = bs.block
+for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe_length)
+  @eval Base.$f(S::GenericBlockSlice) = Base.$f(S.indices)
+end
+Base.getindex(S::GenericBlockSlice, i::Integer) = getindex(S.indices, i)
+
+# BlockIndices works around an issue that the indices of BlockSlice
+# are restricted to AbstractUnitRange{Int}.
 struct BlockIndices{B,T<:Integer,I<:AbstractVector{T}} <: AbstractVector{T}
   blocks::B
   indices::I
@@ -175,6 +190,13 @@ function blockrange(axis::AbstractUnitRange, r::BlockSlice)
   return blockrange(axis, r.block)
 end
 
+# GenericBlockSlice works around an issue that the indices of BlockSlice
+# are restricted to Int element type.
+# TODO: Raise an issue/make a pull request in BlockArrays.jl.
+function blockrange(axis::AbstractUnitRange, r::GenericBlockSlice)
+  return blockrange(axis, r.block)
+end
+
 function blockrange(a::AbstractUnitRange, r::BlockIndices)
   return blockrange(a, r.blocks)
 end
@@ -312,4 +334,35 @@ function blocked_cartesianindices(axes::Tuple, subaxes::Tuple, blocks)
   return map(subblocks(axes, subaxes, blocks)) do block
     return cartesianindices(subaxes, block)
   end
+end
+
+function view!(a::BlockSparseArray{<:Any,N}, index::Block{N}) where {N}
+  return view!(a, Tuple(index)...)
+end
+function view!(a::AbstractArray{<:Any,N}, index::Vararg{Block{1},N}) where {N}
+  blocks(a)[Int.(index)...] = blocks(a)[Int.(index)...]
+  return blocks(a)[Int.(index)...]
+end
+
+function view!(a::AbstractArray{<:Any,N}, index::BlockIndexRange{N}) where {N}
+  # TODO: Is there a better code pattern for this?
+  indices = ntuple(N) do dim
+    return Tuple(Block(index))[dim][index.indices[dim]]
+  end
+  return view!(a, indices...)
+end
+function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) where {N}
+  b = view!(a, Block.(index)...)
+  r = map(index -> only(index.indices), index)
+  return @view b[r...]
+end
+
+using MacroTools: @capture
+using NDTensors.SparseArrayDOKs: is_getindex_expr
+macro view!(expr)
+  if !is_getindex_expr(expr)
+    error("@view must be used with getindex syntax (as `@view! a[i,j,...]`)")
+  end
+  @capture(expr, array_[indices__])
+  return :(view!($(esc(array)), $(esc.(indices)...)))
 end

@@ -1,4 +1,4 @@
-using BlockArrays: BlockedUnitRange
+using BlockArrays: AbstractBlockedUnitRange
 
 # Represents the range `1:1` or `Base.OneTo(1)`.
 struct OneToOne{T} <: AbstractUnitRange{T} end
@@ -74,7 +74,7 @@ flatten_maybe_nested(v::Vector{<:Integer}) = v
 flatten_maybe_nested(v::Vector{<:GradedUnitRange}) = reduce(vcat, blocklengths.(v))
 
 using BlockArrays: blockedrange, blocks
-function tensor_product(a1::BlockedUnitRange, a2::BlockedUnitRange)
+function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
   maybe_nested = map(
     it -> mapreduce(length, fuse_blocklengths, it),
     Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),)),
@@ -83,7 +83,7 @@ function tensor_product(a1::BlockedUnitRange, a2::BlockedUnitRange)
   return blockedrange(blocklengths)
 end
 
-function blocksortperm(a::BlockedUnitRange)
+function blocksortperm(a::AbstractBlockedUnitRange)
   return Block.(sortperm(blocklabels(a)))
 end
 
@@ -104,7 +104,9 @@ function groupsortperm(v; kwargs...)
 end
 
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
-function blockmergesortperm(a::BlockedUnitRange)
+# Get the permutation for sorting, then group by common elements.
+# groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
+function blockmergesortperm(a::AbstractBlockedUnitRange)
   return Block.(groupsortperm(blocklabels(a)))
 end
 
