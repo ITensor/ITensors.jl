@@ -11,7 +11,8 @@ using BlockArrays:
   blocksize,
   mortar
 using LinearAlgebra: mul!
-using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored, block_reshape
+using NDTensors.BlockSparseArrays:
+  @view!, BlockSparseArray, block_nstored, block_reshape, view!
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset
@@ -403,6 +404,80 @@ include("TestBlockSparseArraysUtils.jl")
     @test !isassigned(a, Block(2)[3], Block(2)[5])
     @test !isassigned(a, Block(1)[1], Block(0)[1])
     @test !isassigned(a, Block(3)[3], Block(2)[4])
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    fill!(a, 0)
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    fill!(a, 2)
+    @test !iszero(a)
+    @test all(==(2), a)
+    @test block_nstored(a) == 4
+    fill!(a, 0)
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    a .= 0
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+    a .= 2
+    @test !iszero(a)
+    @test all(==(2), a)
+    @test block_nstored(a) == 4
+    a .= 0
+    @test iszero(a)
+    @test iszero(block_nstored(a))
+  end
+  @testset "view!" begin
+    for blk in ((Block(2, 2),), (Block(2), Block(2)))
+      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      b = view!(a, blk...)
+      x = randn(elt, 3, 3)
+      b .= x
+      @test b == x
+      @test a[blk...] == x
+      @test @view(a[blk...]) == x
+      @test view!(a, blk...) == x
+      @test @view!(a[blk...]) == x
+    end
+    for blk in ((Block(2, 2),), (Block(2), Block(2)))
+      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      b = @view! a[blk...]
+      x = randn(elt, 3, 3)
+      b .= x
+      @test b == x
+      @test a[blk...] == x
+      @test @view(a[blk...]) == x
+      @test view!(a, blk...) == x
+      @test @view!(a[blk...]) == x
+    end
+    for blk in ((Block(2, 2)[2:3, 1:2],), (Block(2)[2:3], Block(2)[1:2]))
+      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      b = view!(a, blk...)
+      x = randn(elt, 2, 2)
+      b .= x
+      @test b == x
+      @test a[blk...] == x
+      @test @view(a[blk...]) == x
+      @test view!(a, blk...) == x
+      @test @view!(a[blk...]) == x
+    end
+    for blk in ((Block(2, 2)[2:3, 1:2],), (Block(2)[2:3], Block(2)[1:2]))
+      a = BlockSparseArray{elt}([2, 3], [2, 3])
+      b = @view! a[blk...]
+      x = randn(elt, 2, 2)
+      b .= x
+      @test b == x
+      @test a[blk...] == x
+      @test @view(a[blk...]) == x
+      @test view!(a, blk...) == x
+      @test @view!(a[blk...]) == x
+    end
   end
   @testset "LinearAlgebra" begin
     a1 = BlockSparseArray{elt}([2, 3], [2, 3])

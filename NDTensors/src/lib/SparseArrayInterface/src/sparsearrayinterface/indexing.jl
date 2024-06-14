@@ -153,9 +153,7 @@ function sparse_setindex!(a::AbstractArray, value, I::StoredIndex)
 end
 
 function sparse_setindex!(a::AbstractArray, value, I::NotStoredIndex)
-  if !iszero(value)
-    setindex_notstored!(a, value, index(I))
-  end
+  setindex_notstored!(a, value, index(I))
   return a
 end
 

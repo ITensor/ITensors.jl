@@ -44,13 +44,16 @@ end
 # but we don't use that here since `sparse_fill!`
 # is used inside of `sparse_map!`.
 function sparse_fill!(a::AbstractArray, x)
-  ## TODO: Add this back?
-  ## if iszero(x)
-  ##   # TODO: Check that `typeof(x)` is compatible
-  ##   # with `eltype(a)`.
-  ##   dropall!(a)
-  ## end
-  fill!(sparse_storage(a), x)
+  if iszero(x)
+    # This checks that `x` is compatible
+    # with `eltype(a)`.
+    x = convert(eltype(a), x)
+    sparse_zero!(a)
+    return a
+  end
+  for I in eachindex(a)
+    a[I] = x
+  end
   return a
 end
 

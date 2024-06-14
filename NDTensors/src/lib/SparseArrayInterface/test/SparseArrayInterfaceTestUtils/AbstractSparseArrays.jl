@@ -1,6 +1,6 @@
 module AbstractSparseArrays
+using ArrayLayouts: ArrayLayouts, MatMulMatAdd, MemoryLayout, MulAdd
 using NDTensors.SparseArrayInterface: SparseArrayInterface, AbstractSparseArray
-using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
 
 struct SparseArray{T,N} <: AbstractSparseArray{T,N}
   data::Vector{T}
@@ -25,6 +25,13 @@ struct SparseLayout <: MemoryLayout end
 ArrayLayouts.MemoryLayout(::Type{<:SparseArray}) = SparseLayout()
 function Base.similar(::MulAdd{<:SparseLayout,<:SparseLayout}, elt::Type, axes)
   return similar(SparseArray{elt}, axes)
+end
+function ArrayLayouts.materialize!(
+  m::MatMulMatAdd{<:SparseLayout,<:SparseLayout,<:SparseLayout}
+)
+  α, a1, a2, β, a_dest = m.α, m.A, m.B, m.β, m.C
+  SparseArrayInterface.sparse_mul!(a_dest, a1, a2, α, β)
+  return a_dest
 end
 
 # AbstractArray interface
