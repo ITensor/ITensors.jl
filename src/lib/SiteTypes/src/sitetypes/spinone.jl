@@ -1,5 +1,7 @@
 using ..ITensors: complex!, QN
 
+alias(::SiteType"SpinOne") = SiteType"S=1"()
+
 """
     space(::SiteType"S=1";
           conserve_qns = false,
@@ -57,7 +59,7 @@ op(::OpName"Sz", ::SiteType"S=1") = [
   0.0 0.0 -1.0
 ]
 
-op(::OpName"Sᶻ", t::SiteType"S=1") = op(OpName("Sz"), t)
+op(on::OpName"Sᶻ", t::SiteType"S=1") = op(alias(on), t)
 
 op(::OpName"S+", ::SiteType"S=1") = [
   0.0 √2 0.0
@@ -65,9 +67,9 @@ op(::OpName"S+", ::SiteType"S=1") = [
   0.0 0.0 0.0
 ]
 
-op(::OpName"S⁺", t::SiteType"S=1") = op(OpName("S+"), t)
-op(::OpName"Splus", t::SiteType"S=1") = op(OpName("S+"), t)
-op(::OpName"Sp", t::SiteType"S=1") = op(OpName("S+"), t)
+op(on::OpName"S⁺", t::SiteType"S=1") = op(alias(on), t)
+op(on::OpName"Splus", t::SiteType"S=1") = op(alias(on), t)
+op(on::OpName"Sp", t::SiteType"S=1") = op(alias(on), t)
 
 op(::OpName"S-", ::SiteType"S=1") = [
   0.0 0.0 0.0
@@ -75,9 +77,9 @@ op(::OpName"S-", ::SiteType"S=1") = [
   0.0 √2 0.0
 ]
 
-op(::OpName"S⁻", t::SiteType"S=1") = op(OpName("S-"), t)
-op(::OpName"Sminus", t::SiteType"S=1") = op(OpName("S-"), t)
-op(::OpName"Sm", t::SiteType"S=1") = op(OpName("S-"), t)
+op(on::OpName"S⁻", t::SiteType"S=1") = op(alias(on), t)
+op(on::OpName"Sminus", t::SiteType"S=1") = op(alias(on), t)
+op(on::OpName"Sm", t::SiteType"S=1") = op(alias(on), t)
 
 op(::OpName"Sx", ::SiteType"S=1") = [
   0.0 1/√2 0.0
@@ -85,7 +87,7 @@ op(::OpName"Sx", ::SiteType"S=1") = [
   0.0 1/√2 0.0
 ]
 
-op(::OpName"Sˣ", t::SiteType"S=1") = op(OpName("Sx"), t)
+op(on::OpName"Sˣ", t::SiteType"S=1") = op(alias(on), t)
 
 op(::OpName"iSy", ::SiteType"S=1") = [
   0.0 1/√2 0.0
@@ -93,7 +95,7 @@ op(::OpName"iSy", ::SiteType"S=1") = [
   0.0 -1/√2 0.0
 ]
 
-op(::OpName"iSʸ", t::SiteType"S=1") = op(OpName("iSy"), t)
+op(on::OpName"iSʸ", t::SiteType"S=1") = op(alias(on), t)
 
 op(::OpName"Sy", ::SiteType"S=1") = [
   0.0 -im/√2 0.0
@@ -101,7 +103,7 @@ op(::OpName"Sy", ::SiteType"S=1") = [
   0.0 im/√2 0.0
 ]
 
-op(::OpName"Sʸ", t::SiteType"S=1") = op(OpName("Sy"), t)
+op(on::OpName"Sʸ", t::SiteType"S=1") = op(alias(on), t)
 
 op(::OpName"Sz2", ::SiteType"S=1") = [
   1.0 0.0 0.0
@@ -127,15 +129,15 @@ op(::OpName"S2", ::SiteType"S=1") = [
   0.0 0.0 2.0
 ]
 
-op(::OpName"S²", t::SiteType"S=1") = op(OpName("S2"), t)
+op(on::OpName"S²", t::SiteType"S=1") = op(alias(on), t)
 
-space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1"); kwargs...)
+space(st::SiteType"SpinOne"; kwargs...) = space(alias(st); kwargs...)
 
-state(name::StateName, ::SiteType"SpinOne") = state(name, SiteType("S=1"))
-val(name::ValName, ::SiteType"SpinOne") = val(name, SiteType("S=1"))
+state(name::StateName, st::SiteType"SpinOne") = state(name, alias(st))
+val(name::ValName, st::SiteType"SpinOne") = val(name, alias(st))
 
-function op!(Op::ITensor, o::OpName, ::SiteType"SpinOne", s::Index)
-  return op!(Op, o, SiteType("S=1"), s)
+function op!(Op::ITensor, o::OpName, st::SiteType"SpinOne", s::Index)
+  return op!(Op, o, alias(st), s)
 end
 
-op(o::OpName, ::SiteType"SpinOne") = op(o, SiteType("S=1"))
+op(o::OpName, st::SiteType"SpinOne") = op(o, alias(st))
