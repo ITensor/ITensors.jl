@@ -51,103 +51,83 @@ state(::StateName"Y+", ::SiteType"S=1") = [-1 / 2, -im / sqrt(2), 1 / 2]
 state(::StateName"Y0", ::SiteType"S=1") = [1 / sqrt(2), 0, 1 / sqrt(2)]
 state(::StateName"Y-", ::SiteType"S=1") = [-1 / 2, im / sqrt(2), 1 / 2]
 
-function op!(Op::ITensor, ::OpName"Sz", ::SiteType"S=1", s::Index)
-  Op[s' => 1, s => 1] = +1.0
-  return Op[s' => 3, s => 3] = -1.0
-end
+op(::OpName"Sz", ::SiteType"S=1") = [
+  1.0 0.0 0.0
+  0.0 0.0 0.0
+  0.0 0.0 -1.0
+]
 
-function op!(Op::ITensor, ::OpName"Sᶻ", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("Sz"), t, s)
-end
+op(::OpName"Sᶻ", t::SiteType"S=1") = op(OpName("Sz"), t)
 
-function op!(Op::ITensor, ::OpName"S+", ::SiteType"S=1", s::Index)
-  Op[s' => 2, s => 3] = sqrt(2)
-  return Op[s' => 1, s => 2] = sqrt(2)
-end
+op(::OpName"S+", ::SiteType"S=1") = [
+  0.0 √2 0.0
+  0.0 0.0 √2
+  0.0 0.0 0.0
+]
 
-function op!(Op::ITensor, ::OpName"S⁺", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("S+"), t, s)
-end
+op(::OpName"S⁺", t::SiteType"S=1") = op(OpName("S+"), t)
+op(::OpName"Splus", t::SiteType"S=1") = op(OpName("S+"), t)
+op(::OpName"Sp", t::SiteType"S=1") = op(OpName("S+"), t)
 
-function op!(Op::ITensor, ::OpName"Splus", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("S+"), t, s)
-end
+op(::OpName"S-", ::SiteType"S=1") = [
+  0.0 0.0 0.0
+  √2 0.0 0.0
+  0.0 √2 0.0
+]
 
-function op!(Op::ITensor, ::OpName"Sp", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("S+"), t, s)
-end
+op(::OpName"S⁻", t::SiteType"S=1") = op(OpName("S-"), t)
+op(::OpName"Sminus", t::SiteType"S=1") = op(OpName("S-"), t)
+op(::OpName"Sm", t::SiteType"S=1") = op(OpName("S-"), t)
 
-function op!(Op::ITensor, ::OpName"S-", ::SiteType"S=1", s::Index)
-  Op[s' => 3, s => 2] = sqrt(2)
-  return Op[s' => 2, s => 1] = sqrt(2)
-end
+op(::OpName"Sx", ::SiteType"S=1") = [
+  0.0 1/√2 0.0
+  1/√2 0.0 1/√2
+  0.0 1/√2 0.0
+]
 
-function op!(Op::ITensor, ::OpName"S⁻", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("S-"), t, s)
-end
+op(::OpName"Sˣ", t::SiteType"S=1") = op(OpName("Sx"), t)
 
-function op!(Op::ITensor, ::OpName"Sminus", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("S-"), t, s)
-end
+op(::OpName"iSy", ::SiteType"S=1") = [
+  0.0 1/√2 0.0
+  -1/√2 0.0 1/√2
+  0.0 -1/√2 0.0
+]
 
-function op!(Op::ITensor, ::OpName"Sm", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("S-"), t, s)
-end
+op(::OpName"iSʸ", t::SiteType"S=1") = op(OpName("iSy"), t)
 
-function op!(Op::ITensor, ::OpName"Sx", ::SiteType"S=1", s::Index)
-  Op[s' => 2, s => 1] = 1 / sqrt(2)
-  Op[s' => 1, s => 2] = 1 / sqrt(2)
-  Op[s' => 3, s => 2] = 1 / sqrt(2)
-  return Op[s' => 2, s => 3] = 1 / sqrt(2)
-end
+op(::OpName"Sy", ::SiteType"S=1") = [
+  0.0 -im/√2 0.0
+  im/√2 0.0 -im/√2
+  0.0 im/√2 0.0
+]
 
-function op!(Op::ITensor, ::OpName"Sˣ", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("Sx"), t, s)
-end
+op(::OpName"Sʸ", t::SiteType"S=1") = op(OpName("Sy"), t)
 
-function op!(Op::ITensor, ::OpName"iSy", ::SiteType"S=1", s::Index)
-  Op[s' => 2, s => 1] = -1 / sqrt(2)
-  Op[s' => 1, s => 2] = +1 / sqrt(2)
-  Op[s' => 3, s => 2] = -1 / sqrt(2)
-  return Op[s' => 2, s => 3] = +1 / sqrt(2)
-end
+op(::OpName"Sz2", ::SiteType"S=1") = [
+  1.0 0.0 0.0
+  0.0 0.0 0.0
+  0.0 0.0 1.0
+]
 
-function op!(Op::ITensor, ::OpName"iSʸ", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("iSy"), t, s)
-end
+op(::OpName"Sx2", ::SiteType"S=1") = [
+  0.5 0.0 0.5
+  0.0 1.0 0.0
+  0.5 0.0 0.5
+]
 
-function op!(Op::ITensor, ::OpName"Sy", ::SiteType"S=1", s::Index)
-  complex!(Op)
-  Op[s' => 2, s => 1] = +1im / sqrt(2)
-  Op[s' => 1, s => 2] = -1im / sqrt(2)
-  Op[s' => 3, s => 2] = +1im / sqrt(2)
-  return Op[s' => 2, s => 3] = -1im / sqrt(2)
-end
+op(::OpName"Sy2", ::SiteType"S=1") = [
+  0.5 0.0 -0.5
+  0.0 1.0 0.0
+  -0.5 0.0 0.5
+]
 
-function op!(Op::ITensor, ::OpName"Sʸ", t::SiteType"S=1", s::Index)
-  return op!(Op, OpName("Sy"), t, s)
-end
+op(::OpName"S2", ::SiteType"S=1") = [
+  2.0 0.0 0.0
+  0.0 2.0 0.0
+  0.0 0.0 2.0
+]
 
-function op!(Op::ITensor, ::OpName"Sz2", ::SiteType"S=1", s::Index)
-  Op[s' => 1, s => 1] = +1.0
-  return Op[s' => 3, s => 3] = +1.0
-end
-
-function op!(Op::ITensor, ::OpName"Sx2", ::SiteType"S=1", s::Index)
-  Op[s' => 1, s => 1] = 0.5
-  Op[s' => 3, s => 1] = 0.5
-  Op[s' => 2, s => 2] = 1.0
-  Op[s' => 1, s => 3] = 0.5
-  return Op[s' => 3, s => 3] = 0.5
-end
-
-function op!(Op::ITensor, ::OpName"Sy2", ::SiteType"S=1", s::Index)
-  Op[s' => 1, s => 1] = +0.5
-  Op[s' => 3, s => 1] = -0.5
-  Op[s' => 2, s => 2] = +1.0
-  Op[s' => 1, s => 3] = -0.5
-  return Op[s' => 3, s => 3] = +0.5
-end
+op(::OpName"S²", t::SiteType"S=1") = op(OpName("S2"), t)
 
 space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1"); kwargs...)
 
@@ -157,3 +137,5 @@ val(name::ValName, ::SiteType"SpinOne") = val(name, SiteType("S=1"))
 function op!(Op::ITensor, o::OpName, ::SiteType"SpinOne", s::Index)
   return op!(Op, o, SiteType("S=1"), s)
 end
+
+op(o::OpName, ::SiteType"SpinOne") = op(o, SiteType("S=1"))
