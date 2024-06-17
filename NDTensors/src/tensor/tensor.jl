@@ -366,8 +366,8 @@ using .Expose: Exposed, expose, unexpose
 # block sparse vector instead of dense.
 diag(tensor::Tensor) = diag(expose(tensor))
 
-function diag(Etensor::Exposed)
-  tensor = unexpose(Etensor)
+function diag(ETensor::Exposed)
+  tensor = unexpose(ETensor)
   ## d = NDTensors.similar(T, ElT, (diaglength(T),))
   tensordiag = NDTensors.similar(
     dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
@@ -375,7 +375,7 @@ function diag(Etensor::Exposed)
   array(tensordiag) .= diagview(tensor)
   return tensordiag
 end
-  
+
 """
 setdiagindex!
 

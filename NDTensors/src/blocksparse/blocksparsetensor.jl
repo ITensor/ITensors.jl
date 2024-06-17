@@ -356,13 +356,13 @@ function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
   return tensor(Dense(r), inds(T))
 end
 
-function diag(ETensor::Exposed{<:AbstractArray, BlockSparseTensor})
+function diag(ETensor::Exposed{<:AbstractArray,<:BlockSparseTensor})
   tensor = unexpose(ETensor)
   tensordiag = NDTensors.similar(
     dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
   )
   for j in 1:diaglength(tensor)
-    @inbounds tensor_diag[j] = getdiagindex(tensor, j)
+    @inbounds tensordiag[j] = getdiagindex(tensor, j)
   end
   return tensordiag
 end
