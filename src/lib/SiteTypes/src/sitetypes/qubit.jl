@@ -196,8 +196,8 @@ function op(::OpName"Rn", ::SiteType"Qubit"; θ::Real, ϕ::Real, λ::Real)
   ]
 end
 
-function op(::OpName"Rn̂", t::SiteType"Qubit"; kwargs...)
-  return op(OpName("Rn"), t; kwargs...)
+function op(on::OpName"Rn̂", t::SiteType"Qubit"; kwargs...)
+  return op(alias(on), t; kwargs...)
 end
 
 #
@@ -435,68 +435,68 @@ op(::OpName"Sz", ::SiteType"Qubit") = [
   0.0 -0.5
 ]
 
-op(::OpName"Sᶻ", t::SiteType"Qubit") = op(OpName("Sz"), t)
+op(on::OpName"Sᶻ", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"S+", ::SiteType"Qubit") = [
   0 1
   0 0
 ]
 
-op(::OpName"S⁺", t::SiteType"Qubit") = op(OpName("S+"), t)
+op(on::OpName"S⁺", t::SiteType"Qubit") = op(alias(on), t)
 
-op(::OpName"Splus", t::SiteType"Qubit") = op(OpName("S+"), t)
+op(on::OpName"Splus", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"S-", ::SiteType"Qubit") = [
   0 0
   1 0
 ]
 
-op(::OpName"S⁻", t::SiteType"Qubit") = op(OpName("S-"), t)
+op(on::OpName"S⁻", t::SiteType"Qubit") = op(alias(on), t)
 
-op(::OpName"Sminus", t::SiteType"Qubit") = op(OpName("S-"), t)
+op(on::OpName"Sminus", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"Sx", ::SiteType"Qubit") = [
   0.0 0.5
   0.5 0.0
 ]
 
-op(::OpName"Sˣ", t::SiteType"Qubit") = op(OpName("Sx"), t)
+op(on::OpName"Sˣ", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"iSy", ::SiteType"Qubit") = [
   0.0 0.5
   -0.5 0.0
 ]
 
-op(::OpName"iSʸ", t::SiteType"Qubit") = op(OpName("iSy"), t)
+op(on::OpName"iSʸ", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"Sy", ::SiteType"Qubit") = [
   0.0 -0.5im
   0.5im 0.0
 ]
 
-op(::OpName"Sʸ", t::SiteType"Qubit") = op(OpName("Sy"), t)
+op(on::OpName"Sʸ", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"S2", ::SiteType"Qubit") = [
   0.75 0.0
   0.0 0.75
 ]
 
-op(::OpName"S²", t::SiteType"Qubit") = op(OpName("S2"), t)
+op(on::OpName"S²", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"ProjUp", ::SiteType"Qubit") = [
   1 0
   0 0
 ]
 
-op(::OpName"projUp", t::SiteType"Qubit") = op(OpName("ProjUp"), t)
+op(on::OpName"projUp", t::SiteType"Qubit") = op(alias(on), t)
 
-op(::OpName"Proj0", t::SiteType"Qubit") = op(OpName("ProjUp"), t)
+op(on::OpName"Proj0", t::SiteType"Qubit") = op(alias(on), t)
 
 op(::OpName"ProjDn", ::SiteType"Qubit") = [
   0 0
   0 1
 ]
 
-op(::OpName"projDn", t::SiteType"Qubit") = op(OpName("ProjDn"), t)
+op(on::OpName"projDn", t::SiteType"Qubit") = op(alias(on), t)
 
-op(::OpName"Proj1", t::SiteType"Qubit") = op(OpName("ProjDn"), t)
+op(on::OpName"Proj1", t::SiteType"Qubit") = op(alias(on), t)
