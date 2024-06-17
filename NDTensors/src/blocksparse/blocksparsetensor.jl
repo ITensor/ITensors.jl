@@ -256,7 +256,7 @@ end
 # Returns the offset of the new block added.
 # XXX rename to insertblock!, no need to return offset
 using .TypeParameterAccessors: unwrap_array_type
-using .Expose: expose
+using .Expose: Exposed, expose, unexpose
 function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
   newdim = blockdim(T, newblock)
   newoffset = nnz(T)
@@ -356,6 +356,16 @@ function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
   return tensor(Dense(r), inds(T))
 end
 
+function diag(ETensor::Exposed{<:AbstractArray, BlockSparseTensor})
+  tensor = unexpose(ETensor)
+  tensordiag = NDTensors.similar(
+    dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
+  )
+  for j in 1:diaglength(tensor)
+    @inbounds tensor_diag[j] = getdiagindex(tensor, j)
+  end
+  return tensordiag
+end
 #
 # Operations
 #

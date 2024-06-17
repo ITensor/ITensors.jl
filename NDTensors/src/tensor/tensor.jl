@@ -361,10 +361,13 @@ function getdiagindex(T::Tensor{<:Number,N}, ind::Int) where {N}
   return getindex(T, CartesianIndex(ntuple(_ -> ind, Val(N))))
 end
 
-using .DiagonalArrays: diagview
+using .Expose: Exposed, expose, unexpose
 # TODO: add support for off-diagonals, return
 # block sparse vector instead of dense.
-function diag(tensor::Tensor)
+diag(tensor::Tensor) = diag(expose(tensor))
+
+function diag(Etensor::Exposed)
+  tensor = unexpose(Etensor)
   ## d = NDTensors.similar(T, ElT, (diaglength(T),))
   tensordiag = NDTensors.similar(
     dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
@@ -372,7 +375,7 @@ function diag(tensor::Tensor)
   array(tensordiag) .= diagview(tensor)
   return tensordiag
 end
-
+  
 """
 setdiagindex!
 

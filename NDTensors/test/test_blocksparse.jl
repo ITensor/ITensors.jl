@@ -10,6 +10,7 @@ using NDTensors:
   blockview,
   data,
   dense,
+  diag,
   dims,
   eachnzblock,
   inds,
@@ -52,6 +53,8 @@ using Test: @test, @test_throws, @testset
     @test isblocknz(A, (1, 2))
     @test !isblocknz(A, (1, 1))
     @test !isblocknz(A, (2, 2))
+    dA = diag(A)
+    @allowscalar dA ≈ diag(dense(A))
 
     # Test different ways of getting nnz
     @test nnz(blockoffsets(A), inds(A)) == nnz(A)
