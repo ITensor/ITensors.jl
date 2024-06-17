@@ -48,7 +48,7 @@ using LinearAlgebra: dot
 
     # This if statement corresponds to the reported bug:
     # https://github.com/JuliaGPU/Metal.jl/issues/364
-    if (dev == NDTensors.mtl && elt != ComplexF32)
+    if !(dev == NDTensors.mtl && elt === ComplexF32)
       S = permutedims(dev(D), (1, 2), sqrt)
       @allowscalar begin
         for i in 1:diaglength(S)
