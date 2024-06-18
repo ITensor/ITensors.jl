@@ -22,7 +22,24 @@ using Test: @test, @test_broken, @test_throws, @testset
 include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
-  @testset "Broken" begin end
+  @testset "Broken" begin
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    @test_broken a[Block(1, 2)] .= 1
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    @test_broken b[2:4, 2:4]
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @views a[Block(1, 1)][1:2, 1:1]
+    for i in parentindices(b)
+      @test_broken i isa BlockSlice{<:BlockIndexRange{1}}
+    end
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    @test_broken b[Block(1, 1)] = randn(3, 3)
+  end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     @test a == BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
@@ -471,6 +488,26 @@ include("TestBlockSparseArraysUtils.jl")
       # single SubArray wrapper.
       @test a[Block(2, 2)] == x
       @test b[Block(2, 2)] == x
+    end
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    x = randn(elt, 3, 4)
+    b[Block(1, 1)] .= x
+    @test b[Block(1, 1)] == x
+    @test a[Block(2, 2)] == x
+    @test_throws DimensionMismatch b[Block(1, 1)] .= randn(2, 3)
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    for index in parentindices(@view(b[Block(1, 1)]))
+      @test index isa BlockSlice{<:Block{1}}
+    end
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @view a[Block(1, 1)[1:2, 1:1]]
+    for i in parentindices(b)
+      @test i isa BlockSlice{<:BlockIndexRange{1}}
     end
   end
   @testset "view!" begin
