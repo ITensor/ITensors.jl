@@ -215,7 +215,7 @@ end
 
 function blockrange(
   axis::AbstractUnitRange,
-  r::BlockVector{BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
+  r::BlockVector{<:BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
 )
   return map(b -> Block(b), blocks(r))
 end
@@ -271,7 +271,7 @@ end
 function blockindices(
   a::AbstractUnitRange,
   b::Block,
-  r::BlockVector{BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
+  r::BlockVector{<:BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
 )
   # TODO: Change to iterate over `BlockRange(r)`
   # once https://github.com/JuliaArrays/BlockArrays.jl/issues/404
