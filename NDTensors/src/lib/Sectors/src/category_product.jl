@@ -76,7 +76,7 @@ categories_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"
 
 categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
 
-recover_key(T::Type, t::Tuple{Vararg{<:AbstractCategory}}) = sector(T, t)
+recover_key(T::Type, t::Tuple{Vararg{AbstractCategory}}) = sector(T, t)
 recover_key(T::Type, c::AbstractCategory) = recover_key(T, (c,))
 recover_key(T::Type, c::CategoryProduct) = recover_key(T, categories(c))
 function recover_key(T::Type, fused::Tuple)
