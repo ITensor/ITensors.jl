@@ -42,10 +42,7 @@ end
 
 # == is just a range comparison that ignores labels. Need dedicated function to check equality.
 function gradedisequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
-  # TODO remove workaround once BlockArrays.blockisequal is generalized to Integer
-  blocka1 = BlockArrays.blockedrange(GradedAxes.unlabel.(BlockArrays.blocklengths(a1)))
-  blocka2 = BlockArrays.blockedrange(GradedAxes.unlabel.(BlockArrays.blocklengths(a2)))
-  return blockisequal(blocka1, blocka2) && (blocklabels(a1) == blocklabels(a2))
+  return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
 end
 
 # TODO: Use `TypeParameterAccessors`.
