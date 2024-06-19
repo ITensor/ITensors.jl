@@ -102,7 +102,24 @@ function blocksparse_fill!(a::AbstractArray, value)
     return a
   end
   for b in BlockRange(a)
-    a[b] .= value
+    # We can't use:
+    # ```julia
+    # a[b] .= value
+    # ```
+    # since that would lead to a stack overflow,
+    # because broadcasting calls `fill!`.
+
+    # TODO: Ideally we would use:
+    # ```julia
+    # @view!(a[b]) .= value
+    # ```
+    # but that doesn't work on `SubArray` right now.
+
+    # This line is needed to instantiate blocks
+    # that aren't instantiated yet. Maybe
+    # we can make this work without this line?
+    blocks(a)[Int.(Tuple(b))...] = blocks(a)[Int.(Tuple(b))...]
+    blocks(a)[Int.(Tuple(b))...] .= value
   end
   return a
 end
@@ -268,6 +285,10 @@ function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) w
 end
 function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N}) where {N}
   parent_blocks = view(blocks(parent(a.array)), axes(a)...)
+  # TODO: The following line is required to instantiate
+  # uninstantiated blocks, maybe use `@view!` instead,
+  # or some other code pattern.
+  parent_blocks[I...] = parent_blocks[I...]
   return parent_blocks[I...][blockindices(parent(a.array), Block(I), a.array.indices)...] =
     value
 end
