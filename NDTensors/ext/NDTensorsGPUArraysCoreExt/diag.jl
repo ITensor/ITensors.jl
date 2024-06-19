@@ -12,7 +12,11 @@ function NDTensors.diag(ETensor::Exposed{<:AbstractGPUArray,<:BlockSparseTensor}
 end
 
 ## TODO scalar indexing is slow here 
-function NDTensors.map_diag!(f::Function, exposed_t_destination::Exposed{<:AbstractGPUArray, <:BlockSparseTensor}, exposed_t_source::Exposed{<:AbstractGPUArray, <:BlockSparseTensor})
+function NDTensors.map_diag!(
+  f::Function,
+  exposed_t_destination::Exposed{<:AbstractGPUArray,<:BlockSparseTensor},
+  exposed_t_source::Exposed{<:AbstractGPUArray,<:BlockSparseTensor},
+)
   t_destination = unexpose(exposed_t_destination)
   t_source = unexpose(exposed_t_source)
   @allowscalar for i in 1:diaglength(t_destination)
