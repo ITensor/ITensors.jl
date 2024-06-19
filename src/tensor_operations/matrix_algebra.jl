@@ -87,7 +87,7 @@ function exp(A::ITensor; kwargs...)
 end
 
 function map_diag!(f::Function, it_destination::ITensor, it_source::ITensor)
-  return itensor(map_diag!(f, expose(tensor(it_destination)), expose(tensor(it_source))))
+  return itensor(map_diag!(f, tensor(it_destination), tensor(it_source)))
 end
 map_diag(f::Function, it::ITensor) = map_diag!(f, copy(it), it)
 
