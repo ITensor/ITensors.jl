@@ -366,6 +366,16 @@ function diag(ETensor::Exposed{<:AbstractArray,<:BlockSparseTensor})
   end
   return tensordiag
 end
+
+## TODO currently this fails on GPU with scalar indexing 
+function map_diag!(f::Function, exposed_t_destination::Exposed{<:AbstractArray, <:BlockSparseTensor}, exposed_t_source::Exposed{<:AbstractArray, <:BlockSparseTensor})
+  t_destination = unexpose(exposed_t_destination)
+  t_source = unexpose(exposed_t_source)
+  for i in 1:diaglength(t_destination)
+    NDTensors.setdiagindex!(t_destination, f(NDTensors.getdiagindex(t_source, i)), i)
+  end
+  return t_destination
+end
 #
 # Operations
 #
