@@ -1,5 +1,3 @@
-using NDTensors: map_diag!
-
 # Fix for AD
 function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   trpairs = indpairs(T; plev=plev, tags=tags)
@@ -88,7 +86,15 @@ function exp(A::ITensor; kwargs...)
   return exp(A, Lis, Ris; kwargs...)
 end
 
-function NDTensors.map_diag!(f::Function, it_destination::ITensor, it_source::ITensor)
-  return itensor(map_diag!(f, tensor(it_destination), tensor(it_source)))
+function map_diag!(f::Function, it_destination::ITensor, it_source::ITensor)
+  return itensor(map_diag!(f, expose(tensor(it_destination)), expose(tensor(it_source))))
 end
 map_diag(f::Function, it::ITensor) = map_diag!(f, copy(it), it)
+
+function map_diag!(f::Function, t_destination::Tensor, t_source::Tensor)
+  for i in 1:diaglength(t_destination)
+    NDTensors.setdiagindex!(t_destination, f(NDTensors.getdiagindex(t_source, i)), i)
+  end
+  return t_destination
+end
+map_diag(f::Function, t::Tensor) = map_diag!(f, copy(t), t)
