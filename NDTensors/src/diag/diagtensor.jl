@@ -114,31 +114,8 @@ using .TypeParameterAccessors: unwrap_array_type
 function dense(T::DiagTensor)
   R = zeros(dense(typeof(T)), inds(T))
   diagview(R) .= diagview(T)
-  return R  
+  return R
 end
-
-# # CPU version
-# function dense(::Type{<:Array}, T::DiagTensor)
-#   R = zeros(dense(typeof(T)), inds(T))
-#   for i in 1:diaglength(T)
-#     setdiagindex!(R, getdiagindex(T, i), i)
-#   end
-#   return R
-# end
-
-# # GPU version
-# function dense(::Type{<:AbstractArray}, T::DiagTensor)
-#   D_cpu = dense(Array, cpu(T))
-#   return adapt(unwrap_array_type(T), D_cpu)
-# end
-
-# # UniformDiag version
-# # TODO: Delete once new DiagonalArray is designed.
-# # TODO: This creates a tensor on CPU by default so may cause
-# # problems for GPU.
-# function dense(::Type{<:Number}, T::DiagTensor)
-#   return dense(Tensor(Diag(fill(getdiagindex(T, 1), diaglength(T))), inds(T)))
-# end
 
 denseblocks(T::DiagTensor) = dense(T)
 
