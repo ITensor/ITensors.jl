@@ -386,6 +386,13 @@ function setdiagindex!(T::Tensor{<:Number,N}, val, ind::Int) where {N}
   return T
 end
 
+## TODO This fails for blocksparse because there is no diagview in blocksparse
+function map_diag!(f::Function, t_destination::Tensor, t_source::Tensor)
+  diagview(t_destination) .= f.(diagview(t_source))
+  return t_destination
+end
+map_diag(f::Function, t::Tensor) = map_diag!(f, copy(t), t)
+
 #
 # Some generic contraction functionality
 #
