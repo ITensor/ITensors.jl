@@ -68,6 +68,14 @@ end
   return set_type_parameter(type, eltype, param)
 end
 
+# These are generic fallback definitions. By convention,
+# this is very commonly true of `AbstractArray` subtypes
+# but it may not be correct, but it is very convenient
+# to define this to make more operations "just work"
+# on most AbstractArrays.
+position(type::Type{<:AbstractArray}, ::typeof(eltype)) = Position(1)
+position(type::Type{<:AbstractArray}, ::typeof(ndims)) = Position(2)
+
 for wrapper in [:PermutedDimsArray, :(Base.ReshapedArray), :SubArray]
   @eval begin
     position(type::Type{<:$wrapper}, ::typeof(eltype)) = Position(1)
