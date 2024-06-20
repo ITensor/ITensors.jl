@@ -34,6 +34,12 @@ using LinearAlgebra: dot
     D = Tensor(Diag(1), (2, 2))
     @test norm(D) == √2
     d = 3
+    ## TODO this fails because uniform diag tensors are immutable
+    #S = NDTensors.map_diag((i->i * 2), dev(D))
+    # @allowscalar for i in 1:diaglength(S)
+    #   @test  S[i,i] == 2.0 * D[i,i]
+    # end
+    
     vr = rand(elt, d)
     D = dev(tensor(Diag(vr), (d, d)))
     Da = Array(D)
@@ -56,6 +62,11 @@ using LinearAlgebra: dot
         end
       end
     end
+    S = NDTensors.map_diag((i->i * 2), dev(D))
+    @allowscalar for i in 1:diaglength(S)
+      @test S[i,i] == 2.0 * D[i,i]
+    end
+    
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
     S = dev(tensor(Diag(randn(elt, 2)), (2, 2)))

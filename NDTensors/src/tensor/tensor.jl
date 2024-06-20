@@ -386,9 +386,9 @@ function setdiagindex!(T::Tensor{<:Number,N}, val, ind::Int) where {N}
   return T
 end
 
-function map_diag!(f::Function, t_destination::Exposed, t_source::Exposed)
-  diagview(unexpose(t_destination)) .= f.(diagview(unexpose(t_source)))
-  return t_destination
+function map_diag!(f::Function, exposed_t_destination::Exposed, exposed_t_source::Exposed)
+  diagview(unexpose(exposed_t_destination)) .= f.(diagview(unexpose(exposed_t_source)))
+  return unexpose(exposed_t_destination)
 end
 map_diag(f::Function, t::Tensor) = map_diag!(f, expose(copy(t)), expose(t))
 
