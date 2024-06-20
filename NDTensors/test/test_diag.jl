@@ -62,9 +62,9 @@ using LinearAlgebra: dot
         end
       end
     end
-    S = NDTensors.map_diag((i -> i * 2), dev(D))
+    S = NDTensors.map_diag(i -> 2 * i, dev(D))
     @allowscalar for i in 1:diaglength(S)
-      @test S[i, i] == 2.0 * D[i, i]
+      @test S[i, i] == 2 * D[i, i]
     end
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
