@@ -108,9 +108,9 @@ using Test: @test, @test_throws, @testset
     @allowscalar for I in eachindex(C)
       @test C[I] == A[I] + B[I]
     end
-    Cp = NDTensors.map_diag((i -> i* 2), C)
+    Cp = NDTensors.map_diag((i -> i * 2), C)
     @allowscalar for i in 1:diaglength(Cp)
-      @test Cp[i,i] == 2.0 * C[i,i]
+      @test Cp[i, i] == 2.0 * C[i, i]
     end
 
     Ap = permutedims(A, (2, 1))

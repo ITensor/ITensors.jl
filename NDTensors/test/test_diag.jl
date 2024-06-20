@@ -39,7 +39,7 @@ using LinearAlgebra: dot
     # @allowscalar for i in 1:diaglength(S)
     #   @test  S[i,i] == 2.0 * D[i,i]
     # end
-    
+
     vr = rand(elt, d)
     D = dev(tensor(Diag(vr), (d, d)))
     Da = Array(D)
@@ -62,11 +62,10 @@ using LinearAlgebra: dot
         end
       end
     end
-    S = NDTensors.map_diag((i->i * 2), dev(D))
+    S = NDTensors.map_diag((i -> i * 2), dev(D))
     @allowscalar for i in 1:diaglength(S)
-      @test S[i,i] == 2.0 * D[i,i]
+      @test S[i, i] == 2.0 * D[i, i]
     end
-    
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
     S = dev(tensor(Diag(randn(elt, 2)), (2, 2)))
