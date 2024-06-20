@@ -15,6 +15,11 @@ using NDTensors.TypeParameterAccessors:
 include("utils/test_inferred.jl")
 @testset "TypeParameterAccessors basics" begin
   @testset "Get parameters" begin
+    @test_inferred type_parameter(AbstractArray{Float64}, 1) == Float64 wrapped = true
+    @test_inferred type_parameter(AbstractArray{Float64}, Position(1)) == Float64
+    @test_inferred type_parameter(AbstractArray{Float64}, eltype) == Float64
+    @test_inferred type_parameter(AbstractMatrix{Float64}, ndims) == 2
+
     @test_inferred type_parameter(Array{Float64}, 1) == Float64 wrapped = true
     @test_inferred type_parameter(Array{Float64}, Position(1)) == Float64
     @test_inferred type_parameter(Val{3}) == 3
