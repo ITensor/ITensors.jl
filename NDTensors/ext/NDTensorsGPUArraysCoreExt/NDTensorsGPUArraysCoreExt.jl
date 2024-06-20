@@ -1,4 +1,4 @@
 module NDTensorsGPUArraysCoreExt
 include("contract.jl")
-include("diag.jl")
+include("blocksparsetensor.jl")
 end
