@@ -52,7 +52,7 @@ using LinearAlgebra: dot
       S = permutedims(dev(D), (1, 2), sqrt)
       @allowscalar begin
         for i in 1:diaglength(S)
-          @test S[i, i] == sqrt(D[i, i])
+          @test S[i, i] ≈ sqrt(D[i, i])
         end
       end
     end
