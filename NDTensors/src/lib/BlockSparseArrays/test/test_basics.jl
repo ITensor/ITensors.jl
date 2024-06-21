@@ -31,13 +31,13 @@ include("TestBlockSparseArraysUtils.jl")
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(1, 1)]
-    @test_broken b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
+    @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[Block(1, 1)][1:2, 1:1]
     @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
     for i in parentindices(b)
-      @test_broken i isa BlockSlice{<:BlockIndexRange{1}}
+      @test i isa BlockSlice{<:BlockIndexRange{1}}
     end
   end
   @testset "Basics" begin

@@ -19,19 +19,6 @@ using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: stored_indices
 
-# GenericBlockSlice works around an issue that the indices of BlockSlice
-# are restricted to Int element type.
-# TODO: Raise an issue/make a pull request in BlockArrays.jl.
-struct GenericBlockSlice{B,T<:Integer,I<:AbstractUnitRange{T}} <: AbstractUnitRange{T}
-  block::B
-  indices::I
-end
-BlockArrays.Block(bs::GenericBlockSlice{<:Block}) = bs.block
-for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe_length)
-  @eval Base.$f(S::GenericBlockSlice) = Base.$f(S.indices)
-end
-Base.getindex(S::GenericBlockSlice, i::Integer) = getindex(S.indices, i)
-
 # BlockIndices works around an issue that the indices of BlockSlice
 # are restricted to AbstractUnitRange{Int}.
 struct BlockIndices{B,T<:Integer,I<:AbstractVector{T}} <: AbstractVector{T}
@@ -42,6 +29,10 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length, :unsafe
   @eval Base.$f(S::BlockIndices) = Base.$f(S.indices)
 end
 Base.getindex(S::BlockIndices, i::Integer) = getindex(S.indices, i)
+function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
+  # TODO: Check that `i.indices` is consistent with `S.indices`.
+  return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
+end
 
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices)
@@ -187,13 +178,6 @@ end
 
 using BlockArrays: BlockSlice
 function blockrange(axis::AbstractUnitRange, r::BlockSlice)
-  return blockrange(axis, r.block)
-end
-
-# GenericBlockSlice works around an issue that the indices of BlockSlice
-# are restricted to Int element type.
-# TODO: Raise an issue/make a pull request in BlockArrays.jl.
-function blockrange(axis::AbstractUnitRange, r::GenericBlockSlice)
   return blockrange(axis, r.block)
 end
 

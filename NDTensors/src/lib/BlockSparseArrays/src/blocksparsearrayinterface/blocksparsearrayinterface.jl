@@ -57,6 +57,11 @@ function blocksparse_getindex(
   return a_merged
 end
 
+function blocksparse_to_indices(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
 # TODO: Need to implement this!
 function block_merge end
 
@@ -117,20 +122,6 @@ function blocksparse_fill!(a::AbstractArray, value)
     blocks(a)[Int.(Tuple(b))...] .= value
   end
   return a
-end
-
-function blocksparse_view(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
-  return blocksparse_view(a, Tuple(I)...)
-end
-function blocksparse_view(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
-  return SubArray(a, to_indices(a, I))
-end
-
-function blocksparse_viewblock(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
-  # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
-  i = I.n
-  @boundscheck blockcheckbounds(a, i...)
-  return blocks(a)[i...]
 end
 
 function block_nstored(a::AbstractArray)
