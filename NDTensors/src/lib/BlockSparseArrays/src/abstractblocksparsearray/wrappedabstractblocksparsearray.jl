@@ -185,7 +185,22 @@ function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::Block{1})
   return a
 end
 
+function Base.fill!(a::AbstractBlockSparseArray, value)
+  if iszero(value)
+    # This drops all of the blocks.
+    sparse_zero!(blocks(a))
+    return a
+  end
+  blocksparse_fill!(a, value)
+  return a
+end
+
 function Base.fill!(a::BlockSparseArrayLike, value)
+  # TODO: Even if `iszero(value)`, this doesn't drop
+  # blocks from `a`, and additionally allocates
+  # new blocks filled with zeros, unlike
+  # `fill!(a::AbstractBlockSparseArray, value)`.
+  # Consider changing that behavior when possible.
   blocksparse_fill!(a, value)
   return a
 end

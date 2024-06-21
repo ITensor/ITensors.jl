@@ -4,6 +4,7 @@ Manifest.toml
 .benchmarkci
 *.o
 *.swp
+*.swo
 *.cov
 benchmark/mult
 benchmark/*.json
