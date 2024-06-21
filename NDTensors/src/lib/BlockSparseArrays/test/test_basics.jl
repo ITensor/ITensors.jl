@@ -13,6 +13,7 @@ using BlockArrays:
   blocksize,
   blocksizes,
   mortar
+using Compat: @compat
 using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays:
   @view!, BlockSparseArray, block_nstored, block_reshape, view!
@@ -513,7 +514,8 @@ include("TestBlockSparseArraysUtils.jl")
       b[Block(1, 1)] = x
       return (; a, b, x)
     end
-    for (; a, b, x) in (f1(), f2())
+    for abx in (f1(), f2())
+      @compat (; a, b, x) = abx
       @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
       @test block_nstored(b) == 1
       @test b[Block(1, 1)] == x
