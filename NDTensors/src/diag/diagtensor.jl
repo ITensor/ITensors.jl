@@ -1,4 +1,4 @@
-using .DiagonalArrays: diaglength
+using .DiagonalArrays: diaglength, diagview
 
 const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
 const NonuniformDiagTensor{ElT,N,StoreT,IndsT} =
@@ -9,9 +9,7 @@ const UniformDiagTensor{ElT,N,StoreT,IndsT} =
 function diag(tensor::DiagTensor)
   tensor_diag = NDTensors.similar(dense(typeof(tensor)), (diaglength(tensor),))
   # TODO: Define `eachdiagindex`.
-  for j in 1:diaglength(tensor)
-    tensor_diag[j] = getdiagindex(tensor, j)
-  end
+  diagview(tensor_diag) .= diagview(tensor)
   return tensor_diag
 end
 
@@ -31,6 +29,10 @@ end
 
 function Array(T::DiagTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
+end
+
+function DiagonalArrays.diagview(T::NonuniformDiagTensor)
+  return data(T)
 end
 
 function zeros(tensortype::Type{<:DiagTensor}, inds)
@@ -110,30 +112,9 @@ end
 using .TypeParameterAccessors: unwrap_array_type
 # convert to Dense
 function dense(T::DiagTensor)
-  return dense(unwrap_array_type(T), T)
-end
-
-# CPU version
-function dense(::Type{<:Array}, T::DiagTensor)
   R = zeros(dense(typeof(T)), inds(T))
-  for i in 1:diaglength(T)
-    setdiagindex!(R, getdiagindex(T, i), i)
-  end
+  diagview(R) .= diagview(T)
   return R
-end
-
-# GPU version
-function dense(::Type{<:AbstractArray}, T::DiagTensor)
-  D_cpu = dense(Array, cpu(T))
-  return adapt(unwrap_array_type(T), D_cpu)
-end
-
-# UniformDiag version
-# TODO: Delete once new DiagonalArray is designed.
-# TODO: This creates a tensor on CPU by default so may cause
-# problems for GPU.
-function dense(::Type{<:Number}, T::DiagTensor)
-  return dense(Tensor(Diag(fill(getdiagindex(T, 1), diaglength(T))), inds(T)))
 end
 
 denseblocks(T::DiagTensor) = dense(T)
@@ -145,16 +126,14 @@ function permutedims!(
   f::Function=(r, t) -> t,
 ) where {N}
   # TODO: check that inds(R)==permute(inds(T),perm)?
-  for i in 1:diaglength(R)
-    @inbounds setdiagindex!(R, f(getdiagindex(R, i), getdiagindex(T, i)), i)
-  end
+  diagview(R) .= f.(diagview(R), diagview(T))
   return R
 end
 
 function permutedims(
   T::DiagTensor{<:Number,N}, perm::NTuple{N,Int}, f::Function=identity
 ) where {N}
-  R = NDTensors.similar(T, permute(inds(T), perm))
+  R = NDTensors.similar(T)
   g(r, t) = f(t)
   permutedims!(R, T, perm, g)
   return R
@@ -193,9 +172,7 @@ end
 function permutedims!(
   R::DenseTensor{ElR,N}, T::DiagTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=(r, t) -> t
 ) where {ElR,ElT,N}
-  for i in 1:diaglength(T)
-    @inbounds setdiagindex!(R, f(getdiagindex(R, i), getdiagindex(T, i)), i)
-  end
+  diagview(R) .= f.(diagview(R), diagview(T))
   return R
 end
 
