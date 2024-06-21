@@ -48,6 +48,10 @@ NDTensors.dim(i::MyInd) = i.dim
       randn!(B)
       C = copy(A)
       C = permutedims!!(C, B, (1, 2), +)
+      Cp = NDTensors.map_diag(i -> 2 * i, C)
+      @allowscalar for i in 1:diaglength(Cp)
+        @test Cp[i, i] == 2 * C[i, i]
+      end
 
       Ap = permutedims(A, (2, 1))
       @allowscalar begin

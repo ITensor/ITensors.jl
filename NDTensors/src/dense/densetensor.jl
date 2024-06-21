@@ -68,6 +68,12 @@ convert(::Type{Array}, T::DenseTensor) = reshape(data(storage(T)), dims(inds(T))
 # Useful for using Base Array functions
 array(T::DenseTensor) = convert(Array, T)
 
+using .DiagonalArrays: DiagonalArrays, diagview
+
+function DiagonalArrays.diagview(T::DenseTensor)
+  return diagview(array(T))
+end
+
 function Array{ElT,N}(T::DenseTensor{ElT,N}) where {ElT,N}
   return copy(array(T))
 end

@@ -27,7 +27,3 @@ end
 function Base.view(a::BlockSparseArrayLike{<:Any,1}, index::Block{1})
   return blocksparse_view(a, index)
 end
-
-function Base.view(a::BlockSparseArrayLike, indices::BlockIndexRange)
-  return view(view(a, block(indices)), indices.indices...)
-end

@@ -27,7 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.update(); Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -51,7 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.update(); Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -75,7 +75,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.update(); Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
             '''
           }
         }

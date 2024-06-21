@@ -369,7 +369,6 @@ matrix is unique. Returns a tuple (Q,R).
 function qr_positive(M::AbstractMatrix)
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
-  nc = size(Q, 2)
   signs = nonzero_sign.(diag(R))
   Q = Q * Diagonal(signs)
   R = Diagonal(conj.(signs)) * R
