@@ -25,6 +25,13 @@ function Base.to_indices(
   return blocksparse_to_indices(a, inds, I)
 end
 
+# a[1:2, 1:2]
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}}
+)
+  return blocksparse_to_indices(a, inds, I)
+end
+
 # BlockArrays `AbstractBlockArray` interface
 BlockArrays.blocks(a::BlockSparseArrayLike) = blocksparse_blocks(a)
 
