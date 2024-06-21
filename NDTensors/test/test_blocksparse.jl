@@ -10,6 +10,8 @@ using NDTensors:
   blockview,
   data,
   dense,
+  diag,
+  diaglength,
   dims,
   eachnzblock,
   inds,
@@ -52,6 +54,8 @@ using Test: @test, @test_throws, @testset
     @test isblocknz(A, (1, 2))
     @test !isblocknz(A, (1, 1))
     @test !isblocknz(A, (2, 2))
+    dA = diag(A)
+    @test @allowscalar dA ≈ diag(dense(A))
 
     # Test different ways of getting nnz
     @test nnz(blockoffsets(A), inds(A)) == nnz(A)
@@ -103,6 +107,10 @@ using Test: @test, @test_throws, @testset
 
     @allowscalar for I in eachindex(C)
       @test C[I] == A[I] + B[I]
+    end
+    Cp = NDTensors.map_diag(i -> 2 * i, C)
+    @allowscalar for i in 1:diaglength(Cp)
+      @test Cp[i, i] == 2 * C[i, i]
     end
 
     Ap = permutedims(A, (2, 1))
