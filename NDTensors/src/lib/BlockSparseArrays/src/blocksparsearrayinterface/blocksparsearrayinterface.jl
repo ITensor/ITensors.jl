@@ -1,12 +1,13 @@
 using BlockArrays:
   AbstractBlockVector,
   Block,
-  BlockedUnitRange,
   BlockIndex,
+  BlockVector,
+  BlockedUnitRange,
   block,
   blockcheckbounds,
-  blocks,
   blocklengths,
+  blocks,
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
 using ..SparseArrayInterface: perm, iperm, nstored, sparse_zero!
