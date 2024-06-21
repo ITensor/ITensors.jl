@@ -24,9 +24,6 @@ include("TestBlockSparseArraysUtils.jl")
                                                (Float32, Float64, ComplexF32, ComplexF64)
   @testset "Broken" begin
     a = BlockSparseArray{elt}([2, 3], [3, 4])
-    @test_broken a[Block(1, 2)] .= 1
-
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
     @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
     @test_broken b[2:4, 2:4]
@@ -41,11 +38,6 @@ include("TestBlockSparseArraysUtils.jl")
     for i in parentindices(b)
       @test_broken i isa BlockSlice{<:BlockIndexRange{1}}
     end
-
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
-    @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
-    @test_broken b[Block(1, 1)] = randn(3, 3)
   end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
@@ -88,6 +80,16 @@ include("TestBlockSparseArraysUtils.jl")
     @test eltype(a) == elt
     @test block_nstored(a) == 2
     @test nstored(a) == 2 * 4 + 3 * 3
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a[Block(1, 2)] .= 2
+    @test eltype(a) == elt
+    @test all(==(2), a[Block(1, 2)])
+    @test iszero(a[Block(1, 1)])
+    @test iszero(a[Block(2, 1)])
+    @test iszero(a[Block(2, 2)])
+    @test block_nstored(a) == 1
+    @test nstored(a) == 2 * 4
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]
@@ -497,13 +499,44 @@ include("TestBlockSparseArraysUtils.jl")
       @test b[Block(2, 2)] == x
     end
 
+    function f1()
+      a = BlockSparseArray{elt}([2, 3], [3, 4])
+      b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+      x = randn(elt, 3, 4)
+      b[Block(1, 1)] .= x
+      return (; a, b, x)
+    end
+    function f2()
+      a = BlockSparseArray{elt}([2, 3], [3, 4])
+      b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+      x = randn(elt, 3, 4)
+      b[Block(1, 1)] = x
+      return (; a, b, x)
+    end
+    for (; a, b, x) in (f1(), f2())
+      @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
+      @test block_nstored(b) == 1
+      @test b[Block(1, 1)] == x
+      for blck in [Block(2, 1), Block(1, 2), Block(2, 2)]
+        @test iszero(b[blck])
+      end
+      @test block_nstored(a) == 1
+      @test a[Block(2, 2)] == x
+      for blck in [Block(1, 1), Block(2, 1), Block(1, 2)]
+        @test iszero(a[blck])
+      end
+      @test_throws DimensionMismatch b[Block(1, 1)] .= randn(2, 3)
+    end
+
     a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
-    x = randn(elt, 3, 4)
-    b[Block(1, 1)] .= x
-    @test b[Block(1, 1)] == x
-    @test a[Block(2, 2)] == x
-    @test_throws DimensionMismatch b[Block(1, 1)] .= randn(2, 3)
+    b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
+    @test iszero(b)
+    @test size(b) == (2, 4)
+    x = randn(elt, 2, 4)
+    b .= x
+    @test b == x
+    @test a[Block(1, 2)] == x
+    @test block_nstored(a) == 1
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]

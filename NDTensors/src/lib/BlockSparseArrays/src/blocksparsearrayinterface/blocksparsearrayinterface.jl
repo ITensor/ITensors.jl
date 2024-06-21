@@ -284,12 +284,14 @@ function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) w
   return a[Tuple(I)...]
 end
 function Base.setindex!(a::SparseSubArrayBlocks{<:Any,N}, value, I::Vararg{Int,N}) where {N}
-  parent_blocks = view(blocks(parent(a.array)), axes(a)...)
+  parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
   # TODO: The following line is required to instantiate
   # uninstantiated blocks, maybe use `@view!` instead,
   # or some other code pattern.
   parent_blocks[I...] = parent_blocks[I...]
-  return parent_blocks[I...][blockindices(parent(a.array), Block(I), a.array.indices)...] =
+  # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
+  block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
+  return parent_blocks[I...][blockindices(parent(a.array), block, a.array.indices)...] =
     value
 end
 function Base.isassigned(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
