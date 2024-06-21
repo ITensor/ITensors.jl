@@ -13,6 +13,7 @@ using BlockArrays:
   blocksize,
   blocksizes,
   mortar
+using Compat: @compat
 using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays:
   @view!, BlockSparseArray, block_nstored, block_reshape, view!
@@ -87,6 +88,16 @@ include("TestBlockSparseArraysUtils.jl")
     @test all(==(2), a[Block(1, 2)])
     @test iszero(a[Block(1, 1)])
     @test iszero(a[Block(2, 1)])
+    @test iszero(a[Block(2, 2)])
+    @test block_nstored(a) == 1
+    @test nstored(a) == 2 * 4
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a[Block(1, 2)] .= 0
+    @test eltype(a) == elt
+    @test iszero(a[Block(1, 1)])
+    @test iszero(a[Block(2, 1)])
+    @test iszero(a[Block(1, 2)])
     @test iszero(a[Block(2, 2)])
     @test block_nstored(a) == 1
     @test nstored(a) == 2 * 4
@@ -513,7 +524,8 @@ include("TestBlockSparseArraysUtils.jl")
       b[Block(1, 1)] = x
       return (; a, b, x)
     end
-    for (; a, b, x) in (f1(), f2())
+    for abx in (f1(), f2())
+      @compat (; a, b, x) = abx
       @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
       @test block_nstored(b) == 1
       @test b[Block(1, 1)] == x

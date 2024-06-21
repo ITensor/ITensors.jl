@@ -256,7 +256,7 @@ end
 # Returns the offset of the new block added.
 # XXX rename to insertblock!, no need to return offset
 using .TypeParameterAccessors: unwrap_array_type
-using .Expose: expose
+using .Expose: Exposed, expose, unexpose
 function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
   newdim = blockdim(T, newblock)
   newoffset = nnz(T)
@@ -356,6 +356,30 @@ function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
   return tensor(Dense(r), inds(T))
 end
 
+function diag(ETensor::Exposed{<:AbstractArray,<:BlockSparseTensor})
+  tensor = unexpose(ETensor)
+  tensordiag = NDTensors.similar(
+    dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
+  )
+  for j in 1:diaglength(tensor)
+    @inbounds tensordiag[j] = getdiagindex(tensor, j)
+  end
+  return tensordiag
+end
+
+## TODO currently this fails on GPU with scalar indexing 
+function map_diag!(
+  f::Function,
+  exposed_t_destination::Exposed{<:AbstractArray,<:BlockSparseTensor},
+  exposed_t_source::Exposed{<:AbstractArray,<:BlockSparseTensor},
+)
+  t_destination = unexpose(exposed_t_destination)
+  t_source = unexpose(exposed_t_source)
+  for i in 1:diaglength(t_destination)
+    NDTensors.setdiagindex!(t_destination, f(NDTensors.getdiagindex(t_source, i)), i)
+  end
+  return t_destination
+end
 #
 # Operations
 #
