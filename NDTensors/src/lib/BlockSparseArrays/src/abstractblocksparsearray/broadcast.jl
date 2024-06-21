@@ -12,7 +12,7 @@ function Broadcast.BroadcastStyle(
       <:Any,
       <:Any,
       <:AbstractBlockSparseArray,
-      <:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}},
+      <:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}},
     },
   },
 )
@@ -25,8 +25,8 @@ function Broadcast.BroadcastStyle(
       <:Any,
       <:AbstractBlockSparseArray,
       <:Tuple{
-        BlockSlice{<:Any,<:AbstractBlockedUnitRange},
-        BlockSlice{<:Any,<:AbstractBlockedUnitRange},
+        BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},
+        BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},
         Vararg{Any},
       },
     },
@@ -40,7 +40,7 @@ function Broadcast.BroadcastStyle(
       <:Any,
       <:Any,
       <:AbstractBlockSparseArray,
-      <:Tuple{Any,BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}},
+      <:Tuple{Any,BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}},
     },
   },
 )
