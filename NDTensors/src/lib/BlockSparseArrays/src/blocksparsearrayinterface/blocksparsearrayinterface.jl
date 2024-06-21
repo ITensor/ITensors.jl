@@ -96,11 +96,6 @@ function blocksparse_setindex!(
 end
 
 function blocksparse_fill!(a::AbstractArray, value)
-  if iszero(value)
-    # This drops all of the blocks.
-    sparse_zero!(blocks(a))
-    return a
-  end
   for b in BlockRange(a)
     # We can't use:
     # ```julia

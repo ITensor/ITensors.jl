@@ -92,6 +92,16 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(a) == 1
     @test nstored(a) == 2 * 4
 
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a[Block(1, 2)] .= 0
+    @test eltype(a) == elt
+    @test iszero(a[Block(1, 1)])
+    @test iszero(a[Block(2, 1)])
+    @test iszero(a[Block(1, 2)])
+    @test iszero(a[Block(2, 2)])
+    @test block_nstored(a) == 1
+    @test nstored(a) == 2 * 4
+
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]
       a[b] = randn(elt, size(a[b]))
