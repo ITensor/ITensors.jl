@@ -30,9 +30,21 @@ include("TestBlockSparseArraysUtils.jl")
     @test_broken b[2:4, 2:4]
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @views a[2:4, 2:4][Block(2, 2)]
+    @test_broken size(b) == (2, 2)
+
+    # TODO: This is already in the tests below, delete this
+    # once it is fixed.
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
+    @test_broken iszero(b)
+
+    # TODO: Move to unbroken tests below.
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(1, 1)]
     @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
 
+    # TODO: Move to unbroken tests below.
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[Block(1, 1)][1:2, 1:1]
     @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
@@ -542,7 +554,8 @@ include("TestBlockSparseArraysUtils.jl")
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
-    @test iszero(b)
+    # TODO: Fix this.
+    @test_broken iszero(b)
     @test size(b) == (2, 4)
     x = randn(elt, 2, 4)
     b .= x

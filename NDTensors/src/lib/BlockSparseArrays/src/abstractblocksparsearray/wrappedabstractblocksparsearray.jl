@@ -18,6 +18,13 @@ const BlockSparseArrayLike{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
 
+# a[1:2, 1:2]
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}}
+)
+  return blocksparse_to_indices(a, inds, I)
+end
+
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function Base.to_indices(
   a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
@@ -25,9 +32,16 @@ function Base.to_indices(
   return blocksparse_to_indices(a, inds, I)
 end
 
-# a[1:2, 1:2]
+# a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}}
+  a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:BlockIndexRange{1}},Vararg{Any}}
+)
+  return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
+end
+
+# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
+function Base.to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{BlockVector{<:Block{1}},Vararg{Any}}
 )
   return blocksparse_to_indices(a, inds, I)
 end

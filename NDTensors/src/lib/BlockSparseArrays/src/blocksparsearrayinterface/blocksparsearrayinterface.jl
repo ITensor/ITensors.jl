@@ -57,16 +57,31 @@ function blocksparse_getindex(
   return a_merged
 end
 
+# a[1:2, 1:2]
+# TODO: This definition means that the result of slicing a block sparse array
+# with a non-blocked unit range is blocked. We may want to change that behavior,
+# and make that explicit with `@blocked a[1:2, 1:2]`. See the discussion in
+# https://github.com/JuliaArrays/BlockArrays.jl/issues/347 and also
+# https://github.com/ITensor/ITensors.jl/issues/1336.
+function blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
+  bs1 = blockrange(inds[1], I[1])
+  I1 = BlockSlice(bs1, blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function blocksparse_to_indices(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
   I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
-# a[1:2, 1:2]
-function blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
-  bs1 = blockrange(inds[1], I[1])
-  I1 = BlockSlice(bs1, blockedunitrange_getindices(inds[1], I[1]))
+# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
+# Permute and merge blocks.
+# TODO: This isn't merging blocks yet, that needs to be implemented that.
+function blocksparse_to_indices(
+  a::BlockSparseArrayLike, inds, I::Tuple{BlockVector{<:Block{1}},Vararg{Any}}
+)
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
