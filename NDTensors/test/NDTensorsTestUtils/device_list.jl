@@ -51,10 +51,10 @@ function devices_list(test_args)
   if "metal" in test_args || "all" in test_args
     push!(devs, NDTensors.MetalExtensions.mtl)
   end
-  
+
   if "jlarrays" in test_args || "all" in test_args
     push!(devs, JLArrays.jl)
   end
-  
+
   return devs
 end
