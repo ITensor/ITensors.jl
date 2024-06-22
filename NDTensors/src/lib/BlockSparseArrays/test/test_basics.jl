@@ -38,19 +38,6 @@ include("TestBlockSparseArraysUtils.jl")
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
     @test_broken iszero(b)
-
-    # TODO: Move to unbroken tests below.
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(1, 1)]
-    @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
-
-    # TODO: Move to unbroken tests below.
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @views a[Block(1, 1)][1:2, 1:1]
-    @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
-    for i in parentindices(b)
-      @test i isa BlockSlice{<:BlockIndexRange{1}}
-    end
   end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
@@ -369,6 +356,18 @@ include("TestBlockSparseArraysUtils.jl")
     @test @view(a[Block(2, 2)])[1:1, 1:2] == x
     @test a[3:3, 4:5] == x
 
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @views a[Block(2, 2)][1:2, 2:3]
+    @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
+    for i in parentindices(b)
+      @test i isa BlockSlice{<:BlockIndexRange{1}}
+    end
+    x = randn(elt, 2, 2)
+    b .= x
+    @test a[Block(2, 2)[1:2, 2:3]] == x
+    @test a[Block(2, 2)[1:2, 2:3]] == b
+    @test block_nstored(a) == 1
+
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
       a[b] = randn(elt, size(a[b]))
@@ -541,6 +540,7 @@ include("TestBlockSparseArraysUtils.jl")
       @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
       @test block_nstored(b) == 1
       @test b[Block(1, 1)] == x
+      @test @view(b[Block(1, 1)]) isa SubArray{<:Any,<:Any,<:BlockSparseArray}
       for blck in [Block(2, 1), Block(1, 2), Block(2, 2)]
         @test iszero(b[blck])
       end
