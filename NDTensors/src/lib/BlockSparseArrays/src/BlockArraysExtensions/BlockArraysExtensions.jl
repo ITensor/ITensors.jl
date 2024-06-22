@@ -4,6 +4,7 @@ using BlockArrays:
   AbstractBlockVector,
   Block,
   BlockRange,
+  BlockedOneTo,
   BlockedUnitRange,
   BlockVector,
   BlockSlice,
@@ -174,6 +175,10 @@ function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Block{1}})
     @assert b ∈ blockaxes(axis, 1)
   end
   return r
+end
+
+function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockVector{<:Integer})
+  return error("Slicing not implemented for range of type `$(typeof(r))`.")
 end
 
 using BlockArrays: BlockSlice

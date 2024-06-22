@@ -88,26 +88,23 @@ function blockedunitrange_getindices(
   return map(index -> a[index], indices)
 end
 
-## # TODO: Bring back this definition and remove the one in
-## # BlockSparseArraysGradedAxesExt once
-## # https://github.com/JuliaArrays/BlockArrays.jl/pull/405 is merged.
-## # TODO: Move this to a `BlockArraysExtensions` library.
-## # TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
-## # to merge blocks.
-## function blockedunitrange_getindices(
-##   a::AbstractBlockedUnitRange, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
-## )
-##   # Without converting `indices` to `Vector`,
-##   # mapping `indices` outputs a `BlockVector`
-##   # which is harder to reason about.
-##   blocks = map(index -> a[index], Vector(indices))
-##   # We pass `length.(blocks)` to `mortar` in order
-##   # to pass block labels to the axes of the output,
-##   # if they exist. This makes it so that
-##   # `only(axes(a[indices])) isa `GradedUnitRange`
-##   # if `a isa `GradedUnitRange`, for example.
-##   return mortar(blocks, length.(blocks))
-## end
+# TODO: Move this to a `BlockArraysExtensions` library.
+# TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
+# to merge blocks.
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
+)
+  # Without converting `indices` to `Vector`,
+  # mapping `indices` outputs a `BlockVector`
+  # which is harder to reason about.
+  blocks = map(index -> a[index], Vector(indices))
+  # We pass `length.(blocks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  return mortar(blocks, length.(blocks))
+end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::AbstractBlockedUnitRange, indices::Block{1})
