@@ -381,7 +381,7 @@ function Base.mapreduce(f, op, t::BlockSparseTensor; kwargs...)
   if !iszero(f(zero(eltype(t))))
     return mapreduce(f, op, array(t); kwargs...)
   end
-  if length(t) > length(storage(t))
+  if length(t) > nnz(t)
     # Some elements are zero, account for that
     # with the initial value.
     init_kwargs = (; init=zero(elt))
