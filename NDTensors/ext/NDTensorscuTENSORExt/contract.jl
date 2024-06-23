@@ -9,7 +9,7 @@ function to_zero_offset_cuarray(a::CuArray)
   return iszero(a.offset) ? a : copy(a)
 end
 function to_zero_offset_cuarray(a::ReshapedArray)
-  return copy(a)
+  return copy(expose(a))
 end
 
 function NDTensors.contract!(
