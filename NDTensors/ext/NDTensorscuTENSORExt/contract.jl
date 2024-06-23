@@ -1,3 +1,4 @@
+using Base: ReshapedArray
 using NDTensors: NDTensors, DenseTensor, array
 using NDTensors.Expose: Exposed, unexpose
 using cuTENSOR: cuTENSOR, CuArray, CuTensor
