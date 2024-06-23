@@ -378,7 +378,8 @@ end
 # and takes advantage of block sparsity. Once the more general
 # case handles block sparsity, this can be removed.
 function Base.mapreduce(f, op, t::BlockSparseTensor; kwargs...)
-  if !iszero(f(zero(eltype(t))))
+  elt = eltype(t)
+  if !iszero(f(zero(elt)))
     return mapreduce(f, op, array(t); kwargs...)
   end
   if length(t) > nnz(t)
