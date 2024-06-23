@@ -443,9 +443,9 @@ function map_diag!(f::Function, exposed_t_dest::Exposed, exposed_t_src::Exposed)
 end
 
 map_diag(f::Function, t::Tensor) = map_diag(f, expose(t))
-function map_diag(f::Function, t::Exposed)
-  t_dest = copy(t)
-  map_diag!(f, expose(t_dest), expose(t))
+function map_diag(f::Function, exposed_t::Exposed)
+  t_dest = copy(exposed_t)
+  map_diag!(f, expose(t_dest), exposed_t)
   return t_dest
 end
 
