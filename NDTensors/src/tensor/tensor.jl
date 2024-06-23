@@ -213,7 +213,8 @@ imag(T::Tensor) = setstorage(T, imag(storage(T)))
 function Base.map(f, t1::Tensor, t_tail::Tensor...; kwargs...)
   elt = mapreduce(eltype, promote_type, (t1, t_tail...))
   if !iszero(f(zero(elt)))
-    return map(f, array(t1), array.(t_tail)...; kwargs...)
+    # TODO: Do a better job of preserving the storage type, if possible.
+    return tensor(Dense(map(f, array(t1), array.(t_tail)...; kwargs...)), inds(t1))
   end
   return setstorage(t1, map(f, storage(t1), storage.(t_tail)...; kwargs...))
 end

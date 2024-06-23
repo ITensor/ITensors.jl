@@ -160,7 +160,7 @@ end
       B = map(x -> 2x, A)
       @test B ≈ 2A
       @test eltype(B) == Float64
-      @test_throws ErrorException map(x -> x + 1, A)
+      @test array(map(x -> x + 1, A)) ≈ map(x -> x + 1, array(A))
     end
 
     @testset "getindex with state string" begin
