@@ -81,16 +81,16 @@ end
 @testset "DiagTensor contractions" for dev in devices_list(copy(ARGS))
   ## TODO add more GPU tests
   elt = (dev == NDTensors.mtl ? Float32 : Float64)
-  t = tensor(Diag(elt[1.0, 1.0, 1.0]), (3, 3))
-  A = randomTensor(Dense{elt}, (3, 3))
+  t = dev(tensor(Diag(elt[1.0, 1.0, 1.0]), (3, 3)))
+  A = dev(randomTensor(Dense{elt}, (3, 3)))
 
   @test contract(t, (1, -2), t, (-2, 3)) == t
   @test contract(A, (1, -2), t, (-2, 3)) == A
   @test contract(A, (-2, 1), t, (-2, 3)) == transpose(A)
 
   ## Testing sparse contractions on GPU
-  t = tensor(Diag(one(elt)), (3, 3))
-  @test contract(t, (-1, -2), dev(A), (-1, -2))[] ≈ dot(t, A) rtol = sqrt(eps(elt))
+  t = dev(tensor(Diag(one(elt)), (3, 3)))
+  @test contract(t, (-1, -2), A, (-1, -2))[] ≈ dot(t, A) rtol = sqrt(eps(elt))
 end
 nothing
 end
