@@ -89,20 +89,13 @@ function contract!(
   labelsT2,
 ) where {ElR,NR,N1,N2}
   if NR == 0  # If all indices of A and B are contracted
-    # all indices are summed over, just add the product of the diagonal
-    # elements of A and B
-    Rdiag = zero(ElR)
-    for i in 1:diaglength(T1)
-      Rdiag += getdiagindex(T1, i) * getdiagindex(T2, i)
-    end
-    setdiagindex!(R, Rdiag, 1)
+    # All indices are summed over, just add the product of the diagonal
+    # elements of A and B.
+    # `expose` allows dispatching on the data type
+    # in order to allow scalar indexing on GPU.
+    expose(R)[] = mapreduce(*, +, diagview(T1), diagview(T2))
   else
-    min_dim = min(diaglength(T1), diaglength(T2))
-    # not all indices are summed over, set the diagonals of the result
-    # to the product of the diagonals of A and B
-    for i in 1:min_dim
-      setdiagindex!(R, getdiagindex(T1, i) * getdiagindex(T2, i), i)
-    end
+    diagview(R) .= diagview(T1) .* diagview(T2)
   end
   return R
 end
