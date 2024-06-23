@@ -32,7 +32,29 @@ end
 Base.getindex(S::BlockIndices, i::Integer) = getindex(S.indices, i)
 function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
   # TODO: Check that `i.indices` is consistent with `S.indices`.
+  # It seems like this isn't handling the case where `i` is a
+  # subslice of a block correctly (i.e. it ignores `i.indices`).
+  @assert length(S.indices[Block(i)]) == length(i.indices)
   return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
+end
+function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
+  display(S.blocks)
+  display(S.indices)
+  display(i.block)
+  display(i.indices)
+
+  @show S.blocks[Int.(i.block)]
+  for b in i.block
+    @show b
+    @show S.blocks[b]
+    @show i.indices[b]
+    @show S.indices[b]
+  end
+  @show S.indices[i.block]
+
+  error()
+  # TODO: Check that `i.indices` is consistent with `S.indices`.
+  return BlockSlice(S.blocks[Int.(i.block)], S.indices[Block(i)])
 end
 
 # Outputs a `BlockUnitRange`.
