@@ -433,11 +433,21 @@ function setdiagindex!(T::Tensor{<:Number,N}, val, ind::Int) where {N}
   return T
 end
 
-function map_diag!(f::Function, exposed_t_destination::Exposed, exposed_t_source::Exposed)
-  diagview(unexpose(exposed_t_destination)) .= f.(diagview(unexpose(exposed_t_source)))
-  return unexpose(exposed_t_destination)
+function map_diag!(f::Function, t_dest::Tensor, t_src::Tensor)
+  map_diag!(f, expose(t_dest), expose(t_src))
+  return t_dest
 end
-map_diag(f::Function, t::Tensor) = map_diag!(f, expose(copy(t)), expose(t))
+function map_diag!(f::Function, exposed_t_dest::Exposed, exposed_t_src::Exposed)
+  diagview(unexpose(exposed_t_dest)) .= f.(diagview(unexpose(exposed_t_src)))
+  return unexpose(exposed_t_dest)
+end
+
+map_diag(f::Function, t::Tensor) = map_diag(f, expose(t))
+function map_diag(f::Function, t::Exposed)
+  t_dest = copy(t)
+  map_diag!(f, expose(t_dest), expose(t))
+  return t_dest
+end
 
 #
 # Some generic contraction functionality

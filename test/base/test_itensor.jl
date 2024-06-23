@@ -163,6 +163,22 @@ end
       @test array(map(x -> x + 1, A)) ≈ map(x -> x + 1, array(A))
     end
 
+    @testset "reductions (sum, prod)" for elt in (
+      Float32, Float64, Complex{Float32}, Complex{Float64}
+    )
+      a = random_itensor(elt, Index(2), Index(2))
+      @test sum(a) ≈ sum(array(a))
+      @test sum(a) isa elt
+      @test prod(a) ≈ prod(array(a))
+      @test prod(a) isa elt
+
+      a = ITensor(elt(2))
+      @test sum(a) ≈ sum(array(a))
+      @test sum(a) isa elt
+      @test prod(a) ≈ prod(array(a))
+      @test prod(a) isa elt
+    end
+
     @testset "getindex with state string" begin
       i₁ = Index(2, "S=1/2")
       i₂ = Index(2, "S=1/2")
