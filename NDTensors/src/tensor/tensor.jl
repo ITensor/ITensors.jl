@@ -210,13 +210,20 @@ real(T::Tensor) = setstorage(T, real(storage(T)))
 
 imag(T::Tensor) = setstorage(T, imag(storage(T)))
 
-function map(f, x::Tensor{T}) where {T}
-  if !iszero(f(zero(T)))
-    error(
-      "map(f, ::Tensor) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.",
-    )
+function Base.map(f, t1::Tensor, t_tail::Tensor...; kwargs...)
+  elt = mapreduce(eltype, promote_type, (t1, t_tail...))
+  if !iszero(f(zero(elt)))
+    return map(f, array(t1), array.(t_tail)...; kwargs...)
   end
-  return setstorage(x, map(f, storage(x)))
+  return setstorage(t1, map(f, storage(t1), storage.(t_tail)...; kwargs...))
+end
+
+function Base.mapreduce(f, op, t1::Tensor, t_tail::Tensor...; kwargs...)
+  elt = mapreduce(eltype, promote_type, (t1, t_tail...))
+  if !iszero(f(zero(elt)))
+    return mapreduce(f, op, array(t1), array.(t_tail)...; kwargs...)
+  end
+  return mapreduce(f, op, storage(t1), storage.(t_tail)...; kwargs...)
 end
 
 #
@@ -280,6 +287,9 @@ dense(T::Tensor) = setstorage(T, dense(storage(T)))
 array(T::Tensor) = array(dense(T))
 matrix(T::Tensor{<:Number,2}) = array(T)
 vector(T::Tensor{<:Number,1}) = array(T)
+
+array(T::Transpose{<:Any,<:Tensor}) = transpose(array(transpose(T)))
+matrix(T::Transpose{<:Any,<:Tensor}) = transpose(array(transpose(T)))
 
 #
 # Helper functions for BlockSparse-type storage
@@ -351,6 +361,42 @@ end
 @propagate_inbounds @inline setindex!!(T::Tensor, x, I...) = setindex!(T, x, I...)
 
 insertblock!!(T::Tensor, block) = insertblock!(T, block)
+
+function tensor_isequal(x, y)
+  # TODO: Use a reduction to avoid intermediates.
+  # This doesn't work right now because `mapreduce`
+  # on `Tensor`s is limited to functions that preserve
+  # zeros.
+  # return mapreduce(==, ==, x, y)
+
+  # TODO: Use `x - y` instead of `map(-, x, y)`.
+  # `x - y` calls `x .- y` and broadcasting isn't
+  # defined properly for sparse Tensor storage
+  # like `Diag` and `BlockSparse`.
+  return iszero(norm(map(-, x, y)))
+end
+
+function Base.:(==)(x::Tensor, y::Tensor)
+  return tensor_isequal(x, y)
+end
+
+function Base.:(==)(x::AbstractArray, y::Tensor)
+  return array(x) == array(y)
+end
+function Base.:(==)(x::Tensor, y::AbstractArray)
+  return array(x) == array(y)
+end
+
+function Base.isequal(x::Tensor, y::Tensor)
+  return tensor_isequal(x, y)
+end
+
+function Base.isequal(x::AbstractArray, y::Tensor)
+  return isequal(array(x), array(y))
+end
+function Base.isequal(x::Tensor, y::AbstractArray)
+  return isequal(array(x), array(y))
+end
 
 """
 getdiagindex
