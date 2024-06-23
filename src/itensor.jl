@@ -305,14 +305,14 @@ end
 
 using NDTensors.TypeParameterAccessors: set_eltype, type_parameters, specify_type_parameters
 """
-    ITensor([ElT::Type, ]A::Array, inds)
-    ITensor([ElT::Type, ]A::Array, inds::Index...)
+    ITensor([ElT::Type, ]A::AbstractArray, inds)
+    ITensor([ElT::Type, ]A::AbstractArray, inds::Index...)
 
-    itensor([ElT::Type, ]A::Array, inds)
-    itensor([ElT::Type, ]A::Array, inds::Index...)
+    itensor([ElT::Type, ]A::AbstractArray, inds)
+    itensor([ElT::Type, ]A::AbstractArray, inds::Index...)
 
-Construct an ITensor from an Array `A` and indices `inds`.
-The ITensor will be a view of the Array data if possible (if
+Construct an ITensor from an AbstractArray `A` and indices `inds`.
+The ITensor will be a view of the AbstractArray data if possible (if
 no conversion to a different element type is necessary).
 
 If specified, the ITensor will have element type `ElT`.
@@ -389,13 +389,13 @@ function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwar
 end
 
 # For now, it's not well defined to construct an ITensor without indices
-# from a non-zero dimensional Array
+# from a non-zero dimensional AbstractArray
 function ITensor(
   as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
 )
   if length(A) > 1
     error(
-      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
+      "Trying to create an ITensor without any indices from $(typeof(A)) $A of dimensions $(size(A)). Cannot construct an ITensor from an $(typeof(A)) with more than one element without any indices.",
     )
   end
   return ITensor(eltype, A[]; kwargs...)
