@@ -448,8 +448,8 @@ diag_itensor(is::Indices) = diag_itensor(Float64, is)
 diag_itensor(is...) = diag_itensor(indices(is...))
 
 """
-    diag_itensor([ElT::Type, ]v::Vector, inds...)
-    diagitensor([ElT::Type, ]v::Vector, inds...)
+    diag_itensor([ElT::Type, ]v::AbstractVector, inds...)
+    diagitensor([ElT::Type, ]v::AbstractVector, inds...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal.
 In general, the diagonal elements will be those stored in `v` and
@@ -467,29 +467,31 @@ The version `diagitensor` might output an ITensor whose storage data
 is an alias of the input vector data in order to minimize operations.
 """
 function diag_itensor(
-  as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is::Indices
+  as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
 )
   length(v) ≠ mindim(is) && error(
     "Length of vector for diagonal must equal minimum of the dimension of the input indices",
   )
-  data = Vector{eltype}(as, v)
+  data = set_eltype(typeof(v), eltype)(as, v)
   return itensor(Diag(data), is)
 end
 
-function diag_itensor(as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+function diag_itensor(
+  as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is...
+)
   return diag_itensor(as, eltype, v, indices(is...))
 end
 
-function diag_itensor(as::AliasStyle, v::Vector, is...)
+function diag_itensor(as::AliasStyle, v::AbstractVector, is...)
   return diag_itensor(as, eltype(v), v, is...)
 end
 
-function diag_itensor(as::AliasStyle, v::Vector{<:RealOrComplex{Int}}, is...)
+function diag_itensor(as::AliasStyle, v::AbstractVector{<:RealOrComplex{Int}}, is...)
   return diag_itensor(AllowAlias(), float(eltype(v)), v, is...)
 end
 
-diag_itensor(v::Vector{<:Number}, is...) = diag_itensor(NeverAlias(), v, is...)
-function diag_itensor(eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+diag_itensor(v::AbstractVector{<:Number}, is...) = diag_itensor(NeverAlias(), v, is...)
+function diag_itensor(eltype::Type{<:Number}, v::AbstractVector{<:Number}, is...)
   return diag_itensor(NeverAlias(), eltype, v, is...)
 end
 
