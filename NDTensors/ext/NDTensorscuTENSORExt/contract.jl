@@ -26,8 +26,16 @@ function NDTensors.contract!(
   arrayR = zoffR ? array(R) : copy(array(R))
   arrayT1 = to_zero_offset_cuarray(array(T1))
   arrayT2 = to_zero_offset_cuarray(array(T2))
-  # Promote to a common type.
-  elt = promote_type(eltype(arrayT1), eltype(arrayT2))
+  # Promote to a common type. This is needed because as of
+  # cuTENSOR.jl v5.4.2, cuTENSOR contraction only performs
+  # limited sets of type promotions of inputs, see:
+  # https://github.com/JuliaGPU/CUDA.jl/blob/v5.4.2/lib/cutensor/src/types.jl#L11-L19
+  elt = promote_type(eltype.((arrayR, arrayT1, arrayT2))...)
+  if elt !== eltype(arrayR)
+    return error(
+      "In cuTENSOR contraction, input tensors have element types `$(eltype(arrayT1))` and `$(eltype(arrayT2))` while the output has element type `$(eltype(arrayR))`.",
+    )
+  end
   arrayT1 = convert(CuArray{elt}, arrayT1)
   arrayT2 = convert(CuArray{elt}, arrayT2)
   cuR = CuTensor(arrayR, collect(labelsR))
