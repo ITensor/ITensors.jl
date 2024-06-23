@@ -1,5 +1,7 @@
-using NDTensors: NDTensors
 using Pkg: Pkg
+using JLArrays
+using NDTensors: NDTensors
+
 if "cuda" in ARGS || "all" in ARGS
   ## Right now adding CUDA during Pkg.test results in a
   ## compat issues. I am adding it back to test/Project.toml
@@ -23,15 +25,12 @@ if "cutensor" in ARGS || "all" in ARGS
   Pkg.add("cuTENSOR")
   using CUDA, cuTENSOR
 end
-if "jlarrays" in ARGS || "all" in ARGS
-  Pkg.add("JLArrays")
-  using JLArrays
-end
 
 function devices_list(test_args)
   devs = Vector{Function}(undef, 0)
   if isempty(test_args) || "base" in test_args
     push!(devs, NDTensors.cpu)
+    # push!(devs, jl)
   end
 
   if "cuda" in test_args || "cutensor" in test_args || "all" in test_args
@@ -50,10 +49,6 @@ function devices_list(test_args)
 
   if "metal" in test_args || "all" in test_args
     push!(devs, NDTensors.MetalExtensions.mtl)
-  end
-
-  if "jlarrays" in test_args || "all" in test_args
-    push!(devs, JLArrays.jl)
   end
 
   return devs
