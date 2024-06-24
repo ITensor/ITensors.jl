@@ -50,6 +50,44 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
   return BlockIndices(subblocks, subindices)
 end
 
+# TODO: This is type piracy. This is used in `reindex` when making
+# views of blocks of sliced block arrays, for example:
+# ```julia
+# a = BlockSparseArray{elt}(undef, ([2, 3], [2, 3]))
+# b = @view a[[Block(1)[1:1], Block(2)[1:2]], [Block(1)[1:1], Block(2)[1:2]]]
+# b[Block(1, 1)]
+# ```
+# Without this change, BlockArrays has the slicing behavior:
+# ```julia
+# julia> mortar([Block(1)[1:1], Block(2)[1:2]])[BlockSlice(Block(2), 2:3)]
+# 2-element Vector{BlockIndex{1, Tuple{Int64}, Tuple{Int64}}}:
+#  Block(2)[1]
+#  Block(2)[2]
+# ```
+# while with this change it has the slicing behavior:
+# ```julia
+# julia> mortar([Block(1)[1:1], Block(2)[1:2]])[BlockSlice(Block(2), 2:3)]
+# Block(2)[1:2]
+# ```
+# i.e. it preserves the types of the blocks better. Upstream this fix to
+# BlockArrays.jl. Also consider overloading `reindex` so that it calls
+# a custom `getindex` function to avoid type piracy in the meantime.
+# Also fix this in BlockArrays:
+# ```julia
+# julia> mortar([Block(1)[1:1], Block(2)[1:2]])[Block(2)]
+# 2-element Vector{BlockIndex{1, Tuple{Int64}, Tuple{Int64}}}:
+#  Block(2)[1]
+#  Block(2)[2]
+# ```
+function Base.getindex(
+  a::BlockVector{<:BlockIndex{1},<:AbstractVector{<:BlockIndexRange{1}}},
+  I::BlockSlice{<:Block{1}},
+)
+  # Check that the block slice corresponds to the correct block.
+  @assert I.indices == only(axes(a))[Block(I)]
+  return blocks(a)[Int(Block(I))]
+end
+
 # Outputs a `BlockUnitRange`.
 function sub_axis(a::AbstractUnitRange, indices)
   return error("Not implemented")
