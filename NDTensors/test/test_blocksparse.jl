@@ -56,6 +56,8 @@ using Test: @test, @test_throws, @testset
     @test !isblocknz(A, (2, 2))
     dA = diag(A)
     @test @allowscalar dA ≈ diag(dense(A))
+    @test sum(A) ≈ sum(array(A))
+    @test prod(A) ≈ prod(array(A))
 
     # Test different ways of getting nnz
     @test nnz(blockoffsets(A), inds(A)) == nnz(A)

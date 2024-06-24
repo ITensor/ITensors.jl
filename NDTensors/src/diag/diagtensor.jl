@@ -195,6 +195,21 @@ function permutedims!!(
   return RR
 end
 
+function Base.mapreduce(f, op, t1::DiagTensor, t_tail::DiagTensor...; kwargs...)
+  elt = mapreduce(eltype, promote_type, (t1, t_tail...))
+  if !iszero(f(zero(elt)))
+    return mapreduce(f, op, array(t1), array.(t_tail)...; kwargs...)
+  end
+  if length(t1) > diaglength(t1)
+    # Some elements are zero, account for that
+    # with the initial value.
+    init_kwargs = (; init=zero(elt))
+  else
+    init_kwargs = (;)
+  end
+  return mapreduce(f, op, diagview(t1), diagview.(t_tail)...; kwargs..., init_kwargs...)
+end
+
 function Base.show(io::IO, mime::MIME"text/plain", T::DiagTensor)
   summary(io, T)
   print_tensor(io, T)
