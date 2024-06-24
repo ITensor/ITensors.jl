@@ -20,44 +20,6 @@ function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where
   return a[findblockindex.(axes(a), I)...]
 end
 
-function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
-  return blocksparse_getindex(a, Tuple(I)...)
-end
-function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
-  # TODO: Avoid copy if the block isn't stored.
-  return copy(blocks(a)[Int.(I)...])
-end
-
-# TODO: Implement as `copy(@view a[I...])`, which is then implemented
-# through `ArrayLayouts.sub_materialize`.
-using ..SparseArrayInterface: set_getindex_zero_function
-function blocksparse_getindex(
-  a::AbstractArray{<:Any,N}, I::Vararg{AbstractVector{<:Block{1}},N}
-) where {N}
-  blocks_a = blocks(a)
-  # Convert to cartesian indices of the underlying sparse array of blocks.
-  CI = map(i -> Int.(i), I)
-  subblocks_a = blocks_a[CI...]
-  subaxes = ntuple(ndims(a)) do i
-    return only(axes(axes(a, i)[I[i]]))
-  end
-  subblocks_a = set_getindex_zero_function(subblocks_a, BlockZero(subaxes))
-  return typeof(a)(subblocks_a, subaxes)
-end
-
-# Slice by block and merge according to the blocking structure of the indices.
-function blocksparse_getindex(
-  a::AbstractArray{<:Any,N}, I::Vararg{AbstractBlockVector{<:Block{1}},N}
-) where {N}
-  a_sub = a[Vector.(I)...]
-  # TODO: Define `blocklengths(::AbstractBlockVector)`? Maybe make a PR
-  # to `BlockArrays`.
-  blockmergers = blockedrange.(blocklengths.(only.(axes.(I))))
-  # TODO: Need to implement this!
-  a_merged = block_merge(a_sub, blockmergers...)
-  return a_merged
-end
-
 # a[1:2, 1:2]
 # TODO: This definition means that the result of slicing a block sparse array
 # with a non-blocked unit range is blocked. We may want to change that behavior,
@@ -99,26 +61,6 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::BlockIndex{N
   a_b[I.α...] = value
   # Set the block, required if it is structurally zero.
   blocks(a)[i...] = a_b
-  return a
-end
-
-function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Block{N}) where {N}
-  blocksparse_setindex!(a, value, Tuple(I)...)
-  return a
-end
-function blocksparse_setindex!(
-  a::AbstractArray{<:Any,N}, value, I::Vararg{Block{1},N}
-) where {N}
-  i = Int.(I)
-  @boundscheck blockcheckbounds(a, i...)
-  # TODO: Use `blocksizes(a)[i...]` when we upgrade to
-  # BlockArrays.jl v1.
-  if size(value) ≠ size(view(a, I...))
-    return throw(
-      DimensionMismatch("Trying to set a block with an array of the wrong size.")
-    )
-  end
-  blocks(a)[i...] = value
   return a
 end
 

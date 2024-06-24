@@ -582,15 +582,20 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(c) == 2
     @test blocksize(c) == (2, 2)
     @test blocklengths.(axes(c)) == ([2, 3], [2, 3])
-    # TODO: Fix this.
-    @test_broken size(c[Block(1, 1)]) == (2, 2)
-    @test_broken c[Block(1, 1)] == a[Block(2, 2)[2:3, 2:3]]
-    @test_broken size(c[Block(2, 2)]) == (3, 3)
-    @test_broken c[Block(2, 2)] == a[Block(1, 1)[1:3, 1:3]]
-    @test_broken size(c[Block(2, 1)]) == (3, 2)
+    @test size(c[Block(1, 1)]) == (2, 2)
+    @test c[Block(1, 1)] == a[Block(2, 2)[2:3, 2:3]]
+    @test size(c[Block(2, 2)]) == (3, 3)
+    @test c[Block(2, 2)] == a[Block(1, 1)[1:3, 1:3]]
+    @test size(c[Block(2, 1)]) == (3, 2)
     @test iszero(c[Block(2, 1)])
-    @test_broken size(c[Block(1, 2)]) == (2, 3)
+    @test size(c[Block(1, 2)]) == (2, 3)
     @test iszero(c[Block(1, 2)])
+
+    x = randn(elt, 2, 2)
+    # TODO: Fix this.
+    @test_broken c[Block(2, 2)] = x
+    @test_broken c[Block(2, 2)] == x
+    @test_broken a[Block(2, 2)[2:3, 2:3]] == x
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]

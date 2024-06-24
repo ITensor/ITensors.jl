@@ -81,15 +81,6 @@ function Base.getindex(
   return ArrayLayouts.layout_getindex(a, I...)
 end
 
-function Base.getindex(a::BlockSparseArrayLike{<:Any,N}, block::Block{N}) where {N}
-  return blocksparse_getindex(a, block)
-end
-function Base.getindex(
-  a::BlockSparseArrayLike{<:Any,N}, block::Vararg{Block{1},N}
-) where {N}
-  return blocksparse_getindex(a, block...)
-end
-
 # TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
   a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
@@ -113,20 +104,8 @@ function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N
   blocksparse_setindex!(a, value, I)
   return a
 end
-
-function Base.setindex!(
-  a::BlockSparseArrayLike{<:Any,N}, value, I::Vararg{Block{1},N}
-) where {N}
-  a[Block(Int.(I))] = value
-  return a
-end
-function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::Block{N}) where {N}
-  blocksparse_setindex!(a, value, I)
-  return a
-end
-
-# Fix ambiguity error
-function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::Block{1})
+# Fixes ambiguity error with BlockArrays.jl
+function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::BlockIndex{1})
   blocksparse_setindex!(a, value, I)
   return a
 end
