@@ -38,23 +38,16 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
   return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
 end
 function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
-  display(S.blocks)
-  display(S.indices)
-  display(i.block)
-  display(i.indices)
-
-  @show S.blocks[Int.(i.block)]
-  for b in i.block
-    @show b
-    @show S.blocks[b]
-    @show i.indices[b]
-    @show S.indices[b]
-  end
-  @show S.indices[i.block]
-
-  error()
   # TODO: Check that `i.indices` is consistent with `S.indices`.
-  return BlockSlice(S.blocks[Int.(i.block)], S.indices[Block(i)])
+  # TODO: Turn this into a `blockedunitrange_getindices` definition.
+  subblocks = S.blocks[Int.(i.block)]
+  subindices = mortar(
+    map(1:length(i.block)) do I
+      r = blocks(i.indices)[I]
+      return S.indices[first(r)]:S.indices[last(r)]
+    end,
+  )
+  return BlockIndices(subblocks, subindices)
 end
 
 # Outputs a `BlockUnitRange`.
