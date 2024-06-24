@@ -103,6 +103,25 @@ Random.seed!(1234)
     @test ITensor(zeros(3, 3), i', dag(i)) isa ITensor
   end
 
+  @testset "reductions (sum, prod)" for elt in (
+    Float32, Float64, Complex{Float32}, Complex{Float64}
+  )
+    s = [QN(0) => 2, QN(1) => 2]
+    a = random_itensor(elt, Index(s), dag(Index(s)))
+    @test sum(a) ≈ sum(array(a))
+    @test sum(a) isa elt
+    @test prod(a) ≈ prod(array(a))
+    @test prod(a) isa elt
+
+    # All blocks are nonzero
+    s = [QN(0) => 2, QN(0) => 2]
+    a = random_itensor(elt, Index(s), dag(Index(s)))
+    @test sum(a) ≈ sum(array(a))
+    @test sum(a) isa elt
+    @test prod(a) ≈ prod(array(a))
+    @test prod(a) isa elt
+  end
+
   @testset "Regression test for in-place operations with mismatched block structure (eltype=$elt)" for elt in
                                                                                                        (
     Float32, Float64, Complex{Float32}, Complex{Float64}

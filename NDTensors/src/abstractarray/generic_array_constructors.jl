@@ -1,6 +1,11 @@
 using .TypeParameterAccessors:
   unwrap_array_type, specify_default_type_parameters, type_parameter
 
+# Convert to Array, avoiding copying if possible
+array(a::AbstractArray) = a
+matrix(a::AbstractMatrix) = a
+vector(a::AbstractVector) = a
+
 ## Warning to use these functions it is necessary to define `TypeParameterAccessors.position(::Type{<:YourArrayType}, ::typeof(ndims)))`
 # Implementation, catches if `ndims(arraytype) != length(dims)`.
 ## TODO convert ndims to `type_parameter(::, typeof(ndims))`

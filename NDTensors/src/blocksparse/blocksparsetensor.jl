@@ -367,7 +367,45 @@ function diag(ETensor::Exposed{<:AbstractArray,<:BlockSparseTensor})
   return tensordiag
 end
 
-## TODO currently this fails on GPU with scalar indexing 
+function Base.mapreduce(
+  f, op, t1::BlockSparseTensor, t_tail::BlockSparseTensor...; kwargs...
+)
+  # TODO: Take advantage of block sparsity here.
+  return mapreduce(f, op, array(t1), array.(t_tail)...; kwargs...)
+end
+
+# This is a special case that optimizes for a single tensor
+# and takes advantage of block sparsity. Once the more general
+# case handles block sparsity, this can be removed.
+function Base.mapreduce(f, op, t::BlockSparseTensor; kwargs...)
+  elt = eltype(t)
+  if !iszero(f(zero(elt)))
+    return mapreduce(f, op, array(t); kwargs...)
+  end
+  if length(t) > nnz(t)
+    # Some elements are zero, account for that
+    # with the initial value.
+    init_kwargs = (; init=zero(elt))
+  else
+    init_kwargs = (;)
+  end
+  return mapreduce(f, op, storage(t); kwargs..., init_kwargs...)
+end
+
+function blocksparse_isequal(x, y)
+  return array(x) == array(y)
+end
+function Base.:(==)(x::BlockSparseTensor, y::BlockSparseTensor)
+  return blocksparse_isequal(x, y)
+end
+function Base.:(==)(x::BlockSparseTensor, y::Tensor)
+  return blocksparse_isequal(x, y)
+end
+function Base.:(==)(x::Tensor, y::BlockSparseTensor)
+  return blocksparse_isequal(x, y)
+end
+
+## TODO currently this fails on GPU with scalar indexing
 function map_diag!(
   f::Function,
   exposed_t_destination::Exposed{<:AbstractArray,<:BlockSparseTensor},
