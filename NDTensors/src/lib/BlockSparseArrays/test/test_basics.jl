@@ -24,11 +24,18 @@ include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
   @testset "Broken" begin
-    # TODO: This is already in the tests below, delete this
-    # once it is fixed.
     a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    c = @view b[Block(2, 1)]
     @test_broken iszero(b)
+    @test_broken iszero(c)
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    @views for I in [Block(1, 2), Block(2, 1)]
+      a[I] = randn(elt, size(a[I]))
+    end
+    b = @view a[2:4, 2:4]
+    @test_broken nstored(b)
   end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
