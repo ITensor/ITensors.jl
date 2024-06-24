@@ -591,11 +591,10 @@ include("TestBlockSparseArraysUtils.jl")
     @test size(c[Block(1, 2)]) == (2, 3)
     @test iszero(c[Block(1, 2)])
 
-    x = randn(elt, 2, 2)
-    # TODO: Fix this.
-    @test_broken c[Block(2, 2)] = x
-    @test_broken c[Block(2, 2)] == x
-    @test_broken a[Block(2, 2)[2:3, 2:3]] == x
+    x = randn(elt, 3, 3)
+    c[Block(2, 2)] = x
+    @test c[Block(2, 2)] == x
+    @test a[Block(1, 1)[1:3, 1:3]] == x
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
