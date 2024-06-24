@@ -574,6 +574,7 @@ function factorize_qr(A::ITensor, Linds...; ortho="left", tags=nothing, positive
   return L, R
 end
 
+using NDTensors: map_diag!
 #
 # Generic function implementing a square root decomposition of a diagonal, order 2 tensor with inds u, v
 #

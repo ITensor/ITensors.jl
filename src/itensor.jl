@@ -1912,6 +1912,14 @@ end
 
 map(f, x::ITensor) = itensor(map(f, tensor(x)))
 
+# Some limited set of reductions. Ideally we
+# would overload `Base.mapreduce` which would
+# cover all of these cases, but we need to make
+# sure that the `Tensor` version of `mapreduce`
+# is correct and efficient for all sparse storage types.
+Base.sum(x::ITensor) = sum(tensor(x))
+Base.prod(x::ITensor) = prod(tensor(x))
+
 """
     axpy!(a::Number, v::ITensor, w::ITensor)
 ```
