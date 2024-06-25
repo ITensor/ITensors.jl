@@ -17,6 +17,7 @@ function SparseArrayInterface.setindex_notstored!(
   return error("Setting the specified unstored index is not supported.")
 end
 
+# TODO: Make this into a generic definition of all `AbstractArray`?
 # TODO: Check if this is efficient, or determine if this mapping should
 # be performed in `storage_index_to_index` and/or `index_to_storage_index`.
 function SparseArrayInterface.sparse_storage(a::SubArray{<:Any,<:Any,<:AbstractSparseArray})
@@ -29,6 +30,7 @@ function SparseArrayInterface.sparse_storage(a::SubArray{<:Any,<:Any,<:AbstractS
   return typeof(parent_storage)(sliced_storage_indices, sliced_parent_storage)
 end
 
+# TODO: Make this into a generic definition of all `AbstractArray`?
 function SparseArrayInterface.stored_indices(
   a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
 )
@@ -37,6 +39,7 @@ function SparseArrayInterface.stored_indices(
   )
 end
 
+# TODO: Make this into a generic definition of all `AbstractArray`?
 function SparseArrayInterface.sparse_storage(
   a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
 )
