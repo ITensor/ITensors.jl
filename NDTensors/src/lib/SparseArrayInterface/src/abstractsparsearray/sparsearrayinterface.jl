@@ -28,3 +28,17 @@ function SparseArrayInterface.sparse_storage(a::SubArray{<:Any,<:Any,<:AbstractS
   sliced_parent_storage = map(I -> parent_storage[I], keys(sliced_storage_indices))
   return typeof(parent_storage)(sliced_storage_indices, sliced_parent_storage)
 end
+
+function SparseArrayInterface.stored_indices(
+  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
+)
+  return Iterators.map(
+    I -> CartesianIndex(map(i -> I[i], perm(a))), stored_indices(parent(a))
+  )
+end
+
+function SparseArrayInterface.sparse_storage(
+  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
+)
+  return sparse_storage(parent(a))
+end
