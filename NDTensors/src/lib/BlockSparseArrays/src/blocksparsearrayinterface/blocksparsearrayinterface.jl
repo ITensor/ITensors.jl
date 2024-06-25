@@ -258,8 +258,12 @@ end
 # `SparseArrayInterface.sparse_storage`, which is used
 # to defined this.
 SparseArrayInterface.nstored(a::SparseSubArrayBlocks) = length(stored_indices(a))
+
+## struct SparseSubArrayBlocksStorage{Array<:SparseSubArrayBlocks}
+##   array::Array
+## end
 function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
-  return error("Not implemented")
+  return map(I -> a[I], stored_indices(a))
 end
 
 function blocksparse_blocks(a::SubArray)

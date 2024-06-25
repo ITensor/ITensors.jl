@@ -16,3 +16,15 @@ function SparseArrayInterface.setindex_notstored!(
   iszero(value) && return a
   return error("Setting the specified unstored index is not supported.")
 end
+
+# TODO: Check if this is efficient, or determine if this mapping should
+# be performed in `storage_index_to_index` and/or `index_to_storage_index`.
+function SparseArrayInterface.sparse_storage(a::SubArray{<:Any,<:Any,<:AbstractSparseArray})
+  parent_storage = sparse_storage(parent(a))
+  all_sliced_storage_indices = map(keys(parent_storage)) do I
+    return map_index(a.indices, I)
+  end
+  sliced_storage_indices = filter(!isnothing, all_sliced_storage_indices)
+  sliced_parent_storage = map(I -> parent_storage[I], keys(sliced_storage_indices))
+  return typeof(parent_storage)(sliced_storage_indices, sliced_parent_storage)
+end

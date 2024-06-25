@@ -23,20 +23,6 @@ using Test: @test, @test_broken, @test_throws, @testset
 include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
-  @testset "Broken" begin
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
-    c = @view b[Block(2, 1)]
-    @test_broken iszero(b)
-    @test_broken iszero(c)
-
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    @views for I in [Block(1, 2), Block(2, 1)]
-      a[I] = randn(elt, size(a[I]))
-    end
-    b = @view a[2:4, 2:4]
-    @test_broken nstored(b)
-  end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     @test a == BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
@@ -110,6 +96,26 @@ include("TestBlockSparseArraysUtils.jl")
     @test nstored(b) == 0
     @test size(b) == size(a)
     @test blocksize(b) == blocksize(a)
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    c = @view b[Block(1, 1)]
+    @test iszero(a)
+    @test iszero(nstored(a))
+    @test iszero(b)
+    @test iszero(nstored(b))
+    @test iszero(c)
+    @test iszero(nstored(c))
+    a[5, 7] = 1
+    @test !iszero(a)
+    @test nstored(a) == 3 * 4
+    @test !iszero(b)
+    @test nstored(b) == 3 * 4
+    @test !iszero(c)
+    @test nstored(c) == 3 * 4
+    d = @view a[1:4, 1:6]
+    @test iszero(d)
+    @test nstored(d) == 2 * 3
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]
@@ -248,12 +254,7 @@ include("TestBlockSparseArraysUtils.jl")
       @test b == Array(a)[2:4, 2:4]
       @test size(b) == (3, 3)
       @test blocksize(b) == (2, 2)
-      if b isa SubArray
-        # TODO: Fix this.
-        @test_broken nstored(b) == 1 * 1 + 2 * 2
-      else
-        @test nstored(b) == 1 * 1 + 2 * 2
-      end
+      @test nstored(b) == 1 * 1 + 2 * 2
       @test block_nstored(b) == 2
       for f in (getindex, view)
         @test size(f(b, Block(1, 1))) == (1, 2)
@@ -568,8 +569,7 @@ include("TestBlockSparseArraysUtils.jl")
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
-    # TODO: Fix this.
-    @test_broken iszero(b)
+    @test iszero(b)
     @test size(b) == (2, 4)
     x = randn(elt, 2, 4)
     b .= x
