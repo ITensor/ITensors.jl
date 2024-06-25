@@ -104,10 +104,10 @@ end
 
 # TODO: Why isn't this calling `mapreduce` already?
 function Base.iszero(a::BlockSparseArrayLike)
-  return sparse_iszero(a)
+  return sparse_iszero(blocks(a))
 end
 
 # TODO: Why isn't this calling `mapreduce` already?
 function Base.isreal(a::BlockSparseArrayLike)
-  return sparse_isreal(a)
+  return sparse_isreal(blocks(a))
 end
