@@ -56,8 +56,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test size(b) == (4, 4, 4, 4)
       @test blocksize(b) == (2, 2, 2, 2)
       @test blocklengths.(axes(b)) == ([2, 2], [2, 2], [2, 2], [2, 2])
-      # TODO: Fix this for `BlockedArray`.
-      @test_broken nstored(b) == 256
+      @test nstored(b) == 256
       # TODO: Fix this for `BlockedArray`.
       @test_broken block_nstored(b) == 16
       for i in 1:ndims(a)
