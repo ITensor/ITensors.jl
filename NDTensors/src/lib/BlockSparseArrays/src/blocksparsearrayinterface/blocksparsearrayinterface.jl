@@ -1,12 +1,14 @@
 using BlockArrays:
   AbstractBlockVector,
   Block,
-  BlockedUnitRange,
   BlockIndex,
+  BlockVector,
+  BlockedUnitRange,
+  BlockedVector,
   block,
   blockcheckbounds,
-  blocks,
   blocklengths,
+  blocks,
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
 using ..SparseArrayInterface: perm, iperm, nstored, sparse_zero!
@@ -19,42 +21,36 @@ function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where
   return a[findblockindex.(axes(a), I)...]
 end
 
-function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
-  return blocksparse_getindex(a, Tuple(I)...)
-end
-function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
-  # TODO: Avoid copy if the block isn't stored.
-  return copy(blocks(a)[Int.(I)...])
-end
-
-# TODO: Implement as `copy(@view a[I...])`, which is then implemented
-# through `ArrayLayouts.sub_materialize`.
-using ..SparseArrayInterface: set_getindex_zero_function
-function blocksparse_getindex(
-  a::AbstractArray{<:Any,N}, I::Vararg{AbstractVector{<:Block{1}},N}
-) where {N}
-  blocks_a = blocks(a)
-  # Convert to cartesian indices of the underlying sparse array of blocks.
-  CI = map(i -> Int.(i), I)
-  subblocks_a = blocks_a[CI...]
-  subaxes = ntuple(ndims(a)) do i
-    return only(axes(axes(a, i)[I[i]]))
-  end
-  subblocks_a = set_getindex_zero_function(subblocks_a, BlockZero(subaxes))
-  return typeof(a)(subblocks_a, subaxes)
+# a[1:2, 1:2]
+# TODO: This definition means that the result of slicing a block sparse array
+# with a non-blocked unit range is blocked. We may want to change that behavior,
+# and make that explicit with `@blocked a[1:2, 1:2]`. See the discussion in
+# https://github.com/JuliaArrays/BlockArrays.jl/issues/347 and also
+# https://github.com/ITensor/ITensors.jl/issues/1336.
+function blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
+  bs1 = blockrange(inds[1], I[1])
+  I1 = BlockSlice(bs1, blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
-# Slice by block and merge according to the blocking structure of the indices.
-function blocksparse_getindex(
-  a::AbstractArray{<:Any,N}, I::Vararg{AbstractBlockVector{<:Block{1}},N}
-) where {N}
-  a_sub = a[Vector.(I)...]
-  # TODO: Define `blocklengths(::AbstractBlockVector)`? Maybe make a PR
-  # to `BlockArrays`.
-  blockmergers = blockedrange.(blocklengths.(only.(axes.(I))))
-  # TODO: Need to implement this!
-  a_merged = block_merge(a_sub, blockmergers...)
-  return a_merged
+# a[[Block(2), Block(1)], [Block(2), Block(1)]]
+function blocksparse_to_indices(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
+# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
+# Permute and merge blocks.
+# TODO: This isn't merging blocks yet, that needs to be implemented that.
+function blocksparse_to_indices(a, inds, I::Tuple{BlockVector{<:Block{1}},Vararg{Any}})
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
+# TODO: Should this be combined with the version above?
+function blocksparse_to_indices(a, inds, I::Tuple{BlockedVector{<:Block{1}},Vararg{Any}})
+  I1 = blockedunitrange_getindices(inds[1], I[1])
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
 # TODO: Need to implement this!
@@ -72,26 +68,6 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::BlockIndex{N
   a_b[I.α...] = value
   # Set the block, required if it is structurally zero.
   blocks(a)[i...] = a_b
-  return a
-end
-
-function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Block{N}) where {N}
-  blocksparse_setindex!(a, value, Tuple(I)...)
-  return a
-end
-function blocksparse_setindex!(
-  a::AbstractArray{<:Any,N}, value, I::Vararg{Block{1},N}
-) where {N}
-  i = Int.(I)
-  @boundscheck blockcheckbounds(a, i...)
-  # TODO: Use `blocksizes(a)[i...]` when we upgrade to
-  # BlockArrays.jl v1.
-  if size(value) ≠ size(view(a, I...))
-    return throw(
-      DimensionMismatch("Trying to set a block with an array of the wrong size.")
-    )
-  end
-  blocks(a)[i...] = value
   return a
 end
 
@@ -117,20 +93,6 @@ function blocksparse_fill!(a::AbstractArray, value)
     blocks(a)[Int.(Tuple(b))...] .= value
   end
   return a
-end
-
-function blocksparse_view(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
-  return blocksparse_view(a, Tuple(I)...)
-end
-function blocksparse_view(a::AbstractArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
-  return SubArray(a, to_indices(a, I))
-end
-
-function blocksparse_viewblock(a::AbstractArray{<:Any,N}, I::Block{N}) where {N}
-  # TODO: Create a conversion function, say `CartesianIndex(Int.(Tuple(I)))`.
-  i = I.n
-  @boundscheck blockcheckbounds(a, i...)
-  return blocks(a)[i...]
 end
 
 function block_nstored(a::AbstractArray)
@@ -268,6 +230,9 @@ function Base.size(a::SparseSubArrayBlocks)
   return length.(axes(a))
 end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
+  # TODO: Should this be defined as `@view a.array[Block(I)]` instead?
+  ## return @view a.array[Block(I)]
+
   parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
   parent_block = parent_blocks[I...]
   # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
@@ -303,8 +268,12 @@ end
 # `SparseArrayInterface.sparse_storage`, which is used
 # to defined this.
 SparseArrayInterface.nstored(a::SparseSubArrayBlocks) = length(stored_indices(a))
+
+## struct SparseSubArrayBlocksStorage{Array<:SparseSubArrayBlocks}
+##   array::Array
+## end
 function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
-  return error("Not implemented")
+  return map(I -> a[I], stored_indices(a))
 end
 
 function blocksparse_blocks(a::SubArray)

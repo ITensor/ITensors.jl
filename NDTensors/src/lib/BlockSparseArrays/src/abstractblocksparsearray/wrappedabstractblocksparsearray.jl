@@ -1,6 +1,7 @@
 using Adapt: Adapt, WrappedArray
 using BlockArrays:
   BlockArrays,
+  AbstractBlockVector,
   AbstractBlockedUnitRange,
   BlockIndexRange,
   BlockRange,
@@ -18,86 +19,33 @@ const BlockSparseArrayLike{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
 
-# Used when making views.
-# TODO: Move to blocksparsearrayinterface.
-function blocksparse_to_indices(a, inds, I)
-  return (unblock(a, inds, I), to_indices(a, BlockArrays._maybetail(inds), Base.tail(I))...)
-end
-
-# TODO: Move to blocksparsearrayinterface.
-function blocksparse_to_indices(a, I)
-  return to_indices(a, axes(a), I)
-end
-
-# Used when making views.
+# a[1:2, 1:2]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}}
+  a::BlockSparseArrayLike, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}}
 )
   return blocksparse_to_indices(a, inds, I)
 end
 
+# a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
+  a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
 )
   return blocksparse_to_indices(a, inds, I)
 end
 
-# Fixes ambiguity error with BlockArrays.
-function Base.to_indices(a::BlockSparseArrayLike, inds, I::Tuple{BlockRange{1},Vararg{Any}})
-  return blocksparse_to_indices(a, inds, I)
-end
-
+# a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]]
 function Base.to_indices(
-  a::BlockSparseArrayLike, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}}
-)
-  return blocksparse_to_indices(a, I)
-end
-
-# Handle case of indexing with `[Block(1)[1:2], Block(2)[1:2]]`
-# by converting it to a `BlockVector` with
-# `mortar([Block(1)[1:2], Block(2)[1:2]])`.
-function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{AbstractVector{<:BlockIndexRange{1}},Vararg{Any}}
+  a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:BlockIndexRange{1}},Vararg{Any}}
 )
   return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
 end
 
-# Fixes ambiguity error with BlockArrays.
-function Base.to_indices(a::BlockSparseArrayLike, I::Tuple{BlockRange{1},Vararg{Any}})
-  return blocksparse_to_indices(a, I)
-end
-
+# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
+# a[BlockedVector([Block(2), Block(1)], [2]), BlockedVector([Block(2), Block(1)], [2])]
 function Base.to_indices(
-  a::BlockSparseArrayLike, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
+  a::BlockSparseArrayLike, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}}
 )
-  return blocksparse_to_indices(a, I)
-end
-
-# Used inside `Base.to_indices` when making views.
-# TODO: Move to blocksparsearrayinterface.
-# TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
-# to merge blocks.
-function blocksparse_unblock(a, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}})
-  return BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
-end
-
-# TODO: Move to blocksparsearrayinterface.
-function blocksparse_unblock(a, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}})
-  bs = blockrange(inds[1], I[1])
-  # GenericBlockSlice works around an issue that the indices of BlockSlice
-  # are restricted to Int element type.
-  # TODO: Raise an issue/make a pull request in BlockArrays.jl.
-  return GenericBlockSlice(bs, blockedunitrange_getindices(inds[1], I[1]))
-end
-
-function BlockArrays.unblock(a, inds, I::Tuple{AbstractVector{<:Block{1}},Vararg{Any}})
-  return blocksparse_unblock(a, inds, I)
-end
-
-function BlockArrays.unblock(
-  a::BlockSparseArrayLike, inds, I::Tuple{AbstractUnitRange{<:Integer},Vararg{Any}}
-)
-  return blocksparse_unblock(a, inds, I)
+  return blocksparse_to_indices(a, inds, I)
 end
 
 # BlockArrays `AbstractBlockArray` interface
@@ -135,15 +83,6 @@ function Base.getindex(
   return ArrayLayouts.layout_getindex(a, I...)
 end
 
-function Base.getindex(a::BlockSparseArrayLike{<:Any,N}, block::Block{N}) where {N}
-  return blocksparse_getindex(a, block)
-end
-function Base.getindex(
-  a::BlockSparseArrayLike{<:Any,N}, block::Vararg{Block{1},N}
-) where {N}
-  return blocksparse_getindex(a, block...)
-end
-
 # TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
   a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
@@ -167,20 +106,8 @@ function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N
   blocksparse_setindex!(a, value, I)
   return a
 end
-
-function Base.setindex!(
-  a::BlockSparseArrayLike{<:Any,N}, value, I::Vararg{Block{1},N}
-) where {N}
-  a[Block(Int.(I))] = value
-  return a
-end
-function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::Block{N}) where {N}
-  blocksparse_setindex!(a, value, I)
-  return a
-end
-
-# Fix ambiguity error
-function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::Block{1})
+# Fixes ambiguity error with BlockArrays.jl
+function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::BlockIndex{1})
   blocksparse_setindex!(a, value, I)
   return a
 end
@@ -203,12 +130,6 @@ function Base.fill!(a::BlockSparseArrayLike, value)
   # Consider changing that behavior when possible.
   blocksparse_fill!(a, value)
   return a
-end
-
-# `BlockArrays` interface
-# TODO: Is this needed if `blocks` is defined?
-function BlockArrays.viewblock(a::BlockSparseArrayLike{<:Any,N}, I::Block{N,Int}) where {N}
-  return blocksparse_viewblock(a, I)
 end
 
 # Needed by `BlockArrays` matrix multiplication interface
