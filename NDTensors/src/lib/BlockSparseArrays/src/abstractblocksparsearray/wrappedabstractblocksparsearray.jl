@@ -1,6 +1,7 @@
 using Adapt: Adapt, WrappedArray
 using BlockArrays:
   BlockArrays,
+  AbstractBlockVector,
   AbstractBlockedUnitRange,
   BlockIndexRange,
   BlockRange,
@@ -40,8 +41,9 @@ function Base.to_indices(
 end
 
 # a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
+# a[BlockedVector([Block(2), Block(1)], [2]), BlockedVector([Block(2), Block(1)], [2])]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{BlockVector{<:Block{1}},Vararg{Any}}
+  a::BlockSparseArrayLike, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}}
 )
   return blocksparse_to_indices(a, inds, I)
 end

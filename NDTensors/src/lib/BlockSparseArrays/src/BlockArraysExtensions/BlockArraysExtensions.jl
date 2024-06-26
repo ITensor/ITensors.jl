@@ -230,8 +230,26 @@ function blockrange(axis::AbstractUnitRange, r::AbstractVector{<:Block{1}})
   return r
 end
 
+# This handles changing the blocking, for example:
+# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = blockedrange([4, 4])
+# a[I, I]
+# TODO: Generalize to `AbstractBlockedUnitRange`.
+function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockedOneTo{<:Integer})
+  # TODO: Probably this is incorrect and should be something like:
+  # return findblock(axis, first(r)):findblock(axis, last(r))
+  return only(blockaxes(r))
+end
+
+# This handles changing the blocking, for example:
+# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
+# a[I, I]
+# TODO: Generalize to `AbstractBlockedUnitRange` and `AbstractBlockVector`.
 function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockVector{<:Integer})
-  return error("Slicing not implemented for range of type `$(typeof(r))`.")
+  # TODO: Probably this is incorrect and should be something like:
+  # return findblock(axis, first(r)):findblock(axis, last(r))
+  return only(blockaxes(r))
 end
 
 using BlockArrays: BlockSlice

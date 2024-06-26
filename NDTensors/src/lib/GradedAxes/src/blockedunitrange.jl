@@ -6,6 +6,7 @@ using BlockArrays:
   BlockRange,
   BlockSlice,
   BlockedUnitRange,
+  BlockedVector,
   block,
   blockindex,
   findblock,
@@ -68,6 +69,21 @@ function blockedunitrange_getindices(
     end
   end
   return blockedunitrange(indices .+ (first(a) - 1), blocklengths)
+end
+
+# TODO: Make sure this handles block labels (AbstractGradedUnitRange) correctly.
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange, indices::BlockedVector{<:Block{1},<:BlockRange{1}}
+)
+  blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
+  return blockedrange(blocklengths)
+end
+
+# TODO: Make sure this handles block labels (AbstractGradedUnitRange) correctly.
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange, indices::BlockedVector{<:Block{1}}
+)
+  return mortar(map(bs -> mortar(map(b -> a[b], bs)), blocks(indices)))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
