@@ -396,6 +396,23 @@ function blocked_cartesianindices(axes::Tuple, subaxes::Tuple, blocks)
   end
 end
 
+# Represents a view of a block of a blocked array.
+struct BlockView{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
+  array::Array
+  block::Tuple{Vararg{Block{1,Int},N}}
+end
+function Base.size(a::BlockView)
+  return ntuple(dim -> length(axes(a.array, dim)[a.block[dim]]), ndims(a))
+end
+function Base.getindex(a::BlockView{<:Any,N}, index::Vararg{Int,N}) where {N}
+  return blocks(a.array)[Int.(a.block)...][index...]
+end
+function Base.setindex!(a::BlockView{<:Any,N}, value, index::Vararg{Int,N}) where {N}
+  blocks(a.array)[Int.(a.block)...] = blocks(a.array)[Int.(a.block)...]
+  blocks(a.array)[Int.(a.block)...][index...] = value
+  return a
+end
+
 function view!(a::BlockSparseArray{<:Any,N}, index::Block{N}) where {N}
   return view!(a, Tuple(index)...)
 end
