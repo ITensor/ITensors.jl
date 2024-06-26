@@ -4,6 +4,7 @@ using BlockArrays:
   BlockIndex,
   BlockVector,
   BlockedUnitRange,
+  BlockedVector,
   block,
   blockcheckbounds,
   blocklengths,
@@ -43,6 +44,12 @@ end
 # TODO: This isn't merging blocks yet, that needs to be implemented that.
 function blocksparse_to_indices(a, inds, I::Tuple{BlockVector{<:Block{1}},Vararg{Any}})
   I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
+# TODO: Should this be combined with the version above?
+function blocksparse_to_indices(a, inds, I::Tuple{BlockedVector{<:Block{1}},Vararg{Any}})
+  I1 = blockedunitrange_getindices(inds[1], I[1])
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
@@ -223,6 +230,9 @@ function Base.size(a::SparseSubArrayBlocks)
   return length.(axes(a))
 end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
+  # TODO: Should this be defined as `@view a.array[Block(I)]` instead?
+  ## return @view a.array[Block(I)]
+
   parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
   parent_block = parent_blocks[I...]
   # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
