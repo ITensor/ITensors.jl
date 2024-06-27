@@ -35,9 +35,15 @@ function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where 
   return a.array
 end
 
+reblock(a) = a
+function reblock(a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{BlockSlice}}})
+  return @view a.parent[map(i -> i.indices, a.indices)...]
+end
+
 function SparseArrayInterface.sparse_map!(
   ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
 )
+  a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
     BI_dest = blockindexrange(a_dest, I)
     BI_srcs = map(a_src -> blockindexrange(a_src, I), a_srcs)
@@ -50,12 +56,6 @@ function SparseArrayInterface.sparse_map!(
       return blocks(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
     end
     subblock_dest = @view block_dest[BI_dest.indices...]
-
-    @show BI_dest
-    display(block_dest)
-    display(subblock_dest)
-    error()
-
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
     # TODO: Use `map!!` to handle immutable blocks.
     map!(f, subblock_dest, subblock_srcs...)
