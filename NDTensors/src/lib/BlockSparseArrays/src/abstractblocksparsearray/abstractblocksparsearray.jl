@@ -42,3 +42,18 @@ function Base.setindex!(
   blocksparse_setindex!(a, value, I...)
   return a
 end
+
+function Base.setindex!(
+  a::AbstractBlockSparseArray{<:Any,N}, value, I::Vararg{Block{1},N}
+) where {N}
+  blocksize = ntuple(dim -> length(axes(a, dim)[I[dim]]), N)
+  if size(value) ≠ blocksize
+    throw(
+      DimensionMismatch(
+        "Trying to set block $(Block(Int.(I)...)), which has a size $blocksize, with data of size $(size(value)).",
+      ),
+    )
+  end
+  blocks(a)[Int.(I)...] = value
+  return a
+end
