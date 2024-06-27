@@ -17,7 +17,7 @@ using BlockArrays:
 using Compat: @compat
 using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays:
-  @view!, BlockSparseArray, block_nstored, block_reshape, view!
+  @view!, BlockSparseArray, BlockView, block_nstored, block_reshape, view!
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset
@@ -362,10 +362,10 @@ include("TestBlockSparseArraysUtils.jl")
     b = @view a[Block(2, 2)]
     @test size(b) == (3, 4)
     for i in parentindices(b)
-      @test i isa BlockSlice{<:Block{1}}
+      @test i isa Base.OneTo{Int}
     end
-    @test parentindices(b)[1] == BlockSlice(Block(2), 3:5)
-    @test parentindices(b)[2] == BlockSlice(Block(2), 4:7)
+    @test parentindices(b)[1] == 1:3
+    @test parentindices(b)[2] == 1:4
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @view a[Block(2, 2)[1:2, 2:2]]
@@ -392,9 +392,9 @@ include("TestBlockSparseArraysUtils.jl")
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @views a[Block(2, 2)][1:2, 2:3]
-    @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
+    @test b isa SubArray{<:Any,<:Any,<:BlockView}
     for i in parentindices(b)
-      @test i isa BlockSlice{<:BlockIndexRange{1}}
+      @test i isa UnitRange{Int}
     end
     x = randn(elt, 2, 2)
     b .= x

@@ -68,6 +68,21 @@ end
 using NDTensors.LabelledNumbers: LabelledNumbers, label
 LabelledNumbers.label(a::UnitRangeDual) = dual(label(nondual(a)))
 
+using NDTensors.LabelledNumbers: LabelledUnitRange
+# The Base version of `length(::AbstractUnitRange)` drops the label.
+function Base.length(a::UnitRangeDual{<:Any,<:LabelledUnitRange})
+  return dual(length(nondual(a)))
+end
+function Base.iterate(a::UnitRangeDual, i)
+  i == last(a) && return nothing
+  return dual.(iterate(nondual(a), i))
+end
+# TODO: Is this a good definition?
+Base.unitrange(a::UnitRangeDual{<:Any,<:AbstractUnitRange}) = a
+
+using NDTensors.LabelledNumbers: LabelledInteger, label, labelled, unlabel
+dual(i::LabelledInteger) = labelled(unlabel(i), dual(label(i)))
+
 using BlockArrays: BlockArrays, blockaxes, blocklasts, combine_blockaxes, findblock
 BlockArrays.blockaxes(a::UnitRangeDual) = blockaxes(nondual(a))
 BlockArrays.blockfirsts(a::UnitRangeDual) = label_dual.(blockfirsts(nondual(a)))
