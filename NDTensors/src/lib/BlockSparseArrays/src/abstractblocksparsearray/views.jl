@@ -29,9 +29,53 @@ function BlockArrays.viewblock(
 ) where {N}
   return viewblock(a, Tuple(block)...)
 end
+
+# TODO: Define `blocksparse_viewblock`.
 function BlockArrays.viewblock(
   a::AbstractBlockSparseArray{<:Any,N}, block::Vararg{Block{1},N}
 ) where {N}
+  I = CartesianIndex(Int.(block))
+  if I ∈ stored_indices(blocks(a))
+    return blocks(a)[I]
+  end
+  return BlockView(a, block)
+end
+
+function Base.view(
+  a::SubArray{
+    T,
+    N,
+    <:AbstractBlockSparseArray{T,N},
+    <:Tuple{Vararg{BlockSlice{<:BlockRange{1,<:Tuple{<:AbstractUnitRange{<:Integer}}}},N}},
+  },
+  block::Block{N},
+) where {T,N}
+  return viewblock(a, block)
+end
+function Base.view(
+  a::SubArray{
+    T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSlice{<:BlockRange{1}},N}}
+  },
+  block::Vararg{Block{1},N},
+) where {T,N}
+  return viewblock(a, block...)
+end
+function BlockArrays.viewblock(
+  a::SubArray{
+    T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSlice{<:BlockRange{1}}}}
+  },
+  block::Block{N},
+) where {T,N}
+  return viewblock(a, Tuple(block)...)
+end
+
+# TODO: Define `blocksparse_viewblock`.
+function BlockArrays.viewblock(
+  a::SubArray{
+    T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSlice{<:BlockRange{1}}}}
+  },
+  block::Vararg{Block{1},N},
+) where {T,N}
   I = CartesianIndex(Int.(block))
   if I ∈ stored_indices(blocks(a))
     return blocks(a)[I]

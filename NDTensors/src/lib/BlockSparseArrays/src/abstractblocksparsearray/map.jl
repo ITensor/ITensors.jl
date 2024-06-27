@@ -36,7 +36,9 @@ function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where 
 end
 
 reblock(a) = a
-function reblock(a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{BlockSlice}}})
+function reblock(
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{BlockSlice}}}
+)
   return @view a.parent[map(i -> i.indices, a.indices)...]
 end
 

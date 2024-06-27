@@ -280,6 +280,17 @@ function blocksparse_blocks(a::SubArray)
   return SparseSubArrayBlocks(a)
 end
 
+function blocksparse_blocks(
+  a::SubArray{
+    T,
+    N,
+    <:AbstractBlockSparseArray{T,N},
+    <:Tuple{Vararg{BlockSlice{<:BlockRange{1,<:Tuple{<:AbstractUnitRange{<:Integer}}}},N}},
+  },
+) where {T,N}
+  return @view blocks(parent(a))[map(i -> Int.(i.block), parentindices(a))...]
+end
+
 using BlockArrays: BlocksView
 # TODO: Is this correct in general?
 SparseArrayInterface.nstored(a::BlocksView) = 1
