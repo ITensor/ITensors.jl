@@ -231,13 +231,13 @@ function Base.size(a::SparseSubArrayBlocks)
 end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
   # TODO: Should this be defined as `@view a.array[Block(I)]` instead?
-  ## return @view a.array[Block(I)]
+  return @view a.array[Block(I)]
 
-  parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
-  parent_block = parent_blocks[I...]
-  # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
-  block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
-  return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
+  ## parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
+  ## parent_block = parent_blocks[I...]
+  ## # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
+  ## block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
+  ## return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
 end
 # TODO: This should be handled by generic `AbstractSparseArray` code.
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
