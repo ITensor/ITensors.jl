@@ -2,6 +2,8 @@ using BlockArrays:
   AbstractBlockVector,
   Block,
   BlockIndex,
+  BlockRange,
+  BlockSlice,
   BlockVector,
   BlockedUnitRange,
   BlockedVector,
@@ -282,12 +284,12 @@ end
 
 function blocksparse_blocks(
   a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{BlockSlice{<:BlockRange{1,<:Tuple{<:AbstractUnitRange{<:Integer}}}},N}},
+    <:Any,
+    <:Any,
+    <:Any,
+    <:Tuple{Vararg{BlockSlice{<:BlockRange{1,<:Tuple{<:AbstractUnitRange{<:Integer}}}}}},
   },
-) where {T,N}
+)
   return @view blocks(parent(a))[map(i -> Int.(i.block), parentindices(a))...]
 end
 
