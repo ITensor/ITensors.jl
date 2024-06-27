@@ -29,12 +29,12 @@ function Expose.ql_positive(A::Exposed{<:JLMatrix})
   return adapt(unwrap_array_type(A), copy(Q)), adapt(unwrap_array_type(A), L)
 end
 
-function LinearAlgebra.eigen(A::Exposed{<:JLMatrix, <:Symmetric})
-  q,l = (eigen(expose(cpu(A))))
-  return adapt.(unwrap_array_type(A), (q,l))
+function LinearAlgebra.eigen(A::Exposed{<:JLMatrix,<:Symmetric})
+  q, l = (eigen(expose(cpu(A))))
+  return adapt.(unwrap_array_type(A), (q, l))
 end
 
-function LinearAlgebra.eigen(A::Exposed{<:JLMatrix, <:Hermitian})
-  q,l = (eigen(expose(Hermitian(cpu(unexpose(A).data)))))
-  return adapt.(JLArray, (q,l))
+function LinearAlgebra.eigen(A::Exposed{<:JLMatrix,<:Hermitian})
+  q, l = (eigen(expose(Hermitian(cpu(unexpose(A).data)))))
+  return adapt.(JLArray, (q, l))
 end
