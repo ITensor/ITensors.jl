@@ -28,6 +28,9 @@ function Base.OrdinalRange{T,T}(a::LabelledUnitRange) where {T<:Integer}
   return OrdinalRange{T,T}(unlabel(a))
 end
 
+# TODO: Is this a good definition?
+Base.unitrange(a::LabelledUnitRange) = a
+
 for f in [:first, :getindex, :last, :length, :step]
   @eval Base.$f(a::LabelledUnitRange, args...) = labelled($f(unlabel(a), args...), label(a))
 end
