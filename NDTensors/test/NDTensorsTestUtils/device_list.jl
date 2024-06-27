@@ -1,5 +1,5 @@
 using Pkg: Pkg
-using JLArrays: JLArrays
+using JLArrays: JLArrays, jl
 using NDTensors: NDTensors
 
 if "cuda" in ARGS || "all" in ARGS
@@ -30,7 +30,7 @@ function devices_list(test_args)
   devs = Vector{Function}(undef, 0)
   if isempty(test_args) || "base" in test_args
     push!(devs, NDTensors.cpu)
-    # push!(devs, jl)
+    push!(devs, jl)
   end
 
   if "cuda" in test_args || "cutensor" in test_args || "all" in test_args
