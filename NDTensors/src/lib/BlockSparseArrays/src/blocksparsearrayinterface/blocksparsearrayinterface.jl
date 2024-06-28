@@ -14,7 +14,6 @@ using BlockArrays:
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
 using ..SparseArrayInterface: perm, iperm, nstored, sparse_zero!
-## using MappedArrays: mappedarray
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
@@ -282,15 +281,13 @@ function blocksparse_blocks(a::SubArray)
   return SparseSubArrayBlocks(a)
 end
 
+_blocks(I::BlockSlice) = I.block
+_blocks(I::BlockIndices) = I.blocks
+
 function blocksparse_blocks(
-  a::SubArray{
-    <:Any,
-    <:Any,
-    <:Any,
-    <:Tuple{Vararg{BlockSlice{<:BlockRange{1,<:Tuple{<:AbstractUnitRange{<:Integer}}}}}},
-  },
+  a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{BlockSliceCollection}}}
 )
-  return @view blocks(parent(a))[map(i -> Int.(i.block), parentindices(a))...]
+  return @view blocks(parent(a))[map(I -> Int.(_blocks(I)), parentindices(a))...]
 end
 
 using BlockArrays: BlocksView

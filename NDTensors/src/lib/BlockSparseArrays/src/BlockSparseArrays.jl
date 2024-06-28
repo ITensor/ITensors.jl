@@ -1,4 +1,5 @@
 module BlockSparseArrays
+include("BlockArraysExtensions/BlockArraysExtensions.jl")
 include("blocksparsearrayinterface/blocksparsearrayinterface.jl")
 include("blocksparsearrayinterface/linearalgebra.jl")
 include("blocksparsearrayinterface/blockzero.jl")
@@ -15,7 +16,6 @@ include("abstractblocksparsearray/broadcast.jl")
 include("abstractblocksparsearray/map.jl")
 include("blocksparsearray/defaults.jl")
 include("blocksparsearray/blocksparsearray.jl")
-include("BlockArraysExtensions/BlockArraysExtensions.jl")
 include("BlockArraysSparseArrayInterfaceExt/BlockArraysSparseArrayInterfaceExt.jl")
 include("../ext/BlockSparseArraysTensorAlgebraExt/src/BlockSparseArraysTensorAlgebraExt.jl")
 include("../ext/BlockSparseArraysGradedAxesExt/src/BlockSparseArraysGradedAxesExt.jl")

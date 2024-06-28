@@ -32,15 +32,19 @@ include("TestBlockSparseArraysUtils.jl")
 
     I = blockedrange([4, 4])
     b = @view a[I, I]
-    @test_broken copy(b)
+    @test copy(b) == a
 
     I = BlockedVector(Block.(1:4), [2, 2])
     b = @view a[I, I]
-    @test_broken copy(b)
+    @test copy(b) == a
 
     I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
     b = @view a[I, I]
     @test_broken copy(b)
+
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    @test_broken @view(a[Block(1, 1)[1:2, 2:2]]) isa SubArray{elt,2,Matrix{elt}}
   end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])

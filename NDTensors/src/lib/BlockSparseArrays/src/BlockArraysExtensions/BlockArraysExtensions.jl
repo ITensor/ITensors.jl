@@ -3,6 +3,8 @@ using BlockArrays:
   AbstractBlockArray,
   AbstractBlockVector,
   Block,
+  BlockIndex,
+  BlockIndexRange,
   BlockRange,
   BlockedOneTo,
   BlockedUnitRange,
@@ -49,6 +51,15 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
   )
   return BlockIndices(subblocks, subindices)
 end
+
+# Similar to the definition of `BlockArrays.BlockSlices`:
+# ```julia
+# const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
+# ```
+# but includes `BlockIndices`, where the blocks aren't contiguous.
+const BlockSliceCollection = Union{
+  BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
+}
 
 # TODO: This is type piracy. This is used in `reindex` when making
 # views of blocks of sliced block arrays, for example:
@@ -423,7 +434,7 @@ function Base.setindex!(a::BlockView{<:Any,N}, value, index::Vararg{Int,N}) wher
   return a
 end
 
-function view!(a::BlockSparseArray{<:Any,N}, index::Block{N}) where {N}
+function view!(a::AbstractArray{<:Any,N}, index::Block{N}) where {N}
   return view!(a, Tuple(index)...)
 end
 function view!(a::AbstractArray{<:Any,N}, index::Vararg{Block{1},N}) where {N}

@@ -1,4 +1,4 @@
-using BlockArrays: BlockArrays, Block, BlockSlices, viewblock
+using BlockArrays: BlockArrays, Block, viewblock
 
 function blocksparse_view(a, I...)
   return Base.invoke(view, Tuple{AbstractArray,Vararg{Any}}, a, I...)
@@ -8,17 +8,24 @@ end
 # https://github.com/JuliaArrays/BlockArrays.jl/blob/master/src/views.jl
 # which don't handle subslices of blocks properly.
 function Base.view(
-  a::SubArray{<:Any,N,<:BlockSparseArrayLike,<:NTuple{N,BlockSlices}}, I::Block{N}
+  a::SubArray{
+    <:Any,N,<:BlockSparseArrayLike,<:Tuple{Vararg{BlockSlice{<:BlockRange{1}},N}}
+  },
+  I::Block{N},
 ) where {N}
   return blocksparse_view(a, I)
 end
 function Base.view(
-  a::SubArray{<:Any,N,<:BlockSparseArrayLike,<:NTuple{N,BlockSlices}}, I::Vararg{Block{1},N}
+  a::SubArray{
+    <:Any,N,<:BlockSparseArrayLike,<:Tuple{Vararg{BlockSlice{<:BlockRange{1}},N}}
+  },
+  I::Vararg{Block{1},N},
 ) where {N}
   return blocksparse_view(a, I...)
 end
 function Base.view(
-  V::SubArray{<:Any,1,<:BlockSparseArrayLike,<:Tuple{BlockSlices}}, I::Block{1}
+  V::SubArray{<:Any,1,<:BlockSparseArrayLike,<:Tuple{BlockSlice{<:BlockRange{1}}}},
+  I::Block{1},
 )
   return blocksparse_view(a, I)
 end
@@ -42,16 +49,34 @@ function BlockArrays.viewblock(
 end
 
 function Base.view(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
+  block::Block{N},
+) where {T,N}
+  return viewblock(a, block)
+end
+function Base.view(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
+  block::Vararg{Block{1},N},
+) where {T,N}
+  return viewblock(a, block...)
+end
+function BlockArrays.viewblock(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
+  block::Block{N},
+) where {T,N}
+  return viewblock(a, Tuple(block)...)
+end
+
+# Fixes ambiguity error with `BlockSparseArrayLike` definition.
+function Base.view(
   a::SubArray{
-    T,
-    N,
-    <:AbstractBlockSparseArray{T,N},
-    <:Tuple{Vararg{BlockSlice{<:BlockRange{1,<:Tuple{<:AbstractUnitRange{<:Integer}}}},N}},
+    T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSlice{<:BlockRange{1}},N}}
   },
   block::Block{N},
 ) where {T,N}
   return viewblock(a, block)
 end
+# Fixes ambiguity error with `BlockSparseArrayLike` definition.
 function Base.view(
   a::SubArray{
     T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSlice{<:BlockRange{1}},N}}
@@ -60,20 +85,10 @@ function Base.view(
 ) where {T,N}
   return viewblock(a, block...)
 end
-function BlockArrays.viewblock(
-  a::SubArray{
-    T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSlice{<:BlockRange{1}}}}
-  },
-  block::Block{N},
-) where {T,N}
-  return viewblock(a, Tuple(block)...)
-end
 
 # TODO: Define `blocksparse_viewblock`.
 function BlockArrays.viewblock(
-  a::SubArray{
-    T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSlice{<:BlockRange{1}}}}
-  },
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
   block::Vararg{Block{1},N},
 ) where {T,N}
   I = CartesianIndex(Int.(block))
