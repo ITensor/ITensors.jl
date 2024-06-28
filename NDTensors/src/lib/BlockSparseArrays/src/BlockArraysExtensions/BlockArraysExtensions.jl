@@ -20,7 +20,7 @@ using BlockArrays:
 using Compat: allequal
 using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices
-using ..SparseArrayInterface: stored_indices
+using ..SparseArrayInterface: SparseArrayInterface, nstored, stored_indices
 
 # BlockIndices works around an issue that the indices of BlockSlice
 # are restricted to AbstractUnitRange{Int}.
