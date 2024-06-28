@@ -434,6 +434,17 @@ function Base.setindex!(a::BlockView{<:Any,N}, value, index::Vararg{Int,N}) wher
   return a
 end
 
+function SparseArrayInterface.nstored(a::BlockView)
+  # TODO: Store whether or not the block is stored already as
+  # a Bool in `BlockView`.
+  I = CartesianIndex(Int.(a.block))
+  # TODO: Use `block_stored_indices`.
+  if I ∈ stored_indices(blocks(a.array))
+    return nstored(blocks(a.array)[I])
+  end
+  return 0
+end
+
 function view!(a::AbstractArray{<:Any,N}, index::Block{N}) where {N}
   return view!(a, Tuple(index)...)
 end

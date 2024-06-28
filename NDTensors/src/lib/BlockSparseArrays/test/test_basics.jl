@@ -25,19 +25,29 @@ include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
   @testset "Broken" begin
+    # TODO: Turn this into a proper test.
     a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
     @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
       a[I] = randn(elt, size(a[I]))
     end
-
     I = blockedrange([4, 4])
     b = @view a[I, I]
     @test copy(b) == a
 
+    # TODO: Turn this into a proper test.
+    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+      a[I] = randn(elt, size(a[I]))
+    end
     I = BlockedVector(Block.(1:4), [2, 2])
     b = @view a[I, I]
     @test copy(b) == a
 
+    # TODO: Fix this and turn it into a proper test.
+    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+      a[I] = randn(elt, size(a[I]))
+    end
     I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
     b = @view a[I, I]
     @test_broken copy(b)
