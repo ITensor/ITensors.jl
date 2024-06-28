@@ -61,6 +61,17 @@ const BlockSliceCollection = Union{
   BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
 }
 
+function to_blockindices(a::BlockedOneTo{<:Integer}, I::UnitRange{<:Integer})
+  return mortar(
+    map(blocks(blockedunitrange_getindices(a, I))) do r
+      bi_first = findblockindex(a, first(r))
+      bi_last = findblockindex(a, last(r))
+      @assert block(bi_first) == block(bi_last)
+      return block(bi_first)[blockindex(bi_first):blockindex(bi_last)]
+    end,
+  )
+end
+
 # TODO: This is type piracy. This is used in `reindex` when making
 # views of blocks of sliced block arrays, for example:
 # ```julia

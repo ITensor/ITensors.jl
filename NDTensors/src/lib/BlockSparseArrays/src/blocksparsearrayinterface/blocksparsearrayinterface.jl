@@ -29,7 +29,7 @@ end
 # https://github.com/JuliaArrays/BlockArrays.jl/issues/347 and also
 # https://github.com/ITensor/ITensors.jl/issues/1336.
 function blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
-  bs1 = blockrange(inds[1], I[1])
+  bs1 = to_blockindices(inds[1], I[1])
   I1 = BlockSlice(bs1, blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end

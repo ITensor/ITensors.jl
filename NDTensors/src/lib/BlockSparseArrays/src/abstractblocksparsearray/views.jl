@@ -87,6 +87,10 @@ function Base.view(
   return viewblock(a, block...)
 end
 
+# XXX: TODO: Distinguish if a sub-view of the block needs to be taken!
+# Define a new `SubBlockSlice` which is used in:
+# `blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})`
+# in `blocksparsearrayinterface/blocksparsearrayinterface.jl`.
 # TODO: Define `blocksparse_viewblock`.
 function BlockArrays.viewblock(
   a::SubArray{T,N,<:AbstractBlockSparseArray{T,N},<:Tuple{Vararg{BlockSliceCollection,N}}},
