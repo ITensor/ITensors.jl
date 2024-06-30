@@ -47,42 +47,12 @@ include("TestBlockSparseArraysUtils.jl")
     @test_broken a[:, [2, 4]]
     @test_broken a[[3, 5], [2, 4]]
 
-    # TODO: Turn this into a proper test.
-    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
-    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
-      a[I] = randn(elt, size(a[I]))
-    end
-    I = blockedrange([4, 4])
-    b = @view a[I, I]
-    @test copy(b) == a
-
-    # TODO: Turn this into a proper test.
-    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
-    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
-      a[I] = randn(elt, size(a[I]))
-    end
-    I = BlockedVector(Block.(1:4), [2, 2])
-    b = @view a[I, I]
-    @test copy(b) == a
-
-    # TODO: Turn this into a proper test.
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
-    a[Block(1, 1)] = randn(elt, 2, 2)
-    a[Block(2, 2)] = randn(elt, 3, 3)
-    I = mortar([Block(1)[2:2], Block(2)[2:3]])
-    b = @view a[:, I]
-    @test b == Array(a)[:, [2, 4, 5]]
-
-    # TODO: Turn this into a proper test.
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
-    a[Block(1, 1)] = randn(elt, 2, 2)
-    @test @view(a[Block(1, 1)[1:2, 2:2]]) isa SubArray{elt,2,Matrix{elt}}
-
-    # TODO: Turn this into a proper test.
+    # TODO: Fix this and turn it into a proper test.
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     a[Block(1, 1)] = randn(elt, 2, 2)
     a[Block(2, 2)] = randn(elt, 3, 3)
     @test a[2:4, 4] == Array(a)[2:4, 4]
+    @test_broken a[4, 2:4]
   end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
@@ -671,10 +641,44 @@ include("TestBlockSparseArraysUtils.jl")
     end
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a[Block(1, 1)] = randn(elt, 2, 3)
     b = @view a[Block(1, 1)[1:2, 1:1]]
+    @test b isa SubArray{elt,2,Matrix{elt}}
     for i in parentindices(b)
       @test i isa UnitRange{Int}
     end
+
+    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+      a[I] = randn(elt, size(a[I]))
+    end
+    for I in (blockedrange([4, 4]), BlockedVector(Block.(1:4), [2, 2]))
+      b = @view a[I, I]
+      @test copy(b) == a
+      @test blocksize(b) == (2, 2)
+      @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
+      @test b[Block(1, 1)] == a[Block.(1:2), Block.(1:2)]
+      @test b[Block(2, 1)] == a[Block.(3:4), Block.(1:2)]
+      @test b[Block(1, 2)] == a[Block.(1:2), Block.(3:4)]
+      @test b[Block(2, 2)] == a[Block.(3:4), Block.(3:4)]
+    end
+
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    a[Block(2, 2)] = randn(elt, 3, 3)
+    for I in (mortar([Block(1)[2:2], Block(2)[2:3]]), [Block(1)[2:2], Block(2)[2:3]])
+      b = @view a[:, I]
+      @test b == Array(a)[:, [2, 4, 5]]
+    end
+
+    # TODO: Add more tests of this, it may
+    # only be working accidentally.
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    a[Block(2, 2)] = randn(elt, 3, 3)
+    @test a[2:4, 4] == Array(a)[2:4, 4]
+    # TODO: Fix this.
+    @test_broken a[4, 2:4] == Array(a)[4, 2:4]
   end
   @testset "view!" begin
     for blk in ((Block(2, 2),), (Block(2), Block(2)))
