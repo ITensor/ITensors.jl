@@ -661,6 +661,9 @@ include("TestBlockSparseArraysUtils.jl")
       @test b[Block(2, 1)] == a[Block.(3:4), Block.(1:2)]
       @test b[Block(1, 2)] == a[Block.(1:2), Block.(3:4)]
       @test b[Block(2, 2)] == a[Block.(3:4), Block.(3:4)]
+      c = @view b[Block(2, 2)]
+      @test blocksize(c) == (1, 1)
+      @test c == a[Block.(3:4), Block.(3:4)]
     end
 
     a = BlockSparseArray{elt}([2, 3], [2, 3])
