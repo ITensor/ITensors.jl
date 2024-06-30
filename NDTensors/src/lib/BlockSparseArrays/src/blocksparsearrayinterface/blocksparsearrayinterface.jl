@@ -40,6 +40,15 @@ function blocksparse_to_indices(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
+# a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
+# a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
+function blocksparse_to_indices(
+  a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
+)
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
+  return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
 # a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
 # Permute and merge blocks.
 # TODO: This isn't merging blocks yet, that needs to be implemented that.
@@ -281,13 +290,13 @@ function blocksparse_blocks(a::SubArray)
   return SparseSubArrayBlocks(a)
 end
 
-_blocks(I::BlockSlice) = I.block
-_blocks(I::BlockIndices) = I.blocks
+to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
+to_blocks_indices(I::BlockIndices{<:Vector{<:Block{1}}}) = Int.(I.blocks)
 
 function blocksparse_blocks(
   a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{BlockSliceCollection}}}
 )
-  return @view blocks(parent(a))[map(I -> Int.(_blocks(I)), parentindices(a))...]
+  return @view blocks(parent(a))[map(to_blocks_indices, parentindices(a))...]
 end
 
 using BlockArrays: BlocksView

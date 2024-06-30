@@ -2,9 +2,11 @@ using BlockArrays:
   BlockArrays,
   AbstractBlockedUnitRange,
   Block,
+  BlockIndex,
   BlockIndexRange,
   BlockRange,
   BlockSlice,
+  BlockVector,
   BlockedUnitRange,
   BlockedVector,
   block,
@@ -125,6 +127,13 @@ end
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::AbstractBlockedUnitRange, indices::Block{1})
   return a[indices]
+end
+
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange,
+  indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},
+)
+  return mortar(map(b -> a[b], blocks(indices)))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.

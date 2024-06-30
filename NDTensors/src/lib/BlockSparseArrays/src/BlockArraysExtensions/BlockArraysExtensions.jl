@@ -58,9 +58,15 @@ end
 # ```
 # but includes `BlockIndices`, where the blocks aren't contiguous.
 const BlockSliceCollection = Union{
-  BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
+  Base.Slice,BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
+}
+const SubBlockSliceCollection = BlockIndices{
+  <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}
 }
 
+# Slice `a` by `I`, returning a:
+# `BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}`
+# with the `BlockIndex{1}` corresponding to each value of `I`.
 function to_blockindices(a::BlockedOneTo{<:Integer}, I::UnitRange{<:Integer})
   return mortar(
     map(blocks(blockedunitrange_getindices(a, I))) do r
@@ -237,6 +243,12 @@ end
 
 # Get the blocks the range spans across.
 function blockrange(axis::AbstractUnitRange, r::UnitRange)
+  return findblock(axis, first(r)):findblock(axis, last(r))
+end
+
+# Occurs when slicing with `a[2:4, 2:4]`.
+function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockedUnitRange{<:Integer})
+  # TODO: Check the blocks are commensurate.
   return findblock(axis, first(r)):findblock(axis, last(r))
 end
 

@@ -36,10 +36,16 @@ function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where 
 end
 
 reblock(a) = a
+# If the blocking of the slice doesn't match the blocking of the
+# parent array, reblock according to the blocking of the parent array.
 function reblock(
-  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{BlockSlice}}}
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{AbstractUnitRange}}}
 )
-  return @view a.parent[map(i -> i.indices, a.indices)...]
+  # TODO: This relies on the behavior that slicing a block sparse
+  # array with a UnitRange inherits the blocking of the underlying
+  # block sparse array, we might change that default behavior
+  # so this might become something like `@blocked parent(a)[...]`.
+  return @view parent(a)[UnitRange{Int}.(parentindices(a))...]
 end
 
 function SparseArrayInterface.sparse_map!(
@@ -55,7 +61,7 @@ function SparseArrayInterface.sparse_map!(
     # TODO: Investigate why this doesn't work:
     # block_srcs = ntuple(i -> @view(a_srcs[i][_block(BI_srcs[i])]), length(a_srcs))
     block_srcs = ntuple(length(a_srcs)) do i
-      return blocks(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
+      return _blocks(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
     end
     subblock_dest = @view block_dest[BI_dest.indices...]
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
