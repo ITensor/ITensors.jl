@@ -52,6 +52,22 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
   return BlockIndices(subblocks, subindices)
 end
 
+# Used when performing slices like:
+# @views a[[Block(2), Block(1)]][2:4, 2:4]
+function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockVector{<:BlockIndex{1}}})
+  subblocks = mortar(
+    map(blocks(i.block)) do br
+      return S.blocks[Int(Block(br))][only(br.indices)]
+    end,
+  )
+  subindices = mortar(
+    map(blocks(i.block)) do br
+      S.indices[br]
+    end,
+  )
+  return BlockIndices(subblocks, subindices)
+end
+
 # Similar to the definition of `BlockArrays.BlockSlices`:
 # ```julia
 # const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
