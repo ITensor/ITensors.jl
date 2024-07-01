@@ -40,8 +40,10 @@ end
 # This is only needed in certain Julia versions below 1.10
 # (for example Julia 1.6).
 # TODO: Delete this once we drop Julia 1.6 support.
-function Base.UnitRange{T}(r::GradedOneTo{<:LabelledInteger{T}}) where {T}
-  return unlabel_blocks(a)
+# The type constraint `T<:Integer` is needed to avoid an ambiguity
+# error with a conversion method in Base.
+function Base.UnitRange{T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T<:Integer}
+  return UnitRange(unlabel_blocks(a))
 end
 
 # TODO: See if this is needed.
