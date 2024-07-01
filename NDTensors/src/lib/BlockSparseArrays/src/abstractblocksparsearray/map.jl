@@ -45,6 +45,19 @@ function reblock(
   return @view parent(a)[map(I -> I.array, parentindices(a))...]
 end
 
+function reblock(
+  a::SubArray{
+    <:Any,
+    <:Any,
+    <:AbstractBlockSparseArray,
+    <:Tuple{Vararg{BlockIndices{<:AbstractBlockVector{<:Block{1}}}}},
+  },
+)
+  # Remove the blocking.
+  return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
+end
+
+# TODO: Move to `blocksparsearrayinterface/map.jl`.
 function SparseArrayInterface.sparse_map!(
   ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
 )
