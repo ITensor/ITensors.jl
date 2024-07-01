@@ -37,6 +37,13 @@ function Base.OrdinalRange{T,T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
   return unlabel_blocks(a)
 end
 
+# This is only needed in certain Julia versions below 1.10
+# (for example Julia 1.6).
+# TODO: Delete this once we drop Julia 1.6 support.
+function Base.UnitRange{T}(r::GradedOneTo{<:LabelledInteger{T}}) where {T}
+  return unlabel_blocks(a)
+end
+
 # TODO: See if this is needed.
 function Base.AbstractUnitRange{T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
   return unlabel_blocks(a)
