@@ -18,7 +18,9 @@ using BlockArrays:
   findblock,
   findblockindex,
   mortar
-using ..LabelledNumbers: LabelledNumbers, LabelledInteger, label, labelled, unlabel
+using Compat: allequal
+using ..LabelledNumbers:
+  LabelledNumbers, LabelledInteger, LabelledUnitRange, label, labelled, unlabel
 
 const AbstractGradedUnitRange{T<:LabelledInteger} = AbstractBlockedUnitRange{T}
 
@@ -291,4 +293,31 @@ function BlockArrays.combine_blockaxes(
   a1::Base.OneTo{T}, a2::GradedOneTo{<:LabelledInteger{T}}
 ) where {T<:Integer}
   return BlockArrays.combine_blockaxes(a2, a1)
+end
+
+# Version of length that checks that all blocks have the same label
+# and returns a labelled length with that label.
+function labelled_length(a::AbstractBlockVector{<:Integer})
+  blocklabels = label.(blocks(a))
+  @assert allequal(blocklabels)
+  return labelled(unlabel(length(a)), first(blocklabels))
+end
+
+# TODO: Make sure this handles block labels (AbstractGradedUnitRange) correctly.
+# TODO: Make a special case for `BlockedVector{<:Block{1},<:BlockRange{1}}`?
+# For example:
+# ```julia
+# blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
+# return blockedrange(blocklengths)
+# ```
+function blockedunitrange_getindices(
+  a::AbstractGradedUnitRange, indices::AbstractBlockVector{<:Block{1}}
+)
+  blks = map(bs -> mortar(map(b -> a[b], bs)), blocks(indices))
+  # We pass `length.(blks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  return mortar(blks, labelled_length.(blks))
 end

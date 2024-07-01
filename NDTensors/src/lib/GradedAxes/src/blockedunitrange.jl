@@ -85,7 +85,21 @@ end
 function blockedunitrange_getindices(
   a::AbstractBlockedUnitRange, indices::AbstractBlockVector{<:Block{1}}
 )
-  return mortar(map(bs -> mortar(map(b -> a[b], bs)), blocks(indices)))
+  blks = map(bs -> mortar(map(b -> a[b], bs)), blocks(indices))
+  # We pass `length.(blks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  # Note there is a more specialized definition:
+  # ```julia
+  # function blockedunitrange_getindices(
+  #   a::AbstractGradedUnitRange, indices::AbstractBlockVector{<:Block{1}}
+  # )
+  # ```
+  # that does a better job of preserving labels, since `length`
+  # may drop labels for certain block types.
+  return mortar(blks, length.(blks))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
