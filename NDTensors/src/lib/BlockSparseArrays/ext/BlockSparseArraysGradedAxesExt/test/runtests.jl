@@ -87,14 +87,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     a = BlockSparseArray{elt}(d1, d2, d1, d2)
     blockdiagonal!(randn!, a)
     m = fusedims(a, (1, 2), (3, 4))
-    # TODO: Once block merging is implemented, this should
-    # be the real test.
     for ax in axes(m)
       @test ax isa GradedOneTo
-      # TODO: Current `fusedims` doesn't merge
-      # common sectors, need to fix.
-      @test_broken blocklabels(ax) == [U1(0), U1(1), U1(2)]
-      @test blocklabels(ax) == [U1(0), U1(1), U1(1), U1(2)]
+      @test blocklabels(ax) == [U1(0), U1(1), U1(2)]
     end
     for I in CartesianIndices(m)
       if I ∈ CartesianIndex.([(1, 1), (4, 4)])
@@ -105,10 +100,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     end
     @test a[1, 1, 1, 1] == m[1, 1]
     @test a[2, 2, 2, 2] == m[4, 4]
-    # TODO: Current `fusedims` doesn't merge
-    # common sectors, need to fix.
-    @test_broken blocksize(m) == (3, 3)
-    @test blocksize(m) == (4, 4)
+    @test blocksize(m) == (3, 3)
     @test a == splitdims(m, (d1, d2), (d1, d2))
   end
   @testset "dual axes" begin

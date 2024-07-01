@@ -3,11 +3,14 @@ using BlockArrays:
   AbstractBlockArray,
   AbstractBlockVector,
   Block,
+  BlockIndex,
+  BlockIndexRange,
   BlockRange,
+  BlockSlice,
+  BlockVector,
   BlockedOneTo,
   BlockedUnitRange,
-  BlockVector,
-  BlockSlice,
+  BlockedVector,
   block,
   blockaxes,
   blockedrange,
@@ -17,8 +20,30 @@ using BlockArrays:
   findblockindex
 using Compat: allequal
 using Dictionaries: Dictionary, Indices
-using ..GradedAxes: blockedunitrange_getindices
-using ..SparseArrayInterface: stored_indices
+using ..GradedAxes: blockedunitrange_getindices, to_blockindices
+using ..SparseArrayInterface: SparseArrayInterface, nstored, stored_indices
+
+# A return type for `blocks(array)` when `array` isn't blocked.
+# Represents a vector with just that single block.
+struct SingleBlockView{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
+  array::Array
+end
+blocks_maybe_single(a) = blocks(a)
+blocks_maybe_single(a::Array) = SingleBlockView(a)
+function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where {N}
+  @assert all(isone, index)
+  return a.array
+end
+
+# A wrapper around a potentially blocked array that is not blocked.
+struct NonBlockedArray{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
+  array::Array
+end
+Base.size(a::NonBlockedArray) = size(a.array)
+Base.getindex(a::NonBlockedArray{<:Any,N}, I::Vararg{Integer,N}) where {N} = a.array[I...]
+BlockArrays.blocks(a::NonBlockedArray) = SingleBlockView(a.array)
+const NonBlockedVector{T,Array} = NonBlockedArray{T,1,Array}
+NonBlockedVector(array::AbstractVector) = NonBlockedArray(array)
 
 # BlockIndices works around an issue that the indices of BlockSlice
 # are restricted to AbstractUnitRange{Int}.
@@ -37,6 +62,43 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
   @assert length(S.indices[Block(i)]) == length(i.indices)
   return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
 end
+
+# This is used in slicing like:
+# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
+# a[I, I]
+function Base.getindex(
+  S::BlockIndices{<:AbstractBlockVector{<:Block{1}}}, i::BlockSlice{<:Block{1}}
+)
+  # TODO: Check for conistency of indices.
+  # Wrapping the indices in `NonBlockedVector` reinterprets the blocked indices
+  # as a single block, since the result shouldn't be blocked.
+  return NonBlockedVector(BlockIndices(S.blocks[Block(i)], S.indices[Block(i)]))
+end
+function Base.getindex(
+  S::BlockIndices{<:BlockedVector{<:Block{1},<:BlockRange{1}}}, i::BlockSlice{<:Block{1}}
+)
+  return i
+end
+
+# Used in indexing such as:
+# ```julia
+# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
+# b = @view a[I, I]
+# @view b[Block(1, 1)[1:2, 2:2]]
+# ```
+# This is similar to the definition:
+# blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
+function Base.getindex(
+  a::NonBlockedVector{<:Integer,<:BlockIndices}, I::UnitRange{<:Integer}
+)
+  ax = only(axes(a.array.indices))
+  brs = to_blockindices(ax, I)
+  inds = blockedunitrange_getindices(ax, I)
+  return NonBlockedVector(a.array[BlockSlice(brs, inds)])
+end
+
 function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
   # TODO: Check that `i.indices` is consistent with `S.indices`.
   # TODO: Turn this into a `blockedunitrange_getindices` definition.
@@ -49,6 +111,34 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
   )
   return BlockIndices(subblocks, subindices)
 end
+
+# Used when performing slices like:
+# @views a[[Block(2), Block(1)]][2:4, 2:4]
+function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockVector{<:BlockIndex{1}}})
+  subblocks = mortar(
+    map(blocks(i.block)) do br
+      return S.blocks[Int(Block(br))][only(br.indices)]
+    end,
+  )
+  subindices = mortar(
+    map(blocks(i.block)) do br
+      S.indices[br]
+    end,
+  )
+  return BlockIndices(subblocks, subindices)
+end
+
+# Similar to the definition of `BlockArrays.BlockSlices`:
+# ```julia
+# const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
+# ```
+# but includes `BlockIndices`, where the blocks aren't contiguous.
+const BlockSliceCollection = Union{
+  Base.Slice,BlockSlice{<:BlockRange{1}},BlockIndices{<:Vector{<:Block{1}}}
+}
+const SubBlockSliceCollection = BlockIndices{
+  <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}
+}
 
 # TODO: This is type piracy. This is used in `reindex` when making
 # views of blocks of sliced block arrays, for example:
@@ -218,6 +308,12 @@ function blockrange(axis::AbstractUnitRange, r::UnitRange)
   return findblock(axis, first(r)):findblock(axis, last(r))
 end
 
+# Occurs when slicing with `a[2:4, 2:4]`.
+function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockedUnitRange{<:Integer})
+  # TODO: Check the blocks are commensurate.
+  return findblock(axis, first(r)):findblock(axis, last(r))
+end
+
 function blockrange(axis::AbstractUnitRange, r::Int)
   ## return findblock(axis, r)
   return error("Slicing with integer values isn't supported.")
@@ -241,14 +337,17 @@ function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockedOneTo{<:Integer})
   return only(blockaxes(r))
 end
 
-# This handles changing the blocking, for example:
+# This handles block merging:
 # a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = BlockedVector(Block.(1:4), [2, 2])
+# I = BlockVector(Block.(1:4), [2, 2])
 # I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
+# I = BlockVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
 # a[I, I]
-# TODO: Generalize to `AbstractBlockedUnitRange` and `AbstractBlockVector`.
-function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockVector{<:Integer})
-  # TODO: Probably this is incorrect and should be something like:
-  # return findblock(axis, first(r)):findblock(axis, last(r))
+function blockrange(axis::BlockedOneTo{<:Integer}, r::AbstractBlockVector{<:Block{1}})
+  for b in r
+    @assert b ∈ blockaxes(axis, 1)
+  end
   return only(blockaxes(r))
 end
 
@@ -285,6 +384,10 @@ function blockrange(axis::AbstractUnitRange, r::Base.Slice)
   # TODO: Maybe use `BlockRange`, but that doesn't output
   # the same thing.
   return only(blockaxes(axis))
+end
+
+function blockrange(axis::AbstractUnitRange, r::NonBlockedVector)
+  return Block(1):Block(1)
 end
 
 function blockrange(axis::AbstractUnitRange, r)
@@ -423,7 +526,18 @@ function Base.setindex!(a::BlockView{<:Any,N}, value, index::Vararg{Int,N}) wher
   return a
 end
 
-function view!(a::BlockSparseArray{<:Any,N}, index::Block{N}) where {N}
+function SparseArrayInterface.nstored(a::BlockView)
+  # TODO: Store whether or not the block is stored already as
+  # a Bool in `BlockView`.
+  I = CartesianIndex(Int.(a.block))
+  # TODO: Use `block_stored_indices`.
+  if I ∈ stored_indices(blocks(a.array))
+    return nstored(blocks(a.array)[I])
+  end
+  return 0
+end
+
+function view!(a::AbstractArray{<:Any,N}, index::Block{N}) where {N}
   return view!(a, Tuple(index)...)
 end
 function view!(a::AbstractArray{<:Any,N}, index::Vararg{Block{1},N}) where {N}
