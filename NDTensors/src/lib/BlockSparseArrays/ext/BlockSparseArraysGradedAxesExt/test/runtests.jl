@@ -101,7 +101,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test a[1, 1, 1, 1] == m[1, 1]
     @test a[2, 2, 2, 2] == m[4, 4]
     @test blocksize(m) == (3, 3)
-    @test_broken a == splitdims(m, (d1, d2), (d1, d2))
+    @test a == splitdims(m, (d1, d2), (d1, d2))
   end
   @testset "dual axes" begin
     r = gradedrange([U1(0) => 2, U1(1) => 2])

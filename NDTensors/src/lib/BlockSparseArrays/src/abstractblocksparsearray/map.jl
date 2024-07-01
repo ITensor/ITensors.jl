@@ -57,6 +57,10 @@ function reblock(
   return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
 end
 
+# TODO: Rewrite this so that it takes the blocking structure
+# made by combining the blocking of the axes (i.e. the blocking that
+# is used to determine `union_stored_blocked_cartesianindices(...)`).
+# `reblock` is a partial solution to that, but a bit ad-hoc.
 # TODO: Move to `blocksparsearrayinterface/map.jl`.
 function SparseArrayInterface.sparse_map!(
   ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
