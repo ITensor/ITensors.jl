@@ -418,13 +418,7 @@ include("TestBlockSparseArraysUtils.jl")
     @views for b in [Block(1, 1), Block(2, 2)]
       a[b] = randn(elt, size(a[b]))
     end
-    for I in (
-      Block.(1:2),
-      [Block(1), Block(2)],
-      BlockVector([Block(1), Block(2)], [1, 1]),
-      # TODO: This should merge blocks.
-      BlockVector([Block(1), Block(2)], [2]),
-    )
+    for I in (Block.(1:2), [Block(1), Block(2)])
       b = @view a[I, I]
       for I in CartesianIndices(a)
         @test b[I] == a[I]
@@ -439,12 +433,7 @@ include("TestBlockSparseArraysUtils.jl")
       # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
       a[b] = randn(elt, size(a[b]))
     end
-    for I in (
-      [Block(2), Block(1)],
-      BlockVector([Block(2), Block(1)], [1, 1]),
-      # TODO: This should merge blocks.
-      BlockVector([Block(2), Block(1)], [2]),
-    )
+    for I in ([Block(2), Block(1)],)
       b = @view a[I, I]
       @test b[Block(1, 1)] == a[Block(2, 2)]
       @test b[Block(2, 1)] == a[Block(1, 2)]

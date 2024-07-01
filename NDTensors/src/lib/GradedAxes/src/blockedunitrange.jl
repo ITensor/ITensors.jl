@@ -1,5 +1,6 @@
 using BlockArrays:
   BlockArrays,
+  AbstractBlockVector,
   AbstractBlockedUnitRange,
   Block,
   BlockIndex,
@@ -74,16 +75,14 @@ function blockedunitrange_getindices(
 end
 
 # TODO: Make sure this handles block labels (AbstractGradedUnitRange) correctly.
+# TODO: Make a special case for `BlockedVector{<:Block{1},<:BlockRange{1}}`?
+# For example:
+# ```julia
+# blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
+# return blockedrange(blocklengths)
+# ```
 function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange, indices::BlockedVector{<:Block{1},<:BlockRange{1}}
-)
-  blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
-  return blockedrange(blocklengths)
-end
-
-# TODO: Make sure this handles block labels (AbstractGradedUnitRange) correctly.
-function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange, indices::BlockedVector{<:Block{1}}
+  a::AbstractBlockedUnitRange, indices::AbstractBlockVector{<:Block{1}}
 )
   return mortar(map(bs -> mortar(map(b -> a[b], bs)), blocks(indices)))
 end

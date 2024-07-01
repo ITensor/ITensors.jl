@@ -25,16 +25,6 @@ end
 # This is type piracy, try to avoid this, maybe requires defining `map`.
 ## Base.promote_shape(a1::Tuple{Vararg{BlockedUnitRange}}, a2::Tuple{Vararg{BlockedUnitRange}}) = combine_axes(a1, a2)
 
-struct SingleBlockView{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
-  array::Array
-end
-_blocks(a) = blocks(a)
-_blocks(a::Array) = SingleBlockView(a)
-function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where {N}
-  @assert all(isone, index)
-  return a.array
-end
-
 reblock(a) = a
 # If the blocking of the slice doesn't match the blocking of the
 # parent array, reblock according to the blocking of the parent array.
@@ -57,11 +47,11 @@ function SparseArrayInterface.sparse_map!(
     BI_srcs = map(a_src -> blockindexrange(a_src, I), a_srcs)
     # TODO: Investigate why this doesn't work:
     # block_dest = @view a_dest[_block(BI_dest)]
-    block_dest = _blocks(a_dest)[Int.(Tuple(_block(BI_dest)))...]
+    block_dest = blocks_maybe_single(a_dest)[Int.(Tuple(_block(BI_dest)))...]
     # TODO: Investigate why this doesn't work:
     # block_srcs = ntuple(i -> @view(a_srcs[i][_block(BI_srcs[i])]), length(a_srcs))
     block_srcs = ntuple(length(a_srcs)) do i
-      return _blocks(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
+      return blocks_maybe_single(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
     end
     subblock_dest = @view block_dest[BI_dest.indices...]
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))

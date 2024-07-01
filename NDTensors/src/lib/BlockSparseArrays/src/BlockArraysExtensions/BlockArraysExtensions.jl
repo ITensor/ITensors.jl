@@ -6,10 +6,11 @@ using BlockArrays:
   BlockIndex,
   BlockIndexRange,
   BlockRange,
+  BlockSlice,
+  BlockVector,
   BlockedOneTo,
   BlockedUnitRange,
-  BlockVector,
-  BlockSlice,
+  BlockedVector,
   block,
   blockaxes,
   blockedrange,
@@ -21,6 +22,26 @@ using Compat: allequal
 using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices
 using ..SparseArrayInterface: SparseArrayInterface, nstored, stored_indices
+
+# A return type for `blocks(array)` when `array` isn't blocked.
+# Represents a vector with just that single block.
+struct SingleBlockView{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
+  array::Array
+end
+blocks_maybe_single(a) = blocks(a)
+blocks_maybe_single(a::Array) = SingleBlockView(a)
+function Base.getindex(a::SingleBlockView{<:Any,N}, index::Vararg{Int,N}) where {N}
+  @assert all(isone, index)
+  return a.array
+end
+
+# A wrapper around a potentially blocked array that is not blocked.
+struct NonBlockedArray{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
+  array::Array
+end
+Base.size(a::NonBlockedArray) = size(a.array)
+Base.getindex(a::NonBlockedArray{<:Any,N}, I::Vararg{Integer,N}) where {N} = a.array[I...]
+BlockArrays.blocks(a::NonBlockedArray) = SingleBlockView(a.array)
 
 # BlockIndices works around an issue that the indices of BlockSlice
 # are restricted to AbstractUnitRange{Int}.
@@ -39,6 +60,21 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
   @assert length(S.indices[Block(i)]) == length(i.indices)
   return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
 end
+function Base.getindex(
+  S::BlockIndices{<:AbstractBlockVector{<:Block{1}}}, i::BlockSlice{<:Block{1}}
+)
+  # TODO: Check for conistency of indices.
+  # Calling `mortar` on the indices wraps the multiple blocks into a single
+  # block, since the result shouldn't be blocked.
+  ## return BlockIndices(S.blocks[Block(i)], NonBlockedArray(S.indices[Block(i)]))
+  return NonBlockedArray(S.indices[Block(i)])
+end
+function Base.getindex(
+  S::BlockIndices{<:BlockedVector{<:Block{1},<:BlockRange{1}}}, i::BlockSlice{<:Block{1}}
+)
+  return i
+end
+
 function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
   # TODO: Check that `i.indices` is consistent with `S.indices`.
   # TODO: Turn this into a `blockedunitrange_getindices` definition.
@@ -93,6 +129,13 @@ function to_blockindices(a::BlockedOneTo{<:Integer}, I::UnitRange{<:Integer})
     end,
   )
 end
+
+# This handles non-blocked slices.
+# For example:
+# a = BlockSparseArray{Float64}([2, 2, 2, 2])
+# I = BlockedVector(Block.(1:4), [2, 2])
+# @views a[I][Block(1)]
+to_blockindices(a::Base.OneTo{<:Integer}, I::UnitRange{<:Integer}) = I
 
 # TODO: This is type piracy. This is used in `reindex` when making
 # views of blocks of sliced block arrays, for example:
@@ -291,14 +334,17 @@ function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockedOneTo{<:Integer})
   return only(blockaxes(r))
 end
 
-# This handles changing the blocking, for example:
+# This handles block merging:
 # a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = BlockedVector(Block.(1:4), [2, 2])
+# I = BlockVector(Block.(1:4), [2, 2])
 # I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
+# I = BlockVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
 # a[I, I]
-# TODO: Generalize to `AbstractBlockedUnitRange` and `AbstractBlockVector`.
-function blockrange(axis::BlockedOneTo{<:Integer}, r::BlockVector{<:Integer})
-  # TODO: Probably this is incorrect and should be something like:
-  # return findblock(axis, first(r)):findblock(axis, last(r))
+function blockrange(axis::BlockedOneTo{<:Integer}, r::AbstractBlockVector{<:Block{1}})
+  for b in r
+    @assert b ∈ blockaxes(axis, 1)
+  end
   return only(blockaxes(r))
 end
 
@@ -335,6 +381,10 @@ function blockrange(axis::AbstractUnitRange, r::Base.Slice)
   # TODO: Maybe use `BlockRange`, but that doesn't output
   # the same thing.
   return only(blockaxes(axis))
+end
+
+function blockrange(axis::AbstractUnitRange, r::NonBlockedArray)
+  return Block(1):Block(1)
 end
 
 function blockrange(axis::AbstractUnitRange, r)
