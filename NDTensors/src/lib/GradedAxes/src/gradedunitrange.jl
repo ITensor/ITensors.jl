@@ -55,7 +55,7 @@ end
 # error with a conversion method in Base.
 using BlockArrays: BlockSlice
 function Base.UnitRange{T}(
-  a::BlockSlice{<:Any,<:LabelledInteger{T},<:GradedUnitRange{<:LabelledInteger{T}}}
+  a::BlockSlice{<:Any,<:LabelledInteger{T},<:AbstractUnitRange{<:LabelledInteger{T}}}
 ) where {T<:Integer}
   return UnitRange{T}(a.indices)
 end

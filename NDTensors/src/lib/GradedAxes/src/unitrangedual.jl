@@ -108,3 +108,12 @@ function Base.OrdinalRange{Int,Int}(
   # return Int.(r)
   return unlabel(nondual(r))
 end
+
+# This is only needed in certain Julia versions below 1.10
+# (for example Julia 1.6).
+# TODO: Delete this once we drop Julia 1.6 support.
+# The type constraint `T<:Integer` is needed to avoid an ambiguity
+# error with a conversion method in Base.
+function Base.UnitRange{T}(a::UnitRangeDual{<:LabelledInteger{T}}) where {T<:Integer}
+  return UnitRange(nondual(a))
+end
