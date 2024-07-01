@@ -115,5 +115,5 @@ end
 # The type constraint `T<:Integer` is needed to avoid an ambiguity
 # error with a conversion method in Base.
 function Base.UnitRange{T}(a::UnitRangeDual{<:LabelledInteger{T}}) where {T<:Integer}
-  return UnitRange(nondual(a))
+  return UnitRange{T}(nondual(a))
 end
