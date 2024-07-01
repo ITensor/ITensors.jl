@@ -42,8 +42,22 @@ end
 # TODO: Delete this once we drop Julia 1.6 support.
 # The type constraint `T<:Integer` is needed to avoid an ambiguity
 # error with a conversion method in Base.
-function Base.UnitRange{T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T<:Integer}
+function Base.UnitRange{T}(
+  a::AbstractGradedUnitRange{<:LabelledInteger{T}}
+) where {T<:Integer}
   return UnitRange(unlabel_blocks(a))
+end
+
+# This is only needed in certain Julia versions below 1.10
+# (for example Julia 1.6).
+# TODO: Delete this once we drop Julia 1.6 support.
+# The type constraint `T<:Integer` is needed to avoid an ambiguity
+# error with a conversion method in Base.
+using BlockArrays: BlockSlice
+function Base.UnitRange{T}(
+  a::BlockSlice{<:Any,<:LabelledInteger{T},<:GradedUnitRange{<:LabelledInteger{T}}}
+) where {T<:Integer}
+  return UnitRange{T}(a.indices)
 end
 
 # TODO: See if this is needed.
