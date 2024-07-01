@@ -73,19 +73,44 @@ function Base.view(
   return view(a, to_tuple(block)...)
 end
 
+# Specialized code for getting the view of a subblock.
+function Base.view(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N}}, I::BlockIndexRange{N}
+) where {T,N}
+  return view(a, to_tuple(I)...)
+end
 function Base.view(a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Block{1},N}) where {N}
   return viewblock(a, I...)
 end
 
+# TODO: Move to `GradedAxes` or `BlockArraysExtensions`.
 to_block(I::Block{1}) = I
 to_block(I::BlockIndexRange{1}) = Block(I)
-to_blockindices(I::Block{1}) = Colon()
-to_blockindices(I::BlockIndexRange{1}) = only(I.indices)
+to_block_indices(I::Block{1}) = Colon()
+to_block_indices(I::BlockIndexRange{1}) = only(I.indices)
 
 function Base.view(
   a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Union{Block{1},BlockIndexRange{1}},N}
 ) where {N}
-  return @views a[to_block.(I)...][to_blockindices.(I)...]
+  return @views a[to_block.(I)...][to_block_indices.(I)...]
+end
+
+function Base.view(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N}}, I::Vararg{Block{1},N}
+) where {T,N}
+  return viewblock(a, I...)
+end
+function Base.view(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N}},
+  I::Vararg{Union{Block{1},BlockIndexRange{1}},N},
+) where {T,N}
+  return @views a[to_block.(I)...][to_block_indices.(I)...]
+end
+# Generic fallback.
+function BlockArrays.viewblock(
+  a::SubArray{T,N,<:AbstractBlockSparseArray{T,N}}, I::Vararg{Block{1},N}
+) where {T,N}
+  return Base.invoke(view, Tuple{AbstractArray,Vararg{Any}}, a, I...)
 end
 
 function Base.view(

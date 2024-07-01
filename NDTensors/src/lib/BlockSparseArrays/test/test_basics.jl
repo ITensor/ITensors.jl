@@ -26,15 +26,6 @@ include("TestBlockSparseArraysUtils.jl")
                                                (Float32, Float64, ComplexF32, ComplexF64)
   @testset "Broken" begin
     # TODO: Fix this and turn it into a proper test.
-    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
-    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
-      a[I] = randn(elt, size(a[I]))
-    end
-    I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
-    b = @view a[I, I]
-    @test_broken copy(b)
-
-    # TODO: Fix this and turn it into a proper test.
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     a[Block(1, 1)] = randn(elt, 2, 2)
     a[Block(2, 2)] = randn(elt, 3, 3)
@@ -661,6 +652,30 @@ include("TestBlockSparseArraysUtils.jl")
     for I in (mortar([Block(1)[2:2], Block(2)[2:3]]), [Block(1)[2:2], Block(2)[2:3]])
       b = @view a[:, I]
       @test b == Array(a)[:, [2, 4, 5]]
+    end
+
+    # Merge and permute blocks.
+    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+      a[I] = randn(elt, size(a[I]))
+    end
+    for I in (
+      BlockVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
+      BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
+    )
+      b = @view a[I, I]
+      J = [Block(4), Block(3), Block(2), Block(1)]
+      @test b == a[J, J]
+      @test copy(b) == a[J, J]
+      @test blocksize(b) == (2, 2)
+      @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
+      @test b[Block(1, 1)] == Array(a)[[7, 8, 5, 6], [7, 8, 5, 6]]
+      c = @views b[Block(1, 1)][2:3, 2:3]
+      @test c == Array(a)[[8, 5], [8, 5]]
+      @test copy(c) == Array(a)[[8, 5], [8, 5]]
+      c = @view b[Block(1, 1)[2:3, 2:3]]
+      @test c == Array(a)[[8, 5], [8, 5]]
+      @test copy(c) == Array(a)[[8, 5], [8, 5]]
     end
 
     # TODO: Add more tests of this, it may

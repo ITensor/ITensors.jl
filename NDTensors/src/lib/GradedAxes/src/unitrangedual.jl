@@ -51,6 +51,10 @@ function Base.getindex(a::UnitRangeDual, indices::Vector{<:BlockIndexRange{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
 
+function to_blockindices(a::UnitRangeDual, indices::UnitRange{<:Integer})
+  return to_blockindices(nondual(a), indices)
+end
+
 Base.axes(a::UnitRangeDual) = axes(nondual(a))
 
 using BlockArrays: BlockArrays, Block, BlockSlice

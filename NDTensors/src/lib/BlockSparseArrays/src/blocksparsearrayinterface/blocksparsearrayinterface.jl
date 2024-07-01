@@ -34,6 +34,15 @@ function blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{An
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
+# Special case when there is no blocking.
+function blocksparse_to_indices(
+  a,
+  inds::Tuple{Base.OneTo{<:Integer},Vararg{Any}},
+  I::Tuple{UnitRange{<:Integer},Vararg{Any}},
+)
+  return (inds[1][I[1]], to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function blocksparse_to_indices(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
   I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))

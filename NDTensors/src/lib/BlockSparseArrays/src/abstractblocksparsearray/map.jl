@@ -26,6 +26,7 @@ end
 ## Base.promote_shape(a1::Tuple{Vararg{BlockedUnitRange}}, a2::Tuple{Vararg{BlockedUnitRange}}) = combine_axes(a1, a2)
 
 reblock(a) = a
+
 # If the blocking of the slice doesn't match the blocking of the
 # parent array, reblock according to the blocking of the parent array.
 function reblock(
@@ -36,6 +37,12 @@ function reblock(
   # block sparse array, we might change that default behavior
   # so this might become something like `@blocked parent(a)[...]`.
   return @view parent(a)[UnitRange{Int}.(parentindices(a))...]
+end
+
+function reblock(
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{NonBlockedArray}}}
+)
+  return @view parent(a)[map(I -> I.array, parentindices(a))...]
 end
 
 function SparseArrayInterface.sparse_map!(

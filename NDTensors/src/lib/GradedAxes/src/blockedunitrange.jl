@@ -8,6 +8,7 @@ using BlockArrays:
   BlockRange,
   BlockSlice,
   BlockVector,
+  BlockedOneTo,
   BlockedUnitRange,
   BlockedVector,
   block,
@@ -148,3 +149,24 @@ end
 function _blocks(a::AbstractUnitRange, indices::BlockRange)
   return indices
 end
+
+# Slice `a` by `I`, returning a:
+# `BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}`
+# with the `BlockIndex{1}` corresponding to each value of `I`.
+function to_blockindices(a::BlockedOneTo{<:Integer}, I::UnitRange{<:Integer})
+  return mortar(
+    map(blocks(blockedunitrange_getindices(a, I))) do r
+      bi_first = findblockindex(a, first(r))
+      bi_last = findblockindex(a, last(r))
+      @assert block(bi_first) == block(bi_last)
+      return block(bi_first)[blockindex(bi_first):blockindex(bi_last)]
+    end,
+  )
+end
+
+# This handles non-blocked slices.
+# For example:
+# a = BlockSparseArray{Float64}([2, 2, 2, 2])
+# I = BlockedVector(Block.(1:4), [2, 2])
+# @views a[I][Block(1)]
+to_blockindices(a::Base.OneTo{<:Integer}, I::UnitRange{<:Integer}) = I

@@ -20,7 +20,7 @@ using BlockArrays:
   findblockindex
 using Compat: allequal
 using Dictionaries: Dictionary, Indices
-using ..GradedAxes: blockedunitrange_getindices
+using ..GradedAxes: blockedunitrange_getindices, to_blockindices
 using ..SparseArrayInterface: SparseArrayInterface, nstored, stored_indices
 
 # A return type for `blocks(array)` when `array` isn't blocked.
@@ -42,6 +42,8 @@ end
 Base.size(a::NonBlockedArray) = size(a.array)
 Base.getindex(a::NonBlockedArray{<:Any,N}, I::Vararg{Integer,N}) where {N} = a.array[I...]
 BlockArrays.blocks(a::NonBlockedArray) = SingleBlockView(a.array)
+const NonBlockedVector{T,Array} = NonBlockedArray{T,1,Array}
+NonBlockedVector(array::AbstractVector) = NonBlockedArray(array)
 
 # BlockIndices works around an issue that the indices of BlockSlice
 # are restricted to AbstractUnitRange{Int}.
@@ -60,19 +62,41 @@ function Base.getindex(S::BlockIndices, i::BlockSlice{<:Block{1}})
   @assert length(S.indices[Block(i)]) == length(i.indices)
   return BlockSlice(S.blocks[Int(Block(i))], S.indices[Block(i)])
 end
+
+# This is used in slicing like:
+# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
+# a[I, I]
 function Base.getindex(
   S::BlockIndices{<:AbstractBlockVector{<:Block{1}}}, i::BlockSlice{<:Block{1}}
 )
   # TODO: Check for conistency of indices.
-  # Calling `mortar` on the indices wraps the multiple blocks into a single
-  # block, since the result shouldn't be blocked.
-  ## return BlockIndices(S.blocks[Block(i)], NonBlockedArray(S.indices[Block(i)]))
-  return NonBlockedArray(S.indices[Block(i)])
+  # Wrapping the indices in `NonBlockedVector` reinterprets the blocked indices
+  # as a single block, since the result shouldn't be blocked.
+  return NonBlockedVector(BlockIndices(S.blocks[Block(i)], S.indices[Block(i)]))
 end
 function Base.getindex(
   S::BlockIndices{<:BlockedVector{<:Block{1},<:BlockRange{1}}}, i::BlockSlice{<:Block{1}}
 )
   return i
+end
+
+# Used in indexing such as:
+# ```julia
+# a = BlockSparseArray{Float64}([2, 2, 2, 2], [2, 2, 2, 2])
+# I = BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2])
+# b = @view a[I, I]
+# @view b[Block(1, 1)[1:2, 2:2]]
+# ```
+# This is similar to the definition:
+# blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
+function Base.getindex(
+  a::NonBlockedVector{<:Integer,<:BlockIndices}, I::UnitRange{<:Integer}
+)
+  ax = only(axes(a.array.indices))
+  brs = to_blockindices(ax, I)
+  inds = blockedunitrange_getindices(ax, I)
+  return NonBlockedVector(a.array[BlockSlice(brs, inds)])
 end
 
 function Base.getindex(S::BlockIndices, i::BlockSlice{<:BlockRange{1}})
@@ -115,27 +139,6 @@ const BlockSliceCollection = Union{
 const SubBlockSliceCollection = BlockIndices{
   <:BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}
 }
-
-# Slice `a` by `I`, returning a:
-# `BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}`
-# with the `BlockIndex{1}` corresponding to each value of `I`.
-function to_blockindices(a::BlockedOneTo{<:Integer}, I::UnitRange{<:Integer})
-  return mortar(
-    map(blocks(blockedunitrange_getindices(a, I))) do r
-      bi_first = findblockindex(a, first(r))
-      bi_last = findblockindex(a, last(r))
-      @assert block(bi_first) == block(bi_last)
-      return block(bi_first)[blockindex(bi_first):blockindex(bi_last)]
-    end,
-  )
-end
-
-# This handles non-blocked slices.
-# For example:
-# a = BlockSparseArray{Float64}([2, 2, 2, 2])
-# I = BlockedVector(Block.(1:4), [2, 2])
-# @views a[I][Block(1)]
-to_blockindices(a::Base.OneTo{<:Integer}, I::UnitRange{<:Integer}) = I
 
 # TODO: This is type piracy. This is used in `reindex` when making
 # views of blocks of sliced block arrays, for example:
@@ -383,7 +386,7 @@ function blockrange(axis::AbstractUnitRange, r::Base.Slice)
   return only(blockaxes(axis))
 end
 
-function blockrange(axis::AbstractUnitRange, r::NonBlockedArray)
+function blockrange(axis::AbstractUnitRange, r::NonBlockedVector)
   return Block(1):Block(1)
 end
 
