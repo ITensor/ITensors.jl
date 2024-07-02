@@ -66,7 +66,12 @@ function TensorAlgebra.splitdims(
       return length(axis) ≤ length(axes(a, i))
     end
   blockperms = invblockperm.(blocksortperm.(axes_prod))
-  a_blockpermed = a[blockperms...]
+  # TODO: This is doing extra copies of the blocks,
+  # use `@view a[axes_prod...]` instead.
+  # That will require implementing some reindexing logic
+  # for this combination of slicing.
+  a_unblocked = a[axes_prod...]
+  a_blockpermed = a_unblocked[blockperms...]
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
 end
 
@@ -83,29 +88,6 @@ end
 # matrix has graded axes.
 function Base.axes(a::Adjoint{<:Any,<:AbstractBlockSparseMatrix})
   return dual.(reverse(axes(a')))
-end
-
-# TODO: Delete this definition in favor of the one in
-# GradedAxes once https://github.com/JuliaArrays/BlockArrays.jl/pull/405 is merged.
-# TODO: Make a special definition for `BlockedVector{<:Block{1}}` in order
-# to merge blocks.
-function GradedAxes.blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
-)
-  # Without converting `indices` to `Vector`,
-  # mapping `indices` outputs a `BlockVector`
-  # which is harder to reason about.
-  blocks = map(index -> a[index], Vector(indices))
-  # We pass `length.(blocks)` to `mortar` in order
-  # to pass block labels to the axes of the output,
-  # if they exist. This makes it so that
-  # `only(axes(a[indices])) isa `GradedUnitRange`
-  # if `a isa `GradedUnitRange`, for example.
-  # TODO: Remove `unlabel` once `BlockArray` axes
-  # type is generalized in BlockArrays.jl.
-  # TODO: Support using `BlockSparseVector`, need
-  # to make more `BlockSparseArray` constructors.
-  return BlockSparseArray(blocks, (blockedrange(length.(blocks)),))
 end
 
 # This definition is only needed since calls like

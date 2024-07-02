@@ -8,12 +8,24 @@ using .RankFactorization: Spectrum
 # be made <: StridedArray
 import .Expose: qr_positive, ql, ql_positive
 
-function (
-  T1::Tensor{ElT1,2,StoreT1} * T2::Tensor{ElT2,2,StoreT2}
-) where {ElT1,StoreT1<:Dense,ElT2,StoreT2<:Dense}
+# TODO: Generalize this to any `Tensor` type using:
+# ```julia
+# contract(T1, (1, -1), T2, (-1, 2))
+# ```
+function Base.:*(T1::Tensor{<:Any,2,<:Dense}, T2::Tensor{<:Any,2,<:Dense})
   RM = matrix(T1) * matrix(T2)
   indsR = (ind(T1, 1), ind(T2, 2))
   return tensor(Dense(vec(RM)), indsR)
+end
+
+function LinearAlgebra.dot(x::Tensor, y::Tensor)
+  size(x) == size(y) || throw(
+    DimensionMismatch(
+      "dimensions must match in `dot(x::Tensor, y::Tensor)`: `x` has size `$(size(x))` while `y` has size `$(size(y))`.",
+    ),
+  )
+  labels = ntuple(dim -> -dim, ndims(x))
+  return contract(conj(x), labels, y, labels)[]
 end
 
 function LinearAlgebra.exp(T::DenseTensor{ElT,2}) where {ElT<:Union{Real,Complex}}
@@ -369,7 +381,6 @@ matrix is unique. Returns a tuple (Q,R).
 function qr_positive(M::AbstractMatrix)
   sparseQ, R = qr(M)
   Q = convert(typeof(R), sparseQ)
-  nc = size(Q, 2)
   signs = nonzero_sign.(diag(R))
   Q = Q * Diagonal(signs)
   R = Diagonal(conj.(signs)) * R

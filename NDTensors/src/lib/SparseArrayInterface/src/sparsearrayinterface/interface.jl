@@ -1,13 +1,12 @@
 # Also look into:
 # https://juliaarrays.github.io/ArrayInterface.jl/stable/sparsearrays/
 
-# Minimal interface
-# Data structure of the stored (generally nonzero) values
-sparse_storage(a::AbstractArray) = error("Not implemented")
+# Minimal sparse array interface.
+# Data structure of the stored (generally nonzero) values.
+# By default assume it is dense, so all values are stored.
+sparse_storage(a::AbstractArray) = a
 
-sparse_storage(a::Array) = a
-
-# Minimal interface
+# Minimal sparse array interface.
 # Map an index into the stored data to a CartesianIndex of the
 # outer array.
 storage_index_to_index(a::AbstractArray, I) = I

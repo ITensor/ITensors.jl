@@ -256,7 +256,7 @@ end
 # Returns the offset of the new block added.
 # XXX rename to insertblock!, no need to return offset
 using .TypeParameterAccessors: unwrap_array_type
-using .Expose: expose
+using .Expose: Exposed, expose, unexpose
 function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) where {ElT,N}
   newdim = blockdim(T, newblock)
   newoffset = nnz(T)
@@ -356,6 +356,68 @@ function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
   return tensor(Dense(r), inds(T))
 end
 
+function diag(ETensor::Exposed{<:AbstractArray,<:BlockSparseTensor})
+  tensor = unexpose(ETensor)
+  tensordiag = NDTensors.similar(
+    dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
+  )
+  for j in 1:diaglength(tensor)
+    @inbounds tensordiag[j] = getdiagindex(tensor, j)
+  end
+  return tensordiag
+end
+
+function Base.mapreduce(
+  f, op, t1::BlockSparseTensor, t_tail::BlockSparseTensor...; kwargs...
+)
+  # TODO: Take advantage of block sparsity here.
+  return mapreduce(f, op, array(t1), array.(t_tail)...; kwargs...)
+end
+
+# This is a special case that optimizes for a single tensor
+# and takes advantage of block sparsity. Once the more general
+# case handles block sparsity, this can be removed.
+function Base.mapreduce(f, op, t::BlockSparseTensor; kwargs...)
+  elt = eltype(t)
+  if !iszero(f(zero(elt)))
+    return mapreduce(f, op, array(t); kwargs...)
+  end
+  if length(t) > nnz(t)
+    # Some elements are zero, account for that
+    # with the initial value.
+    init_kwargs = (; init=zero(elt))
+  else
+    init_kwargs = (;)
+  end
+  return mapreduce(f, op, storage(t); kwargs..., init_kwargs...)
+end
+
+function blocksparse_isequal(x, y)
+  return array(x) == array(y)
+end
+function Base.:(==)(x::BlockSparseTensor, y::BlockSparseTensor)
+  return blocksparse_isequal(x, y)
+end
+function Base.:(==)(x::BlockSparseTensor, y::Tensor)
+  return blocksparse_isequal(x, y)
+end
+function Base.:(==)(x::Tensor, y::BlockSparseTensor)
+  return blocksparse_isequal(x, y)
+end
+
+## TODO currently this fails on GPU with scalar indexing
+function map_diag!(
+  f::Function,
+  exposed_t_destination::Exposed{<:AbstractArray,<:BlockSparseTensor},
+  exposed_t_source::Exposed{<:AbstractArray,<:BlockSparseTensor},
+)
+  t_destination = unexpose(exposed_t_destination)
+  t_source = unexpose(exposed_t_source)
+  for i in 1:diaglength(t_destination)
+    NDTensors.setdiagindex!(t_destination, f(NDTensors.getdiagindex(t_source, i)), i)
+  end
+  return t_destination
+end
 #
 # Operations
 #

@@ -25,19 +25,57 @@ end
 # This is type piracy, try to avoid this, maybe requires defining `map`.
 ## Base.promote_shape(a1::Tuple{Vararg{BlockedUnitRange}}, a2::Tuple{Vararg{BlockedUnitRange}}) = combine_axes(a1, a2)
 
+reblock(a) = a
+
+# If the blocking of the slice doesn't match the blocking of the
+# parent array, reblock according to the blocking of the parent array.
+function reblock(
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{AbstractUnitRange}}}
+)
+  # TODO: This relies on the behavior that slicing a block sparse
+  # array with a UnitRange inherits the blocking of the underlying
+  # block sparse array, we might change that default behavior
+  # so this might become something like `@blocked parent(a)[...]`.
+  return @view parent(a)[UnitRange{Int}.(parentindices(a))...]
+end
+
+function reblock(
+  a::SubArray{<:Any,<:Any,<:AbstractBlockSparseArray,<:Tuple{Vararg{NonBlockedArray}}}
+)
+  return @view parent(a)[map(I -> I.array, parentindices(a))...]
+end
+
+function reblock(
+  a::SubArray{
+    <:Any,
+    <:Any,
+    <:AbstractBlockSparseArray,
+    <:Tuple{Vararg{BlockIndices{<:AbstractBlockVector{<:Block{1}}}}},
+  },
+)
+  # Remove the blocking.
+  return @view parent(a)[map(I -> Vector(I.blocks), parentindices(a))...]
+end
+
+# TODO: Rewrite this so that it takes the blocking structure
+# made by combining the blocking of the axes (i.e. the blocking that
+# is used to determine `union_stored_blocked_cartesianindices(...)`).
+# `reblock` is a partial solution to that, but a bit ad-hoc.
+# TODO: Move to `blocksparsearrayinterface/map.jl`.
 function SparseArrayInterface.sparse_map!(
   ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
 )
+  a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
   for I in union_stored_blocked_cartesianindices(a_dest, a_srcs...)
     BI_dest = blockindexrange(a_dest, I)
     BI_srcs = map(a_src -> blockindexrange(a_src, I), a_srcs)
     # TODO: Investigate why this doesn't work:
     # block_dest = @view a_dest[_block(BI_dest)]
-    block_dest = blocks(a_dest)[Int.(Tuple(_block(BI_dest)))...]
+    block_dest = blocks_maybe_single(a_dest)[Int.(Tuple(_block(BI_dest)))...]
     # TODO: Investigate why this doesn't work:
     # block_srcs = ntuple(i -> @view(a_srcs[i][_block(BI_srcs[i])]), length(a_srcs))
     block_srcs = ntuple(length(a_srcs)) do i
-      return blocks(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
+      return blocks_maybe_single(a_srcs[i])[Int.(Tuple(_block(BI_srcs[i])))...]
     end
     subblock_dest = @view block_dest[BI_dest.indices...]
     subblock_srcs = ntuple(i -> @view(block_srcs[i][BI_srcs[i].indices...]), length(a_srcs))
@@ -104,10 +142,10 @@ end
 
 # TODO: Why isn't this calling `mapreduce` already?
 function Base.iszero(a::BlockSparseArrayLike)
-  return sparse_iszero(a)
+  return sparse_iszero(blocks(a))
 end
 
 # TODO: Why isn't this calling `mapreduce` already?
 function Base.isreal(a::BlockSparseArrayLike)
-  return sparse_isreal(a)
+  return sparse_isreal(blocks(a))
 end

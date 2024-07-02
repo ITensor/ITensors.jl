@@ -210,13 +210,21 @@ real(T::Tensor) = setstorage(T, real(storage(T)))
 
 imag(T::Tensor) = setstorage(T, imag(storage(T)))
 
-function map(f, x::Tensor{T}) where {T}
-  if !iszero(f(zero(T)))
-    error(
-      "map(f, ::Tensor) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.",
-    )
+function Base.map(f, t1::Tensor, t_tail::Tensor...; kwargs...)
+  elt = mapreduce(eltype, promote_type, (t1, t_tail...))
+  if !iszero(f(zero(elt)))
+    # TODO: Do a better job of preserving the storage type, if possible.
+    return tensor(Dense(map(f, array(t1), array.(t_tail)...; kwargs...)), inds(t1))
   end
-  return setstorage(x, map(f, storage(x)))
+  return setstorage(t1, map(f, storage(t1), storage.(t_tail)...; kwargs...))
+end
+
+function Base.mapreduce(f, op, t1::Tensor, t_tail::Tensor...; kwargs...)
+  elt = mapreduce(eltype, promote_type, (t1, t_tail...))
+  if !iszero(f(zero(elt)))
+    return mapreduce(f, op, array(t1), array.(t_tail)...; kwargs...)
+  end
+  return mapreduce(f, op, storage(t1), storage.(t_tail)...; kwargs...)
 end
 
 #
@@ -280,6 +288,9 @@ dense(T::Tensor) = setstorage(T, dense(storage(T)))
 array(T::Tensor) = array(dense(T))
 matrix(T::Tensor{<:Number,2}) = array(T)
 vector(T::Tensor{<:Number,1}) = array(T)
+
+array(T::Transpose{<:Any,<:Tensor}) = transpose(array(transpose(T)))
+matrix(T::Transpose{<:Any,<:Tensor}) = transpose(array(transpose(T)))
 
 #
 # Helper functions for BlockSparse-type storage
@@ -352,6 +363,42 @@ end
 
 insertblock!!(T::Tensor, block) = insertblock!(T, block)
 
+function tensor_isequal(x, y)
+  # TODO: Use a reduction to avoid intermediates.
+  # This doesn't work right now because `mapreduce`
+  # on `Tensor`s is limited to functions that preserve
+  # zeros.
+  # return mapreduce(==, ==, x, y)
+
+  # TODO: Use `x - y` instead of `map(-, x, y)`.
+  # `x - y` calls `x .- y` and broadcasting isn't
+  # defined properly for sparse Tensor storage
+  # like `Diag` and `BlockSparse`.
+  return iszero(norm(map(-, x, y)))
+end
+
+function Base.:(==)(x::Tensor, y::Tensor)
+  return tensor_isequal(x, y)
+end
+
+function Base.:(==)(x::AbstractArray, y::Tensor)
+  return array(x) == array(y)
+end
+function Base.:(==)(x::Tensor, y::AbstractArray)
+  return array(x) == array(y)
+end
+
+function Base.isequal(x::Tensor, y::Tensor)
+  return tensor_isequal(x, y)
+end
+
+function Base.isequal(x::AbstractArray, y::Tensor)
+  return isequal(array(x), array(y))
+end
+function Base.isequal(x::Tensor, y::AbstractArray)
+  return isequal(array(x), array(y))
+end
+
 """
 getdiagindex
 
@@ -361,16 +408,18 @@ function getdiagindex(T::Tensor{<:Number,N}, ind::Int) where {N}
   return getindex(T, CartesianIndex(ntuple(_ -> ind, Val(N))))
 end
 
+using .Expose: Exposed, expose, unexpose
 # TODO: add support for off-diagonals, return
 # block sparse vector instead of dense.
-function diag(tensor::Tensor)
+diag(tensor::Tensor) = diag(expose(tensor))
+
+function diag(ETensor::Exposed)
+  tensor = unexpose(ETensor)
   ## d = NDTensors.similar(T, ElT, (diaglength(T),))
   tensordiag = NDTensors.similar(
     dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
   )
-  for n in 1:diaglength(tensor)
-    tensordiag[n] = tensor[n, n]
-  end
+  array(tensordiag) .= diagview(tensor)
   return tensordiag
 end
 
@@ -382,6 +431,22 @@ Set the specified value on the diagonal
 function setdiagindex!(T::Tensor{<:Number,N}, val, ind::Int) where {N}
   setindex!(T, val, CartesianIndex(ntuple(_ -> ind, Val(N))))
   return T
+end
+
+function map_diag!(f::Function, t_dest::Tensor, t_src::Tensor)
+  map_diag!(f, expose(t_dest), expose(t_src))
+  return t_dest
+end
+function map_diag!(f::Function, exposed_t_dest::Exposed, exposed_t_src::Exposed)
+  diagview(unexpose(exposed_t_dest)) .= f.(diagview(unexpose(exposed_t_src)))
+  return unexpose(exposed_t_dest)
+end
+
+map_diag(f::Function, t::Tensor) = map_diag(f, expose(t))
+function map_diag(f::Function, exposed_t::Exposed)
+  t_dest = copy(exposed_t)
+  map_diag!(f, expose(t_dest), exposed_t)
+  return t_dest
 end
 
 #

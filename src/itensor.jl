@@ -305,14 +305,14 @@ end
 
 using NDTensors.TypeParameterAccessors: set_eltype, type_parameters, specify_type_parameters
 """
-    ITensor([ElT::Type, ]A::Array, inds)
-    ITensor([ElT::Type, ]A::Array, inds::Index...)
+    ITensor([ElT::Type, ]A::AbstractArray, inds)
+    ITensor([ElT::Type, ]A::AbstractArray, inds::Index...)
 
-    itensor([ElT::Type, ]A::Array, inds)
-    itensor([ElT::Type, ]A::Array, inds::Index...)
+    itensor([ElT::Type, ]A::AbstractArray, inds)
+    itensor([ElT::Type, ]A::AbstractArray, inds::Index...)
 
-Construct an ITensor from an Array `A` and indices `inds`.
-The ITensor will be a view of the Array data if possible (if
+Construct an ITensor from an AbstractArray `A` and indices `inds`.
+The ITensor will be a view of the AbstractArray data if possible (if
 no conversion to a different element type is necessary).
 
 If specified, the ITensor will have element type `ElT`.
@@ -389,13 +389,13 @@ function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwar
 end
 
 # For now, it's not well defined to construct an ITensor without indices
-# from a non-zero dimensional Array
+# from a non-zero dimensional AbstractArray
 function ITensor(
   as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
 )
   if length(A) > 1
     error(
-      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
+      "Trying to create an ITensor without any indices from $(typeof(A)) $A of dimensions $(size(A)). Cannot construct an ITensor from an $(typeof(A)) with more than one element without any indices.",
     )
   end
   return ITensor(eltype, A[]; kwargs...)
@@ -448,8 +448,8 @@ diag_itensor(is::Indices) = diag_itensor(Float64, is)
 diag_itensor(is...) = diag_itensor(indices(is...))
 
 """
-    diag_itensor([ElT::Type, ]v::Vector, inds...)
-    diagitensor([ElT::Type, ]v::Vector, inds...)
+    diag_itensor([ElT::Type, ]v::AbstractVector, inds...)
+    diagitensor([ElT::Type, ]v::AbstractVector, inds...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal.
 In general, the diagonal elements will be those stored in `v` and
@@ -467,29 +467,31 @@ The version `diagitensor` might output an ITensor whose storage data
 is an alias of the input vector data in order to minimize operations.
 """
 function diag_itensor(
-  as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is::Indices
+  as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
 )
   length(v) ≠ mindim(is) && error(
     "Length of vector for diagonal must equal minimum of the dimension of the input indices",
   )
-  data = Vector{eltype}(as, v)
+  data = set_eltype(typeof(v), eltype)(as, v)
   return itensor(Diag(data), is)
 end
 
-function diag_itensor(as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+function diag_itensor(
+  as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is...
+)
   return diag_itensor(as, eltype, v, indices(is...))
 end
 
-function diag_itensor(as::AliasStyle, v::Vector, is...)
+function diag_itensor(as::AliasStyle, v::AbstractVector, is...)
   return diag_itensor(as, eltype(v), v, is...)
 end
 
-function diag_itensor(as::AliasStyle, v::Vector{<:RealOrComplex{Int}}, is...)
+function diag_itensor(as::AliasStyle, v::AbstractVector{<:RealOrComplex{Int}}, is...)
   return diag_itensor(AllowAlias(), float(eltype(v)), v, is...)
 end
 
-diag_itensor(v::Vector{<:Number}, is...) = diag_itensor(NeverAlias(), v, is...)
-function diag_itensor(eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+diag_itensor(v::AbstractVector{<:Number}, is...) = diag_itensor(NeverAlias(), v, is...)
+function diag_itensor(eltype::Type{<:Number}, v::AbstractVector{<:Number}, is...)
   return diag_itensor(NeverAlias(), eltype, v, is...)
 end
 
@@ -1909,6 +1911,14 @@ function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
 end
 
 map(f, x::ITensor) = itensor(map(f, tensor(x)))
+
+# Some limited set of reductions. Ideally we
+# would overload `Base.mapreduce` which would
+# cover all of these cases, but we need to make
+# sure that the `Tensor` version of `mapreduce`
+# is correct and efficient for all sparse storage types.
+Base.sum(x::ITensor) = sum(tensor(x))
+Base.prod(x::ITensor) = prod(tensor(x))
 
 """
     axpy!(a::Number, v::ITensor, w::ITensor)

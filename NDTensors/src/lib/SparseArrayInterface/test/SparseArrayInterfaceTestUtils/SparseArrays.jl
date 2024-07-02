@@ -65,6 +65,16 @@ function SparseArrayInterface.setindex_notstored!(
   return a
 end
 
+# TODO: Make this into a generic definition of all `AbstractArray`?
+using NDTensors.SparseArrayInterface: perm, stored_indices
+function SparseArrayInterface.stored_indices(
+  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
+)
+  return Iterators.map(
+    I -> CartesianIndex(map(i -> I[i], perm(a))), stored_indices(parent(a))
+  )
+end
+
 # Empty the storage, helps with efficiency in `map!` to drop
 # zeros.
 function SparseArrayInterface.dropall!(a::SparseArray)

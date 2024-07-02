@@ -64,6 +64,10 @@ function Base.getindex(a::UnitRangeDual, indices::Vector{<:BlockIndexRange{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
 
+function to_blockindices(a::UnitRangeDual, indices::UnitRange{<:Integer})
+  return to_blockindices(nondual(a), indices)
+end
+
 Base.axes(a::UnitRangeDual) = axes(nondual(a))
 
 using BlockArrays: BlockArrays, Block, BlockSlice
@@ -80,6 +84,21 @@ end
 
 using NDTensors.LabelledNumbers: LabelledNumbers, label
 LabelledNumbers.label(a::UnitRangeDual) = dual(label(nondual(a)))
+
+using NDTensors.LabelledNumbers: LabelledUnitRange
+# The Base version of `length(::AbstractUnitRange)` drops the label.
+function Base.length(a::UnitRangeDual{<:Any,<:LabelledUnitRange})
+  return dual(length(nondual(a)))
+end
+function Base.iterate(a::UnitRangeDual, i)
+  i == last(a) && return nothing
+  return dual.(iterate(nondual(a), i))
+end
+# TODO: Is this a good definition?
+Base.unitrange(a::UnitRangeDual{<:Any,<:AbstractUnitRange}) = a
+
+using NDTensors.LabelledNumbers: LabelledInteger, label, labelled, unlabel
+dual(i::LabelledInteger) = labelled(unlabel(i), dual(label(i)))
 
 using BlockArrays: BlockArrays, blockaxes, blocklasts, combine_blockaxes, findblock
 BlockArrays.blockaxes(a::UnitRangeDual) = blockaxes(nondual(a))
@@ -109,4 +128,13 @@ function Base.OrdinalRange{Int,Int}(
   # TODO: Implement this broadcasting operation and use it here.
   # return Int.(r)
   return unlabel(nondual(r))
+end
+
+# This is only needed in certain Julia versions below 1.10
+# (for example Julia 1.6).
+# TODO: Delete this once we drop Julia 1.6 support.
+# The type constraint `T<:Integer` is needed to avoid an ambiguity
+# error with a conversion method in Base.
+function Base.UnitRange{T}(a::UnitRangeDual{<:LabelledInteger{T}}) where {T<:Integer}
+  return UnitRange{T}(nondual(a))
 end

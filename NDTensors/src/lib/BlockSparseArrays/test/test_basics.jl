@@ -7,15 +7,17 @@ using BlockArrays:
   BlockVector,
   BlockedOneTo,
   BlockedUnitRange,
+  BlockedVector,
   blockedrange,
   blocklength,
   blocklengths,
   blocksize,
   blocksizes,
   mortar
+using Compat: @compat
 using LinearAlgebra: mul!
 using NDTensors.BlockSparseArrays:
-  @view!, BlockSparseArray, block_nstored, block_reshape, view!
+  @view!, BlockSparseArray, BlockView, block_nstored, block_reshape, view!
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset
@@ -23,22 +25,25 @@ include("TestBlockSparseArraysUtils.jl")
 @testset "BlockSparseArrays (eltype=$elt)" for elt in
                                                (Float32, Float64, ComplexF32, ComplexF64)
   @testset "Broken" begin
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    @test_broken a[Block(1, 2)] .= 1
+    # TODO: Fix this and turn it into a proper test.
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    a[Block(2, 2)] = randn(elt, 3, 3)
+    @test_broken a[:, 4]
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
-    @test_broken b[2:4, 2:4]
+    # TODO: Fix this and turn it into a proper test.
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    a[Block(2, 2)] = randn(elt, 3, 3)
+    @test_broken a[:, [2, 4]]
+    @test_broken a[[3, 5], [2, 4]]
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @views a[Block(1, 1)][1:2, 1:1]
-    for i in parentindices(b)
-      @test_broken i isa BlockSlice{<:BlockIndexRange{1}}
-    end
-
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
-    @test_broken b[Block(1, 1)] = randn(3, 3)
+    # TODO: Fix this and turn it into a proper test.
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    a[Block(2, 2)] = randn(elt, 3, 3)
+    @test a[2:4, 4] == Array(a)[2:4, 4]
+    @test_broken a[4, 2:4]
   end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
@@ -82,6 +87,26 @@ include("TestBlockSparseArraysUtils.jl")
     @test block_nstored(a) == 2
     @test nstored(a) == 2 * 4 + 3 * 3
 
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a[Block(1, 2)] .= 2
+    @test eltype(a) == elt
+    @test all(==(2), a[Block(1, 2)])
+    @test iszero(a[Block(1, 1)])
+    @test iszero(a[Block(2, 1)])
+    @test iszero(a[Block(2, 2)])
+    @test block_nstored(a) == 1
+    @test nstored(a) == 2 * 4
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a[Block(1, 2)] .= 0
+    @test eltype(a) == elt
+    @test iszero(a[Block(1, 1)])
+    @test iszero(a[Block(2, 1)])
+    @test iszero(a[Block(1, 2)])
+    @test iszero(a[Block(2, 2)])
+    @test block_nstored(a) == 1
+    @test nstored(a) == 2 * 4
+
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]
       a[b] = randn(elt, size(a[b]))
@@ -93,6 +118,26 @@ include("TestBlockSparseArraysUtils.jl")
     @test nstored(b) == 0
     @test size(b) == size(a)
     @test blocksize(b) == blocksize(a)
+
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+    c = @view b[Block(1, 1)]
+    @test iszero(a)
+    @test iszero(nstored(a))
+    @test iszero(b)
+    @test iszero(nstored(b))
+    @test iszero(c)
+    @test iszero(nstored(c))
+    a[5, 7] = 1
+    @test !iszero(a)
+    @test nstored(a) == 3 * 4
+    @test !iszero(b)
+    @test nstored(b) == 3 * 4
+    @test !iszero(c)
+    @test nstored(c) == 3 * 4
+    d = @view a[1:4, 1:6]
+    @test iszero(d)
+    @test nstored(d) == 2 * 3
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]
@@ -227,12 +272,23 @@ include("TestBlockSparseArraysUtils.jl")
     @views for b in [Block(1, 2), Block(2, 1)]
       a[b] = randn(elt, size(a[b]))
     end
-    b = a[2:4, 2:4]
-    @test b == Array(a)[2:4, 2:4]
-    @test size(b) == (3, 3)
-    @test blocksize(b) == (2, 2)
-    @test nstored(b) == 1 * 1 + 2 * 2
-    @test block_nstored(b) == 2
+    for b in (a[2:4, 2:4], @view(a[2:4, 2:4]))
+      @test b == Array(a)[2:4, 2:4]
+      @test size(b) == (3, 3)
+      @test blocksize(b) == (2, 2)
+      @test nstored(b) == 1 * 1 + 2 * 2
+      @test block_nstored(b) == 2
+      for f in (getindex, view)
+        @test size(f(b, Block(1, 1))) == (1, 2)
+        @test size(f(b, Block(2, 1))) == (2, 2)
+        @test size(f(b, Block(1, 2))) == (1, 1)
+        @test size(f(b, Block(2, 2))) == (2, 1)
+        @test f(b, Block(1, 1)) == a[Block(1, 1)[2:2, 2:3]]
+        @test f(b, Block(2, 1)) == a[Block(2, 1)[1:2, 2:3]]
+        @test f(b, Block(1, 2)) == a[Block(1, 2)[2:2, 1:1]]
+        @test f(b, Block(2, 2)) == a[Block(2, 2)[1:2, 1:1]]
+      end
+    end
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]
@@ -309,19 +365,19 @@ include("TestBlockSparseArraysUtils.jl")
     b = @view a[Block(2, 2)]
     @test size(b) == (3, 4)
     for i in parentindices(b)
-      @test i isa BlockSlice{<:Block{1}}
+      @test i isa Base.OneTo{Int}
     end
-    @test parentindices(b)[1] == BlockSlice(Block(2), 3:5)
-    @test parentindices(b)[2] == BlockSlice(Block(2), 4:7)
+    @test parentindices(b)[1] == 1:3
+    @test parentindices(b)[2] == 1:4
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @view a[Block(2, 2)[1:2, 2:2]]
     @test size(b) == (2, 1)
     for i in parentindices(b)
-      @test i isa BlockSlice{<:BlockIndexRange{1}}
+      @test i isa UnitRange{Int}
     end
-    @test parentindices(b)[1] == BlockSlice(Block(2)[1:2], 3:4)
-    @test parentindices(b)[2] == BlockSlice(Block(2)[2:2], 5:5)
+    @test parentindices(b)[1] == 1:2
+    @test parentindices(b)[2] == 2:2
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     x = randn(elt, 1, 2)
@@ -337,17 +393,23 @@ include("TestBlockSparseArraysUtils.jl")
     @test @view(a[Block(2, 2)])[1:1, 1:2] == x
     @test a[3:3, 4:5] == x
 
+    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    b = @views a[Block(2, 2)][1:2, 2:3]
+    @test b isa SubArray{<:Any,<:Any,<:BlockView}
+    for i in parentindices(b)
+      @test i isa UnitRange{Int}
+    end
+    x = randn(elt, 2, 2)
+    b .= x
+    @test a[Block(2, 2)[1:2, 2:3]] == x
+    @test a[Block(2, 2)[1:2, 2:3]] == b
+    @test block_nstored(a) == 1
+
     a = BlockSparseArray{elt}([2, 3], [2, 3])
     @views for b in [Block(1, 1), Block(2, 2)]
       a[b] = randn(elt, size(a[b]))
     end
-    for I in (
-      Block.(1:2),
-      [Block(1), Block(2)],
-      BlockVector([Block(1), Block(2)], [1, 1]),
-      # TODO: This should merge blocks.
-      BlockVector([Block(1), Block(2)], [2]),
-    )
+    for I in (Block.(1:2), [Block(1), Block(2)])
       b = @view a[I, I]
       for I in CartesianIndices(a)
         @test b[I] == a[I]
@@ -362,12 +424,7 @@ include("TestBlockSparseArraysUtils.jl")
       # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
       a[b] = randn(elt, size(a[b]))
     end
-    for I in (
-      [Block(2), Block(1)],
-      BlockVector([Block(2), Block(1)], [1, 1]),
-      # TODO: This should merge blocks.
-      BlockVector([Block(2), Block(1)], [2]),
-    )
+    for I in ([Block(2), Block(1)],)
       b = @view a[I, I]
       @test b[Block(1, 1)] == a[Block(2, 2)]
       @test b[Block(2, 1)] == a[Block(1, 2)]
@@ -490,25 +547,145 @@ include("TestBlockSparseArraysUtils.jl")
       @test b[Block(2, 2)] == x
     end
 
+    function f1()
+      a = BlockSparseArray{elt}([2, 3], [3, 4])
+      b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+      x = randn(elt, 3, 4)
+      b[Block(1, 1)] .= x
+      return (; a, b, x)
+    end
+    function f2()
+      a = BlockSparseArray{elt}([2, 3], [3, 4])
+      b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
+      x = randn(elt, 3, 4)
+      b[Block(1, 1)] = x
+      return (; a, b, x)
+    end
+    for abx in (f1(), f2())
+      @compat (; a, b, x) = abx
+      @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
+      @test block_nstored(b) == 1
+      @test b[Block(1, 1)] == x
+      @test @view(b[Block(1, 1)]) isa Matrix{elt}
+      for blck in [Block(2, 1), Block(1, 2), Block(2, 2)]
+        @test iszero(b[blck])
+      end
+      @test block_nstored(a) == 1
+      @test a[Block(2, 2)] == x
+      for blck in [Block(1, 1), Block(2, 1), Block(1, 2)]
+        @test iszero(a[blck])
+      end
+      @test_throws DimensionMismatch b[Block(1, 1)] .= randn(2, 3)
+    end
+
     a = BlockSparseArray{elt}([2, 3], [3, 4])
-    b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
-    x = randn(elt, 3, 4)
-    b[Block(1, 1)] .= x
-    @test b[Block(1, 1)] == x
-    @test a[Block(2, 2)] == x
-    @test_throws DimensionMismatch b[Block(1, 1)] .= randn(2, 3)
+    b = @views a[[Block(2), Block(1)], [Block(2), Block(1)]][Block(2, 1)]
+    @test iszero(b)
+    @test size(b) == (2, 4)
+    x = randn(elt, 2, 4)
+    b .= x
+    @test b == x
+    @test a[Block(1, 2)] == x
+    @test block_nstored(a) == 1
+
+    a = BlockSparseArray{elt}([4, 3, 2], [4, 3, 2])
+    @views for B in [Block(1, 1), Block(2, 2), Block(3, 3)]
+      a[B] = randn(elt, size(a[B]))
+    end
+    b = @view a[[Block(3), Block(2), Block(1)], [Block(3), Block(2), Block(1)]]
+    @test b isa SubArray{<:Any,<:Any,<:BlockSparseArray}
+    c = @view b[4:8, 4:8]
+    @test c isa SubArray{<:Any,<:Any,<:BlockSparseArray}
+    @test size(c) == (5, 5)
+    @test block_nstored(c) == 2
+    @test blocksize(c) == (2, 2)
+    @test blocklengths.(axes(c)) == ([2, 3], [2, 3])
+    @test size(c[Block(1, 1)]) == (2, 2)
+    @test c[Block(1, 1)] == a[Block(2, 2)[2:3, 2:3]]
+    @test size(c[Block(2, 2)]) == (3, 3)
+    @test c[Block(2, 2)] == a[Block(1, 1)[1:3, 1:3]]
+    @test size(c[Block(2, 1)]) == (3, 2)
+    @test iszero(c[Block(2, 1)])
+    @test size(c[Block(1, 2)]) == (2, 3)
+    @test iszero(c[Block(1, 2)])
+
+    x = randn(elt, 3, 3)
+    c[Block(2, 2)] = x
+    @test c[Block(2, 2)] == x
+    @test a[Block(1, 1)[1:3, 1:3]] == x
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
     for index in parentindices(@view(b[Block(1, 1)]))
-      @test index isa BlockSlice{<:Block{1}}
+      @test index isa Base.OneTo{Int}
     end
 
     a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a[Block(1, 1)] = randn(elt, 2, 3)
     b = @view a[Block(1, 1)[1:2, 1:1]]
+    @test b isa SubArray{elt,2,Matrix{elt}}
     for i in parentindices(b)
-      @test i isa BlockSlice{<:BlockIndexRange{1}}
+      @test i isa UnitRange{Int}
     end
+
+    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+      a[I] = randn(elt, size(a[I]))
+    end
+    for I in (blockedrange([4, 4]), BlockedVector(Block.(1:4), [2, 2]))
+      b = @view a[I, I]
+      @test copy(b) == a
+      @test blocksize(b) == (2, 2)
+      @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
+      @test b[Block(1, 1)] == a[Block.(1:2), Block.(1:2)]
+      @test b[Block(2, 1)] == a[Block.(3:4), Block.(1:2)]
+      @test b[Block(1, 2)] == a[Block.(1:2), Block.(3:4)]
+      @test b[Block(2, 2)] == a[Block.(3:4), Block.(3:4)]
+      c = @view b[Block(2, 2)]
+      @test blocksize(c) == (1, 1)
+      @test c == a[Block.(3:4), Block.(3:4)]
+    end
+
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    a[Block(2, 2)] = randn(elt, 3, 3)
+    for I in (mortar([Block(1)[2:2], Block(2)[2:3]]), [Block(1)[2:2], Block(2)[2:3]])
+      b = @view a[:, I]
+      @test b == Array(a)[:, [2, 4, 5]]
+    end
+
+    # Merge and permute blocks.
+    a = BlockSparseArray{elt}([2, 2, 2, 2], [2, 2, 2, 2])
+    @views for I in [Block(1, 1), Block(2, 2), Block(3, 3), Block(4, 4)]
+      a[I] = randn(elt, size(a[I]))
+    end
+    for I in (
+      BlockVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
+      BlockedVector([Block(4), Block(3), Block(2), Block(1)], [2, 2]),
+    )
+      b = @view a[I, I]
+      J = [Block(4), Block(3), Block(2), Block(1)]
+      @test b == a[J, J]
+      @test copy(b) == a[J, J]
+      @test blocksize(b) == (2, 2)
+      @test blocklengths.(axes(b)) == ([4, 4], [4, 4])
+      @test b[Block(1, 1)] == Array(a)[[7, 8, 5, 6], [7, 8, 5, 6]]
+      c = @views b[Block(1, 1)][2:3, 2:3]
+      @test c == Array(a)[[8, 5], [8, 5]]
+      @test copy(c) == Array(a)[[8, 5], [8, 5]]
+      c = @view b[Block(1, 1)[2:3, 2:3]]
+      @test c == Array(a)[[8, 5], [8, 5]]
+      @test copy(c) == Array(a)[[8, 5], [8, 5]]
+    end
+
+    # TODO: Add more tests of this, it may
+    # only be working accidentally.
+    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a[Block(1, 1)] = randn(elt, 2, 2)
+    a[Block(2, 2)] = randn(elt, 3, 3)
+    @test a[2:4, 4] == Array(a)[2:4, 4]
+    # TODO: Fix this.
+    @test_broken a[4, 2:4] == Array(a)[4, 2:4]
   end
   @testset "view!" begin
     for blk in ((Block(2, 2),), (Block(2), Block(2)))
