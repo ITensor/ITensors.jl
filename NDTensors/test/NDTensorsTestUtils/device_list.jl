@@ -1,5 +1,4 @@
 using Pkg: Pkg
-using JLArrays: JLArrays, jl
 using NDTensors: NDTensors
 
 if "cuda" in ARGS || "all" in ARGS
@@ -25,6 +24,10 @@ if "cutensor" in ARGS || "all" in ARGS
   Pkg.add("cuTENSOR")
   Pkg.add("CUDA")
   using CUDA, cuTENSOR
+end
+if isempty(ARGS) || "base" in ARGS
+  Pkg.add("JLArrays")
+  using JLArrays: jl
 end
 
 function devices_list(test_args)
