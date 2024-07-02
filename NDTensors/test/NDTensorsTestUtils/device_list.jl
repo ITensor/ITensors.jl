@@ -25,10 +25,8 @@ if "cutensor" in ARGS || "all" in ARGS
   Pkg.add("CUDA")
   using CUDA, cuTENSOR
 end
-if isempty(ARGS) || VERSION > v"1.7"
-  Pkg.add("JLArrays")
-  using JLArrays: jl
-end
+
+using JLArrays: jl
 
 function devices_list(test_args)
   devs = Vector{Function}(undef, 0)
