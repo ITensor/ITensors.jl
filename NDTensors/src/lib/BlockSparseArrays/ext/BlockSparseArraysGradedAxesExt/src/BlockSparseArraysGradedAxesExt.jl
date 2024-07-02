@@ -66,7 +66,12 @@ function TensorAlgebra.splitdims(
       return length(axis) ≤ length(axes(a, i))
     end
   blockperms = invblockperm.(blocksortperm.(axes_prod))
-  a_blockpermed = a[blockperms...]
+  # TODO: This is doing extra copies of the blocks,
+  # use `@view a[axes_prod...]` instead.
+  # That will require implementing some reindexing logic
+  # for this combination of slicing.
+  a_unblocked = a[axes_prod...]
+  a_blockpermed = a_unblocked[blockperms...]
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
 end
 

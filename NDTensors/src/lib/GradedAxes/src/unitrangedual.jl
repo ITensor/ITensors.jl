@@ -51,6 +51,10 @@ function Base.getindex(a::UnitRangeDual, indices::Vector{<:BlockIndexRange{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
 
+function to_blockindices(a::UnitRangeDual, indices::UnitRange{<:Integer})
+  return to_blockindices(nondual(a), indices)
+end
+
 Base.axes(a::UnitRangeDual) = axes(nondual(a))
 
 using BlockArrays: BlockArrays, Block, BlockSlice
@@ -103,4 +107,13 @@ function Base.OrdinalRange{Int,Int}(
   # TODO: Implement this broadcasting operation and use it here.
   # return Int.(r)
   return unlabel(nondual(r))
+end
+
+# This is only needed in certain Julia versions below 1.10
+# (for example Julia 1.6).
+# TODO: Delete this once we drop Julia 1.6 support.
+# The type constraint `T<:Integer` is needed to avoid an ambiguity
+# error with a conversion method in Base.
+function Base.UnitRange{T}(a::UnitRangeDual{<:LabelledInteger{T}}) where {T<:Integer}
+  return UnitRange{T}(nondual(a))
 end

@@ -2,6 +2,8 @@ using BlockArrays:
   AbstractBlockVector,
   Block,
   BlockIndex,
+  BlockRange,
+  BlockSlice,
   BlockVector,
   BlockedUnitRange,
   BlockedVector,
@@ -12,7 +14,6 @@ using BlockArrays:
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
 using ..SparseArrayInterface: perm, iperm, nstored, sparse_zero!
-## using MappedArrays: mappedarray
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
@@ -28,9 +29,18 @@ end
 # https://github.com/JuliaArrays/BlockArrays.jl/issues/347 and also
 # https://github.com/ITensor/ITensors.jl/issues/1336.
 function blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
-  bs1 = blockrange(inds[1], I[1])
+  bs1 = to_blockindices(inds[1], I[1])
   I1 = BlockSlice(bs1, blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
+end
+
+# Special case when there is no blocking.
+function blocksparse_to_indices(
+  a,
+  inds::Tuple{Base.OneTo{<:Integer},Vararg{Any}},
+  I::Tuple{UnitRange{<:Integer},Vararg{Any}},
+)
+  return (inds[1][I[1]], to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
@@ -39,17 +49,22 @@ function blocksparse_to_indices(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
-# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
-# Permute and merge blocks.
-# TODO: This isn't merging blocks yet, that needs to be implemented that.
-function blocksparse_to_indices(a, inds, I::Tuple{BlockVector{<:Block{1}},Vararg{Any}})
+# a[mortar([Block(1)[1:2], Block(2)[1:3]]), mortar([Block(1)[1:2], Block(2)[1:3]])]
+# a[[Block(1)[1:2], Block(2)[1:3]], [Block(1)[1:2], Block(2)[1:3]]]
+function blocksparse_to_indices(
+  a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
+)
   I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
-# TODO: Should this be combined with the version above?
-function blocksparse_to_indices(a, inds, I::Tuple{BlockedVector{<:Block{1}},Vararg{Any}})
-  I1 = blockedunitrange_getindices(inds[1], I[1])
+# a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
+# Permute and merge blocks.
+# TODO: This isn't merging blocks yet, that needs to be implemented that.
+function blocksparse_to_indices(
+  a, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}}
+)
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
@@ -231,13 +246,13 @@ function Base.size(a::SparseSubArrayBlocks)
 end
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::Vararg{Int,N}) where {N}
   # TODO: Should this be defined as `@view a.array[Block(I)]` instead?
-  ## return @view a.array[Block(I)]
+  return @view a.array[Block(I)]
 
-  parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
-  parent_block = parent_blocks[I...]
-  # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
-  block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
-  return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
+  ## parent_blocks = @view blocks(parent(a.array))[blockrange(a)...]
+  ## parent_block = parent_blocks[I...]
+  ## # TODO: Define this using `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
+  ## block = Block(ntuple(i -> blockrange(a)[i][I[i]], ndims(a)))
+  ## return @view parent_block[blockindices(parent(a.array), block, a.array.indices)...]
 end
 # TODO: This should be handled by generic `AbstractSparseArray` code.
 function Base.getindex(a::SparseSubArrayBlocks{<:Any,N}, I::CartesianIndex{N}) where {N}
@@ -278,6 +293,15 @@ end
 
 function blocksparse_blocks(a::SubArray)
   return SparseSubArrayBlocks(a)
+end
+
+to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
+to_blocks_indices(I::BlockIndices{<:Vector{<:Block{1}}}) = Int.(I.blocks)
+
+function blocksparse_blocks(
+  a::SubArray{<:Any,<:Any,<:Any,<:Tuple{Vararg{BlockSliceCollection}}}
+)
+  return @view blocks(parent(a))[map(to_blocks_indices, parentindices(a))...]
 end
 
 using BlockArrays: BlocksView

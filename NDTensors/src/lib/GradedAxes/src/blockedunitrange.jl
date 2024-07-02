@@ -1,10 +1,14 @@
 using BlockArrays:
   BlockArrays,
+  AbstractBlockVector,
   AbstractBlockedUnitRange,
   Block,
+  BlockIndex,
   BlockIndexRange,
   BlockRange,
   BlockSlice,
+  BlockVector,
+  BlockedOneTo,
   BlockedUnitRange,
   BlockedVector,
   block,
@@ -72,18 +76,30 @@ function blockedunitrange_getindices(
 end
 
 # TODO: Make sure this handles block labels (AbstractGradedUnitRange) correctly.
+# TODO: Make a special case for `BlockedVector{<:Block{1},<:BlockRange{1}}`?
+# For example:
+# ```julia
+# blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
+# return blockedrange(blocklengths)
+# ```
 function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange, indices::BlockedVector{<:Block{1},<:BlockRange{1}}
+  a::AbstractBlockedUnitRange, indices::AbstractBlockVector{<:Block{1}}
 )
-  blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
-  return blockedrange(blocklengths)
-end
-
-# TODO: Make sure this handles block labels (AbstractGradedUnitRange) correctly.
-function blockedunitrange_getindices(
-  a::AbstractBlockedUnitRange, indices::BlockedVector{<:Block{1}}
-)
-  return mortar(map(bs -> mortar(map(b -> a[b], bs)), blocks(indices)))
+  blks = map(bs -> mortar(map(b -> a[b], bs)), blocks(indices))
+  # We pass `length.(blks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  # Note there is a more specialized definition:
+  # ```julia
+  # function blockedunitrange_getindices(
+  #   a::AbstractGradedUnitRange, indices::AbstractBlockVector{<:Block{1}}
+  # )
+  # ```
+  # that does a better job of preserving labels, since `length`
+  # may drop labels for certain block types.
+  return mortar(blks, length.(blks))
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
@@ -127,6 +143,13 @@ function blockedunitrange_getindices(a::AbstractBlockedUnitRange, indices::Block
   return a[indices]
 end
 
+function blockedunitrange_getindices(
+  a::AbstractBlockedUnitRange,
+  indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},
+)
+  return mortar(map(b -> a[b], blocks(indices)))
+end
+
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(a::AbstractBlockedUnitRange, indices)
   return error("Not implemented.")
@@ -140,3 +163,24 @@ end
 function _blocks(a::AbstractUnitRange, indices::BlockRange)
   return indices
 end
+
+# Slice `a` by `I`, returning a:
+# `BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}`
+# with the `BlockIndex{1}` corresponding to each value of `I`.
+function to_blockindices(a::BlockedOneTo{<:Integer}, I::UnitRange{<:Integer})
+  return mortar(
+    map(blocks(blockedunitrange_getindices(a, I))) do r
+      bi_first = findblockindex(a, first(r))
+      bi_last = findblockindex(a, last(r))
+      @assert block(bi_first) == block(bi_last)
+      return block(bi_first)[blockindex(bi_first):blockindex(bi_last)]
+    end,
+  )
+end
+
+# This handles non-blocked slices.
+# For example:
+# a = BlockSparseArray{Float64}([2, 2, 2, 2])
+# I = BlockedVector(Block.(1:4), [2, 2])
+# @views a[I][Block(1)]
+to_blockindices(a::Base.OneTo{<:Integer}, I::UnitRange{<:Integer}) = I
