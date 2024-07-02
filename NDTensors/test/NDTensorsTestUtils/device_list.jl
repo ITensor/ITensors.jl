@@ -25,7 +25,7 @@ if "cutensor" in ARGS || "all" in ARGS
   Pkg.add("CUDA")
   using CUDA, cuTENSOR
 end
-if isempty(ARGS) || "base" in ARGS
+if isempty(ARGS) || VERSION > v"1.7"
   Pkg.add("JLArrays")
   using JLArrays: jl
 end
