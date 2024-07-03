@@ -7,7 +7,7 @@ pipeline {
   stages {
     stage('GPU Testing') {
       parallel {
-        stage('NDTensorsCUDAExt julia-1.6') {
+        stage('NDTensorsCUDAExt julia-1.8') {
 	        options {
             timeout(time: 45, unit: 'MINUTES')
           }
@@ -16,7 +16,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.6'
+              additionalBuildArgs  '--build-arg JULIA=1.8'
               args '--gpus "device=0"'
             }
           }
