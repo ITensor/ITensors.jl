@@ -1,11 +1,24 @@
 @eval module $(gensym())
-using NDTensors
-using Test: @testset, @test, @test_throws
-using GPUArraysCore: @allowscalar
 using Adapt: adapt
+using GPUArraysCore: @allowscalar
+using LinearAlgebra: diagm, dot, norm
+using NDTensors:
+  NDTensors,
+  Dense,
+  Diag,
+  DiagTensor,
+  Tensor,
+  array,
+  contract,
+  data,
+  dense,
+  diaglength,
+  matrix,
+  randomTensor,
+  tensor
+using Test: @testset, @test, @test_throws
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list, is_supported_eltype
-using LinearAlgebra: dot
 
 @testset "DiagTensor basic functionality" begin
   @testset "test device: $dev" for dev in devices_list(copy(ARGS)),
@@ -16,7 +29,7 @@ using LinearAlgebra: dot
       continue
     end
     t = dev(tensor(Diag(rand(elt, 100)), (100, 100)))
-    @test conj(data(store(t))) == data(store(conj(t)))
+    @test conj(data(t)) == data(conj(t))
     @test typeof(conj(t)) <: DiagTensor
 
     d = rand(real(elt), 10)
@@ -34,17 +47,36 @@ using LinearAlgebra: dot
     D = Tensor(Diag(1), (2, 2))
     @test norm(D) == √2
     d = 3
+    ## TODO this fails because uniform diag tensors are immutable
+    #S = NDTensors.map_diag((i->i * 2), dev(D))
+    # @allowscalar for i in 1:diaglength(S)
+    #   @test  S[i,i] == 2.0 * D[i,i]
+    # end
+
     vr = rand(elt, d)
     D = dev(tensor(Diag(vr), (d, d)))
-    Da = Array(D)
-    Dm = Matrix(D)
-    @allowscalar begin
-      @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
-      @test Da == NDTensors.LinearAlgebra.diagm(0 => vr)
+    Da = array(D)
+    Dm = matrix(D)
+    Dp = permutedims(D, (2, 1))
+    for x in (Da, Dm, Dp)
+      @test x == dev(diagm(0 => vr))
+      @test x == dev(diagm(0 => vr))
+      @test x == D
+    end
 
-      ## TODO Currently this permutedims requires scalar indexing on GPU.
-      Da = permutedims(D, (2, 1))
-      @test Da == D
+    # This if statement corresponds to the reported bug:
+    # https://github.com/JuliaGPU/Metal.jl/issues/364
+    if !(dev == NDTensors.mtl && elt === ComplexF32)
+      S = permutedims(dev(D), (1, 2), sqrt)
+      @allowscalar begin
+        for i in 1:diaglength(S)
+          @test S[i, i] ≈ sqrt(D[i, i])
+        end
+      end
+    end
+    S = NDTensors.map_diag(i -> 2 * i, dev(D))
+    @allowscalar for i in 1:diaglength(S)
+      @test S[i, i] == 2 * D[i, i]
     end
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
@@ -61,16 +93,26 @@ end
 @testset "DiagTensor contractions" for dev in devices_list(copy(ARGS))
   ## TODO add more GPU tests
   elt = (dev == NDTensors.mtl ? Float32 : Float64)
-  t = tensor(Diag(elt[1.0, 1.0, 1.0]), (3, 3))
-  A = randomTensor(Dense{elt}, (3, 3))
+  t = dev(tensor(Diag(elt[1.0, 1.0, 1.0]), (3, 3)))
+  A = dev(randomTensor(Dense{elt}, (3, 3)))
+
+  @test sum(t) ≈ sum(array(t))
+  @test sum(A) ≈ sum(array(A))
+  @test prod(t) ≈ prod(array(t))
+  @test prod(A) ≈ prod(array(A))
 
   @test contract(t, (1, -2), t, (-2, 3)) == t
   @test contract(A, (1, -2), t, (-2, 3)) == A
   @test contract(A, (-2, 1), t, (-2, 3)) == transpose(A)
 
   ## Testing sparse contractions on GPU
-  t = tensor(Diag(one(elt)), (3, 3))
-  @test contract(t, (-1, -2), dev(A), (-1, -2))[] ≈ dot(t, A) rtol = sqrt(eps(elt))
+  t = dev(tensor(Diag(one(elt)), (3, 3)))
+  @test contract(t, (-1, -2), A, (-1, -2))[] ≈ dot(dev(array(t)), array(A)) rtol = sqrt(
+    eps(elt)
+  )
+
+  ## Test dot on GPU
+  @test dot(t, A) ≈ dot(dev(array(t)), array(A)) rtol = sqrt(eps(elt))
 end
 nothing
 end

@@ -1,14 +1,22 @@
 module BlockSparseArraysGradedAxesExt
-using BlockArrays: AbstractBlockVector, Block, BlockedUnitRange, blocks
+using BlockArrays:
+  AbstractBlockVector,
+  AbstractBlockedUnitRange,
+  Block,
+  BlockIndexRange,
+  blockedrange,
+  blocks
 using ..BlockSparseArrays:
   BlockSparseArrays,
   AbstractBlockSparseArray,
   AbstractBlockSparseMatrix,
   BlockSparseArray,
   BlockSparseMatrix,
+  BlockSparseVector,
   block_merge
 using ...GradedAxes:
-  GradedUnitRange,
+  GradedAxes,
+  AbstractGradedUnitRange,
   OneToOne,
   blockmergesortperm,
   blocksortperm,
@@ -23,11 +31,13 @@ using ...TensorAlgebra:
 # TODO: Make a `ReduceWhile` library.
 include("reducewhile.jl")
 
-TensorAlgebra.FusionStyle(::GradedUnitRange) = SectorFusion()
+TensorAlgebra.FusionStyle(::AbstractGradedUnitRange) = SectorFusion()
 
 # TODO: Need to implement this! Will require implementing
 # `block_merge(a::AbstractUnitRange, blockmerger::BlockedUnitRange)`.
-function BlockSparseArrays.block_merge(a::GradedUnitRange, blockmerger::BlockedUnitRange)
+function BlockSparseArrays.block_merge(
+  a::AbstractGradedUnitRange, blockmerger::AbstractBlockedUnitRange
+)
   return a
 end
 
@@ -56,7 +66,12 @@ function TensorAlgebra.splitdims(
       return length(axis) ≤ length(axes(a, i))
     end
   blockperms = invblockperm.(blocksortperm.(axes_prod))
-  a_blockpermed = a[blockperms...]
+  # TODO: This is doing extra copies of the blocks,
+  # use `@view a[axes_prod...]` instead.
+  # That will require implementing some reindexing logic
+  # for this combination of slicing.
+  a_unblocked = a[axes_prod...]
+  a_blockpermed = a_unblocked[blockperms...]
   return splitdims(BlockReshapeFusion(), a_blockpermed, split_axes...)
 end
 
@@ -73,6 +88,21 @@ end
 # matrix has graded axes.
 function Base.axes(a::Adjoint{<:Any,<:AbstractBlockSparseMatrix})
   return dual.(reverse(axes(a')))
+end
+
+# This definition is only needed since calls like
+# `a[[Block(1), Block(2)]]` where `a isa AbstractGradedUnitRange`
+# returns a `BlockSparseVector` instead of a `BlockVector`
+# due to limitations in the `BlockArray` type not allowing
+# axes with non-Int element types.
+# TODO: Remove this once that issue is fixed,
+# see https://github.com/JuliaArrays/BlockArrays.jl/pull/405.
+using BlockArrays: BlockRange
+using NDTensors.LabelledNumbers: label
+function GradedAxes.blocklabels(a::BlockSparseVector)
+  return map(BlockRange(a)) do block
+    return label(blocks(a)[Int(block)])
+  end
 end
 
 # This is a temporary fix for `show` being broken for BlockSparseArrays

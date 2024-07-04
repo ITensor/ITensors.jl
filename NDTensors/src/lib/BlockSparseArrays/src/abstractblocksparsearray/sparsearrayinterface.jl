@@ -32,3 +32,7 @@ end
 function SparseArrayInterface.sparse_storage(a::AbstractBlockSparseArray)
   return BlockSparseStorage(a)
 end
+
+function SparseArrayInterface.nstored(a::BlockSparseArrayLike)
+  return sum(nstored, sparse_storage(blocks(a)); init=zero(Int))
+end

@@ -153,23 +153,16 @@ function sparse_setindex!(a::AbstractArray, value, I::StoredIndex)
 end
 
 function sparse_setindex!(a::AbstractArray, value, I::NotStoredIndex)
-  if !iszero(value)
-    setindex_notstored!(a, value, index(I))
-  end
+  setindex_notstored!(a, value, index(I))
   return a
 end
 
 # isassigned
-function sparse_isassigned(a::AbstractArray, I::Integer...)
-  return sparse_isassigned(a, CartesianIndex(I))
+function sparse_isassigned(a::AbstractArray{<:Any,N}, I::CartesianIndex{N}) where {N}
+  return sparse_isassigned(a, Tuple(I)...)
 end
-sparse_isassigned(a::AbstractArray, I::NotStoredIndex) = true
-sparse_isassigned(a::AbstractArray, I::StoredIndex) = sparse_isassigned(a, StorageIndex(I))
-function sparse_isassigned(a::AbstractArray, I::StorageIndex)
-  return isassigned(sparse_storage(a), index(I))
-end
-function sparse_isassigned(a::AbstractArray, I::CartesianIndex)
-  return sparse_isassigned(a, storage_index(a, I))
+function sparse_isassigned(a::AbstractArray{<:Any,N}, I::Vararg{Integer,N}) where {N}
+  return all(dim -> I[dim] ∈ axes(a, dim), 1:ndims(a))
 end
 
 # A set of indices into the storage of the sparse array.

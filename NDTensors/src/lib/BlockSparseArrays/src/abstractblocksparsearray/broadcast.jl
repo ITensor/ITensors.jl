@@ -1,4 +1,4 @@
-using BlockArrays: BlockedUnitRange, BlockSlice
+using BlockArrays: AbstractBlockedUnitRange, BlockSlice
 using Base.Broadcast: Broadcast
 
 function Broadcast.BroadcastStyle(arraytype::Type{<:BlockSparseArrayLike})
@@ -12,7 +12,7 @@ function Broadcast.BroadcastStyle(
       <:Any,
       <:Any,
       <:AbstractBlockSparseArray,
-      <:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}},
+      <:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}},
     },
   },
 )
@@ -25,8 +25,8 @@ function Broadcast.BroadcastStyle(
       <:Any,
       <:AbstractBlockSparseArray,
       <:Tuple{
-        BlockSlice{<:Any,<:BlockedUnitRange},
-        BlockSlice{<:Any,<:BlockedUnitRange},
+        BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},
+        BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},
         Vararg{Any},
       },
     },
@@ -40,7 +40,7 @@ function Broadcast.BroadcastStyle(
       <:Any,
       <:Any,
       <:AbstractBlockSparseArray,
-      <:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}},
+      <:Tuple{Any,BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}},
     },
   },
 )

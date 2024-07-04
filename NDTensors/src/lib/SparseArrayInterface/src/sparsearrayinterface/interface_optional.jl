@@ -15,6 +15,7 @@ end
 # where there is not a stored value.
 # Some types (like `Diagonal`) may not support this.
 function setindex_notstored!(a::AbstractArray, value, I)
+  iszero(value) && return a
   return throw(ArgumentError("Can't set nonzero values of $(typeof(a))."))
 end
 

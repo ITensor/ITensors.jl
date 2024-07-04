@@ -21,6 +21,14 @@ using Test: @test, @testset
   for I in eachindex(a)
     @test iszero(a)
   end
+  for I in CartesianIndices(a)
+    @test isassigned(a, Tuple(I)...)
+    @test isassigned(a, I)
+  end
+  @test !isassigned(a, 0, 1)
+  @test !isassigned(a, CartesianIndex(0, 1))
+  @test !isassigned(a, 1, 4)
+  @test !isassigned(a, CartesianIndex(1, 4))
 
   a = SparseArray{elt}(2, 3)
   fill!(a, 0)
@@ -60,6 +68,14 @@ using Test: @test, @testset
       @test iszero(a[I])
     end
   end
+  for I in CartesianIndices(a)
+    @test isassigned(a, Tuple(I)...)
+    @test isassigned(a, I)
+  end
+  @test !isassigned(a, 0, 1)
+  @test !isassigned(a, CartesianIndex(0, 1))
+  @test !isassigned(a, 1, 4)
+  @test !isassigned(a, CartesianIndex(1, 4))
 
   a = SparseArray{elt}(2, 3)
   a[1, 2] = 12
@@ -264,7 +280,12 @@ using Test: @test, @testset
   a′ = copy(a)
   a′ .+= b
   @test a′ == a + b
-  @test SparseArrayInterface.nstored(a′) == 2
+  # TODO: Should this be:
+  # ```julia
+  # @test SparseArrayInterface.nstored(a′) == 2
+  # ```
+  # ? I.e. should it only store the nonzero values?
+  @test SparseArrayInterface.nstored(a′) == 6
 
   # Matrix multiplication
   a1 = SparseArray{elt}(2, 3)

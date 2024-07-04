@@ -106,6 +106,22 @@ using Test
       end
     end
 
+    @testset "reductions (sum, prod)" for elt in (
+      Float32, Float64, Complex{Float32}, Complex{Float64}
+    )
+      a = diag_itensor(randn(elt, 2), Index(2), Index(2))
+      @test sum(a) ≈ sum(array(a))
+      @test sum(a) isa elt
+      @test prod(a) ≈ prod(array(a))
+      @test prod(a) isa elt
+
+      a = diag_itensor(randn(elt, 1), Index(1), Index(1))
+      @test sum(a) ≈ sum(array(a))
+      @test sum(a) isa elt
+      @test prod(a) ≈ prod(array(a))
+      @test prod(a) isa elt
+    end
+
     @testset "Complex operations" begin
       xr = randn(d)
       xi = randn(d)

@@ -38,13 +38,19 @@ Base.:(==)(x::LabelledInteger, y::LabelledInteger) = labelled_isequal(x, y)
 Base.:(==)(x::LabelledInteger, y::Number) = labelled_isequal(x, y)
 Base.:(==)(x::Number, y::LabelledInteger) = labelled_isequal(x, y)
 Base.:<(x::LabelledInteger, y::LabelledInteger) = labelled_isless(x, y)
+# This is only needed on older versions of Julia, like Julia 1.6.
+# TODO: Delete once we drop support for Julia 1.6.
+function Base.:<=(x::LabelledInteger, y::LabelledInteger)
+  return labelled_isless(x, y) || labelled_isequal(x, y)
+end
 # TODO: Define `labelled_colon`.
 (::Base.Colon)(start::LabelledInteger, stop::LabelledInteger) = unlabel(start):unlabel(stop)
 Base.zero(lobject::LabelledInteger) = labelled_zero(lobject)
 Base.one(lobject::LabelledInteger) = labelled_one(lobject)
 Base.one(type::Type{<:LabelledInteger}) = labelled_one(type)
 Base.oneunit(lobject::LabelledInteger) = labelled_oneunit(lobject)
-Base.oneunit(type::Type{<:LabelledInteger}) = error("Not implemented.")
+Base.oneunit(type::Type{<:LabelledInteger}) = oneunit(unlabel_type(type))
+Base.zero(type::Type{<:LabelledInteger}) = zero(unlabel_type(type))
 
 Base.Int(x::LabelledInteger) = Int(unlabel(x))
 

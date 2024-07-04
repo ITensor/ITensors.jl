@@ -68,13 +68,12 @@ end
 Random.randn!(S::TensorStorage) = randn!(Random.default_rng(), S)
 Random.randn!(rng::AbstractRNG, S::TensorStorage) = (randn!(rng, data(S)); S)
 
-function map(f, x::TensorStorage{T}) where {T}
-  if !iszero(f(zero(T)))
-    error(
-      "map(f, ::TensorStorage) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.",
-    )
-  end
-  return setdata(x, map(f, data(x)))
+function Base.map(f, t1::TensorStorage, t_tail::TensorStorage...; kwargs...)
+  return setdata(t1, map(f, data(t1), data.(t_tail)...; kwargs...))
+end
+
+function Base.mapreduce(f, op, t1::TensorStorage, t_tail::TensorStorage...; kwargs...)
+  return mapreduce(f, op, data(t1), data.(t_tail)...; kwargs...)
 end
 
 Base.fill!(S::TensorStorage, v) = (fill!(data(S), v); S)
