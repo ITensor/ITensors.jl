@@ -18,7 +18,7 @@ if "metal" in ARGS || "all" in ARGS
 end
 if "cutensor" in ARGS || "all" in ARGS
   if in("TensorOperations", map(v -> v.name, values(Pkg.dependencies())))
-    Pkg.rm("TensorOperations")
+    Pkg.add(; url="https://github.com/Jutho/TensorOperations.jl.git")
   end
   Pkg.add("cuTENSOR")
   using CUDA, cuTENSOR

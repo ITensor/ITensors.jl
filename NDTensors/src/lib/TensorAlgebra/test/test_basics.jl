@@ -122,51 +122,48 @@ end
     @test eltype(a_split) === elt
     @test a_split ≈ reshape(a, (2, 3, 20))
   end
-  ## Right now TensorOperations version is downgraded when using cuTENSOR to `v0.7` we
-  ## are waiting for TensorOperations to support the breaking changes in cuTENSOR 2.x
-  if !("cutensor" ∈ ARGS)
-    using TensorOperations: TensorOperations
-    @testset "contract (eltype1=$elt1, eltype2=$elt2)" for elt1 in elts, elt2 in elts
-      dims = (2, 3, 4, 5, 6, 7, 8, 9, 10)
-      labels = (:a, :b, :c, :d, :e, :f, :g, :h, :i)
-      for (d1s, d2s, d_dests) in (
-        ((1, 2), (1, 2), ()),
-        ((1, 2), (2, 1), ()),
-        ((1, 2), (2, 1, 3), (3,)),
-        ((1, 2, 3), (2, 1), (3,)),
-        ((1, 2), (2, 3), (1, 3)),
-        ((1, 2), (2, 3), (3, 1)),
-        ((2, 1), (2, 3), (3, 1)),
-        ((1, 2, 3), (2, 3, 4), (1, 4)),
-        ((1, 2, 3), (2, 3, 4), (4, 1)),
-        ((3, 2, 1), (4, 2, 3), (4, 1)),
-        ((1, 2, 3), (3, 4), (1, 2, 4)),
-        ((1, 2, 3), (3, 4), (4, 1, 2)),
-        ((1, 2, 3), (3, 4), (2, 4, 1)),
-        ((3, 1, 2), (3, 4), (2, 4, 1)),
-        ((3, 2, 1), (4, 3), (2, 4, 1)),
-        ((1, 2, 3, 4, 5, 6), (4, 5, 6, 7, 8, 9), (1, 2, 3, 7, 8, 9)),
-        ((2, 4, 5, 1, 6, 3), (6, 4, 9, 8, 5, 7), (1, 7, 2, 8, 3, 9)),
+  using TensorOperations: TensorOperations
+  @testset "contract (eltype1=$elt1, eltype2=$elt2)" for elt1 in elts, elt2 in elts
+    dims = (2, 3, 4, 5, 6, 7, 8, 9, 10)
+    labels = (:a, :b, :c, :d, :e, :f, :g, :h, :i)
+    for (d1s, d2s, d_dests) in (
+      ((1, 2), (1, 2), ()),
+      ((1, 2), (2, 1), ()),
+      ((1, 2), (2, 1, 3), (3,)),
+      ((1, 2, 3), (2, 1), (3,)),
+      ((1, 2), (2, 3), (1, 3)),
+      ((1, 2), (2, 3), (3, 1)),
+      ((2, 1), (2, 3), (3, 1)),
+      ((1, 2, 3), (2, 3, 4), (1, 4)),
+      ((1, 2, 3), (2, 3, 4), (4, 1)),
+      ((3, 2, 1), (4, 2, 3), (4, 1)),
+      ((1, 2, 3), (3, 4), (1, 2, 4)),
+      ((1, 2, 3), (3, 4), (4, 1, 2)),
+      ((1, 2, 3), (3, 4), (2, 4, 1)),
+      ((3, 1, 2), (3, 4), (2, 4, 1)),
+      ((3, 2, 1), (4, 3), (2, 4, 1)),
+      ((1, 2, 3, 4, 5, 6), (4, 5, 6, 7, 8, 9), (1, 2, 3, 7, 8, 9)),
+      ((2, 4, 5, 1, 6, 3), (6, 4, 9, 8, 5, 7), (1, 7, 2, 8, 3, 9)),
+    )
+      a1 = randn(elt1, map(i -> dims[i], d1s))
+      labels1 = map(i -> labels[i], d1s)
+      a2 = randn(elt2, map(i -> dims[i], d2s))
+      labels2 = map(i -> labels[i], d2s)
+      labels_dest = map(i -> labels[i], d_dests)
+
+      # Don't specify destination labels
+      a_dest, labels_dest′ = TensorAlgebra.contract(a1, labels1, a2, labels2)
+      a_dest_tensoroperations = TensorOperations.tensorcontract(
+        labels_dest′, a1, labels1, a2, labels2
       )
-        a1 = randn(elt1, map(i -> dims[i], d1s))
-        labels1 = map(i -> labels[i], d1s)
-        a2 = randn(elt2, map(i -> dims[i], d2s))
-        labels2 = map(i -> labels[i], d2s)
-        labels_dest = map(i -> labels[i], d_dests)
+      @test a_dest ≈ a_dest_tensoroperations
 
-        # Don't specify destination labels
-        a_dest, labels_dest′ = TensorAlgebra.contract(a1, labels1, a2, labels2)
-        a_dest_tensoroperations = TensorOperations.tensorcontract(
-          labels_dest′, a1, labels1, a2, labels2
-        )
-        @test a_dest ≈ a_dest_tensoroperations
-
-        # Specify destination labels
-        a_dest = TensorAlgebra.contract(labels_dest, a1, labels1, a2, labels2)
-        a_dest_tensoroperations = TensorOperations.tensorcontract(
-          labels_dest, a1, labels1, a2, labels2
-        )
-        @test a_dest ≈ a_dest_tensoroperations
+      # Specify destination labels
+      a_dest = TensorAlgebra.contract(labels_dest, a1, labels1, a2, labels2)
+      a_dest_tensoroperations = TensorOperations.tensorcontract(
+        labels_dest, a1, labels1, a2, labels2
+      )
+      @test a_dest ≈ a_dest_tensoroperations
 
         # Specify α and β
         elt_dest = promote_type(elt1, elt2)
