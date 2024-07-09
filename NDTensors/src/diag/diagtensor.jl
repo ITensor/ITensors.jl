@@ -82,7 +82,8 @@ setdiag(T::UniformDiagTensor, val) = tensor(Diag(val), inds(T))
   end
 end
 @propagate_inbounds getindex(T::DiagTensor{<:Number,1}, ind::Int) = storage(T)[ind]
-@propagate_inbounds getindex(T::DiagTensor{<:Number,0}) = storage(T)[1]
+using NDTensors.Expose: expose
+@propagate_inbounds getindex(T::DiagTensor{<:Number,0}) = getindex(expose(storage(T)))
 
 # Set diagonal elements
 # Throw error for off-diagonal
