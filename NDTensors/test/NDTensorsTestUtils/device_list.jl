@@ -26,7 +26,7 @@ if "cutensor" in ARGS || "all" in ARGS
   using CUDA, cuTENSOR
 end
 
-using JLArrays: jl
+using JLArrays: JLArrays, jl
 
 function devices_list(test_args)
   devs = Vector{Function}(undef, 0)
