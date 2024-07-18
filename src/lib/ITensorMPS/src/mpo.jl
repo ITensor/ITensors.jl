@@ -561,7 +561,7 @@ end
 """
     error_contract(y::MPS, A::MPO, x::MPS;
                    make_inds_match::Bool = true)
-    error_contract(y::MPS, x::MPS, x::MPO;
+    error_contract(y::MPS, x::MPS, A::MPO;
                    make_inds_match::Bool = true)
 
 Compute the distance between A|x> and an approximation MPS y:
