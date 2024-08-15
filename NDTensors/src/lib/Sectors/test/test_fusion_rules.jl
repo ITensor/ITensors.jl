@@ -2,7 +2,7 @@
 using NDTensors.GradedAxes:
   dual, fusion_product, gradedisequal, gradedrange, flip, tensor_product
 using NDTensors.Sectors:
-  ⊗, Fib, Ising, SU, SU2, U1, Z, block_dimensions, quantum_dimension, trivial
+  ⊗, Fib, Ising, O2, SU, SU2, U1, Z, block_dimensions, quantum_dimension, trivial
 using Test: @inferred, @test, @testset, @test_throws
 
 @testset "Simple object fusion rules" begin
@@ -35,6 +35,29 @@ using Test: @inferred, @test, @testset, @test_throws
     @test q2 ⊗ q1 == U1(3)
     @test (@inferred q1 ⊗ q2) == q3  # no better way, see Julia PR 23426
   end
+
+  @testset "O2 fusion rules" begin
+    s0e = O2(0)
+    s0o = O2(-1)
+    s12 = O2(1//2)
+    s1 = O2(1)
+
+    @test gradedisequal((@inferred s0e ⊗ s0e), gradedrange([s0e => 1]))
+    @test gradedisequal((@inferred s0o ⊗ s0e), gradedrange([s0o => 1]))
+    @test gradedisequal((@inferred s0o ⊗ s0e), gradedrange([s0o => 1]))
+    @test gradedisequal((@inferred s0o ⊗ s0o), gradedrange([s0e => 1]))
+
+    @test gradedisequal((@inferred s0e ⊗ s12), gradedrange([s12 => 1]))
+    @test gradedisequal((@inferred s0o ⊗ s12), gradedrange([s12 => 1]))
+    @test gradedisequal((@inferred s12 ⊗ s0e), gradedrange([s12 => 1]))
+    @test gradedisequal((@inferred s12 ⊗ s0o), gradedrange([s12 => 1]))
+    @test gradedisequal((@inferred s12 ⊗ s1), gradedrange([s12 => 1, O2(3//2) => 1]))
+    @test gradedisequal((@inferred s12 ⊗ s12), gradedrange([s0o => 1, s0e => 1, s1 => 1]))
+
+    @test (@inferred quantum_dimension(s0o ⊗ s1)) == 2
+    @test (@inferred block_dimensions(s0o ⊗ s1)) == [2]
+  end
+
   @testset "SU2 fusion rules" begin
     j1 = SU2(0)
     j2 = SU2(1//2)

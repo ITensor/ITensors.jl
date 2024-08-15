@@ -1,7 +1,18 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes: dual
 using NDTensors.Sectors:
-  Fib, Ising, SU, SU2, U1, Z, adjoint, quantum_dimension, fundamental, istrivial, trivial
+  Fib,
+  Ising,
+  O2,
+  SU,
+  SU2,
+  U1,
+  Z,
+  adjoint,
+  quantum_dimension,
+  fundamental,
+  istrivial,
+  trivial
 using Test: @inferred, @test, @testset, @test_throws
 @testset "Test Category Types" begin
   @testset "U(1)" begin
@@ -39,6 +50,26 @@ using Test: @inferred, @test, @testset, @test_throws
     @test dual(Z{2}(1)) == Z{2}(1)
     @test isless(Z{2}(0), Z{2}(1))
     @test !isless(Z{2}(1), Z{2}(0))
+  end
+
+  @testset "O(2)" begin
+    s0e = O2(0)
+    s0o = O2(-1)
+    s12 = O2(1//2)
+    s1 = O2(1)
+
+    @test trivial(O2) == s0e
+    @test istrivial(s0e)
+
+    @test (@inferred quantum_dimension(s0e)) == 1
+    @test (@inferred quantum_dimension(s0o)) == 1
+    @test (@inferred quantum_dimension(s12)) == 2
+    @test (@inferred quantum_dimension(s1)) == 2
+
+    @test (@inferred dual(s0e)) == s0e
+    @test (@inferred dual(s0o)) == s0o
+    @test (@inferred dual(s12)) == s12
+    @test (@inferred dual(s1)) == s1
   end
 
   @testset "SU2" begin
