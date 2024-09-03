@@ -165,35 +165,35 @@ end
       )
       @test a_dest ≈ a_dest_tensoroperations
 
-        # Specify α and β
-        elt_dest = promote_type(elt1, elt2)
-        # TODO: Using random `α`, `β` causing
-        # random test failures, investigate why.
-        α = elt_dest(1.2) # randn(elt_dest)
-        β = elt_dest(2.4) # randn(elt_dest)
-        a_dest_init = randn(elt_dest, map(i -> dims[i], d_dests))
-        a_dest = copy(a_dest_init)
-        TensorAlgebra.contract!(a_dest, labels_dest, a1, labels1, a2, labels2, α, β)
-        a_dest_tensoroperations = TensorOperations.tensorcontract(
-          labels_dest, a1, labels1, a2, labels2
-        )
-        ## Here we loosened the tolerance because of some floating point roundoff issue.
-        ## with Float32 numbers
-        @test a_dest ≈ α * a_dest_tensoroperations + β * a_dest_init rtol =
-          50 * default_rtol(elt_dest)
-      end
+      # Specify α and β
+      elt_dest = promote_type(elt1, elt2)
+      # TODO: Using random `α`, `β` causing
+      # random test failures, investigate why.
+      α = elt_dest(1.2) # randn(elt_dest)
+      β = elt_dest(2.4) # randn(elt_dest)
+      a_dest_init = randn(elt_dest, map(i -> dims[i], d_dests))
+      a_dest = copy(a_dest_init)
+      TensorAlgebra.contract!(a_dest, labels_dest, a1, labels1, a2, labels2, α, β)
+      a_dest_tensoroperations = TensorOperations.tensorcontract(
+        labels_dest, a1, labels1, a2, labels2
+      )
+      ## Here we loosened the tolerance because of some floating point roundoff issue.
+      ## with Float32 numbers
+      @test a_dest ≈ α * a_dest_tensoroperations + β * a_dest_init rtol =
+        50 * default_rtol(elt_dest)
     end
   end
-  @testset "qr (eltype=$elt)" for elt in elts
-    a = randn(elt, 5, 4, 3, 2)
-    labels_a = (:a, :b, :c, :d)
-    labels_q = (:b, :a)
-    labels_r = (:d, :c)
-    q, r = qr(a, labels_a, labels_q, labels_r)
-    label_qr = :qr
-    a′ = TensorAlgebra.contract(
-      labels_a, q, (labels_q..., label_qr), r, (label_qr, labels_r...)
-    )
-    @test a ≈ a′
-  end
+end
+@testset "qr (eltype=$elt)" for elt in elts
+  a = randn(elt, 5, 4, 3, 2)
+  labels_a = (:a, :b, :c, :d)
+  labels_q = (:b, :a)
+  labels_r = (:d, :c)
+  q, r = qr(a, labels_a, labels_q, labels_r)
+  label_qr = :qr
+  a′ = TensorAlgebra.contract(
+    labels_a, q, (labels_q..., label_qr), r, (label_qr, labels_r...)
+  )
+  @test a ≈ a′
+end
 end
