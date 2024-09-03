@@ -63,7 +63,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       @test x == dev(diagm(0 => vr))
       @test x == D
     end
-
+    @test sqrt(contract(D, (-1, -2), conj(D), (-1, -2))[]) ≈ norm(D)
     # This if statement corresponds to the reported bug:
     # https://github.com/JuliaGPU/Metal.jl/issues/364
     if !(dev == NDTensors.mtl && elt === ComplexF32)
