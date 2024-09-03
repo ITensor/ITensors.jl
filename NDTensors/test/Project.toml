@@ -25,7 +25,6 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 Metal = "1.1.0"
-TensorOperations = "5"
 cuTENSOR = "2.0"
 
 [extras]
