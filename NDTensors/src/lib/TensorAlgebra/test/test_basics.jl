@@ -197,5 +197,3 @@ end
     @test a ≈ a′
   end
 end
-
-end
