@@ -17,9 +17,6 @@ if "metal" in ARGS || "all" in ARGS
   using Metal
 end
 if "cutensor" in ARGS || "all" in ARGS
-  if in("TensorOperations", map(v -> v.name, values(Pkg.dependencies())))
-    Pkg.rm("TensorOperations")
-  end
   Pkg.add("cuTENSOR")
   using CUDA, cuTENSOR
 end
