@@ -1,6 +1,18 @@
 @eval module $(gensym())
-using BlockArrays: Block, blockaxes, blockfirsts, blocklasts, blocks, findblock
-using NDTensors.GradedAxes: GradedAxes, UnitRangeDual, dual, gradedrange, nondual
+using BlockArrays:
+  Block, blockaxes, blockfirsts, blocklasts, blocklength, blocklengths, blocks, findblock
+using NDTensors.GradedAxes:
+  GradedAxes,
+  BlockedUnitRangeDual,
+  blocklabels,
+  blockmergesortperm,
+  blocksortperm,
+  dual,
+  flip,
+  gradedisequal,
+  gradedrange,
+  isdual,
+  nondual
 using NDTensors.LabelledNumbers: LabelledInteger, label, labelled
 using Test: @test, @test_broken, @testset
 struct U1
@@ -22,7 +34,7 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test ad[4] == 4
   @test label(ad[4]) == U1(-1)
   @test ad[2:4] == 2:4
-  @test ad[2:4] isa UnitRangeDual
+  @test ad[2:4] isa BlockedUnitRangeDual
   @test label(ad[2:4][Block(2)]) == U1(-1)
   @test ad[[2, 4]] == [2, 4]
   @test label(ad[[2, 4]][2]) == U1(-1)
@@ -34,5 +46,36 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test label(ad[[Block(2), Block(1)]][Block(1)]) == U1(-1)
   @test ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)] == 3:4
   @test label(ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)]) == U1(-1)
+  @test blocksortperm(a) == [Block(1), Block(2)]
+  @test blocksortperm(ad) == [Block(1), Block(2)]
+  @test blocklength(blockmergesortperm(a)) == 2
+  @test blocklength(blockmergesortperm(ad)) == 2
+  @test blockmergesortperm(a) == [Block(1), Block(2)]
+  @test blockmergesortperm(ad) == [Block(1), Block(2)]
+end
+
+@testset "flip" begin
+  a = gradedrange([U1(0) => 2, U1(1) => 3])
+  ad = dual(a)
+  @test gradedisequal(flip(a), dual(gradedrange([U1(0) => 2, U1(-1) => 3])))
+  @test gradedisequal(flip(ad), gradedrange([U1(0) => 2, U1(-1) => 3]))
+
+  @test blocklabels(a) == [U1(0), U1(1)]
+  @test blocklabels(dual(a)) == [U1(0), U1(-1)]
+  @test blocklabels(flip(a)) == [U1(0), U1(1)]
+  @test blocklabels(flip(dual(a))) == [U1(0), U1(-1)]
+  @test blocklabels(dual(flip(a))) == [U1(0), U1(-1)]
+
+  @test blocklengths(a) == [2, 3]
+  @test blocklengths(ad) == [2, 3]
+  @test blocklengths(flip(a)) == [2, 3]
+  @test blocklengths(flip(ad)) == [2, 3]
+  @test blocklengths(dual(flip(a))) == [2, 3]
+
+  @test !isdual(a)
+  @test isdual(ad)
+  @test isdual(flip(a))
+  @test !isdual(flip(ad))
+  @test !isdual(dual(flip(a)))
 end
 end
