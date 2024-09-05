@@ -30,11 +30,11 @@ function tensor_product(a1::Base.OneTo, a2::Base.OneTo)
   return Base.OneTo(length(a1) * length(a2))
 end
 
-function tensor_product(::OneToOne, a2::AbstractUnitRange)
+function tensor_product(::OneToOne, a2::AbstractBlockedUnitRange)
   return a2
 end
 
-function tensor_product(a1::AbstractUnitRange, ::OneToOne)
+function tensor_product(a1::AbstractBlockedUnitRange, ::OneToOne)
   return a1
 end
 
@@ -43,15 +43,15 @@ function tensor_product(::OneToOne, ::OneToOne)
 end
 
 # Handle dual. Always return a non-dual GradedUnitRange.
-function tensor_product(a1::AbstractUnitRange, a2::UnitRangeDual)
+function tensor_product(a1::AbstractBlockedUnitRange, a2::BlockedUnitRangeDual)
   return tensor_product(a1, flip(a2))
 end
 
-function tensor_product(a1::UnitRangeDual, a2::AbstractUnitRange)
+function tensor_product(a1::BlockedUnitRangeDual, a2::AbstractBlockedUnitRange)
   return tensor_product(flip(a1), a2)
 end
 
-function tensor_product(a1::UnitRangeDual, a2::UnitRangeDual)
+function tensor_product(a1::BlockedUnitRangeDual, a2::BlockedUnitRangeDual)
   return tensor_product(flip(a1), flip(a2))
 end
 
@@ -87,8 +87,8 @@ function blocksortperm(a::AbstractBlockedUnitRange)
   return Block.(sortperm(blocklabels(a)))
 end
 
-# convention: sort UnitRangeDual according to nondual blocks
-function blocksortperm(a::UnitRangeDual)
+# convention: sort BlockedUnitRangeDual according to nondual blocks
+function blocksortperm(a::BlockedUnitRangeDual)
   return Block.(sortperm(blocklabels(nondual(a))))
 end
 
@@ -113,7 +113,7 @@ end
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
 
-function blockmergesortperm(a::UnitRangeDual)
+function blockmergesortperm(a::BlockedUnitRangeDual)
   return Block.(groupsortperm(blocklabels(nondual(a))))
 end
 
@@ -127,7 +127,7 @@ function blockmergesort(g::AbstractGradedUnitRange)
   return GradedAxes.gradedrange(new_blocklengths)
 end
 
-blockmergesort(g::UnitRangeDual) = dual(blockmergesort(flip(g)))
+blockmergesort(g::BlockedUnitRangeDual) = dual(blockmergesort(flip(g)))
 blockmergesort(g::OneToOne) = g
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
@@ -136,7 +136,7 @@ function fusion_product(g1, g2)
 end
 
 fusion_product(g::AbstractUnitRange) = blockmergesort(g)
-fusion_product(g::UnitRangeDual) = fusion_product(flip(g))
+fusion_product(g::BlockedUnitRangeDual) = fusion_product(flip(g))
 
 # recursive fusion_product. Simpler than reduce + fix type stability issues with reduce
 function fusion_product(g1, g2, g3...)

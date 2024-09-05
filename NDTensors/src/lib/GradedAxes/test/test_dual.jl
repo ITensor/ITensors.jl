@@ -3,7 +3,7 @@ using BlockArrays:
   Block, blockaxes, blockfirsts, blocklasts, blocklength, blocklengths, blocks, findblock
 using NDTensors.GradedAxes:
   GradedAxes,
-  UnitRangeDual,
+  BlockedUnitRangeDual,
   blocklabels,
   blockmergesortperm,
   blocksortperm,
@@ -43,7 +43,7 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   @test ad[4] == 4
   @test label(ad[4]) == U1(-1)
   @test ad[2:4] == 2:4
-  @test ad[2:4] isa UnitRangeDual
+  @test ad[2:4] isa BlockedUnitRangeDual
   @test label(ad[2:4][Block(2)]) == U1(-1)
   @test ad[[2, 4]] == [2, 4]
   @test label(ad[[2, 4]][2]) == U1(-1)
@@ -76,15 +76,15 @@ end
   @test blocklabels(dual(flip(a))) == [U1(0), U1(-1)]
 
   @test blocklengths(a) == [2, 3]
-  @test blocklengths(dual(a)) == [2, 3]
+  @test blocklengths(ad) == [2, 3]
   @test blocklengths(flip(a)) == [2, 3]
-  @test blocklengths(flip(dual(a))) == [2, 3]
+  @test blocklengths(flip(ad)) == [2, 3]
   @test blocklengths(dual(flip(a))) == [2, 3]
 
   @test !isdual(a)
-  @test isdual(dual(a))
+  @test isdual(ad)
   @test isdual(flip(a))
-  @test !isdual(flip(dual(a)))
+  @test !isdual(flip(ad))
   @test !isdual(dual(flip(a)))
 end
 end
