@@ -39,15 +39,15 @@ function tensor_product(a1::OneToOne, a2::OneToOne)
 end
 
 # Handle dual. Always return a non-dual GradedUnitRange.
-function tensor_product(a1::AbstractBlockedUnitRange, a2::BlockedUnitRangeDual)
+function tensor_product(a1::AbstractBlockedUnitRange, a2::GradedUnitRangeDual)
   return tensor_product(a1, flip(a2))
 end
 
-function tensor_product(a1::BlockedUnitRangeDual, a2::AbstractBlockedUnitRange)
+function tensor_product(a1::GradedUnitRangeDual, a2::AbstractBlockedUnitRange)
   return tensor_product(flip(a1), a2)
 end
 
-function tensor_product(a1::BlockedUnitRangeDual, a2::BlockedUnitRangeDual)
+function tensor_product(a1::GradedUnitRangeDual, a2::GradedUnitRangeDual)
   return tensor_product(flip(a1), flip(a2))
 end
 
@@ -81,8 +81,8 @@ function blocksortperm(a::AbstractBlockedUnitRange)
   return Block.(sortperm(blocklabels(a)))
 end
 
-# convention: sort BlockedUnitRangeDual according to nondual blocks
-function blocksortperm(a::BlockedUnitRangeDual)
+# convention: sort GradedUnitRangeDual according to nondual blocks
+function blocksortperm(a::GradedUnitRangeDual)
   return Block.(sortperm(blocklabels(nondual(a))))
 end
 
@@ -113,7 +113,7 @@ end
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
 
-function blockmergesortperm(a::BlockedUnitRangeDual)
+function blockmergesortperm(a::GradedUnitRangeDual)
   return Block.(groupsortperm(blocklabels(nondual(a))))
 end
 
@@ -127,7 +127,7 @@ function blockmergesort(g::AbstractGradedUnitRange)
   return GradedAxes.gradedrange(new_blocklengths)
 end
 
-blockmergesort(g::BlockedUnitRangeDual) = dual(blockmergesort(flip(g)))
+blockmergesort(g::GradedUnitRangeDual) = dual(blockmergesort(flip(g)))
 blockmergesort(g::OneToOne) = g
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
@@ -136,7 +136,7 @@ function fusion_product(g1, g2)
 end
 
 fusion_product(g::AbstractUnitRange) = blockmergesort(g)
-fusion_product(g::BlockedUnitRangeDual) = fusion_product(flip(g))
+fusion_product(g::GradedUnitRangeDual) = fusion_product(flip(g))
 
 # recursive fusion_product. Simpler than reduce + fix type stability issues with reduce
 function fusion_product(g1, g2, g3...)

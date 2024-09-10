@@ -3,7 +3,7 @@ using BlockArrays:
   Block, blockaxes, blockfirsts, blocklasts, blocklength, blocklengths, blocks, findblock
 using NDTensors.GradedAxes:
   GradedAxes,
-  BlockedUnitRangeDual,
+  GradedUnitRangeDual,
   blocklabels,
   blockmergesortperm,
   blocksortperm,
@@ -34,7 +34,7 @@ GradedAxes.dual(c::U1) = U1(-c.n)
   @test ad[4] == 4
   @test label(ad[4]) == U1(-1)
   @test ad[2:4] == 2:4
-  @test ad[2:4] isa BlockedUnitRangeDual
+  @test ad[2:4] isa GradedUnitRangeDual
   @test label(ad[2:4][Block(2)]) == U1(-1)
   @test ad[[2, 4]] == [2, 4]
   @test label(ad[[2, 4]][2]) == U1(-1)
