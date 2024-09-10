@@ -152,3 +152,7 @@ end
 function Base.UnitRange{T}(a::GradedUnitRangeDual{<:LabelledInteger{T}}) where {T<:Integer}
   return UnitRange{T}(nondual(a))
 end
+
+function unlabel_blocks(a::GradedUnitRangeDual)
+  return unlabel_blocks(nondual(a))
+end

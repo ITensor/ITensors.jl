@@ -4,7 +4,13 @@ using Test: @test, @testset, @test_broken
 using BlockArrays: Block, BlockedOneTo, blockedrange, blocklengths, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
 using NDTensors.GradedAxes:
-  GradedAxes, GradedOneTo, UnitRangeDual, blocklabels, dual, gradedrange
+  GradedAxes,
+  GradedOneTo,
+  GradedUnitRangeDual,
+  UnitRangeDual,
+  blocklabels,
+  dual,
+  gradedrange
 using NDTensors.LabelledNumbers: label
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
@@ -149,6 +155,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     end
 
     # Test case when all axes are dual.
+    @test dual(gradedrange([U1(0) => 2])) isa GradedUnitRangeDual
+    @test dual(blockedrange([2, 2])) isa UnitRangeDual
     for r in (gradedrange([U1(0) => 2, U1(1) => 2]), blockedrange([2, 2]))
       a = BlockSparseArray{elt}(dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
@@ -158,7 +166,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
       for ax in axes(b)
-        @test ax isa UnitRangeDual
+        @test ax isa typeof(dual(r))
       end
     end
 
@@ -173,7 +181,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)'
       for ax in axes(b)
-        @test ax isa UnitRangeDual
+        @test ax isa typeof(dual(r))
       end
     end
   end
