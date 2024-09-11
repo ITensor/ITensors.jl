@@ -70,6 +70,8 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
 
     @test blockfirsts(ad) == [1, 3]
     @test blocklasts(ad) == [2, 5]
+    @test blocklength(ad) == 2
+    @test blocklengths(ad) == [2, 3]
     @test findblock(ad, 4) == Block(2)
     @test only(blockaxes(ad)) == Block(1):Block(2)
     @test blocks(ad) == [1:2, 3:5]
@@ -102,6 +104,8 @@ end
 
   @test blockfirsts(ad) == [labelled(1, U1(0)), labelled(3, U1(-1))]
   @test blocklasts(ad) == [labelled(2, U1(0)), labelled(5, U1(-1))]
+  @test blocklength(ad) == 2
+  @test blocklengths(ad) == [2, 3]
   @test findblock(ad, 4) == Block(2)
   @test only(blockaxes(ad)) == Block(1):Block(2)
   @test blocks(ad) == [labelled(1:2, U1(0)), labelled(3:5, U1(-1))]
