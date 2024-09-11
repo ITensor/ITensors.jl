@@ -1,9 +1,19 @@
 @eval module $(gensym())
 using BlockArrays:
-  Block, blockaxes, blockfirsts, blocklasts, blocklength, blocklengths, blocks, findblock
+  Block,
+  blockaxes,
+  blockedrange,
+  blockfirsts,
+  blocklasts,
+  blocklength,
+  blocklengths,
+  blocks,
+  findblock
 using NDTensors.GradedAxes:
   GradedAxes,
   GradedUnitRangeDual,
+  OneToOne,
+  UnitRangeDual,
   blocklabels,
   blockmergesortperm,
   blocksortperm,
@@ -20,9 +30,64 @@ struct U1
 end
 GradedAxes.dual(c::U1) = U1(-c.n)
 Base.isless(c1::U1, c2::U1) = c1.n < c2.n
-@testset "dual" begin
+
+@testset "UnitRangeDual" begin
+  @testset "dual(OneToOne)" begin
+    a = OneToOne()
+    ad = dual(a)
+    @test ad isa UnitRangeDual
+    @test eltype(ad) == Bool
+    @test nondual(ad) === a
+    @test dual(ad) === a
+
+    @test isdual(ad)
+    @test !isdual(a)
+    @test length(ad) == 1
+  end
+  @testset "dual(UnitRange)" begin
+    a = 1:3
+    ad = dual(a)
+    @test ad isa UnitRangeDual
+    @test eltype(ad) == Int
+    @test nondual(ad) === a
+    @test dual(ad) === a
+
+    @test isdual(ad)
+    @test !isdual(a)
+    @test length(ad) == 3
+  end
+  @testset "dual(BlockedOneTo)" begin
+    a = blockedrange([2, 3])
+    ad = dual(a)
+    @test ad isa UnitRangeDual
+    @test eltype(ad) == Int
+    @test nondual(ad) === a
+    @test dual(ad) === a
+
+    @test isdual(ad)
+    @test !isdual(a)
+    @test length(ad) == 5
+
+    @test blockfirsts(ad) == [1, 3]
+    @test blocklasts(ad) == [2, 5]
+    @test findblock(ad, 4) == Block(2)
+    @test only(blockaxes(ad)) == Block(1):Block(2)
+    @test blocks(ad) == [1:2, 3:5]
+    @test ad[4] == 4
+    @test ad[2:4] == 2:4
+    @test ad[2:4] isa UnitRangeDual
+    @test ad[[2, 4]] == [2, 4]
+    @test ad[Block(2)] == 3:5
+    @test ad[Block(1):Block(2)][Block(2)] == 3:5
+    @test ad[[Block(2), Block(1)]][Block(1)] == 3:5
+    @test ad[[Block(2)[1:2], Block(1)[1:2]]][Block(1)] == 3:4
+  end
+end
+
+@testset "GradedUnitRangeDual" begin
   a = gradedrange([U1(0) => 2, U1(1) => 3])
   ad = dual(a)
+  @test ad isa GradedUnitRangeDual
   @test eltype(ad) == LabelledInteger{Int,U1}
 
   @test gradedisequal(dual(ad), a)
