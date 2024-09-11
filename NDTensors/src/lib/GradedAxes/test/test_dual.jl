@@ -24,7 +24,7 @@ using NDTensors.GradedAxes:
   isdual,
   nondual
 using NDTensors.LabelledNumbers: LabelledInteger, label, labelled
-using Test: @test, @test_broken, @testset
+using Test: @test, @testset
 struct U1
   n::Int
 end
