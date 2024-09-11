@@ -168,6 +168,12 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       for ax in axes(b)
         @test ax isa typeof(dual(r))
       end
+
+      I = [Block(1)[1:1]]
+      @test_broken a[I, :]
+      @test_broken a[:, I]
+      @test size(a[I, I]) == (1, 1)
+      @test_broken GradedAxes.isdual(axes(a[I, I], 1))
     end
 
     # Test case when all axes are dual
@@ -183,6 +189,11 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       for ax in axes(b)
         @test ax isa typeof(dual(r))
       end
+
+      I = [Block(1)[1:1]]
+      @test size(a[I, :]) == (1, 4)
+      @test size(a[:, I]) == (4, 1)
+      @test size(a[I, I]) == (1, 1)
     end
   end
   @testset "Matrix multiplication" begin
