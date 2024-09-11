@@ -35,6 +35,7 @@ export
   contract,
   # global_variables.jl
   # Methods
+  timeit_debug_enabled,
   # Macros
   @disable_warn_order,
   @reset_warn_order,

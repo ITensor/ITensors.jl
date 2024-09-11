@@ -8,3 +8,21 @@ If you are concerned about the performance of your code, a good place to start i
 ## Timing and benchmarking
 
 Julia has many nice timing tools available. Tools like [@time](https://docs.julialang.org/en/v1/base/base/#Base.@time) and [TimerOutputs](https://github.com/KristofferC/TimerOutputs.jl) can be used to measure the time of specific lines of code. For microbenchmarking, we recommend the [BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl) package. For profiling your code, see the Julia documentation on [profiling](https://docs.julialang.org/en/v1/manual/profile/).
+
+## Using TimerOutputs
+```julia
+using TimerOutputs
+using ITensors
+using NDTensors: timer
+...
+
+TimerOutputs.enable_debug_timings(ITensors)
+@timeit timer "dmrg" energy, _ = dmrg(mpo, mps;
+                                      nsweeps=nsweeps,
+                                      maxdim=maxdim,
+                                      mindim=maxdim,
+                                      cutoff=cutoff,
+                                      outputlevel=0)
+println("Energy = $energy")
+println(timer)
+```

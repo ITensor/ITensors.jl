@@ -209,3 +209,11 @@ function disable_contraction_sequence_optimization()
   _using_contraction_sequence_optimization[] = false
   return nothing
 end
+
+#
+# Turn debug timer for TimerOutputs on and off
+#
+
+function timeit_debug_enabled()
+  return false
+end
