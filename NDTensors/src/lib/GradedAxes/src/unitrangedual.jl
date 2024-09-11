@@ -56,7 +56,7 @@ function Base.getindex(
 end
 
 function BlockArrays.blocklengths(a::UnitRangeDual)
-  return dual.(blocklengths(nondual(a)))
+  return blocklengths(nondual(a))
 end
 
 function unitrangedual_getindices_blocks(a, indices)
