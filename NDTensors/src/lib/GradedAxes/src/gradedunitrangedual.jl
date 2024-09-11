@@ -8,7 +8,6 @@ dual(a::AbstractGradedUnitRange) = GradedUnitRangeDual(a)
 nondual(a::GradedUnitRangeDual) = a.nondual_unitrange
 dual(a::GradedUnitRangeDual) = nondual(a)
 flip(a::GradedUnitRangeDual) = dual(flip(nondual(a)))
-isdual(::AbstractGradedUnitRange) = false
 isdual(::GradedUnitRangeDual) = true
 ## TODO: Define this to instantiate a dual unit range.
 ## materialize_dual(a::GradedUnitRangeDual) = materialize_dual(nondual(a))

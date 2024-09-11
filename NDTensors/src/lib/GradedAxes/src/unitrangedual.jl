@@ -59,9 +59,8 @@ function BlockArrays.blocklengths(a::UnitRangeDual)
   return dual.(blocklengths(nondual(a)))
 end
 
-# TODO: Use `label_dual.` here, make broadcasting work?
 function unitrangedual_getindices_blocks(a, indices)
-  a_indices = getindex(nondual(a), indices)
+  a_indices = blockedunitrange_getindices(nondual(a), indices)
   return mortar([dual(b) for b in blocks(a_indices)])
 end
 

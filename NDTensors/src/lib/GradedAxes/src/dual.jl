@@ -1,4 +1,5 @@
 function dual end
+isdual(::AbstractUnitRange) = false  # default behavior
 
 using NDTensors.LabelledNumbers:
   LabelledStyle, IsLabelled, NotLabelled, label, labelled, unlabel
