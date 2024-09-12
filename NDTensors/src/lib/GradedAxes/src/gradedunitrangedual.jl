@@ -75,10 +75,6 @@ function Base.getindex(a::GradedUnitRangeDual, indices::Vector{<:BlockIndexRange
   return unitrangedual_getindices_blocks(a, indices)
 end
 
-function to_blockindices(a::GradedUnitRangeDual, indices::UnitRange{<:Integer})
-  return to_blockindices(nondual(a), indices)
-end
-
 Base.axes(a::GradedUnitRangeDual) = axes(nondual(a))
 
 using BlockArrays: BlockArrays, Block, BlockSlice
