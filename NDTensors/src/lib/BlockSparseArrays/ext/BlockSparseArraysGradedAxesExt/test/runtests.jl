@@ -155,9 +155,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     end
 
     # Test case when all axes are dual.
-    @test dual(gradedrange([U1(0) => 2])) isa GradedUnitRangeDual
-    @test dual(blockedrange([2, 2])) isa UnitRangeDual
-    for r in (gradedrange([U1(0) => 2, U1(1) => 2]), blockedrange([2, 2]))
+    @testset "BlockedOneTo" begin
+      r = gradedrange([U1(0) => 2, U1(1) => 2])
       a = BlockSparseArray{elt}(dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
@@ -165,8 +164,51 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       b = 2 * a
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
+      @test a[:, :] isa BlockSparseArray
       for ax in axes(b)
-        @test ax isa typeof(dual(r))
+        @test ax isa GradedUnitRangeDual
+      end
+
+      I = [Block(1)[1:1]]
+      @test_broken a[I, :]
+      @test_broken a[:, I]
+      @test size(a[I, I]) == (1, 1)
+      @test_broken GradedAxes.isdual(axes(a[I, I], 1))
+    end
+
+    @testset "GradedUnitRange" begin
+      r = gradedrange([U1(0) => 2, U1(1) => 2])[1:3]
+      a = BlockSparseArray{elt}(dual(r), dual(r))
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)
+      @test a[:, :] isa BlockSparseArray
+      for ax in axes(b)
+        @test ax isa GradedUnitRangeDual
+      end
+
+      I = [Block(1)[1:1]]
+      @test_broken a[I, :]
+      @test_broken a[:, I]
+      @test size(a[I, I]) == (1, 1)
+      @test_broken GradedAxes.isdual(axes(a[I, I], 1))
+    end
+
+    @testset "BlockedUnitRange" begin
+      r = blockedrange([2, 2])
+      a = BlockSparseArray{elt}(dual(r), dual(r))
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)
+      @test_broken a[:, :] isa BlockSparseArray
+      for ax in axes(b)
+        @test ax isa UnitRangeDual
       end
 
       I = [Block(1)[1:1]]
@@ -189,6 +231,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       for ax in axes(b)
         @test ax isa typeof(dual(r))
       end
+
+      @test a[:, :] isa BlockSparseArray
 
       I = [Block(1)[1:1]]
       @test size(a[I, :]) == (1, 4)
