@@ -6,8 +6,6 @@ OneToOne() = OneToOne{Bool}()
 Base.first(a::OneToOne) = one(eltype(a))
 Base.last(a::OneToOne) = one(eltype(a))
 
-gradedisequal(::AbstractUnitRange, ::OneToOne) = false
-gradedisequal(::OneToOne, ::AbstractUnitRange) = false
 gradedisequal(::OneToOne, ::OneToOne) = true
 
 # https://github.com/ITensor/ITensors.jl/blob/v0.3.57/NDTensors/src/lib/GradedAxes/src/tensor_product.jl
