@@ -43,6 +43,9 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
     @test isdual(ad)
     @test !isdual(a)
     @test length(ad) == 1
+    @test !gradedisequal(a, ad)
+    @test !gradedisequal(ad, a)
+    @test gradedisequal(ad, ad)
   end
   @testset "dual(UnitRange)" begin
     a = 1:3
@@ -55,6 +58,16 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
     @test isdual(ad)
     @test !isdual(a)
     @test length(ad) == 3
+
+    @test !gradedisequal(ad, a)
+    @test !gradedisequal(a, ad)
+    @test gradedisequal(ad, ad)
+
+    a0 = OneToOne()
+    @test !gradedisequal(ad, a0)
+    @test !gradedisequal(a0, ad)
+    @test !gradedisequal(dual(a0), ad)
+    @test !gradedisequal(ad, dual(a0))
   end
   @testset "dual(BlockedOneTo)" begin
     a = blockedrange([2, 3])

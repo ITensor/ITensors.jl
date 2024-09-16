@@ -117,11 +117,6 @@ end
 
 blocklabels(a::GradedUnitRangeDual) = dual.(blocklabels(nondual(a)))
 
-gradedisequal(::GradedUnitRangeDual, ::AbstractGradedUnitRange) = false
-gradedisequal(::AbstractGradedUnitRange, ::GradedUnitRangeDual) = false
-function gradedisequal(a1::GradedUnitRangeDual, a2::GradedUnitRangeDual)
-  return gradedisequal(nondual(a1), nondual(a2))
-end
 function BlockArrays.combine_blockaxes(a1::GradedUnitRangeDual, a2::GradedUnitRangeDual)
   return dual(combine_blockaxes(dual(a1), dual(a2)))
 end

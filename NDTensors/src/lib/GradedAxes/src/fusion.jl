@@ -1,15 +1,5 @@
 using BlockArrays: AbstractBlockedUnitRange
 
-# Represents the range `1:1` or `Base.OneTo(1)`.
-struct OneToOne{T} <: AbstractUnitRange{T} end
-OneToOne() = OneToOne{Bool}()
-Base.first(a::OneToOne) = one(eltype(a))
-Base.last(a::OneToOne) = one(eltype(a))
-
-gradedisequal(::AbstractUnitRange, ::OneToOne) = false
-gradedisequal(::OneToOne, ::AbstractUnitRange) = false
-gradedisequal(::OneToOne, ::OneToOne) = true
-
 # https://github.com/ITensor/ITensors.jl/blob/v0.3.57/NDTensors/src/lib/GradedAxes/src/tensor_product.jl
 # https://en.wikipedia.org/wiki/Tensor_product
 # https://github.com/KeitaNakamura/Tensorial.jl

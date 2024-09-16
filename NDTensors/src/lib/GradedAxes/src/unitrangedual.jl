@@ -107,11 +107,6 @@ function BlockArrays.findblock(a::UnitRangeDual, index::Integer)
   return findblock(nondual(a), index)
 end
 
-gradedisequal(::UnitRangeDual, ::AbstractGradedUnitRange) = false
-gradedisequal(::AbstractGradedUnitRange, ::UnitRangeDual) = false
-function gradedisequal(a1::UnitRangeDual, a2::UnitRangeDual)
-  return gradedisequal(nondual(a1), nondual(a2))
-end
 function BlockArrays.combine_blockaxes(a1::UnitRangeDual, a2::UnitRangeDual)
   return dual(combine_blockaxes(dual(a1), dual(a2)))
 end
