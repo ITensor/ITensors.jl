@@ -12,7 +12,7 @@ using BlockArrays:
   blockedrange,
   BlockIndexRange,
   blockfirsts,
-  blocklasts,
+  blockisequal,
   blocklength,
   blocklengths,
   findblock,
@@ -35,6 +35,11 @@ const GradedOneTo{T<:LabelledInteger,BlockLasts<:Vector{T}} = BlockedOneTo{T,Blo
 # TODO: Delete this once we drop Julia 1.6 support.
 function Base.OrdinalRange{T,T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
   return unlabel_blocks(a)
+end
+
+# == is just a range comparison that ignores labels. Need dedicated function to check equality.
+function gradedisequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
 end
 
 # This is only needed in certain Julia versions below 1.10

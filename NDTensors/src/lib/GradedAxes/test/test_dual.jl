@@ -91,9 +91,17 @@ end
   ad = dual(a)
   @test ad isa GradedUnitRangeDual
   @test eltype(ad) == LabelledInteger{Int,U1}
-  @test dual(ad) == a
-  @test nondual(ad) == a
-  @test nondual(a) == a
+
+  @test gradedisequal(dual(ad), a)
+  @test gradedisequal(nondual(ad), a)
+  @test gradedisequal(nondual(a), a)
+  @test gradedisequal(ad, ad)
+  @test !gradedisequal(a, ad)
+  @test !gradedisequal(ad, a)
+
+  @test isdual(ad)
+  @test !isdual(a)
+
   @test blockfirsts(ad) == [labelled(1, U1(0)), labelled(3, U1(-1))]
   @test blocklasts(ad) == [labelled(2, U1(0)), labelled(5, U1(-1))]
   @test blocklength(ad) == 2
