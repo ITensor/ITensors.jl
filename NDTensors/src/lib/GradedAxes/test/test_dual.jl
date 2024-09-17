@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using BlockArrays:
   Block,
+  BlockedOneTo,
   blockaxes,
   blockedrange,
   blockfirsts,
@@ -32,19 +33,22 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
 
 @testset "AbstractUnitRange" begin
   a0 = OneToOne()
-  @test gradedisequal(a0, dual(a0))
   @test !isdual(a0)
+  @test dual(a0) isa OneToOne
+  @test gradedisequal(a0, dual(a0))
 
   a = 1:3
   ad = dual(a)
-  @test !isdual(ad)
   @test !isdual(a)
+  @test !isdual(ad)
+  @test ad isa UnitRange
   @test gradedisequal(ad, a)
 
   a = blockedrange([2, 3])
   ad = dual(a)
-  @test !isdual(ad)
   @test !isdual(a)
+  @test !isdual(ad)
+  @test ad isa BlockedOneTo
   @test gradedisequal(ad, a)
 end
 

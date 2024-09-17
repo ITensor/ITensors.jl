@@ -8,6 +8,7 @@ using NDTensors.GradedAxes:
 using NDTensors.LabelledNumbers: label
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
+using LinearAlgebra: adjoint
 using Random: randn!
 function blockdiagonal!(f, a::AbstractArray)
   for i in 1:minimum(blocksize(a))
@@ -38,8 +39,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test blocklengths.(axes(b)) == ([2, 2], [2, 2], [2, 2], [2, 2])
       @test nstored(b) == 32
       @test block_nstored(b) == 2
-      # TODO: Have to investigate why this fails
-      # on Julia v1.6, or drop support for v1.6.
       for i in 1:ndims(a)
         @test axes(b, i) isa GradedOneTo
       end
@@ -158,11 +157,11 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       b = 2 * a
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
-      @test a[:, :] isa BlockSparseArray
-      for ax in axes(b)
-        @test ax isa GradedUnitRangeDual
+      @test a[:, :] isa BlockSparseArray  # broken in 1.6
+      for i in 1:2
+        @test axes(b, i) isa GradedUnitRangeDual
+        @test_broken axes(a[:, :], i) isa GradedUnitRangeDual
       end
-
       I = [Block(1)[1:1]]
       @test_broken a[I, :]
       @test_broken a[:, I]
@@ -179,9 +178,10 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       b = 2 * a
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
-      @test a[:, :] isa BlockSparseArray
-      for ax in axes(b)
-        @test ax isa GradedUnitRangeDual
+      @test a[:, :] isa BlockSparseArray  # broken in 1.6
+      for i in 1:2
+        @test axes(b, i) isa GradedUnitRangeDual
+        @test_broken axes(a[:, :], i) isa GradedUnitRangeDual
       end
 
       I = [Block(1)[1:1]]
@@ -191,7 +191,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test_broken GradedAxes.isdual(axes(a[I, I], 1))
     end
 
-    @testset "BlockedUnitRange" begin
+    @testset "BlockedUnitRange" begin    # self dual
       r = blockedrange([2, 2])
       a = BlockSparseArray{elt}(dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
@@ -201,8 +201,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
       @test a[:, :] isa BlockSparseArray
-      for ax in axes(b)
-        @test ax isa BlockedOneTo
+      for i in 1:2
+        @test axes(b, i) isa BlockedOneTo
+        @test axes(a[:, :], i) isa BlockedOneTo
       end
 
       I = [Block(1)[1:1]]
@@ -226,7 +227,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         @test ax isa typeof(dual(r))
       end
 
-      @test a[:, :] isa BlockSparseArray
+      @test a[:, :] isa BlockSparseArray  # broken in 1.6
+      @test axes(a[:, :]) isa Tuple{BlockedOneTo,BlockedOneTo}  # broken in 1.6
 
       I = [Block(1)[1:1]]
       @test size(a[I, :]) == (1, 4)
