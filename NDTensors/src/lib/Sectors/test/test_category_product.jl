@@ -540,6 +540,9 @@ end
   @test typeof(s) == typeof(sector(()))
   @test typeof(s) == typeof(sector((;)))  # empty NamedTuple is cast to Tuple{}
 
+  g0 = gradedrange([s => 2])
+  @test gradedisequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
+
   @test (@inferred s × U1(1)) == sector(U1(1))
   @test (@inferred s × sector(U1(1))) == sector(U1(1))
   @test (@inferred s × sector(; A=U1(1))) == sector(; A=U1(1))

@@ -83,9 +83,7 @@ function GradedAxes.fuse_blocklengths(
 end
 
 function GradedAxes.fuse_blocklengths(
-  ::SymmetryStyle,
-  l1::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
-  l2::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+  ::SymmetryStyle, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )
   fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
   v =
@@ -96,12 +94,16 @@ function GradedAxes.fuse_blocklengths(
 end
 
 function GradedAxes.fuse_blocklengths(
-  ::AbelianGroup,
-  l1::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
-  l2::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+  ::AbelianGroup, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )
   fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
   return LabelledNumbers.labelled(l1 * l2, fused)
+end
+
+function GradedAxes.fuse_blocklengths(
+  ::EmptyCategory, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
+)
+  return LabelledNumbers.labelled(l1 * l2, sector())
 end
 
 # cast to range
