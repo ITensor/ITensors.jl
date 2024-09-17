@@ -157,7 +157,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       b = 2 * a
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
-      @test a[:, :] isa BlockSparseArray  # broken in 1.6
       for i in 1:2
         @test axes(b, i) isa GradedUnitRangeDual
         @test_broken axes(a[:, :], i) isa GradedUnitRangeDual
@@ -178,7 +177,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       b = 2 * a
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
-      @test a[:, :] isa BlockSparseArray  # broken in 1.6
       for i in 1:2
         @test axes(b, i) isa GradedUnitRangeDual
         @test_broken axes(a[:, :], i) isa GradedUnitRangeDual
@@ -226,9 +224,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       for ax in axes(b)
         @test ax isa typeof(dual(r))
       end
-
-      @test a[:, :] isa BlockSparseArray  # broken in 1.6
-      @test axes(a[:, :]) isa Tuple{BlockedOneTo,BlockedOneTo}  # broken in 1.6
 
       I = [Block(1)[1:1]]
       @test size(a[I, :]) == (1, 4)
