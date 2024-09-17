@@ -62,24 +62,6 @@ function fusion_rule(::AbelianGroup, c1::C, c2::C) where {C<:AbstractCategory}
 end
 
 function fusion_rule(
-  ::SymmetryStyle, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
-)
-  fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
-  v =
-    LabelledNumbers.labelled.(
-      l1 * l2 .* BlockArrays.blocklengths(fused), GradedAxes.blocklabels(fused)
-    )
-  return GradedAxes.gradedrange(v)
-end
-
-function fusion_rule(
-  ::AbelianGroup, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
-)
-  fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
-  return LabelledNumbers.labelled(l1 * l2, fused)
-end
-
-function fusion_rule(
   ::EmptyCategory, l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger
 )
   return LabelledNumbers.labelled(l1 * l2, sector())
@@ -95,7 +77,31 @@ function GradedAxes.fuse_blocklengths(
   l1::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
   l2::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
 )
-  return fusion_rule(l1, l2)
+  return GradedAxes.fuse_blocklengths(
+    combine_styles(SymmetryStyle(l1), SymmetryStyle(l2)), l1, l2
+  )
+end
+
+function GradedAxes.fuse_blocklengths(
+  ::SymmetryStyle,
+  l1::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+  l2::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+)
+  fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
+  v =
+    LabelledNumbers.labelled.(
+      l1 * l2 .* BlockArrays.blocklengths(fused), GradedAxes.blocklabels(fused)
+    )
+  return GradedAxes.gradedrange(v)
+end
+
+function GradedAxes.fuse_blocklengths(
+  ::AbelianGroup,
+  l1::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+  l2::LabelledNumbers.LabelledInteger{<:Integer,<:Sectors.AbstractCategory},
+)
+  fused = LabelledNumbers.label(l1) ⊗ LabelledNumbers.label(l2)
+  return LabelledNumbers.labelled(l1 * l2, fused)
 end
 
 # cast to range
