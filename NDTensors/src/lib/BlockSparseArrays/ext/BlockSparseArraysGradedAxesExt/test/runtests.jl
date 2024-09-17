@@ -4,13 +4,7 @@ using Test: @test, @testset, @test_broken
 using BlockArrays: Block, BlockedOneTo, blockedrange, blocklengths, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
 using NDTensors.GradedAxes:
-  GradedAxes,
-  GradedOneTo,
-  GradedUnitRangeDual,
-  UnitRangeDual,
-  blocklabels,
-  dual,
-  gradedrange
+  GradedAxes, GradedOneTo, GradedUnitRangeDual, blocklabels, dual, gradedrange
 using NDTensors.LabelledNumbers: label
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
@@ -208,14 +202,14 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test Array(b) == 2 * Array(a)
       @test_broken a[:, :] isa BlockSparseArray
       for ax in axes(b)
-        @test ax isa UnitRangeDual
+        @test ax isa BlockedUnitRange
       end
 
       I = [Block(1)[1:1]]
       @test_broken a[I, :]
       @test_broken a[:, I]
       @test size(a[I, I]) == (1, 1)
-      @test_broken GradedAxes.isdual(axes(a[I, I], 1))
+      @test !GradedAxes.isdual(axes(a[I, I], 1))
     end
 
     # Test case when all axes are dual

@@ -30,13 +30,4 @@ function gradedisequal(::OneToOne, g::AbstractUnitRange)
   return !islabelled(eltype(g)) && (first(g) == last(g) == 1)
 end
 gradedisequal(g::AbstractUnitRange, a0::OneToOne) = gradedisequal(a0, g)
-
-gradedisequal(::UnitRangeDual, ::AbstractUnitRange) = false
-gradedisequal(::AbstractUnitRange, ::UnitRangeDual) = false
-gradedisequal(::OneToOne, ::UnitRangeDual) = false
-gradedisequal(::UnitRangeDual, ::OneToOne) = false
-function gradedisequal(a1::UnitRangeDual, a2::UnitRangeDual)
-  return gradedisequal(nondual(a1), nondual(a2))
-end
-
 gradedisequal(a1::AbstractUnitRange, a2::AbstractUnitRange) = a1 == a2

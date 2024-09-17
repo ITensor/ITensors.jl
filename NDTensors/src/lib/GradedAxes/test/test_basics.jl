@@ -106,6 +106,7 @@ end
   @test length(ax) == length(a)
   @test blocklengths(ax) == blocklengths(a)
   @test blocklabels(ax) == blocklabels(a)
+  @test_broken(blockfirsts(a)) == [2, 3]
 
   # Regression test for ambiguity error.
   x = gradedrange(["x" => 2, "y" => 3])

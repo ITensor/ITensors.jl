@@ -1,5 +1,7 @@
-function dual end
-isdual(::AbstractUnitRange) = false  # default behavior
+# default behavior: self-dual
+dual(r::AbstractUnitRange) = r
+nondual(r::AbstractUnitRange) = r
+isdual(::AbstractUnitRange) = false
 
 using NDTensors.LabelledNumbers:
   LabelledStyle, IsLabelled, NotLabelled, label, labelled, unlabel
