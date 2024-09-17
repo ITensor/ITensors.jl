@@ -200,14 +200,14 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       b = 2 * a
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
-      @test_broken a[:, :] isa BlockSparseArray
+      @test a[:, :] isa BlockSparseArray
       for ax in axes(b)
-        @test ax isa BlockedUnitRange
+        @test ax isa BlockedOneTo
       end
 
       I = [Block(1)[1:1]]
-      @test_broken a[I, :]
-      @test_broken a[:, I]
+      @test a[I, :] isa BlockSparseArray
+      @test a[:, I] isa BlockSparseArray
       @test size(a[I, I]) == (1, 1)
       @test !GradedAxes.isdual(axes(a[I, I], 1))
     end
