@@ -2,8 +2,6 @@ using JLArrays: JLArray
 using LinearAlgebra: LinearAlgebra, mul!, transpose
 using NDTensors.Expose: Exposed, expose, unexpose
 
-# This was calling generic matrix multiplication.
-# TODO: Raise an issue with `CUDA.jl`.
 function LinearAlgebra.mul!(
   CM::Exposed{<:JLArray,<:LinearAlgebra.Transpose},
   AM::Exposed{<:JLArray},
@@ -15,8 +13,6 @@ function LinearAlgebra.mul!(
   return unexpose(CM)
 end
 
-# This was calling generic matrix multiplication.
-# TODO: Raise an issue with `CUDA.jl`.
 function LinearAlgebra.mul!(
   CM::Exposed{<:JLArray,<:LinearAlgebra.Adjoint},
   AM::Exposed{<:JLArray},
@@ -28,7 +24,7 @@ function LinearAlgebra.mul!(
   return unexpose(CM)
 end
 
-## Fix issue in CUDA.jl where it cannot distinguish Transpose{Reshape{Adjoint{JLArray}}}
+## Fix issue in JLArrays.jl where it cannot distinguish Transpose{Reshape{Adjoint{JLArray}}}
 ## as a JLArray and calls generic matmul
 function LinearAlgebra.mul!(
   CM::Exposed{<:JLArray},
