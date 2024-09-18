@@ -5,22 +5,23 @@ if "cuda" in ARGS || "all" in ARGS
   ## Right now adding CUDA during Pkg.test results in a
   ## compat issues. I am adding it back to test/Project.toml
   Pkg.add("CUDA")
-  using CUDA
+  using CUDA: CUDA
 end
 if "rocm" in ARGS || "all" in ARGS
   ## Warning AMDGPU does not work in Julia versions below 1.8
   Pkg.add("AMDGPU")
-  using AMDGPU
+  using AMDGPU: AMDGPU
 end
 if "metal" in ARGS || "all" in ARGS
   ## Warning Metal does not work in Julia versions below 1.8
   Pkg.add("Metal")
-  using Metal
+  using Metal: Metal
 end
 if "cutensor" in ARGS || "all" in ARGS
-  Pkg.add("cuTENSOR")
   Pkg.add("CUDA")
-  using CUDA, cuTENSOR
+  Pkg.add("cuTENSOR")
+  using CUDA: CUDA
+  using cuTENSOR: cuTENSOR
 end
 
 using JLArrays: JLArrays, jl
