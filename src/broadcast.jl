@@ -417,7 +417,7 @@ function Base.copyto!(
     ## TODO this line fails, because the function (r, t) -> β * r + α * t 
     ## is an anonymous ITensor function which the GPU compiler cannot process
     ## This code is being called in ITensorsVectorInterfaceExt but checked was missed because
-    
+
     map!((r, t) -> β * r + α * t, T, T, A)
   else
     bc_bc_α = find_type(Broadcasted, bc_α.args)
