@@ -76,6 +76,8 @@ end
 position(type::Type{<:AbstractArray}, ::typeof(eltype)) = Position(1)
 position(type::Type{<:AbstractArray}, ::typeof(ndims)) = Position(2)
 
+default_type_parameters(::Type{<:AbstractArray}) = (Float64, 1)
+
 for wrapper in [:PermutedDimsArray, :(Base.ReshapedArray), :SubArray]
   @eval begin
     position(type::Type{<:$wrapper}, ::typeof(eltype)) = Position(1)
