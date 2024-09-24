@@ -7,30 +7,6 @@ pipeline {
   stages {
     stage('GPU Testing') {
       parallel {
-        stage('NDTensorsCUDAExt julia-1.6') {
-	        options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            dockerfile {
-              label 'gpu&&v100'
-              filename 'Dockerfile'
-              dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.6'
-              args '--gpus "device=0"'
-            }
-          }
-          environment {
-            HOME = pwd(tmp:true)
-            OMP_NUM_THREADS = 4
-            JULIA_NUM_THREADS = 4
-          }
-          steps {
-            sh '''
-              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.update(); Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
-            '''
-          }
-        }
         stage('NDTensorsCUDAExt julia-1.10') {
 	        options {
             timeout(time: 45, unit: 'MINUTES')
@@ -51,7 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.update(); Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -75,7 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia -e 'using Pkg; Pkg.Registry.update(); Pkg.update(); Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
             '''
           }
         }
