@@ -4,13 +4,6 @@ using Metal: Metal, MtlArray
 using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
 using NDTensors.GPUArraysCoreExtensions: storagemode
 
-## TODO remove TypeParameterAccessors when SetParameters is removed
-function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(eltype))
-  return Position(1)
-end
-function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(ndims))
-  return Position(2)
-end
 function TypeParameterAccessors.position(::Type{<:MtlArray}, ::typeof(storagemode))
   return Position(3)
 end
