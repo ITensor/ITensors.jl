@@ -1,7 +1,7 @@
 #
 # Orthogonal group O(2)
 # isomorphic to Z_2 ⋉ U(1)
-# corresponds to to SU(2) subgroup with Sz conservation + Sz-reversal
+# isomorphic to SU(2) subgroup with Sz conservation + Sz-reversal
 #
 
 struct O2 <: AbstractCategory
