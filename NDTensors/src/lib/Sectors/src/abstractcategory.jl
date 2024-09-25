@@ -14,7 +14,9 @@ function trivial(axis_type::Type{<:AbstractUnitRange})
   return GradedAxes.gradedrange([trivial(eltype(axis_type))])  # always returns nondual
 end
 function trivial(la_type::Type{<:LabelledNumbers.LabelledInteger})
-  return la_type(1, trivial(LabelledNumbers.label_type(la_type)))
+  return LabelledNumbers.labelled(
+    one(LabelledNumbers.unlabel_type(la_type)), trivial(LabelledNumbers.label_type(la_type))
+  )
 end
 function trivial(type::Type)
   return error("`trivial` not defined for type $(type).")
