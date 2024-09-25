@@ -121,7 +121,7 @@ function blockmergesort(g::AbstractGradedUnitRange)
     la -> labelled(sum(gblocklengths[findall(==(la), glabels)]; init=0), la),
     sort(unique(glabels)),
   )
-  return GradedAxes.gradedrange(new_blocklengths)
+  return gradedrange(new_blocklengths)
 end
 
 blockmergesort(g::UnitRangeDual) = dual(blockmergesort(flip(g)))
