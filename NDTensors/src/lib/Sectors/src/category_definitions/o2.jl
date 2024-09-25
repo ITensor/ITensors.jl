@@ -3,7 +3,16 @@
 # isomorphic to Z_2 ⋉ U(1)
 # isomorphic to SU(2) subgroup with Sz conservation + Sz-reversal
 #
+# O(2) has 3 kinds of irreps:
+# - trivial irrep, or "0e", corresponds to Sz=0 and even under Sz-reversal
+# - "zero odd", or "0o" irrep, corresponds to Sz=0 and odd under Sz-reversal
+# - 2-dimensional Sz=±|m| irrep, with m a half integer
+#
 
+# here we use only one half-integer as label:
+# - l=0 for trivial
+# - l=-1 for zero odd
+# - l=+|m| for Sz=±|m|
 struct O2 <: AbstractCategory
   l::HalfIntegers.Half{Int}
 end
@@ -15,7 +24,7 @@ category_label(s::O2) = s.l
 trivial(::Type{O2}) = O2(0)
 zero_odd(::Type{O2}) = O2(-1)
 
-_iszero(s::O2) = _iszero(category_label(s))
+_iszero(s::O2) = _iszero(category_label(s))  # matches both 0e and 0o
 _iszero_even(s::O2) = _iszero_even(category_label(s))
 _iszero_odd(s::O2) = _iszero_odd(category_label(s))
 
