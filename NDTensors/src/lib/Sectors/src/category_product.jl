@@ -61,8 +61,8 @@ end
 # - dictionary-like with a NamedTuple
 
 function categories_fusion_rule(cats1, cats2)
-  diff_cat = CategoryProduct(find_diff(cats1, cats2))
-  shared1, shared2 = find_common(cats1, cats2)
+  diff_cat = CategoryProduct(categories_diff(cats1, cats2))
+  shared1, shared2 = categories_common(cats1, cats2)
   fused = map(fusion_rule, values(shared1), values(shared2))
   return recover_key(typeof(shared1), fused) × diff_cat
 end
@@ -172,12 +172,12 @@ categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
 categories_trivial(type::Type{<:Tuple}) = trivial.(fieldtypes(type))
 
-function find_common(t1::Tuple, t2::Tuple)
+function categories_common(t1::Tuple, t2::Tuple)
   n = min(length(t1), length(t2))
   return t1[begin:n], t2[begin:n]
 end
 
-function find_diff(t1::Tuple, t2::Tuple)
+function categories_diff(t1::Tuple, t2::Tuple)
   n1 = length(t1)
   n2 = length(t2)
   return n1 < n2 ? t2[(n1 + 1):end] : t1[(n2 + 1):end]
@@ -243,8 +243,8 @@ function categories_trivial(type::Type{<:NamedTuple{Keys}}) where {Keys}
   return NamedTuple{Keys}(trivial.(fieldtypes(type)))
 end
 
-function find_common(nt1::NamedTuple, nt2::NamedTuple)
+function categories_common(nt1::NamedTuple, nt2::NamedTuple)
   return intersect_keys(nt1, nt2), intersect_keys(nt2, nt1)
 end
 
-find_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
+categories_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
