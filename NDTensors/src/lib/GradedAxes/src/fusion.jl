@@ -73,10 +73,9 @@ flatten_maybe_nested(v::Vector{<:AbstractGradedUnitRange}) = reduce(vcat, blockl
 
 using BlockArrays: blockedrange, blocks
 function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
-  maybe_nested = map(
-    it -> mapreduce(length, fuse_blocklengths, it),
-    Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),)),
-  )
+  maybe_nested = map(Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),))) do it
+    return mapreduce(length, fuse_blocklengths, it)
+  end
   blocklengths = flatten_maybe_nested(maybe_nested)
   return blockedrange(blocklengths)
 end
