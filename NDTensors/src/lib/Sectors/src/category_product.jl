@@ -202,20 +202,20 @@ end
 
 # sector() acts as empty NamedTuple
 function categories_isequal(nt::NamedTuple, ::Tuple{})
-  return categories_isequal(nt, categories_trivial(typeof(nt)))
+  return categories_isequal(nt, (;))
 end
 function categories_isequal(::Tuple{}, nt::NamedTuple)
-  return categories_isequal(categories_trivial(typeof(nt)), nt)
+  return categories_isequal((;), nt)
 end
 function categories_isequal(nt1::NamedTuple, nt2::NamedTuple)
   return ==(sym_categories_insert_unspecified(nt1, nt2)...)
 end
 
 function categories_isless(nt::NamedTuple, ::Tuple{})
-  return categories_isless(nt, categories_trivial(typeof(nt)))
+  return categories_isless(nt, (;))
 end
 function categories_isless(::Tuple{}, nt::NamedTuple)
-  return categories_isless(categories_trivial(typeof(nt)), nt)
+  return categories_isless((;), nt)
 end
 function categories_isless(nt1::NamedTuple, nt2::NamedTuple)
   return isless(sym_categories_insert_unspecified(nt1, nt2)...)
