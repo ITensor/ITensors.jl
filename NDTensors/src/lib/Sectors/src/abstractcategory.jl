@@ -29,7 +29,7 @@ function category_label(c::AbstractCategory)
 end
 
 block_dimensions(g::AbstractUnitRange) = block_dimensions(SymmetryStyle(g), g)
-block_dimensions(::AbelianGroup, g) = GradedAxes.unlabel.(BlockArrays.blocklengths(g))
+block_dimensions(::AbelianGroup, g) = LabelledNumbers.unlabel.(BlockArrays.blocklengths(g))
 function block_dimensions(::SymmetryStyle, g)
   return Sectors.quantum_dimension.(GradedAxes.blocklabels(g)) .*
          BlockArrays.blocklengths(g)
