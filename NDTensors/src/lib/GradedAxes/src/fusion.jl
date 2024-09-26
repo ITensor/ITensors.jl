@@ -47,6 +47,7 @@ function tensor_product(a1::UnitRangeDual, a2::AbstractUnitRange)
   return tensor_product(flip(a1), a2)
 end
 
+# TBD change convention to tensor(dual, dual) -> dual?
 function tensor_product(a1::UnitRangeDual, a2::UnitRangeDual)
   return tensor_product(flip(a1), flip(a2))
 end
