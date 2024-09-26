@@ -39,6 +39,10 @@ end
 
 # == is just a range comparison that ignores labels. Need dedicated function to check equality.
 function gradedisequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  return blockisequal(a1, a2)
+end
+
+function gradedisequal(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
   return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
 end
 
