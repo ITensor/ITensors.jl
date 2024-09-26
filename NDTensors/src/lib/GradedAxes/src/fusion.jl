@@ -79,12 +79,8 @@ function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRan
   return blockedrange(blocklengths)
 end
 
-function blocksortperm(a::AbstractBlockedUnitRange)
-  return Block.(sortperm(blocklabels(a)))
-end
-
 # convention: sort UnitRangeDual according to nondual blocks
-function blocksortperm(a::UnitRangeDual)
+function blocksortperm(a::AbstractUnitRange)
   return Block.(sortperm(blocklabels(nondual(a))))
 end
 
@@ -102,16 +98,12 @@ end
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
-function blockmergesortperm(a::AbstractBlockedUnitRange)
-  return Block.(groupsortperm(blocklabels(a)))
+function blockmergesortperm(a::AbstractUnitRange)
+  return Block.(groupsortperm(blocklabels(nondual(a))))
 end
 
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
-
-function blockmergesortperm(a::UnitRangeDual)
-  return Block.(groupsortperm(blocklabels(nondual(a))))
-end
 
 function blockmergesort(g::AbstractGradedUnitRange)
   glabels = blocklabels(g)
