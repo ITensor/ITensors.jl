@@ -11,6 +11,8 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
+const EmptyCategoryProduct = CategoryProduct{Tuple{}}
+
 # =================================  Sectors interface  ====================================
 function SymmetryStyle(c::CategoryProduct)
   return reduce(combine_styles, map(SymmetryStyle, categories(c)); init=EmptyCategory())
@@ -130,31 +132,29 @@ function fusion_rule(::AbelianGroup, s1::CategoryProduct, s2::CategoryProduct)
 end
 
 # Empty case
-function fusion_rule(
-  ::EmptyCategory, ::CategoryProduct{Tuple{}}, ::CategoryProduct{Tuple{}}
-)
+function fusion_rule(::EmptyCategory, ::EmptyCategoryProduct, ::EmptyCategoryProduct)
   return sector()
 end
 
 # EmptyCategory acts as trivial on any AbstractCategory, not just CategoryProduct
-function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c::AbstractCategory)
+function fusion_rule(::SymmetryStyle, ::EmptyCategoryProduct, c::AbstractCategory)
   return to_graded_axis(c)
 end
-function fusion_rule(::SymmetryStyle, ::CategoryProduct{Tuple{}}, c::CategoryProduct)
+function fusion_rule(::SymmetryStyle, ::EmptyCategoryProduct, c::CategoryProduct)
   return to_graded_axis(c)
 end
-function fusion_rule(::SymmetryStyle, c::AbstractCategory, ::CategoryProduct{Tuple{}})
+function fusion_rule(::SymmetryStyle, c::AbstractCategory, ::EmptyCategoryProduct)
   return to_graded_axis(c)
 end
-function fusion_rule(::SymmetryStyle, c::CategoryProduct, ::CategoryProduct{Tuple{}})
+function fusion_rule(::SymmetryStyle, c::CategoryProduct, ::EmptyCategoryProduct)
   return to_graded_axis(c)
 end
 
 # abelian case: return Category
-fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c::AbstractCategory) = c
-fusion_rule(::AbelianGroup, ::CategoryProduct{Tuple{}}, c::CategoryProduct) = c
-fusion_rule(::AbelianGroup, c::AbstractCategory, ::CategoryProduct{Tuple{}}) = c
-fusion_rule(::AbelianGroup, c::CategoryProduct, ::CategoryProduct{Tuple{}}) = c
+fusion_rule(::AbelianGroup, ::EmptyCategoryProduct, c::AbstractCategory) = c
+fusion_rule(::AbelianGroup, ::EmptyCategoryProduct, c::CategoryProduct) = c
+fusion_rule(::AbelianGroup, c::AbstractCategory, ::EmptyCategoryProduct) = c
+fusion_rule(::AbelianGroup, c::CategoryProduct, ::EmptyCategoryProduct) = c
 
 # ===============================  Ordered implementation  =================================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
