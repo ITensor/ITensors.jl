@@ -24,22 +24,21 @@ category_label(s::O2) = s.l
 trivial(::Type{O2}) = O2(0)
 zero_odd(::Type{O2}) = O2(-1)
 
-_iszero(s::O2) = _iszero(category_label(s))  # matches both 0e and 0o
-_iszero_even(s::O2) = _iszero_even(category_label(s))
-_iszero_odd(s::O2) = _iszero_odd(category_label(s))
+is_zero_even_or_odd(s::O2) = is_zero_even_or_odd(category_label(s))
+iszero_odd(s::O2) = iszero_odd(category_label(s))
 
-_iszero(l::HalfInteger) = _iszero_even(l) || _iszero_odd(l)
-_iszero_even(l::HalfInteger) = l == category_label(trivial(O2))
-_iszero_odd(l::HalfInteger) = l == category_label(zero_odd(O2))
+is_zero_even_or_odd(l::HalfInteger) = iszero_even(l) || iszero_odd(l)
+iszero_even(l::HalfInteger) = l == category_label(trivial(O2))
+iszero_odd(l::HalfInteger) = l == category_label(zero_odd(O2))
 
-quantum_dimension(::NonAbelianGroup, s::O2) = 2 - _iszero(s)
+quantum_dimension(::NonAbelianGroup, s::O2) = 2 - is_zero_even_or_odd(s)
 
 GradedAxes.dual(s::O2) = s
 
 function Base.show(io::IO, s::O2)
-  if _iszero_odd(s)
+  if iszero_odd(s)
     disp = "0o"
-  elseif _iszero_even(s)
+  elseif istrivial(s)
     disp = "0e"
   else
     disp = "±" * string(category_label(s))
@@ -48,15 +47,15 @@ function Base.show(io::IO, s::O2)
 end
 
 function label_fusion_rule(::Type{O2}, l1, l2)
-  if _iszero(l1)
+  if is_zero_even_or_odd(l1)
     degens = [1]
-    if _iszero(l2)
+    if is_zero_even_or_odd(l2)
       labels = l1 == l2 ? [category_label(trivial(O2))] : [category_label(zero_odd(O2))]
     else
       labels = [l2]
     end
   else
-    if _iszero(l2)
+    if is_zero_even_or_odd(l2)
       degens = [1]
       labels = [l1]
     else
