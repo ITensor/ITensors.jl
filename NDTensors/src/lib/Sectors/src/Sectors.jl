@@ -1,6 +1,7 @@
 module Sectors
 
 using BlockArrays: blocklengths
+using HalfIntegers: Half, HalfInteger, twice
 
 using NDTensors.LabelledNumbers:
   LabelledInteger, label, label_type, labelled, unlabel, unlabel_type

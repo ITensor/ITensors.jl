@@ -3,7 +3,7 @@
 #
 
 struct su2{k} <: AbstractCategory
-  j::HalfIntegers.Half{Int}
+  j::Half{Int}
 end
 
 SymmetryStyle(::su2) = NonGroupCategory()

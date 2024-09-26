@@ -14,7 +14,7 @@
 # - l=-1 for zero odd
 # - l=+|m| for Sz=±|m|
 struct O2 <: AbstractCategory
-  l::HalfIntegers.Half{Int}
+  l::Half{Int}
 end
 
 SymmetryStyle(::O2) = NonAbelianGroup()
@@ -28,9 +28,9 @@ _iszero(s::O2) = _iszero(category_label(s))  # matches both 0e and 0o
 _iszero_even(s::O2) = _iszero_even(category_label(s))
 _iszero_odd(s::O2) = _iszero_odd(category_label(s))
 
-_iszero(l::HalfIntegers.HalfInteger) = _iszero_even(l) || _iszero_odd(l)
-_iszero_even(l::HalfIntegers.HalfInteger) = l == category_label(trivial(O2))
-_iszero_odd(l::HalfIntegers.HalfInteger) = l == category_label(zero_odd(O2))
+_iszero(l::HalfInteger) = _iszero_even(l) || _iszero_odd(l)
+_iszero_even(l::HalfInteger) = l == category_label(trivial(O2))
+_iszero_odd(l::HalfInteger) = l == category_label(zero_odd(O2))
 
 quantum_dimension(::NonAbelianGroup, s::O2) = 2 - _iszero(s)
 

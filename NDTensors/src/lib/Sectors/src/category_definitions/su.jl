@@ -95,15 +95,15 @@ function label_fusion_rule(::Type{<:SU{2}}, s1, s2)
 end
 
 # define angular momentum-like interface using half-integers
-SU2(h::Number) = SU{2}((HalfIntegers.twice(HalfIntegers.HalfInteger(h)),))
+SU2(h::Number) = SU{2}((twice(HalfInteger(h)),))
 
 # display SU2 using half-integers
 function Base.show(io::IO, s::SU{2})
-  return print(io, "SU(2)[S=", HalfIntegers.half(quantum_dimension(s) - 1), "]")
+  return print(io, "SU(2)[S=", half(quantum_dimension(s) - 1), "]")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", s::SU{2})
-  return print(io, "S = ", HalfIntegers.half(quantum_dimension(s) - 1))
+  return print(io, "S = ", half(quantum_dimension(s) - 1))
 end
 
 #
