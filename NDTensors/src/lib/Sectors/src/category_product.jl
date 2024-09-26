@@ -24,7 +24,7 @@ function quantum_dimension(::NonGroupCategory, s::CategoryProduct)
   return prod(map(quantum_dimension, categories(s)))
 end
 
-GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(GradedAxes.dual, categories(s)))
+GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(dual, categories(s)))
 
 trivial(type::Type{<:CategoryProduct}) = sector(categories_trivial(categories_type(type)))
 
@@ -83,10 +83,9 @@ function recover_key(T::Type, fused::Tuple)
   # here fused contains at leat one GradedUnitRange
   g0 = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
-  new_labels = recover_key.(T, GradedAxes.blocklabels(g0))
-  new_blocklengths =
-    LabelledNumbers.labelled.(GradedAxes.unlabel.(BlockArrays.blocklengths(g0)), new_labels)
-  return GradedAxes.gradedrange(new_blocklengths)
+  new_labels = recover_key.(T, blocklabels(g0))
+  new_blocklengths = labelled.(unlabel.(blocklengths(g0)), new_labels)
+  return gradedrange(new_blocklengths)
 end
 
 sector(T::Type{<:CategoryProduct}, cats::Tuple) = sector(categories_type(T), cats)
@@ -105,20 +104,18 @@ end
 ×(c1::NamedTuple, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
 ×(c1::AbstractCategory, c2::NamedTuple) = ×(CategoryProduct(c1), CategoryProduct(c2))
 
-function ×(l1::LabelledNumbers.LabelledInteger, l2::LabelledNumbers.LabelledInteger)
-  c3 = LabelledNumbers.label(l1) × LabelledNumbers.label(l2)
-  m3 = LabelledNumbers.unlabel(l1) * LabelledNumbers.unlabel(l2)
-  return LabelledNumbers.labelled(m3, c3)
+function ×(l1::LabelledInteger, l2::LabelledInteger)
+  c3 = label(l1) × label(l2)
+  m3 = unlabel(l1) * unlabel(l2)
+  return labelled(m3, c3)
 end
 
 function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)
   v = map(
     ((l1, l2),) -> l1 × l2,
-    Iterators.flatten((
-      Iterators.product(BlockArrays.blocklengths(g1), BlockArrays.blocklengths(g2)),
-    ),),
+    Iterators.flatten((Iterators.product(blocklengths(g1), blocklengths(g2)),),),
   )
-  return GradedAxes.gradedrange(v)
+  return gradedrange(v)
 end
 
 # ====================================  Fusion rules  ======================================

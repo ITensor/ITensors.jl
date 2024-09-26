@@ -8,7 +8,7 @@ end
 
 SymmetryStyle(::su2) = NonGroupCategory()
 
-dual(s::su2) = s
+GradedAxes.dual(s::su2) = s
 
 category_label(s::su2) = s.j
 
