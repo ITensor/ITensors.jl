@@ -82,7 +82,7 @@ recover_key(T::Type, t::Tuple{Vararg{AbstractCategory}}) = sector(T, t)
 recover_key(T::Type, c::AbstractCategory) = recover_key(T, (c,))
 recover_key(T::Type, c::CategoryProduct) = recover_key(T, categories(c))
 function recover_key(T::Type, fused::Tuple)
-  # here fused contains at leat one GradedUnitRange
+  # here fused contains at least one GradedOneTo
   g0 = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
   new_labels = recover_key.(T, blocklabels(g0))
