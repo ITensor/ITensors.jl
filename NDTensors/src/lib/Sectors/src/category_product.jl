@@ -30,6 +30,7 @@ function quantum_dimension(::NonGroupCategory, s::CategoryProduct)
   return prod(map(quantum_dimension, categories(s)))
 end
 
+# use map instead of broadcast to support both Tuple and NamedTuple
 GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(dual, categories(s)))
 
 trivial(type::Type{<:CategoryProduct}) = sector(categories_trivial(categories_type(type)))
