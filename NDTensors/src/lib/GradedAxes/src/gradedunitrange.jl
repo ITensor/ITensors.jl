@@ -38,12 +38,13 @@ function Base.OrdinalRange{T,T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
 end
 
 # == is just a range comparison that ignores labels. Need dedicated function to check equality.
-function gradedisequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
-  return blockisequal(a1, a2)
+blocklabels(::AbstractUnitRange) = nothing
+function labelled_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
 end
 
-function gradedisequal(a1::AbstractGradedUnitRange, a2::AbstractGradedUnitRange)
-  return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
+function space_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  return (isdual(a1) == isdual(a2)) && labelled_isequal(a1, a2)
 end
 
 # This is only needed in certain Julia versions below 1.10

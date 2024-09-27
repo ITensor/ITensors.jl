@@ -14,7 +14,7 @@ using NDTensors.Sectors:
   recover_category_product_type,
   sector,
   trivial
-using NDTensors.GradedAxes: dual, fusion_product, gradedisequal, gradedrange
+using NDTensors.GradedAxes: dual, fusion_product, space_isequal, gradedrange
 using Test: @inferred, @test, @testset, @test_throws
 
 macro inferred_latest(ex)
@@ -150,10 +150,10 @@ end
   @testset "Fusion of NonAbelian products" begin
     p0 = sector(SU2(0))
     ph = sector(SU2(1//2))
-    @test gradedisequal((@inferred p0 ⊗ ph), gradedrange([sector(SU2(1//2)) => 1]))
+    @test space_isequal((@inferred p0 ⊗ ph), gradedrange([sector(SU2(1//2)) => 1]))
 
     phh = SU2(1//2) × SU2(1//2)
-    @test gradedisequal(
+    @test space_isequal(
       phh ⊗ phh,
       gradedrange([
         (SU2(0) × SU2(0)) => 1,
@@ -162,7 +162,7 @@ end
         (SU2(1) × SU2(1)) => 1,
       ]),
     )
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred phh ⊗ phh),
       gradedrange([
         (SU2(0) × SU2(0)) => 1,
@@ -177,10 +177,10 @@ end
     ı = Fib("1")
     τ = Fib("τ")
     s = ı × ı
-    @test gradedisequal((@inferred s ⊗ s), gradedrange([s => 1]))
+    @test space_isequal((@inferred s ⊗ s), gradedrange([s => 1]))
 
     s = τ × τ
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([(ı × ı) => 1, (τ × ı) => 1, (ı × τ) => 1, (τ × τ) => 1]),
     )
@@ -191,18 +191,18 @@ end
     g = gradedrange([
       (ı × Ising("1")) => 1, (τ × Ising("1")) => 1, (ı × ψ) => 1, (τ × ψ) => 1
     ])
-    @test gradedisequal((@inferred s ⊗ s), g)
+    @test space_isequal((@inferred s ⊗ s), g)
   end
 
   @testset "Fusion of mixed Abelian and NonAbelian products" begin
     p2h = U1(2) × SU2(1//2)
     p1h = U1(1) × SU2(1//2)
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred p2h ⊗ p1h), gradedrange([(U1(3) × SU2(0)) => 1, (U1(3) × SU2(1)) => 1])
     )
 
     p1h1 = U1(1) × SU2(1//2) × Z{2}(1)
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred p1h1 ⊗ p1h1),
       gradedrange([(U1(2) × SU2(0) × Z{2}(0)) => 1, (U1(2) × SU2(1) × Z{2}(0)) => 1]),
     )
@@ -210,7 +210,7 @@ end
 
   @testset "Fusion of fully mixed products" begin
     s = U1(1) × SU2(1//2) × Ising("σ")
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
         (U1(2) × SU2(0) × Ising("1")) => 1,
@@ -223,7 +223,7 @@ end
     ı = Fib("1")
     τ = Fib("τ")
     s = SU2(1//2) × U1(1) × τ
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
         (SU2(0) × U1(2) × ı) => 1,
@@ -234,23 +234,23 @@ end
     )
 
     s = U1(1) × ı × τ
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s), gradedrange([(U1(2) × ı × ı) => 1, (U1(2) × ı × τ) => 1])
     )
   end
 
   @testset "Fusion of different length Categories" begin
     @test sector(U1(1) × U1(0)) ⊗ sector(U1(1)) == sector(U1(2) × U1(0))
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred sector(SU2(0) × SU2(0)) ⊗ sector(SU2(1))),
       gradedrange([sector(SU2(1) × SU2(0)) => 1]),
     )
 
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred sector(SU2(1) × U1(1)) ⊗ sector(SU2(0))),
       gradedrange([sector(SU2(1) × U1(1)) => 1]),
     )
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred sector(U1(1) × SU2(1)) ⊗ sector(U1(2))),
       gradedrange([sector(U1(3) × SU2(1)) => 1]),
     )
@@ -266,7 +266,7 @@ end
     s2 = U1(0) × SU2(1//2) × Ising("1")
     g1 = gradedrange([s1 => 2])
     g2 = gradedrange([s2 => 1])
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred fusion_product(g1, g2)),
       gradedrange([U1(1) × SU2(0) × Ising("σ") => 2, U1(1) × SU2(1) × Ising("σ") => 2]),
     )
@@ -418,14 +418,14 @@ end
     phb = sector(; B=SU2(1//2))
     phab = sector(; A=SU2(1//2), B=SU2(1//2))
 
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred pha ⊗ pha), gradedrange([sector(; A=SU2(0)) => 1, sector(; A=SU2(1)) => 1])
     )
-    @test gradedisequal((@inferred pha ⊗ p0), gradedrange([pha => 1]))
-    @test gradedisequal((@inferred p0 ⊗ phb), gradedrange([phb => 1]))
-    @test gradedisequal((@inferred pha ⊗ phb), gradedrange([phab => 1]))
+    @test space_isequal((@inferred pha ⊗ p0), gradedrange([pha => 1]))
+    @test space_isequal((@inferred p0 ⊗ phb), gradedrange([phb => 1]))
+    @test space_isequal((@inferred pha ⊗ phb), gradedrange([phab => 1]))
 
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred phab ⊗ phab),
       gradedrange([
         sector(; A=SU2(0), B=SU2(0)) => 1,
@@ -440,10 +440,10 @@ end
     ı = Fib("1")
     τ = Fib("τ")
     s = sector(; A=ı, B=ı)
-    @test gradedisequal((@inferred s ⊗ s), gradedrange([s => 1]))
+    @test space_isequal((@inferred s ⊗ s), gradedrange([s => 1]))
 
     s = sector(; A=τ, B=τ)
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
         sector(; A=ı, B=ı) => 1,
@@ -462,7 +462,7 @@ end
       sector(; A=ı, B=ψ) => 1,
       sector(; A=τ, B=ψ) => 1,
     ])
-    @test gradedisequal((@inferred s ⊗ s), g)
+    @test space_isequal((@inferred s ⊗ s), g)
   end
 
   @testset "Fusion of mixed Abelian and NonAbelian products" begin
@@ -476,15 +476,15 @@ end
     q21 = (N=U1(2),) × (J=SU2(1),)
     q22 = (N=U1(2),) × (J=SU2(2),)
 
-    @test gradedisequal((@inferred q1h ⊗ q1h), gradedrange([q20 => 1, q21 => 1]))
-    @test gradedisequal((@inferred q10 ⊗ q1h), gradedrange([q2h => 1]))
-    @test gradedisequal((@inferred q0h ⊗ q1h), gradedrange([q10 => 1, q11 => 1]))
-    @test gradedisequal((@inferred q11 ⊗ q11), gradedrange([q20 => 1, q21 => 1, q22 => 1]))
+    @test space_isequal((@inferred q1h ⊗ q1h), gradedrange([q20 => 1, q21 => 1]))
+    @test space_isequal((@inferred q10 ⊗ q1h), gradedrange([q2h => 1]))
+    @test space_isequal((@inferred q0h ⊗ q1h), gradedrange([q10 => 1, q11 => 1]))
+    @test space_isequal((@inferred q11 ⊗ q11), gradedrange([q20 => 1, q21 => 1, q22 => 1]))
   end
 
   @testset "Fusion of fully mixed products" begin
     s = sector(; A=U1(1), B=SU2(1//2), C=Ising("σ"))
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
         sector(; A=U1(2), B=SU2(0), C=Ising("1")) => 1,
@@ -497,7 +497,7 @@ end
     ı = Fib("1")
     τ = Fib("τ")
     s = sector(; A=SU2(1//2), B=U1(1), C=τ)
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
         sector(; A=SU2(0), B=U1(2), C=ı) => 1,
@@ -508,7 +508,7 @@ end
     )
 
     s = sector(; A=τ, B=U1(1), C=ı)
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([sector(; B=U1(2), A=ı, C=ı) => 1, sector(; B=U1(2), A=τ, C=ı) => 1]),
     )
@@ -520,7 +520,7 @@ end
     g2 = gradedrange([s2 => 1])
     s3 = sector(; A=U1(1), B=SU2(0), C=Ising("σ"))
     s4 = sector(; A=U1(1), B=SU2(1), C=Ising("σ"))
-    @test gradedisequal(
+    @test space_isequal(
       (@inferred_latest fusion_product(g1, g2)), gradedrange([s3 => 2, s4 => 2])
     )
 
@@ -529,7 +529,7 @@ end
     sAB = sector(; A=U1(1), B=SU2(1//2))
     gA = gradedrange([sA => 2])
     gB = gradedrange([sB => 1])
-    @test gradedisequal((@inferred fusion_product(gA, gB)), gradedrange([sAB => 2]))
+    @test space_isequal((@inferred fusion_product(gA, gB)), gradedrange([sAB => 2]))
   end
 end
 
@@ -545,7 +545,7 @@ end
   @test typeof(s) == typeof(sector((;)))  # empty NamedTuple is cast to Tuple{}
 
   g0 = gradedrange([s => 2])
-  @test gradedisequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
+  @test space_isequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
 
   @test (@inferred s × U1(1)) == sector(U1(1))
   @test (@inferred s × sector(U1(1))) == sector(U1(1))

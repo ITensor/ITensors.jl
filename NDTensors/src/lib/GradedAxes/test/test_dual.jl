@@ -9,7 +9,7 @@ using NDTensors.GradedAxes:
   blocksortperm,
   dual,
   flip,
-  gradedisequal,
+  space_isequal,
   gradedrange,
   isdual,
   nondual
@@ -25,12 +25,12 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   ad = dual(a)
   @test eltype(ad) == LabelledInteger{Int,U1}
 
-  @test gradedisequal(dual(ad), a)
-  @test gradedisequal(nondual(ad), a)
-  @test gradedisequal(nondual(a), a)
-  @test gradedisequal(ad, ad)
-  @test !gradedisequal(a, ad)
-  @test !gradedisequal(ad, a)
+  @test space_isequal(dual(ad), a)
+  @test space_isequal(nondual(ad), a)
+  @test space_isequal(nondual(a), a)
+  @test space_isequal(ad, ad)
+  @test !space_isequal(a, ad)
+  @test !space_isequal(ad, a)
 
   @test isdual(ad)
   @test !isdual(a)
@@ -66,8 +66,8 @@ end
 @testset "flip" begin
   a = gradedrange([U1(0) => 2, U1(1) => 3])
   ad = dual(a)
-  @test gradedisequal(flip(a), dual(gradedrange([U1(0) => 2, U1(-1) => 3])))
-  @test gradedisequal(flip(ad), gradedrange([U1(0) => 2, U1(-1) => 3]))
+  @test space_isequal(flip(a), dual(gradedrange([U1(0) => 2, U1(-1) => 3])))
+  @test space_isequal(flip(ad), gradedrange([U1(0) => 2, U1(-1) => 3]))
 
   @test blocklabels(a) == [U1(0), U1(1)]
   @test blocklabels(dual(a)) == [U1(0), U1(-1)]
