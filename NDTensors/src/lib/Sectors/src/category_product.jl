@@ -1,6 +1,10 @@
 # This files defines a structure for Cartesian product of 2 or more fusion categories
 # e.g. U(1)×U(1), U(1)×SU2(2)×SU(3)
 
+using BlockArrays: blocklengths
+using ..LabelledNumbers: LabelledInteger, label, labelled, unlabel
+using ..GradedAxes: GradedAxes, dual
+
 # =====================================  Definition  =======================================
 struct CategoryProduct{Categories} <: AbstractCategory
   cats::Categories

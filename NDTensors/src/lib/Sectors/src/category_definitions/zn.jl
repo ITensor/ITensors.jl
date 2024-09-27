@@ -2,6 +2,8 @@
 # Cyclic group Zₙ
 #
 
+using ...GradedAxes: GradedAxes
+
 struct Z{N} <: AbstractCategory
   m::Int
   Z{N}(m) where {N} = new{N}(m % N)

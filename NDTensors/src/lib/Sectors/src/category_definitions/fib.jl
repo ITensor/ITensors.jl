@@ -3,6 +3,7 @@
 #
 # (same fusion rules as subcategory {0,1} of su2{3})
 #
+using ..GradedAxes: GradedAxes
 
 struct Fib <: AbstractCategory
   l::Int

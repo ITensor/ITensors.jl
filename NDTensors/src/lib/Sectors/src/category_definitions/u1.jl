@@ -2,6 +2,8 @@
 # U₁ group (circle group, or particle number, total Sz etc.)
 #
 
+using ...GradedAxes: GradedAxes
+
 # Parametric type to allow both integer label as well as
 # HalfInteger for easy conversion to/from SU(2)
 struct U1{T} <: AbstractCategory

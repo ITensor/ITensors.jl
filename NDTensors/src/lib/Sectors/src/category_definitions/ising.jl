@@ -4,6 +4,9 @@
 # (same fusion rules as su2{2})
 #
 
+using HalfIntegers: Half, twice
+using ..GradedAxes: GradedAxes
+
 struct Ising <: AbstractCategory
   l::Half{Int}
 end

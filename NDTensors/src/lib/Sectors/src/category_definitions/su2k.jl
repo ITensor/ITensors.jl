@@ -2,6 +2,9 @@
 # Quantum 'group' su2ₖ
 #
 
+using HalfIntegers: Half
+using ...GradedAxes: GradedAxes
+
 struct su2{k} <: AbstractCategory
   j::Half{Int}
 end

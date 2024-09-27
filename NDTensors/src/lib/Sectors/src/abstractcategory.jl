@@ -1,6 +1,10 @@
 # This file defines the abstract type AbstractCategory
 # all fusion categories (Z{2}, SU2, Ising...) are subtypes of AbstractCategory
 
+using BlockArrays: blocklengths
+using ..LabelledNumbers: LabelledInteger, label, label_type, labelled, unlabel, unlabel_type
+using ..GradedAxes: GradedAxes, blocklabels, fuse_blocklengths, gradedrange, tensor_product
+
 abstract type AbstractCategory end
 
 # ===================================  Base interface  =====================================
