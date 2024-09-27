@@ -3,7 +3,7 @@
 
 using BlockArrays: blocklengths
 using ..LabelledNumbers: LabelledInteger, label, labelled, unlabel
-using ..GradedAxes: GradedAxes, dual
+using ..GradedAxes: AbstractGradedUnitRange, GradedAxes, dual
 
 # =====================================  Definition  =======================================
 struct CategoryProduct{Categories} <: AbstractCategory
@@ -67,13 +67,6 @@ end
 # - ordered-like with a Tuple
 # - dictionary-like with a NamedTuple
 
-function categories_fusion_rule(cats1, cats2)
-  diff_cat = CategoryProduct(categories_diff(cats1, cats2))
-  shared1, shared2 = categories_common(cats1, cats2)
-  fused = map(fusion_rule, values(shared1), values(shared2))
-  return recover_key(typeof(shared1), fused) × diff_cat
-end
-
 # get clean results when mixing implementations
 categories_isequal(::Tuple, ::NamedTuple) = false
 categories_isequal(::NamedTuple, ::Tuple) = false
@@ -83,20 +76,50 @@ categories_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"
 
 categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
 
-recover_key(T::Type, t::Tuple{Vararg{AbstractCategory}}) = sector(T, t)
-recover_key(T::Type, c::AbstractCategory) = recover_key(T, (c,))
-recover_key(T::Type, c::CategoryProduct) = recover_key(T, categories(c))
-function recover_key(T::Type, fused::Tuple)
+function categories_fusion_rule(cats1, cats2)
+  diff_cat = CategoryProduct(categories_diff(cats1, cats2))
+  shared1, shared2 = categories_common(cats1, cats2)
+  fused = map(fusion_rule, values(shared1), values(shared2))
+  factorized = factorize_gradedaxes(fused)
+  type_fixed = recover_category_product_type(typeof(shared1), factorized)
+  return type_fixed × diff_cat
+end
+
+# abelian case: there is no gradedaxis
+factorize_gradedaxes(fused::Tuple{Vararg{AbstractCategory}}) = fused
+
+# non-abelian case
+function factorize_gradedaxes(fused::Tuple)
   # here fused contains at least one GradedOneTo
   g0 = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
-  new_labels = recover_key.(T, blocklabels(g0))
+  return g0
+end
+
+function recover_category_product_type(T::Type, g0::AbstractGradedUnitRange)
+  new_labels = recover_category_product_type.(T, blocklabels(g0))
   new_blocklengths = labelled.(unlabel.(blocklengths(g0)), new_labels)
   return gradedrange(new_blocklengths)
 end
 
-sector(T::Type{<:CategoryProduct}, cats::Tuple) = sector(categories_type(T), cats)
-sector(T::Type, cats::Tuple) = sector(T(cats))  # recover NamedTuple
+function recover_category_product_type(T::Type, c::AbstractCategory)
+  return recover_category_product_type(T, CategoryProduct(c))
+end
+
+function recover_category_product_type(T::Type, c::CategoryProduct)
+  return recover_category_product_type(T, categories(c))
+end
+
+function recover_category_product_type(
+  T::Type{<:CategoryProduct}, cats::Tuple{Vararg{AbstractCategory}}
+)
+  return recover_category_product_type(categories_type(T), cats)
+end
+
+function recover_category_product_type(T::Type, cats::Tuple{Vararg{AbstractCategory}})
+  return CategoryProduct(T(cats))
+end
+
 sector(args...; kws...) = CategoryProduct(args...; kws...)
 
 # =================================  Cartesian Product  ====================================

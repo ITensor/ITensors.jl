@@ -11,6 +11,7 @@ using NDTensors.Sectors:
   block_dimensions,
   categories,
   quantum_dimension,
+  recover_category_product_type,
   sector,
   trivial
 using NDTensors.GradedAxes: dual, fusion_product, gradedisequal, gradedrange
@@ -48,8 +49,9 @@ end
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == U1(3)
     @test (@inferred_latest trivial(s)) == sector(U1(0), SU2(0), U1(0))
-    @test (@inferred sector(typeof(categories(s)), categories(s))) == s
-    @test (@inferred sector(typeof(s), categories(s))) == s
+    @test (@inferred recover_category_product_type(typeof(categories(s)), categories(s))) ==
+      s
+    @test (@inferred recover_category_product_type(typeof(s), categories(s))) == s
 
     s = U1(3) × SU2(1//2) × Fib("τ")
     @test length(categories(s)) == 3
@@ -288,8 +290,10 @@ end
     @test (@inferred quantum_dimension(s)) == 5
     @test (@inferred dual(s)) == (A=U1(-1),) × (B=SU2(2),)
     @test (@inferred_latest trivial(s)) == (A=U1(0),) × (B=SU2(0),)
-    @test (@inferred sector(typeof(categories(s)), Tuple(categories(s)))) == s
-    @test (@inferred sector(typeof(s), Tuple(categories(s)))) == s
+    @test (@inferred recover_category_product_type(
+      typeof(categories(s)), Tuple(categories(s))
+    )) == s
+    @test (@inferred recover_category_product_type(typeof(s), Tuple(categories(s)))) == s
 
     s = s × (C=Ising("ψ"),)
     @test length(categories(s)) == 3
