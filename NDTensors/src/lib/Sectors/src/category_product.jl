@@ -186,7 +186,7 @@ fusion_rule(::AbelianGroup, c::CategoryProduct, ::EmptyCategoryProduct) = c
 
 # ===============================  Ordered implementation  =================================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
-CategoryProduct(cats::AbstractCategory...) = CategoryProduct((cats...,))
+CategoryProduct(cats::AbstractCategory...) = CategoryProduct(cats)
 
 categories_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
