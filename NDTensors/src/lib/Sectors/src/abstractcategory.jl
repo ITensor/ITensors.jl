@@ -103,23 +103,23 @@ function GradedAxes.fuse_blocklengths(
 end
 
 # cast to range
-to_graded_axis(c::AbstractCategory) = to_graded_axis(labelled(1, c))
-to_graded_axis(l::LabelledInteger) = gradedrange([l])
-to_graded_axis(g::AbstractUnitRange) = g
+to_gradedrange(c::AbstractCategory) = to_gradedrange(labelled(1, c))
+to_gradedrange(l::LabelledInteger) = gradedrange([l])
+to_gradedrange(g::AbstractUnitRange) = g
 
 # allow to fuse a category with a GradedUnitRange
 function GradedAxes.tensor_product(c::AbstractCategory, g::AbstractUnitRange)
-  return tensor_product(to_graded_axis(c), g)
+  return tensor_product(to_gradedrange(c), g)
 end
 
 function GradedAxes.tensor_product(g::AbstractUnitRange, c::AbstractCategory)
-  return tensor_product(g, to_graded_axis(c))
+  return tensor_product(g, to_gradedrange(c))
 end
 
 function GradedAxes.tensor_product(c1::AbstractCategory, c2::AbstractCategory)
-  return to_graded_axis(fusion_rule(c1, c2))
+  return to_gradedrange(fusion_rule(c1, c2))
 end
 
 function GradedAxes.fusion_product(c::AbstractCategory)
-  return to_graded_axis(c)
+  return to_gradedrange(c)
 end

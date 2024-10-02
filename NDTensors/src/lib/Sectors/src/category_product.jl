@@ -128,8 +128,8 @@ function ×(p1::CategoryProduct, p2::CategoryProduct)
   return CategoryProduct(categories_product(categories(p1), categories(p2)))
 end
 
-×(a, g::AbstractUnitRange) = ×(to_graded_axis(a), g)
-×(g::AbstractUnitRange, b) = ×(g, to_graded_axis(b))
+×(a, g::AbstractUnitRange) = ×(to_gradedrange(a), g)
+×(g::AbstractUnitRange, b) = ×(g, to_gradedrange(b))
 ×(nt1::NamedTuple, nt2::NamedTuple) = ×(CategoryProduct(nt1), CategoryProduct(nt2))
 ×(c1::NamedTuple, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
 ×(c1::AbstractCategory, c2::NamedTuple) = ×(CategoryProduct(c1), CategoryProduct(c2))
@@ -151,7 +151,7 @@ end
 # ====================================  Fusion rules  ======================================
 # generic case: fusion returns a GradedAxes, even for fusion with Empty
 function fusion_rule(::SymmetryStyle, s1::CategoryProduct, s2::CategoryProduct)
-  return to_graded_axis(categories_fusion_rule(categories(s1), categories(s2)))
+  return to_gradedrange(categories_fusion_rule(categories(s1), categories(s2)))
 end
 
 # Abelian case: fusion returns CategoryProduct
@@ -166,16 +166,16 @@ end
 
 # EmptyCategory acts as trivial on any AbstractCategory, not just CategoryProduct
 function fusion_rule(::SymmetryStyle, ::EmptyCategoryProduct, c::AbstractCategory)
-  return to_graded_axis(c)
+  return to_gradedrange(c)
 end
 function fusion_rule(::SymmetryStyle, ::EmptyCategoryProduct, c::CategoryProduct)
-  return to_graded_axis(c)
+  return to_gradedrange(c)
 end
 function fusion_rule(::SymmetryStyle, c::AbstractCategory, ::EmptyCategoryProduct)
-  return to_graded_axis(c)
+  return to_gradedrange(c)
 end
 function fusion_rule(::SymmetryStyle, c::CategoryProduct, ::EmptyCategoryProduct)
-  return to_graded_axis(c)
+  return to_gradedrange(c)
 end
 
 # abelian case: return Category
