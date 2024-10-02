@@ -114,7 +114,7 @@ function blockmergesort(g::AbstractGradedUnitRange)
   return gradedrange(new_blocklengths)
 end
 
-blockmergesort(g::UnitRangeDual) = dual(blockmergesort(flip(g)))
+blockmergesort(g::UnitRangeDual) = flip(blockmergesort(flip(g)))
 blockmergesort(g::AbstractUnitRange) = g
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
