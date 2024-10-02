@@ -5,7 +5,7 @@ struct OneToOne{T} <: AbstractUnitRange{T} end
 OneToOne() = OneToOne{Bool}()
 Base.first(a::OneToOne) = one(eltype(a))
 Base.last(a::OneToOne) = one(eltype(a))
-BlockArrays.blockaxes(::OneToOne{Bool}) = (Block.(OneToOne()),)
+BlockArrays.blockaxes(g::OneToOne) = (Block.(g),)
 
 # https://github.com/ITensor/ITensors.jl/blob/v0.3.57/NDTensors/src/lib/GradedAxes/src/tensor_product.jl
 # https://en.wikipedia.org/wiki/Tensor_product
