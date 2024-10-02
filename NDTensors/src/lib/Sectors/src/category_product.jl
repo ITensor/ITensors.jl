@@ -74,12 +74,16 @@ categories_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"
 categories_type(::Type{<:CategoryProduct{T}}) where {T} = T
 
 function categories_fusion_rule(cats1, cats2)
+  shared_cat = shared_categories_fusion_rule(categories_common(cats1, cats2)...)
   diff_cat = CategoryProduct(categories_diff(cats1, cats2))
-  shared1, shared2 = categories_common(cats1, cats2)
+  return shared_cat × diff_cat
+end
+
+function shared_categories_fusion_rule(shared1, shared2)
   fused = map(fusion_rule, values(shared1), values(shared2))
   factorized = factorize_gradedaxes(fused)
   type_fixed = recover_category_product_type(typeof(shared1), factorized)
-  return type_fixed × diff_cat
+  return type_fixed
 end
 
 # abelian case: there is no gradedaxis
