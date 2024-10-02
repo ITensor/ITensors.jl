@@ -294,6 +294,7 @@ end
       typeof(categories(s)), Tuple(categories(s))
     )) == s
     @test (@inferred recover_category_product_type(typeof(s), Tuple(categories(s)))) == s
+    @test s == (B=SU2(2),) × (A=U1(1),)
 
     s = s × (C=Ising("ψ"),)
     @test length(categories(s)) == 3

@@ -265,6 +265,9 @@ function categories_trivial(type::Type{<:NamedTuple{Keys}}) where {Keys}
 end
 
 function categories_common(nt1::NamedTuple, nt2::NamedTuple)
+  # CategoryProduct(nt::NamedTuple) sorts keys at init
+  @assert issorted(keys(nt1))
+  @assert issorted(keys(nt2))
   return intersect_keys(nt1, nt2), intersect_keys(nt2, nt1)
 end
 
