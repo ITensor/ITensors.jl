@@ -225,7 +225,6 @@ function CategoryProduct(pairs::Pair...)
   return CategoryProduct(NamedTuple{keys}(vals))
 end
 
-# sector() acts as empty NamedTuple
 function categories_isequal(nt::NamedTuple, ::Tuple{})
   return categories_isequal(nt, (;))
 end
