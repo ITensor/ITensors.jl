@@ -108,10 +108,9 @@ invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
 function blockmergesort(g::AbstractGradedUnitRange)
   glabels = blocklabels(g)
   gblocklengths = blocklengths(g)
-  new_blocklengths = map(
-    la -> labelled(sum(gblocklengths[findall(==(la), glabels)]; init=0), la),
-    sort(unique(glabels)),
-  )
+  new_blocklengths = map(sort(unique(glabels))) do la
+    return labelled(sum(gblocklengths[findall(==(la), glabels)]; init=0), la)
+  end
   return gradedrange(new_blocklengths)
 end
 
