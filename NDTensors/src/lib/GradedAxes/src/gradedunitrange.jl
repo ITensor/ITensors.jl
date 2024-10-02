@@ -19,6 +19,7 @@ using BlockArrays:
   findblockindex,
   mortar
 using Compat: allequal
+using FillArrays: Fill
 using ..LabelledNumbers:
   LabelledNumbers, LabelledInteger, LabelledUnitRange, label, labelled, unlabel
 
@@ -38,7 +39,9 @@ function Base.OrdinalRange{T,T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
 end
 
 # == is just a range comparison that ignores labels. Need dedicated function to check equality.
-blocklabels(::AbstractUnitRange) = nothing
+struct NoLabel end
+blocklabels(r::AbstractUnitRange) = Fill(NoLabel(), blocklength(r))
+
 function labelled_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
   return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
 end
