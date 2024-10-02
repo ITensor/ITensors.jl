@@ -15,11 +15,13 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-const EmptyCategoryProduct = CategoryProduct{Tuple{}}
+const EmptyCategory = CategoryProduct{Tuple{}}
 
 # =================================  Sectors interface  ====================================
 function SymmetryStyle(c::CategoryProduct)
-  return reduce(combine_styles, map(SymmetryStyle, categories(c)); init=EmptyCategory())
+  return reduce(
+    combine_styles, map(SymmetryStyle, categories(c)); init=EmptyCategoryStyle()
+  )
 end
 
 function quantum_dimension(::NonAbelianGroup, s::CategoryProduct)
@@ -151,6 +153,13 @@ end
 
 # ====================================  Fusion rules  ======================================
 # generic case: fusion returns a GradedAxes, even for fusion with Empty
+function fusion_rule(style::SymmetryStyle, c1::CategoryProduct, c2::AbstractCategory)
+  return fusion_rule(style, c1, CategoryProduct(c2))
+end
+function fusion_rule(style::SymmetryStyle, c1::AbstractCategory, c2::CategoryProduct)
+  return fusion_rule(style, CategoryProduct(c1), c2)
+end
+
 function fusion_rule(::SymmetryStyle, s1::CategoryProduct, s2::CategoryProduct)
   return to_gradedrange(categories_fusion_rule(categories(s1), categories(s2)))
 end
@@ -161,29 +170,29 @@ function fusion_rule(::AbelianGroup, s1::CategoryProduct, s2::CategoryProduct)
 end
 
 # Empty case
-function fusion_rule(::EmptyCategory, ::EmptyCategoryProduct, ::EmptyCategoryProduct)
+function fusion_rule(::EmptyCategoryStyle, ::EmptyCategory, ::EmptyCategory)
   return sector()
 end
 
-# EmptyCategory acts as trivial on any AbstractCategory, not just CategoryProduct
-function fusion_rule(::SymmetryStyle, ::EmptyCategoryProduct, c::AbstractCategory)
+# EmptyCategoryStyle acts as trivial on any AbstractCategory, not just CategoryProduct
+function fusion_rule(::SymmetryStyle, ::EmptyCategory, c::AbstractCategory)
   return to_gradedrange(c)
 end
-function fusion_rule(::SymmetryStyle, ::EmptyCategoryProduct, c::CategoryProduct)
+function fusion_rule(::SymmetryStyle, c::AbstractCategory, ::EmptyCategory)
   return to_gradedrange(c)
 end
-function fusion_rule(::SymmetryStyle, c::AbstractCategory, ::EmptyCategoryProduct)
+function fusion_rule(::SymmetryStyle, ::EmptyCategory, c::CategoryProduct)
   return to_gradedrange(c)
 end
-function fusion_rule(::SymmetryStyle, c::CategoryProduct, ::EmptyCategoryProduct)
+function fusion_rule(::SymmetryStyle, c::CategoryProduct, ::EmptyCategory)
   return to_gradedrange(c)
 end
 
 # abelian case: return Category
-fusion_rule(::AbelianGroup, ::EmptyCategoryProduct, c::AbstractCategory) = c
-fusion_rule(::AbelianGroup, ::EmptyCategoryProduct, c::CategoryProduct) = c
-fusion_rule(::AbelianGroup, c::AbstractCategory, ::EmptyCategoryProduct) = c
-fusion_rule(::AbelianGroup, c::CategoryProduct, ::EmptyCategoryProduct) = c
+fusion_rule(::AbelianGroup, c::AbstractCategory, ::EmptyCategory) = c
+fusion_rule(::AbelianGroup, ::EmptyCategory, c::AbstractCategory) = c
+fusion_rule(::AbelianGroup, c::CategoryProduct, ::EmptyCategory) = c
+fusion_rule(::AbelianGroup, ::EmptyCategory, c::CategoryProduct) = c
 
 # ===============================  Ordered implementation  =================================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
@@ -217,7 +226,7 @@ end
 
 CategoryProduct(; kws...) = CategoryProduct((; kws...))
 
-# avoid having 2 different kinds of EmptyCategory: cast empty NamedTuple to Tuple{}
+# avoid having 2 different kinds of EmptyCategoryStyle: cast empty NamedTuple to Tuple{}
 CategoryProduct(::NamedTuple{()}) = CategoryProduct(())
 
 function CategoryProduct(pairs::Pair...)

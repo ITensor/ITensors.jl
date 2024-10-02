@@ -43,7 +43,7 @@ function quantum_dimension(::SymmetryStyle, c::AbstractCategory)
 end
 
 quantum_dimension(::AbelianGroup, ::AbstractCategory) = 1
-quantum_dimension(::EmptyCategory, ::AbstractCategory) = 1
+quantum_dimension(::EmptyCategoryStyle, ::AbstractCategory) = 1
 quantum_dimension(::SymmetryStyle, g::AbstractUnitRange) = sum(block_dimensions(g))
 quantum_dimension(::AbelianGroup, g::AbstractUnitRange) = length(g)
 
@@ -64,7 +64,7 @@ function fusion_rule(::AbelianGroup, c1::C, c2::C) where {C<:AbstractCategory}
   return C(label_fusion_rule(C, category_label(c1), category_label(c2)))
 end
 
-function fusion_rule(::EmptyCategory, l1::LabelledInteger, l2::LabelledInteger)
+function fusion_rule(::EmptyCategoryStyle, l1::LabelledInteger, l2::LabelledInteger)
   return labelled(l1 * l2, sector())
 end
 
@@ -97,7 +97,7 @@ function GradedAxes.fuse_blocklengths(
 end
 
 function GradedAxes.fuse_blocklengths(
-  ::EmptyCategory, l1::LabelledInteger, l2::LabelledInteger
+  ::EmptyCategoryStyle, l1::LabelledInteger, l2::LabelledInteger
 )
   return labelled(l1 * l2, sector())
 end
