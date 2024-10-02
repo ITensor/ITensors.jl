@@ -55,9 +55,6 @@ end
 category_show(io::IO, ::Int, v) = print(io, v)
 category_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
-function Base.isless(s1::C, s2::C) where {C<:CategoryProduct}
-  return categories_isless(categories(s1), categories(s2))
-end
 function Base.isless(s1::CategoryProduct, s2::CategoryProduct)
   return categories_isless(categories(s1), categories(s2))
 end
