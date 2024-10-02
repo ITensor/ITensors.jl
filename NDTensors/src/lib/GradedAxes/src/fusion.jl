@@ -19,8 +19,10 @@ function tensor_product(
   return foldl(tensor_product, (a1, a2, a3, a_rest...))
 end
 
-function tensor_product(::AbstractUnitRange, ::AbstractUnitRange)
-  return error("Not implemented yet.")
+flip_dual(r::AbstractUnitRange) = r
+flip_dual(r::UnitRangeDual) = flip(r)
+function tensor_product(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  return tensor_product(flip_dual(a1), flip_dual(a2))
 end
 
 function tensor_product(a1::Base.OneTo, a2::Base.OneTo)
@@ -37,20 +39,6 @@ end
 
 function tensor_product(::OneToOne, ::OneToOne)
   return OneToOne()
-end
-
-# Handle dual. Always return a non-dual GradedUnitRange.
-function tensor_product(a1::AbstractUnitRange, a2::UnitRangeDual)
-  return tensor_product(a1, flip(a2))
-end
-
-function tensor_product(a1::UnitRangeDual, a2::AbstractUnitRange)
-  return tensor_product(flip(a1), a2)
-end
-
-# TBD change convention to tensor(dual, dual) -> dual?
-function tensor_product(a1::UnitRangeDual, a2::UnitRangeDual)
-  return tensor_product(flip(a1), flip(a2))
 end
 
 function fuse_labels(x, y)
