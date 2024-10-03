@@ -31,41 +31,36 @@ function category_label(c::AbstractCategory)
 end
 
 block_dimensions(g::AbstractUnitRange) = block_dimensions(SymmetryStyle(g), g)
-block_dimensions(::AbelianGroup, g) = unlabel.(blocklengths(g))
-function block_dimensions(::SymmetryStyle, g)
+block_dimensions(::AbelianStyle, g) = unlabel.(blocklengths(g))
+function block_dimensions(::NotAbelianStyle, g)
   return quantum_dimension.(blocklabels(g)) .* blocklengths(g)
 end
 
 quantum_dimension(x) = quantum_dimension(SymmetryStyle(x), x)
 
-function quantum_dimension(::SymmetryStyle, c::AbstractCategory)
+function quantum_dimension(::NotAbelianStyle, c::AbstractCategory)
   return error("method `quantum_dimension` not defined for type $(typeof(c))")
 end
 
-quantum_dimension(::AbelianGroup, ::AbstractCategory) = 1
-quantum_dimension(::EmptyCategoryStyle, ::AbstractCategory) = 1
-quantum_dimension(::SymmetryStyle, g::AbstractUnitRange) = sum(block_dimensions(g))
-quantum_dimension(::AbelianGroup, g::AbstractUnitRange) = length(g)
+quantum_dimension(::AbelianStyle, ::AbstractCategory) = 1
+quantum_dimension(::AbelianStyle, g::AbstractUnitRange) = length(g)
+quantum_dimension(::NotAbelianStyle, g::AbstractUnitRange) = sum(block_dimensions(g))
 
 # ===============================  Fusion rule interface  ==================================
 ⊗(c1::AbstractCategory, c2::AbstractCategory) = fusion_rule(c1, c2)
 
-function fusion_rule(c1, c2)
+function fusion_rule(c1::AbstractCategory, c2::AbstractCategory)
   return fusion_rule(combine_styles(SymmetryStyle(c1), SymmetryStyle(c2)), c1, c2)
 end
 
-function fusion_rule(::SymmetryStyle, c1::C, c2::C) where {C<:AbstractCategory}
+function fusion_rule(::NotAbelianStyle, c1::C, c2::C) where {C<:AbstractCategory}
   degen, labels = label_fusion_rule(C, category_label(c1), category_label(c2))
   return gradedrange(labelled.(degen, C.(labels)))
 end
 
 # abelian case: return Category
-function fusion_rule(::AbelianGroup, c1::C, c2::C) where {C<:AbstractCategory}
+function fusion_rule(::AbelianStyle, c1::C, c2::C) where {C<:AbstractCategory}
   return C(label_fusion_rule(C, category_label(c1), category_label(c2)))
-end
-
-function fusion_rule(::EmptyCategoryStyle, l1::LabelledInteger, l2::LabelledInteger)
-  return labelled(l1 * l2, sector())
 end
 
 function label_fusion_rule(category_type::Type{<:AbstractCategory}, ::Any, ::Any)
@@ -82,7 +77,7 @@ function GradedAxes.fuse_blocklengths(
 end
 
 function GradedAxes.fuse_blocklengths(
-  ::SymmetryStyle, l1::LabelledInteger, l2::LabelledInteger
+  ::NotAbelianStyle, l1::LabelledInteger, l2::LabelledInteger
 )
   fused = label(l1) ⊗ label(l2)
   v = labelled.(l1 * l2 .* blocklengths(fused), blocklabels(fused))
@@ -90,16 +85,10 @@ function GradedAxes.fuse_blocklengths(
 end
 
 function GradedAxes.fuse_blocklengths(
-  ::AbelianGroup, l1::LabelledInteger, l2::LabelledInteger
+  ::AbelianStyle, l1::LabelledInteger, l2::LabelledInteger
 )
   fused = label(l1) ⊗ label(l2)
   return labelled(l1 * l2, fused)
-end
-
-function GradedAxes.fuse_blocklengths(
-  ::EmptyCategoryStyle, l1::LabelledInteger, l2::LabelledInteger
-)
-  return labelled(l1 * l2, sector())
 end
 
 # cast to range

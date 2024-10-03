@@ -9,7 +9,7 @@ struct Z{N} <: AbstractCategory
   Z{N}(m) where {N} = new{N}(m % N)
 end
 
-SymmetryStyle(::Z) = AbelianGroup()
+SymmetryStyle(::Z) = AbelianStyle()
 
 category_label(c::Z) = c.m
 modulus(::Type{Z{N}}) where {N} = N

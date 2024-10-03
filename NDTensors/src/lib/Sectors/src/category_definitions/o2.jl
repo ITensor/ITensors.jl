@@ -20,7 +20,7 @@ struct O2 <: AbstractCategory
   l::Half{Int}
 end
 
-SymmetryStyle(::O2) = NonAbelianGroup()
+SymmetryStyle(::O2) = NotAbelianStyle()
 
 category_label(s::O2) = s.l
 
@@ -34,7 +34,7 @@ is_zero_even_or_odd(l::HalfInteger) = iszero_even(l) || iszero_odd(l)
 iszero_even(l::HalfInteger) = l == category_label(trivial(O2))
 iszero_odd(l::HalfInteger) = l == category_label(zero_odd(O2))
 
-quantum_dimension(::NonAbelianGroup, s::O2) = 2 - is_zero_even_or_odd(s)
+quantum_dimension(::NotAbelianStyle, s::O2) = 2 - is_zero_even_or_odd(s)
 
 GradedAxes.dual(s::O2) = s
 

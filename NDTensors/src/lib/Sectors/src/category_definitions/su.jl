@@ -23,7 +23,7 @@ end
 SU{N}(t::Tuple) where {N} = SU{N,length(t)}(t)
 SU(t::Tuple) = SU{length(t) + 1}(t)  # infer N from tuple length
 
-SymmetryStyle(::SU) = NonAbelianGroup()
+SymmetryStyle(::SU) = NotAbelianStyle()
 
 category_label(s::SU) = s.l
 
@@ -35,7 +35,7 @@ fundamental(::Type{<:SU{N}}) where {N} = SU{N}(ntuple(i -> i == 1, Val(N - 1)))
 
 adjoint(::Type{<:SU{N}}) where {N} = SU{N}((ntuple(i -> 1 + (i == 1), Val(N - 1))))
 
-function quantum_dimension(::NonAbelianGroup, s::SU)
+function quantum_dimension(::NotAbelianStyle, s::SU)
   N = groupdim(s)
   l = (category_label(s)..., 0)
   d = 1

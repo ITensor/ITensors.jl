@@ -19,7 +19,7 @@ function Ising(s::AbstractString)
   return error("Unrecognized input \"$s\" to Ising constructor")
 end
 
-SymmetryStyle(::Ising) = NonGroupCategory()
+SymmetryStyle(::Ising) = NotAbelianStyle()
 
 GradedAxes.dual(i::Ising) = i
 
@@ -27,7 +27,7 @@ category_label(i::Ising) = i.l
 
 trivial(::Type{Ising}) = Ising(0)
 
-quantum_dimension(::NonGroupCategory, i::Ising) = (category_label(i) == 1//2) ? √2 : 1.0
+quantum_dimension(::NotAbelianStyle, i::Ising) = (category_label(i) == 1//2) ? √2 : 1.0
 
 # Fusion rules identical to su2₂
 label_fusion_rule(::Type{Ising}, l1, l2) = label_fusion_rule(su2{2}, l1, l2)

@@ -19,7 +19,7 @@ function Fib(s::AbstractString)
   return error("Unrecognized input \"$s\" to Fib constructor")
 end
 
-SymmetryStyle(::Fib) = NonGroupCategory()
+SymmetryStyle(::Fib) = NotAbelianStyle()
 
 GradedAxes.dual(f::Fib) = f
 
@@ -27,7 +27,7 @@ category_label(f::Fib) = f.l
 
 trivial(::Type{Fib}) = Fib(0)
 
-quantum_dimension(::NonGroupCategory, f::Fib) = istrivial(f) ? 1.0 : ((1 + √5) / 2)
+quantum_dimension(::NotAbelianStyle, f::Fib) = istrivial(f) ? 1.0 : ((1 + √5) / 2)
 
 # Fusion rules identical to su2₃
 label_fusion_rule(::Type{Fib}, l1, l2) = label_fusion_rule(su2{3}, l1, l2)

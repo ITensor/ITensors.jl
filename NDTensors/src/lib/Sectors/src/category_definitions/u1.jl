@@ -10,7 +10,7 @@ struct U1{T} <: AbstractCategory
   n::T
 end
 
-SymmetryStyle(::U1) = AbelianGroup()
+SymmetryStyle(::U1) = AbelianStyle()
 
 GradedAxes.dual(u::U1) = U1(-u.n)
 
