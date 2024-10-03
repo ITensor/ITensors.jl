@@ -16,6 +16,7 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 categories(s::CategoryProduct) = s.cats
 
 const TrivialSector = CategoryProduct{Tuple{}}
+TrivialSector() = CategoryProduct(())
 
 # =================================  Sectors interface  ====================================
 function SymmetryStyle(c::CategoryProduct)
@@ -121,8 +122,6 @@ end
 function recover_category_product_type(T::Type, cats::Tuple{Vararg{AbstractCategory}})
   return CategoryProduct(T(cats))
 end
-
-sector(args...; kws...) = CategoryProduct(args...; kws...)
 
 # =================================  Cartesian Product  ====================================
 ×(c1::AbstractCategory, c2::AbstractCategory) = ×(CategoryProduct(c1), CategoryProduct(c2))
