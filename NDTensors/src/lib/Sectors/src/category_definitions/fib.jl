@@ -30,7 +30,11 @@ trivial(::Type{Fib}) = Fib(0)
 quantum_dimension(::NotAbelianStyle, f::Fib) = istrivial(f) ? 1.0 : ((1 + √5) / 2)
 
 # Fusion rules identical to su2₃
-label_fusion_rule(::Type{Fib}, l1, l2) = label_fusion_rule(su2{3}, l1, l2)
+function label_fusion_rule(::Type{Fib}, l1, l2)
+  degen, suk_sectors = label_fusion_rule(su2{3}, l1, l2)
+  sectors = Fib.(category_label.(suk_sectors))
+  return degen, sectors
+end
 
 label_to_str(f::Fib) = istrivial(f) ? "1" : "τ"
 

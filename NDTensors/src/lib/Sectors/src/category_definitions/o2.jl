@@ -71,5 +71,5 @@ function label_fusion_rule(::Type{O2}, l1, l2)
       end
     end
   end
-  return degens, labels
+  return degens, O2.(labels)
 end

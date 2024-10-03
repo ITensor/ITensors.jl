@@ -92,9 +92,9 @@ quantum_dimension(s::SU{2}) = category_label(s)[1] + 1
 GradedAxes.dual(s::SU{2}) = s
 
 function label_fusion_rule(::Type{<:SU{2}}, s1, s2)
-  labels = collect((i,) for i in (abs(s1[1] - s2[1])):2:(s1[1] + s2[1]))
-  degen = ones(Int, length(labels))
-  return degen, labels
+  irreps = collect(SU{2}((i,)) for i in (abs(s1[1] - s2[1])):2:(s1[1] + s2[1]))
+  degen = ones(Int, length(irreps))
+  return degen, irreps
 end
 
 # define angular momentum-like interface using half-integers
@@ -123,7 +123,7 @@ function label_fusion_rule(::Type{<:SU{3}}, left, right)
   end
 
   if right[1] == 0  # avoid issues with singlet
-    return [1], [left]
+    return [1], [SU{3}(left)]
   end
 
   left_row1 = left[1]
@@ -172,6 +172,6 @@ function label_fusion_rule(::Type{<:SU{3}}, left, right)
 
   unique_labels = sort(unique(irreps))
   degen = [count(==(irr), irreps) for irr in unique_labels]
-
-  return degen, unique_labels
+  sectors = SU{3}.(unique_labels)
+  return degen, sectors
 end

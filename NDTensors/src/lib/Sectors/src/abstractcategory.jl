@@ -54,13 +54,14 @@ function fusion_rule(c1::AbstractCategory, c2::AbstractCategory)
 end
 
 function fusion_rule(::NotAbelianStyle, c1::C, c2::C) where {C<:AbstractCategory}
-  degen, labels = label_fusion_rule(C, category_label(c1), category_label(c2))
-  return gradedrange(labelled.(degen, C.(labels)))
+  degen, sectors = label_fusion_rule(C, category_label(c1), category_label(c2))
+  return gradedrange(labelled.(degen, sectors))
 end
 
 # abelian case: return Category
 function fusion_rule(::AbelianStyle, c1::C, c2::C) where {C<:AbstractCategory}
-  return C(label_fusion_rule(C, category_label(c1), category_label(c2)))
+  _, sectors = label_fusion_rule(C, category_label(c1), category_label(c2))
+  return only(sectors)
 end
 
 function label_fusion_rule(category_type::Type{<:AbstractCategory}, ::Any, ::Any)

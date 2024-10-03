@@ -19,7 +19,7 @@ category_label(u::U1) = u.n
 trivial(::Type{U1}) = trivial(U1{Int})
 trivial(::Type{U1{T}}) where {T} = U1(T(0))
 
-label_fusion_rule(::Type{<:U1}, n1, n2) = n1 + n2
+label_fusion_rule(T::Type{<:U1}, n1, n2) = [1], [T(n1 + n2)]
 
 # hide label type in printing
 function Base.show(io::IO, u::U1)

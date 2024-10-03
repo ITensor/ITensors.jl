@@ -30,7 +30,11 @@ trivial(::Type{Ising}) = Ising(0)
 quantum_dimension(::NotAbelianStyle, i::Ising) = (category_label(i) == 1//2) ? √2 : 1.0
 
 # Fusion rules identical to su2₂
-label_fusion_rule(::Type{Ising}, l1, l2) = label_fusion_rule(su2{2}, l1, l2)
+function label_fusion_rule(::Type{Ising}, l1, l2)
+  degen, suk_sectors = label_fusion_rule(su2{2}, l1, l2)
+  sectors = Ising.(category_label.(suk_sectors))
+  return degen, sectors
+end
 
 # TODO: Use `Val` dispatch here?
 label_to_str(i::Ising) = ("1", "σ", "ψ")[twice(category_label(i)) + 1]
