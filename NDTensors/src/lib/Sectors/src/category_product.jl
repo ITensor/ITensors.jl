@@ -77,9 +77,9 @@ function categories_fusion_rule(cats1, cats2)
   return shared_cat × diff_cat
 end
 
-function shared_categories_fusion_rule(shared1, shared2)
+function shared_categories_fusion_rule(shared1::T, shared2::T) where {T}
   fused = map(fusion_rule, values(shared1), values(shared2))
-  return recover_style(typeof(shared1), fused)
+  return recover_style(T, fused)
 end
 
 function recover_style(T::Type, fused)
