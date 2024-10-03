@@ -20,11 +20,11 @@ TrivialSector() = CategoryProduct(())
 
 # =================================  Sectors interface  ====================================
 function SymmetryStyle(c::CategoryProduct)
-  return reduce(combine_styles, map(SymmetryStyle, categories(c)); init=AbelianStyle())
+  return mapreduce(SymmetryStyle, combine_styles, categories(c); init=AbelianStyle())
 end
 
 function quantum_dimension(::NotAbelianStyle, s::CategoryProduct)
-  return prod(map(quantum_dimension, categories(s)))
+  return mapreduce(quantum_dimension, *, categories(s))
 end
 
 # use map instead of broadcast to support both Tuple and NamedTuple
