@@ -542,58 +542,58 @@ end
 end
 
 @testset "Empty category" begin
-  s = TrivialSector()
-  @test s == s
-  @test (@inferred dual(s)) == s
-  @test (@inferred s × s) == s
-  @test (@inferred s ⊗ s) == s
-  @test (@inferred quantum_dimension(s)) == 1
-  @test (@inferred_latest trivial(s)) == s
-  @test typeof(s) == typeof(CategoryProduct(()))
-  @test typeof(s) == typeof(CategoryProduct((;)))  # empty NamedTuple is cast to Tuple{}
+  for s in (CategoryProduct(()), CategoryProduct((;)))
+    @test s == CategoryProduct(())
+    @test s == CategoryProduct((;))
+    @test (@inferred dual(s)) == s
+    @test (@inferred s × s) == s
+    @test (@inferred s ⊗ s) == s
+    @test (@inferred quantum_dimension(s)) == 1
+    @test (@inferred_latest trivial(s)) == s
 
-  g0 = gradedrange([s => 2])
-  @test space_isequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
+    g0 = gradedrange([s => 2])
+    @test space_isequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
 
-  @test (@inferred s × U1(1)) == CategoryProduct(U1(1))
-  @test (@inferred s × CategoryProduct(U1(1))) == CategoryProduct(U1(1))
-  @test (@inferred s × CategoryProduct(; A=U1(1))) == CategoryProduct(; A=U1(1))
-  @test (@inferred U1(1) × s) == CategoryProduct(U1(1))
-  @test (@inferred CategoryProduct(U1(1)) × s) == CategoryProduct(U1(1))
-  @test (@inferred CategoryProduct(; A=U1(1)) × s) == CategoryProduct(; A=U1(1))
+    @test (@inferred s × U1(1)) == CategoryProduct(U1(1))
+    @test (@inferred s × CategoryProduct(U1(1))) == CategoryProduct(U1(1))
+    @test (@inferred s × CategoryProduct(; A=U1(1))) == CategoryProduct(; A=U1(1))
+    @test (@inferred U1(1) × s) == CategoryProduct(U1(1))
+    @test (@inferred CategoryProduct(U1(1)) × s) == CategoryProduct(U1(1))
+    @test (@inferred CategoryProduct(; A=U1(1)) × s) == CategoryProduct(; A=U1(1))
 
-  # Empty acts as trivial
-  @test (@inferred_latest U1(1) ⊗ s) == U1(1)
-  @test (@inferred SU2(0) ⊗ s) == gradedrange([SU2(0) => 1])
-  @test (@inferred Fib("τ") ⊗ s) == gradedrange([Fib("τ") => 1])
-  @test (@inferred_latest s ⊗ U1(1)) == U1(1)
-  @test (@inferred s ⊗ SU2(0)) == gradedrange([SU2(0) => 1])
-  @test (@inferred s ⊗ Fib("τ")) == gradedrange([Fib("τ") => 1])
+    # Empty acts as trivial
+    @test (@inferred_latest U1(1) ⊗ s) == U1(1)
+    @test (@inferred SU2(0) ⊗ s) == gradedrange([SU2(0) => 1])
+    @test (@inferred Fib("τ") ⊗ s) == gradedrange([Fib("τ") => 1])
+    @test (@inferred_latest s ⊗ U1(1)) == U1(1)
+    @test (@inferred s ⊗ SU2(0)) == gradedrange([SU2(0) => 1])
+    @test (@inferred s ⊗ Fib("τ")) == gradedrange([Fib("τ") => 1])
 
-  @test (@inferred_latest CategoryProduct(U1(1)) ⊗ s) == CategoryProduct(U1(1))
-  @test (@inferred_latest CategoryProduct(SU2(0)) ⊗ s) ==
-    gradedrange([CategoryProduct(SU2(0)) => 1])
-  @test (@inferred_latest CategoryProduct(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
-    gradedrange([CategoryProduct(Fib("τ"), SU2(1), U1(2)) => 1])
+    @test (@inferred_latest CategoryProduct(U1(1)) ⊗ s) == CategoryProduct(U1(1))
+    @test (@inferred_latest CategoryProduct(SU2(0)) ⊗ s) ==
+      gradedrange([CategoryProduct(SU2(0)) => 1])
+    @test (@inferred_latest CategoryProduct(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
+      gradedrange([CategoryProduct(Fib("τ"), SU2(1), U1(2)) => 1])
 
-  @test (@inferred_latest CategoryProduct(; A=U1(1)) ⊗ s) == CategoryProduct(; A=U1(1))
-  @test (@inferred_latest CategoryProduct(; A=SU2(0)) ⊗ s) ==
-    gradedrange([CategoryProduct(; A=SU2(0)) => 1])
-  @test (@inferred_latest CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
-    gradedrange([CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
+    @test (@inferred_latest CategoryProduct(; A=U1(1)) ⊗ s) == CategoryProduct(; A=U1(1))
+    @test (@inferred_latest CategoryProduct(; A=SU2(0)) ⊗ s) ==
+      gradedrange([CategoryProduct(; A=SU2(0)) => 1])
+    @test (@inferred_latest CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
+      gradedrange([CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
 
-  # Empty behaves as empty NamedTuple
-  @test s != U1(0)
-  @test s != CategoryProduct(U1(0))
-  @test s != CategoryProduct(; A=U1(1))
-  @test s == CategoryProduct(; A=U1(0))
-  @test CategoryProduct(; A=U1(0)) == s
+    # Empty behaves as empty NamedTuple
+    @test s != U1(0)
+    @test s != CategoryProduct(U1(0))
+    @test s != CategoryProduct(; A=U1(1))
+    @test s == CategoryProduct(; A=U1(0))
+    @test CategoryProduct(; A=U1(0)) == s
 
-  @test !(s < s)
-  @test_throws ArgumentError s < CategoryProduct(U1(0))
-  @test s < CategoryProduct(; A=U1(1))
-  @test s > CategoryProduct(; A=U1(-1))
-  @test !(s < CategoryProduct(; A=U1(0)))
-  @test !(s > CategoryProduct(; A=U1(0)))
+    @test !(s < s)
+    @test_throws ArgumentError s < CategoryProduct(U1(0))
+    @test s < CategoryProduct(; A=U1(1))
+    @test s > CategoryProduct(; A=U1(-1))
+    @test !(s < CategoryProduct(; A=U1(0)))
+    @test !(s > CategoryProduct(; A=U1(0)))
+  end
 end
 end

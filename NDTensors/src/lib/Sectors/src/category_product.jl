@@ -15,7 +15,7 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-const TrivialSector = CategoryProduct{Tuple{}}
+const TrivialSector{Categories<:Union{Tuple{},NamedTuple{()}}} = CategoryProduct{Categories}
 TrivialSector() = CategoryProduct(())
 
 # =================================  Sectors interface  ====================================
@@ -207,6 +207,8 @@ function SymmetryStyle(T::Type{<:Tuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(T); init=AbelianStyle())
 end
 
+categories_product(::NamedTuple{()}, l1::Tuple) = l1
+categories_product(l2::Tuple, ::NamedTuple{()}) = l2
 categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
 categories_trivial(type::Type{<:Tuple}) = trivial.(fieldtypes(type))
@@ -234,9 +236,6 @@ function CategoryProduct(nt::NamedTuple)
 end
 
 CategoryProduct(; kws...) = CategoryProduct((; kws...))
-
-# avoid having 2 different kinds of TrivialSector: cast empty NamedTuple to Tuple{}
-CategoryProduct(::NamedTuple{()}) = CategoryProduct(())
 
 function CategoryProduct(pairs::Pair...)
   keys = ntuple(n -> Symbol(pairs[n][1]), length(pairs))
