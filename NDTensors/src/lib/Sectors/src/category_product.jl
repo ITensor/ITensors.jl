@@ -113,13 +113,11 @@ function recover_category_product_type(T::Type, c::CategoryProduct)
   return recover_category_product_type(T, categories(c))
 end
 
-function recover_category_product_type(
-  T::Type{<:CategoryProduct}, cats::Tuple{Vararg{AbstractCategory}}
-)
+function recover_category_product_type(T::Type{<:CategoryProduct}, cats)
   return recover_category_product_type(categories_type(T), cats)
 end
 
-function recover_category_product_type(T::Type, cats::Tuple{Vararg{AbstractCategory}})
+function recover_category_product_type(T::Type, cats)
   return CategoryProduct(T(cats))
 end
 
