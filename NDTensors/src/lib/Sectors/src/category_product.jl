@@ -92,9 +92,9 @@ function recover_category_product_type(::AbelianStyle, T::Type, fused)
 end
 
 function recover_category_product_type(::NotAbelianStyle, T::Type, fused)
-  factorized = reduce(×, fused)
+  g = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
-  type_fixed = recover_category_product_type(T, factorized)
+  type_fixed = recover_category_product_type(T, g)
   return type_fixed
 end
 
