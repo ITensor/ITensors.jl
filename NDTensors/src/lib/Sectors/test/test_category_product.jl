@@ -56,7 +56,7 @@ end
 
     s = U1(3) × SU2(1//2) × Fib("τ")
     @test length(categories(s)) == 3
-    @test (@inferred quantum_dimension(s)) == 1.0 + √5
+    @test (@inferred_latest quantum_dimension(s)) == 1.0 + √5
     @test dual(s) == U1(-3) × SU2(1//2) × Fib("τ")
     @test categories(s)[1] == U1(3)
     @test categories(s)[2] == SU2(1//2)
@@ -101,15 +101,15 @@ end
     # NonGroupCategory
     g_fib = gradedrange([(Fib("1") × Fib("1")) => 1])
     g_ising = gradedrange([(Ising("1") × Ising("1")) => 1])
-    @test (@inferred quantum_dimension((Fib("1") × Fib("1")))) == 1.0
-    @test (@inferred quantum_dimension(g_fib)) == 1.0
-    @test (@inferred quantum_dimension(g_ising)) == 1.0
-    @test (@inferred quantum_dimension((Ising("1") × Ising("1")))) == 1.0
-    @test (@inferred block_dimensions(g_fib)) == [1.0]
-    @test (@inferred block_dimensions(g_ising)) == [1.0]
+    @test (@inferred_latest quantum_dimension((Fib("1") × Fib("1")))) == 1.0
+    @test (@inferred_latest quantum_dimension(g_fib)) == 1.0
+    @test (@inferred_latest quantum_dimension(g_ising)) == 1.0
+    @test (@inferred_latest quantum_dimension((Ising("1") × Ising("1")))) == 1.0
+    @test (@inferred_latest block_dimensions(g_fib)) == [1.0]
+    @test (@inferred_latest block_dimensions(g_ising)) == [1.0]
 
-    @test (@inferred quantum_dimension(U1(1) × Fib("1"))) == 1.0
-    @test (@inferred quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
+    @test (@inferred_latest quantum_dimension(U1(1) × Fib("1"))) == 1.0
+    @test (@inferred_latest quantum_dimension(gradedrange([U1(1) × Fib("1") => 1]))) == 1.0
 
     # mixed product Abelian / NonAbelian / NonGroup
     g = gradedrange([
@@ -118,8 +118,8 @@ end
       (U1(2) × SU2(0) × Ising("ψ")) => 1,
       (U1(2) × SU2(1) × Ising("ψ")) => 1,
     ])
-    @test (@inferred quantum_dimension(g)) == 8.0
-    @test (@inferred block_dimensions(g)) == [1.0, 3.0, 1.0, 3.0]
+    @test (@inferred_latest quantum_dimension(g)) == 8.0
+    @test (@inferred_latest block_dimensions(g)) == [1.0, 3.0, 1.0, 3.0]
 
     ϕ = (1 + √5) / 2
     g = gradedrange([
@@ -128,24 +128,24 @@ end
       (Fib("τ") × SU2(0) × U1(2)) => 1,
       (Fib("τ") × SU2(1) × U1(2)) => 1,
     ])
-    @test (@inferred quantum_dimension(g)) == 4.0 + 4.0ϕ
-    @test (@inferred block_dimensions(g)) == [1.0, 3.0, 1.0ϕ, 3.0ϕ]
+    @test (@inferred_latest quantum_dimension(g)) == 4.0 + 4.0ϕ
+    @test (@inferred_latest block_dimensions(g)) == [1.0, 3.0, 1.0ϕ, 3.0ϕ]
   end
 
   @testset "Fusion of Abelian products" begin
     p1 = CategoryProduct(U1(1))
     p2 = CategoryProduct(U1(2))
-    @test (@inferred p1 ⊗ p2) == CategoryProduct(U1(3))
+    @test (@inferred_latest p1 ⊗ p2) == CategoryProduct(U1(3))
 
     p11 = U1(1) × U1(1)
-    @test (@inferred p11 ⊗ p11) == U1(2) × U1(2)
+    @test (@inferred_latest p11 ⊗ p11) == U1(2) × U1(2)
 
     p123 = U1(1) × U1(2) × U1(3)
-    @test (@inferred p123 ⊗ p123) == U1(2) × U1(4) × U1(6)
+    @test (@inferred_latest p123 ⊗ p123) == U1(2) × U1(4) × U1(6)
 
     s1 = CategoryProduct(U1(1), Z{2}(1))
     s2 = CategoryProduct(U1(0), Z{2}(0))
-    @test (@inferred s1 ⊗ s2) == U1(1) × Z{2}(1)
+    @test (@inferred_latest s1 ⊗ s2) == U1(1) × Z{2}(1)
   end
 
   @testset "Fusion of NonAbelian products" begin
@@ -253,7 +253,7 @@ end
       gradedrange([CategoryProduct(SU2(1) × U1(1)) => 1]),
     )
     @test space_isequal(
-      (@inferred CategoryProduct(U1(1) × SU2(1)) ⊗ CategoryProduct(U1(2))),
+      (@inferred_latest CategoryProduct(U1(1) × SU2(1)) ⊗ CategoryProduct(U1(2))),
       gradedrange([CategoryProduct(U1(3) × SU2(1)) => 1]),
     )
 
@@ -269,7 +269,7 @@ end
     g1 = gradedrange([s1 => 2])
     g2 = gradedrange([s2 => 1])
     @test space_isequal(
-      (@inferred fusion_product(g1, g2)),
+      (@inferred_latest fusion_product(g1, g2)),
       gradedrange([U1(1) × SU2(0) × Ising("σ") => 2, U1(1) × SU2(1) × Ising("σ") => 2]),
     )
   end
@@ -322,7 +322,7 @@ end
     @test length(categories(s)) == 2
     @test categories(s)[:B] == Ising("ψ")
     @test categories(s)[:C] == Z{2}(1)
-    @test (@inferred quantum_dimension(s)) == 1.0
+    @test (@inferred_latest quantum_dimension(s)) == 1.0
   end
 
   @testset "Comparisons with unspecified labels" begin
@@ -375,8 +375,8 @@ end
     # non group categories
     g_fib = gradedrange([CategoryProduct(; A=Fib("1"), B=Fib("1")) => 1])
     g_ising = gradedrange([CategoryProduct(; A=Ising("1"), B=Ising("1")) => 1])
-    @test (@inferred quantum_dimension(g_fib)) == 1.0
-    @test (@inferred quantum_dimension(g_ising)) == 1.0
+    @test (@inferred_latest quantum_dimension(g_fib)) == 1.0
+    @test (@inferred_latest quantum_dimension(g_ising)) == 1.0
 
     # mixed product Abelian / NonAbelian / NonGroup
     g = gradedrange([
@@ -393,7 +393,7 @@ end
       CategoryProduct(; A=Fib("τ"), B=SU2(0), C=U1(2)) => 1,
       CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1,
     ])
-    @test (@inferred quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
+    @test (@inferred_latest quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
   end
 
   @testset "Fusion of Abelian products" begin
@@ -402,19 +402,19 @@ end
     q01 = CategoryProduct(; B=U1(1))
     q11 = CategoryProduct(; A=U1(1), B=U1(1))
 
-    @test (@inferred q10 ⊗ q10) == CategoryProduct(; A=U1(2))
-    @test (@inferred q01 ⊗ q00) == q01
-    @test (@inferred q00 ⊗ q01) == q01
-    @test (@inferred q10 ⊗ q01) == q11
-    @test (@inferred q11 ⊗ q11) == CategoryProduct(; A=U1(2), B=U1(2))
+    @test (@inferred_latest q10 ⊗ q10) == CategoryProduct(; A=U1(2))
+    @test (@inferred_latest q01 ⊗ q00) == q01
+    @test (@inferred_latest q00 ⊗ q01) == q01
+    @test (@inferred_latest q10 ⊗ q01) == q11
+    @test (@inferred_latest q11 ⊗ q11) == CategoryProduct(; A=U1(2), B=U1(2))
 
     s11 = CategoryProduct(; A=U1(1), B=Z{2}(1))
     s10 = CategoryProduct(; A=U1(1))
     s01 = CategoryProduct(; B=Z{2}(1))
-    @test (@inferred s01 ⊗ q00) == s01
-    @test (@inferred q00 ⊗ s01) == s01
-    @test (@inferred s10 ⊗ s01) == s11
-    @test (@inferred s11 ⊗ s11) == CategoryProduct(; A=U1(2), B=Z{2}(0))
+    @test (@inferred_latest s01 ⊗ q00) == s01
+    @test (@inferred_latest q00 ⊗ s01) == s01
+    @test (@inferred_latest s10 ⊗ s01) == s11
+    @test (@inferred_latest s11 ⊗ s11) == CategoryProduct(; A=U1(2), B=Z{2}(0))
   end
 
   @testset "Fusion of NonAbelian products" begin
@@ -427,9 +427,9 @@ end
       (@inferred pha ⊗ pha),
       gradedrange([CategoryProduct(; A=SU2(0)) => 1, CategoryProduct(; A=SU2(1)) => 1]),
     )
-    @test space_isequal((@inferred pha ⊗ p0), gradedrange([pha => 1]))
-    @test space_isequal((@inferred p0 ⊗ phb), gradedrange([phb => 1]))
-    @test space_isequal((@inferred pha ⊗ phb), gradedrange([phab => 1]))
+    @test space_isequal((@inferred_latest pha ⊗ p0), gradedrange([pha => 1]))
+    @test space_isequal((@inferred_latest p0 ⊗ phb), gradedrange([phb => 1]))
+    @test space_isequal((@inferred_latest pha ⊗ phb), gradedrange([phab => 1]))
 
     @test space_isequal(
       (@inferred phab ⊗ phab),
@@ -537,7 +537,7 @@ end
     sAB = CategoryProduct(; A=U1(1), B=SU2(1//2))
     gA = gradedrange([sA => 2])
     gB = gradedrange([sB => 1])
-    @test space_isequal((@inferred fusion_product(gA, gB)), gradedrange([sAB => 2]))
+    @test space_isequal((@inferred_latest fusion_product(gA, gB)), gradedrange([sAB => 2]))
   end
 end
 
@@ -563,23 +563,23 @@ end
   @test (@inferred CategoryProduct(; A=U1(1)) × s) == CategoryProduct(; A=U1(1))
 
   # Empty acts as trivial
-  @test (@inferred U1(1) ⊗ s) == U1(1)
+  @test (@inferred_latest U1(1) ⊗ s) == U1(1)
   @test (@inferred SU2(0) ⊗ s) == gradedrange([SU2(0) => 1])
   @test (@inferred Fib("τ") ⊗ s) == gradedrange([Fib("τ") => 1])
-  @test (@inferred s ⊗ U1(1)) == U1(1)
+  @test (@inferred_latest s ⊗ U1(1)) == U1(1)
   @test (@inferred s ⊗ SU2(0)) == gradedrange([SU2(0) => 1])
   @test (@inferred s ⊗ Fib("τ")) == gradedrange([Fib("τ") => 1])
 
-  @test (@inferred CategoryProduct(U1(1)) ⊗ s) == CategoryProduct(U1(1))
-  @test (@inferred CategoryProduct(SU2(0)) ⊗ s) ==
+  @test (@inferred_latest CategoryProduct(U1(1)) ⊗ s) == CategoryProduct(U1(1))
+  @test (@inferred_latest CategoryProduct(SU2(0)) ⊗ s) ==
     gradedrange([CategoryProduct(SU2(0)) => 1])
-  @test (@inferred CategoryProduct(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
+  @test (@inferred_latest CategoryProduct(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
     gradedrange([CategoryProduct(Fib("τ"), SU2(1), U1(2)) => 1])
 
-  @test (@inferred CategoryProduct(; A=U1(1)) ⊗ s) == CategoryProduct(; A=U1(1))
-  @test (@inferred CategoryProduct(; A=SU2(0)) ⊗ s) ==
+  @test (@inferred_latest CategoryProduct(; A=U1(1)) ⊗ s) == CategoryProduct(; A=U1(1))
+  @test (@inferred_latest CategoryProduct(; A=SU2(0)) ⊗ s) ==
     gradedrange([CategoryProduct(; A=SU2(0)) => 1])
-  @test (@inferred CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
+  @test (@inferred_latest CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
     gradedrange([CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
 
   # Empty behaves as empty NamedTuple
