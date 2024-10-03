@@ -15,7 +15,7 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-const EmptyCategory = CategoryProduct{Tuple{}}
+const TrivialSector = CategoryProduct{Tuple{}}
 
 # =================================  Sectors interface  ====================================
 function SymmetryStyle(c::CategoryProduct)
@@ -157,29 +157,29 @@ function fusion_rule(::AbelianStyle, s1::CategoryProduct, s2::CategoryProduct)
 end
 
 # Empty case
-function fusion_rule(::AbelianStyle, ::EmptyCategory, ::EmptyCategory)
+function fusion_rule(::AbelianStyle, ::TrivialSector, ::TrivialSector)
   return sector()
 end
 
-# EmptyCategoryStyle acts as trivial on any AbstractCategory, not just CategoryProduct
-function fusion_rule(::NotAbelianStyle, ::EmptyCategory, c::AbstractCategory)
+# TrivialSectorStyle acts as trivial on any AbstractCategory, not just CategoryProduct
+function fusion_rule(::NotAbelianStyle, ::TrivialSector, c::AbstractCategory)
   return to_gradedrange(c)
 end
-function fusion_rule(::NotAbelianStyle, c::AbstractCategory, ::EmptyCategory)
+function fusion_rule(::NotAbelianStyle, c::AbstractCategory, ::TrivialSector)
   return to_gradedrange(c)
 end
-function fusion_rule(::NotAbelianStyle, ::EmptyCategory, c::CategoryProduct)
+function fusion_rule(::NotAbelianStyle, ::TrivialSector, c::CategoryProduct)
   return to_gradedrange(c)
 end
-function fusion_rule(::NotAbelianStyle, c::CategoryProduct, ::EmptyCategory)
+function fusion_rule(::NotAbelianStyle, c::CategoryProduct, ::TrivialSector)
   return to_gradedrange(c)
 end
 
 # abelian case: return Category
-fusion_rule(::AbelianStyle, c::AbstractCategory, ::EmptyCategory) = c
-fusion_rule(::AbelianStyle, ::EmptyCategory, c::AbstractCategory) = c
-fusion_rule(::AbelianStyle, c::CategoryProduct, ::EmptyCategory) = c
-fusion_rule(::AbelianStyle, ::EmptyCategory, c::CategoryProduct) = c
+fusion_rule(::AbelianStyle, c::AbstractCategory, ::TrivialSector) = c
+fusion_rule(::AbelianStyle, ::TrivialSector, c::AbstractCategory) = c
+fusion_rule(::AbelianStyle, c::CategoryProduct, ::TrivialSector) = c
+fusion_rule(::AbelianStyle, ::TrivialSector, c::CategoryProduct) = c
 
 # ===============================  Ordered implementation  =================================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
@@ -213,7 +213,7 @@ end
 
 CategoryProduct(; kws...) = CategoryProduct((; kws...))
 
-# avoid having 2 different kinds of EmptyCategoryStyle: cast empty NamedTuple to Tuple{}
+# avoid having 2 different kinds of TrivialSector: cast empty NamedTuple to Tuple{}
 CategoryProduct(::NamedTuple{()}) = CategoryProduct(())
 
 function CategoryProduct(pairs::Pair...)
