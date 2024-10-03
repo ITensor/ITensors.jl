@@ -61,9 +61,32 @@ end
 # - ordered-like with a Tuple
 # - dictionary-like with a NamedTuple
 
+categories_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
+function categories_isequal(nt::NamedTuple, ::Tuple{})
+  return categories_isequal(nt, (;))
+end
+function categories_isequal(::Tuple{}, nt::NamedTuple)
+  return categories_isequal((;), nt)
+end
+function categories_isequal(nt1::NamedTuple, nt2::NamedTuple)
+  return ==(sym_categories_insert_unspecified(nt1, nt2)...)
+end
+
 # get clean results when mixing implementations
 categories_isequal(::Tuple, ::NamedTuple) = false
 categories_isequal(::NamedTuple, ::Tuple) = false
+
+categories_isless(::Tuple, ::Tuple) = throw(ArgumentError("Not implemented"))
+categories_isless(t1::T, t2::T) where {T<:Tuple} = t1 < t2
+function categories_isless(nt::NamedTuple, ::Tuple{})
+  return categories_isless(nt, (;))
+end
+function categories_isless(::Tuple{}, nt::NamedTuple)
+  return categories_isless((;), nt)
+end
+function categories_isless(nt1::NamedTuple, nt2::NamedTuple)
+  return isless(sym_categories_insert_unspecified(nt1, nt2)...)
+end
 
 categories_isless(::NamedTuple, ::Tuple) = throw(ArgumentError("Not implemented"))
 categories_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"))
@@ -184,11 +207,6 @@ function SymmetryStyle(T::Type{<:Tuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(T); init=AbelianStyle())
 end
 
-categories_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
-
-categories_isless(::Tuple, ::Tuple) = throw(ArgumentError("Not implemented"))
-categories_isless(t1::T, t2::T) where {T<:Tuple} = t1 < t2
-
 categories_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
 categories_trivial(type::Type{<:Tuple}) = trivial.(fieldtypes(type))
@@ -228,26 +246,6 @@ end
 
 function SymmetryStyle(NT::Type{<:NamedTuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(NT); init=AbelianStyle())
-end
-
-function categories_isequal(nt::NamedTuple, ::Tuple{})
-  return categories_isequal(nt, (;))
-end
-function categories_isequal(::Tuple{}, nt::NamedTuple)
-  return categories_isequal((;), nt)
-end
-function categories_isequal(nt1::NamedTuple, nt2::NamedTuple)
-  return ==(sym_categories_insert_unspecified(nt1, nt2)...)
-end
-
-function categories_isless(nt::NamedTuple, ::Tuple{})
-  return categories_isless(nt, (;))
-end
-function categories_isless(::Tuple{}, nt::NamedTuple)
-  return categories_isless((;), nt)
-end
-function categories_isless(nt1::NamedTuple, nt2::NamedTuple)
-  return isless(sym_categories_insert_unspecified(nt1, nt2)...)
 end
 
 function sym_categories_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
