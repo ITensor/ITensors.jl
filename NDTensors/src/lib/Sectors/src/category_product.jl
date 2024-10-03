@@ -29,7 +29,9 @@ end
 # use map instead of broadcast to support both Tuple and NamedTuple
 GradedAxes.dual(s::CategoryProduct) = CategoryProduct(map(dual, categories(s)))
 
-trivial(type::Type{<:CategoryProduct}) = sector(categories_trivial(categories_type(type)))
+function trivial(type::Type{<:CategoryProduct})
+  return CategoryProduct(categories_trivial(categories_type(type)))
+end
 
 # ===================================  Base interface  =====================================
 function Base.:(==)(A::CategoryProduct, B::CategoryProduct)
@@ -158,7 +160,7 @@ end
 
 # Empty case
 function fusion_rule(::AbelianStyle, ::TrivialSector, ::TrivialSector)
-  return sector()
+  return CategoryProduct(())
 end
 
 # TrivialSectorStyle acts as trivial on any AbstractCategory, not just CategoryProduct
