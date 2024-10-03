@@ -79,20 +79,23 @@ end
 
 function shared_categories_fusion_rule(shared1, shared2)
   fused = map(fusion_rule, values(shared1), values(shared2))
-  factorized = factorize_gradedaxes(fused)
-  type_fixed = recover_category_product_type(typeof(shared1), factorized)
-  return type_fixed
+  return recover_style(typeof(shared1), fused)
 end
 
-# abelian case: there is no gradedaxis
-factorize_gradedaxes(fused::Tuple{Vararg{AbstractCategory}}) = fused
+function recover_style(T::Type, fused)
+  style = reduce(combine_styles, SymmetryStyle.(fused); init=AbelianStyle())
+  return recover_category_product_type(style, T, fused)
+end
 
-# non-abelian case
-function factorize_gradedaxes(fused::Tuple)
-  # here fused contains at least one GradedOneTo
-  g0 = reduce(×, fused)
+function recover_category_product_type(::AbelianStyle, T::Type, fused)
+  return recover_category_product_type(T, fused)
+end
+
+function recover_category_product_type(::NotAbelianStyle, T::Type, fused)
+  factorized = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
-  return g0
+  type_fixed = recover_category_product_type(T, factorized)
+  return type_fixed
 end
 
 function recover_category_product_type(T::Type, g0::AbstractGradedUnitRange)
