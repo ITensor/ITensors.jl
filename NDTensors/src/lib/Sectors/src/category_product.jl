@@ -109,6 +109,8 @@ function recover_category_product_type(::AbelianStyle, T::Type, fused)
 end
 
 function recover_category_product_type(::NotAbelianStyle, T::Type, fused)
+  # here fused contains at least one graded unit range.
+  # convert eg. Tuple{GradedUnitRange{SU2}, GradedUnitRange{SU2}} into GradedUnitRange{SU2×SU2}
   g = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
   type_fixed = recover_category_product_type(T, g)
