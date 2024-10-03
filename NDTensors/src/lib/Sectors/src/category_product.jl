@@ -78,11 +78,6 @@ function categories_fusion_rule(cats1, cats2)
   return shared_cat × diff_cat
 end
 
-function shared_categories_fusion_rule(shared1::T, shared2::T) where {T}
-  fused = map(fusion_rule, values(shared1), values(shared2))
-  return recover_style(T, fused)
-end
-
 function recover_style(T::Type, fused)
   style = reduce(combine_styles, SymmetryStyle.(fused); init=AbelianStyle())
   return recover_category_product_type(style, T, fused)
@@ -207,6 +202,11 @@ function categories_diff(t1::Tuple, t2::Tuple)
   return n1 < n2 ? t2[(n1 + 1):end] : t1[(n2 + 1):end]
 end
 
+function shared_categories_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
+  fused = map(fusion_rule, shared1, shared2)
+  return recover_style(T, fused)
+end
+
 # ===========================  Dictionary-like implementation  =============================
 function CategoryProduct(nt::NamedTuple)
   categories = sort_keys(nt)
@@ -274,3 +274,8 @@ function categories_common(nt1::NamedTuple, nt2::NamedTuple)
 end
 
 categories_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
+
+function shared_categories_fusion_rule(shared1::T, shared2::T) where {T<:NamedTuple}
+  fused = map(fusion_rule, values(shared1), values(shared2))
+  return recover_style(T, fused)
+end
