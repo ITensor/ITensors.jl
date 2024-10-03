@@ -77,7 +77,7 @@ function categories_fusion_rule(cats1, cats2)
 end
 
 function recover_style(T::Type, fused)
-  style = reduce(combine_styles, SymmetryStyle.(fused); init=AbelianStyle())
+  style = SymmetryStyle(T)
   return recover_category_product_type(style, T, fused)
 end
 
@@ -156,7 +156,7 @@ function fusion_rule(::AbelianStyle, ::TrivialSector, ::TrivialSector)
   return CategoryProduct(())
 end
 
-# TrivialSectorStyle acts as trivial on any AbstractCategory, not just CategoryProduct
+# TrivialSector acts as trivial on any AbstractCategory, not just CategoryProduct
 function fusion_rule(::NotAbelianStyle, ::TrivialSector, c::AbstractCategory)
   return to_gradedrange(c)
 end
