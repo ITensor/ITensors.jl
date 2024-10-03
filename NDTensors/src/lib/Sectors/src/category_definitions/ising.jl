@@ -19,7 +19,7 @@ function Ising(s::AbstractString)
   return error("Unrecognized input \"$s\" to Ising constructor")
 end
 
-SymmetryStyle(::Ising) = NotAbelianStyle()
+SymmetryStyle(::Type{Ising}) = NotAbelianStyle()
 
 GradedAxes.dual(i::Ising) = i
 

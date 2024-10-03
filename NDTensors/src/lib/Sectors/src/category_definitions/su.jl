@@ -23,7 +23,7 @@ end
 SU{N}(t::Tuple) where {N} = SU{N,length(t)}(t)
 SU(t::Tuple) = SU{length(t) + 1}(t)  # infer N from tuple length
 
-SymmetryStyle(::SU) = NotAbelianStyle()
+SymmetryStyle(::Type{<:SU}) = NotAbelianStyle()
 
 category_label(s::SU) = s.l
 

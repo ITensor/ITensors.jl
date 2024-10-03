@@ -20,7 +20,7 @@ struct O2 <: AbstractCategory
   l::Half{Int}
 end
 
-SymmetryStyle(::O2) = NotAbelianStyle()
+SymmetryStyle(::Type{O2}) = NotAbelianStyle()
 
 category_label(s::O2) = s.l
 

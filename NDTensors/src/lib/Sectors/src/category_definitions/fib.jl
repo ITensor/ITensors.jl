@@ -19,7 +19,7 @@ function Fib(s::AbstractString)
   return error("Unrecognized input \"$s\" to Fib constructor")
 end
 
-SymmetryStyle(::Fib) = NotAbelianStyle()
+SymmetryStyle(::Type{Fib}) = NotAbelianStyle()
 
 GradedAxes.dual(f::Fib) = f
 

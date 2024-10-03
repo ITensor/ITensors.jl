@@ -19,9 +19,7 @@ const TrivialSector = CategoryProduct{Tuple{}}
 TrivialSector() = CategoryProduct(())
 
 # =================================  Sectors interface  ====================================
-function SymmetryStyle(c::CategoryProduct)
-  return mapreduce(SymmetryStyle, combine_styles, categories(c); init=AbelianStyle())
-end
+SymmetryStyle(T::Type{<:CategoryProduct}) = SymmetryStyle(categories_type(T))
 
 function quantum_dimension(::NotAbelianStyle, s::CategoryProduct)
   return mapreduce(quantum_dimension, *, categories(s))
@@ -182,6 +180,10 @@ fusion_rule(::AbelianStyle, ::TrivialSector, c::CategoryProduct) = c
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
 CategoryProduct(cats::AbstractCategory...) = CategoryProduct(cats)
 
+function SymmetryStyle(T::Type{<:Tuple})
+  return mapreduce(SymmetryStyle, combine_styles, fieldtypes(T); init=AbelianStyle())
+end
+
 categories_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
 
 categories_isless(::Tuple, ::Tuple) = throw(ArgumentError("Not implemented"))
@@ -222,6 +224,10 @@ function CategoryProduct(pairs::Pair...)
   keys = ntuple(n -> Symbol(pairs[n][1]), length(pairs))
   vals = ntuple(n -> pairs[n][2], length(pairs))
   return CategoryProduct(NamedTuple{keys}(vals))
+end
+
+function SymmetryStyle(NT::Type{<:NamedTuple})
+  return mapreduce(SymmetryStyle, combine_styles, fieldtypes(NT); init=AbelianStyle())
 end
 
 function categories_isequal(nt::NamedTuple, ::Tuple{})

@@ -9,7 +9,7 @@ struct su2{k} <: AbstractCategory
   j::Half{Int}
 end
 
-SymmetryStyle(::su2) = NotAbelianStyle()
+SymmetryStyle(::Type{<:su2}) = NotAbelianStyle()
 
 GradedAxes.dual(s::su2) = s
 
