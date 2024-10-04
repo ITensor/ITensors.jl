@@ -19,7 +19,7 @@ const TrivialSector{Categories<:Union{Tuple{},NamedTuple{()}}} = CategoryProduct
 TrivialSector() = CategoryProduct(())
 
 # =================================  Sectors interface  ====================================
-SymmetryStyle(T::Type{<:CategoryProduct}) = SymmetryStyle(categories_type(T))
+SymmetryStyle(T::Type{<:CategoryProduct}) = categories_symmetrystyle(categories_type(T))
 
 function quantum_dimension(::NotAbelianStyle, s::CategoryProduct)
   return mapreduce(quantum_dimension, *, categories(s))
@@ -100,7 +100,7 @@ function categories_fusion_rule(cats1, cats2)
 end
 
 function recover_style(T::Type, fused)
-  style = SymmetryStyle(T)
+  style = categories_symmetrystyle(T)
   return recover_category_product_type(style, T, fused)
 end
 
@@ -205,7 +205,7 @@ fusion_rule(::AbelianStyle, ::TrivialSector, c::CategoryProduct) = c
 CategoryProduct(t::Tuple) = _CategoryProduct(t)
 CategoryProduct(cats::AbstractCategory...) = CategoryProduct(cats)
 
-function SymmetryStyle(T::Type{<:Tuple})
+function categories_symmetrystyle(T::Type{<:Tuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(T); init=AbelianStyle())
 end
 
@@ -245,7 +245,7 @@ function CategoryProduct(pairs::Pair...)
   return CategoryProduct(NamedTuple{keys}(vals))
 end
 
-function SymmetryStyle(NT::Type{<:NamedTuple})
+function categories_symmetrystyle(NT::Type{<:NamedTuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(NT); init=AbelianStyle())
 end
 
