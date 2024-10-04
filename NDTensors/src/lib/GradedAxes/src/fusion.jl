@@ -63,7 +63,7 @@ function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRan
   nested = map(Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),))) do it
     return mapreduce(length, fuse_blocklengths, it)
   end
-  new_blocklengths = reduce(vcat, blocklengths.(nested))
+  new_blocklengths = mapreduce(blocklengths, vcat, nested)
   return blockedrange(new_blocklengths)
 end
 
