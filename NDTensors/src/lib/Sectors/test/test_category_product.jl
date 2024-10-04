@@ -143,8 +143,8 @@ end
   @testset "Fusion of Abelian products" begin
     p1 = CategoryProduct(U1(1))
     p2 = CategoryProduct(U1(2))
-    @test (@inferred p1 ⊗ TrivialSector()) == p1
-    @test (@inferred TrivialSector() ⊗ p2) == p2
+    @test (@inferred_latest p1 ⊗ TrivialSector()) == p1
+    @test (@inferred_latest TrivialSector() ⊗ p2) == p2
     @test (@inferred_latest p1 ⊗ p2) == CategoryProduct(U1(3))
 
     p11 = U1(1) × U1(1)
@@ -162,10 +162,11 @@ end
     p0 = CategoryProduct(SU2(0))
     ph = CategoryProduct(SU2(1//2))
     @test space_isequal(
-      (@inferred p0 ⊗ TrivialSector()), gradedrange([CategoryProduct(SU2(0)) => 1])
+      (@inferred_latest p0 ⊗ TrivialSector()), gradedrange([CategoryProduct(SU2(0)) => 1])
     )
     @test space_isequal(
-      (@inferred TrivialSector() ⊗ ph), gradedrange([CategoryProduct(SU2(1//2)) => 1])
+      (@inferred_latest TrivialSector() ⊗ ph),
+      gradedrange([CategoryProduct(SU2(1//2)) => 1]),
     )
 
     phh = SU2(1//2) × SU2(1//2)
@@ -563,12 +564,12 @@ end
     @test s == CategoryProduct((;))
     @test (@inferred dual(s)) == s
     @test (@inferred s × s) == s
-    @test (@inferred s ⊗ s) == s
+    @test (@inferred_latest s ⊗ s) == s
     @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred_latest trivial(s)) == s
 
     g0 = gradedrange([s => 2])
-    @test space_isequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
+    @test space_isequal((@inferred_latest fusion_product(g0, g0)), gradedrange([s => 4]))
 
     @test (@inferred s × U1(1)) == CategoryProduct(U1(1))
     @test (@inferred s × CategoryProduct(U1(1))) == CategoryProduct(U1(1))
