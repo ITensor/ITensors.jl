@@ -89,7 +89,7 @@ using Test: @inferred, @test, @testset, @test_throws
     @test (@inferred dual(s1)) == s1
   end
 
-  @testset "SU2" begin
+  @testset "SU(2)" begin
     j1 = SU2(0)
     j2 = SU2(1//2)  # Rational will be cast to HalfInteger
     j3 = SU2(1)

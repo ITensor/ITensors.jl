@@ -2,18 +2,18 @@
 using NDTensors.Sectors:
   ×,
   ⊗,
-  CategoryProduct,
   Fib,
   Ising,
+  SectorProduct,
   SU,
   SU2,
   TrivialSector,
   U1,
   Z,
   block_dimensions,
-  categories,
   quantum_dimension,
-  recover_category_product_type,
+  recover_sector_product_type,
+  sectors,
   trivial
 using NDTensors.GradedAxes: dual, fusion_product, space_isequal, gradedrange
 using Test: @inferred, @test, @testset, @test_throws
@@ -27,62 +27,61 @@ end
 
 @testset "Test Ordered Products" begin
   @testset "Ordered Constructor" begin
-    s = CategoryProduct(U1(1))
-    @test length(categories(s)) == 1
+    s = SectorProduct(U1(1))
+    @test length(sectors(s)) == 1
     @test (@inferred quantum_dimension(s)) == 1
-    @test (@inferred dual(s)) == CategoryProduct(U1(-1))
-    @test categories(s)[1] == U1(1)
-    @test (@inferred_latest trivial(s)) == CategoryProduct(U1(0))
+    @test (@inferred dual(s)) == SectorProduct(U1(-1))
+    @test sectors(s)[1] == U1(1)
+    @test (@inferred_latest trivial(s)) == SectorProduct(U1(0))
 
-    s = CategoryProduct(U1(1), U1(2))
-    @test length(categories(s)) == 2
+    s = SectorProduct(U1(1), U1(2))
+    @test length(sectors(s)) == 2
     @test (@inferred quantum_dimension(s)) == 1
-    @test (@inferred dual(s)) == CategoryProduct(U1(-1), U1(-2))
-    @test categories(s)[1] == U1(1)
-    @test categories(s)[2] == U1(2)
-    @test (@inferred_latest trivial(s)) == CategoryProduct(U1(0), U1(0))
+    @test (@inferred dual(s)) == SectorProduct(U1(-1), U1(-2))
+    @test sectors(s)[1] == U1(1)
+    @test sectors(s)[2] == U1(2)
+    @test (@inferred_latest trivial(s)) == SectorProduct(U1(0), U1(0))
 
     s = U1(1) × SU2(1//2) × U1(3)
-    @test length(categories(s)) == 3
+    @test length(sectors(s)) == 3
     @test (@inferred quantum_dimension(s)) == 2
     @test (@inferred dual(s)) == U1(-1) × SU2(1//2) × U1(-3)
-    @test categories(s)[1] == U1(1)
-    @test categories(s)[2] == SU2(1//2)
-    @test categories(s)[3] == U1(3)
-    @test (@inferred_latest trivial(s)) == CategoryProduct(U1(0), SU2(0), U1(0))
-    @test (@inferred recover_category_product_type(typeof(categories(s)), categories(s))) ==
-      s
-    @test (@inferred recover_category_product_type(typeof(s), categories(s))) == s
+    @test sectors(s)[1] == U1(1)
+    @test sectors(s)[2] == SU2(1//2)
+    @test sectors(s)[3] == U1(3)
+    @test (@inferred_latest trivial(s)) == SectorProduct(U1(0), SU2(0), U1(0))
+    @test (@inferred recover_sector_product_type(typeof(sectors(s)), sectors(s))) == s
+    @test (@inferred recover_sector_product_type(typeof(s), sectors(s))) == s
 
     s = U1(3) × SU2(1//2) × Fib("τ")
-    @test length(categories(s)) == 3
+    @test length(sectors(s)) == 3
     @test (@inferred_latest quantum_dimension(s)) == 1.0 + √5
     @test dual(s) == U1(-3) × SU2(1//2) × Fib("τ")
-    @test categories(s)[1] == U1(3)
-    @test categories(s)[2] == SU2(1//2)
-    @test categories(s)[3] == Fib("τ")
-    @test (@inferred_latest trivial(s)) == CategoryProduct(U1(0), SU2(0), Fib("1"))
+    @test sectors(s)[1] == U1(3)
+    @test sectors(s)[2] == SU2(1//2)
+    @test sectors(s)[3] == Fib("τ")
+    @test (@inferred_latest trivial(s)) == SectorProduct(U1(0), SU2(0), Fib("1"))
 
     s = TrivialSector() × U1(3) × SU2(1 / 2)
-    @test length(categories(s)) == 3
+    @test length(sectors(s)) == 3
     @test (@inferred_latest quantum_dimension(s)) == 2
     @test dual(s) == TrivialSector() × U1(-3) × SU2(1//2)
-    @test (@inferred_latest trivial(s)) == CategoryProduct(TrivialSector(), U1(0), SU2(0))
+    @test (@inferred_latest trivial(s)) == SectorProduct(TrivialSector(), U1(0), SU2(0))
     @test s > trivial(s)
   end
 
   @testset "Ordered comparisons" begin
-    # convention: categories must have same length to evaluate as equal
-    @test CategoryProduct(U1(1), SU2(1)) == CategoryProduct(U1(1), SU2(1))
-    @test CategoryProduct(U1(1), SU2(0)) != CategoryProduct(U1(1), SU2(1))
-    @test CategoryProduct(U1(0), SU2(1)) != CategoryProduct(U1(1), SU2(1))
-    @test CategoryProduct(U1(1)) != CategoryProduct(U1(1), U1(0))
-    @test CategoryProduct(U1(0), SU2(0)) == TrivialSector()
+    # convention: sectors must have same length to evaluate as equal
+    @test SectorProduct(U1(1), SU2(1)) == SectorProduct(U1(1), SU2(1))
+    @test SectorProduct(U1(1), SU2(0)) != SectorProduct(U1(1), SU2(1))
+    @test SectorProduct(U1(0), SU2(1)) != SectorProduct(U1(1), SU2(1))
+    @test SectorProduct(U1(1)) != SectorProduct(U1(1), U1(0))
+    @test SectorProduct(U1(0), SU2(0)) == TrivialSector()
 
-    # convention: categories must have same length to be compared
-    @test CategoryProduct(U1(0)) < CategoryProduct((U1(1)))
-    @test CategoryProduct(U1(0), U1(2)) < CategoryProduct((U1(1)), U1(0))
-    @test_throws ArgumentError CategoryProduct(U1(0)) < CategoryProduct(U1(1), U1(2))
+    # convention: sectors must have same length to be compared
+    @test SectorProduct(U1(0)) < SectorProduct((U1(1)))
+    @test SectorProduct(U1(0), U1(2)) < SectorProduct((U1(1)), U1(0))
+    @test_throws ArgumentError SectorProduct(U1(0)) < SectorProduct(U1(1), U1(2))
   end
 
   @testset "Quantum dimension and GradedUnitRange" begin
@@ -141,11 +140,11 @@ end
   end
 
   @testset "Fusion of Abelian products" begin
-    p1 = CategoryProduct(U1(1))
-    p2 = CategoryProduct(U1(2))
+    p1 = SectorProduct(U1(1))
+    p2 = SectorProduct(U1(2))
     @test (@inferred_latest p1 ⊗ TrivialSector()) == p1
     @test (@inferred_latest TrivialSector() ⊗ p2) == p2
-    @test (@inferred_latest p1 ⊗ p2) == CategoryProduct(U1(3))
+    @test (@inferred_latest p1 ⊗ p2) == SectorProduct(U1(3))
 
     p11 = U1(1) × U1(1)
     @test (@inferred_latest p11 ⊗ p11) == U1(2) × U1(2)
@@ -153,20 +152,19 @@ end
     p123 = U1(1) × U1(2) × U1(3)
     @test (@inferred_latest p123 ⊗ p123) == U1(2) × U1(4) × U1(6)
 
-    s1 = CategoryProduct(U1(1), Z{2}(1))
-    s2 = CategoryProduct(U1(0), Z{2}(0))
+    s1 = SectorProduct(U1(1), Z{2}(1))
+    s2 = SectorProduct(U1(0), Z{2}(0))
     @test (@inferred_latest s1 ⊗ s2) == U1(1) × Z{2}(1)
   end
 
   @testset "Fusion of NonAbelian products" begin
-    p0 = CategoryProduct(SU2(0))
-    ph = CategoryProduct(SU2(1//2))
+    p0 = SectorProduct(SU2(0))
+    ph = SectorProduct(SU2(1//2))
     @test space_isequal(
-      (@inferred_latest p0 ⊗ TrivialSector()), gradedrange([CategoryProduct(SU2(0)) => 1])
+      (@inferred_latest p0 ⊗ TrivialSector()), gradedrange([SectorProduct(SU2(0)) => 1])
     )
     @test space_isequal(
-      (@inferred_latest TrivialSector() ⊗ ph),
-      gradedrange([CategoryProduct(SU2(1//2)) => 1]),
+      (@inferred_latest TrivialSector() ⊗ ph), gradedrange([SectorProduct(SU2(1//2)) => 1])
     )
 
     phh = SU2(1//2) × SU2(1//2)
@@ -257,23 +255,23 @@ end
   end
 
   @testset "Fusion of different length Categories" begin
-    @test CategoryProduct(U1(1) × U1(0)) ⊗ CategoryProduct(U1(1)) ==
-      CategoryProduct(U1(2) × U1(0))
+    @test SectorProduct(U1(1) × U1(0)) ⊗ SectorProduct(U1(1)) ==
+      SectorProduct(U1(2) × U1(0))
     @test space_isequal(
-      (@inferred CategoryProduct(SU2(0) × SU2(0)) ⊗ CategoryProduct(SU2(1))),
-      gradedrange([CategoryProduct(SU2(1) × SU2(0)) => 1]),
+      (@inferred SectorProduct(SU2(0) × SU2(0)) ⊗ SectorProduct(SU2(1))),
+      gradedrange([SectorProduct(SU2(1) × SU2(0)) => 1]),
     )
 
     @test space_isequal(
-      (@inferred CategoryProduct(SU2(1) × U1(1)) ⊗ CategoryProduct(SU2(0))),
-      gradedrange([CategoryProduct(SU2(1) × U1(1)) => 1]),
+      (@inferred SectorProduct(SU2(1) × U1(1)) ⊗ SectorProduct(SU2(0))),
+      gradedrange([SectorProduct(SU2(1) × U1(1)) => 1]),
     )
     @test space_isequal(
-      (@inferred_latest CategoryProduct(U1(1) × SU2(1)) ⊗ CategoryProduct(U1(2))),
-      gradedrange([CategoryProduct(U1(3) × SU2(1)) => 1]),
+      (@inferred_latest SectorProduct(U1(1) × SU2(1)) ⊗ SectorProduct(U1(2))),
+      gradedrange([SectorProduct(U1(3) × SU2(1)) => 1]),
     )
 
-    # check incompatible categories
+    # check incompatible sectors
     p12 = Z{2}(1) × U1(2)
     z12 = Z{2}(1) × Z{2}(1)
     @test_throws MethodError p12 ⊗ z12
@@ -291,32 +289,31 @@ end
   end
 end
 
-@testset "Test Named Category Products" begin
+@testset "Test Named Sector Products" begin
   @testset "Construct from × of NamedTuples" begin
     s = (A=U1(1),) × (B=Z{2}(0),)
-    @test length(categories(s)) == 2
-    @test categories(s)[:A] == U1(1)
-    @test categories(s)[:B] == Z{2}(0)
+    @test length(sectors(s)) == 2
+    @test sectors(s)[:A] == U1(1)
+    @test sectors(s)[:B] == Z{2}(0)
     @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred dual(s)) == (A=U1(-1),) × (B=Z{2}(0),)
     @test (@inferred_latest trivial(s)) == (A=U1(0),) × (B=Z{2}(0),)
 
     s = (A=U1(1),) × (B=SU2(2),)
-    @test length(categories(s)) == 2
-    @test categories(s)[:A] == U1(1)
-    @test categories(s)[:B] == SU2(2)
+    @test length(sectors(s)) == 2
+    @test sectors(s)[:A] == U1(1)
+    @test sectors(s)[:B] == SU2(2)
     @test (@inferred quantum_dimension(s)) == 5
     @test (@inferred dual(s)) == (A=U1(-1),) × (B=SU2(2),)
     @test (@inferred_latest trivial(s)) == (A=U1(0),) × (B=SU2(0),)
-    @test (@inferred recover_category_product_type(
-      typeof(categories(s)), Tuple(categories(s))
-    )) == s
-    @test (@inferred recover_category_product_type(typeof(s), Tuple(categories(s)))) == s
+    @test (@inferred recover_sector_product_type(typeof(sectors(s)), Tuple(sectors(s)))) ==
+      s
+    @test (@inferred recover_sector_product_type(typeof(s), Tuple(sectors(s)))) == s
     @test s == (B=SU2(2),) × (A=U1(1),)
 
     s = s × (C=Ising("ψ"),)
-    @test length(categories(s)) == 3
-    @test categories(s)[:C] == Ising("ψ")
+    @test length(sectors(s)) == 3
+    @test sectors(s)[:C] == Ising("ψ")
     @test (@inferred_latest quantum_dimension(s)) == 5.0
     @test (@inferred dual(s)) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
 
@@ -326,25 +323,25 @@ end
   end
 
   @testset "Construct from Pairs" begin
-    s = CategoryProduct("A" => U1(2))
-    @test length(categories(s)) == 1
-    @test categories(s)[:A] == U1(2)
-    @test s == CategoryProduct(; A=U1(2))
+    s = SectorProduct("A" => U1(2))
+    @test length(sectors(s)) == 1
+    @test sectors(s)[:A] == U1(2)
+    @test s == SectorProduct(; A=U1(2))
     @test (@inferred quantum_dimension(s)) == 1
-    @test (@inferred dual(s)) == CategoryProduct("A" => U1(-2))
-    @test (@inferred_latest trivial(s)) == CategoryProduct(; A=U1(0))
+    @test (@inferred dual(s)) == SectorProduct("A" => U1(-2))
+    @test (@inferred_latest trivial(s)) == SectorProduct(; A=U1(0))
 
-    s = CategoryProduct("B" => Ising("ψ"), :C => Z{2}(1))
-    @test length(categories(s)) == 2
-    @test categories(s)[:B] == Ising("ψ")
-    @test categories(s)[:C] == Z{2}(1)
+    s = SectorProduct("B" => Ising("ψ"), :C => Z{2}(1))
+    @test length(sectors(s)) == 2
+    @test sectors(s)[:B] == Ising("ψ")
+    @test sectors(s)[:C] == Z{2}(1)
     @test (@inferred_latest quantum_dimension(s)) == 1.0
   end
 
   @testset "Comparisons with unspecified labels" begin
-    # convention: categories evaluate as equal if unmatched labels are trivial
+    # convention: sectors evaluate as equal if unmatched labels are trivial
     # this is different from ordered tuple convention
-    q2 = CategoryProduct(; N=U1(2))
+    q2 = SectorProduct(; N=U1(2))
     q20 = (N=U1(2),) × (J=SU2(0),)
     @test q20 == q2
     @test !(q20 < q2)
@@ -364,84 +361,84 @@ end
 
   @testset "Quantum dimension and GradedUnitRange" begin
     g = gradedrange([
-      CategoryProduct(; A=U1(0), B=Z{2}(0)) => 1, CategoryProduct(; A=U1(1), B=Z{2}(0)) => 2
+      SectorProduct(; A=U1(0), B=Z{2}(0)) => 1, SectorProduct(; A=U1(1), B=Z{2}(0)) => 2
     ])  # abelian
     @test (@inferred quantum_dimension(g)) == 3
 
     g = gradedrange([  # non-abelian
-      CategoryProduct(; A=SU2(0), B=SU2(0)) => 1,
-      CategoryProduct(; A=SU2(1), B=SU2(0)) => 1,
-      CategoryProduct(; A=SU2(0), B=SU2(1)) => 1,
-      CategoryProduct(; A=SU2(1), B=SU2(1)) => 1,
+      SectorProduct(; A=SU2(0), B=SU2(0)) => 1,
+      SectorProduct(; A=SU2(1), B=SU2(0)) => 1,
+      SectorProduct(; A=SU2(0), B=SU2(1)) => 1,
+      SectorProduct(; A=SU2(1), B=SU2(1)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 16
 
     # mixed group
     g = gradedrange([
-      CategoryProduct(; A=U1(2), B=SU2(0), C=Z{2}(0)) => 1,
-      CategoryProduct(; A=U1(2), B=SU2(1), C=Z{2}(0)) => 1,
+      SectorProduct(; A=U1(2), B=SU2(0), C=Z{2}(0)) => 1,
+      SectorProduct(; A=U1(2), B=SU2(1), C=Z{2}(0)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 4
     g = gradedrange([
-      CategoryProduct(; A=SU2(0), B=Z{2}(0), C=SU2(1//2)) => 1,
-      CategoryProduct(; A=SU2(0), B=Z{2}(1), C=SU2(1//2)) => 1,
+      SectorProduct(; A=SU2(0), B=Z{2}(0), C=SU2(1//2)) => 1,
+      SectorProduct(; A=SU2(0), B=Z{2}(1), C=SU2(1//2)) => 1,
     ])
     @test (@inferred quantum_dimension(g)) == 4
 
-    # non group categories
-    g_fib = gradedrange([CategoryProduct(; A=Fib("1"), B=Fib("1")) => 1])
-    g_ising = gradedrange([CategoryProduct(; A=Ising("1"), B=Ising("1")) => 1])
+    # non group sectors
+    g_fib = gradedrange([SectorProduct(; A=Fib("1"), B=Fib("1")) => 1])
+    g_ising = gradedrange([SectorProduct(; A=Ising("1"), B=Ising("1")) => 1])
     @test (@inferred_latest quantum_dimension(g_fib)) == 1.0
     @test (@inferred_latest quantum_dimension(g_ising)) == 1.0
 
     # mixed product Abelian / NonAbelian / NonGroup
     g = gradedrange([
-      CategoryProduct(; A=U1(2), B=SU2(0), C=Ising(1)) => 1,
-      CategoryProduct(; A=U1(2), B=SU2(1), C=Ising(1)) => 1,
-      CategoryProduct(; A=U1(2), B=SU2(0), C=Ising("ψ")) => 1,
-      CategoryProduct(; A=U1(2), B=SU2(1), C=Ising("ψ")) => 1,
+      SectorProduct(; A=U1(2), B=SU2(0), C=Ising(1)) => 1,
+      SectorProduct(; A=U1(2), B=SU2(1), C=Ising(1)) => 1,
+      SectorProduct(; A=U1(2), B=SU2(0), C=Ising("ψ")) => 1,
+      SectorProduct(; A=U1(2), B=SU2(1), C=Ising("ψ")) => 1,
     ])
     @test (@inferred_latest quantum_dimension(g)) == 8.0
 
     g = gradedrange([
-      CategoryProduct(; A=Fib("1"), B=SU2(0), C=U1(2)) => 1,
-      CategoryProduct(; A=Fib("1"), B=SU2(1), C=U1(2)) => 1,
-      CategoryProduct(; A=Fib("τ"), B=SU2(0), C=U1(2)) => 1,
-      CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1,
+      SectorProduct(; A=Fib("1"), B=SU2(0), C=U1(2)) => 1,
+      SectorProduct(; A=Fib("1"), B=SU2(1), C=U1(2)) => 1,
+      SectorProduct(; A=Fib("τ"), B=SU2(0), C=U1(2)) => 1,
+      SectorProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1,
     ])
     @test (@inferred_latest quantum_dimension(g)) == 4.0 + 4.0quantum_dimension(Fib("τ"))
   end
 
   @testset "Fusion of Abelian products" begin
-    q00 = CategoryProduct(;)
-    q10 = CategoryProduct(; A=U1(1))
-    q01 = CategoryProduct(; B=U1(1))
-    q11 = CategoryProduct(; A=U1(1), B=U1(1))
+    q00 = SectorProduct(;)
+    q10 = SectorProduct(; A=U1(1))
+    q01 = SectorProduct(; B=U1(1))
+    q11 = SectorProduct(; A=U1(1), B=U1(1))
 
-    @test (@inferred_latest q10 ⊗ q10) == CategoryProduct(; A=U1(2))
+    @test (@inferred_latest q10 ⊗ q10) == SectorProduct(; A=U1(2))
     @test (@inferred_latest q01 ⊗ q00) == q01
     @test (@inferred_latest q00 ⊗ q01) == q01
     @test (@inferred_latest q10 ⊗ q01) == q11
-    @test (@inferred_latest q11 ⊗ q11) == CategoryProduct(; A=U1(2), B=U1(2))
+    @test (@inferred_latest q11 ⊗ q11) == SectorProduct(; A=U1(2), B=U1(2))
 
-    s11 = CategoryProduct(; A=U1(1), B=Z{2}(1))
-    s10 = CategoryProduct(; A=U1(1))
-    s01 = CategoryProduct(; B=Z{2}(1))
+    s11 = SectorProduct(; A=U1(1), B=Z{2}(1))
+    s10 = SectorProduct(; A=U1(1))
+    s01 = SectorProduct(; B=Z{2}(1))
     @test (@inferred_latest s01 ⊗ q00) == s01
     @test (@inferred_latest q00 ⊗ s01) == s01
     @test (@inferred_latest s10 ⊗ s01) == s11
-    @test (@inferred_latest s11 ⊗ s11) == CategoryProduct(; A=U1(2), B=Z{2}(0))
+    @test (@inferred_latest s11 ⊗ s11) == SectorProduct(; A=U1(2), B=Z{2}(0))
   end
 
   @testset "Fusion of NonAbelian products" begin
-    p0 = CategoryProduct(;)
-    pha = CategoryProduct(; A=SU2(1//2))
-    phb = CategoryProduct(; B=SU2(1//2))
-    phab = CategoryProduct(; A=SU2(1//2), B=SU2(1//2))
+    p0 = SectorProduct(;)
+    pha = SectorProduct(; A=SU2(1//2))
+    phb = SectorProduct(; B=SU2(1//2))
+    phab = SectorProduct(; A=SU2(1//2), B=SU2(1//2))
 
     @test space_isequal(
       (@inferred pha ⊗ pha),
-      gradedrange([CategoryProduct(; A=SU2(0)) => 1, CategoryProduct(; A=SU2(1)) => 1]),
+      gradedrange([SectorProduct(; A=SU2(0)) => 1, SectorProduct(; A=SU2(1)) => 1]),
     )
     @test space_isequal((@inferred_latest pha ⊗ p0), gradedrange([pha => 1]))
     @test space_isequal((@inferred_latest p0 ⊗ phb), gradedrange([phb => 1]))
@@ -450,10 +447,10 @@ end
     @test space_isequal(
       (@inferred phab ⊗ phab),
       gradedrange([
-        CategoryProduct(; A=SU2(0), B=SU2(0)) => 1,
-        CategoryProduct(; A=SU2(1), B=SU2(0)) => 1,
-        CategoryProduct(; A=SU2(0), B=SU2(1)) => 1,
-        CategoryProduct(; A=SU2(1), B=SU2(1)) => 1,
+        SectorProduct(; A=SU2(0), B=SU2(0)) => 1,
+        SectorProduct(; A=SU2(1), B=SU2(0)) => 1,
+        SectorProduct(; A=SU2(0), B=SU2(1)) => 1,
+        SectorProduct(; A=SU2(1), B=SU2(1)) => 1,
       ]),
     )
   end
@@ -461,34 +458,34 @@ end
   @testset "Fusion of NonGroupCategory products" begin
     ı = Fib("1")
     τ = Fib("τ")
-    s = CategoryProduct(; A=ı, B=ı)
+    s = SectorProduct(; A=ı, B=ı)
     @test space_isequal((@inferred s ⊗ s), gradedrange([s => 1]))
 
-    s = CategoryProduct(; A=τ, B=τ)
+    s = SectorProduct(; A=τ, B=τ)
     @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
-        CategoryProduct(; A=ı, B=ı) => 1,
-        CategoryProduct(; A=τ, B=ı) => 1,
-        CategoryProduct(; A=ı, B=τ) => 1,
-        CategoryProduct(; A=τ, B=τ) => 1,
+        SectorProduct(; A=ı, B=ı) => 1,
+        SectorProduct(; A=τ, B=ı) => 1,
+        SectorProduct(; A=ı, B=τ) => 1,
+        SectorProduct(; A=τ, B=τ) => 1,
       ]),
     )
 
     σ = Ising("σ")
     ψ = Ising("ψ")
-    s = CategoryProduct(; A=τ, B=σ)
+    s = SectorProduct(; A=τ, B=σ)
     g = gradedrange([
-      CategoryProduct(; A=ı, B=Ising("1")) => 1,
-      CategoryProduct(; A=τ, B=Ising("1")) => 1,
-      CategoryProduct(; A=ı, B=ψ) => 1,
-      CategoryProduct(; A=τ, B=ψ) => 1,
+      SectorProduct(; A=ı, B=Ising("1")) => 1,
+      SectorProduct(; A=τ, B=Ising("1")) => 1,
+      SectorProduct(; A=ı, B=ψ) => 1,
+      SectorProduct(; A=τ, B=ψ) => 1,
     ])
     @test space_isequal((@inferred s ⊗ s), g)
   end
 
   @testset "Fusion of mixed Abelian and NonAbelian products" begin
-    q0h = CategoryProduct(; J=SU2(1//2))
+    q0h = SectorProduct(; J=SU2(1//2))
     q10 = (N=U1(1),) × (J=SU2(0),)
     # Put names in reverse order sometimes:
     q1h = (J=SU2(1//2),) × (N=U1(1),)
@@ -505,52 +502,52 @@ end
   end
 
   @testset "Fusion of fully mixed products" begin
-    s = CategoryProduct(; A=U1(1), B=SU2(1//2), C=Ising("σ"))
+    s = SectorProduct(; A=U1(1), B=SU2(1//2), C=Ising("σ"))
     @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
-        CategoryProduct(; A=U1(2), B=SU2(0), C=Ising("1")) => 1,
-        CategoryProduct(; A=U1(2), B=SU2(1), C=Ising("1")) => 1,
-        CategoryProduct(; A=U1(2), B=SU2(0), C=Ising("ψ")) => 1,
-        CategoryProduct(; A=U1(2), B=SU2(1), C=Ising("ψ")) => 1,
+        SectorProduct(; A=U1(2), B=SU2(0), C=Ising("1")) => 1,
+        SectorProduct(; A=U1(2), B=SU2(1), C=Ising("1")) => 1,
+        SectorProduct(; A=U1(2), B=SU2(0), C=Ising("ψ")) => 1,
+        SectorProduct(; A=U1(2), B=SU2(1), C=Ising("ψ")) => 1,
       ]),
     )
 
     ı = Fib("1")
     τ = Fib("τ")
-    s = CategoryProduct(; A=SU2(1//2), B=U1(1), C=τ)
+    s = SectorProduct(; A=SU2(1//2), B=U1(1), C=τ)
     @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
-        CategoryProduct(; A=SU2(0), B=U1(2), C=ı) => 1,
-        CategoryProduct(; A=SU2(1), B=U1(2), C=ı) => 1,
-        CategoryProduct(; A=SU2(0), B=U1(2), C=τ) => 1,
-        CategoryProduct(; A=SU2(1), B=U1(2), C=τ) => 1,
+        SectorProduct(; A=SU2(0), B=U1(2), C=ı) => 1,
+        SectorProduct(; A=SU2(1), B=U1(2), C=ı) => 1,
+        SectorProduct(; A=SU2(0), B=U1(2), C=τ) => 1,
+        SectorProduct(; A=SU2(1), B=U1(2), C=τ) => 1,
       ]),
     )
 
-    s = CategoryProduct(; A=τ, B=U1(1), C=ı)
+    s = SectorProduct(; A=τ, B=U1(1), C=ı)
     @test space_isequal(
       (@inferred s ⊗ s),
       gradedrange([
-        CategoryProduct(; B=U1(2), A=ı, C=ı) => 1, CategoryProduct(; B=U1(2), A=τ, C=ı) => 1
+        SectorProduct(; B=U1(2), A=ı, C=ı) => 1, SectorProduct(; B=U1(2), A=τ, C=ı) => 1
       ]),
     )
   end
   @testset "GradedUnitRange fusion rules" begin
-    s1 = CategoryProduct(; A=U1(1), B=SU2(1//2), C=Ising("σ"))
-    s2 = CategoryProduct(; A=U1(0), B=SU2(1//2), C=Ising("1"))
+    s1 = SectorProduct(; A=U1(1), B=SU2(1//2), C=Ising("σ"))
+    s2 = SectorProduct(; A=U1(0), B=SU2(1//2), C=Ising("1"))
     g1 = gradedrange([s1 => 2])
     g2 = gradedrange([s2 => 1])
-    s3 = CategoryProduct(; A=U1(1), B=SU2(0), C=Ising("σ"))
-    s4 = CategoryProduct(; A=U1(1), B=SU2(1), C=Ising("σ"))
+    s3 = SectorProduct(; A=U1(1), B=SU2(0), C=Ising("σ"))
+    s4 = SectorProduct(; A=U1(1), B=SU2(1), C=Ising("σ"))
     @test space_isequal(
       (@inferred_latest fusion_product(g1, g2)), gradedrange([s3 => 2, s4 => 2])
     )
 
-    sA = CategoryProduct(; A=U1(1))
-    sB = CategoryProduct(; B=SU2(1//2))
-    sAB = CategoryProduct(; A=U1(1), B=SU2(1//2))
+    sA = SectorProduct(; A=U1(1))
+    sB = SectorProduct(; B=SU2(1//2))
+    sAB = SectorProduct(; A=U1(1), B=SU2(1//2))
     gA = gradedrange([sA => 2])
     gB = gradedrange([sB => 1])
     @test space_isequal((@inferred_latest fusion_product(gA, gB)), gradedrange([sAB => 2]))
@@ -558,10 +555,10 @@ end
 end
 
 @testset "Empty category" begin
-  for s in (CategoryProduct(()), CategoryProduct((;)))
+  for s in (SectorProduct(()), SectorProduct((;)))
     @test s == TrivialSector()
-    @test s == CategoryProduct(())
-    @test s == CategoryProduct((;))
+    @test s == SectorProduct(())
+    @test s == SectorProduct((;))
     @test (@inferred dual(s)) == s
     @test (@inferred s × s) == s
     @test (@inferred_latest s ⊗ s) == s
@@ -571,45 +568,45 @@ end
     g0 = gradedrange([s => 2])
     @test space_isequal((@inferred_latest fusion_product(g0, g0)), gradedrange([s => 4]))
 
-    @test (@inferred s × U1(1)) == CategoryProduct(U1(1))
-    @test (@inferred s × CategoryProduct(U1(1))) == CategoryProduct(U1(1))
-    @test (@inferred s × CategoryProduct(; A=U1(1))) == CategoryProduct(; A=U1(1))
-    @test (@inferred U1(1) × s) == CategoryProduct(U1(1))
-    @test (@inferred CategoryProduct(U1(1)) × s) == CategoryProduct(U1(1))
-    @test (@inferred CategoryProduct(; A=U1(1)) × s) == CategoryProduct(; A=U1(1))
+    @test (@inferred s × U1(1)) == SectorProduct(U1(1))
+    @test (@inferred s × SectorProduct(U1(1))) == SectorProduct(U1(1))
+    @test (@inferred s × SectorProduct(; A=U1(1))) == SectorProduct(; A=U1(1))
+    @test (@inferred U1(1) × s) == SectorProduct(U1(1))
+    @test (@inferred SectorProduct(U1(1)) × s) == SectorProduct(U1(1))
+    @test (@inferred SectorProduct(; A=U1(1)) × s) == SectorProduct(; A=U1(1))
 
-    @test (@inferred_latest U1(1) ⊗ s) == CategoryProduct(U1(1))
-    @test (@inferred SU2(0) ⊗ s) == gradedrange([CategoryProduct(SU2(0)) => 1])
-    @test (@inferred Fib("τ") ⊗ s) == gradedrange([CategoryProduct(Fib("τ")) => 1])
-    @test (@inferred_latest s ⊗ U1(1)) == CategoryProduct(U1(1))
-    @test (@inferred s ⊗ SU2(0)) == gradedrange([CategoryProduct(SU2(0)) => 1])
-    @test (@inferred s ⊗ Fib("τ")) == gradedrange([CategoryProduct(Fib("τ")) => 1])
+    @test (@inferred_latest U1(1) ⊗ s) == SectorProduct(U1(1))
+    @test (@inferred SU2(0) ⊗ s) == gradedrange([SectorProduct(SU2(0)) => 1])
+    @test (@inferred Fib("τ") ⊗ s) == gradedrange([SectorProduct(Fib("τ")) => 1])
+    @test (@inferred_latest s ⊗ U1(1)) == SectorProduct(U1(1))
+    @test (@inferred s ⊗ SU2(0)) == gradedrange([SectorProduct(SU2(0)) => 1])
+    @test (@inferred s ⊗ Fib("τ")) == gradedrange([SectorProduct(Fib("τ")) => 1])
 
-    @test (@inferred_latest CategoryProduct(U1(1)) ⊗ s) == CategoryProduct(U1(1))
-    @test (@inferred_latest CategoryProduct(SU2(0)) ⊗ s) ==
-      gradedrange([CategoryProduct(SU2(0)) => 1])
-    @test (@inferred_latest CategoryProduct(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
-      gradedrange([CategoryProduct(Fib("τ"), SU2(1), U1(2)) => 1])
+    @test (@inferred_latest SectorProduct(U1(1)) ⊗ s) == SectorProduct(U1(1))
+    @test (@inferred_latest SectorProduct(SU2(0)) ⊗ s) ==
+      gradedrange([SectorProduct(SU2(0)) => 1])
+    @test (@inferred_latest SectorProduct(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
+      gradedrange([SectorProduct(Fib("τ"), SU2(1), U1(2)) => 1])
 
-    @test (@inferred_latest CategoryProduct(; A=U1(1)) ⊗ s) == CategoryProduct(; A=U1(1))
-    @test (@inferred_latest CategoryProduct(; A=SU2(0)) ⊗ s) ==
-      gradedrange([CategoryProduct(; A=SU2(0)) => 1])
-    @test (@inferred_latest CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
-      gradedrange([CategoryProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
+    @test (@inferred_latest SectorProduct(; A=U1(1)) ⊗ s) == SectorProduct(; A=U1(1))
+    @test (@inferred_latest SectorProduct(; A=SU2(0)) ⊗ s) ==
+      gradedrange([SectorProduct(; A=SU2(0)) => 1])
+    @test (@inferred_latest SectorProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
+      gradedrange([SectorProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) => 1])
 
     # Empty behaves as empty NamedTuple
     @test s != U1(0)
-    @test s != CategoryProduct(U1(0))
-    @test s != CategoryProduct(; A=U1(1))
-    @test s == CategoryProduct(; A=U1(0))
-    @test CategoryProduct(; A=U1(0)) == s
+    @test s != SectorProduct(U1(0))
+    @test s != SectorProduct(; A=U1(1))
+    @test s == SectorProduct(; A=U1(0))
+    @test SectorProduct(; A=U1(0)) == s
 
     @test !(s < s)
-    @test_throws ArgumentError s < CategoryProduct(U1(0))
-    @test s < CategoryProduct(; A=U1(1))
-    @test s > CategoryProduct(; A=U1(-1))
-    @test !(s < CategoryProduct(; A=U1(0)))
-    @test !(s > CategoryProduct(; A=U1(0)))
+    @test_throws ArgumentError s < SectorProduct(U1(0))
+    @test s < SectorProduct(; A=U1(1))
+    @test s > SectorProduct(; A=U1(-1))
+    @test !(s < SectorProduct(; A=U1(0)))
+    @test !(s > SectorProduct(; A=U1(0)))
   end
 end
 end

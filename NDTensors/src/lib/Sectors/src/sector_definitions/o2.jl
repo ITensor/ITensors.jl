@@ -16,23 +16,23 @@ using ..GradedAxes: GradedAxes
 # - l=0 for trivial
 # - l=-1 for zero odd
 # - l=+|m| for Sz=±|m|
-struct O2 <: AbstractCategory
+struct O2 <: AbstractSector
   l::Half{Int}
 end
 
 SymmetryStyle(::Type{O2}) = NotAbelianStyle()
 
-category_label(s::O2) = s.l
+sector_label(s::O2) = s.l
 
 trivial(::Type{O2}) = O2(0)
 zero_odd(::Type{O2}) = O2(-1)
 
-is_zero_even_or_odd(s::O2) = is_zero_even_or_odd(category_label(s))
-iszero_odd(s::O2) = iszero_odd(category_label(s))
+is_zero_even_or_odd(s::O2) = is_zero_even_or_odd(sector_label(s))
+iszero_odd(s::O2) = iszero_odd(sector_label(s))
 
 is_zero_even_or_odd(l::HalfInteger) = iszero_even(l) || iszero_odd(l)
-iszero_even(l::HalfInteger) = l == category_label(trivial(O2))
-iszero_odd(l::HalfInteger) = l == category_label(zero_odd(O2))
+iszero_even(l::HalfInteger) = l == sector_label(trivial(O2))
+iszero_odd(l::HalfInteger) = l == sector_label(zero_odd(O2))
 
 quantum_dimension(::NotAbelianStyle, s::O2) = 2 - is_zero_even_or_odd(s)
 
@@ -44,7 +44,7 @@ function Base.show(io::IO, s::O2)
   elseif istrivial(s)
     disp = "0e"
   else
-    disp = "±" * string(category_label(s))
+    disp = "±" * string(sector_label(s))
   end
   return print(io, "O(2)[", disp, "]")
 end
@@ -53,7 +53,7 @@ function label_fusion_rule(::Type{O2}, l1, l2)
   if is_zero_even_or_odd(l1)
     degens = [1]
     if is_zero_even_or_odd(l2)
-      labels = l1 == l2 ? [category_label(trivial(O2))] : [category_label(zero_odd(O2))]
+      labels = l1 == l2 ? [sector_label(trivial(O2))] : [sector_label(zero_odd(O2))]
     else
       labels = [l2]
     end
@@ -64,7 +64,7 @@ function label_fusion_rule(::Type{O2}, l1, l2)
     else
       if l1 == l2
         degens = [1, 1, 1]
-        labels = [category_label(zero_odd(O2)), category_label(trivial(O2)), 2 * l1]
+        labels = [sector_label(zero_odd(O2)), sector_label(trivial(O2)), 2 * l1]
       else
         degens = [1, 1]
         labels = [abs(l1 - l2), l1 + l2]

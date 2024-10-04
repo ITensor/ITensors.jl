@@ -5,7 +5,7 @@
 using ...GradedAxes: GradedAxes
 
 # Trivial is special as it does not have a label
-struct TrivialSector <: AbstractCategory end
+struct TrivialSector <: AbstractSector end
 
 SymmetryStyle(::Type{TrivialSector}) = AbelianStyle()
 
@@ -15,20 +15,20 @@ GradedAxes.dual(::TrivialSector) = TrivialSector()
 
 Base.isless(::TrivialSector, ::TrivialSector) = false  # bypass default that calls label
 
-# TrivialSector acts as trivial on any AbstractCategory
-function fusion_rule(::NotAbelianStyle, ::TrivialSector, c::AbstractCategory)
+# TrivialSector acts as trivial on any AbstractSector
+function fusion_rule(::NotAbelianStyle, ::TrivialSector, c::AbstractSector)
   return to_gradedrange(c)
 end
-function fusion_rule(::NotAbelianStyle, c::AbstractCategory, ::TrivialSector)
+function fusion_rule(::NotAbelianStyle, c::AbstractSector, ::TrivialSector)
   return to_gradedrange(c)
 end
 
 # abelian case: return Category
-fusion_rule(::AbelianStyle, c::AbstractCategory, ::TrivialSector) = c
-fusion_rule(::AbelianStyle, ::TrivialSector, c::AbstractCategory) = c
+fusion_rule(::AbelianStyle, c::AbstractSector, ::TrivialSector) = c
+fusion_rule(::AbelianStyle, ::TrivialSector, c::AbstractSector) = c
 fusion_rule(::AbelianStyle, ::TrivialSector, ::TrivialSector) = TrivialSector()
 
 # any trivial sector equals TrivialSector
-Base.:(==)(c::AbstractCategory, ::TrivialSector) = istrivial(c)
-Base.:(==)(::TrivialSector, c::AbstractCategory) = istrivial(c)
+Base.:(==)(c::AbstractSector, ::TrivialSector) = istrivial(c)
+Base.:(==)(::TrivialSector, c::AbstractSector) = istrivial(c)
 Base.:(==)(::TrivialSector, ::TrivialSector) = true

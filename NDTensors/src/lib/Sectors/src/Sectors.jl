@@ -1,17 +1,17 @@
 module Sectors
 
 include("symmetry_style.jl")
-include("abstractcategory.jl")
-include("category_definitions/fib.jl")
-include("category_definitions/ising.jl")
-include("category_definitions/o2.jl")
-include("category_definitions/trivial.jl")
-include("category_definitions/su.jl")
-include("category_definitions/su2k.jl")
-include("category_definitions/u1.jl")
-include("category_definitions/zn.jl")
+include("abstractsector.jl")
+include("sector_definitions/fib.jl")
+include("sector_definitions/ising.jl")
+include("sector_definitions/o2.jl")
+include("sector_definitions/trivial.jl")
+include("sector_definitions/su.jl")
+include("sector_definitions/su2k.jl")
+include("sector_definitions/u1.jl")
+include("sector_definitions/zn.jl")
 
 include("namedtuple_operations.jl")
-include("category_product.jl")
+include("sector_product.jl")
 
 end

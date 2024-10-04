@@ -210,7 +210,7 @@ end
     @test space_isequal((@inferred tensor_product(dual(g1), dual(g2))), gtd)
     @test space_isequal((@inferred fusion_product(dual(g1), dual(g2))), gfd)
 
-    # test different (non-product) categories cannot be fused
+    # test different (non-product) sectors cannot be fused
     @test_throws MethodError fusion_product(gradedrange([Z{2}(0) => 1]), g1)
     @test_throws MethodError tensor_product(gradedrange([Z{2}(0) => 1]), g2)
   end
@@ -266,7 +266,7 @@ end
     )
   end
 
-  @testset "Mixed GradedUnitRange - Category fusion rules" begin
+  @testset "Mixed GradedUnitRange - Sector fusion rules" begin
     g1 = gradedrange([U1(1) => 1, U1(2) => 2])
     g2 = gradedrange([U1(2) => 1, U1(3) => 2])
     @test space_isequal((@inferred fusion_product(g1, U1(1))), g2)
@@ -277,7 +277,7 @@ end
     @test space_isequal((@inferred fusion_product(g3, SU2(1//2))), g4)
     @test space_isequal((@inferred fusion_product(SU2(1//2), g3)), g4)
 
-    # test different categories cannot be fused
+    # test different simple sectors cannot be fused
     @test_throws MethodError fusion_product(g1, SU2(1))
     @test_throws MethodError fusion_product(U1(1), g3)
   end

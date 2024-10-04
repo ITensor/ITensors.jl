@@ -5,7 +5,7 @@
 using HalfIntegers: Half
 using ...GradedAxes: GradedAxes
 
-struct su2{k} <: AbstractCategory
+struct su2{k} <: AbstractSector
   j::Half{Int}
 end
 
@@ -13,7 +13,7 @@ SymmetryStyle(::Type{<:su2}) = NotAbelianStyle()
 
 GradedAxes.dual(s::su2) = s
 
-category_label(s::su2) = s.j
+sector_label(s::su2) = s.j
 
 level(::su2{k}) where {k} = k
 

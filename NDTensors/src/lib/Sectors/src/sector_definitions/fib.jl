@@ -5,7 +5,7 @@
 #
 using ..GradedAxes: GradedAxes
 
-struct Fib <: AbstractCategory
+struct Fib <: AbstractSector
   l::Int
 end
 
@@ -23,7 +23,7 @@ SymmetryStyle(::Type{Fib}) = NotAbelianStyle()
 
 GradedAxes.dual(f::Fib) = f
 
-category_label(f::Fib) = f.l
+sector_label(f::Fib) = f.l
 
 trivial(::Type{Fib}) = Fib(0)
 
@@ -32,7 +32,7 @@ quantum_dimension(::NotAbelianStyle, f::Fib) = istrivial(f) ? 1.0 : ((1 + √5) 
 # Fusion rules identical to su2₃
 function label_fusion_rule(::Type{Fib}, l1, l2)
   degen, suk_sectors = label_fusion_rule(su2{3}, l1, l2)
-  sectors = Fib.(category_label.(suk_sectors))
+  sectors = Fib.(sector_label.(suk_sectors))
   return degen, sectors
 end
 

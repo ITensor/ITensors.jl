@@ -5,7 +5,7 @@
 using HalfIntegers: HalfInteger, half, twice
 using ...GradedAxes: GradedAxes
 
-struct SU{N,M} <: AbstractCategory
+struct SU{N,M} <: AbstractSector
   # l is the first row of the
   # Gelfand-Tsetlin (GT) pattern describing
   # an SU(N) irrep
@@ -25,7 +25,7 @@ SU(t::Tuple) = SU{length(t) + 1}(t)  # infer N from tuple length
 
 SymmetryStyle(::Type{<:SU}) = NotAbelianStyle()
 
-category_label(s::SU) = s.l
+sector_label(s::SU) = s.l
 
 groupdim(::SU{N}) where {N} = N
 
@@ -37,7 +37,7 @@ adjoint(::Type{<:SU{N}}) where {N} = SU{N}((ntuple(i -> 1 + (i == 1), Val(N - 1)
 
 function quantum_dimension(::NotAbelianStyle, s::SU)
   N = groupdim(s)
-  l = (category_label(s)..., 0)
+  l = (sector_label(s)..., 0)
   d = 1
   for k1 in 1:N, k2 in (k1 + 1):N
     d *= ((k2 - k1) + (l[k1] - l[k2]))//(k2 - k1)
@@ -46,13 +46,13 @@ function quantum_dimension(::NotAbelianStyle, s::SU)
 end
 
 function GradedAxes.dual(s::SU)
-  l = category_label(s)
+  l = sector_label(s)
   nl = reverse(cumsum((l[begin:(end - 1)] .- l[(begin + 1):end]..., l[end])))
   return typeof(s)(nl)
 end
 
 function Base.show(io::IO, s::SU)
-  disp = join([string(l) for l in category_label(s)], ", ")
+  disp = join([string(l) for l in sector_label(s)], ", ")
   return print(io, "SU(", groupdim(s), ")[", disp, "]")
 end
 
@@ -63,7 +63,7 @@ function Base.show(io::IO, ::MIME"text/plain", s::SU)
   end
 
   N = groupdim(s)
-  l = category_label(s)
+  l = sector_label(s)
   println(io, "┌─" * "┬─"^(l[1] - 1) * "┐")
   i = 1
   while i < N - 1 && l[i + 1] != 0
@@ -87,7 +87,7 @@ end
 #
 
 # optimize implementation
-quantum_dimension(s::SU{2}) = category_label(s)[1] + 1
+quantum_dimension(s::SU{2}) = sector_label(s)[1] + 1
 
 GradedAxes.dual(s::SU{2}) = s
 
