@@ -1,4 +1,4 @@
-using BlockArrays: AbstractBlockedUnitRange
+using BlockArrays: AbstractBlockedUnitRange, blocklengths
 
 # Represents the range `1:1` or `Base.OneTo(1)`.
 struct OneToOne{T} <: AbstractUnitRange{T} end
@@ -48,24 +48,23 @@ function fuse_labels(x, y)
 end
 
 function fuse_blocklengths(x::Integer, y::Integer)
-  return x * y
+  # return blocked unit range to keep non-abelian interface
+  return blockedrange([x * y])
 end
 
 using ..LabelledNumbers: LabelledInteger, label, labelled, unlabel
 function fuse_blocklengths(x::LabelledInteger, y::LabelledInteger)
-  return labelled(unlabel(x) * unlabel(y), fuse_labels(label(x), label(y)))
+  # return blocked unit range to keep non-abelian interface
+  return blockedrange([labelled(x * y, fuse_labels(label(x), label(y)))])
 end
-
-flatten_maybe_nested(v::Vector{<:Integer}) = v
-flatten_maybe_nested(v::Vector{<:AbstractGradedUnitRange}) = reduce(vcat, blocklengths.(v))
 
 using BlockArrays: blockedrange, blocks
 function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
-  maybe_nested = map(Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),))) do it
+  nested = map(Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),))) do it
     return mapreduce(length, fuse_blocklengths, it)
   end
-  blocklengths = flatten_maybe_nested(maybe_nested)
-  return blockedrange(blocklengths)
+  new_blocklengths = reduce(vcat, blocklengths.(nested))
+  return blockedrange(new_blocklengths)
 end
 
 # convention: sort UnitRangeDual according to nondual blocks

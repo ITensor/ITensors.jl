@@ -89,7 +89,7 @@ function GradedAxes.fuse_blocklengths(
   ::AbelianStyle, l1::LabelledInteger, l2::LabelledInteger
 )
   fused = label(l1) ⊗ label(l2)
-  return labelled(l1 * l2, fused)
+  return gradedrange([labelled(l1 * l2, fused)])
 end
 
 # cast to range
