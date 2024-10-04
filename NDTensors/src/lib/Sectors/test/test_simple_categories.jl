@@ -6,6 +6,7 @@ using NDTensors.Sectors:
   O2,
   SU,
   SU2,
+  TrivialSector,
   U1,
   Z,
   adjoint,
@@ -15,6 +16,18 @@ using NDTensors.Sectors:
   trivial
 using Test: @inferred, @test, @testset, @test_throws
 @testset "Test Category Types" begin
+  @testset "TrivialSector" begin
+    q = TrivialSector()
+
+    @test (@inferred quantum_dimension(q)) == 1
+    @test q == q
+    @test trivial(q) == q
+    @test istrivial(q)
+
+    @test dual(q) == q
+    @test !isless(q, q)
+  end
+
   @testset "U(1)" begin
     q1 = U1(1)
     q2 = U1(2)
@@ -27,6 +40,8 @@ using Test: @inferred, @test, @testset, @test_throws
     @test trivial(q1) == U1(0)
     @test trivial(U1) == U1(0)
     @test istrivial(U1(0))
+    @test U1(0) == TrivialSector()
+    @test TrivialSector() == U1(0)
 
     @test dual(U1(2)) == U1(-2)
     @test isless(U1(1), U1(2))
@@ -39,6 +54,7 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test trivial(Z{2}) == Z{2}(0)
     @test istrivial(Z{2}(0))
+    @test Z{2}(0) == TrivialSector()
 
     @test quantum_dimension(z0) == 1
     @test quantum_dimension(z1) == 1
@@ -60,6 +76,7 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test trivial(O2) == s0e
     @test istrivial(s0e)
+    @test s0e == TrivialSector()
 
     @test (@inferred quantum_dimension(s0e)) == 1
     @test (@inferred quantum_dimension(s0o)) == 1
@@ -90,6 +107,7 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test trivial(SU{2}) == SU2(0)
     @test istrivial(SU2(0))
+    @test SU2(0) == TrivialSector()
 
     @test fundamental(SU{2}) == SU2(1//2)
     @test adjoint(SU{2}) == SU2(1)
@@ -116,6 +134,8 @@ using Test: @inferred, @test, @testset, @test_throws
     @test istrivial(SU{3}((0, 0)))
     @test trivial(SU{4}) == SU{4}((0, 0, 0))
     @test istrivial(SU{4}((0, 0, 0)))
+    @test SU{3}((0, 0)) == TrivialSector()
+    @test SU{4}((0, 0, 0)) == TrivialSector()
 
     @test fundamental(SU{3}) == f3
     @test adjoint(SU{3}) == ad3
@@ -144,6 +164,7 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test trivial(Fib) == ı
     @test istrivial(ı)
+    @test ı == TrivialSector()
 
     @test dual(ı) == ı
     @test dual(τ) == τ
@@ -159,6 +180,7 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test trivial(Ising) == ı
     @test istrivial(ı)
+    @test ı == TrivialSector()
 
     @test dual(ı) == ı
     @test dual(σ) == σ

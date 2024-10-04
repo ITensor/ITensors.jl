@@ -7,8 +7,8 @@ using NDTensors.Sectors:
   Ising,
   SU,
   SU2,
-  U1,
   TrivialSector,
+  U1,
   Z,
   block_dimensions,
   categories,
@@ -62,6 +62,13 @@ end
     @test categories(s)[2] == SU2(1//2)
     @test categories(s)[3] == Fib("τ")
     @test (@inferred_latest trivial(s)) == CategoryProduct(U1(0), SU2(0), Fib("1"))
+
+    s = TrivialSector() × U1(3) × SU2(1 / 2)
+    @test length(categories(s)) == 3
+    @test (@inferred_latest quantum_dimension(s)) == 2
+    @test dual(s) == TrivialSector() × U1(-3) × SU2(1//2)
+    @test (@inferred_latest trivial(s)) == CategoryProduct(TrivialSector(), U1(0), SU2(0))
+    @test s > trivial(s)
   end
 
   @testset "Ordered comparisons" begin
@@ -70,6 +77,7 @@ end
     @test CategoryProduct(U1(1), SU2(0)) != CategoryProduct(U1(1), SU2(1))
     @test CategoryProduct(U1(0), SU2(1)) != CategoryProduct(U1(1), SU2(1))
     @test CategoryProduct(U1(1)) != CategoryProduct(U1(1), U1(0))
+    @test CategoryProduct(U1(0), SU2(0)) == TrivialSector()
 
     # convention: categories must have same length to be compared
     @test CategoryProduct(U1(0)) < CategoryProduct((U1(1)))
@@ -135,6 +143,8 @@ end
   @testset "Fusion of Abelian products" begin
     p1 = CategoryProduct(U1(1))
     p2 = CategoryProduct(U1(2))
+    @test (@inferred p1 ⊗ TrivialSector()) == p1
+    @test (@inferred TrivialSector() ⊗ p2) == p2
     @test (@inferred_latest p1 ⊗ p2) == CategoryProduct(U1(3))
 
     p11 = U1(1) × U1(1)
@@ -151,7 +161,12 @@ end
   @testset "Fusion of NonAbelian products" begin
     p0 = CategoryProduct(SU2(0))
     ph = CategoryProduct(SU2(1//2))
-    @test space_isequal((@inferred p0 ⊗ ph), gradedrange([CategoryProduct(SU2(1//2)) => 1]))
+    @test space_isequal(
+      (@inferred p0 ⊗ TrivialSector()), gradedrange([CategoryProduct(SU2(0)) => 1])
+    )
+    @test space_isequal(
+      (@inferred TrivialSector() ⊗ ph), gradedrange([CategoryProduct(SU2(1//2)) => 1])
+    )
 
     phh = SU2(1//2) × SU2(1//2)
     @test space_isequal(
@@ -397,7 +412,7 @@ end
   end
 
   @testset "Fusion of Abelian products" begin
-    q00 = TrivialSector()
+    q00 = CategoryProduct(;)
     q10 = CategoryProduct(; A=U1(1))
     q01 = CategoryProduct(; B=U1(1))
     q11 = CategoryProduct(; A=U1(1), B=U1(1))
@@ -418,7 +433,7 @@ end
   end
 
   @testset "Fusion of NonAbelian products" begin
-    p0 = TrivialSector()
+    p0 = CategoryProduct(;)
     pha = CategoryProduct(; A=SU2(1//2))
     phb = CategoryProduct(; B=SU2(1//2))
     phab = CategoryProduct(; A=SU2(1//2), B=SU2(1//2))
@@ -543,6 +558,7 @@ end
 
 @testset "Empty category" begin
   for s in (CategoryProduct(()), CategoryProduct((;)))
+    @test s == TrivialSector()
     @test s == CategoryProduct(())
     @test s == CategoryProduct((;))
     @test (@inferred dual(s)) == s
@@ -561,13 +577,12 @@ end
     @test (@inferred CategoryProduct(U1(1)) × s) == CategoryProduct(U1(1))
     @test (@inferred CategoryProduct(; A=U1(1)) × s) == CategoryProduct(; A=U1(1))
 
-    # Empty acts as trivial
-    @test (@inferred_latest U1(1) ⊗ s) == U1(1)
-    @test (@inferred SU2(0) ⊗ s) == gradedrange([SU2(0) => 1])
-    @test (@inferred Fib("τ") ⊗ s) == gradedrange([Fib("τ") => 1])
-    @test (@inferred_latest s ⊗ U1(1)) == U1(1)
-    @test (@inferred s ⊗ SU2(0)) == gradedrange([SU2(0) => 1])
-    @test (@inferred s ⊗ Fib("τ")) == gradedrange([Fib("τ") => 1])
+    @test (@inferred_latest U1(1) ⊗ s) == CategoryProduct(U1(1))
+    @test (@inferred SU2(0) ⊗ s) == gradedrange([CategoryProduct(SU2(0)) => 1])
+    @test (@inferred Fib("τ") ⊗ s) == gradedrange([CategoryProduct(Fib("τ")) => 1])
+    @test (@inferred_latest s ⊗ U1(1)) == CategoryProduct(U1(1))
+    @test (@inferred s ⊗ SU2(0)) == gradedrange([CategoryProduct(SU2(0)) => 1])
+    @test (@inferred s ⊗ Fib("τ")) == gradedrange([CategoryProduct(Fib("τ")) => 1])
 
     @test (@inferred_latest CategoryProduct(U1(1)) ⊗ s) == CategoryProduct(U1(1))
     @test (@inferred_latest CategoryProduct(SU2(0)) ⊗ s) ==

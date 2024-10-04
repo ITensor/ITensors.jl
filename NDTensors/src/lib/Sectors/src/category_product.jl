@@ -15,9 +15,6 @@ CategoryProduct(c::CategoryProduct) = _CategoryProduct(categories(c))
 
 categories(s::CategoryProduct) = s.cats
 
-const TrivialSector{Categories<:Union{Tuple{},NamedTuple{()}}} = CategoryProduct{Categories}
-TrivialSector() = CategoryProduct(())
-
 # =================================  Sectors interface  ====================================
 SymmetryStyle(T::Type{<:CategoryProduct}) = categories_symmetrystyle(categories_type(T))
 
@@ -99,6 +96,12 @@ function categories_fusion_rule(cats1, cats2)
   return shared_cat × diff_cat
 end
 
+# edge case with empty categories
+categories_fusion_rule(cats::Tuple, ::NamedTuple{()}) = CategoryProduct(cats)
+categories_fusion_rule(::NamedTuple{()}, cats::Tuple) = CategoryProduct(cats)
+categories_fusion_rule(cats::NamedTuple, ::Tuple{}) = CategoryProduct(cats)
+categories_fusion_rule(::Tuple{}, cats::NamedTuple) = CategoryProduct(cats)
+
 function recover_style(T::Type, fused)
   style = categories_symmetrystyle(T)
   return recover_category_product_type(style, T, fused)
@@ -166,6 +169,14 @@ function ×(g1::AbstractUnitRange, g2::AbstractUnitRange)
 end
 
 # ====================================  Fusion rules  ======================================
+# cast AbstractCategory to CategoryProduct
+function fusion_rule(style::SymmetryStyle, c1::CategoryProduct, c2::AbstractCategory)
+  return fusion_rule(style, c1, CategoryProduct(c2))
+end
+function fusion_rule(style::SymmetryStyle, c1::AbstractCategory, c2::CategoryProduct)
+  return fusion_rule(style, CategoryProduct(c1), c2)
+end
+
 # generic case: fusion returns a GradedAxes, even for fusion with Empty
 function fusion_rule(::NotAbelianStyle, s1::CategoryProduct, s2::CategoryProduct)
   return to_gradedrange(categories_fusion_rule(categories(s1), categories(s2)))
@@ -176,30 +187,11 @@ function fusion_rule(::AbelianStyle, s1::CategoryProduct, s2::CategoryProduct)
   return categories_fusion_rule(categories(s1), categories(s2))
 end
 
-# Empty case
-function fusion_rule(::AbelianStyle, ::TrivialSector, ::TrivialSector)
-  return CategoryProduct(())
-end
-
-# TrivialSector acts as trivial on any AbstractCategory, not just CategoryProduct
-function fusion_rule(::NotAbelianStyle, ::TrivialSector, c::AbstractCategory)
-  return to_gradedrange(c)
-end
-function fusion_rule(::NotAbelianStyle, c::AbstractCategory, ::TrivialSector)
-  return to_gradedrange(c)
-end
-function fusion_rule(::NotAbelianStyle, ::TrivialSector, c::CategoryProduct)
-  return to_gradedrange(c)
-end
-function fusion_rule(::NotAbelianStyle, c::CategoryProduct, ::TrivialSector)
-  return to_gradedrange(c)
-end
-
-# abelian case: return Category
-fusion_rule(::AbelianStyle, c::AbstractCategory, ::TrivialSector) = c
-fusion_rule(::AbelianStyle, ::TrivialSector, c::AbstractCategory) = c
+# lift ambiguities for TrivialSector
 fusion_rule(::AbelianStyle, c::CategoryProduct, ::TrivialSector) = c
 fusion_rule(::AbelianStyle, ::TrivialSector, c::CategoryProduct) = c
+fusion_rule(::NotAbelianStyle, c::CategoryProduct, ::TrivialSector) = to_gradedrange(c)
+fusion_rule(::NotAbelianStyle, ::TrivialSector, c::CategoryProduct) = to_gradedrange(c)
 
 # ===============================  Ordered implementation  =================================
 CategoryProduct(t::Tuple) = _CategoryProduct(t)

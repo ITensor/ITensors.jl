@@ -2,7 +2,18 @@
 using NDTensors.GradedAxes:
   dual, fusion_product, space_isequal, gradedrange, flip, tensor_product
 using NDTensors.Sectors:
-  ⊗, Fib, Ising, O2, SU, SU2, U1, Z, block_dimensions, quantum_dimension, trivial
+  ⊗,
+  Fib,
+  Ising,
+  O2,
+  SU,
+  SU2,
+  TrivialSector,
+  U1,
+  Z,
+  block_dimensions,
+  quantum_dimension,
+  trivial
 using Test: @inferred, @test, @testset, @test_throws
 
 @testset "Simple object fusion rules" begin
@@ -14,6 +25,11 @@ using Test: @inferred, @test, @testset, @test_throws
     @test z0 ⊗ z1 == z1
     @test z1 ⊗ z1 == z0
     @test (@inferred z0 ⊗ z0) == z0  # no better way, see Julia PR 23426
+
+    q = TrivialSector()
+    @test (@inferred q ⊗ q) == q
+    @test (@inferred q ⊗ z0) == z0
+    @test (@inferred z1 ⊗ q) == z1
 
     # using GradedAxes interface
     @test space_isequal(fusion_product(z0, z0), gradedrange([z0 => 1]))
@@ -41,6 +57,10 @@ using Test: @inferred, @test, @testset, @test_throws
     s0o = O2(-1)
     s12 = O2(1//2)
     s1 = O2(1)
+
+    q = TrivialSector()
+    @test space_isequal((@inferred s0e ⊗ q), gradedrange([s0e => 1]))
+    @test space_isequal((@inferred q ⊗ s0o), gradedrange([s0o => 1]))
 
     @test space_isequal((@inferred s0e ⊗ s0e), gradedrange([s0e => 1]))
     @test space_isequal((@inferred s0o ⊗ s0e), gradedrange([s0o => 1]))
