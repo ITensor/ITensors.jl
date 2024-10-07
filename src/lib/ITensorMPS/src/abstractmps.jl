@@ -1671,36 +1671,48 @@ provided as keyword arguments.
 
 Keyword arguments:
 * `site_range`=1:N - only truncate the MPS bonds between these sites
+* `return_spectrum=false` - in addition to returning the MPS, also return a named tuple containing the  of type `Spectrum` for each bond in the MPS. `Spectrum` contains a Vector of `Float64` called `eigs` that contains the singular values at each bond and the truncation error performed at that bond. For example, `_, spec = truncate!(m, maxdim=5)` and then inspect the singular values and truncation error at bond 3 by doing `spec.bond_3.eigs` or `spec.bond_3.truncerr`, respectively. 
 """
 function truncate!(M::AbstractMPS; alg="frobenius", kwargs...)
   return truncate!(Algorithm(alg), M; kwargs...)
 end
 
 function truncate!(
-  ::Algorithm"frobenius", M::AbstractMPS; site_range=1:length(M), kwargs...
+  ::Algorithm"frobenius",
+  M::AbstractMPS;
+  site_range=1:length(M),
+  return_spectrum=false,
+  kwargs...,
 )
   N = length(M)
+  Nbonds = N - 1
+  bond_names = Tuple([Symbol("bond_$(α)") for α in 1:Nbonds])
+  spectrums = Vector{Spectrum}(undef, Nbonds)
 
   # Left-orthogonalize all tensors to make
   # truncations controlled
   orthogonalize!(M, last(site_range))
 
   # Perform truncations in a right-to-left sweep
-  for j in reverse((first(site_range) + 1):last(site_range))
+  for (idx, j) in enumerate(reverse((first(site_range) + 1):last(site_range)))
     rinds = uniqueinds(M[j], M[j - 1])
     ltags = tags(commonind(M[j], M[j - 1]))
-    U, S, V = svd(M[j], rinds; lefttags=ltags, kwargs...)
+    U, S, V, spec = svd(M[j], rinds; lefttags=ltags, kwargs...)
+    spectrums[idx] = spec
     M[j] = U
     M[j - 1] *= (S * V)
     setrightlim!(M, j)
   end
-  return M
+  if return_spectrum
+    return M, NamedTuple{bond_names}(spectrums)
+  else
+    return M
+  end
 end
 
 function truncate(ψ0::AbstractMPS; kwargs...)
   ψ = copy(ψ0)
-  truncate!(ψ; kwargs...)
-  return ψ
+  return truncate!(ψ; kwargs...)
 end
 
 # Make `*` an alias for `contract` of two `AbstractMPS`
