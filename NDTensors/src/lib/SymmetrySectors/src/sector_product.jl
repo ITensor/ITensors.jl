@@ -58,6 +58,10 @@ end
 # - ordered-like with a Tuple
 # - dictionary-like with a NamedTuple
 
+function sym_sectors_insert_unspecified(s1, s2)
+  return sectors_insert_unspecified(s1, s2), sectors_insert_unspecified(s2, s1)
+end
+
 function sectors_isequal(s1, s2)
   return ==(sym_sectors_insert_unspecified(s1, s2)...)
 end
@@ -234,10 +238,9 @@ function shared_sectors_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
   return recover_style(T, fused)
 end
 
-function sym_sectors_insert_unspecified(t1::Tuple, t2::Tuple)
+function sectors_insert_unspecified(t1::Tuple, t2::Tuple)
   n1 = length(t1)
-  n2 = length(t2)
-  return (t1..., trivial.(t2[(n1 + 1):end])...), (t2..., trivial.(t1[(n2 + 1):end])...)
+  return (t1..., trivial.(t2[(n1 + 1):end])...)
 end
 
 # ===========================  Dictionary-like implementation  =============================
@@ -256,10 +259,6 @@ end
 
 function sectors_symmetrystyle(NT::Type{<:NamedTuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(NT); init=AbelianStyle())
-end
-
-function sym_sectors_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
-  return sectors_insert_unspecified(nt1, nt2), sectors_insert_unspecified(nt2, nt1)
 end
 
 function sectors_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
