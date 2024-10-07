@@ -1,9 +1,9 @@
 # NDTensors.similar
-similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(data(storage)))
+similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(expose(data(storage))))
 
 # NDTensors.similar
 function similar(storage::TensorStorage, eltype::Type)
-  return setdata(storage, NDTensors.similar(data(storage), eltype))
+  return setdata(storage, NDTensors.similar(expose(data(storage)), eltype))
 end
 
 # NDTensors.similar
