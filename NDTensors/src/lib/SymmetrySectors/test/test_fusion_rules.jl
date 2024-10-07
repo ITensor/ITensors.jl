@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using NDTensors.GradedAxes:
   dual, fusion_product, space_isequal, gradedrange, flip, tensor_product
-using NDTensors.Sectors:
+using NDTensors.SymmetrySectors:
   ⊗,
   Fib,
   Ising,

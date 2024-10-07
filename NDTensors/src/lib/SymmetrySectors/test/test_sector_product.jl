@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using NDTensors.Sectors:
+using NDTensors.SymmetrySectors:
   ×,
   ⊗,
   Fib,

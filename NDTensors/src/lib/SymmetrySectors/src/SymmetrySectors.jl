@@ -1,4 +1,4 @@
-module Sectors
+module SymmetrySectors
 
 include("symmetry_style.jl")
 include("abstractsector.jl")
