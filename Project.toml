@@ -1,7 +1,7 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
-version = "0.6.18"
+version = "0.6.19"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -52,7 +52,7 @@ Dictionaries = "0.4"
 DocStringExtensions = "0.9.3"
 Functors = "0.2, 0.3, 0.4"
 HDF5 = "0.14, 0.15, 0.16, 0.17"
-IsApprox = "0.1, 1"
+IsApprox = "0.1, 1, 2"
 KrylovKit = "0.4.2, 0.5, 0.6, 0.7, 0.8"
 LinearAlgebra = "1.6"
 LinearMaps = "3"
