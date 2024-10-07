@@ -60,8 +60,7 @@ end
 
 # abelian case: return Sector
 function fusion_rule(::AbelianStyle, c1::C, c2::C) where {C<:AbstractSector}
-  _, sectors = label_fusion_rule(C, sector_label(c1), sector_label(c2))
-  return only(sectors)
+  return label(only(fusion_rule(NotAbelianStyle(), c1, c2)))
 end
 
 function label_fusion_rule(sector_type::Type{<:AbstractSector}, ::Any, ::Any)
