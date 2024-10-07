@@ -2,12 +2,15 @@
 using BlockArrays: Block, blocksize
 using Compat: Returns
 using NDTensors.BlockSparseArrays: BlockSparseArray
-using NDTensors.GradedAxes: gradedrange
+using NDTensors.GradedAxes: GradedAxes, gradedrange
 using NDTensors.Sectors: U1
 using NDTensors.SparseArrayInterface: densearray
 using NDTensors.TensorAlgebra: contract
 using Random: randn!
 using Test: @test, @testset
+
+#TODO remove once fuse_labels is defined in Sectors
+GradedAxes.fuse_labels(m::U1, n::U1) = U1(m.n + n.n)
 
 function randn_blockdiagonal(elt::Type, axes::Tuple)
   a = BlockSparseArray{elt}(axes)

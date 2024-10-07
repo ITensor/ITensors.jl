@@ -15,9 +15,15 @@ using BlockArrays:
   blocksizes,
   mortar
 using Compat: @compat
-using LinearAlgebra: mul!
+using LinearAlgebra: Adjoint, mul!
 using NDTensors.BlockSparseArrays:
-  @view!, BlockSparseArray, BlockView, block_nstored, block_reshape, view!
+  @view!,
+  BlockSparseArray,
+  BlockView,
+  block_nstored,
+  block_reshape,
+  block_stored_indices,
+  view!
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset
@@ -44,6 +50,17 @@ include("TestBlockSparseArraysUtils.jl")
     a[Block(2, 2)] = randn(elt, 3, 3)
     @test a[2:4, 4] == Array(a)[2:4, 4]
     @test_broken a[4, 2:4]
+
+    @test a[Block(1), :] isa BlockSparseArray{elt}
+    @test adjoint(a) isa Adjoint{elt,<:BlockSparseArray}
+    @test_broken adjoint(a)[Block(1), :] isa Adjoint{elt,<:BlockSparseArray}
+    # could also be directly a BlockSparseArray
+
+    a = BlockSparseArray{elt}([1], [1, 1])
+    a[1, 2] = 1
+    @test [a[Block(Tuple(it))] for it in eachindex(block_stored_indices(a))] isa Vector
+    ah = adjoint(a)
+    @test_broken [ah[Block(Tuple(it))] for it in eachindex(block_stored_indices(ah))] isa Vector
   end
   @testset "Basics" begin
     a = BlockSparseArray{elt}([2, 3], [2, 3])
