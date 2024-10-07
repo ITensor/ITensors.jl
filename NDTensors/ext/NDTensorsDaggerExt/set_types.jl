@@ -2,7 +2,12 @@
 using Dagger: Dagger, Blocks, DArray
 using NDTensors: NDTensors
 using NDTensors.TypeParameterAccessors:
-  TypeParameterAccessors, Position, default_type_parameters, parameter, position, set_type_parameters
+  TypeParameterAccessors,
+  Position,
+  default_type_parameters,
+  parameter,
+  position,
+  set_type_parameters
 
 blocktype(darray::DArray) = blocktype(typeof(darray))
 blocktype(darrayT::Type{<:DArray}) = parameter(darrayT, position(darrayT, blocktype))
@@ -14,7 +19,7 @@ end
 concattype(darray::DArray) = concattype(typeof(darray))
 concattype(darrayT::Type{<:DArray}) = parameter(darrayT, position(darrayT, concattype))
 
-function TypeParameterAccessors.position(::Type{<:DArray}, ::typeof(concattype)) 
+function TypeParameterAccessors.position(::Type{<:DArray}, ::typeof(concattype))
   return Position(4)
 end
 
