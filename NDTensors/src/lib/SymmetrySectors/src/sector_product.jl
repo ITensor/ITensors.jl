@@ -58,31 +58,42 @@ end
 # - ordered-like with a Tuple
 # - dictionary-like with a NamedTuple
 
-sectors_isequal(o1::Tuple, o2::Tuple) = (o1 == o2)
+function sectors_isequal(s1, s2)
+  return ==(sym_sectors_insert_unspecified(s1, s2)...)
+end
+
+# get clean results when mixing implementations
 function sectors_isequal(nt::NamedTuple, ::Tuple{})
   return sectors_isequal(nt, (;))
 end
 function sectors_isequal(::Tuple{}, nt::NamedTuple)
   return sectors_isequal((;), nt)
 end
-function sectors_isequal(nt1::NamedTuple, nt2::NamedTuple)
-  return ==(sym_sectors_insert_unspecified(nt1, nt2)...)
+function sectors_isequal(::NamedTuple{()}, t::Tuple)
+  return sectors_isequal((), t)
 end
-
-# get clean results when mixing implementations
+function sectors_isequal(t::Tuple, ::NamedTuple{()})
+  return sectors_isequal(t, ())
+end
+sectors_isequal(::Tuple{}, ::NamedTuple{()}) = true
+sectors_isequal(::NamedTuple{()}, ::Tuple{}) = true
 sectors_isequal(::Tuple, ::NamedTuple) = false
 sectors_isequal(::NamedTuple, ::Tuple) = false
 
-sectors_isless(::Tuple, ::Tuple) = throw(ArgumentError("Not implemented"))
-sectors_isless(t1::T, t2::T) where {T<:Tuple} = t1 < t2
 function sectors_isless(nt::NamedTuple, ::Tuple{})
   return sectors_isless(nt, (;))
 end
 function sectors_isless(::Tuple{}, nt::NamedTuple)
   return sectors_isless((;), nt)
 end
-function sectors_isless(nt1::NamedTuple, nt2::NamedTuple)
-  return isless(sym_sectors_insert_unspecified(nt1, nt2)...)
+function sectors_isless(::NamedTuple{()}, t::Tuple)
+  return sectors_isless((), t)
+end
+function sectors_isless(t::Tuple, ::NamedTuple{()})
+  return sectors_isless(t, ())
+end
+function sectors_isless(s1, s2)
+  return isless(sym_sectors_insert_unspecified(s1, s2)...)
 end
 
 sectors_isless(::NamedTuple, ::Tuple) = throw(ArgumentError("Not implemented"))
@@ -221,6 +232,12 @@ end
 function shared_sectors_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
   fused = map(fusion_rule, shared1, shared2)
   return recover_style(T, fused)
+end
+
+function sym_sectors_insert_unspecified(t1::Tuple, t2::Tuple)
+  n1 = length(t1)
+  n2 = length(t2)
+  return (t1..., trivial.(t2[(n1 + 1):end])...), (t2..., trivial.(t1[(n2 + 1):end])...)
 end
 
 # ===========================  Dictionary-like implementation  =============================

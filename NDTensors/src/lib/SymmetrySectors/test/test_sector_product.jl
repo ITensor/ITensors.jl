@@ -71,17 +71,22 @@ end
   end
 
   @testset "Ordered comparisons" begin
-    # convention: sectors must have same length to evaluate as equal
+    # convention: missing sectors are filled with singlets
     @test SectorProduct(U1(1), SU2(1)) == SectorProduct(U1(1), SU2(1))
     @test SectorProduct(U1(1), SU2(0)) != SectorProduct(U1(1), SU2(1))
     @test SectorProduct(U1(0), SU2(1)) != SectorProduct(U1(1), SU2(1))
-    @test SectorProduct(U1(1)) != SectorProduct(U1(1), U1(0))
+    @test SectorProduct(U1(1)) != U1(1)
+    @test SectorProduct(U1(1)) == SectorProduct(U1(1), U1(0))
+    @test SectorProduct(U1(1)) != SectorProduct(U1(1), U1(1))
     @test SectorProduct(U1(0), SU2(0)) == TrivialSector()
+    @test SectorProduct(U1(0), SU2(0)) == SectorProduct(TrivialSector(), SU2(0))
+    @test SectorProduct(U1(0), SU2(0)) == SectorProduct(U1(0), TrivialSector())
+    @test SectorProduct(U1(0), SU2(0)) == SectorProduct(TrivialSector(), TrivialSector())
 
-    # convention: sectors must have same length to be compared
     @test SectorProduct(U1(0)) < SectorProduct((U1(1)))
     @test SectorProduct(U1(0), U1(2)) < SectorProduct((U1(1)), U1(0))
-    @test_throws ArgumentError SectorProduct(U1(0)) < SectorProduct(U1(1), U1(2))
+    @test SectorProduct(U1(0)) < SectorProduct(U1(0), U1(1))
+    @test SectorProduct(U1(0)) > SectorProduct(U1(0), U1(-1))
   end
 
   @testset "Quantum dimension and GradedUnitRange" begin
@@ -596,13 +601,13 @@ end
 
     # Empty behaves as empty NamedTuple
     @test s != U1(0)
-    @test s != SectorProduct(U1(0))
+    @test s == SectorProduct(U1(0))
     @test s != SectorProduct(; A=U1(1))
     @test s == SectorProduct(; A=U1(0))
     @test SectorProduct(; A=U1(0)) == s
 
     @test !(s < s)
-    @test_throws ArgumentError s < SectorProduct(U1(0))
+    @test s < SectorProduct(U1(1))
     @test s < SectorProduct(; A=U1(1))
     @test s > SectorProduct(; A=U1(-1))
     @test !(s < SectorProduct(; A=U1(0)))
