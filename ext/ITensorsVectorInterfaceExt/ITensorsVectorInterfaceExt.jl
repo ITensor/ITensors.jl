@@ -38,12 +38,7 @@ function VectorInterface.add(a::ITensor, b::ITensor, α::Number, β::Number)
   return a * β + b * α
 end
 function VectorInterface.add!(a::ITensor, b::ITensor, α::Number, β::Number)
-  ## TODO Coding it this way skips code which fails on GPU in broadcast.jl
-  ## Not a permanant fix, just here until the broadcast function can be
-  ## updated
-  a .*= β
-  a .+= b .* α
-  # a .= a .* β .+ b .* α
+  a .= a .* β .+ b .* α
   return a
 end
 function VectorInterface.add!!(a::ITensor, b::ITensor, α::Number, β::Number)
