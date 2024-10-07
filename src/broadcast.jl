@@ -414,11 +414,19 @@ function Base.copyto!(
     A, C = C, A
   end
   if !isnothing(A) && !isnothing(C) && !isnothing(α) && !isnothing(β)
-    ## TODO this line fails, because the function (r, t) -> β * r + α * t 
-    ## is an anonymous ITensor function which the GPU compiler cannot process
-    ## This code is being called in ITensorsVectorInterfaceExt but checked was missed because
 
-    map!((r, t) -> β * r + α * t, T, T, A)
+    #map!((r, t) -> β * r + α * t, T, T, A)
+    ## I tried to make a closure like this but
+    ## This throws an error still during GPU compiling.
+    # f1 = +
+    # f2 = *
+    # map!((r, t) -> f1(f2(β, r), f2(α, t)), T, T, A)
+    ## The only way I could get this to work was by 
+    ## Splitting it into two calls
+    ## The original call made 51 allocations on CPU and this new 
+    ## version makes 44 allocations
+    T .= β .* T
+    T .+= α .* A
   else
     bc_bc_α = find_type(Broadcasted, bc_α.args)
     if isnothing(α)
