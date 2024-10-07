@@ -7,6 +7,6 @@ function NDTensors.similar(E::Exposed{<:DArray})
   return Base.similar(A)
 end
 
-function similar(E::Exposed{<:DArray}, eltype::Type)
+function NDTensors.similar(E::Exposed{<:DArray}, eltype::Type)
   return Base.similar(unexpose(E), eltype)
 end
