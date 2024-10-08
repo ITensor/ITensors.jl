@@ -395,12 +395,12 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
-struct axpby{Alpha,Beta}
+struct axpby{Alpha,Beta} <: Function
   alpha::Alpha
   beta::Beta
 end
 
-(xy::axpby)(x, y) = x * xy.alpha + y * xy.beta
+(f::axpby)(y, x) = x * f.alpha + y * f.beta
 
 ## TODO this code doesn't actually get called
 function Base.copyto!(
@@ -424,8 +424,7 @@ function Base.copyto!(
 
     # map!((r, t) -> β * r + α * t, T, T, A)
 
-    ab = axpby{promote_type(typeof(α), typeof(β))}(α, β)
-    map!((r, t) -> ab(t, r), T, T, A)
+    map!(axpby(α, β), T, T, A)
   else
     bc_bc_α = find_type(Broadcasted, bc_α.args)
     if isnothing(α)
