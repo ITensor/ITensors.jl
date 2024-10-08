@@ -395,6 +395,13 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
+struct axpby{T}
+  alpha::T
+  beta::T
+end
+
+(xy::axpby)(x, y) = x * xy.alpha + y * xy.beta   
+
 ## TODO this code doesn't actually get called
 function Base.copyto!(
   T::ITensor,
@@ -416,17 +423,9 @@ function Base.copyto!(
   if !isnothing(A) && !isnothing(C) && !isnothing(α) && !isnothing(β)
 
     #map!((r, t) -> β * r + α * t, T, T, A)
-    ## I tried to make a closure like this but
-    ## This throws an error still during GPU compiling.
-    # f1 = +
-    # f2 = *
-    # map!((r, t) -> f1(f2(β, r), f2(α, t)), T, T, A)
-    ## The only way I could get this to work was by 
-    ## Splitting it into two calls
-    ## The original call made 51 allocations on CPU and this new 
-    ## version makes 44 allocations
-    T .= β .* T
-    T .+= α .* A
+
+    ab = axpby{promote_type(typeof(α), typeof(β))}(α, β)
+    map!((r,t) -> ab(r, t), T, T, A)
   else
     bc_bc_α = find_type(Broadcasted, bc_α.args)
     if isnothing(α)
