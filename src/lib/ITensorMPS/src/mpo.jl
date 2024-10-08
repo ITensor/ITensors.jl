@@ -836,15 +836,14 @@ function ITensors.contract(
   N = length(A)
   N != length(B) &&
     throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
-  ResultType = typeof(B)
   # Special case for a single site
-  N == 1 && return ResultType([A[1] * B[1]])
+  N == 1 && return typeof(B)([A[1] * B[1]])
   A = orthogonalize(A, 1)
   B = orthogonalize(B, 1)
   A = sim(linkinds, A)
   sA = siteinds(uniqueinds, A, B)
   sB = siteinds(uniqueinds, B, A)
-  C = ResultType(N)
+  C = typeof(B)(N)
   lCᵢ = Index[]
   R = ITensor(true)
   for i in 1:(N - 2)
