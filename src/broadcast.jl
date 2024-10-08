@@ -395,9 +395,9 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
-struct axpby{T}
-  alpha::T
-  beta::T
+struct axpby{Alpha, Beta}
+  alpha::Alpha
+  beta::Beta
 end
 
 (xy::axpby)(x, y) = x * xy.alpha + y * xy.beta
