@@ -422,10 +422,10 @@ function Base.copyto!(
   end
   if !isnothing(A) && !isnothing(C) && !isnothing(α) && !isnothing(β)
 
-    #map!((r, t) -> β * r + α * t, T, T, A)
+    # map!((r, t) -> β * r + α * t, T, T, A)
 
     ab = axpby{promote_type(typeof(α), typeof(β))}(α, β)
-    map!((r,t) -> ab(r, t), T, T, A)
+    map!((r,t) -> ab(t, r), T, T, A)
   else
     bc_bc_α = find_type(Broadcasted, bc_α.args)
     if isnothing(α)
