@@ -395,7 +395,7 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
-struct axpby{Alpha, Beta}
+struct axpby{Alpha,Beta}
   alpha::Alpha
   beta::Beta
 end
