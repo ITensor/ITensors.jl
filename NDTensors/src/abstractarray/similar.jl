@@ -87,6 +87,7 @@ end
 # NDTensors.similar
 similar(array::AbstractArray, dims::Tuple) = NDTensors.similar(typeof(array), dims)
 
+using NDTensors.Expose: Exposed, unexpose
 function similar(E::Exposed, eltype::Type)
   return similar(unexpose(E), eltype)
 end
