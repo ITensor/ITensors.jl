@@ -18,9 +18,8 @@ modulus(c::Z) = modulus(typeof(c))
 
 trivial(category_type::Type{<:Z}) = category_type(0)
 
-function label_fusion_rule(category_type::Type{<:Z}, n1, n2)
-  irrep = category_type((n1 + n2) % modulus(category_type))
-  return [1], [irrep]
+function abelian_label_fusion_rule(category_type::Type{<:Z}, n1, n2)
+  return category_type((n1 + n2) % modulus(category_type))
 end
 
 GradedAxes.dual(c::Z) = typeof(c)(mod(-sector_label(c), modulus(c)))

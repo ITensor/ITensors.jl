@@ -63,8 +63,8 @@ function fusion_rule(::AbelianStyle, c1::C, c2::C) where {C<:AbstractSector}
   return label(only(fusion_rule(NotAbelianStyle(), c1, c2)))
 end
 
-function label_fusion_rule(sector_type::Type{<:AbstractSector}, ::Any, ::Any)
-  return error("`label_fusion_rule` not defined for type $(sector_type).")
+function label_fusion_rule(sector_type::Type{<:AbstractSector}, l1, l2)
+  return [1], [abelian_label_fusion_rule(sector_type, l1, l2)]
 end
 
 # ================================  GradedAxes interface  ==================================
