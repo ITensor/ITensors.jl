@@ -122,25 +122,27 @@ product_sectors_fusion_rule(::NamedTuple{()}, sects::Tuple) = SectorProduct(sect
 product_sectors_fusion_rule(sects::NamedTuple, ::Tuple{}) = SectorProduct(sects)
 product_sectors_fusion_rule(::Tuple{}, sects::NamedTuple) = SectorProduct(sects)
 
-function recover_style(T::Type, fused)
-  style = product_sectors_symmetrystyle(T)
-  return recover_sector_product_type(style, T, fused)
+function fix_fused_product_type(T::Type, fused)
+  return fix_fused_product_type(product_sectors_symmetrystyle(T), T, fused)
 end
 
-function recover_sector_product_type(::AbelianStyle, T::Type, fused)
+function fix_fused_product_type(::AbelianStyle, T::Type, fused)
   return recover_sector_product_type(T, fused)
 end
 
-function recover_sector_product_type(::NotAbelianStyle, T::Type, fused)
-  # here fused contains at least one graded unit range.
+function fix_fused_product_type(::NotAbelianStyle, T::Type, fused)
+  g = factorize_gradedaxis(fused)
+  return recover_gradedaxis_product_type(T, g)
+end
+
+function factorize_gradedaxis(fused)
   # convert eg. Tuple{GradedUnitRange{SU2}, GradedUnitRange{SU2}} into GradedUnitRange{SU2×SU2}
   g = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
-  type_fixed = recover_sector_product_type(T, g)
-  return type_fixed
+  return g
 end
 
-function recover_sector_product_type(T::Type, g0::AbstractGradedUnitRange)
+function recover_gradedaxis_product_type(T::Type, g0::AbstractGradedUnitRange)
   new_labels = recover_sector_product_type.(T, blocklabels(g0))
   new_blocklengths = labelled.(unlabel.(blocklengths(g0)), new_labels)
   return gradedrange(new_blocklengths)
@@ -206,7 +208,7 @@ end
 
 # Abelian case: fusion returns SectorProduct
 function fusion_rule(::AbelianStyle, s1::SectorProduct, s2::SectorProduct)
-  return product_sectors_fusion_rule(product_sectors(s1), product_sectors(s2))
+  return label(only(fusion_rule(NotAbelianStyle(), s1, s2)))
 end
 
 # lift ambiguities for TrivialSector
@@ -242,7 +244,7 @@ end
 
 function shared_product_sectors_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
   fused = map(fusion_rule, shared1, shared2)
-  return recover_style(T, fused)
+  return fix_fused_product_type(T, fused)
 end
 
 function product_sectors_insert_unspecified(t1::Tuple, t2::Tuple)
@@ -297,5 +299,5 @@ product_sectors_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
 
 function shared_product_sectors_fusion_rule(shared1::T, shared2::T) where {T<:NamedTuple}
   fused = map(fusion_rule, values(shared1), values(shared2))
-  return recover_style(T, fused)
+  return fix_fused_product_type(T, fused)
 end
