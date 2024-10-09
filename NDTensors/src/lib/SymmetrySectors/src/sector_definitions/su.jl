@@ -92,7 +92,7 @@ quantum_dimension(s::SU{2}) = sector_label(s)[1] + 1
 GradedAxes.dual(s::SU{2}) = s
 
 function label_fusion_rule(::Type{<:SU{2}}, s1, s2)
-  irreps = collect(SU{2}((i,)) for i in (abs(s1[1] - s2[1])):2:(s1[1] + s2[1]))
+  irreps = [SU{2}((i,)) for i in (abs(s1[1] - s2[1])):2:(s1[1] + s2[1])]
   degen = ones(Int, length(irreps))
   return degen, irreps
 end
