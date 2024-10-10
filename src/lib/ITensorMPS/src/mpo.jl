@@ -826,7 +826,7 @@ function ITensors.contract(
   cutoff=1e-14,
   maxdim=maxlinkdim(A) * maxlinkdim(B),
   mindim=1,
-  truncate_kwargs=(;),
+  truncate_kwargs=(; cutoff, maxdim, mindim),
   kwargs...,
 )
   if hassameinds(siteinds, A, B)
