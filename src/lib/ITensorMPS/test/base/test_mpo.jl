@@ -2,6 +2,7 @@
 using Combinatorics
 using ITensors
 using NDTensors: scalartype
+using StableRNGs: StableRNG
 using Test
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
@@ -812,11 +813,11 @@ end
     N = 6
     sites = [Index(2, "Site,n=$n") for n in 1:N]
     seed = 623
-    mt = MersenneTwister(seed)
-    K = random_mps(mt, sites)
+    rng = StableRNG(seed)
+    K = random_mps(rng, sites)
     L = MPO(K)
-    result = sample(mt, L)
-    @test result ≈ [1, 2, 1, 1, 2, 2]
+    result = sample(rng, L)
+    @test result ≈ [1, 1, 2, 1, 1, 1]
   end
 
   @testset "MPO+MPO sum (directsum)" begin
