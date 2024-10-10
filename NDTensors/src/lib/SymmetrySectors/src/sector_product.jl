@@ -224,7 +224,7 @@ product_sectors_product(::NamedTuple{()}, l1::Tuple) = l1
 product_sectors_product(l2::Tuple, ::NamedTuple{()}) = l2
 product_sectors_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
-product_sectors_trivial(type::Type{<:Tuple}) = trivial.(fieldtypes(type))
+product_sectors_trivial(T::Type{<:Tuple}) = trivial.(fieldtypes(T))
 
 function product_sectors_common(t1::Tuple, t2::Tuple)
   n = min(length(t1), length(t2))
@@ -279,8 +279,8 @@ function product_sectors_product(l1::NamedTuple, l2::NamedTuple)
   return union_keys(l1, l2)
 end
 
-function product_sectors_trivial(type::Type{<:NamedTuple{Keys}}) where {Keys}
-  return NamedTuple{Keys}(trivial.(fieldtypes(type)))
+function product_sectors_trivial(NT::Type{<:NamedTuple{Keys}}) where {Keys}
+  return NamedTuple{Keys}(trivial.(fieldtypes(NT)))
 end
 
 function product_sectors_common(nt1::NamedTuple, nt2::NamedTuple)
@@ -292,7 +292,7 @@ end
 
 product_sectors_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
 
-function shared_product_sectors_fusion_rule(shared1::T, shared2::T) where {T<:NamedTuple}
+function shared_product_sectors_fusion_rule(shared1::NT, shared2::NT) where {NT<:NamedTuple}
   fused = map(fusion_rule, values(shared1), values(shared2))
-  return fix_fused_product_type(T, fused)
+  return fix_fused_product_type(NT, fused)
 end
