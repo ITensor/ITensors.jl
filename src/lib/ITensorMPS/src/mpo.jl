@@ -822,10 +822,11 @@ end
 function ITensors.contract(
   ::Algorithm"zipup",
   A::MPO,
-  B::MPO;
+  B::AbstractMPS;
   cutoff=1e-14,
   maxdim=maxlinkdim(A) * maxlinkdim(B),
   mindim=1,
+  truncate_kwargs=(; cutoff, maxdim, mindim),
   kwargs...,
 )
   if hassameinds(siteinds, A, B)
@@ -837,13 +838,13 @@ function ITensors.contract(
   N != length(B) &&
     throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
   # Special case for a single site
-  N == 1 && return MPO([A[1] * B[1]])
+  N == 1 && return typeof(B)([A[1] * B[1]])
   A = orthogonalize(A, 1)
   B = orthogonalize(B, 1)
   A = sim(linkinds, A)
   sA = siteinds(uniqueinds, A, B)
   sB = siteinds(uniqueinds, B, A)
-  C = MPO(N)
+  C = typeof(B)(N)
   lCᵢ = Index[]
   R = ITensor(true)
   for i in 1:(N - 2)
@@ -874,7 +875,7 @@ function ITensors.contract(
     mindim,
     kwargs...,
   )
-  truncate!(C; kwargs...)
+  truncate!(C; truncate_kwargs...)
   return C
 end
 
