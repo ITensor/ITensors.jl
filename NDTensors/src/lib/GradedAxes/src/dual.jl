@@ -5,3 +5,5 @@ using NDTensors.LabelledNumbers:
 label_dual(x) = label_dual(LabelledStyle(x), x)
 label_dual(::NotLabelled, x) = x
 label_dual(::IsLabelled, x) = labelled(unlabel(x), dual(label(x)))
+
+flip(g::AbstractGradedUnitRange) = dual(gradedrange(label_dual.(blocklengths(g))))
