@@ -131,15 +131,10 @@ function fix_fused_product_type(::AbelianStyle, T::Type, fused)
 end
 
 function fix_fused_product_type(::NotAbelianStyle, T::Type, fused)
-  g = factorize_gradedaxis(fused)
-  return recover_gradedaxis_product_type(T, g)
-end
-
-function factorize_gradedaxis(fused)
-  # convert eg. Tuple{GradedUnitRange{SU2}, GradedUnitRange{SU2}} into GradedUnitRange{SU2×SU2}
+  # convert e.g. Tuple{GradedUnitRange{SU2}, GradedUnitRange{SU2}} into GradedUnitRange{SU2×SU2}
   g = reduce(×, fused)
   # convention: keep unsorted blocklabels as produced by F order loops in ×
-  return g
+  return recover_gradedaxis_product_type(T, g)
 end
 
 function recover_gradedaxis_product_type(T::Type, g0::AbstractGradedUnitRange)
