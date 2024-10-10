@@ -7,7 +7,7 @@ pipeline {
   stages {
     stage('GPU Testing') {
       parallel {
-        stage('NDTensorsCUDAExt julia-1.10') {
+        stage('NDTensorsCUDAExt julia-lts') {
 	        options {
             timeout(time: 45, unit: 'MINUTES')
           }
@@ -16,7 +16,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.10'
+              additionalBuildArgs  '--build-arg JULIA=lts'
               args '--gpus "device=1"'
             }
           }
@@ -55,7 +55,7 @@ pipeline {
             '''
           }
         }
-        stage('NDTensorscuTENSORExt julia-1.10') {
+        stage('NDTensorscuTENSORExt julia-lts') {
 	        options {
             timeout(time: 45, unit: 'MINUTES')
           }
@@ -64,7 +64,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.10'
+              additionalBuildArgs  '--build-arg JULIA=lts'
               args '--gpus "device=1"'
             }
           }
@@ -103,7 +103,7 @@ pipeline {
             '''
           }
         }
-        stage('NDTensorsMetalExt Julia-1.10'){
+        stage('NDTensorsMetalExt Julia-lts'){
           options {
             timeout(time: 45, unit: 'MINUTES')
           }
@@ -116,8 +116,8 @@ pipeline {
           }
           steps{
             sh '''
-              juliaup add 1.10
-              juliaup default 1.10
+              juliaup add lts
+              juliaup default lts
             '''
             sh '''
               julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
