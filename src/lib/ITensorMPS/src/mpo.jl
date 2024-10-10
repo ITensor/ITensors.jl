@@ -875,7 +875,7 @@ function ITensors.contract(
     mindim,
     kwargs...,
   )
-  truncate!(C, truncate_kwargs...)
+  truncate!(C; truncate_kwargs...)
   return C
 end
 
