@@ -12,6 +12,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 #ARG JULIA=1.6
-RUN curl -fsSL https://install.julialang.org | sh -s -- --path /usr/local/.julia --yes && \
+RUN curl -fsSL https://install.julialang.org | sh -s -- --yes && \
     juliaup add ${JULIA} && \
     juliaup default ${JULIA}
