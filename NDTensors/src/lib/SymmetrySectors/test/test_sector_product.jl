@@ -53,7 +53,6 @@ end
     @test (@inferred_latest recover_sector_product_type(
       typeof(product_sectors(s)), product_sectors(s)
     )) == s
-    @test (@inferred_latest recover_sector_product_type(typeof(s), product_sectors(s))) == s
 
     s = U1(3) × SU2(1//2) × Fib("τ")
     @test length(product_sectors(s)) == 3
@@ -316,9 +315,6 @@ end
     @test (@inferred_latest trivial(s)) == (A=U1(0),) × (B=SU2(0),)
     @test (@inferred_latest recover_sector_product_type(
       typeof(product_sectors(s)), Tuple(product_sectors(s))
-    )) == s
-    @test (@inferred_latest recover_sector_product_type(
-      typeof(s), Tuple(product_sectors(s))
     )) == s
     @test s == (B=SU2(2),) × (A=U1(1),)
 
