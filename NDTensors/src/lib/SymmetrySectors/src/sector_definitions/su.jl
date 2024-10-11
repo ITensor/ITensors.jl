@@ -173,6 +173,5 @@ function label_fusion_rule(::Type{<:SU{3}}, left, right)
   unique_labels = sort(unique(irreps))
   degen = [count(==(irr), irreps) for irr in unique_labels]
   sectors = SU{3}.(unique_labels)
-  @show sectors, degen
   return sectors .=> degen
 end
