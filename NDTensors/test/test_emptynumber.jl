@@ -12,7 +12,7 @@ const 𝟎 = EmptyNumber()
   @test complex(EmptyNumber) == Complex{EmptyNumber}
 
   # Promotion
-  for T in (Bool, Float64)
+  for T in (Bool, Float32, Float64, Complex{Float32}, Complex{Float64})
     @test promote_type(EmptyNumber, T) === T
     @test promote_type(T, EmptyNumber) === T
   end
