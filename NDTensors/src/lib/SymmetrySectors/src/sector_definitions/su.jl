@@ -94,7 +94,7 @@ GradedAxes.dual(s::SU{2}) = s
 function label_fusion_rule(::Type{<:SU{2}}, s1, s2)
   irreps = [SU{2}((i,)) for i in (abs(s1[1] - s2[1])):2:(s1[1] + s2[1])]
   degen = ones(Int, length(irreps))
-  return degen, irreps
+  return irreps .=> degen
 end
 
 # define angular momentum-like interface using half-integers
@@ -123,7 +123,7 @@ function label_fusion_rule(::Type{<:SU{3}}, left, right)
   end
 
   if right[1] == 0  # avoid issues with singlet
-    return [1], [SU{3}(left)]
+    return [SU{3}(left) => 1]
   end
 
   left_row1 = left[1]
@@ -173,5 +173,6 @@ function label_fusion_rule(::Type{<:SU{3}}, left, right)
   unique_labels = sort(unique(irreps))
   degen = [count(==(irr), irreps) for irr in unique_labels]
   sectors = SU{3}.(unique_labels)
-  return degen, sectors
+  @show sectors, degen
+  return sectors .=> degen
 end

@@ -31,9 +31,11 @@ quantum_dimension(::NotAbelianStyle, i::Ising) = (sector_label(i) == 1//2) ? √
 
 # Fusion rules identical to su2₂
 function label_fusion_rule(::Type{Ising}, l1, l2)
-  degen, suk_sectors = label_fusion_rule(su2{2}, l1, l2)
+  suk_sectors_degen = label_fusion_rule(su2{2}, l1, l2)
+  suk_sectors = first.(suk_sectors_degen)
+  degen = last.(suk_sectors_degen)
   sectors = Ising.(sector_label.(suk_sectors))
-  return degen, sectors
+  return sectors .=> degen
 end
 
 # TODO: Use `Val` dispatch here?

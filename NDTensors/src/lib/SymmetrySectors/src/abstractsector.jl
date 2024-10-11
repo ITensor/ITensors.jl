@@ -54,8 +54,8 @@ function fusion_rule(c1::AbstractSector, c2::AbstractSector)
 end
 
 function fusion_rule(::NotAbelianStyle, c1::C, c2::C) where {C<:AbstractSector}
-  degen, sectors = label_fusion_rule(C, sector_label(c1), sector_label(c2))
-  return gradedrange(labelled.(degen, sectors))
+  sector_degen_pairs = label_fusion_rule(C, sector_label(c1), sector_label(c2))
+  return gradedrange(sector_degen_pairs)
 end
 
 # abelian case: return Sector
@@ -64,7 +64,7 @@ function fusion_rule(::AbelianStyle, c1::C, c2::C) where {C<:AbstractSector}
 end
 
 function label_fusion_rule(sector_type::Type{<:AbstractSector}, l1, l2)
-  return [1], [abelian_label_fusion_rule(sector_type, l1, l2)]
+  return [abelian_label_fusion_rule(sector_type, l1, l2) => 1]
 end
 
 # ================================  GradedAxes interface  ==================================
