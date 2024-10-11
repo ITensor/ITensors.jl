@@ -13,6 +13,6 @@ RUN apt-get update && \
 
 #ARG JULIA=1.6
 RUN curl -fsSL https://install.julialang.org | sh -s -- --yes
-RUN /root/.juliaup/bin/juliaup add ${JULIA} && \
-    /root/.juliaup/bin/juliaup default ${JULIA}
+RUN /root/.juliaup/bin/juliaup add ${JULIA}
+RUN /root/.juliaup/bin/juliaup default ${JULIA}
 RUN export PATH=/root/.juliaup/bin/:$PATH
