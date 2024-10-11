@@ -27,7 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-              /root/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -51,7 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-              /root/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -75,7 +75,7 @@ pipeline {
           }
           steps {
             sh '''
-              /root/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
             '''
           }
         }
@@ -99,7 +99,7 @@ pipeline {
           }
           steps {
             sh '''
-              /root/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
             '''
           }
         }
