@@ -18,6 +18,11 @@ convert(::Type{T}, x::EmptyNumber) where {T<:Number} = T(zero(T))
 # This helps with defining `norm` of `EmptyStorage{EmptyNumber}`.
 AbstractFloat(::EmptyNumber) = zero(AbstractFloat)
 
+Base.promote_rule(::Type{EmptyNumber}, ::Type{T}) where {T<:Number} = T
+Base.promote_rule(::Type{T}, ::Type{EmptyNumber}) where {T<:Number} = T
+Base.promote_rule(::Type{EmptyNumber}, ::Type{Bool}) = Bool
+Base.promote_rule(::Type{Bool}, ::Type{EmptyNumber}) = Bool
+
 # Basic arithmetic
 (::EmptyNumber + ::EmptyNumber) = EmptyNumber()
 (::EmptyNumber - ::EmptyNumber) = EmptyNumber()
