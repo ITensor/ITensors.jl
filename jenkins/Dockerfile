@@ -11,5 +11,6 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN rm -rf /usr/local/.juliaup
-RUN rm -rf /usr/local/.julia
+ARG JULIA=1.6
+RUN curl -s -L https://julialang-s3.julialang.org/bin/linux/x64/${JULIA}/julia-${JULIA}-latest-linux-x86_64.tar.gz | \
+    tar -C /usr/local -x -z --strip-components=1 -f -

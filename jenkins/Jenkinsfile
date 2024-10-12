@@ -16,7 +16,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=lts'
+              additionalBuildArgs  '--build-arg JULIA=1.10'
               args '--gpus "device=1"'
             }
           }
@@ -27,12 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-              curl -fsSL https://install.julialang.org | sh -s -- --path /usr/local/.juliaup --yes;              
-              /usr/local/.juliaup/bin/juliaup add lts;
-              /usr/local/.juliaup/bin/juliaup default lts;
-            '''
-            sh '''
-              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -45,7 +40,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1'
+              additionalBuildArgs  '--build-arg JULIA=1.11'
               args '--gpus "device=1"'
             }
           }
@@ -56,12 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-              curl -fsSL https://install.julialang.org | sh -s -- --path /usr/local/.juliaup --yes;              
-              /usr/local/.juliaup/bin/juliaup add 1;
-              /usr/local/.juliaup/bin/juliaup default 1;
-            '''
-            sh '''
-              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -74,7 +64,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=lts'
+              additionalBuildArgs  '--build-arg JULIA=1.10'
               args '--gpus "device=1"'
             }
           }
@@ -85,12 +75,7 @@ pipeline {
           }
           steps {
             sh '''
-              curl -fsSL https://install.julialang.org | sh -s -- --path /usr/local/.juliaup --yes;              
-              /usr/local/.juliaup/bin/juliaup add lts;
-              /usr/local/.juliaup/bin/juliaup default lts;
-            '''
-            sh '''
-              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
             '''
           }
         }
@@ -103,7 +88,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1'
+              additionalBuildArgs  '--build-arg JULIA=1.11'
               args '--gpus "device=1"'
             }
           }
@@ -114,12 +99,7 @@ pipeline {
           }
           steps {
             sh '''
-              curl -fsSL https://install.julialang.org | sh -s -- --path /usr/local/.juliaup --yes;              
-              /usr/local/.juliaup/bin/juliaup add 1;
-              /usr/local/.juliaup/bin/juliaup default 1;
-            '''
-            sh '''
-              /usr/local/.juliaup/bin/julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+              julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
             '''
           }
         }
