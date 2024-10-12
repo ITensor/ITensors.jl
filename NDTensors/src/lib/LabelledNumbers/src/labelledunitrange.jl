@@ -37,6 +37,17 @@ end
 
 labelled_getindex(a, index) = labelled(unlabel(a)[index], label(a))
 
+# This is required in Julia 1.11 and above since
+# the generic `axes(a::AbstractRange)` definition was removed
+# and replace with a generic `axes(a)` definition that
+# is written in terms of `Base.unchecked_oneto`, i.e.:
+# ```julia
+# map(Base.unchecked_oneto, size(A))
+# ```
+# which returns a `Base.OneTo` instead of a `LabelledUnitRange`.
+Base.axes(a::LabelledUnitRange) = Base.oneto.(size(a))
+
+# TODO: Delete this definition, this should output a `Base.OneTo`.
 Base.OneTo(stop::LabelledInteger) = labelled(Base.OneTo(unlabel(stop)), label(stop))
 
 # Fix ambiguity error with `AbstractRange` definition in `Base`.
