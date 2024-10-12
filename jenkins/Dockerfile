@@ -10,4 +10,6 @@ RUN apt-get update && \
                     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-    
+
+RUN rm -rf /usr/local/.juliaup
+RUN rm -rf /usr/local/.julia
