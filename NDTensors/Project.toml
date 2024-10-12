@@ -1,7 +1,7 @@
 name = "NDTensors"
 uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>"]
-version = "0.3.44"
+version = "0.3.45"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -91,7 +91,7 @@ TimerOutputs = "0.5.5"
 TupleTools = "1.2.0"
 VectorInterface = "0.4.2"
 cuTENSOR = "2"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
