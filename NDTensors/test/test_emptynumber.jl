@@ -1,14 +1,21 @@
 @eval module $(gensym())
-using NDTensors
+using LinearAlgebra: norm
+using NDTensors: EmptyNumber
 using Test: @testset, @test, @test_throws
 
-const 𝟎 = NDTensors.EmptyNumber()
+const 𝟎 = EmptyNumber()
 
 @testset "NDTensors.EmptyNumber" begin
   x = 2.3
 
   @test complex(𝟎) == 𝟎
-  @test complex(NDTensors.EmptyNumber) == Complex{NDTensors.EmptyNumber}
+  @test complex(EmptyNumber) == Complex{EmptyNumber}
+
+  # Promotion
+  for T in (Bool, Float32, Float64, Complex{Float32}, Complex{Float64})
+    @test promote_type(EmptyNumber, T) === T
+    @test promote_type(T, EmptyNumber) === T
+  end
 
   # Basic arithmetic
   @test 𝟎 + 𝟎 == 𝟎
