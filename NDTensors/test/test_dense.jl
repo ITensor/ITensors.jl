@@ -86,8 +86,8 @@ NDTensors.dim(i::MyInd) = i.dim
       ## Testing A .= α .* B .+ β .* A
       C = copy(A)
       @allowscalar fill!(B, zero(elt))
-      β = elt(2.0)
-      α = elt(1.0)
+      β = elt(2)
+      α = elt(1)
       permutedims!!(A, B, (1, 2), (a, b) -> +(*(β, a), *(α, b)))
       @allowscalar 2.0 .* C == A
       randn!(B)
