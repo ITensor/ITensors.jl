@@ -12,7 +12,7 @@ using BlockArrays:
   blockedrange,
   BlockIndexRange,
   blockfirsts,
-  blocklasts,
+  blockisequal,
   blocklength,
   blocklengths,
   findblock,
@@ -177,7 +177,7 @@ end
 function gradedunitrange_blockfirsts(a::AbstractGradedUnitRange)
   return labelled.(blockfirsts(unlabel_blocks(a)), blocklabels(a))
 end
-function BlockArrays.blockfirsts(a::AbstractGradedUnitRange)
+function BlockArrays.blockfirsts(a::GradedUnitRange)
   return gradedunitrange_blockfirsts(a)
 end
 function BlockArrays.blockfirsts(a::GradedOneTo)

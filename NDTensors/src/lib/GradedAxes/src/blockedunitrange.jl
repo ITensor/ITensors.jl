@@ -167,7 +167,7 @@ end
 # Slice `a` by `I`, returning a:
 # `BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}}`
 # with the `BlockIndex{1}` corresponding to each value of `I`.
-function to_blockindices(a::BlockedOneTo{<:Integer}, I::UnitRange{<:Integer})
+function to_blockindices(a::AbstractBlockedUnitRange{<:Integer}, I::UnitRange{<:Integer})
   return mortar(
     map(blocks(blockedunitrange_getindices(a, I))) do r
       bi_first = findblockindex(a, first(r))
