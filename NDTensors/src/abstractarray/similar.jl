@@ -87,6 +87,10 @@ end
 # NDTensors.similar
 similar(array::AbstractArray, dims::Tuple) = NDTensors.similar(typeof(array), dims)
 
+using NDTensors.Expose: Exposed, unexpose
+function similar(E::Exposed, eltype::Type)
+  return similar(unexpose(E), eltype)
+end
 # Use the `size` to determine the dimensions
 # NDTensors.similar
 function similar(array::AbstractArray, eltype::Type)
@@ -95,6 +99,7 @@ end
 
 # Use the `size` to determine the dimensions
 # NDTensors.similar
+similar(E::Exposed) = similar(unexpose(E))
 similar(array::AbstractArray) = NDTensors.similar(typeof(array), size(array))
 
 ## similartype
