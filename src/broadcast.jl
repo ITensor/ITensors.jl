@@ -421,9 +421,8 @@ function Base.copyto!(
     A, C = C, A
   end
   if !isnothing(A) && !isnothing(C) && !isnothing(α) && !isnothing(β)
-
+    # The following fails to compile on some GPU backends.
     # map!((r, t) -> β * r + α * t, T, T, A)
-
     map!(axpby(α, β), T, T, A)
   else
     bc_bc_α = find_type(Broadcasted, bc_α.args)
