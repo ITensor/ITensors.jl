@@ -182,6 +182,7 @@ import ITensors.NDTensors:
   truncate!,
   using_tblis,
   vector,
+  RankFactorization.Spectrum,
   # Deprecated
   addblock!,
   store
