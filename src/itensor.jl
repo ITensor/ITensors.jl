@@ -840,6 +840,7 @@ dirs(A::ITensor, is) = dirs(inds(A), is)
 
 # TODO: add isdiag(::Tensor) to NDTensors
 isdiag(T::ITensor)::Bool = (storage(T) isa Diag || storage(T) isa DiagBlockSparse)
+LinearAlgebra.isdiag(T::ITensor) = isdiag(T)
 
 diaglength(T::ITensor) = diaglength(tensor(T))
 

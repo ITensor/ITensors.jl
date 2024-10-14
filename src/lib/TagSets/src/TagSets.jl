@@ -215,6 +215,7 @@ data(T::TagSet) = T.data
 Base.length(T::TagSet) = T.length
 Base.@propagate_inbounds Base.getindex(T::TagSet, n::Integer) = SmallString(data(T)[n])
 Base.copy(ts::TagSet) = TagSet(data(ts), length(ts))
+Base.keys(ts::TagSet) = Base.OneTo(length(ts))
 
 function Base.:(==)(ts1::TagSet, ts2::TagSet)
   l1 = length(ts1)

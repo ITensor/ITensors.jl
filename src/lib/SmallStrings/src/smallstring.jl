@@ -102,6 +102,33 @@ end
 Base.:(==)(s1::SmallString, s2::SmallString) = (s1.data == s2.data)
 Base.isless(s1::SmallString, s2::SmallString) = isless(s1.data, s2.data)
 
+maxlength(s::SmallString) = length(s.data)
+
+function Base.length(s::SmallString)
+  n = 1
+  while n <= maxlength(s) && s[n] != zero(eltype(s))
+    n += 1
+  end
+  return n - 1
+end
+
+Base.lastindex(s::SmallString) = length(s)
+Base.getindex(s::SmallString, r::UnitRange) = SmallString([s[n] for n in r])
+
+
+# TODO: make this work directly on a Tag, without converting
+# to String
+function Base.parse(::Type{T}, s::SmallString) where {T<:Integer}
+  return parse(T, string(s))
+end
+
+function Base.startswith(s::SmallString, subtag::SmallString)
+  for n in 1:length(subtag)
+    s[n] ≠ subtag[n] && return false
+  end
+  return true
+end
+
 ########################################################
 # Here are alternative SmallString comparison implementations
 #
