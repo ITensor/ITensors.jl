@@ -395,6 +395,13 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
+struct axpby{Alpha,Beta} <: Function
+  alpha::Alpha
+  beta::Beta
+end
+
+(f::axpby)(y, x) = x * f.alpha + y * f.beta
+
 ## TODO this code doesn't actually get called
 function Base.copyto!(
   T::ITensor,
@@ -414,7 +421,9 @@ function Base.copyto!(
     A, C = C, A
   end
   if !isnothing(A) && !isnothing(C) && !isnothing(α) && !isnothing(β)
-    map!((r, t) -> β * r + α * t, T, T, A)
+    # The following fails to compile on some GPU backends.
+    # map!((r, t) -> β * r + α * t, T, T, A)
+    map!(axpby(α, β), T, T, A)
   else
     bc_bc_α = find_type(Broadcasted, bc_α.args)
     if isnothing(α)

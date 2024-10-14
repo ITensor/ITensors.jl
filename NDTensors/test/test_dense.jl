@@ -83,6 +83,20 @@ NDTensors.dim(i::MyInd) = i.dim
         @test A[2, 2] == Aview[1, 1]
       end
 
+      ## Testing A .= α .* B .+ β .* A
+      C = copy(A)
+      @allowscalar fill!(B, zero(elt))
+      β = elt(2)
+      α = elt(1)
+      permutedims!!(A, B, (1, 2), (a, b) -> +(*(β, a), *(α, b)))
+      @allowscalar 2 .* C == A
+      randn!(B)
+      C = copy(A)
+      A = permutedims!!(A, B, (1, 2), (a, b) -> +(*(β, a), *(α, b)))
+      @allowscalar for i in 1:3, j in 1:4
+        @test A[i, j] == α * B[i, j] + β * C[i, j]
+      end
+
       ## add elt around 2.0 to preserve the eltype of A.
       @test data(A * elt(2.0)) == data(elt(2.0) * A)
 
