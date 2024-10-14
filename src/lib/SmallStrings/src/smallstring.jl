@@ -115,7 +115,6 @@ end
 Base.lastindex(s::SmallString) = length(s)
 Base.getindex(s::SmallString, r::UnitRange) = SmallString([s[n] for n in r])
 
-
 # TODO: make this work directly on a Tag, without converting
 # to String
 function Base.parse(::Type{T}, s::SmallString) where {T<:Integer}
