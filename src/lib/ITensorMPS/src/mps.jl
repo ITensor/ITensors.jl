@@ -1032,5 +1032,3 @@ end
 function expect(psi::MPS, op1::Matrix{<:Number}, ops::Matrix{<:Number}...; kwargs...)
   return expect(psi, (op1, ops...); kwargs...)
 end
-
-Base.getindex(ψ::MPS, r::UnitRange{Int}) = MPS([ψ[n] for n in r])
