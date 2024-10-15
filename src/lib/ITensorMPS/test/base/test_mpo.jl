@@ -240,14 +240,14 @@ end
     @test_throws DimensionMismatch error_contract(phi, K, badpsi)
   end
 
-  @testset "contract" begin
+  @testset "contract(::MPO, ::MPS)" for method in ["densitymatrix", "naive", "zipup"]
     phi = random_mps(sites)
     K = random_mpo(sites)
     @test maxlinkdim(K) == 1
     psi = random_mps(sites)
-    psi_out = contract(K, psi; maxdim=1)
+    psi_out = contract(K, psi; method, maxdim=1)
     @test inner(phi', psi_out) ≈ inner(phi', K, psi)
-    psi_out = contract(psi, K; maxdim=1)
+    psi_out = contract(psi, K; method, maxdim=1)
     @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     psi_out = psi * K
     @test inner(phi', psi_out) ≈ inner(phi', K, psi)
@@ -255,7 +255,7 @@ end
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = random_mps(badsites)
-    @test_throws DimensionMismatch contract(K, badpsi)
+    @test_throws DimensionMismatch contract(K, badpsi; method)
 
     # make bigger random MPO...
     for link_dim in 2:5
@@ -287,7 +287,7 @@ end
       orthogonalize!(psi, 1; maxdim=link_dim)
       orthogonalize!(K, 1; maxdim=link_dim)
       orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
-      psi_out = contract(deepcopy(K), deepcopy(psi); maxdim=10 * link_dim, cutoff=0.0)
+      psi_out = contract(deepcopy(K), deepcopy(psi); method, maxdim=10 * link_dim, cutoff=0.0)
       @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     end
   end
@@ -354,14 +354,14 @@ end
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
   end
 
-  @testset "contract(::MPO, ::MPO)" begin
+  @testset "contract(::MPO, ::MPO)" for alg in ["naive", "zipup"]
     psi = random_mps(sites)
     K = random_mpo(sites)
     L = random_mpo(sites)
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
-    KL = contract(prime(K), L; maxdim=1)
-    psi_kl_out = contract(prime(K), contract(L, psi; maxdim=1); maxdim=1)
+    KL = contract(prime(K), L; alg, maxdim=1)
+    psi_kl_out = contract(prime(K), contract(L, psi; alg, maxdim=1); alg, maxdim=1)
     @test inner(psi'', KL, psi) ≈ inner(psi'', psi_kl_out) atol = 5e-3
 
     # where both K and L have differently labelled sites
@@ -373,15 +373,15 @@ end
       replaceind!(K[ii], sites[ii]', othersitesk[ii])
       replaceind!(L[ii], sites[ii]', othersitesl[ii])
     end
-    KL = contract(K, L; maxdim=1)
+    KL = contract(K, L; alg, maxdim=1)
     psik = random_mps(othersitesk)
     psil = random_mps(othersitesl)
-    psi_kl_out = contract(K, contract(L, psil; maxdim=1); maxdim=1)
+    psi_kl_out = contract(K, contract(L, psil; alg, maxdim=1); alg, maxdim=1)
     @test inner(psik, KL, psil) ≈ inner(psik, psi_kl_out) atol = 5e-3
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badL = random_mpo(badsites)
-    @test_throws DimensionMismatch contract(K, badL)
+    @test_throws DimensionMismatch contract(K, badL; alg)
   end
 
   @testset "*(::MPO, ::MPO)" begin
