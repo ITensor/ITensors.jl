@@ -82,9 +82,9 @@ function uncombine(
   # This is needed for reshaping the block
   # TODO: It is already calculated in uncombine_output, use it from there
   labels_uncomb_perm = setdiff(labels_dest, labels_src)
-  ind_uncomb_perm = ⊗(
-    axes_dest[map(x -> findfirst(==(x), labels_dest), labels_uncomb_perm)]...
-  )
+  ind_uncomb_perm = ⊗(axes_dest[map(
+    x -> findfirst(==(x), labels_dest), labels_uncomb_perm
+  )]...)
   ind_uncomb = BlockArrays.blockedrange(
     length.(BlockArrays.blocks(ind_uncomb_perm)[blockperm])
   )
@@ -139,9 +139,9 @@ function uncombine_output(
   blockcomb::Vector{Int},
 )
   labels_uncomb_perm = setdiff(labels_dest, labels_src)
-  ind_uncomb_perm = ⊗(
-    axes_dest[map(x -> findfirst(==(x), labels_dest), labels_uncomb_perm)]...
-  )
+  ind_uncomb_perm = ⊗(axes_dest[map(
+    x -> findfirst(==(x), labels_dest), labels_uncomb_perm
+  )]...)
   axes_uncomb_perm = insertat(axes(a_src), ind_uncomb_perm, combdim)
   # Uncombine the blocks of a_src
   blocks_uncomb = uncombine_blocks(nzblocks(a_src), combdim, blockcomb)

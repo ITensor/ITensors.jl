@@ -404,7 +404,7 @@ function ql_positive(M::AbstractMatrix)
   Q = convert(typeof(L), sparseQ)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
-  for c in 1:(nc - dc)
+  for c in 1:(nc-dc)
     if L[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
       sign_Lc = sign(L[c, c + dc])
       if c <= nr && !isone(sign_Lc)
@@ -445,10 +445,10 @@ function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
   mn = min(nr, nc)
   L = similar(A, (mn, nc))
   for r in 1:mn
-    for c in 1:(r + nc - mn)
+    for c in 1:(r+nc-mn)
       L[r, c] = A[r + nr - mn, c]
     end
-    for c in (r + 1 + nc - mn):nc
+    for c in (r+1+nc-mn):nc
       L[r, c] = 0.0
     end
   end

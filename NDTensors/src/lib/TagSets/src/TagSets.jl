@@ -45,10 +45,14 @@ for (SetTyp, TagSetTyp) in ((:SmallSet, :SmallTagSet), (:MSmallSet, :MSmallTagSe
       return TagSet($SetTyp{S,I}(a; kwargs...))
     end
     @propagate_inbounds $TagSetTyp{S}(; kwargs...) where {S} = $TagSetTyp{S}([]; kwargs...)
-    @propagate_inbounds $TagSetTyp{S}(iter; kwargs...) where {S} =
-      $TagSetTyp{S}(collect(iter); kwargs...)
-    @propagate_inbounds $TagSetTyp{S}(a::AbstractArray{I}; kwargs...) where {S,I} =
-      $TagSetTyp{S,I}(a; kwargs...)
+    @propagate_inbounds $TagSetTyp{S}(iter; kwargs...) where {S} = $TagSetTyp{S}(
+      collect(iter); kwargs...
+    )
+    @propagate_inbounds $TagSetTyp{S}(a::AbstractArray{I}; kwargs...) where {S,I} = $TagSetTyp{
+      S,I
+    }(
+      a; kwargs...
+    )
     # Strings get split by a deliminator.
     function $TagSetTyp{S}(str::T; kwargs...) where {S,T<:AbstractString}
       return $TagSetTyp{S,T}(str, kwargs...)
@@ -68,8 +72,11 @@ Base.parent(set::TagSet) = getfield(set, :data)
 
 # AbstractWrappedSet interface.
 # Specialized version when they are the same data type is faster.
-@inline SortedSets.rewrap(::TagSet{T,D}, data::D) where {T,D<:AbstractIndices{T}} =
-  TagSet{T,D}(data)
+@inline SortedSets.rewrap(::TagSet{T,D}, data::D) where {T,D<:AbstractIndices{T}} = TagSet{
+  T,D
+}(
+  data
+)
 @inline SortedSets.rewrap(::TagSet, data) = TagSet(data)
 
 # TagSet interface

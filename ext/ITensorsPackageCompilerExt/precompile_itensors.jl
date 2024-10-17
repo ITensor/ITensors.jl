@@ -11,7 +11,7 @@ using ITensors.ITensorMPS: MPO, OpSum, dmrg, random_mps, siteinds
 
 function main(; N, dmrg_kwargs)
   opsum = OpSum()
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     opsum += 0.5, "S+", j, "S-", j + 1
     opsum += 0.5, "S-", j, "S+", j + 1
     opsum += "Sz", j, "Sz", j + 1

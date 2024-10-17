@@ -36,13 +36,13 @@ using SimpleTraits: Not, @traitfn
 
 @traitfn function unwrap_array_type(
   arraytype::Type{ArrayType}
-) where {ArrayType; IsWrappedArray{ArrayType}}
+) where {ArrayType;IsWrappedArray{ArrayType}}
   return unwrap_array_type(parenttype(arraytype))
 end
 
 @traitfn function unwrap_array_type(
   arraytype::Type{ArrayType}
-) where {ArrayType; !IsWrappedArray{ArrayType}}
+) where {ArrayType;!IsWrappedArray{ArrayType}}
   return arraytype
 end
 
@@ -55,7 +55,7 @@ end
 
 @traitfn function set_eltype(
   type::Type{ArrayType}, param
-) where {ArrayType <: AbstractArray; IsWrappedArray{ArrayType}}
+) where {ArrayType<:AbstractArray;IsWrappedArray{ArrayType}}
   new_parenttype = set_eltype(parenttype(type), param)
   # Need to set both in one `set_type_parameters` call to avoid
   # conflicts in type parameter constraints of certain wrapper types.
@@ -64,7 +64,7 @@ end
 
 @traitfn function set_eltype(
   type::Type{ArrayType}, param
-) where {ArrayType <: AbstractArray; !IsWrappedArray{ArrayType}}
+) where {ArrayType<:AbstractArray;!IsWrappedArray{ArrayType}}
   return set_type_parameter(type, eltype, param)
 end
 

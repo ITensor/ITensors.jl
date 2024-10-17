@@ -11,7 +11,7 @@ let
 
   # Make gates (1,2),(2,3),(3,4),...
   gates = ITensor[]
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     s1 = s[j]
     s2 = s[j + 1]
     hj =

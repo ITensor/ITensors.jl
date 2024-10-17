@@ -24,7 +24,7 @@ function dimension(s::SU)
   N = groupdim(s)
   l = label(s)
   d = 1
-  for k1 in 1:N, k2 in (k1 + 1):N
+  for k1 in 1:N, k2 in (k1+1):N
     d *= ((k2 - k1) + (l[k1] - l[k2]))//(k2 - k1)
   end
   return Int(d)
@@ -75,7 +75,7 @@ dual(s::SU{2}) = s
 
 function fusion_rule(s1::SU{2}, s2::SU{2})
   d1, d2 = dimension(s1), dimension(s2)
-  return [SU{2}(d) for d in (abs(d1 - d2) + 1):2:(d1 + d2 - 1)]
+  return [SU{2}(d) for d in (abs(d1-d2)+1):2:(d1+d2-1)]
 end
 
 function Base.show(io::IO, s::SU{2})

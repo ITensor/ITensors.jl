@@ -383,7 +383,7 @@ end
       @test dim(s[n]) == 2
       @test hastags(s[n], "Site,S=1/2,n=$n")
     end
-    for n in 2:(N - 1)
+    for n in 2:(N-1)
       @test dim(s[n]) == 3
       @test hastags(s[n], "Site,S=1,n=$n")
     end

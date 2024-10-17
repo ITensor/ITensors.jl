@@ -45,7 +45,7 @@ op(on::OpName"F", st::SiteType"Qudit", ds::Int...) = op(OpName"Id"(), st, ds...)
 
 function op(::OpName"Adag", ::SiteType"Qudit", d::Int)
   mat = zeros(d, d)
-  for k in 1:(d - 1)
+  for k in 1:(d-1)
     mat[k + 1, k] = √k
   end
   return mat
@@ -55,7 +55,7 @@ op(on::OpName"a†", st::SiteType"Qudit", d::Int) = op(alias(on), st, d)
 
 function op(::OpName"A", ::SiteType"Qudit", d::Int)
   mat = zeros(d, d)
-  for k in 1:(d - 1)
+  for k in 1:(d-1)
     mat[k, k + 1] = √k
   end
   return mat

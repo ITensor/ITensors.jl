@@ -7,8 +7,7 @@ using SafeTestsets: @safetestset
   include("../NDTensorsTestUtils/NDTensorsTestUtils.jl")
   using .NDTensorsTestUtils: devices_list, is_supported_eltype
   @testset "Test DMRG $dev, $conserve_qns, $elt, $N" for dev in devices_list(ARGS),
-    conserve_qns in [false, true],
-    elt in (Float32, ComplexF32, Float64, ComplexF64),
+    conserve_qns in [false, true], elt in (Float32, ComplexF32, Float64, ComplexF64),
     N in [4, 10]
 
     if !is_supported_eltype(dev, elt)
@@ -26,8 +25,7 @@ using SafeTestsets: @safetestset
   ## Without this line this test was throwing an error of ``NDTensors` not defined`
   using NDTensors: NDTensors
   @testset "Test DMRG with NamedDimsArrays" for dev in (NDTensors.cpu,),
-    conserve_qns in [false],
-    elt in (Float32, Float64),
+    conserve_qns in [false], elt in (Float32, Float64),
     N in [4, 10]
 
     dev = dev ∘ to_nameddimsarray

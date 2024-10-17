@@ -137,7 +137,7 @@ function leftright_move!(T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir="left", 
   if dir == "left" || dir == "up"
     xrange = 1:nx
   elseif dir == "right" || dir == "down"
-    xrange = per.((nx - 1):-1:0, nx)
+    xrange = per.((nx-1):-1:0, nx)
   end
   for ix in xrange
     ixm = per(ix - 1, nx)
@@ -232,7 +232,7 @@ function sweepsdims(stepsizes::Vector{Int}, dims::Vector{Int})
     maxdims[i] = dims[1]
   end
   for j in 2:nstep
-    for i in (stepsizes[j - 1] + 1):stepsizes[j]
+    for i in (stepsizes[j - 1]+1):stepsizes[j]
       maxdims[i] = dims[j]
     end
   end

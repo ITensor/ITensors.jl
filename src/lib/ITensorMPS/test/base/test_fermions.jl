@@ -49,7 +49,7 @@ import ITensors: Out, In
       sites = siteinds("Fermion", N; conserve_qns=true)
       t1 = 1.0
       os = OpSum()
-      for b in 1:(N - 1)
+      for b in 1:(N-1)
         os -= t1, "Cdag", b, "C", b + 1
         os -= t1, "Cdag", b + 1, "C", b
       end
@@ -71,14 +71,14 @@ import ITensors: Out, In
       sites = siteinds("Fermion", N; conserve_qns=true)
 
       os = OpSum()
-      for b in 1:(N - 1)
+      for b in 1:(N-1)
         os -= t1, "Cdag", b, "C", b + 1
         os -= t1, "Cdag", b + 1, "C", b
         os += V1, "N", b, "N", b + 1
       end
       H = MPO(os, sites)
 
-      for j in 1:(N - 2)
+      for j in 1:(N-2)
         stateA = [1 for n in 1:N]
         stateA[j] = 2
         stateA[N] = 2 # to make MPS bosonic
@@ -94,7 +94,7 @@ import ITensors: Out, In
         @test inner(psiB', H, psiA) ≈ -t1
       end
 
-      for j in 1:(N - 1)
+      for j in 1:(N-1)
         state = [1 for n in 1:N]
         state[j] = 2
         state[j + 1] = 2
@@ -109,11 +109,11 @@ import ITensors: Out, In
       t2 = 0.427
       s = siteinds("Fermion", N; conserve_qns=true)
       os = OpSum()
-      for n in 1:(N - 1)
+      for n in 1:(N-1)
         os -= t1, "Cdag", n, "C", n + 1
         os -= t1, "Cdag", n + 1, "C", n
       end
-      for n in 1:(N - 2)
+      for n in 1:(N-2)
         os -= t2, "Cdag", n, "C", n + 2
         os -= t2, "Cdag", n + 2, "C", n
       end
@@ -172,7 +172,7 @@ import ITensors: Out, In
 
       ost = OpSum()
       osV = OpSum()
-      for b in 1:(N - 1)
+      for b in 1:(N-1)
         ost -= t1, "Cdag", b, "C", b + 1
         ost -= t1, "Cdag", b + 1, "C", b
         osV += V1, "N", b, "N", b + 1
@@ -212,11 +212,11 @@ import ITensors: Out, In
       s = siteinds("Fermion", N; conserve_qns=true)
 
       ost = OpSum()
-      for b in 1:(N - 1)
+      for b in 1:(N-1)
         ost -= t1, "Cdag", b, "C", b + 1
         ost -= t1, "Cdag", b + 1, "C", b
       end
-      for b in 1:(N - 2)
+      for b in 1:(N-2)
         ost -= t2, "Cdag", b, "C", b + 2
         ost -= t2, "Cdag", b + 2, "C", b
       end
@@ -238,7 +238,7 @@ import ITensors: Out, In
 
       C = correlation_matrix(psi, "Cdag", "C")
       C_energy =
-        sum(j -> -2t1 * C[j, j + 1], 1:(N - 1)) + sum(j -> -2t2 * C[j, j + 2], 1:(N - 2))
+        sum(j -> -2t1 * C[j, j + 1], 1:(N-1)) + sum(j -> -2t2 * C[j, j + 2], 1:(N-2))
 
       @test energy_inner ≈ energy
       @test C_energy ≈ energy

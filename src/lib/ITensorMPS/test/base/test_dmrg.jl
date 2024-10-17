@@ -7,7 +7,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N)
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       add!(os, "Sz", j, "Sz", j + 1)
       add!(os, 0.5, "S+", j, "S-", j + 1)
       add!(os, 0.5, "S-", j, "S+", j + 1)
@@ -33,7 +33,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N; conserve_qns=true)
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os += "Sz", j, "Sz", j + 1
       os += 0.5, "S+", j, "S-", j + 1
       os += 0.5, "S-", j, "S+", j + 1
@@ -60,7 +60,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N; conserve_qns=true)
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os += "Sz", j, "Sz", j + 1
       os += 0.5, "S+", j, "S-", j + 1
       os += 0.5, "S-", j, "S+", j + 1
@@ -87,7 +87,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N; conserve_qns=true)
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os += "Sz", j, "Sz", j + 1
       os += 0.5, "S+", j, "S-", j + 1
       os += 0.5, "S-", j, "S+", j + 1
@@ -107,7 +107,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
 
     @test length(PH) == N
     @test length(PHdisk) == N
-    @test site_range(PH) == n:(n + 1)
+    @test site_range(PH) == n:(n+1)
     @test eltype(PH) == Float64
     ## TODO sometimes random_mps gives a linkdim value of 3
     ## which causes an error in `calculated_dim = 3^2 * 4^2`
@@ -133,13 +133,13 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N; conserve_qns=true)
 
     osA = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       osA += "Sz", j, "Sz", j + 1
     end
     HA = MPO(osA, sites)
 
     osB = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       osB += 0.5, "S+", j, "S-", j + 1
       osB += 0.5, "S-", j, "S+", j + 1
     end
@@ -159,12 +159,12 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N)
 
     os1 = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os1 += 0.5, "S+", j, "S-", j + 1
       os1 += 0.5, "S-", j, "S+", j + 1
     end
     os2 = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os2 += "Sz", j, "Sz", j + 1
     end
     H1 = MPO(os1, sites)
@@ -282,7 +282,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     psi0 = random_mps(sites)
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os -= 1, "Sz", j, "Sz", j + 1
     end
     for j in 1:N
@@ -316,13 +316,13 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N)
 
     osZ = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       osZ += "Sz", j, "Sz", j + 1
     end
     HZ = MPO(osZ, sites)
 
     osXY = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       osXY += 0.5, "S+", j, "S-", j + 1
       osXY += 0.5, "S-", j, "S+", j + 1
     end
@@ -348,7 +348,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites[N] = Index(2, "S=1/2,n=$N,Site")
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os += "Sz", j, "Sz", j + 1
       os += 0.5, "S+", j, "S-", j + 1
       os += 0.5, "S-", j, "S+", j + 1
@@ -389,12 +389,12 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     psi0 = MPS(s, state)
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       os -= t1, "Cdag", j, "C", j + 1
       os -= t1, "Cdag", j + 1, "C", j
       os += V, "N", j, "N", j + 1
     end
-    for j in 1:(N - 2)
+    for j in 1:(N-2)
       os -= t2, "Cdag", j, "C", j + 2
       os -= t2, "Cdag", j + 2, "C", j
     end
@@ -420,7 +420,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     for i in 1:N
       os += (U, "Nupdn", i)
     end
-    for b in 1:(N - 1)
+    for b in 1:(N-1)
       os -= t1, "Cdagup", b, "Cup", b + 1
       os -= t1, "Cdagup", b + 1, "Cup", b
       os -= t1, "Cdagdn", b, "Cdn", b + 1
@@ -442,7 +442,7 @@ using ITensors.ITensorMPS: nsite, set_nsite!, site_range
     sites = siteinds("S=1", N)
 
     os = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       add!(os, "Sz", j, "Sz", j + 1)
       add!(os, 0.5, "S+", j, "S-", j + 1)
       add!(os, 0.5, "S-", j, "S+", j + 1)

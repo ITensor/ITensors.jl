@@ -145,7 +145,7 @@ end
 
   allocations_right_associative_pairwise = 0
   tmp = As[end]
-  for n in reverse(1:(length(As) - 1))
+  for n in reverse(1:(length(As)-1))
     tmp * As[n]
     allocations_right_associative_pairwise += @allocated tmp = tmp * As[n]
   end

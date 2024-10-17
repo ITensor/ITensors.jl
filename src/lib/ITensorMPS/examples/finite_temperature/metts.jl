@@ -43,7 +43,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
   s = siteinds("S=1/2", N)
 
   # Make gates (1,2),(2,3),(3,4),...
-  gates = ops([("expτSS", (n, n + 1), (τ=-δτ / 2,)) for n in 1:(N - 1)], s)
+  gates = ops([("expτSS", (n, n + 1), (τ=-δτ / 2,)) for n in 1:(N-1)], s)
   # Include gates in reverse order to complete Trotter formula
   append!(gates, reverse(gates))
 
@@ -55,7 +55,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
 
   # Make H for measuring the energy
   terms = OpSum()
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     terms += 1 / 2, "S+", j, "S-", j + 1
     terms += 1 / 2, "S-", j, "S+", j + 1
     terms += "Sz", j, "Sz", j + 1
@@ -63,14 +63,14 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
   H = MPO(terms, s)
 
   # Make τ_range and check δτ is commensurate
-  τ_range = δτ:δτ:(beta / 2)
+  τ_range = δτ:δτ:(beta/2)
   if norm(length(τ_range) * δτ - beta / 2) > 1E-10
     error("Time step δτ=$δτ not commensurate with beta/2=$(beta/2)")
   end
 
   energies = Float64[]
 
-  for step in 1:(Nwarm + NMETTS)
+  for step in 1:(Nwarm+NMETTS)
     if step <= Nwarm
       println("Making warmup METTS number $step")
     else

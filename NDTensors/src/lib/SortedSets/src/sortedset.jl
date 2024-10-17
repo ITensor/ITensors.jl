@@ -10,9 +10,11 @@ small collections. Larger collections are better handled by containers like `Ind
 struct SortedSet{T,Data<:AbstractArray{T},Order<:Ordering} <: AbstractSet{T}
   data::Data
   order::Order
-  global @inline _SortedSet(
-    data::Data, order::Order
-  ) where {T,Data<:AbstractArray{T},Order<:Ordering} = new{T,Data,Order}(data, order)
+  global @inline _SortedSet(data::Data, order::Order) where {T,Data<:AbstractArray{T},Order<:Ordering} = new{
+    T,Data,Order
+  }(
+    data, order
+  )
 end
 
 @inline Base.parent(set::SortedSet) = getfield(set, :data)
@@ -63,29 +65,39 @@ end
 end
 
 # Traits
-@inline SmallVectors.InsertStyle(::Type{<:SortedSet{T,Data}}) where {T,Data} =
-  InsertStyle(Data)
+@inline SmallVectors.InsertStyle(::Type{<:SortedSet{T,Data}}) where {T,Data} = InsertStyle(
+  Data
+)
 @inline SmallVectors.thaw(set::SortedSet) = SortedSet(thaw(parent(set)), order(set))
 @inline SmallVectors.freeze(set::SortedSet) = SortedSet(freeze(parent(set)), order(set))
 
 @propagate_inbounds SortedSet(; kwargs...) = SortedSet{Any}([]; kwargs...)
-@propagate_inbounds SortedSet{T}(; kwargs...) where {T} =
-  SortedSet{T,Vector{T}}(T[]; kwargs...)
-@propagate_inbounds SortedSet{T,Data}(; kwargs...) where {T,Data} =
-  SortedSet{T}(Data(); kwargs...)
+@propagate_inbounds SortedSet{T}(; kwargs...) where {T} = SortedSet{T,Vector{T}}(
+  T[]; kwargs...
+)
+@propagate_inbounds SortedSet{T,Data}(; kwargs...) where {T,Data} = SortedSet{T}(
+  Data(); kwargs...
+)
 
 @propagate_inbounds SortedSet(iter; kwargs...) = SortedSet(collect(iter); kwargs...)
-@propagate_inbounds SortedSet{T}(iter; kwargs...) where {T} =
-  SortedSet{T}(collect(T, iter); kwargs...)
+@propagate_inbounds SortedSet{T}(iter; kwargs...) where {T} = SortedSet{T}(
+  collect(T, iter); kwargs...
+)
 
-@propagate_inbounds SortedSet(a::AbstractArray{T}; kwargs...) where {T} =
-  SortedSet{T}(a; kwargs...)
-@propagate_inbounds SortedSet{T}(a::AbstractArray{T}; kwargs...) where {T} =
-  SortedSet{T,typeof(a)}(a; kwargs...)
+@propagate_inbounds SortedSet(a::AbstractArray{T}; kwargs...) where {T} = SortedSet{T}(
+  a; kwargs...
+)
+@propagate_inbounds SortedSet{T}(a::AbstractArray{T}; kwargs...) where {T} = SortedSet{
+  T,typeof(a)
+}(
+  a; kwargs...
+)
 
-@propagate_inbounds SortedSet{T,Data}(
-  a::AbstractArray; kwargs...
-) where {T,Data<:AbstractArray{T}} = SortedSet{T,Data}(Data(a); kwargs...)
+@propagate_inbounds SortedSet{T,Data}(a::AbstractArray; kwargs...) where {T,Data<:AbstractArray{T}} = SortedSet{
+  T,Data
+}(
+  Data(a); kwargs...
+)
 
 function Base.convert(::Type{AbstractIndices{T}}, set::SortedSet) where {T}
   return convert(SortedSet{T}, set)
@@ -162,8 +174,9 @@ end
 
 @inline Dictionaries.istokenizable(::SortedSet) = true
 @inline Dictionaries.tokentype(::SortedSet) = Int
-@inline Dictionaries.iteratetoken(set::SortedSet, s...) =
-  iterate(LinearIndices(parent(set)), s...)
+@inline Dictionaries.iteratetoken(set::SortedSet, s...) = iterate(
+  LinearIndices(parent(set)), s...
+)
 @inline function Dictionaries.iteratetoken_reverse(set::SortedSet)
   li = LinearIndices(parent(set))
   if isempty(li)
@@ -221,8 +234,9 @@ end
 # TODO: Make into `MSmallVector`?
 # More generally, make a `thaw(::AbstractArray)` function to return
 # a mutable version of an AbstractArray.
-@inline Dictionaries.empty_type(::Type{SortedSet{T,D,Order}}, ::Type{T}) where {T,D,Order} =
-  SortedSet{T,Dictionaries.empty_type(D, T),Order}
+@inline Dictionaries.empty_type(::Type{SortedSet{T,D,Order}}, ::Type{T}) where {T,D,Order} = SortedSet{
+  T,Dictionaries.empty_type(D, T),Order
+}
 
 @inline Dictionaries.empty_type(::Type{<:AbstractVector}, ::Type{T}) where {T} = Vector{T}
 

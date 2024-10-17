@@ -14,8 +14,7 @@ const initializerss = ((undef,), (AllocateData.undef,), (zero_init,), ())
 const axess = ((2, 2), (1:2, 1:2))
 @testset "AllocateData (arraytype=$arraytype, eltype=$elt, initializer=$initializers, axes=$axes)" for arraytype in
                                                                                                        arraytypes,
-  elt in elts,
-  initializers in initializerss,
+  elt in elts, initializers in initializerss,
   axes in axess
 
   a = allocate(arraytype{elt}, initializers..., axes)

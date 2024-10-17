@@ -4,7 +4,7 @@ using OptimKit
 
 function ising(n; h)
   ℋ = Sum{Op}()
-  for j in 1:(n - 1)
+  for j in 1:(n-1)
     ℋ -= "Z", j, "Z", j + 1
   end
   for j in 1:n

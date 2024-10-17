@@ -5,7 +5,7 @@ using ITensors.Ops
 
 function heisenberg(N)
   os = Sum{Op}()
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     os += "Sz", j, "Sz", j + 1
     os += 0.5, "S+", j, "S-", j + 1
     os += 0.5, "S-", j, "S+", j + 1

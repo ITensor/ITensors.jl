@@ -11,7 +11,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
     N = 3
     s = siteinds("S=1/2", N; conserve_qns=true)
     os = OpSum()
-    for n in 1:(N - 1)
+    for n in 1:(N-1)
       os .+= 0.5, "S+", n, "S-", n + 1
       os .+= 0.5, "S-", n, "S+", n + 1
       os .+= "Sz", n, "Sz", n + 1
@@ -43,7 +43,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
     χ = 4
     s = siteinds("S=1/2", N; conserve_qns=true)
     os = OpSum()
-    for n in 1:(N - 1)
+    for n in 1:(N-1)
       os .+= 0.5, "S+", n, "S-", n + 1
       os .+= 0.5, "S-", n, "S+", n + 1
       os .+= "Sz", n, "Sz", n + 1
@@ -88,7 +88,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
     end
 
     function CXlayer(N)
-      return [("CX", (n, n + 1)) for n in 1:2:(N - 1)]
+      return [("CX", (n, n + 1)) for n in 1:2:(N-1)]
     end
 
     # The variational circuit we want to optimize
@@ -124,7 +124,17 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
   end
 
   @testset "State preparation (MPS)" begin
-    for gate in ["Ry"] #="Rx", =#
+    for gate in ["Ry"]
+      #="Rx", =#
+
+      # The Rayleigh quotient to minimize
+
+      # The Rayleigh quotient to minimize
+
+      # The variational circuit we want to optimize
+
+      # Create the target state
+
       nsites = 4 # Number of sites
       nlayers = 2 # Layers of gates in the ansatz
       gradtol = 1e-3 # Tolerance for stopping gradient descent
@@ -132,7 +142,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
       # A layer of the circuit we want to optimize
       function layer(nsites, θ⃗)
         gate_layer = [(gate, (n,), (θ=θ⃗[n],)) for n in 1:nsites]
-        CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites - 1)]
+        CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites-1)]
         return [gate_layer; CX_layer]
       end
 
@@ -140,7 +150,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
       function variational_circuit(nsites, nlayers, θ⃗)
         range = 1:nsites
         circuit = layer(nsites, θ⃗[range])
-        for n in 1:(nlayers - 1)
+        for n in 1:(nlayers-1)
           circuit = [circuit; layer(nsites, θ⃗[range .+ n * nsites])]
         end
         return circuit
@@ -197,7 +207,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
     # The Hamiltonian we are minimizing
     function ising_hamiltonian(nsites; h)
       ℋ = OpSum()
-      for j in 1:(nsites - 1)
+      for j in 1:(nsites-1)
         ℋ -= 1, "Z", j, "Z", j + 1
       end
       for j in 1:nsites
@@ -209,7 +219,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
     # A layer of the circuit we want to optimize
     function layer(nsites, θ⃗)
       RY_layer = [("Ry", (n,), (θ=θ⃗[n],)) for n in 1:nsites]
-      CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites - 1)]
+      CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites-1)]
       return [RY_layer; CX_layer]
     end
 
@@ -217,7 +227,7 @@ include(joinpath(@__DIR__, "utils", "circuit.jl"))
     function variational_circuit(nsites, nlayers, θ⃗)
       range = 1:nsites
       circuit = layer(nsites, θ⃗[range])
-      for n in 1:(nlayers - 1)
+      for n in 1:(nlayers-1)
         circuit = [circuit; layer(nsites, θ⃗[range .+ n * nsites])]
       end
       return circuit

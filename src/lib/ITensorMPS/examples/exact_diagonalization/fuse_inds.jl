@@ -4,7 +4,7 @@ function fusion_tree(s::Vector{<:Index})
   n = length(s)
   Cs = Vector{ITensor}(undef, n - 1)
   cj = s[1]
-  for j in 1:(n - 1)
+  for j in 1:(n-1)
     fuse_inds = (cj, s[j + 1])
     Cj = combiner(fuse_inds...)
     Cs[j] = Cj
@@ -35,7 +35,7 @@ function fusion_tree_binary_layer(s::Vector{IndexT}; layer=1) where {IndexT<:Ind
   n = length(s)
   Cs = ITensor[]
   cs = IndexT[]
-  for j in 1:2:(n - 1)
+  for j in 1:2:(n-1)
     fuse_inds = (s[j], s[j + 1])
     Cj = combiner(fuse_inds...; tags="n=$(j)⊗$(j + 1),l=$(layer)")
     push!(Cs, Cj)

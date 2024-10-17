@@ -28,8 +28,9 @@ end
 
 @inline Dictionaries.istokenizable(set::AbstractWrappedSet) = istokenizable(parent(set))
 @inline Dictionaries.tokentype(set::AbstractWrappedSet) = tokentype(parent(set))
-@inline Dictionaries.iteratetoken(set::AbstractWrappedSet, s...) =
-  iterate(parent(set), s...)
+@inline Dictionaries.iteratetoken(set::AbstractWrappedSet, s...) = iterate(
+  parent(set), s...
+)
 @inline function Dictionaries.iteratetoken_reverse(set::AbstractWrappedSet)
   return iteratetoken_reverse(parent(set))
 end
@@ -40,8 +41,9 @@ end
 @inline function Dictionaries.gettoken(set::AbstractWrappedSet, i)
   return gettoken(parent(set), i)
 end
-@propagate_inbounds Dictionaries.gettokenvalue(set::AbstractWrappedSet, x) =
-  gettokenvalue(parent(set), x)
+@propagate_inbounds Dictionaries.gettokenvalue(set::AbstractWrappedSet, x) = gettokenvalue(
+  parent(set), x
+)
 
 @inline Dictionaries.isinsertable(set::AbstractWrappedSet) = isinsertable(parent(set))
 

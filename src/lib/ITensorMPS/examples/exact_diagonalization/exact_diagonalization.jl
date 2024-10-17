@@ -11,7 +11,7 @@ ITensors.disable_threaded_blocksparse()
 
 function heisenberg(n)
   os = OpSum()
-  for j in 1:(n - 1)
+  for j in 1:(n-1)
     os += 1 / 2, "S+", j, "S-", j + 1
     os += 1 / 2, "S-", j, "S+", j + 1
     os += "Sz", j, "Sz", j + 1

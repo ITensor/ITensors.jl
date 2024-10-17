@@ -17,7 +17,7 @@ gates = [X[n] for n in 1:2:N]
 @assert inner(ψ, MPS(s, n -> isodd(n) ? "1" : "0")) ≈ 1
 
 # Change to the state |10111011...⟩
-append!(gates, [CX[n, n + 3] for n in 1:4:(N - 3)])
+append!(gates, [CX[n, n + 3] for n in 1:4:(N-3)])
 ψ = apply(gates, ψ0; cutoff=1e-15)
 @assert inner(ψ, MPS(s, ["1", "0", "1", "1", "1", "0", "1", "1", "1", "0"])) ≈ 1
 

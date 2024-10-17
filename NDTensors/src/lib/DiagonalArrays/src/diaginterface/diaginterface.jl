@@ -14,7 +14,7 @@ end
 function diagstride(a::AbstractArray)
   s = 1
   p = 1
-  for i in 1:(ndims(a) - 1)
+  for i in 1:(ndims(a)-1)
     p *= size(a, i)
     s += p
   end

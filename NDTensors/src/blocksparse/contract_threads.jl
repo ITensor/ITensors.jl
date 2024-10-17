@@ -74,14 +74,14 @@ function contract!(
   ncontracted = 1
   posR = last(contraction_plan[1])
   posR_unique = posR
-  for n in 1:(nnzblocks(R) - 1)
+  for n in 1:(nnzblocks(R)-1)
     start = ncontracted
     while posR == posR_unique
       ncontracted += 1
       posR = last(contraction_plan[ncontracted])
     end
     posR_unique = posR
-    repeats[n] = start:(ncontracted - 1)
+    repeats[n] = start:(ncontracted-1)
   end
   repeats[end] = ncontracted:length(contraction_plan)
 

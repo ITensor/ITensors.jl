@@ -233,7 +233,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     end
     @test phipsi[] ≈ inner(phi, psi)
 
-    badsites = [Index(2) for n in 1:(length(psi) + 1)]
+    badsites = [Index(2) for n in 1:(length(psi)+1)]
     badpsi = random_mps(badsites)
     @test_throws DimensionMismatch inner(phi, badpsi)
   end
@@ -427,7 +427,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     @test lognorm(psi) ≈ 0.0 atol = 1e-15
 
     α = 2
-    r = (length(psi) ÷ 2 - 1):(length(psi) ÷ 2 + 1)
+    r = (length(psi)÷2-1):(length(psi)÷2+1)
     phi = copy(psi)
     for n in r
       phi[n] = α * psi[n]
@@ -669,7 +669,7 @@ end
 function basicRandomMPS(N::Int; dim=4)
   sites = [Index(2, "Site") for n in 1:N]
   M = MPS(sites)
-  links = [Index(dim, "n=$(n-1),Link") for n in 1:(N + 1)]
+  links = [Index(dim, "n=$(n-1),Link") for n in 1:(N+1)]
   for n in 1:N
     M[n] = random_itensor(links[n], sites[n], links[n + 1])
   end
@@ -711,7 +711,7 @@ end
     L = M[1] * prime(M[1], "Link")
     l = linkind(M, 1)
     @test norm(L - delta(l, l')) < 1E-12
-    for j in 2:(c - 1)
+    for j in 2:(c-1)
       L = L * M[j] * prime(M[j], "Link")
       l = linkind(M, j)
       @test norm(L - delta(l, l')) < 1E-12
@@ -721,7 +721,7 @@ end
     R = M[length(M)] * prime(M[length(M)], "Link")
     r = linkind(M, length(M) - 1)
     @test norm(R - delta(r, r')) < 1E-12
-    for j in reverse((c + 1):(length(M) - 1))
+    for j in reverse((c+1):(length(M)-1))
       R = R * M[j] * prime(M[j], "Link")
       r = linkind(M, j - 1)
       @test norm(R - delta(r, r')) < 1E-12
@@ -741,7 +741,7 @@ end
     R = M[length(M)] * prime(M[length(M)], "Link")
     r = linkind(M, length(M) - 1)
     @test norm(R - delta(r, r')) < 1E-12
-    for j in reverse(2:(length(M) - 1))
+    for j in reverse(2:(length(M)-1))
       R = R * M[j] * prime(M[j], "Link")
       r = linkind(M, j - 1)
       @test norm(R - delta(r, r')) < 1E-12
@@ -803,7 +803,7 @@ end
     R = M[length(M)] * prime(M[length(M)], "Link")
     r = linkind(M, length(M) - 1)
     @test norm(R - delta(r, r')) < 1E-10
-    for j in reverse(2:(length(M) - 1))
+    for j in reverse(2:(length(M)-1))
       R = R * M[j] * prime(M[j], "Link")
       r = linkind(M, j - 1)
       @test norm(R - delta(r, r')) < 1E-10
@@ -1319,7 +1319,7 @@ end
     ψ = orthogonalize(ψ0, 2)
     A = prod(ITensorMPS.data(ψ)[2:(N - 1)])
     randn!(A)
-    ψ[2:(N - 1), orthocenter=3] = A
+    ψ[2:(N - 1), orthocenter = 3] = A
     @test prod(ψ) ≈ ψ[1] * A * ψ[N]
     @test maxlinkdim(ψ) == 4
     @test ITensorMPS.orthocenter(ψ) == 3
@@ -1344,7 +1344,7 @@ end
       ns = [i, j]
       !allunique(ns) && continue
       min_ns = minimum(ns)
-      ns′ = collect(min_ns:(min_ns + length(ns) - 1))
+      ns′ = collect(min_ns:(min_ns+length(ns)-1))
       ψ′ = movesites(ψ, ns .=> ns′; cutoff=1e-15)
       @test siteind(ψ′, min_ns) == siteind(ψ, i)
       @test siteind(ψ′, min_ns + 1) == siteind(ψ, j)
@@ -1360,7 +1360,7 @@ end
       ns = [i, j, k]
       !allunique(ns) && continue
       min_ns = minimum(ns)
-      ns′ = collect(min_ns:(min_ns + length(ns) - 1))
+      ns′ = collect(min_ns:(min_ns+length(ns)-1))
       ψ′ = movesites(ψ, ns .=> ns′; cutoff=1e-15)
       @test siteind(ψ′, min_ns) == siteind(ψ, i)
       @test siteind(ψ′, min_ns + 1) == siteind(ψ, j)
@@ -1377,7 +1377,7 @@ end
       ns = [i, j, k, l]
       !allunique(ns) && continue
       min_ns = minimum(ns)
-      ns′ = collect(min_ns:(min_ns + length(ns) - 1))
+      ns′ = collect(min_ns:(min_ns+length(ns)-1))
       ψ′ = movesites(ψ, ns .=> ns′; cutoff=1e-15)
       @test siteind(ψ′, min_ns) == siteind(ψ, i)
       @test siteind(ψ′, min_ns + 1) == siteind(ψ, j)
@@ -1395,7 +1395,7 @@ end
       ns = [i, j, k, l, m]
       !allunique(ns) && continue
       min_ns = minimum(ns)
-      ns′ = collect(min_ns:(min_ns + length(ns) - 1))
+      ns′ = collect(min_ns:(min_ns+length(ns)-1))
       ψ′ = movesites(ψ, ns .=> ns′; cutoff=1e-15)
       for n in 1:length(ns)
         @test siteind(ψ′, min_ns + n - 1) == siteind(ψ, ns[n])
@@ -1632,15 +1632,15 @@ end
 
       osZ = [("Z", n) for n in 1:N]
 
-      osSw = [("SWAP", n, n + 1) for n in 1:(N - 2)]
+      osSw = [("SWAP", n, n + 1) for n in 1:(N-2)]
 
-      osCx = [("CX", n, n + 3) for n in 1:(N - 3)]
+      osCx = [("CX", n, n + 3) for n in 1:(N-3)]
 
-      osT = [("CCX", n, n + 1, n + 3) for n in 1:(N - 3)]
+      osT = [("CCX", n, n + 1, n + 3) for n in 1:(N-3)]
 
       osRx = [("Rx", n, (θ=π,)) for n in 1:N]
 
-      osXX = [("Rxx", (n, n + 1), (ϕ=π / 8,)) for n in 1:(N - 1)]
+      osXX = [("Rxx", (n, n + 1), (ϕ=π / 8,)) for n in 1:(N-1)]
 
       #os_noise = [("noise", n, n+2, n+4) for n in 1:N-4]
 
@@ -1713,9 +1713,9 @@ end
       N = 8
       osX = [("X", n) for n in 1:N]
       osZ = [("Z", n) for n in 1:N]
-      osSw = [("SWAP", n, n + 2) for n in 1:(N - 2)]
-      osCx = [("CX", n, n + 3) for n in 1:(N - 3)]
-      osT = [("CCX", n, n + 1, n + 3) for n in 1:(N - 3)]
+      osSw = [("SWAP", n, n + 2) for n in 1:(N-2)]
+      osCx = [("CX", n, n + 3) for n in 1:(N-3)]
+      osT = [("CCX", n, n + 1, n + 3) for n in 1:(N-3)]
       osRx = [("Rx", n, (θ=π,)) for n in 1:N]
       os = vcat(osX, osSw, osRx, osZ, osCx, osT)
 
@@ -1746,9 +1746,9 @@ end
 
       osX = [("X", n) for n in 1:N]
       osZ = [("Z", n) for n in 1:N]
-      osSw = [("SWAP", n, n + 1) for n in 1:(N - 1)]
-      osCx = [("CX", n, n + 1) for n in 1:(N - 1)]
-      osT = [("CCX", n, n + 2, n + 4) for n in 1:(N - 4)]
+      osSw = [("SWAP", n, n + 1) for n in 1:(N-1)]
+      osCx = [("CX", n, n + 1) for n in 1:(N-1)]
+      osT = [("CCX", n, n + 2, n + 4) for n in 1:(N-4)]
       os = vcat(osX, osSw, osZ, osCx, osT)
 
       s = siteinds("Qubit", N)
@@ -1810,7 +1810,7 @@ end
       t = 1.0
       U = 1.0
       opsum = OpSum()
-      for b in 1:(N - 1)
+      for b in 1:(N-1)
         opsum .-= t, "Cdag", b, "C", b + 1
         opsum .-= t, "Cdag", b + 1, "C", b
         opsum .+= U, "N", b, "N", b + 1
@@ -1832,12 +1832,12 @@ end
         return -1 * op("Cdag", s1) * op("Cdag", s2) * op("C", s3) * op("C", s4)
       end
 
-      for i in 1:(N - 1), j in (i + 1):N
+      for i in 1:(N-1), j in (i+1):N
         G1 = op("CdagC2", s, i, j)
 
         @disable_warn_order begin
           G2 = op("Cdag", s, i)
-          for n in (i + 1):(j - 1)
+          for n in (i+1):(j-1)
             G2 *= op("F", s, n)
           end
           G2 *= op("C", s, j)
@@ -1857,19 +1857,19 @@ end
         @test A_OP ≈ A_MPO
       end
 
-      for i in 1:(N - 3), j in (i + 1):(N - 2), k in (j + 1):(N - 1), l in (k + 1):N
+      for i in 1:(N-3), j in (i+1):(N-2), k in (j+1):(N-1), l in (k+1):N
         G1 = op("CCCC", s, i, j, k, l)
         @disable_warn_order begin
           G2 = -1 * op("Cdag", s, i)
-          for n in (i + 1):(j - 1)
+          for n in (i+1):(j-1)
             G2 *= op("F", s, n)
           end
           G2 *= op("Cdag", s, j)
-          for n in (j + 1):(k - 1)
+          for n in (j+1):(k-1)
             G2 *= op("Id", s, n)
           end
           G2 *= op("C", s, k)
-          for n in (k + 1):(l - 1)
+          for n in (k+1):(l-1)
             G2 *= op("F", s, n)
           end
           G2 *= op("C", s, l)
@@ -1896,7 +1896,7 @@ end
       t = 1.0
       U = 1.0
       opsum = OpSum()
-      for b in 1:(N - 1)
+      for b in 1:(N-1)
         opsum .-= t, "Cdagup", b, "Cup", b + 1
         opsum .-= t, "Cdagup", b + 1, "Cup", b
         opsum .-= t, "Cdagdn", b, "Cdn", b + 1
@@ -1915,7 +1915,7 @@ end
         return op("Adagup * F", s1) * op("Aup", s2)
       end
 
-      for i in 1:(N - 1), j in (i + 1):N
+      for i in 1:(N-1), j in (i+1):N
         opsum = OpSum()
         opsum += "Cdagup", i, "Cup", j
         G1 = MPO(opsum, s)
@@ -1958,7 +1958,7 @@ end
     N = 8
     s = siteinds("S=1/2", N)
     a = OpSum()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       a .+= 0.5, "S+", j, "S-", j + 1
       a .+= 0.5, "S-", j, "S+", j + 1
       a .+= "Sz", j, "Sz", j + 1

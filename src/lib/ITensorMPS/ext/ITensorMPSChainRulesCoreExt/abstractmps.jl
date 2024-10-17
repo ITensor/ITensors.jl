@@ -14,14 +14,14 @@ function ChainRulesCore.rrule(
     n = length(ȳtensors)
     envL = [ȳtensors[1] * dag(x[1])]
     envR = [ȳtensors[n] * dag(x[n])]
-    for j in 2:(n - 1)
+    for j in 2:(n-1)
       push!(envL, envL[j - 1] * ȳtensors[j] * dag(x[j]))
       push!(envR, envR[j - 1] * ȳtensors[n + 1 - j] * dag(x[n + 1 - j]))
     end
 
     x̄ = ITensor[]
     push!(x̄, ȳtensors[1] * envR[n - 1])
-    for j in 2:(n - 1)
+    for j in 2:(n-1)
       push!(x̄, envL[j - 1] * ȳtensors[j] * envR[n - j])
     end
     push!(x̄, envL[n - 1] * ȳtensors[n])
@@ -60,7 +60,7 @@ function _contract(::Type{ITensor}, ψ::Union{MPS,MPO}, ϕ::Union{MPS,MPO}; kwar
     Tᴸ = Tᴸ * ψ[j] * ϕ[j]
   end
   Tᴿ = adapt(datatype(ψ[end]), ITensor(1))
-  for j in reverse((jcenter + 1):length(ψ))
+  for j in reverse((jcenter+1):length(ψ))
     Tᴿ = Tᴿ * ψ[j] * ϕ[j]
   end
   return Tᴸ * Tᴿ
@@ -77,7 +77,7 @@ end
 function _is_mps_or_hermitian_mpo(x::MPO; kwargs...)
   s = siteinds(x)
   return all(eachindex(x)) do i
-    isapprox(x[i], swapprime(dag(x[i]), 0 => 1; inds=s[i]); kwargs...)
+    return isapprox(x[i], swapprime(dag(x[i]), 0 => 1; inds=s[i]); kwargs...)
   end
 end
 _is_mps_or_hermitian_mpo(x::MPS; kwargs...) = true
@@ -108,7 +108,7 @@ function ChainRulesCore.rrule(
     # Apply circuit and store intermediates in the reverse direction
     x1dag_ȳ = Vector{typeof(x2)}(undef, N)
     x1dag_ȳ[end] = ȳ
-    for n in (N - 1):-1:1
+    for n in (N-1):-1:1
       x1dag_ȳ[n] = apply(
         x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, apply_dag, kwargs...
       )
