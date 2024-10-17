@@ -287,7 +287,9 @@ end
       orthogonalize!(psi, 1; maxdim=link_dim)
       orthogonalize!(K, 1; maxdim=link_dim)
       orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
-      psi_out = contract(deepcopy(K), deepcopy(psi); method, maxdim=10 * link_dim, cutoff=0.0)
+      psi_out = contract(
+        deepcopy(K), deepcopy(psi); method, maxdim=10 * link_dim, cutoff=0.0
+      )
       @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     end
   end
