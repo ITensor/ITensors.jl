@@ -66,7 +66,7 @@ function _depth_first_constructive!(
     optimal_cost[] = cost
     optimal_sequence .= sequence
   end
-  for aᵢ in 1:(length(remaining) - 1), bᵢ in (aᵢ + 1):length(remaining)
+  for aᵢ in 1:(length(remaining)-1), bᵢ in (aᵢ+1):length(remaining)
     a = remaining[aᵢ]
     b = remaining[bᵢ]
     current_cost, Tᵈ = contraction_cost(T[a], T[b], ind_dims)

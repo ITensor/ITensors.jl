@@ -16,14 +16,14 @@ let
   sites = siteinds("Electron", N; conserve_qns=true)
 
   os = OpSum()
-  for b in 1:(N - 1)
+  for b in 1:(N-1)
     os -= t1, "Cdagup", b, "Cup", b + 1
     os -= t1, "Cdagup", b + 1, "Cup", b
     os -= t1, "Cdagdn", b, "Cdn", b + 1
     os -= t1, "Cdagdn", b + 1, "Cdn", b
     os += V1, "Ntot", b, "Ntot", b + 1
   end
-  for b in 1:(N - 2)
+  for b in 1:(N-2)
     os -= t2, "Cdagup", b, "Cup", b + 2
     os -= t2, "Cdagup", b + 2, "Cup", b
     os -= t2, "Cdagdn", b, "Cdn", b + 2

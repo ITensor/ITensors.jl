@@ -9,13 +9,13 @@ struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractDiagonalArray{
 end
 
 function DiagonalArray{T,N}(
-  diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}, zero=Zero()
+  diag::AbstractVector{T}, d::Tuple{Vararg{Int,N}}; zero=Zero()
 ) where {T,N}
   return DiagonalArray{T,N,typeof(diag),typeof(zero)}(diag, d, zero)
 end
 
 function DiagonalArray{T,N}(
-  diag::AbstractVector, d::Tuple{Vararg{Int,N}}, zero=Zero()
+  diag::AbstractVector, d::Tuple{Vararg{Int,N}}; zero=Zero()
 ) where {T,N}
   return DiagonalArray{T,N}(T.(diag), d, zero)
 end
@@ -25,7 +25,7 @@ function DiagonalArray{T,N}(diag::AbstractVector, d::Vararg{Int,N}) where {T,N}
 end
 
 function DiagonalArray{T}(
-  diag::AbstractVector, d::Tuple{Vararg{Int,N}}, zero=Zero()
+  diag::AbstractVector, d::Tuple{Vararg{Int,N}}; zero=Zero()
 ) where {T,N}
   return DiagonalArray{T,N}(diag, d, zero)
 end
@@ -53,7 +53,7 @@ end
 
 # undef
 function DiagonalArray{T,N}(
-  ::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()
+  ::UndefInitializer, d::Tuple{Vararg{Int,N}}; zero=Zero()
 ) where {T,N}
   return DiagonalArray{T,N}(Vector{T}(undef, minimum(d)), d, zero)
 end
@@ -63,14 +63,14 @@ function DiagonalArray{T,N}(::UndefInitializer, d::Vararg{Int,N}) where {T,N}
 end
 
 function DiagonalArray{T}(
-  ::UndefInitializer, d::Tuple{Vararg{Int,N}}, zero=Zero()
+  ::UndefInitializer, d::Tuple{Vararg{Int,N}}; zero=Zero()
 ) where {T,N}
   return DiagonalArray{T,N}(undef, d, zero)
 end
 
 # Axes version
 function DiagonalArray{T}(
-  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}, zero=Zero()
+  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}; zero=Zero()
 ) where {T,N}
   @assert all(isone, first.(axes))
   return DiagonalArray{T,N}(undef, length.(axes), zero)

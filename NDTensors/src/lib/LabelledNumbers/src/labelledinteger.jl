@@ -112,12 +112,15 @@ for f in [:rand, :randn]
     )
       return $f(rng, elt, (dim1, dims...))
     end
-    Base.$f(elt::Type{<:Number}, dims::Tuple{LabelledInteger,Vararg{LabelledInteger}}) =
-      $f(default_rng(), elt, dims)
-    Base.$f(elt::Type{<:Number}, dim1::LabelledInteger, dims::Vararg{LabelledInteger}) =
-      $f(elt, (dim1, dims...))
-    Base.$f(dims::Tuple{LabelledInteger,Vararg{LabelledInteger}}) =
-      $f(default_eltype(), dims)
+    Base.$f(elt::Type{<:Number}, dims::Tuple{LabelledInteger,Vararg{LabelledInteger}}) = $f(
+      default_rng(), elt, dims
+    )
+    Base.$f(elt::Type{<:Number}, dim1::LabelledInteger, dims::Vararg{LabelledInteger}) = $f(
+      elt, (dim1, dims...)
+    )
+    Base.$f(dims::Tuple{LabelledInteger,Vararg{LabelledInteger}}) = $f(
+      default_eltype(), dims
+    )
     Base.$f(dim1::LabelledInteger, dims::Vararg{LabelledInteger}) = $f((dim1, dims...))
   end
 end

@@ -11,7 +11,7 @@ function test_dmrg(
   sites = siteinds("S=1/2", N; conserve_qns)
 
   os = OpSum()
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     os += "Sz", j, "Sz", j + 1
     os += 0.5, "S+", j, "S-", j + 1
     os += 0.5, "S-", j, "S+", j + 1

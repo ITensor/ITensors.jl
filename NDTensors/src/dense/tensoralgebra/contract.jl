@@ -10,7 +10,7 @@ function _contract_scalar!(
   T1::Number,
   labelsT1,
   T2::Number,
-  labelsT2,
+  labelsT2;
   α=one(ElR),
   β=zero(ElR),
 ) where {ElR}
@@ -28,7 +28,7 @@ end
 # Version where R and T have different element types, so we can't call BLAS
 # Instead use Julia's broadcasting (maybe consider Strided in the future)
 function _contract_scalar_noperm!(
-  R::DenseTensor{ElR}, T::DenseTensor, α, β=zero(ElR)
+  R::DenseTensor{ElR}, T::DenseTensor, α; β=zero(ElR)
 ) where {ElR}
   Rᵈ = data(R)
   Tᵈ = data(T)
@@ -60,7 +60,7 @@ end
 # Version where R and T are the same element type, so we can
 # call BLAS
 function _contract_scalar_noperm!(
-  R::DenseTensor{ElR}, T::DenseTensor{ElR}, α, β=zero(ElR)
+  R::DenseTensor{ElR}, T::DenseTensor{ElR}, α; β=zero(ElR)
 ) where {ElR}
   Rᵈ = data(R)
   Tᵈ = data(T)
@@ -90,7 +90,7 @@ function _contract_scalar_noperm!(
 end
 
 function _contract_scalar_maybe_perm!(
-  ::Order{N}, R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α, β=zero(ElR)
+  ::Order{N}, R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α; β=zero(ElR)
 ) where {ElR,NR,N}
   labelsRᵣ, dimsRᵣ = drop_singletons(Order(N), labelsR, dims(R))
   labelsTᵣ, dimsTᵣ = drop_singletons(Order(N), labelsT, dims(T))
@@ -108,7 +108,7 @@ function _contract_scalar_maybe_perm!(
 end
 
 function _contract_scalar_maybe_perm!(
-  R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α, β=zero(ElR)
+  R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α; β=zero(ElR)
 ) where {ElR,NR}
   N = count(≠(1), dims(R))
   _contract_scalar_maybe_perm!(Order(N), R, labelsR, T, labelsT, α, β)
@@ -122,7 +122,7 @@ function _contract_scalar_maybe_perm!(
   T₁::DenseTensor,
   labelsT₁,
   T₂::DenseTensor,
-  labelsT₂,
+  labelsT₂;
   α=one(ElR),
   β=zero(ElR),
 ) where {ElR,NR}
@@ -143,7 +143,7 @@ function _contract_scalar!(
   T1::DenseTensor,
   labelsT1,
   T2::DenseTensor,
-  labelsT2,
+  labelsT2;
   α=one(ElR),
   β=zero(ElR),
 ) where {ElR}
@@ -161,7 +161,7 @@ function contract!(
   T1::DenseTensor{ElT1,N1},
   labelsT1,
   T2::DenseTensor{ElT2,N2},
-  labelsT2,
+  labelsT2;
   α::Elα=one(ElR),
   β::Elβ=zero(ElR),
 ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
@@ -217,7 +217,7 @@ function _contract!(
   CT::DenseTensor{El,NC},
   AT::DenseTensor{El,NA},
   BT::DenseTensor{El,NB},
-  props::ContractionProperties,
+  props::ContractionProperties;
   α::Number=one(El),
   β::Number=zero(El),
 ) where {El,NC,NA,NB}

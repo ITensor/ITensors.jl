@@ -19,10 +19,12 @@ for f in [:rand, :randn]
     )
       return $f(rng, elt, (dim1, dims...))
     end
-    Base.$f(elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}}) =
-      $f(default_rng(), elt, dims)
-    Base.$f(elt::Type{<:Number}, dim1::Index, dims::Vararg{Index}) =
-      $f(elt, (dim1, dims...))
+    Base.$f(elt::Type{<:Number}, dims::Tuple{Index,Vararg{Index}}) = $f(
+      default_rng(), elt, dims
+    )
+    Base.$f(elt::Type{<:Number}, dim1::Index, dims::Vararg{Index}) = $f(
+      elt, (dim1, dims...)
+    )
     Base.$f(dims::Tuple{Index,Vararg{Index}}) = $f(default_eltype(), dims)
     Base.$f(dim1::Index, dims::Vararg{Index}) = $f((dim1, dims...))
   end

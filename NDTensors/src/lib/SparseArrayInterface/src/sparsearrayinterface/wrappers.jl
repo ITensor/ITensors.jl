@@ -27,7 +27,7 @@ function map_index(
 ) where {N}
   index = Tuple(cartesian_index)
   new_index = ntuple(length(indices)) do i
-    findfirst(==(index[i]), indices[i])
+    return findfirst(==(index[i]), indices[i])
   end
   any(isnothing, new_index) && return nothing
   return CartesianIndex(new_index)

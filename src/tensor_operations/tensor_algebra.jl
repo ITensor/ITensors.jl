@@ -177,7 +177,7 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number; β::Number=0)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
@@ -601,23 +601,23 @@ function product(A::ITensor, B::ITensor; apply_dag::Bool=false)
   danglings_inds = unioninds(danglings_indsA, danglings_indsB)
   if hassameinds(common_paired_indsA, common_paired_indsB)
     # matrix-matrix product
-    A′ = prime(A; inds=!danglings_inds)
-    AB = mapprime(A′ * B, 2 => 1; inds=!danglings_inds)
+    A′ = prime(A; inds=(!danglings_inds))
+    AB = mapprime(A′ * B, 2 => 1; inds=(!danglings_inds))
     if apply_dag
-      AB′ = prime(AB; inds=!danglings_inds)
-      Adag = swapprime(dag(A), 0 => 1; inds=!danglings_inds)
-      return mapprime(AB′ * Adag, 2 => 1; inds=!danglings_inds)
+      AB′ = prime(AB; inds=(!danglings_inds))
+      Adag = swapprime(dag(A), 0 => 1; inds=(!danglings_inds))
+      return mapprime(AB′ * Adag, 2 => 1; inds=(!danglings_inds))
     end
     return AB
   elseif isempty(common_paired_indsA) && !isempty(common_paired_indsB)
     # vector-matrix product
     apply_dag && error("apply_dag not supported for matrix-vector product")
-    A′ = prime(A; inds=!danglings_inds)
+    A′ = prime(A; inds=(!danglings_inds))
     return A′ * B
   elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
     # matrix-vector product
     apply_dag && error("apply_dag not supported for vector-matrix product")
-    return replaceprime(A * B, 1 => 0; inds=!danglings_inds)
+    return replaceprime(A * B, 1 => 0; inds=(!danglings_inds))
   end
 end
 

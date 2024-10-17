@@ -10,7 +10,7 @@ function tfimMPO(sites, h::Float64)
   # Input operator terms which define a Hamiltonian
   N = length(sites)
   os = OpSum()
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     os -= 1, "Z", j, "Z", j + 1
   end
   for j in 1:N

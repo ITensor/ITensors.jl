@@ -10,7 +10,7 @@ gradtol = 1e-4 # Tolerance for stopping gradient descent
 # The Hamiltonian we are minimizing
 function ising_hamiltonian(nsites; h)
   ℋ = OpSum()
-  for j in 1:(nsites - 1)
+  for j in 1:(nsites-1)
     ℋ -= 1, "Z", j, "Z", j + 1
   end
   for j in 1:nsites
@@ -22,7 +22,7 @@ end
 # A layer of the circuit we want to optimize
 function layer(nsites, θ⃗)
   RY_layer = [("Ry", (n,), (θ=θ⃗[n],)) for n in 1:nsites]
-  CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites - 1)]
+  CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites-1)]
   return [RY_layer; CX_layer]
 end
 
@@ -30,7 +30,7 @@ end
 function variational_circuit(nsites, nlayers, θ⃗)
   range = 1:nsites
   circuit = layer(nsites, θ⃗[range])
-  for n in 1:(nlayers - 1)
+  for n in 1:(nlayers-1)
     circuit = [circuit; layer(nsites, θ⃗[range .+ n * nsites])]
   end
   return circuit

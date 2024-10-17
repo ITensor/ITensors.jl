@@ -92,7 +92,7 @@ function sparse_getindex(a::AbstractArray, I::CartesianIndex)
   t = Tuple(I)
   length(t) < ndims(a) && error("Not enough indices passed")
   I′ = ntuple(i -> t[i], ndims(a))
-  @assert all(i -> isone(I[i]), (ndims(a) + 1):length(I))
+  @assert all(i -> isone(I[i]), (ndims(a)+1):length(I))
   return _sparse_getindex(a, CartesianIndex(I′))
 end
 
@@ -143,7 +143,7 @@ function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex)
   t = Tuple(I)
   length(t) < ndims(a) && error("Not enough indices passed")
   I′ = ntuple(i -> t[i], ndims(a))
-  @assert all(i -> isone(I[i]), (ndims(a) + 1):length(I))
+  @assert all(i -> isone(I[i]), (ndims(a)+1):length(I))
   return _sparse_setindex!(a, value, CartesianIndex(I′))
 end
 

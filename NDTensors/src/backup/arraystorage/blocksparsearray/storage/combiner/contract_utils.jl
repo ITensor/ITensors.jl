@@ -96,7 +96,7 @@ function uncombine_blocks(
     ncomb = _number_uncombined(blockval, blockcomb)
     ncomb_shift = _number_uncombined_shift(blockval, blockcomb)
     push!(blocks_uncomb, setindex(block, blockval + ncomb_shift, dim))
-    for j in 1:(ncomb - 1)
+    for j in 1:(ncomb-1)
       push!(blocks_uncomb, setindex(block, blockval + ncomb_shift + j, dim))
     end
   end
@@ -112,7 +112,7 @@ function uncombine_block(
   ncomb = _number_uncombined(blockval, blockcomb)
   ncomb_shift = _number_uncombined_shift(blockval, blockcomb)
   push!(blocks_uncomb, setindex(block, blockval + ncomb_shift, dim))
-  for j in 1:(ncomb - 1)
+  for j in 1:(ncomb-1)
     push!(blocks_uncomb, setindex(block, blockval + ncomb_shift + j, dim))
   end
   return blocks_uncomb

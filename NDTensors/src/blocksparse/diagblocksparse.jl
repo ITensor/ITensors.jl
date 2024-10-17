@@ -504,7 +504,7 @@ end
 function permutedims!(
   R::DiagBlockSparseTensor{<:Number,N},
   T::DiagBlockSparseTensor{<:Number,N},
-  perm::NTuple{N,Int},
+  perm::NTuple{N,Int};
   f::Function=(r, t) -> t,
 ) where {N}
   # TODO: check that inds(R)==permute(inds(T),perm)?
@@ -515,7 +515,7 @@ function permutedims!(
 end
 
 function permutedims(
-  T::UniformDiagBlockSparseTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=identity
+  T::UniformDiagBlockSparseTensor{ElT,N}, perm::NTuple{N,Int}; f::Function=identity
 ) where {ElT,N}
   R = tensor(DiagBlockSparse(f(getdiagindex(T, 1))), permute(inds(T), perm))
   return R
@@ -525,7 +525,7 @@ end
 function permutedims!!(
   R::NonuniformDiagBlockSparseTensor{<:Number,N},
   T::NonuniformDiagBlockSparseTensor{<:Number,N},
-  perm::NTuple{N,Int},
+  perm::NTuple{N,Int};
   f::Function=(r, t) -> t,
 ) where {N}
   RR = convert(promote_type(typeof(R), typeof(T)), R)
@@ -536,7 +536,7 @@ end
 function permutedims!!(
   R::UniformDiagBlockSparseTensor{ElR,N},
   T::UniformDiagBlockSparseTensor{ElT,N},
-  perm::NTuple{N,Int},
+  perm::NTuple{N,Int};
   f::Function=(r, t) -> t,
 ) where {ElR,ElT,N}
   RR = convert(promote_type(typeof(R), typeof(T)), R)
@@ -547,7 +547,7 @@ end
 function permutedims!(
   R::DenseTensor{ElR,N},
   T::DiagBlockSparseTensor{ElT,N},
-  perm::NTuple{N,Int},
+  perm::NTuple{N,Int};
   f::Function=(r, t) -> t,
 ) where {ElR,ElT,N}
   for i in 1:diaglength(T)
@@ -559,7 +559,7 @@ end
 function permutedims!!(
   R::DenseTensor{ElR,N},
   T::DiagBlockSparseTensor{ElT,N},
-  perm::NTuple{N,Int},
+  perm::NTuple{N,Int};
   f::Function=(r, t) -> t,
 ) where {ElR,ElT,N}
   permutedims!(R, T, perm, f)

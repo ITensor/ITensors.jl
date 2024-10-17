@@ -13,7 +13,7 @@ end
 @testset "MPO Basics" begin
   N = 6
   sites = [Index(QN(-1) => 1, QN(1) => 1; tags="Site,n=$n") for n in 1:N]
-  links = [Index(QN() => 1; tags="Links,l=$n") for n in 1:(N - 1)]
+  links = [Index(QN() => 1; tags="Links,l=$n") for n in 1:(N-1)]
   @test length(MPO()) == 0
   #O = MPO(sites)
   O = MPO(N)
@@ -32,21 +32,21 @@ end
 
   K = MPO(N)
   K[1] = random_itensor(QN(), dag(sites[1]), sites[1]', links[1])
-  for i in 2:(N - 1)
+  for i in 2:(N-1)
     K[i] = random_itensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
   K[N] = random_itensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   J = MPO(N)
   J[1] = random_itensor(QN(), dag(sites[1]), sites[1]', links[1])
-  for i in 2:(N - 1)
+  for i in 2:(N-1)
     J[i] = random_itensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
   J[N] = random_itensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   L = MPO(N)
   L[1] = random_itensor(QN(), dag(sites[1]), sites[1]', links[1])
-  for i in 2:(N - 1)
+  for i in 2:(N-1)
     L[i] = random_itensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
   L[N] = random_itensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
@@ -56,14 +56,14 @@ end
 
   phi = MPS(N)
   phi[1] = random_itensor(QN(-1), sites[1], links[1])
-  for i in 2:(N - 1)
+  for i in 2:(N-1)
     phi[i] = random_itensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
   end
   phi[N] = random_itensor(QN(-1), sites[N], dag(links[N - 1]))
 
   psi = MPS(N)
   psi[1] = random_itensor(QN(-1), sites[1], links[1])
-  for i in 2:(N - 1)
+  for i in 2:(N-1)
     psi[i] = random_itensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
   end
   psi[N] = random_itensor(QN(-1), sites[N], dag(links[N - 1]))
@@ -106,7 +106,7 @@ end
 
     @test phiJdagKpsi[] ≈ inner(J, phi, K, psi)
 
-    badsites = [Index(2, "Site") for n in 1:(N + 1)]
+    badsites = [Index(2, "Site") for n in 1:(N+1)]
     badpsi = random_mps(badsites)
     @test_throws DimensionMismatch inner(J, phi, K, badpsi)
   end
@@ -198,7 +198,7 @@ end
   N = 4
   sites = siteinds("S=1", N; conserve_qns=true)
   opsum = OpSum()
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     opsum .+= 0.5, "S+", j, "S-", j + 1
     opsum .+= 0.5, "S-", j, "S+", j + 1
     opsum .+= "Sz", j, "Sz", j + 1
@@ -249,7 +249,7 @@ end
     s = siteinds("S=1/2", N; conserve_szparity=conserve_szparity)
     a = OpSum()
     h = 0.5
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       a .-= 1, "Sx", j, "Sx", j + 1
     end
     for j in 1:N
@@ -302,7 +302,7 @@ function make_heisenberg_opsum(sites, NNN::Int64; J::Float64=1.0, kwargs...)::MP
   opsum = OpSum()
   for dj in 1:NNN
     f = J / dj
-    for j in 1:(N - dj)
+    for j in 1:(N-dj)
       add!(opsum, f, "Sz", j, "Sz", j + dj)
       add!(opsum, f * 0.5, "S+", j, "S-", j + dj)
       add!(opsum, f * 0.5, "S-", j, "S+", j + dj)
@@ -322,7 +322,7 @@ function make_hubbard_opsum(
   end
   for dn in 1:NNN
     tj, Vj = t / dn, V / dn
-    for n in 1:(N - dn)
+    for n in 1:(N-dn)
       os -= tj, "Cdagup", n, "Cup", n + dn
       os -= tj, "Cdagup", n + dn, "Cup", n
       os -= tj, "Cdagdn", n, "Cdn", n + dn
@@ -337,10 +337,11 @@ test_combos = [(make_heisenberg_opsum, "S=1/2"), (make_hubbard_opsum, "Electron"
 
 @testset "QR/QL MPO tensors with complex block structures, H=$(test_combo[1])" for test_combo in
                                                                                    test_combos
+
   N, NNN = 10, 7 #10 lattice site, up 7th neight interactions
   sites = siteinds(test_combo[2], N; conserve_qns=true)
   H = test_combo[1](sites, NNN)
-  for n in 1:(N - 1)
+  for n in 1:(N-1)
     W = H[n]
     @test flux(W) == QN("Sz", 0)
     ilr = filterinds(W; tags="l=$n")[1]

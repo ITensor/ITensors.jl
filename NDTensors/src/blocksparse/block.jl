@@ -68,7 +68,7 @@ convert(::Type{Block{N}}, t::Tuple) where {N} = Block{N}(t)
 
 gethash(b::Block) = b.hash[]
 
-sethash!(b::Block, h::UInt) = (b.hash[] = h; return b)
+sethash!(b::Block, h::UInt) = (b.hash[]=h; return b)
 
 #
 # Basic functions
@@ -114,7 +114,7 @@ checkbounds(::Tensor, ::Block) = nothing
 _hash(t::Tuple) = _hash(t, zero(UInt))
 _hash(::Tuple{}, h::UInt) = h + Base.tuplehash_seed
 @generated function _hash(b::NTuple{N}, h::UInt) where {N}
-  quote
+  return quote
     out = h + Base.tuplehash_seed
     @nexprs $N i -> out = hash(b[$N - i + 1], out)
   end

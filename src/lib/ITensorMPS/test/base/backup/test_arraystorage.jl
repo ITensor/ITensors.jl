@@ -6,7 +6,7 @@ using Test
   s = siteinds("S=1/2", n; conserve_qns)
   heisenberg_opsum = function (n)
     os = OpSum()
-    for j in 1:(n - 1)
+    for j in 1:(n-1)
       os += "Sz", j, "Sz", j + 1
       os += 0.5, "S+", j, "S-", j + 1
       os += 0.5, "S-", j, "S+", j + 1

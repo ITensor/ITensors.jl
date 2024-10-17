@@ -105,13 +105,13 @@ end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, eltype::Type
-) where {ArrayT; !IsWrappedArray{ArrayT}}
+) where {ArrayT;!IsWrappedArray{ArrayT}}
   return set_eltype(arraytype, eltype)
 end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, dims::Tuple
-) where {ArrayT; !IsWrappedArray{ArrayT}}
+) where {ArrayT;!IsWrappedArray{ArrayT}}
   return set_indstype(arraytype, dims)
 end
 
@@ -126,13 +126,13 @@ end
 ## Wrapped arrays
 @traitfn function similartype(
   arraytype::Type{ArrayT}, eltype::Type
-) where {ArrayT; IsWrappedArray{ArrayT}}
+) where {ArrayT;IsWrappedArray{ArrayT}}
   return similartype(unwrap_array_type(arraytype), eltype)
 end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, dims::Tuple
-) where {ArrayT; IsWrappedArray{ArrayT}}
+) where {ArrayT;IsWrappedArray{ArrayT}}
   return similartype(unwrap_array_type(arraytype), dims)
 end
 

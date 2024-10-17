@@ -76,7 +76,7 @@ A * B
 ```
 """
 macro disable_warn_order(block)
-  quote
+  return quote
     local old_order = disable_warn_order()
     r = $(esc(block))
     set_warn_order(old_order)
@@ -102,7 +102,7 @@ end
 ```
 """
 macro set_warn_order(new_order, block)
-  quote
+  return quote
     local old_order = set_warn_order($(esc(new_order)))
     r = $(esc(block))
     set_warn_order(old_order)
@@ -122,7 +122,7 @@ order in a block of code to the default value $default_warn_order.
 ```
 """
 macro reset_warn_order(block)
-  quote
+  return quote
     local old_order = reset_warn_order()
     r = $(esc(block))
     set_warn_order(old_order)
@@ -175,7 +175,7 @@ const _using_debug_checks = Ref{Bool}(false)
 using_debug_checks() = _using_debug_checks[]
 
 macro debug_check(ex)
-  quote
+  return quote
     if using_debug_checks()
       $(esc(ex))
     end

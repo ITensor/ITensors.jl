@@ -148,7 +148,7 @@ function contraction_labels!(labels, is)
   nextlabel = 1
   # Loop through each tensor pair searching for
   # common indices
-  @inbounds for n1 in 1:(ntensors - 1), n2 in (n1 + 1):ntensors
+  @inbounds for n1 in 1:(ntensors-1), n2 in (n1+1):ntensors
     nextlabel = common_contraction_labels!(
       labels[n1], labels[n2], is[n1], is[n2], nextlabel
     )
@@ -204,7 +204,7 @@ function contraction_labels_caching!(labels, ::Type{IndexT}, is) where {IndexT}
     @inbounds for j in 1:length(labelsₙ)
       i = isₙ[j]
       i_label = get!(ind_to_label, i) do
-        label += 1
+        return label += 1
       end
       labelsₙ[j] = i_label
     end
@@ -325,7 +325,7 @@ function adjacencymatrix(T::Vector, alldims::Vector)
   # First break up the network into disconnected parts
   N = length(T)
   _adjacencymatrix = falses(N, N)
-  for nᵢ in 1:(N - 1), nⱼ in (nᵢ + 1):N
+  for nᵢ in 1:(N-1), nⱼ in (nᵢ+1):N
     if dim(_intersect(T[nᵢ], T[nⱼ]), alldims) > 1
       _adjacencymatrix[nᵢ, nⱼ] = _adjacencymatrix[nⱼ, nᵢ] = true
     end

@@ -86,7 +86,7 @@ end
 
 # Non-trivial permutation
 function _contract_scalar_perm!(
-  Rᵃ::AbstractArray{ElR}, Tᵃ::AbstractArray, perm, α, β=zero(ElR)
+  Rᵃ::AbstractArray{ElR}, Tᵃ::AbstractArray, perm, α; β=zero(ElR)
 ) where {ElR}
   if iszero(β)
     if iszero(α)
@@ -116,7 +116,7 @@ function _contract!(
   CT::AbstractArray{El,NC},
   AT::AbstractArray{El,NA},
   BT::AbstractArray{El,NB},
-  props::ContractionProperties,
+  props::ContractionProperties;
   α::Number=one(El),
   β::Number=zero(El),
 ) where {El,NC,NA,NB}

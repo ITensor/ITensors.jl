@@ -16,7 +16,7 @@ function is_permutation_matrix(a::SparseArrayDOK{<:Any,2})
 end
 
 function findnonzerorows(a::SparseMatrixCSC, col)
-  return view(a.rowval, a.colptr[col]:(a.colptr[col + 1] - 1))
+  return view(a.rowval, a.colptr[col]:(a.colptr[col + 1]-1))
 end
 
 # TODO: Is this already defined?

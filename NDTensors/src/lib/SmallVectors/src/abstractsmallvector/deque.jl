@@ -94,7 +94,7 @@ midpoint(lo::Integer, hi::Integer) = midpoint(promote(lo, hi)...)
 @inline function Base.reverse!(vec::AbstractSmallVector)
   start, stop = firstindex(vec), lastindex(vec)
   r = stop
-  @inbounds for i in start:midpoint(start, stop - 1)
+  @inbounds for i in start:midpoint(start, stop-1)
     vec[i], vec[r] = vec[r], vec[i]
     r -= 1
   end

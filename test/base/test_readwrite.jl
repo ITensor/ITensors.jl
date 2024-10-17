@@ -13,7 +13,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   @testset "TagSet" begin
     ts = TagSet("A,Site,n=2")
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "tags", ts)
+      return write(fo, "tags", ts)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -25,7 +25,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
   @testset "Index" begin
     i = Index(3, "Site,S=1")
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "index", i)
+      return write(fo, "index", i)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -37,7 +37,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     i = Index(3, "Site,S=1")
     i = prime(i, 2)
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "index", i)
+      return write(fo, "index", i)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -50,7 +50,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     is = IndexSet(i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "inds", is)
+      return write(fo, "inds", is)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -65,7 +65,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     T = ITensor()
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "defaultT", T)
+      return write(fo, "defaultT", T)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -77,7 +77,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     T = random_itensor(i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "T", T)
+      return write(fo, "T", T)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -89,7 +89,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     T = random_itensor(ComplexF64, i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "complexT", T)
+      return write(fo, "complexT", T)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -106,7 +106,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     cΔ = δ(ComplexF64, i, i')
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
       fo["delta_tensor"] = Δ
-      fo["c_delta_tensor"] = cΔ
+      return fo["c_delta_tensor"] = cΔ
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -126,7 +126,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     C = diag_itensor(randn(ComplexF64, dk), k, k')
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
       fo["diag_tensor"] = D
-      fo["c_diag_tensor"] = C
+      return fo["c_diag_tensor"] = C
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -146,7 +146,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     T = random_itensor(QN("A", 1), i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "T", T)
+      return write(fo, "T", T)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
@@ -158,7 +158,7 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     T = random_itensor(ComplexF64, i, j, k)
 
     h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-      write(fo, "complexT", T)
+      return write(fo, "complexT", T)
     end
 
     h5open(joinpath(@__DIR__, "data.h5"), "r") do fi

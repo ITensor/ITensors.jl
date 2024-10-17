@@ -6,9 +6,9 @@ using ITensors.ITensorsNamedDimsArraysExt: to_nameddimsarray
 function main(; n, conserve_qns=false, nsweeps=3, cutoff=1e-4, arraytype=Array)
   s = siteinds("S=1/2", n; conserve_qns)
   ℋ = OpSum()
-  ℋ = sum(j -> ("S+", j, "S-", j + 1), 1:(n - 1); init=ℋ)
-  ℋ = sum(j -> ("S-", j, "S+", j + 1), 1:(n - 1); init=ℋ)
-  ℋ = sum(j -> ("Sz", j, "Sz", j + 1), 1:(n - 1); init=ℋ)
+  ℋ = sum(j -> ("S+", j, "S-", j + 1), 1:(n-1); init=ℋ)
+  ℋ = sum(j -> ("S-", j, "S+", j + 1), 1:(n-1); init=ℋ)
+  ℋ = sum(j -> ("Sz", j, "Sz", j + 1), 1:(n-1); init=ℋ)
   H = MPO(ℋ, s)
   ψ₀ = random_mps(s, j -> isodd(j) ? "↑" : "↓")
 

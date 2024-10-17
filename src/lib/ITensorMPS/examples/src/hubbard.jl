@@ -1,7 +1,7 @@
 
 function hubbard_1d(; N::Int, t=1.0, U=0.0)
   opsum = OpSum()
-  for b in 1:(N - 1)
+  for b in 1:(N-1)
     opsum -= t, "Cdagup", b, "Cup", b + 1
     opsum -= t, "Cdagup", b + 1, "Cup", b
     opsum -= t, "Cdagdn", b, "Cdn", b + 1
@@ -35,8 +35,8 @@ end
 
 function hubbard_2d_ky(; Nx::Int, Ny::Int, t=1.0, U=0.0)
   opsum = OpSum()
-  for x in 0:(Nx - 1)
-    for ky in 0:(Ny - 1)
+  for x in 0:(Nx-1)
+    for ky in 0:(Ny-1)
       s = x * Ny + ky + 1
       disp = -2 * t * cos((2 * π / Ny) * ky)
       if abs(disp) > 1e-12
@@ -45,8 +45,8 @@ function hubbard_2d_ky(; Nx::Int, Ny::Int, t=1.0, U=0.0)
       end
     end
   end
-  for x in 0:(Nx - 2)
-    for ky in 0:(Ny - 1)
+  for x in 0:(Nx-2)
+    for ky in 0:(Ny-1)
       s1 = x * Ny + ky + 1
       s2 = (x + 1) * Ny + ky + 1
       opsum -= t, "Cdagup", s1, "Cup", s2
@@ -56,10 +56,10 @@ function hubbard_2d_ky(; Nx::Int, Ny::Int, t=1.0, U=0.0)
     end
   end
   if U ≠ 0
-    for x in 0:(Nx - 1)
-      for ky in 0:(Ny - 1)
-        for py in 0:(Ny - 1)
-          for qy in 0:(Ny - 1)
+    for x in 0:(Nx-1)
+      for ky in 0:(Ny-1)
+        for py in 0:(Ny-1)
+          for qy in 0:(Ny-1)
             s1 = x * Ny + (ky + qy + Ny) % Ny + 1
             s2 = x * Ny + (py - qy + Ny) % Ny + 1
             s3 = x * Ny + py + 1

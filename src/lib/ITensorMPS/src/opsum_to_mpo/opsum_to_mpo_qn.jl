@@ -9,7 +9,7 @@ function qn_svdMPO(
 
   # Specifying the element type with `Dict{QN,Matrix{ValType}}[...]` improves type inference and therefore efficiency.
   # See https://github.com/ITensor/ITensors.jl/pull/1183.
-  Vs = Dict{QN,Matrix{ValType}}[Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
+  Vs = Dict{QN,Matrix{ValType}}[Dict{QN,Matrix{ValType}}() for n in 1:(N+1)]
   sparse_MPO = [QNMatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
   function crosses_bond(t::Scaled{C,Prod{Op}}, n::Int)
@@ -124,7 +124,7 @@ function qn_svdMPO(
   # matches QN q, but *not* 1 or dim(i)
   # which are special ending/starting states
   function qnblock(i::Index, q::QN)
-    for b in 2:(nblocks(i) - 1)
+    for b in 2:(nblocks(i)-1)
       flux(i, Block(b)) == q && return b
     end
     return error("Could not find block of QNIndex with matching QN")

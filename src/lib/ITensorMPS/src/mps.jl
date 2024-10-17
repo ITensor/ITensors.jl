@@ -66,12 +66,12 @@ function MPS(
   end
 
   spaces = if hasqns(sites)
-    [[QN() => _linkdims[j]] for j in 1:(N - 1)]
+    [[QN() => _linkdims[j]] for j in 1:(N-1)]
   else
-    [_linkdims[j] for j in 1:(N - 1)]
+    [_linkdims[j] for j in 1:(N-1)]
   end
 
-  l = [Index(spaces[ii], "Link,l=$ii") for ii in 1:(N - 1)]
+  l = [Index(spaces[ii], "Link,l=$ii") for ii in 1:(N-1)]
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
@@ -126,7 +126,7 @@ function randomizeMPS!(
   max_pass = 100
   for pass in 1:max_pass, half in 1:2
     if half == 1
-      (db, brange) = (+1, 1:1:(N - 1))
+      (db, brange) = (+1, 1:1:(N-1))
     else
       (db, brange) = (-1, N:-1:2)
     end
@@ -184,7 +184,7 @@ function randomCircuitMPS(
   O = NDTensors.random_unitary(rng, eltype, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
-  for j in (N - 1):-1:2
+  for j in (N-1):-1:2
     chi *= dim(sites[j])
     chi = min(linkdims[j - 1], chi)
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
@@ -344,21 +344,21 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
 
   if hasqns(ind(ivals[1]))
     lflux = QN()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       lflux += qn(ivals[j])
     end
     links = Vector{QNIndex}(undef, N - 1)
-    for j in (N - 1):-1:1
+    for j in (N-1):-1:1
       links[j] = dag(Index(lflux => 1; tags="Link,l=$j"))
       lflux -= qn(ivals[j])
     end
   else
-    links = [Index(1, "Link,l=$n") for n in 1:(N - 1)]
+    links = [Index(1, "Link,l=$n") for n in 1:(N-1)]
   end
 
   M[1] = ITensor(T, ind(ivals[1]), links[1])
   M[1][ivals[1], links[1] => 1] = one(T)
-  for n in 2:(N - 1)
+  for n in 2:(N-1)
     s = ind(ivals[n])
     M[n] = ITensor(T, dag(links[n - 1]), s, links[n])
     M[n][links[n - 1] => 1, ivals[n], links[n] => 1] = one(T)
@@ -422,11 +422,11 @@ function MPS(eltype::Type{<:Number}, sites::Vector{<:Index}, states_)
 
   if hasqns(states[1])
     lflux = QN()
-    for j in 1:(N - 1)
+    for j in 1:(N-1)
       lflux += flux(states[j])
     end
     links = Vector{QNIndex}(undef, N - 1)
-    for j in (N - 1):-1:1
+    for j in (N-1):-1:1
       links[j] = dag(Index(lflux => 1; tags="Link,l=$j"))
       lflux -= flux(states[j])
     end
@@ -436,7 +436,7 @@ function MPS(eltype::Type{<:Number}, sites::Vector{<:Index}, states_)
 
   M[1] = ITensor(sites[1], links[1])
   M[1] += states[1] * state(links[1], 1)
-  for n in 2:(N - 1)
+  for n in 2:(N-1)
     M[n] = ITensor(dag(links[n - 1]), sites[n], links[n])
     M[n] += state(dag(links[n - 1]), 1) * states[n] * state(links[n], 1)
   end

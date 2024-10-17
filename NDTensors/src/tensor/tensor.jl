@@ -337,7 +337,7 @@ function blockstart(T::Tensor{<:Number,N}, block) where {N}
   start_index = @MVector ones(Int, N)
   for j in 1:N
     ind_j = ind(T, j)
-    for block_j in 1:(block[j] - 1)
+    for block_j in 1:(block[j]-1)
       start_index[j] += blockdim(ind_j, block_j)
     end
   end

@@ -27,7 +27,7 @@ function unionsortedunique!(itr1, itr2, order::Ordering)
     elseif lt(order, item2, item1)
       # TODO: Use `insertat!`?
       resize!(itr1, length(itr1) + 1)
-      for j in length(itr1):-1:(i1 + 1)
+      for j in length(itr1):-1:(i1+1)
         itr1[j] = itr1[j - 1]
       end
       # Replace with the item from the second list
@@ -131,7 +131,7 @@ function setdiffsortedunique!(itr1, itr2, order::Ordering)
       i2 += 1
     else # They are equal
       # TODO: Use `deletate!`?
-      for j1 in i1:(length(itr1) - 1)
+      for j1 in i1:(length(itr1)-1)
         itr1[j1] = itr1[j1 + 1]
       end
       resize!(itr1, length(itr1) - 1)

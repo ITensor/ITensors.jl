@@ -3,7 +3,7 @@ using Random
 
 # Based on https://discourse.julialang.org/t/lapackexception-1-while-svd-but-not-svdvals/23787
 function make_illconditioned_matrix(T=5000)
-  t = 0:(T - 1)
+  t = 0:(T-1)
   f = LinRange(0, 0.5 - 1 / length(t) / 2, length(t) ÷ 2)
   y = sin.(t)
   function check_freq(f)

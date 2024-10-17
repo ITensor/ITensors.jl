@@ -22,7 +22,7 @@ function split(f, t::Tuple)
   nsplit = length(n) + 1
   s = Vector{Any}(undef, nsplit)
   s[1] = t[1:(first(n) - 1)]
-  for i in 2:(nsplit - 1)
+  for i in 2:(nsplit-1)
     s[i] = t[n[i - 1]:(n[i] - 1)]
   end
   s[end] = t[last(n):end]

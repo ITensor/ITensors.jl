@@ -19,4 +19,4 @@ adjoint(::Type{SU2}) = SU2(1)
 
 dimension(s::SU2) = twice(label(s)) + 1
 
-label_fusion_rule(::Type{SU2}, j1, j2) = abs(j1 - j2):(j1 + j2)
+label_fusion_rule(::Type{SU2}, j1, j2) = abs(j1-j2):(j1+j2)

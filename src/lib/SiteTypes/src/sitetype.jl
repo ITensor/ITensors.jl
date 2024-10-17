@@ -258,13 +258,11 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
     start, opnames = 0, String[]
     for oploc in oplocs
       finish = oploc
-      opnames = vcat(
-        opnames, [prod([name_split[k] * " " for k in (start + 1):(finish - 1)])]
-      )
+      opnames = vcat(opnames, [prod([name_split[k] * " " for k in (start+1):(finish-1)])])
       start = oploc
     end
     opnames = vcat(
-      opnames, [prod([name_split[k] * " " for k in (start + 1):length(name_split)])]
+      opnames, [prod([name_split[k] * " " for k in (start+1):length(name_split)])]
     )
 
     # build the vector of blocks and sum

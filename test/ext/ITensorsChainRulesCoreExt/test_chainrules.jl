@@ -238,11 +238,11 @@ Random.seed!(1234)
     args = (A,)
 
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-    f = x -> (x^2 * δ((i', i)))[1, 1]
+    f = x -> (x ^ 2 * δ((i', i)))[1, 1]
     args = (6.2,)
 
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-    f = x -> (x^2 * δ(i', i))[1, 1]
+    f = x -> (x ^ 2 * δ(i', i))[1, 1]
     args = (5.2,)
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
@@ -282,7 +282,7 @@ Random.seed!(1234)
     #args = (2.8 + 3.1im,)
     #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
     f = function (x)
-      return real((x^3 * ITensor([sin(x) exp(-2x); 3x^3 x+x^2], j', dag(j)))[1, 1])
+      return real((x ^ 3 * ITensor([sin(x) exp(-2x); 3x ^ 3 x + x ^ 2], j', dag(j)))[1, 1])
     end
     args = (3.4 + 2.3im,)
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)

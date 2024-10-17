@@ -147,7 +147,7 @@ function _breadth_first_constructive(
     # in the current sequence
     for c in 2:n
       # For each pair of sets Sᵈ, Sᶜ⁻ᵈ, 1 ≤ d ≤ ⌊c/2⌋
-      for d in 1:(c ÷ 2)
+      for d in 1:(c÷2)
         for a in keys(cache[d]), b in keys(cache[c - d])
           if d == c - d && _isless(b, a)
             # When d == c-d (the subset sizes are equal), check that

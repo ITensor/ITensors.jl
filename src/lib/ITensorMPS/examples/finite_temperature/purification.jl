@@ -27,7 +27,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta_max=2.0)
   s = siteinds("S=1/2", N; conserve_qns=true)
 
   # Make gates (1,2),(2,3),(3,4),...
-  gates = ops([("expτSS", (n, n + 1), (τ=-δτ / 2,)) for n in 1:(N - 1)], s)
+  gates = ops([("expτSS", (n, n + 1), (τ=-δτ / 2,)) for n in 1:(N-1)], s)
   # Include gates in reverse order to complete Trotter formula
   append!(gates, reverse(gates))
 
@@ -36,7 +36,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta_max=2.0)
 
   # Make H for measuring the energy
   terms = OpSum()
-  for j in 1:(N - 1)
+  for j in 1:(N-1)
     terms += 1 / 2, "S+", j, "S-", j + 1
     terms += 1 / 2, "S-", j, "S+", j + 1
     terms += "Sz", j, "Sz", j + 1

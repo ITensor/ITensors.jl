@@ -124,7 +124,7 @@ end
 function checkflux(P::ProjMPS)
   checkflux(P.M)
   foreach(eachindex(P.LR)) do i
-    isassigned(P.LR, i) && checkflux(P.LR[i])
+    return isassigned(P.LR, i) && checkflux(P.LR[i])
   end
   return nothing
 end

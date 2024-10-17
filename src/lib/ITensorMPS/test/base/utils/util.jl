@@ -21,7 +21,7 @@ inner_add(ψ⃗...) = inner_add(fill_trivial_coefficients.(ψ⃗)...)
 function makeRandomMPS(sites; chi::Int=4)::MPS
   N = length(sites)
   v = Vector{ITensor}(undef, N)
-  l = [Index(chi, "Link,l=$n") for n in 1:(N - 1)]
+  l = [Index(chi, "Link,l=$n") for n in 1:(N-1)]
   for n in 1:N
     s = sites[n]
     if n == 1
@@ -39,7 +39,7 @@ end
 function makeRandomMPO(sites; chi::Int=4)::MPO
   N = length(sites)
   v = Vector{ITensor}(undef, N)
-  l = [Index(chi, "Link,l=$n") for n in 1:(N - 1)]
+  l = [Index(chi, "Link,l=$n") for n in 1:(N-1)]
   for n in 1:N
     s = sites[n]
     if n == 1

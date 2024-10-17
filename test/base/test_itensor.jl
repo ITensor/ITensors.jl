@@ -246,7 +246,7 @@ end
       @test A[b => end - 1, a => 2] == A[a => 2, b => 2]
       @test A[b => end, a => 1] == A[a => 1, b => 3]
       @test A[b => end - 2, a => 1] == A[a => 1, b => 1]
-      @test A[b => end^2 - 7, a => 1] == A[a => 1, b => 2]
+      @test A[b => end ^ 2 - 7, a => 1] == A[a => 1, b => 2]
 
       i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       B = random_itensor(i)
