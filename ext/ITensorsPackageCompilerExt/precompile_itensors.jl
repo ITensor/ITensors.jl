@@ -1,4 +1,5 @@
 using ITensors.ITensorMPS: MPO, OpSum, dmrg, random_mps, siteinds
+include("$(@__DIR__)/../ITensorsVectorInterfaceExt/ITensorsVectorInterfaceExt.jl")
 
 # TODO: This uses all of the tests to make
 # precompile statements, but takes a long time
