@@ -1,5 +1,5 @@
 using Adapt: adapt
-using KrylovKit: eigsolve
+using KrylovKit: eigsolve, Arnoldi, KrylovDefaults, realeigsolve
 using NDTensors: scalartype, timer
 using Printf: @printf
 using TupleTools: TupleTools
@@ -131,10 +131,18 @@ Optional keyword arguments:
   - `eigsolve_tol::Number = 1e-14` - Krylov eigensolver tolerance. [^krylovkit]
   - `eigsolve_maxiter::Int = 1` - number of times the Krylov subspace can be
      rebuilt. [^krylovkit]
+  - `eigsolve_eager=false` - if true, eagerly compute the eigenvalue or Schur decomposition
+    after every expansion of the Krylov subspace to test for convergence, otherwise wait
+    until the Krylov subspace has dimension `krylovdim`. This can result in a faster return,
+    for example if the initial guess is very good, but also has some overhead, as many more
+    dense Schur factorizations need to be computed. [^krylovkit]
   - `eigsolve_verbosity::Int = 0` - verbosity level of the Krylov solver.
      Warning: enabling this will lead to a lot of outputs to the terminal. [^krylovkit]
   - `ishermitian=true` - boolean specifying if dmrg should assume the MPO (or more
      general linear operator) represents a Hermitian matrix. [^krylovkit]
+  - `realeigenvalues=ishermitian` = boolean specifying if the operator has real eigenvalues.
+     Primarily used to avoid using complex numbers if the operator is not Hermitian and both
+     the operator and initial MPS are real valued.
   - `noise` - float or array of floats specifying strength of the "noise term"
      to use to aid convergence.
   - `mindim` - integer or array of integers specifying the minimum size of the
@@ -172,6 +180,8 @@ function dmrg(
   eigsolve_verbosity=0,
   eigsolve_which_eigenvalue=:SR,
   ishermitian=true,
+  realeigenvalues=ishermitian,
+  eigsolve_eager=false
 )
   if length(psi0) == 1
     error(
@@ -236,16 +246,37 @@ function dmrg(
         end
 
         @timeit_debug timer "dmrg: eigsolve" begin
-          vals, vecs = eigsolve(
-            PH,
-            phi,
-            1,
-            eigsolve_which_eigenvalue;
-            ishermitian,
-            tol=eigsolve_tol,
-            krylovdim=eigsolve_krylovdim,
-            maxiter=eigsolve_maxiter,
-          )
+          if ishermitian || !realeigenvalues
+            vals, vecs = eigsolve(
+              PH,
+              phi,
+              1,
+              eigsolve_which_eigenvalue;
+              ishermitian,
+              tol=eigsolve_tol,
+              krylovdim=eigsolve_krylovdim,
+              maxiter=eigsolve_maxiter,
+              eager=eigsolve_eager,
+              verbosity=eigsolve_verbosity
+            )
+          else
+            alg = Arnoldi(;
+              krylovdim=eigsolve_krylovdim,
+              maxiter=eigsolve_maxiter,
+              tol=eigsolve_tol,
+              orth=KrylovDefaults.orth,
+              eager=eigsolve_eager,
+              verbosity=eigsolve_verbosity
+            )
+
+            vals, vecs = realeigsolve(
+              PH,
+              phi,
+              1,
+              eigsolve_which_eigenvalue,
+              alg
+            )
+          end
         end
 
         energy = vals[1]
