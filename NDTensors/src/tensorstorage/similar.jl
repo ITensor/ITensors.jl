@@ -1,9 +1,9 @@
 # NDTensors.similar
-similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(data(storage)))
+similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(expose(data(storage))))
 
 # NDTensors.similar
 function similar(storage::TensorStorage, eltype::Type)
-  return setdata(storage, NDTensors.similar(data(storage), eltype))
+  return setdata(storage, NDTensors.similar(expose(data(storage)), eltype))
 end
 
 # NDTensors.similar
@@ -45,6 +45,7 @@ function similar(storagetype::Type{<:TensorStorage}, dims::Dims)
   # TODO: Don't convert to an `AbstractVector` with `prod`, once we support
   # more general data types.
   # return setdata(storagetype, NDTensors.similar(datatype(storagetype), dims))
+  ## TODO use expose here to work for DArray
   return setdata(storagetype, NDTensors.similar(datatype(storagetype), prod(dims)))
 end
 
