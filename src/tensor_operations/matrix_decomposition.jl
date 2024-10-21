@@ -599,15 +599,7 @@ function Base.sqrt(T::ITensor; ishermitian=true, atol=1e-15)
   #  return itensor(sqrt(tensor(T)))
   #end
   D, U = eigen(T; ishermitian=ishermitian)
-  sqrtD = D
-  for n in 1:mindim(D)
-    Dnn = D[n, n]
-    if Dnn < 0 && abs(Dnn) < atol
-      sqrtD[n, n] = 0
-    else
-      sqrtD[n, n] = sqrt(Dnn)
-    end
-  end
+  sqrtD = map_diag(x -> x < 0 && abs(x) < atol ? 0 : sqrt(x), D)
   return U' * sqrtD * dag(U)
 end
 
