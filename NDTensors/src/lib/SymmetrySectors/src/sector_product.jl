@@ -246,8 +246,8 @@ end
 SectorProduct(; kws...) = SectorProduct((; kws...))
 
 function SectorProduct(pairs::Pair...)
-  keys = ntuple(n -> Symbol(pairs[n][1]), length(pairs))
-  vals = ntuple(n -> pairs[n][2], length(pairs))
+  keys = Symbol.(first.(pairs))
+  vals = last.(pairs)
   return SectorProduct(NamedTuple{keys}(vals))
 end
 
