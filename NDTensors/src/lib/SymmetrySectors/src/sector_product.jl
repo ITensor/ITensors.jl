@@ -122,33 +122,6 @@ product_sectors_fusion_rule(::NamedTuple{()}, sects::Tuple) = SectorProduct(sect
 product_sectors_fusion_rule(sects::NamedTuple, ::Tuple{}) = SectorProduct(sects)
 product_sectors_fusion_rule(::Tuple{}, sects::NamedTuple) = SectorProduct(sects)
 
-function fix_fused_product_type(Sectors::Type, fused)
-  return fix_fused_product_type(product_sectors_symmetrystyle(Sectors), Sectors, fused)
-end
-
-function fix_fused_product_type(::AbelianStyle, Sectors::Type, fused)
-  return recover_sector_product_type(Sectors, fused)
-end
-
-function fix_fused_product_type(::NotAbelianStyle, Sectors::Type, fused)
-  # convert e.g. Tuple{GradedUnitRange{SU2}, GradedUnitRange{SU2}} into GradedUnitRange{SU2×SU2}
-  g = reduce(×, fused)
-  # convention: keep unsorted blocklabels as produced by F order loops in ×
-  return recover_gradedaxis_product_type(Sectors, g)
-end
-
-function recover_gradedaxis_product_type(Sectors::Type, g0::AbstractGradedUnitRange)
-  old_labels = blocklabels(g0)
-  old_sects = product_sectors.(SectorProduct.(old_labels))
-  new_labels = recover_sector_product_type.(Sectors, old_sects)
-  new_blocklengths = labelled.(unlabel.(blocklengths(g0)), new_labels)
-  return gradedrange(new_blocklengths)
-end
-
-function recover_sector_product_type(Sectors::Type, sects)
-  return SectorProduct(Sectors(sects))
-end
-
 # =================================  Cartesian Product  ====================================
 ×(c1::AbstractSector, c2::AbstractSector) = ×(SectorProduct(c1), SectorProduct(c2))
 function ×(p1::SectorProduct, p2::SectorProduct)
@@ -228,8 +201,13 @@ function product_sectors_diff(t1::Tuple, t2::Tuple)
 end
 
 function shared_product_sectors_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
-  fused = map(fusion_rule, shared1, shared2)
-  return fix_fused_product_type(T, fused)
+  return mapreduce(
+    to_gradedrange ∘ fusion_rule,
+    ×,
+    shared1,
+    shared2;
+    init=to_gradedrange(SectorProduct(())),
+  )
 end
 
 function product_sectors_insert_unspecified(t1::Tuple, t2::Tuple)
@@ -282,7 +260,11 @@ end
 
 product_sectors_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
 
+function map_blocklabels(f, r::AbstractUnitRange)
+  return gradedrange(labelled.(unlabel.(blocklengths(r)), f.(blocklabels(r))))
+end
+
 function shared_product_sectors_fusion_rule(shared1::NT, shared2::NT) where {NT<:NamedTuple}
-  fused = map(fusion_rule, values(shared1), values(shared2))
-  return fix_fused_product_type(NT, fused)
+  tuple_fused = shared_product_sectors_fusion_rule(values(shared1), values(shared2))
+  return map_blocklabels(SectorProduct ∘ NT ∘ product_sectors ∘ SectorProduct, tuple_fused)
 end
