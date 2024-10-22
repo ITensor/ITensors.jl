@@ -75,6 +75,7 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test Z{2}(0) == TrivialSector()
     @test TrivialSector() < Z{2}(1)
+    @test_throws MethodError U1(0) < Z{2}(1)
     @test Z{2}(0) != Z{2}(1)
     @test Z{2}(0) != Z{3}(0)
     @test Z{2}(0) != U1(0)
