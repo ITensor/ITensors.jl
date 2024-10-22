@@ -17,7 +17,7 @@ GradedAxes.dual(u::U1) = U1(-u.n)
 sector_label(u::U1) = u.n
 
 trivial(::Type{U1}) = trivial(U1{Int})
-trivial(::Type{U1{T}}) where {T} = U1(T(0))
+trivial(::Type{U1{T}}) where {T} = U1(zero(T))
 
 abelian_label_fusion_rule(sector_type::Type{<:U1}, n1, n2) = sector_type(n1 + n2)
 
