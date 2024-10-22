@@ -28,3 +28,4 @@ end
 
 # enforce U1(Int32(1)) == U1(1)
 Base.:(==)(s1::U1, s2::U1) = sector_label(s1) == sector_label(s2)
+Base.isless(s1::U1, s2::U1) = sector_label(s1) < sector_label(s2)

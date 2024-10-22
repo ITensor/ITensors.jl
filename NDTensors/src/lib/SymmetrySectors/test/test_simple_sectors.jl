@@ -50,6 +50,7 @@ using Test: @inferred, @test, @testset, @test_throws
     @test TrivialSector() == U1(0)
     @test U1(-1) < TrivialSector()
     @test TrivialSector() < U1(1)
+    @test U1(Int8(1)) < U1(Int32(2))
   end
 
   @testset "Z₂" begin
