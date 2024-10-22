@@ -322,7 +322,8 @@ end
   end
 
   @testset "siteind defined by siteind overload" begin
-    ITensors.siteind(::SiteType"Test2") = Index(4, "Test2")
+    # TODO: Make `ITensors.siteind` accessible? Or delete this test?
+    ITensors.SiteTypes.siteind(::SiteType"Test2") = Index(4, "Test2")
     s = siteind("Test2", 3)
     @test dim(s) == 4
     @test hastags(s, "Test2,n=3")
