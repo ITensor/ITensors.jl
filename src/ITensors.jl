@@ -157,19 +157,6 @@ include("nullspace.jl")
 include("lib/ITensorsOpsExt/src/ITensorsOpsExt.jl")
 include("fermions/fermions.jl")
 export fparity, isfermionic
-include("lib/ITensorMPS/src/ITensorMPS.jl")
-using .ITensorMPS: ITensorMPS
-# Reexport everything exported by `ITensors.ITensorMPS`
-# except for `ITensorMPS` itself. Ideally we would use
-# `Reexport.jl` but that is not supported right now:
-# https://github.com/simonster/Reexport.jl/issues/27
-# https://github.com/simonster/Reexport.jl/issues/39
-for name in names(ITensorMPS)
-  if name ≠ :ITensorMPS
-    @eval using .ITensorMPS: $name
-    @eval export $name
-  end
-end
 include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
 using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
 include("../ext/ITensorsChainRulesCoreExt/ITensorsChainRulesCoreExt.jl")
