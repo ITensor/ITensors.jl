@@ -134,6 +134,7 @@ export
   hassameinds,
   ind,
   inds,
+  inner,
   insertblock!,
   ishermitian,
   itensor,

@@ -366,7 +366,8 @@ end
   end
 
   @testset "siteinds defined by siteinds overload" begin
-    function ITensors.siteinds(::SiteType"Test5", N; kwargs...)
+    # TODO: Make `ITensors.siteinds` accessible? Or delete this test?
+    function ITensors.SiteTypes.siteinds(::SiteType"Test5", N; kwargs...)
       return [Index(4, "Test5,n=$n") for n in 1:N]
     end
     s = siteinds("Test5", 8)
