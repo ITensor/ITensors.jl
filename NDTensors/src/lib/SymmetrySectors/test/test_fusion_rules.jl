@@ -16,7 +16,7 @@ using NDTensors.SymmetrySectors:
   trivial
 using Test: @inferred, @test, @testset, @test_throws
 
-@testset "Simple object fusion rules" begin
+@testset "Simple SymmetrySector fusion rules" begin
   @testset "Z{2} fusion rules" begin
     z0 = Z{2}(0)
     z1 = Z{2}(1)
@@ -127,7 +127,7 @@ using Test: @inferred, @test, @testset, @test_throws
     @test (@inferred quantum_dimension(σ ⊗ σ)) == 2.0
   end
 end
-@testset "Reducible object fusion rules" begin
+@testset "Gradedrange fusion rules" begin
   @testset "Trivial GradedUnitRange" begin
     g1 = gradedrange([U1(0) => 1])
     g2 = gradedrange([SU2(0) => 1])

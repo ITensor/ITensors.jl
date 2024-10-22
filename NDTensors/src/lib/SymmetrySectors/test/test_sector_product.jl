@@ -541,7 +541,7 @@ end
   end
 end
 
-@testset "Empty category" begin
+@testset "Empty SymmetrySector" begin
   for s in (SectorProduct(()), SectorProduct((;)))
     @test s == TrivialSector()
     @test s == SectorProduct(())
