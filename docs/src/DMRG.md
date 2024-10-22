@@ -1,5 +1,5 @@
 # DMRG
 
 ```@docs
-dmrg
+ITensorMPS.dmrg
 ```
