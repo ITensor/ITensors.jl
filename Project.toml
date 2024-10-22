@@ -31,15 +31,11 @@ Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 
 [weakdeps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
-PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
 ITensorsHDF5Ext = "HDF5"
-ITensorsObserversExt = "Observers"
-ITensorsPackageCompilerExt = "PackageCompiler"
 ITensorsVectorInterfaceExt = "VectorInterface"
 ITensorsZygoteRulesExt = "ZygoteRules"
 
@@ -57,8 +53,6 @@ KrylovKit = "0.4.2, 0.5, 0.6, 0.7, 0.8"
 LinearAlgebra = "1.6"
 LinearMaps = "3"
 NDTensors = "0.3.34"
-Observers = "0.2"
-PackageCompiler = "1, 2"
 PackageExtensionCompat = "1"
 Pkg = "1.6"
 Printf = "1.6"
@@ -78,7 +72,5 @@ julia = "1.10"
 [extras]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-Observers = "338f10d5-c7f1-4033-a7d1-f9dec39bcaa0"
-PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
