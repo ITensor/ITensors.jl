@@ -33,8 +33,6 @@ trivial(::Type{<:SU{N}}) where {N} = SU{N}(ntuple(_ -> 0, Val(N - 1)))
 
 fundamental(::Type{<:SU{N}}) where {N} = SU{N}(ntuple(i -> i == 1, Val(N - 1)))
 
-adjoint(::Type{<:SU{N}}) where {N} = SU{N}((ntuple(i -> 1 + (i == 1), Val(N - 1))))
-
 function quantum_dimension(::NotAbelianStyle, s::SU)
   N = groupdim(s)
   l = (sector_label(s)..., 0)

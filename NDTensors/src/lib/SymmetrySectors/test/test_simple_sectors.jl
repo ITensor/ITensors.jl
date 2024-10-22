@@ -9,7 +9,6 @@ using NDTensors.SymmetrySectors:
   TrivialSector,
   U1,
   Z,
-  adjoint,
   quantum_dimension,
   fundamental,
   istrivial,
@@ -116,9 +115,7 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test trivial(SU{2}) == SU2(0)
     @test istrivial(SU2(0))
-
     @test fundamental(SU{2}) == SU2(1//2)
-    @test adjoint(SU{2}) == SU2(1)
 
     @test quantum_dimension(j1) == 1
     @test quantum_dimension(j2) == 2
@@ -151,9 +148,7 @@ using Test: @inferred, @test, @testset, @test_throws
     @test SU{4}((0, 0, 0)) == TrivialSector()
 
     @test fundamental(SU{3}) == f3
-    @test adjoint(SU{3}) == ad3
     @test fundamental(SU{4}) == f4
-    @test adjoint(SU{4}) == ad4
 
     @test dual(f3) == SU{3}((1, 1))
     @test dual(f4) == SU{4}((1, 1, 1))
