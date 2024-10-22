@@ -1,12 +1,14 @@
 using Documenter
 using ITensors
+using ITensorMPS: ITensorMPS
 
 DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
+DocMeta.setdocmeta!(ITensorMPS, :DocTestSetup, :(using ITensorMPS); recursive=true)
 
 sitename = "ITensors.jl"
 
 settings = Dict(
-  :modules => [ITensors],
+  :modules => [ITensors, ITensorMPS],
   :pages => [
     "Introduction" => "index.md",
     "Getting Started with ITensor" => [
