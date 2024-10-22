@@ -25,3 +25,6 @@ abelian_label_fusion_rule(sector_type::Type{<:U1}, n1, n2) = sector_type(n1 + n2
 function Base.show(io::IO, u::U1)
   return print(io, "U(1)[", sector_label(u), "]")
 end
+
+# enforce U1(Int32(1)) == U1(1)
+Base.:(==)(s1::U1, s2::U1) = sector_label(s1) == sector_label(s2)

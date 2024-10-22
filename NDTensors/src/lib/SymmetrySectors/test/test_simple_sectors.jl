@@ -43,6 +43,8 @@ using Test: @inferred, @test, @testset, @test_throws
     @test dual(U1(2)) == U1(-2)
     @test isless(U1(1), U1(2))
     @test !isless(U1(2), U1(1))
+    @test U1(Int8(1)) == U1(1)
+    @test U1(UInt32(1)) == U1(1)
 
     @test U1(0) == TrivialSector()
     @test TrivialSector() == U1(0)
@@ -70,6 +72,9 @@ using Test: @inferred, @test, @testset, @test_throws
 
     @test Z{2}(0) == TrivialSector()
     @test TrivialSector() < Z{2}(1)
+    @test Z{2}(0) != Z{2}(1)
+    @test Z{2}(0) != Z{3}(0)
+    @test Z{2}(0) != U1(0)
   end
 
   @testset "O(2)" begin
