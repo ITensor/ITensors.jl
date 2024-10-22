@@ -1,4 +1,5 @@
 using ITensors, LinearAlgebra, Test
+using ITensors.SiteTypes: siteind, siteinds
 
 @testset "Physics Sites" begin
   N = 10

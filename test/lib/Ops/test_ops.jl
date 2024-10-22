@@ -3,6 +3,7 @@ using ITensors
 using LinearAlgebra
 
 using ITensors.Ops #: Scaled, Prod, Sum, expand
+using ITensors.SiteTypes: siteinds
 
 function heisenberg(N)
   os = Sum{Op}()

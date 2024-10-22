@@ -1,6 +1,7 @@
 using Test
 using ITensors
 using ITensors.Ops
+using ITensors.SiteTypes: siteinds
 
 @testset "Simple trotterization" begin
   H = Sum{Op}() + ("X", 1) + ("Y", 1)

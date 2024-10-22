@@ -1,4 +1,5 @@
 using ITensors, Test
+using ITensors.SiteTypes: siteind, siteinds
 
 function is_unitary(U::ITensor; kwargs...)
   s = noprime(filterinds(U; plev=1))
