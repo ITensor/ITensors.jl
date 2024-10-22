@@ -70,6 +70,8 @@ using Test: @inferred, @test, @testset, @test_throws
     @test dual(Z{2}(1)) == Z{2}(1)
     @test isless(Z{2}(0), Z{2}(1))
     @test !isless(Z{2}(1), Z{2}(0))
+    @test Z{2}(0) == z0
+    @test Z{2}(-3) == z1
 
     @test Z{2}(0) == TrivialSector()
     @test TrivialSector() < Z{2}(1)

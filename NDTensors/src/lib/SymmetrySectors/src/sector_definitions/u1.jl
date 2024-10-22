@@ -11,10 +11,10 @@ struct U1{T} <: AbstractSector
 end
 
 SymmetryStyle(::Type{<:U1}) = AbelianStyle()
-
-GradedAxes.dual(u::U1) = U1(-u.n)
-
 sector_label(u::U1) = u.n
+
+set_sector_label(s::U1, sector_label) = typeof(s)(sector_label)
+GradedAxes.dual(s::U1) = set_sector_label(s, -sector_label(s))
 
 trivial(::Type{U1}) = trivial(U1{Int})
 trivial(::Type{U1{T}}) where {T} = U1(zero(T))
