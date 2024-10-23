@@ -629,6 +629,24 @@ function ITensors.contract(A::MPO, ψ::MPS; alg=nothing, method=alg, kwargs...)
   return contract(Algorithm(alg), A, ψ; kwargs...)
 end
 
+function zipup_docstring(isMPOMPO::Bool)::String
+  rhsTypeString = isMPOMPO ? "MPO" : "MPS"
+  rhsString = isMPOMPO ? "B" : "ψ"
+  return """    - "zipup": The MPO and $rhsTypeString tensors are contracted then truncated at each site without enforcing
+  the appropriate orthogonal gauge. Once this sweep is complete a call to `truncate!` occurs.
+  Because the initial truncation is not locally optimal it is recommended to use a loose
+  `cutoff` and `maxdim` and then pass the desired truncation parameters to the locally optimal
+  `truncate!` sweep via the additional keyword argument `truncate_kwargs`.
+  A set of parameters suggested in [^Paeckel2019] is
+  `contract(A, $rhsString; method="zipup", cutoff=cutoff / 10, maxdim=2 * maxdim, truncate_kwargs=(; cutoff, maxdim))`."""
+end
+
+function Paeckel2019_citation_docstring()::String
+  return """
+  [^Paeckel2019]: Time-evolution methods for matrix-product states. Sebastian Paeckel et al. [arXiv:1901.05824](https://arxiv.org/abs/1901.05824)
+  """
+end
+
 contract_mpo_mps_doc = """
     contract(ψ::MPS, A::MPO; kwargs...) -> MPS
     *(::MPS, ::MPO; kwargs...) -> MPS
@@ -666,14 +684,11 @@ Choose the method with the `method` keyword, for example
     a density matrix which is diagonalized iteratively at each site.
     - "naive": The MPO and MPS tensor are contracted exactly at each site and then a truncation 
     of the resulting MPS is performed.
-    - "zipup": The MPO and MPS tensors are contracted then truncated at each site without enforcing
-    the appropriate orthogonal gauge. Once this sweep is complete a call to `truncate!` occurs.
-    Because the initial truncation is not locally optimal it is recommended to use a loose
-    `cutoff` and `maxdim` and then pass the desired truncation parameters to the locally optimal
-    `truncate!` sweep via the additional keyword argument `truncate_kwargs`.
-    Suggested use is `contract(A, ψ; method="zipup", cutoff=cutoff / 10, maxdim=2 * maxdim, truncate_kwargs=(; cutoff, maxdim))`.
+    $(zipup_docstring(false))
 
 See also [`apply`](@ref).
+
+$(Paeckel2019_citation_docstring())
 """
 
 @doc """
@@ -959,14 +974,11 @@ C = apply(A, B; alg="naive", truncate=false)
 - `alg="zipup"`: the algorithm to use for the contraction. Supported algorithms are
     - "naive": The MPO tensors are contracted exactly at each site and then a truncation 
     of the resulting MPO is performed.
-    - "zipup": The MPO and MPS tensors are contracted then truncated at each site without enforcing
-    the appropriate orthogonal gauge. Once this sweep is complete a call to `truncate!` occurs.
-    Because the initial truncation is not locally optimal it is recommended to use a loose
-    `cutoff` and `maxdim` and then pass the desired truncation parameters to the locally optimal
-    `truncate!` sweep via the additional keyword argument `truncate_kwargs`.
-    Suggested use is `contract(A, ψ; method="zipup", cutoff=cutoff / 10, maxdim=2 * maxdim, truncate_kwargs=(; cutoff, maxdim))`.
+    $(zipup_docstring(false))
 
 See also [`apply`](@ref) for details about the arguments available.
+
+$(Paeckel2019_citation_docstring())
 """
 
 @doc """
