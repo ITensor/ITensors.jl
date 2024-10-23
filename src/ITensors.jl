@@ -58,13 +58,11 @@ include("lib/LazyApply/src/LazyApply.jl")
 # TODO: `using .LazyApply: LazyApply, ...`.
 using .LazyApply
 using .LazyApply: Prod, Scaled, Sum, coefficient
-export Prod, Scaled, Sum, coefficient
 include("lib/Ops/src/Ops.jl")
 # TODO: `using .Ops: Ops, ...`.
 using .Ops
 using .Ops: Ops, Op, Trotter
 import .Ops: sites, name
-export Ops, Op, Trotter
 include("exports.jl")
 include("imports.jl")
 include("global_variables.jl")
@@ -129,21 +127,6 @@ using .SiteTypes:
   op!,
   ops,
   state
-export OpName,
-  SiteType,
-  StateName,
-  TagType,
-  ValName,
-  @OpName_str,
-  @SiteType_str,
-  @StateName_str,
-  @TagType_str,
-  @ValName_str,
-  has_fermion_string,
-  op,
-  ops,
-  state,
-  val
 include("lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
@@ -165,12 +148,6 @@ include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
 using .ITensorVisualizationCore
 using .ITensorVisualizationCore:
   @visualize,
-  @visualize!,
-  @visualize_noeval,
-  @visualize_noeval!,
-  @visualize_sequence,
-  @visualize_sequence_noeval
-export @visualize,
   @visualize!,
   @visualize_noeval,
   @visualize_noeval!,

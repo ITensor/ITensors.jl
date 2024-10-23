@@ -125,6 +125,7 @@ export
   diagitensor,
   diag_itensor,
   directsum,
+  dot,
   eachnzblock,
   firstind,
   filterinds,
@@ -188,10 +189,6 @@ export
   # Methods
   addtags,
   hastags,
-  # physics/autompo.jl
-  AutoMPO,
-  OpSum,
-  add!,
   # qn/qnindex.jl
   blockdim,
   flux,
