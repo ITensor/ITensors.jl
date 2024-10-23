@@ -20,7 +20,6 @@ ITensors.disable_threaded_blocksparse()
       "threading",
       "lib/ContractionSequenceOptimization",
       "ext/ITensorsChainRulesCoreExt",
-      "ext/ITensorsPackageCompilerExt",
       "ext/ITensorsVectorInterfaceExt",
     ]
     @time for dir in dirs

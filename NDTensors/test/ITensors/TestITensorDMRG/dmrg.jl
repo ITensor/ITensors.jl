@@ -1,4 +1,4 @@
-using ITensors: MPO, OpSum, dmrg, random_mps, siteinds
+using ITensorMPS: MPO, OpSum, dmrg, random_mps, siteinds
 using Random: Random
 using Test: @test
 include("../../NDTensorsTestUtils/NDTensorsTestUtils.jl")
@@ -6,7 +6,7 @@ using .NDTensorsTestUtils: default_rtol
 # TODO: Include file with `reference_energies`.
 
 function test_dmrg(
-  elt, N::Integer; dev::Function, conserve_qns, rtol_scale=true, outputlevel=0
+  elt, N::Integer; dev::Function, conserve_qns, rtol_scale=true, outputlevel=0, broken=false
 )
   sites = siteinds("S=1/2", N; conserve_qns)
 
@@ -31,5 +31,5 @@ function test_dmrg(
 
   energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, noise, outputlevel)
 
-  @test energy ≈ reference_energies[N] rtol = rtol_scale * default_rtol(elt)
+  @test energy ≈ reference_energies[N] rtol = rtol_scale * default_rtol(elt) broken = broken
 end

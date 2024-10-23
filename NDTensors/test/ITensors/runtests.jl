@@ -14,13 +14,8 @@ using SafeTestsets: @safetestset
     if !is_supported_eltype(dev, elt)
       continue
     end
-    if TestITensorDMRG.is_broken(dev, elt, Val(conserve_qns))
-      # TODO: Switch to `@test ... broken=true`, introduced
-      # in Julia 1.7.
-      @test_broken TestITensorDMRG.test_dmrg(elt, N; dev, conserve_qns)
-    else
-      TestITensorDMRG.test_dmrg(elt, N; dev, conserve_qns, outputlevel=0)
-    end
+    broken = TestITensorDMRG.is_broken(dev, elt, Val(conserve_qns))
+    TestITensorDMRG.test_dmrg(elt, N; dev, conserve_qns, outputlevel=0, broken)
   end
   using ITensors.ITensorsNamedDimsArraysExt: to_nameddimsarray
   ## Without this line this test was throwing an error of ``NDTensors` not defined`
