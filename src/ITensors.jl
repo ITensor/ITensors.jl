@@ -126,6 +126,8 @@ using .SiteTypes:
   op,
   op!,
   ops,
+  siteind,
+  siteinds,
   state
 include("lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
