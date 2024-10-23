@@ -1,6 +1,6 @@
 using Test
 using ITensors
-using ITensors.Ops
+using ITensors.Ops: Op, Prod, Sum, Trotter
 using ITensors.SiteTypes: siteinds
 
 @testset "Simple trotterization" begin

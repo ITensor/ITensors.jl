@@ -1,5 +1,5 @@
 using ITensors, LinearAlgebra, Test
-using ITensors.SiteTypes: siteind, siteinds
+using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
 
 @testset "Physics Sites" begin
   N = 10
