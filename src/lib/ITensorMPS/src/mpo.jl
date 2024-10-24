@@ -971,10 +971,7 @@ C = apply(A, B; alg="naive", truncate=false)
    for the `"naive"` version, if you just want to contract the tensors pairwise
    exactly. This can be useful if you are contracting MPOs that have diverging
    norms, such as MPOs originating from sums of local operators.
-- `alg="zipup"`: the algorithm to use for the contraction. Supported algorithms are
-    - "naive": The MPO tensors are contracted exactly at each site and then a truncation 
-    of the resulting MPO is performed.
-    $(zipup_docstring(false))
+  $(zipup_docstring(true))
 
 See also [`apply`](@ref) for details about the arguments available.
 
