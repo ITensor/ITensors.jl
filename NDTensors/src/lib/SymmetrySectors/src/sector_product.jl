@@ -84,10 +84,10 @@ function arguments_product(s1, s2)
   return throw(ArgumentError("Mixing non-empty storage types is illegal"))
 end
 
-function arguments_isless(a1, a2)
-  isempty(a1) && return _arguments_isless(empty(a2), a2)
-  isempty(a2) && return _arguments_isless(a1, empty(a1))
-  return isless(sym_arguments_maybe_insert_unspecified(a1, a2)...)
+function arguments_isless(a1, b1)
+  a2 = isempty(a1) ? empty(b1) : a1
+  b2 = isempty(b1) ? empty(a2) : b1
+  return isless(sym_arguments_maybe_insert_unspecified(a2, b2)...)
 end
 
 # =================================  Cartesian Product  ====================================
@@ -187,9 +187,6 @@ function arguments_maybe_insert_unspecified(t1::Tuple, t2::Tuple)
   return (t1..., trivial.(t2[(n1 + 1):end])...)
 end
 
-function _arguments_isless(t1::Tuple, t2::Tuple)
-  return isless(sym_arguments_maybe_insert_unspecified(t1, t2)...)
-end
 # ===========================  Dictionary-like implementation  =============================
 function SectorProduct(nt::NamedTuple)
   arguments = sort_keys(nt)
@@ -240,8 +237,4 @@ end
 function shared_arguments_fusion_rule(shared1::NT, shared2::NT) where {NT<:NamedTuple}
   tuple_fused = shared_arguments_fusion_rule(values(shared1), values(shared2))
   return map_blocklabels(SectorProduct ∘ NT ∘ arguments ∘ SectorProduct, tuple_fused)
-end
-
-function _arguments_isless(nt1::NamedTuple, nt2::NamedTuple)
-  return isless(sym_arguments_maybe_insert_unspecified(nt1, nt2)...)
 end
