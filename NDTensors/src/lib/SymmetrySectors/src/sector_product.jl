@@ -68,14 +68,14 @@ function sym_arguments_maybe_insert_unspecified(s1, s2)
   arguments_maybe_insert_unspecified(s2, s1)
 end
 
-function arguments_isequal(s1, s2)
-  isempty(s1) && return _arguments_isequal(empty(s2), s2)
-  isempty(s2) && return _arguments_isequal(s1, empty(s1))
-  return _arguments_isequal(s1, s2)
+function make_empty_match(a1, b1)
+  a2 = isempty(a1) ? empty(b1) : a1
+  b2 = isempty(b1) ? empty(a2) : b1
+  return a2, b2
 end
 
-function _arguments_isequal(s1, s2)
-  return ==(sym_arguments_maybe_insert_unspecified(s1, s2)...)
+function arguments_isequal(a1, b1)
+  return ==(sym_arguments_maybe_insert_unspecified(make_empty_match(a1, b1)...)...)
 end
 
 function arguments_product(s1, s2)
@@ -85,9 +85,7 @@ function arguments_product(s1, s2)
 end
 
 function arguments_isless(a1, b1)
-  a2 = isempty(a1) ? empty(b1) : a1
-  b2 = isempty(b1) ? empty(a2) : b1
-  return isless(sym_arguments_maybe_insert_unspecified(a2, b2)...)
+  return isless(sym_arguments_maybe_insert_unspecified(make_empty_match(a1, b1)...)...)
 end
 
 # =================================  Cartesian Product  ====================================
