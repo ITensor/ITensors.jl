@@ -86,22 +86,11 @@ arguments_product(t::Tuple, ::NamedTuple{()}) = t
 arguments_product(::Tuple{}, nt::NamedTuple) = nt
 arguments_product(nt::NamedTuple, ::Tuple{}) = nt
 
-function arguments_isless(nt::NamedTuple, ::Tuple{})
-  return arguments_isless(nt, (;))
-end
-function arguments_isless(::Tuple{}, nt::NamedTuple)
-  return arguments_isless((;), nt)
-end
-function arguments_isless(::NamedTuple{()}, t::Tuple)
-  return arguments_isless((), t)
-end
-function arguments_isless(t::Tuple, ::NamedTuple{()})
-  return arguments_isless(t, ())
-end
-function arguments_isless(s1, s2)
-  return isless(sym_arguments_insert_unspecified(s1, s2)...)
-end
-
+arguments_isless(s1, s2) = isless(sym_arguments_insert_unspecified(s1, s2)...)
+arguments_isless(nt::NamedTuple, ::Tuple{}) = arguments_isless(nt, (;))
+arguments_isless(::Tuple{}, nt::NamedTuple) = arguments_isless((;), nt)
+arguments_isless(::NamedTuple{()}, t::Tuple) = arguments_isless((), t)
+arguments_isless(t::Tuple, ::NamedTuple{()}) = arguments_isless(t, ())
 arguments_isless(::NamedTuple, ::Tuple) = throw(ArgumentError("Not implemented"))
 arguments_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"))
 
