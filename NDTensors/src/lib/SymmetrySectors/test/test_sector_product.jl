@@ -12,7 +12,7 @@ using NDTensors.SymmetrySectors:
   Z,
   block_dimensions,
   quantum_dimension,
-  product_sectors,
+  arguments,
   trivial
 using NDTensors.GradedAxes: dual, fusion_product, space_isequal, gradedrange
 using Test: @inferred, @test, @testset, @test_throws
@@ -20,40 +20,40 @@ using Test: @inferred, @test, @testset, @test_throws
 @testset "Test Ordered Products" begin
   @testset "Ordered Constructor" begin
     s = SectorProduct(U1(1))
-    @test length(product_sectors(s)) == 1
+    @test length(arguments(s)) == 1
     @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred dual(s)) == SectorProduct(U1(-1))
-    @test product_sectors(s)[1] == U1(1)
+    @test arguments(s)[1] == U1(1)
     @test (@inferred trivial(s)) == SectorProduct(U1(0))
 
     s = SectorProduct(U1(1), U1(2))
-    @test length(product_sectors(s)) == 2
+    @test length(arguments(s)) == 2
     @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred dual(s)) == SectorProduct(U1(-1), U1(-2))
-    @test product_sectors(s)[1] == U1(1)
-    @test product_sectors(s)[2] == U1(2)
+    @test arguments(s)[1] == U1(1)
+    @test arguments(s)[2] == U1(2)
     @test (@inferred trivial(s)) == SectorProduct(U1(0), U1(0))
 
     s = U1(1) × SU2(1//2) × U1(3)
-    @test length(product_sectors(s)) == 3
+    @test length(arguments(s)) == 3
     @test (@inferred quantum_dimension(s)) == 2
     @test (@inferred dual(s)) == U1(-1) × SU2(1//2) × U1(-3)
-    @test product_sectors(s)[1] == U1(1)
-    @test product_sectors(s)[2] == SU2(1//2)
-    @test product_sectors(s)[3] == U1(3)
+    @test arguments(s)[1] == U1(1)
+    @test arguments(s)[2] == SU2(1//2)
+    @test arguments(s)[3] == U1(3)
     @test (@inferred trivial(s)) == SectorProduct(U1(0), SU2(0), U1(0))
 
     s = U1(3) × SU2(1//2) × Fib("τ")
-    @test length(product_sectors(s)) == 3
+    @test length(arguments(s)) == 3
     @test (@inferred quantum_dimension(s)) == 1.0 + √5
     @test dual(s) == U1(-3) × SU2(1//2) × Fib("τ")
-    @test product_sectors(s)[1] == U1(3)
-    @test product_sectors(s)[2] == SU2(1//2)
-    @test product_sectors(s)[3] == Fib("τ")
+    @test arguments(s)[1] == U1(3)
+    @test arguments(s)[2] == SU2(1//2)
+    @test arguments(s)[3] == Fib("τ")
     @test (@inferred trivial(s)) == SectorProduct(U1(0), SU2(0), Fib("1"))
 
     s = TrivialSector() × U1(3) × SU2(1 / 2)
-    @test length(product_sectors(s)) == 3
+    @test length(arguments(s)) == 3
     @test (@inferred quantum_dimension(s)) == 2
     @test dual(s) == TrivialSector() × U1(-3) × SU2(1//2)
     @test (@inferred trivial(s)) == SectorProduct(TrivialSector(), U1(0), SU2(0))
@@ -61,7 +61,7 @@ using Test: @inferred, @test, @testset, @test_throws
   end
 
   @testset "Ordered comparisons" begin
-    # convention: missing product_sectors are filled with singlets
+    # convention: missing arguments are filled with singlets
     @test SectorProduct(U1(1), SU2(1)) == SectorProduct(U1(1), SU2(1))
     @test SectorProduct(U1(1), SU2(0)) != SectorProduct(U1(1), SU2(1))
     @test SectorProduct(U1(0), SU2(1)) != SectorProduct(U1(1), SU2(1))
@@ -284,25 +284,25 @@ end
 @testset "Test Named Sector Products" begin
   @testset "Construct from × of NamedTuples" begin
     s = (A=U1(1),) × (B=Z{2}(0),)
-    @test length(product_sectors(s)) == 2
-    @test product_sectors(s)[:A] == U1(1)
-    @test product_sectors(s)[:B] == Z{2}(0)
+    @test length(arguments(s)) == 2
+    @test arguments(s)[:A] == U1(1)
+    @test arguments(s)[:B] == Z{2}(0)
     @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred dual(s)) == (A=U1(-1),) × (B=Z{2}(0),)
     @test (@inferred trivial(s)) == (A=U1(0),) × (B=Z{2}(0),)
 
     s = (A=U1(1),) × (B=SU2(2),)
-    @test length(product_sectors(s)) == 2
-    @test product_sectors(s)[:A] == U1(1)
-    @test product_sectors(s)[:B] == SU2(2)
+    @test length(arguments(s)) == 2
+    @test arguments(s)[:A] == U1(1)
+    @test arguments(s)[:B] == SU2(2)
     @test (@inferred quantum_dimension(s)) == 5
     @test (@inferred dual(s)) == (A=U1(-1),) × (B=SU2(2),)
     @test (@inferred trivial(s)) == (A=U1(0),) × (B=SU2(0),)
     @test s == (B=SU2(2),) × (A=U1(1),)
 
     s = s × (C=Ising("ψ"),)
-    @test length(product_sectors(s)) == 3
-    @test product_sectors(s)[:C] == Ising("ψ")
+    @test length(arguments(s)) == 3
+    @test arguments(s)[:C] == Ising("ψ")
     @test (@inferred quantum_dimension(s)) == 5.0
     @test (@inferred dual(s)) == (A=U1(-1),) × (B=SU2(2),) × (C=Ising("ψ"),)
 
@@ -313,22 +313,22 @@ end
 
   @testset "Construct from Pairs" begin
     s = SectorProduct("A" => U1(2))
-    @test length(product_sectors(s)) == 1
-    @test product_sectors(s)[:A] == U1(2)
+    @test length(arguments(s)) == 1
+    @test arguments(s)[:A] == U1(2)
     @test s == SectorProduct(; A=U1(2))
     @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred dual(s)) == SectorProduct("A" => U1(-2))
     @test (@inferred trivial(s)) == SectorProduct(; A=U1(0))
 
     s = SectorProduct("B" => Ising("ψ"), :C => Z{2}(1))
-    @test length(product_sectors(s)) == 2
-    @test product_sectors(s)[:B] == Ising("ψ")
-    @test product_sectors(s)[:C] == Z{2}(1)
+    @test length(arguments(s)) == 2
+    @test arguments(s)[:B] == Ising("ψ")
+    @test arguments(s)[:C] == Z{2}(1)
     @test (@inferred quantum_dimension(s)) == 1.0
   end
 
   @testset "Comparisons with unspecified labels" begin
-    # convention: product_sectors evaluate as equal if unmatched labels are trivial
+    # convention: arguments evaluate as equal if unmatched labels are trivial
     # this is different from ordered tuple convention
     q2 = SectorProduct(; N=U1(2))
     q20 = (N=U1(2),) × (J=SU2(0),)

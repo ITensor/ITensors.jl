@@ -7,40 +7,40 @@ using ..GradedAxes: AbstractGradedUnitRange, GradedAxes, dual
 
 # =====================================  Definition  =======================================
 struct SectorProduct{Sectors} <: AbstractSector
-  product_sectors::Sectors
+  arguments::Sectors
   global _SectorProduct(l) = new{typeof(l)}(l)
 end
 
-SectorProduct(c::SectorProduct) = _SectorProduct(product_sectors(c))
+SectorProduct(c::SectorProduct) = _SectorProduct(arguments(c))
 
-product_sectors(s::SectorProduct) = s.product_sectors
+arguments(s::SectorProduct) = s.arguments
 
 # =================================  Sectors interface  ====================================
 function SymmetryStyle(T::Type{<:SectorProduct})
-  return product_sectors_symmetrystyle(product_sectors_type(T))
+  return arguments_symmetrystyle(arguments_type(T))
 end
 
 function quantum_dimension(::NotAbelianStyle, s::SectorProduct)
-  return mapreduce(quantum_dimension, *, product_sectors(s))
+  return mapreduce(quantum_dimension, *, arguments(s))
 end
 
 # use map instead of broadcast to support both Tuple and NamedTuple
-GradedAxes.dual(s::SectorProduct) = SectorProduct(map(dual, product_sectors(s)))
+GradedAxes.dual(s::SectorProduct) = SectorProduct(map(dual, arguments(s)))
 
 function trivial(type::Type{<:SectorProduct})
-  return SectorProduct(product_sectors_trivial(product_sectors_type(type)))
+  return SectorProduct(arguments_trivial(arguments_type(type)))
 end
 
 # ===================================  Base interface  =====================================
 function Base.:(==)(A::SectorProduct, B::SectorProduct)
-  return product_sectors_isequal(product_sectors(A), product_sectors(B))
+  return arguments_isequal(arguments(A), arguments(B))
 end
 
 function Base.show(io::IO, s::SectorProduct)
-  (length(product_sectors(s)) < 2) && print(io, "sector")
+  (length(arguments(s)) < 2) && print(io, "sector")
   print(io, "(")
   symbol = ""
-  for p in pairs(product_sectors(s))
+  for p in pairs(arguments(s))
     print(io, symbol)
     sector_show(io, p[1], p[2])
     symbol = " × "
@@ -52,7 +52,7 @@ sector_show(io::IO, ::Int, v) = print(io, v)
 sector_show(io::IO, k::Symbol, v) = print(io, "($k=$v,)")
 
 function Base.isless(s1::SectorProduct, s2::SectorProduct)
-  return product_sectors_isless(product_sectors(s1), product_sectors(s2))
+  return arguments_isless(arguments(s1), arguments(s2))
 end
 
 # =======================================  shared  =========================================
@@ -60,61 +60,55 @@ end
 # - ordered-like with a Tuple
 # - dictionary-like with a NamedTuple
 
-function sym_product_sectors_insert_unspecified(s1, s2)
-  return product_sectors_insert_unspecified(s1, s2),
-  product_sectors_insert_unspecified(s2, s1)
+arguments_type(::Type{<:SectorProduct{T}}) where {T} = T
+
+function sym_arguments_insert_unspecified(s1, s2)
+  return arguments_insert_unspecified(s1, s2), arguments_insert_unspecified(s2, s1)
 end
 
-function product_sectors_isequal(s1, s2)
-  return ==(sym_product_sectors_insert_unspecified(s1, s2)...)
+function arguments_isequal(s1, s2)
+  return ==(sym_arguments_insert_unspecified(s1, s2)...)
 end
 
 # get clean results when mixing implementations
-product_sectors_isequal(nt::NamedTuple, t::Tuple) = product_sectors_isequal(t, nt)
-function product_sectors_isequal(t::Tuple, nt::NamedTuple)
+arguments_isequal(nt::NamedTuple, t::Tuple) = arguments_isequal(t, nt)
+function arguments_isequal(t::Tuple, nt::NamedTuple)
   if isempty(t)
-    return product_sectors_isequal((;), nt)
+    return arguments_isequal((;), nt)
   elseif isempty(nt)
-    return product_sectors_isequal(t, ())
+    return arguments_isequal(t, ())
   end
   return false
 end
 
-function product_sectors_isless(nt::NamedTuple, ::Tuple{})
-  return product_sectors_isless(nt, (;))
+arguments_product(::NamedTuple{()}, t::Tuple) = t
+arguments_product(t::Tuple, ::NamedTuple{()}) = t
+arguments_product(::Tuple{}, nt::NamedTuple) = nt
+arguments_product(nt::NamedTuple, ::Tuple{}) = nt
+
+function arguments_isless(nt::NamedTuple, ::Tuple{})
+  return arguments_isless(nt, (;))
 end
-function product_sectors_isless(::Tuple{}, nt::NamedTuple)
-  return product_sectors_isless((;), nt)
+function arguments_isless(::Tuple{}, nt::NamedTuple)
+  return arguments_isless((;), nt)
 end
-function product_sectors_isless(::NamedTuple{()}, t::Tuple)
-  return product_sectors_isless((), t)
+function arguments_isless(::NamedTuple{()}, t::Tuple)
+  return arguments_isless((), t)
 end
-function product_sectors_isless(t::Tuple, ::NamedTuple{()})
-  return product_sectors_isless(t, ())
+function arguments_isless(t::Tuple, ::NamedTuple{()})
+  return arguments_isless(t, ())
 end
-function product_sectors_isless(s1, s2)
-  return isless(sym_product_sectors_insert_unspecified(s1, s2)...)
+function arguments_isless(s1, s2)
+  return isless(sym_arguments_insert_unspecified(s1, s2)...)
 end
 
-product_sectors_isless(::NamedTuple, ::Tuple) = throw(ArgumentError("Not implemented"))
-product_sectors_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"))
-
-product_sectors_type(::Type{<:SectorProduct{T}}) where {T} = T
-
-function product_sectors_fusion_rule(sects1, sects2)
-  isempty(sects1) && return SectorProduct(sects2)
-  isempty(sects2) && return SectorProduct(sects1)
-  shared_sect = shared_product_sectors_fusion_rule(
-    product_sectors_common(sects1, sects2)...
-  )
-  diff_sect = SectorProduct(product_sectors_diff(sects1, sects2))
-  return shared_sect × diff_sect
-end
+arguments_isless(::NamedTuple, ::Tuple) = throw(ArgumentError("Not implemented"))
+arguments_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"))
 
 # =================================  Cartesian Product  ====================================
 ×(c1::AbstractSector, c2::AbstractSector) = ×(SectorProduct(c1), SectorProduct(c2))
 function ×(p1::SectorProduct, p2::SectorProduct)
-  return SectorProduct(product_sectors_product(product_sectors(p1), product_sectors(p2)))
+  return SectorProduct(arguments_product(arguments(p1), arguments(p2)))
 end
 
 ×(a, g::AbstractUnitRange) = ×(to_gradedrange(a), g)
@@ -148,9 +142,7 @@ end
 
 # generic case: fusion returns a GradedAxes, even for fusion with Empty
 function fusion_rule(::NotAbelianStyle, s1::SectorProduct, s2::SectorProduct)
-  return to_gradedrange(
-    product_sectors_fusion_rule(product_sectors(s1), product_sectors(s2))
-  )
+  return to_gradedrange(arguments_fusion_rule(arguments(s1), arguments(s2)))
 end
 
 # Abelian case: fusion returns SectorProduct
@@ -164,32 +156,38 @@ fusion_rule(::AbelianStyle, ::TrivialSector, c::SectorProduct) = c
 fusion_rule(::NotAbelianStyle, c::SectorProduct, ::TrivialSector) = to_gradedrange(c)
 fusion_rule(::NotAbelianStyle, ::TrivialSector, c::SectorProduct) = to_gradedrange(c)
 
+function arguments_fusion_rule(sects1, sects2)
+  isempty(sects1) && return SectorProduct(sects2)
+  isempty(sects2) && return SectorProduct(sects1)
+  shared_sect = shared_arguments_fusion_rule(arguments_common(sects1, sects2)...)
+  diff_sect = SectorProduct(arguments_diff(sects1, sects2))
+  return shared_sect × diff_sect
+end
+
 # ===============================  Ordered implementation  =================================
 SectorProduct(t::Tuple) = _SectorProduct(t)
 SectorProduct(sects::AbstractSector...) = SectorProduct(sects)
 
-function product_sectors_symmetrystyle(T::Type{<:Tuple})
+function arguments_symmetrystyle(T::Type{<:Tuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(T); init=AbelianStyle())
 end
 
-product_sectors_product(::NamedTuple{()}, l1::Tuple) = l1
-product_sectors_product(l2::Tuple, ::NamedTuple{()}) = l2
-product_sectors_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
+arguments_product(l1::Tuple, l2::Tuple) = (l1..., l2...)
 
-product_sectors_trivial(T::Type{<:Tuple}) = trivial.(fieldtypes(T))
+arguments_trivial(T::Type{<:Tuple}) = trivial.(fieldtypes(T))
 
-function product_sectors_common(t1::Tuple, t2::Tuple)
+function arguments_common(t1::Tuple, t2::Tuple)
   n = min(length(t1), length(t2))
   return t1[begin:n], t2[begin:n]
 end
 
-function product_sectors_diff(t1::Tuple, t2::Tuple)
+function arguments_diff(t1::Tuple, t2::Tuple)
   n1 = length(t1)
   n2 = length(t2)
   return n1 < n2 ? t2[(n1 + 1):end] : t1[(n2 + 1):end]
 end
 
-function shared_product_sectors_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
+function shared_arguments_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
   return mapreduce(
     to_gradedrange ∘ fusion_rule,
     ×,
@@ -199,15 +197,15 @@ function shared_product_sectors_fusion_rule(shared1::T, shared2::T) where {T<:Tu
   )
 end
 
-function product_sectors_insert_unspecified(t1::Tuple, t2::Tuple)
+function arguments_insert_unspecified(t1::Tuple, t2::Tuple)
   n1 = length(t1)
   return (t1..., trivial.(t2[(n1 + 1):end])...)
 end
 
 # ===========================  Dictionary-like implementation  =============================
 function SectorProduct(nt::NamedTuple)
-  product_sectors = sort_keys(nt)
-  return _SectorProduct(product_sectors)
+  arguments = sort_keys(nt)
+  return _SectorProduct(arguments)
 end
 
 SectorProduct(; kws...) = SectorProduct((; kws...))
@@ -218,42 +216,40 @@ function SectorProduct(pairs::Pair...)
   return SectorProduct(NamedTuple{keys}(vals))
 end
 
-function product_sectors_symmetrystyle(NT::Type{<:NamedTuple})
+function arguments_symmetrystyle(NT::Type{<:NamedTuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(NT); init=AbelianStyle())
 end
 
-function product_sectors_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
-  diff1 = product_sectors_trivial(typeof(setdiff_keys(nt2, nt1)))
+function arguments_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
+  diff1 = arguments_trivial(typeof(setdiff_keys(nt2, nt1)))
   return sort_keys(union_keys(nt1, diff1))
 end
 
-product_sectors_product(l1::NamedTuple, ::Tuple{}) = l1
-product_sectors_product(::Tuple{}, l2::NamedTuple) = l2
-function product_sectors_product(l1::NamedTuple, l2::NamedTuple)
+function arguments_product(l1::NamedTuple, l2::NamedTuple)
   if length(intersect_keys(l1, l2)) > 0
     throw(ArgumentError("Cannot define product of shared keys"))
   end
   return union_keys(l1, l2)
 end
 
-function product_sectors_trivial(NT::Type{<:NamedTuple{Keys}}) where {Keys}
+function arguments_trivial(NT::Type{<:NamedTuple{Keys}}) where {Keys}
   return NamedTuple{Keys}(trivial.(fieldtypes(NT)))
 end
 
-function product_sectors_common(nt1::NamedTuple, nt2::NamedTuple)
+function arguments_common(nt1::NamedTuple, nt2::NamedTuple)
   # SectorProduct(nt::NamedTuple) sorts keys at init
   @assert issorted(keys(nt1))
   @assert issorted(keys(nt2))
   return intersect_keys(nt1, nt2), intersect_keys(nt2, nt1)
 end
 
-product_sectors_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
+arguments_diff(nt1::NamedTuple, nt2::NamedTuple) = symdiff_keys(nt1, nt2)
 
 function map_blocklabels(f, r::AbstractUnitRange)
   return gradedrange(labelled.(unlabel.(blocklengths(r)), f.(blocklabels(r))))
 end
 
-function shared_product_sectors_fusion_rule(shared1::NT, shared2::NT) where {NT<:NamedTuple}
-  tuple_fused = shared_product_sectors_fusion_rule(values(shared1), values(shared2))
-  return map_blocklabels(SectorProduct ∘ NT ∘ product_sectors ∘ SectorProduct, tuple_fused)
+function shared_arguments_fusion_rule(shared1::NT, shared2::NT) where {NT<:NamedTuple}
+  tuple_fused = shared_arguments_fusion_rule(values(shared1), values(shared2))
+  return map_blocklabels(SectorProduct ∘ NT ∘ arguments ∘ SectorProduct, tuple_fused)
 end
