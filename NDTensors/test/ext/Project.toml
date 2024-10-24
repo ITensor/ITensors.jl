@@ -1,4 +1,0 @@
-[deps]
-ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-MappedArrays = "dbb5928d-eab1-5f90-85c2-b9b0edb7c900"
-NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
