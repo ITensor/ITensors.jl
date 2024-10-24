@@ -74,11 +74,10 @@ function arguments_isequal(t::Tuple, nt::NamedTuple)
   return false
 end
 
-arguments_product(nt::NamedTuple, t::Tuple) = arguments_product(t, nt)
-function arguments_product(t::Tuple, nt::NamedTuple)
-  isempty(nt) && return t
-  isempty(t) && return nt
-  throw(ArgumentError("Mixing Tuple and NamedTuple is illegal"))
+function arguments_product(s1, s2)
+  isempty(s1) && return s2
+  isempty(s2) && return s1
+  throw(ArgumentError("Mixing implementations is illegal"))
 end
 
 arguments_isless(s1, s2) = isless(sym_arguments_insert_unspecified(s1, s2)...)
