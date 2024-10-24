@@ -629,6 +629,24 @@ function ITensors.contract(A::MPO, ψ::MPS; alg=nothing, method=alg, kwargs...)
   return contract(Algorithm(alg), A, ψ; kwargs...)
 end
 
+function zipup_docstring(isMPOMPO::Bool)::String
+  rhsTypeString = isMPOMPO ? "MPO" : "MPS"
+  rhsString = isMPOMPO ? "B" : "ψ"
+  return """    - "zipup": The MPO and $rhsTypeString tensors are contracted then truncated at each site without enforcing
+  the appropriate orthogonal gauge. Once this sweep is complete a call to `truncate!` occurs.
+  Because the initial truncation is not locally optimal it is recommended to use a loose
+  `cutoff` and `maxdim` and then pass the desired truncation parameters to the locally optimal
+  `truncate!` sweep via the additional keyword argument `truncate_kwargs`.
+  A set of parameters suggested in [^Paeckel2019] is
+  `contract(A, $rhsString; method="zipup", cutoff=cutoff / 10, maxdim=2 * maxdim, truncate_kwargs=(; cutoff, maxdim))`."""
+end
+
+function Paeckel2019_citation_docstring()::String
+  return """
+  [^Paeckel2019]: Time-evolution methods for matrix-product states. Sebastian Paeckel et al. [arXiv:1901.05824](https://arxiv.org/abs/1901.05824)
+  """
+end
+
 contract_mpo_mps_doc = """
     contract(ψ::MPS, A::MPO; kwargs...) -> MPS
     *(::MPS, ::MPO; kwargs...) -> MPS
@@ -662,13 +680,15 @@ Choose the method with the `method` keyword, for example
 - `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
 - `normalize::Bool=false`: whether or not to normalize the resulting MPS.
 - `method::String="densitymatrix"`: the algorithm to use for the contraction.
-   Currently the options are "densitymatrix", where the network formed by the
-   MPO and MPS is squared and contracted down to a density matrix which is
-   diagonalized iteratively at each site, and "naive", where the MPO and MPS
-   tensor are contracted exactly at each site and then a truncation of the
-   resulting MPS is performed.
+    - "densitymatrix": The network formed by the MPO and MPS is squared and contracted down to
+    a density matrix which is diagonalized iteratively at each site.
+    - "naive": The MPO and MPS tensor are contracted exactly at each site and then a truncation 
+    of the resulting MPS is performed.
+    $(zipup_docstring(false))
 
 See also [`apply`](@ref).
+
+$(Paeckel2019_citation_docstring())
 """
 
 @doc """
@@ -822,10 +842,11 @@ end
 function ITensors.contract(
   ::Algorithm"zipup",
   A::MPO,
-  B::MPO;
+  B::AbstractMPS;
   cutoff=1e-14,
   maxdim=maxlinkdim(A) * maxlinkdim(B),
   mindim=1,
+  truncate_kwargs=(; cutoff, maxdim, mindim),
   kwargs...,
 )
   if hassameinds(siteinds, A, B)
@@ -837,13 +858,13 @@ function ITensors.contract(
   N != length(B) &&
     throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
   # Special case for a single site
-  N == 1 && return MPO([A[1] * B[1]])
+  N == 1 && return typeof(B)([A[1] * B[1]])
   A = orthogonalize(A, 1)
   B = orthogonalize(B, 1)
   A = sim(linkinds, A)
   sA = siteinds(uniqueinds, A, B)
   sB = siteinds(uniqueinds, B, A)
-  C = MPO(N)
+  C = typeof(B)(N)
   lCᵢ = Index[]
   R = ITensor(true)
   for i in 1:(N - 2)
@@ -874,7 +895,7 @@ function ITensors.contract(
     mindim,
     kwargs...,
   )
-  truncate!(C; kwargs...)
+  truncate!(C; truncate_kwargs...)
   return C
 end
 
@@ -945,16 +966,16 @@ C = apply(A, B; alg="naive", truncate=false)
    in general you should set a `cutoff` value.
 - `maxdim::Int=maxlinkdim(A) * maxlinkdim(B))`: the maximal bond dimension of the results MPS.
 - `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
-- `alg="zipup"`: Either `"zipup"` or `"naive"`. `"zipup"` contracts pairs of
-   site tensors and truncates with SVDs in a sweep across the sites, while `"naive"`
-   first contracts pairs of tensor exactly and then truncates at the end if `truncate=true`.
 - `truncate=true`: Enable or disable truncation. If `truncate=false`, ignore
    other truncation parameters like `cutoff` and `maxdim`. This is most relevant
    for the `"naive"` version, if you just want to contract the tensors pairwise
    exactly. This can be useful if you are contracting MPOs that have diverging
    norms, such as MPOs originating from sums of local operators.
+  $(zipup_docstring(true))
 
 See also [`apply`](@ref) for details about the arguments available.
+
+$(Paeckel2019_citation_docstring())
 """
 
 @doc """
