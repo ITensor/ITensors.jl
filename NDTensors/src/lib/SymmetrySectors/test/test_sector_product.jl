@@ -546,8 +546,8 @@ end
   sA1 = SectorProduct(; A=U1(1))
 
   @test sA1 != st1
-  @test_throws ArgumentError sA1 < st1
-  @test_throws ArgumentError st1 < sA1
+  @test_throws MethodError sA1 < st1
+  @test_throws MethodError st1 < sA1
   @test_throws MethodError st1 ⊗ sA1
   @test_throws MethodError sA1 ⊗ st1
   @test_throws ArgumentError st1 × sA1
