@@ -542,17 +542,22 @@ end
 end
 
 @testset "Mixing implementations" begin
-  s1 = SectorProduct(U1(1))
-  sA = SectorProduct(; A=U1(1))
+  st1 = SectorProduct(U1(1))
+  sA1 = SectorProduct(; A=U1(1))
 
-  @test sA != s1
-  @test_throws ArgumentError sA < s1
-  @test_throws ArgumentError s1 < sA
-  @test_throws MethodError s1 ⊗ sA
-  @test_throws MethodError sA ⊗ s1
+  @test sA1 != st1
+  @test_throws ArgumentError sA1 < st1
+  @test_throws ArgumentError st1 < sA1
+  @test_throws MethodError st1 ⊗ sA1
+  @test_throws MethodError sA1 ⊗ st1
+  @test_throws MethodError st1 × sA1
+  @test_throws MethodError sA1 × st1
 end
 
 @testset "Empty SymmetrySector" begin
+  st1 = SectorProduct(U1(1))
+  sA1 = SectorProduct(; A=U1(1))
+
   for s in (SectorProduct(()), SectorProduct((;)))
     @test s == TrivialSector()
     @test s == SectorProduct(())
@@ -566,26 +571,26 @@ end
     g0 = gradedrange([s => 2])
     @test space_isequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
 
-    @test (@inferred s × U1(1)) == SectorProduct(U1(1))
-    @test (@inferred s × SectorProduct(U1(1))) == SectorProduct(U1(1))
-    @test (@inferred s × SectorProduct(; A=U1(1))) == SectorProduct(; A=U1(1))
-    @test (@inferred U1(1) × s) == SectorProduct(U1(1))
-    @test (@inferred SectorProduct(U1(1)) × s) == SectorProduct(U1(1))
-    @test (@inferred SectorProduct(; A=U1(1)) × s) == SectorProduct(; A=U1(1))
+    @test (@inferred s × U1(1)) == st1
+    @test (@inferred U1(1) × s) == st1
+    @test (@inferred s × st1) == st1
+    @test (@inferred st1 × s) == st1
+    @test (@inferred s × sA1) == sA1
+    @test (@inferred sA1 × s) == sA1
 
-    @test (@inferred U1(1) ⊗ s) == SectorProduct(U1(1))
+    @test (@inferred U1(1) ⊗ s) == st1
+    @test (@inferred s ⊗ U1(1)) == st1
     @test (@inferred SU2(0) ⊗ s) == gradedrange([SectorProduct(SU2(0)) => 1])
-    @test (@inferred Fib("τ") ⊗ s) == gradedrange([SectorProduct(Fib("τ")) => 1])
-    @test (@inferred s ⊗ U1(1)) == SectorProduct(U1(1))
     @test (@inferred s ⊗ SU2(0)) == gradedrange([SectorProduct(SU2(0)) => 1])
+    @test (@inferred Fib("τ") ⊗ s) == gradedrange([SectorProduct(Fib("τ")) => 1])
     @test (@inferred s ⊗ Fib("τ")) == gradedrange([SectorProduct(Fib("τ")) => 1])
 
-    @test (@inferred SectorProduct(U1(1)) ⊗ s) == SectorProduct(U1(1))
+    @test (@inferred st1 ⊗ s) == st1
     @test (@inferred SectorProduct(SU2(0)) ⊗ s) == gradedrange([SectorProduct(SU2(0)) => 1])
     @test (@inferred SectorProduct(Fib("τ"), SU2(1), U1(2)) ⊗ s) ==
       gradedrange([SectorProduct(Fib("τ"), SU2(1), U1(2)) => 1])
 
-    @test (@inferred SectorProduct(; A=U1(1)) ⊗ s) == SectorProduct(; A=U1(1))
+    @test (@inferred sA1 ⊗ s) == sA1
     @test (@inferred SectorProduct(; A=SU2(0)) ⊗ s) ==
       gradedrange([SectorProduct(; A=SU2(0)) => 1])
     @test (@inferred SectorProduct(; A=Fib("τ"), B=SU2(1), C=U1(2)) ⊗ s) ==
@@ -594,14 +599,15 @@ end
     # Empty behaves as empty NamedTuple
     @test s != U1(0)
     @test s == SectorProduct(U1(0))
-    @test s != SectorProduct(; A=U1(1))
     @test s == SectorProduct(; A=U1(0))
     @test SectorProduct(; A=U1(0)) == s
+    @test s != sA1
+    @test s != st1
 
     @test !(s < s)
-    @test s < SectorProduct(U1(1))
+    @test s < st1
     @test SectorProduct(U1(-1)) < s
-    @test s < SectorProduct(; A=U1(1))
+    @test s < sA1
     @test s > SectorProduct(; A=U1(-1))
     @test !(s < SectorProduct(; A=U1(0)))
     @test !(s > SectorProduct(; A=U1(0)))
