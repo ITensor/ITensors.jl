@@ -77,19 +77,19 @@ end
 function arguments_product(s1, s2)
   isempty(s1) && return s2
   isempty(s2) && return s1
-  throw(ArgumentError("Mixing non-empty storage types is illegal"))
+  return throw(ArgumentError("Mixing non-empty storage types is illegal"))
 end
 
 arguments_isless(s1, s2) = isless(sym_arguments_insert_unspecified(s1, s2)...)
 function arguments_isless(t::Tuple, nt::NamedTuple)
   isempty(nt) && return arguments_isless(t, ())
   isempty(t) && return arguments_isless((;), nt)
-  throw(ArgumentError("Mixing non-empty storage types is illegal"))
+  return throw(ArgumentError("Mixing non-empty storage types is illegal"))
 end
 function arguments_isless(nt::NamedTuple, t::Tuple)
   isempty(nt) && return arguments_isless((), t)
   isempty(t) && return arguments_isless(nt, (;))
-  throw(ArgumentError("Mixing non-empty storage types is illegal"))
+  return throw(ArgumentError("Mixing non-empty storage types is illegal"))
 end
 
 # =================================  Cartesian Product  ====================================
