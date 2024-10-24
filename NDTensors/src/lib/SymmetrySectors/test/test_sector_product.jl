@@ -541,6 +541,17 @@ end
   end
 end
 
+@testset "Mixing implementations" begin
+  s1 = SectorProduct(U1(1))
+  sA = SectorProduct(; A=U1(1))
+
+  @test sA != s1
+  @test_throws ArgumentError sA < s1
+  @test_throws ArgumentError s1 < sA
+  @test_throws MethodError s1 ⊗ sA
+  @test_throws MethodError sA ⊗ s1
+end
+
 @testset "Empty SymmetrySector" begin
   for s in (SectorProduct(()), SectorProduct((;)))
     @test s == TrivialSector()
@@ -589,6 +600,7 @@ end
 
     @test !(s < s)
     @test s < SectorProduct(U1(1))
+    @test SectorProduct(U1(-1)) < s
     @test s < SectorProduct(; A=U1(1))
     @test s > SectorProduct(; A=U1(-1))
     @test !(s < SectorProduct(; A=U1(0)))

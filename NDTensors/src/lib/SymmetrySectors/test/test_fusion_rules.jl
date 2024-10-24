@@ -278,6 +278,8 @@ end
     @test space_isequal((@inferred fusion_product(SU2(1//2), g3)), g4)
 
     # test different simple sectors cannot be fused
+    @test_throws MethodError Z{2}(0) ⊗ U1(1)
+    @test_throws MethodError SU2(1) ⊗ U1(1)
     @test_throws MethodError fusion_product(g1, SU2(1))
     @test_throws MethodError fusion_product(U1(1), g3)
   end
