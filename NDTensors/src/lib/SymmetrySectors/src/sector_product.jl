@@ -73,11 +73,8 @@ end
 # get clean results when mixing implementations
 arguments_isequal(nt::NamedTuple, t::Tuple) = arguments_isequal(t, nt)
 function arguments_isequal(t::Tuple, nt::NamedTuple)
-  if isempty(t)
-    return arguments_isequal((;), nt)
-  elseif isempty(nt)
-    return arguments_isequal(t, ())
-  end
+  isempty(t) && return arguments_isequal((;), nt)
+  isempty(nt) && return arguments_isequal(t, ())
   return false
 end
 
