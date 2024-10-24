@@ -70,22 +70,15 @@ function product_sectors_isequal(s1, s2)
 end
 
 # get clean results when mixing implementations
-function product_sectors_isequal(nt::NamedTuple, ::Tuple{})
-  return product_sectors_isequal(nt, (;))
+product_sectors_isequal(nt::NamedTuple, t::Tuple) = product_sectors_isequal(t, nt)
+function product_sectors_isequal(t::Tuple, nt::NamedTuple)
+  if isempty(t)
+    return product_sectors_isequal((;), nt)
+  elseif isempty(nt)
+    return product_sectors_isequal(t, ())
+  end
+  return false
 end
-function product_sectors_isequal(::Tuple{}, nt::NamedTuple)
-  return product_sectors_isequal((;), nt)
-end
-function product_sectors_isequal(::NamedTuple{()}, t::Tuple)
-  return product_sectors_isequal((), t)
-end
-function product_sectors_isequal(t::Tuple, ::NamedTuple{()})
-  return product_sectors_isequal(t, ())
-end
-product_sectors_isequal(::Tuple{}, ::NamedTuple{()}) = true
-product_sectors_isequal(::NamedTuple{()}, ::Tuple{}) = true
-product_sectors_isequal(::Tuple, ::NamedTuple) = false
-product_sectors_isequal(::NamedTuple, ::Tuple) = false
 
 function product_sectors_isless(nt::NamedTuple, ::Tuple{})
   return product_sectors_isless(nt, (;))
@@ -109,18 +102,14 @@ product_sectors_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not impleme
 product_sectors_type(::Type{<:SectorProduct{T}}) where {T} = T
 
 function product_sectors_fusion_rule(sects1, sects2)
+  isempty(sects1) && return SectorProduct(sects2)
+  isempty(sects2) && return SectorProduct(sects1)
   shared_sect = shared_product_sectors_fusion_rule(
     product_sectors_common(sects1, sects2)...
   )
   diff_sect = SectorProduct(product_sectors_diff(sects1, sects2))
   return shared_sect × diff_sect
 end
-
-# edge case with empty product_sectors
-product_sectors_fusion_rule(sects::Tuple, ::NamedTuple{()}) = SectorProduct(sects)
-product_sectors_fusion_rule(::NamedTuple{()}, sects::Tuple) = SectorProduct(sects)
-product_sectors_fusion_rule(sects::NamedTuple, ::Tuple{}) = SectorProduct(sects)
-product_sectors_fusion_rule(::Tuple{}, sects::NamedTuple) = SectorProduct(sects)
 
 # =================================  Cartesian Product  ====================================
 ×(c1::AbstractSector, c2::AbstractSector) = ×(SectorProduct(c1), SectorProduct(c2))
