@@ -66,30 +66,32 @@ function sym_arguments_insert_unspecified(s1, s2)
   return arguments_insert_unspecified(s1, s2), arguments_insert_unspecified(s2, s1)
 end
 
-function arguments_isequal(s1, s2)
-  return ==(sym_arguments_insert_unspecified(s1, s2)...)
-end
-
-# get clean results when mixing implementations
+arguments_isequal(s1, s2) = ==(sym_arguments_insert_unspecified(s1, s2)...)
 arguments_isequal(nt::NamedTuple, t::Tuple) = arguments_isequal(t, nt)
 function arguments_isequal(t::Tuple, nt::NamedTuple)
-  isempty(t) && return arguments_isequal((;), nt)
   isempty(nt) && return arguments_isequal(t, ())
+  isempty(t) && return arguments_isequal((;), nt)
   return false
 end
 
-arguments_product(::NamedTuple{()}, t::Tuple) = t
-arguments_product(t::Tuple, ::NamedTuple{()}) = t
-arguments_product(::Tuple{}, nt::NamedTuple) = nt
-arguments_product(nt::NamedTuple, ::Tuple{}) = nt
+arguments_product(nt::NamedTuple, t::Tuple) = arguments_product(t, nt)
+function arguments_product(t::Tuple, nt::NamedTuple)
+  isempty(nt) && return t
+  isempty(t) && return nt
+  throw(ArgumentError("Mixing Tuple and NamedTuple is illegal"))
+end
 
 arguments_isless(s1, s2) = isless(sym_arguments_insert_unspecified(s1, s2)...)
-arguments_isless(nt::NamedTuple, ::Tuple{}) = arguments_isless(nt, (;))
-arguments_isless(::Tuple{}, nt::NamedTuple) = arguments_isless((;), nt)
-arguments_isless(::NamedTuple{()}, t::Tuple) = arguments_isless((), t)
-arguments_isless(t::Tuple, ::NamedTuple{()}) = arguments_isless(t, ())
-arguments_isless(::NamedTuple, ::Tuple) = throw(ArgumentError("Not implemented"))
-arguments_isless(::Tuple, ::NamedTuple) = throw(ArgumentError("Not implemented"))
+function arguments_isless(t::Tuple, nt::NamedTuple)
+  isempty(nt) && return arguments_isless(t, ())
+  isempty(t) && return arguments_isless((;), nt)
+  throw(ArgumentError("Mixing Tuple and NamedTuple is illegal"))
+end
+function arguments_isless(nt::NamedTuple, t::Tuple)
+  isempty(nt) && return arguments_isless((), t)
+  isempty(t) && return arguments_isless(nt, (;))
+  throw(ArgumentError("Mixing Tuple and NamedTuple is illegal"))
+end
 
 # =================================  Cartesian Product  ====================================
 ×(c1::AbstractSector, c2::AbstractSector) = ×(SectorProduct(c1), SectorProduct(c2))

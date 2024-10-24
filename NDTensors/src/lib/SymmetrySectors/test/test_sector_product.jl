@@ -550,8 +550,8 @@ end
   @test_throws ArgumentError st1 < sA1
   @test_throws MethodError st1 ⊗ sA1
   @test_throws MethodError sA1 ⊗ st1
-  @test_throws MethodError st1 × sA1
-  @test_throws MethodError sA1 × st1
+  @test_throws ArgumentError st1 × sA1
+  @test_throws ArgumentError sA1 × st1
 end
 
 @testset "Empty SymmetrySector" begin
@@ -562,11 +562,18 @@ end
     @test s == TrivialSector()
     @test s == SectorProduct(())
     @test s == SectorProduct((;))
+
+    @test !(s < SectorProduct())
+    @test !(s < SectorProduct(;))
+
+    @test (@inferred s × SectorProduct(())) == s
+    @test (@inferred s × SectorProduct((;))) == s
+    @test (@inferred s ⊗ SectorProduct(())) == s
+    @test (@inferred s ⊗ SectorProduct((;))) == s
+
     @test (@inferred dual(s)) == s
-    @test (@inferred s × s) == s
-    @test (@inferred s ⊗ s) == s
-    @test (@inferred quantum_dimension(s)) == 1
     @test (@inferred trivial(s)) == s
+    @test (@inferred quantum_dimension(s)) == 1
 
     g0 = gradedrange([s => 2])
     @test space_isequal((@inferred fusion_product(g0, g0)), gradedrange([s => 4]))
@@ -604,7 +611,6 @@ end
     @test s != sA1
     @test s != st1
 
-    @test !(s < s)
     @test s < st1
     @test SectorProduct(U1(-1)) < s
     @test s < sA1
