@@ -62,16 +62,20 @@ end
 
 arguments_type(::Type{<:SectorProduct{T}}) where {T} = T
 
-function sym_arguments_insert_unspecified(s1, s2)
-  return arguments_insert_unspecified(s1, s2), arguments_insert_unspecified(s2, s1)
+arguments_maybe_insert_unspecified(s1, ::Any) = s1
+function sym_arguments_maybe_insert_unspecified(s1, s2)
+  return arguments_maybe_insert_unspecified(s1, s2),
+  arguments_maybe_insert_unspecified(s2, s1)
 end
 
-arguments_isequal(s1, s2) = ==(sym_arguments_insert_unspecified(s1, s2)...)
-arguments_isequal(nt::NamedTuple, t::Tuple) = arguments_isequal(t, nt)
-function arguments_isequal(t::Tuple, nt::NamedTuple)
-  isempty(nt) && return arguments_isequal(t, ())
-  isempty(t) && return arguments_isequal((;), nt)
-  return false
+function arguments_isequal(s1, s2)
+  isempty(s1) && return _arguments_isequal(empty(s2), s2)
+  isempty(s2) && return _arguments_isequal(s1, empty(s1))
+  return _arguments_isequal(s1, s2)
+end
+
+function _arguments_isequal(s1, s2)
+  return ==(sym_arguments_maybe_insert_unspecified(s1, s2)...)
 end
 
 function arguments_product(s1, s2)
@@ -83,7 +87,7 @@ end
 function arguments_isless(a1, a2)
   isempty(a1) && return _arguments_isless(empty(a2), a2)
   isempty(a2) && return _arguments_isless(a1, empty(a1))
-  return isless(sym_arguments_insert_unspecified(a1, a2)...)
+  return isless(sym_arguments_maybe_insert_unspecified(a1, a2)...)
 end
 
 # =================================  Cartesian Product  ====================================
@@ -178,13 +182,13 @@ function shared_arguments_fusion_rule(shared1::T, shared2::T) where {T<:Tuple}
   )
 end
 
-function arguments_insert_unspecified(t1::Tuple, t2::Tuple)
+function arguments_maybe_insert_unspecified(t1::Tuple, t2::Tuple)
   n1 = length(t1)
   return (t1..., trivial.(t2[(n1 + 1):end])...)
 end
 
 function _arguments_isless(t1::Tuple, t2::Tuple)
-  return isless(sym_arguments_insert_unspecified(t1, t2)...)
+  return isless(sym_arguments_maybe_insert_unspecified(t1, t2)...)
 end
 # ===========================  Dictionary-like implementation  =============================
 function SectorProduct(nt::NamedTuple)
@@ -204,7 +208,7 @@ function arguments_symmetrystyle(NT::Type{<:NamedTuple})
   return mapreduce(SymmetryStyle, combine_styles, fieldtypes(NT); init=AbelianStyle())
 end
 
-function arguments_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
+function arguments_maybe_insert_unspecified(nt1::NamedTuple, nt2::NamedTuple)
   diff1 = arguments_trivial(typeof(setdiff_keys(nt2, nt1)))
   return sort_keys(union_keys(nt1, diff1))
 end
@@ -239,5 +243,5 @@ function shared_arguments_fusion_rule(shared1::NT, shared2::NT) where {NT<:Named
 end
 
 function _arguments_isless(nt1::NamedTuple, nt2::NamedTuple)
-  return isless(sym_arguments_insert_unspecified(nt1, nt2)...)
+  return isless(sym_arguments_maybe_insert_unspecified(nt1, nt2)...)
 end
