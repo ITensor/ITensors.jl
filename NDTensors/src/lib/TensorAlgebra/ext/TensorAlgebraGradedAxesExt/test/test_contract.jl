@@ -3,7 +3,6 @@ using BlockArrays: Block, blocksize
 using Compat: Returns
 using NDTensors.BlockSparseArrays: BlockSparseArray
 using NDTensors.GradedAxes: GradedAxes, gradedrange
-using NDTensors.Sectors: U1
 using NDTensors.SparseArrayInterface: densearray
 using NDTensors.SymmetrySectors: U1
 using NDTensors.TensorAlgebra: contract

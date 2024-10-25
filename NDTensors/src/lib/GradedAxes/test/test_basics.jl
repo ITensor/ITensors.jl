@@ -11,7 +11,8 @@ using BlockArrays:
   blocks
 using NDTensors.GradedAxes:
   GradedOneTo, GradedUnitRange, OneToOne, blocklabels, gradedisequal, gradedrange
-using NDTensors.LabelledNumbers: LabelledUnitRange, islabelled, label, labelled, unlabel
+using NDTensors.LabelledNumbers:
+  LabelledUnitRange, islabelled, label, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
 
 @testset "OneToOne" begin

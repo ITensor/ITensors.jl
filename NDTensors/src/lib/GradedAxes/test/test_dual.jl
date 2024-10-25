@@ -35,6 +35,7 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   a0 = OneToOne()
   @test !isdual(a0)
   @test dual(a0) isa OneToOne
+  @test space_isequal(a0, a0)
   @test space_isequal(a0, dual(a0))
 
   a = 1:3
