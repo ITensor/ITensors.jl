@@ -1,12 +1,18 @@
 using Documenter
 using ITensors
+using ITensorMPS
 
+# Allows using ITensorMPS.jl docstrings in ITensors.jl documentation:
+# https://github.com/JuliaDocs/Documenter.jl/issues/1734
 DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
+DocMeta.setdocmeta!(ITensorMPS, :DocTestSetup, :(using ITensorMPS); recursive=true)
 
 sitename = "ITensors.jl"
 
 settings = Dict(
-  :modules => [ITensors],
+  # Allows using ITensorMPS.jl docstrings in ITensors.jl documentation:
+  # https://github.com/JuliaDocs/Documenter.jl/issues/1734
+  :modules => [ITensors, ITensorMPS],
   :pages => [
     "Introduction" => "index.md",
     "Getting Started with ITensor" => [

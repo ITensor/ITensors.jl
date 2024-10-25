@@ -15,6 +15,5 @@ include("indexset.jl")
 include("itensor.jl")
 include("LazyApply/LazyApply.jl")
 include("non_differentiable.jl")
-include("itensormps.jl")
 include("smallstrings.jl")
 end

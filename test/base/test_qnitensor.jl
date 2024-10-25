@@ -1,5 +1,6 @@
 using ITensors
 using ITensors.NDTensors
+using ITensors.SiteTypes: siteind, siteinds
 using LinearAlgebra
 using Random
 using Test
