@@ -32,83 +32,83 @@ MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
 ## Copying behavior
 
 ```@docs
-copy(::ITensors.AbstractMPS)
-deepcopy(::ITensors.AbstractMPS)
+copy(::ITensorMPS.AbstractMPS)
+deepcopy(::ITensorMPS.AbstractMPS)
 ```
 
 ## Properties
 
 ```@docs
-eltype(::ITensors.AbstractMPS)
-flux(::ITensors.AbstractMPS)
-hasqns(::ITensors.AbstractMPS)
-length(::ITensors.AbstractMPS)
-maxlinkdim(::ITensors.AbstractMPS)
+eltype(::ITensorMPS.AbstractMPS)
+flux(::ITensorMPS.AbstractMPS)
+hasqns(::ITensorMPS.AbstractMPS)
+length(::ITensorMPS.AbstractMPS)
+maxlinkdim(::ITensorMPS.AbstractMPS)
 ```
 
 ## Obtaining and finding indices
 
 ```@docs
-siteinds(::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS, ::Int)
-siteinds(::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS, ::Int)
+siteinds(::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS, ::Int)
+siteinds(::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS, ::Int)
 findsite
 findsites
 firstsiteinds
-linkind(::ITensors.AbstractMPS,::Int)
+linkind(::ITensorMPS.AbstractMPS,::Int)
 siteind(::MPS, ::Int)
 siteind(::typeof(first), ::MPS, ::Int)
 siteinds(::MPS)
 siteind(::MPO, ::Int)
 siteinds(::MPO)
-siteinds(::ITensors.AbstractMPS, ::Int)
+siteinds(::ITensorMPS.AbstractMPS, ::Int)
 ```
 
 ## Priming and tagging
 
 ```@docs
-prime(::ITensors.AbstractMPS)
-prime(::typeof(siteinds), ::ITensors.AbstractMPS)
-prime(::typeof(linkinds), ::ITensors.AbstractMPS)
-prime(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
-prime(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+prime(::ITensorMPS.AbstractMPS)
+prime(::typeof(siteinds), ::ITensorMPS.AbstractMPS)
+prime(::typeof(linkinds), ::ITensorMPS.AbstractMPS)
+prime(::typeof(siteinds), ::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
+prime(::typeof(siteinds), ::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
 
-swapprime(::ITensors.AbstractMPS, args...; kwargs...)
+swapprime(::ITensorMPS.AbstractMPS, args...; kwargs...)
 
-setprime(::ITensors.AbstractMPS)
-setprime(::typeof(siteinds), ::ITensors.AbstractMPS)
-setprime(::typeof(linkinds), ::ITensors.AbstractMPS)
-setprime(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
-setprime(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+setprime(::ITensorMPS.AbstractMPS)
+setprime(::typeof(siteinds), ::ITensorMPS.AbstractMPS)
+setprime(::typeof(linkinds), ::ITensorMPS.AbstractMPS)
+setprime(::typeof(siteinds), ::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
+setprime(::typeof(siteinds), ::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
 
-noprime(::ITensors.AbstractMPS)
-noprime(::typeof(siteinds), ::ITensors.AbstractMPS)
-noprime(::typeof(linkinds), ::ITensors.AbstractMPS)
-noprime(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
-noprime(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+noprime(::ITensorMPS.AbstractMPS)
+noprime(::typeof(siteinds), ::ITensorMPS.AbstractMPS)
+noprime(::typeof(linkinds), ::ITensorMPS.AbstractMPS)
+noprime(::typeof(siteinds), ::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
+noprime(::typeof(siteinds), ::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
 
-addtags(::ITensors.AbstractMPS)
-addtags(::typeof(siteinds), ::ITensors.AbstractMPS)
-addtags(::typeof(linkinds), ::ITensors.AbstractMPS)
-addtags(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
-addtags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+addtags(::ITensorMPS.AbstractMPS)
+addtags(::typeof(siteinds), ::ITensorMPS.AbstractMPS)
+addtags(::typeof(linkinds), ::ITensorMPS.AbstractMPS)
+addtags(::typeof(siteinds), ::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
+addtags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
 
-removetags(::ITensors.AbstractMPS)
-removetags(::typeof(siteinds), ::ITensors.AbstractMPS)
-removetags(::typeof(linkinds), ::ITensors.AbstractMPS)
-removetags(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
-removetags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+removetags(::ITensorMPS.AbstractMPS)
+removetags(::typeof(siteinds), ::ITensorMPS.AbstractMPS)
+removetags(::typeof(linkinds), ::ITensorMPS.AbstractMPS)
+removetags(::typeof(siteinds), ::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
+removetags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
 
-replacetags(::ITensors.AbstractMPS)
-replacetags(::typeof(siteinds), ::ITensors.AbstractMPS)
-replacetags(::typeof(linkinds), ::ITensors.AbstractMPS)
-replacetags(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
-replacetags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+replacetags(::ITensorMPS.AbstractMPS)
+replacetags(::typeof(siteinds), ::ITensorMPS.AbstractMPS)
+replacetags(::typeof(linkinds), ::ITensorMPS.AbstractMPS)
+replacetags(::typeof(siteinds), ::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
+replacetags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
 
-settags(::ITensors.AbstractMPS)
-settags(::typeof(siteinds), ::ITensors.AbstractMPS)
-settags(::typeof(linkinds), ::ITensors.AbstractMPS)
-settags(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
-settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+settags(::ITensorMPS.AbstractMPS)
+settags(::typeof(siteinds), ::ITensorMPS.AbstractMPS)
+settags(::typeof(linkinds), ::ITensorMPS.AbstractMPS)
+settags(::typeof(siteinds), ::typeof(commoninds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
+settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensorMPS.AbstractMPS, ::ITensorMPS.AbstractMPS)
 ```
 
 ## Operations
@@ -116,41 +116,41 @@ settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITen
 ```@docs
 expect(::MPS, ::Any)
 correlation_matrix(::MPS, ::AbstractString, ::AbstractString)
-dag(::ITensors.AbstractMPS)
-dense(::ITensors.AbstractMPS)
-movesite(::ITensors.AbstractMPS, ::Pair{Int, Int};orthocenter::Int,kwargs...)
+dag(::ITensorMPS.AbstractMPS)
+dense(::ITensorMPS.AbstractMPS)
+movesite(::ITensorMPS.AbstractMPS, ::Pair{Int, Int};orthocenter::Int,kwargs...)
 orthogonalize!
 replacebond!(::MPS, ::Int, ::ITensor)
 sample(::MPS)
 sample!(::MPS)
 sample(::MPO)
-swapbondsites(::ITensors.AbstractMPS, ::Int; kwargs...)
+swapbondsites(::ITensorMPS.AbstractMPS, ::Int; kwargs...)
 truncate!
 ```
 
 ## Gate evolution
 
 ```@docs
-product(::ITensor, ::ITensors.AbstractMPS)
-product(::Vector{ITensor}, ::ITensors.AbstractMPS)
+product(::ITensor, ::ITensorMPS.AbstractMPS)
+product(::Vector{ITensor}, ::ITensorMPS.AbstractMPS)
 ```
 
 ## Algebra Operations
 
 ```@docs
-inner(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
-dot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
-loginner(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
-logdot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
+inner(::MPST, ::MPST) where {MPST <: ITensorMPS.AbstractMPS}
+dot(::MPST, ::MPST) where {MPST <: ITensorMPS.AbstractMPS}
+loginner(::MPST, ::MPST) where {MPST <: ITensorMPS.AbstractMPS}
+logdot(::MPST, ::MPST) where {MPST <: ITensorMPS.AbstractMPS}
 inner(::MPS, ::MPO, ::MPS)
 dot(::MPS, ::MPO, ::MPS)
 inner(::MPO, ::MPS, ::MPO, ::MPS)
 dot(::MPO, ::MPS, ::MPO, ::MPS)
-norm(::ITensors.AbstractMPS)
-normalize(::ITensors.AbstractMPS)
-normalize!(::ITensors.AbstractMPS)
-lognorm(::ITensors.AbstractMPS)
-+(::ITensors.AbstractMPS...)
+norm(::ITensorMPS.AbstractMPS)
+normalize(::ITensorMPS.AbstractMPS)
+normalize!(::ITensorMPS.AbstractMPS)
+lognorm(::ITensorMPS.AbstractMPS)
++(::ITensorMPS.AbstractMPS...)
 contract(::MPO, ::MPS)
 apply(::MPO, ::MPS)
 contract(::MPO, ::MPO)

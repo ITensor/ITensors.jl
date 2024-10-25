@@ -17,7 +17,6 @@ jobs:
         package:
           - {user: ITensor, repo: ITensorGaussianMPS.jl}
           - {user: ITensor, repo: ITensorMPS.jl}
-          - {user: ITensor, repo: ITensorTDVP.jl}
           - {user: ITensor, repo: ITensorUnicodePlots.jl}
           - {user: ITensor, repo: ITensorVisualizationBase.jl}
 

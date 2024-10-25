@@ -1,5 +1,6 @@
 using ITensors, Test
 import ITensors: Out, In
+using ITensors.SiteTypes: op, siteinds
 
 @testset "Fermions" begin
   ITensors.enable_auto_fermion()

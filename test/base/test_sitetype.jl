@@ -1,4 +1,15 @@
 using ITensors, Test
+using ITensors.SiteTypes:
+  @OpName_str,
+  @SiteType_str,
+  @StateName_str,
+  OpName,
+  StateName,
+  op,
+  ops,
+  siteind,
+  siteinds,
+  state
 
 function is_unitary(U::ITensor; kwargs...)
   s = noprime(filterinds(U; plev=1))
@@ -321,7 +332,8 @@ end
   end
 
   @testset "siteind defined by siteind overload" begin
-    ITensors.siteind(::SiteType"Test2") = Index(4, "Test2")
+    # TODO: Make `ITensors.siteind` accessible? Or delete this test?
+    ITensors.SiteTypes.siteind(::SiteType"Test2") = Index(4, "Test2")
     s = siteind("Test2", 3)
     @test dim(s) == 4
     @test hastags(s, "Test2,n=3")
@@ -365,7 +377,8 @@ end
   end
 
   @testset "siteinds defined by siteinds overload" begin
-    function ITensors.siteinds(::SiteType"Test5", N; kwargs...)
+    # TODO: Make `ITensors.siteinds` accessible? Or delete this test?
+    function ITensors.SiteTypes.siteinds(::SiteType"Test5", N; kwargs...)
       return [Index(4, "Test5,n=$n") for n in 1:N]
     end
     s = siteinds("Test5", 8)

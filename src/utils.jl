@@ -18,7 +18,6 @@ end
 # running examples)
 src_dir() = dirname(pathof(@__MODULE__))
 pkg_dir() = joinpath(dirname(pathof(@__MODULE__)), "..")
-examples_dir() = joinpath(dirname(pathof(@__MODULE__)), "lib", "ITensorMPS", "examples")
 
 # Determine version and uuid of the package
 function _parse_project_toml(field::String)

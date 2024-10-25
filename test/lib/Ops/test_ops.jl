@@ -2,7 +2,8 @@ using Test
 using ITensors
 using LinearAlgebra
 
-using ITensors.Ops #: Scaled, Prod, Sum, expand
+using ITensors.Ops: Ops, Op, OpSum, Prod, Scaled, Sum, coefficient, expand
+using ITensors.SiteTypes: op, siteinds
 
 function heisenberg(N)
   os = Sum{Op}()
