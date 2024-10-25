@@ -40,12 +40,6 @@ function compile(; backend=Algorithm"PackageCompiler"(), kwargs...)
   return compile(backend; kwargs...)
 end
 
-function compile(::Algorithm; kwargs...)
-  return error(
-    "As of ITensors v0.5, you must install `PackageCompiler.jl` (`using Pkg: Pkg; Pkg.add(\"PackageCompiler\")`) and execute `using PackageCompiler` to use `ITensors.compile`.",
-  )
-end
-
 @doc """
     ITensors.compile(; dir = "$(default_compile_dir())",
                        filename = "$(default_compile_filename())")

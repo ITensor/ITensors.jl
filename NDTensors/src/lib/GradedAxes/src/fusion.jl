@@ -1,4 +1,4 @@
-using BlockArrays: AbstractBlockedUnitRange
+using BlockArrays: AbstractBlockedUnitRange, blocklengths
 
 # https://github.com/ITensor/ITensors.jl/blob/v0.3.57/NDTensors/src/lib/GradedAxes/src/tensor_product.jl
 # https://en.wikipedia.org/wiki/Tensor_product
@@ -52,12 +52,14 @@ function fuse_labels(x, y)
 end
 
 function fuse_blocklengths(x::Integer, y::Integer)
-  return x * y
+  # return blocked unit range to keep non-abelian interface
+  return blockedrange([x * y])
 end
 
 using ..LabelledNumbers: LabelledInteger, label, labelled, unlabel
 function fuse_blocklengths(x::LabelledInteger, y::LabelledInteger)
-  return labelled(unlabel(x) * unlabel(y), fuse_labels(label(x), label(y)))
+  # return blocked unit range to keep non-abelian interface
+  return blockedrange([labelled(x * y, fuse_labels(label(x), label(y)))])
 end
 
 flatten_maybe_nested(v::Vector{<:Integer}) = v
@@ -65,16 +67,16 @@ flatten_maybe_nested(v::Vector{<:AbstractGradedUnitRange}) = reduce(vcat, blockl
 
 using BlockArrays: blockedrange, blocks
 function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
-  maybe_nested = map(
-    it -> mapreduce(length, fuse_blocklengths, it),
-    Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),)),
-  )
-  blocklengths = flatten_maybe_nested(maybe_nested)
-  return blockedrange(blocklengths)
+  nested = map(Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),))) do it
+    return mapreduce(length, fuse_blocklengths, it)
+  end
+  new_blocklengths = mapreduce(blocklengths, vcat, nested)
+  return blockedrange(new_blocklengths)
 end
 
-function blocksortperm(a::AbstractBlockedUnitRange)
-  return Block.(sortperm(blocklabels(a)))
+# convention: sort UnitRangeDual according to nondual blocks
+function blocksortperm(a::AbstractUnitRange)
+  return Block.(sortperm(blocklabels(nondual(a))))
 end
 
 # convention: sort GradedUnitRangeDual according to nondual blocks

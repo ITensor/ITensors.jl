@@ -19,7 +19,7 @@ using NDTensors.GradedAxes:
   blocksortperm,
   dual,
   flip,
-  gradedisequal,
+  space_isequal,
   gradedrange,
   isdual,
   nondual
@@ -35,21 +35,21 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   a0 = OneToOne()
   @test !isdual(a0)
   @test dual(a0) isa OneToOne
-  @test gradedisequal(a0, dual(a0))
+  @test space_isequal(a0, dual(a0))
 
   a = 1:3
   ad = dual(a)
   @test !isdual(a)
   @test !isdual(ad)
   @test ad isa UnitRange
-  @test gradedisequal(ad, a)
+  @test space_isequal(ad, a)
 
   a = blockedrange([2, 3])
   ad = dual(a)
   @test !isdual(a)
   @test !isdual(ad)
   @test ad isa BlockedOneTo
-  @test gradedisequal(ad, a)
+  @test space_isequal(ad, a)
 end
 
 @testset "GradedUnitRangeDual" begin
@@ -59,12 +59,12 @@ end
     @test ad isa GradedUnitRangeDual
     @test eltype(ad) == LabelledInteger{Int,U1}
 
-    @test gradedisequal(dual(ad), a)
-    @test gradedisequal(nondual(ad), a)
-    @test gradedisequal(nondual(a), a)
-    @test gradedisequal(ad, ad)
-    @test !gradedisequal(a, ad)
-    @test !gradedisequal(ad, a)
+    @test space_isequal(dual(ad), a)
+    @test space_isequal(nondual(ad), a)
+    @test space_isequal(nondual(a), a)
+    @test space_isequal(ad, ad)
+    @test !space_isequal(a, ad)
+    @test !space_isequal(ad, a)
 
     @test isdual(ad)
     @test !isdual(a)
@@ -104,8 +104,8 @@ end
   for a in
       [gradedrange([U1(0) => 2, U1(1) => 3]), gradedrange([U1(0) => 2, U1(1) => 3])[1:5]]
     ad = dual(a)
-    @test gradedisequal(flip(a), dual(gradedrange([U1(0) => 2, U1(-1) => 3])))
-    @test gradedisequal(flip(ad), gradedrange([U1(0) => 2, U1(-1) => 3]))
+    @test space_isequal(flip(a), dual(gradedrange([U1(0) => 2, U1(-1) => 3])))
+    @test space_isequal(flip(ad), gradedrange([U1(0) => 2, U1(-1) => 3]))
 
     @test blocklabels(a) == [U1(0), U1(1)]
     @test blocklabels(dual(a)) == [U1(0), U1(-1)]

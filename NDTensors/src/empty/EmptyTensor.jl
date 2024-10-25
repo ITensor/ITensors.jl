@@ -152,8 +152,6 @@ end
 
 setindex!!(T::EmptyTensor, x, I...) = setindex(T, x, I...)
 
-promote_rule(::Type{EmptyNumber}, ::Type{T}) where {T<:Number} = T
-
 function promote_rule(
   ::Type{T1}, ::Type{T2}
 ) where {T1<:EmptyStorage{EmptyNumber},T2<:TensorStorage}
