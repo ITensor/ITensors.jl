@@ -1,5 +1,12 @@
 using BlockArrays:
-  BlockArrays, Block, BlockIndexRange, BlockedVector, blocklength, blocksize, viewblock
+  AbstractBlockedUnitRange,
+  BlockArrays,
+  Block,
+  BlockIndexRange,
+  BlockedVector,
+  blocklength,
+  blocksize,
+  viewblock
 
 # This splits `BlockIndexRange{N}` into
 # `NTuple{N,BlockIndexRange{1}}`.
