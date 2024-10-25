@@ -6,7 +6,10 @@ UnitRangeDual(a::AbstractUnitRange) = UnitRangeDual{eltype(a),typeof(a)}(a)
 dual(a::AbstractUnitRange) = UnitRangeDual(a)
 nondual(a::UnitRangeDual) = a.nondual_unitrange
 dual(a::UnitRangeDual) = nondual(a)
+flip(a::UnitRangeDual) = dual(flip(nondual(a)))
 nondual(a::AbstractUnitRange) = a
+isdual(::AbstractUnitRange) = false
+isdual(::UnitRangeDual) = true
 ## TODO: Define this to instantiate a dual unit range.
 ## materialize_dual(a::UnitRangeDual) = materialize_dual(nondual(a))
 
@@ -15,6 +18,16 @@ Base.last(a::UnitRangeDual) = label_dual(last(nondual(a)))
 Base.step(a::UnitRangeDual) = label_dual(step(nondual(a)))
 
 Base.view(a::UnitRangeDual, index::Block{1}) = a[index]
+
+function Base.show(io::IO, a::UnitRangeDual)
+  return print(io, UnitRangeDual, "(", blocklasts(a), ")")
+end
+
+function Base.show(io::IO, mimetype::MIME"text/plain", a::UnitRangeDual)
+  return Base.invoke(
+    show, Tuple{typeof(io),MIME"text/plain",AbstractArray}, io, mimetype, a
+  )
+end
 
 function Base.getindex(a::UnitRangeDual, indices::AbstractUnitRange{<:Integer})
   return dual(getindex(nondual(a), indices))
@@ -92,6 +105,9 @@ BlockArrays.blockaxes(a::UnitRangeDual) = blockaxes(nondual(a))
 BlockArrays.blockfirsts(a::UnitRangeDual) = label_dual.(blockfirsts(nondual(a)))
 BlockArrays.blocklasts(a::UnitRangeDual) = label_dual.(blocklasts(nondual(a)))
 BlockArrays.findblock(a::UnitRangeDual, index::Integer) = findblock(nondual(a), index)
+
+blocklabels(a::UnitRangeDual) = dual.(blocklabels(nondual(a)))
+
 function BlockArrays.combine_blockaxes(a1::UnitRangeDual, a2::UnitRangeDual)
   return dual(combine_blockaxes(dual(a1), dual(a2)))
 end
