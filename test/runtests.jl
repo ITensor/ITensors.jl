@@ -22,6 +22,7 @@ ITensors.disable_threaded_blocksparse()
       "ext/ITensorsChainRulesCoreExt",
       "ext/ITensorsPackageCompilerExt",
       "ext/ITensorsVectorInterfaceExt",
+      "ext/NDTensorsMappedArraysExt",
     ]
     @time for dir in dirs
       println("\nTest $(@__DIR__)/$(dir)")
