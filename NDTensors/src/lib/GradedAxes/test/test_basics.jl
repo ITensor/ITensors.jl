@@ -9,9 +9,9 @@ using BlockArrays:
   blocklength,
   blocklengths,
   blocks
-using NDTensors.GradedAxes:
-  GradedOneTo, GradedUnitRange, blocklabels, labelled_isequal, gradedrange
-using NDTensors.LabelledNumbers: LabelledUnitRange, islabelled, label, labelled, unlabel
+using NDTensors.GradedAxes: GradedOneTo, GradedUnitRange, blocklabels, gradedrange
+using NDTensors.LabelledNumbers:
+  LabelledUnitRange, islabelled, label, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
 @testset "GradedAxes basics" begin
   for a in (
