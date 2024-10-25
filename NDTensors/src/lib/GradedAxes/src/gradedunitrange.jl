@@ -21,7 +21,13 @@ using BlockArrays:
 using Compat: allequal
 using FillArrays: Fill
 using ..LabelledNumbers:
-  LabelledNumbers, LabelledInteger, LabelledUnitRange, label, labelled, unlabel
+  LabelledNumbers,
+  LabelledInteger,
+  LabelledUnitRange,
+  label,
+  labelled,
+  labelled_isequal,
+  unlabel
 
 const AbstractGradedUnitRange{T<:LabelledInteger} = AbstractBlockedUnitRange{T}
 
@@ -42,7 +48,7 @@ end
 struct NoLabel end
 blocklabels(r::AbstractUnitRange) = Fill(NoLabel(), blocklength(r))
 
-function labelled_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
+function LabelledNumbers.labelled_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
   return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))
 end
 

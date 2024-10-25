@@ -110,6 +110,7 @@ export
   array,
   axpy!,
   blockoffsets,
+  checkflux,
   combinedind,
   combiner,
   commonind,
@@ -124,6 +125,7 @@ export
   diagitensor,
   diag_itensor,
   directsum,
+  dot,
   eachnzblock,
   firstind,
   filterinds,
@@ -134,6 +136,7 @@ export
   hassameinds,
   ind,
   inds,
+  inner,
   insertblock!,
   ishermitian,
   itensor,
@@ -143,6 +146,7 @@ export
   noncommonind,
   noncommoninds,
   norm,
+  normalize,
   normalize!,
   noprime!,
   nnzblocks,
@@ -185,10 +189,6 @@ export
   # Methods
   addtags,
   hastags,
-  # physics/autompo.jl
-  AutoMPO,
-  OpSum,
-  add!,
   # qn/qnindex.jl
   blockdim,
   flux,

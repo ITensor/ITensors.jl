@@ -29,6 +29,8 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ## News
 
+- October 25, 2024: ITensors.jl v0.7 has been released. This is a major breaking change, since all of the MPS/MPO functionality from this package has been moved to [ITensorMPS.jl](https://github.com/ITensor/ITensorMPS.jl), along with all of the functionality of [ITensorTDVP.jl](https://github.com/ITensor/ITensorTDVP.jl). If you want to use MPS/MPO types and related functionality, such as `MPS`, `MPO`, `dmrg`, `siteinds`, `OpSum`, `op`, etc. you now must install and load the ITensorMPS.jl package. Additionally, if you are using ITensorTDVP.jl in your code, please change `using ITensorTDVP` to `using ITensorMPS`. ITensorMPS.jl has all of the same functionality as ITensorTDVP.jl, and ITensorTDVP.jl will be deprecated in favor of ITensorMPS.jl. **Note:** If you are using `ITensors.compile`, you must now install and load the ITensorMPS.jl package in order to trigger it to load properly, since it relies on running MPS/MPO functionality as example code for Julia to compile.
+
 - May 9, 2024: A new package [ITensorMPS.jl](https://github.com/ITensor/ITensorMPS.jl) has been released. We plan to move all of the MPS/MPO functionality in [ITensors.jl](https://github.com/ITensor/ITensors.jl) to [ITensorMPS.jl](https://github.com/ITensor/ITensorMPS.jl). For now, ITensorMPS.jl just re-exports the MPS/MPO functionality of ITensors.jl (as well as of [ITensorTDVP.jl](https://github.com/ITensor/ITensorTDVP.jl)), such as `dmrg`, `siteinds`, `MPS`, `MPO`, etc. To prepare for the change over to ITensorMPS.jl, please change `using ITensors` to `using ITensors, ITensorMPS` in any code that makes use of MPS/MPO functionality, and if you are using ITensorTDVP.jl change `using ITensorTDVP` to `using ITensorMPS` in your code.
 
 - May 8, 2024: ITensors.jl v0.6 has been released. This version deletes the experimental "combine-contract" contraction backend, which was enabled by `ITensors.enable_combine_contract()`. This feature enabled performing ITensor contractions by first combining indices and then performing contractions as matrix multiplications, which potentially could lead to speedups for certain contractions involving higher-order QN-conserving tensors. However, the speedups weren't consistent with the current implementation, and this feature will be incorporated into the library in a more systematic way when we release our new non-abelian symmetric tensor backend.
@@ -321,5 +323,5 @@ After sweep 4 energy=-138.940086009318 maxlinkdim=100 maxerr=1.05E-10 time=11.64
 After sweep 5 energy=-138.940086058840 maxlinkdim=96 maxerr=1.00E-10 time=12.771
 Final energy = -138.94008605883985
 ```
-You can find more examples of running `dmrg` and related algorithms [here](https://github.com/ITensor/ITensors.jl/tree/main/src/lib/ITensorMPS/examples).
+You can find more examples of running `dmrg` and related algorithms [here](https://github.com/ITensor/ITensorMPS.jl/tree/main/examples).
 
