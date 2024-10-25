@@ -1,12 +1,40 @@
 @eval module $(gensym())
-using NDTensors
-using Test: @testset, @test, @test_throws
 using GPUArraysCore: @allowscalar
+using NDTensors:
+  NDTensors,
+  Block,
+  BlockOffsets,
+  BlockSparse,
+  BlockSparseTensor,
+  Combiner,
+  Dense,
+  DenseTensor,
+  contract,
+  dim,
+  dims,
+  tensor
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list, is_supported_eltype
+using Test: @testset, @test, @test_throws
 
 # Testing generic block indices
-using ITensors: QN, Index
+struct Index{Space}
+  space::Space
+end
+NDTensors.dim(i::Index) = sum(b -> last(b), i.space)
+NDTensors.nblocks(i::Index) = length(i.space)
+NDTensors.blockdim(i::Index, block::Integer) = last(i.space[block])
+function NDTensors.outer(i1::Index, i2::Index)
+  return Index(vec(
+    map(Iterators.product(i1.space, i2.space)) do (b1, b2)
+      return first(b1) + first(b2) => last(b1) * last(b2)
+    end,
+  ))
+end
+NDTensors.permuteblocks(i::Index, perm::Vector{Int}) = Index(i.space[perm])
+
+struct QN end
+Base.:+(q1::QN, q2::QN) = QN()
 
 @testset "CombinerTensor basic functionality" begin
   @testset "test device: $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
