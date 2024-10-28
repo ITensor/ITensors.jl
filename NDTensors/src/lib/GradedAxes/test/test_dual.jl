@@ -5,6 +5,7 @@ using BlockArrays:
   blockaxes,
   blockedrange,
   blockfirsts,
+  blockisequal,
   blocklasts,
   blocklength,
   blocklengths,
@@ -23,7 +24,7 @@ using NDTensors.GradedAxes:
   gradedrange,
   isdual,
   nondual
-using NDTensors.LabelledNumbers: LabelledInteger, label, labelled
+using NDTensors.LabelledNumbers: LabelledInteger, label, labelled, labelled_isequal
 using Test: @test, @testset
 struct U1
   n::Int
@@ -36,6 +37,7 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   @test !isdual(a0)
   @test dual(a0) isa OneToOne
   @test space_isequal(a0, a0)
+  @test labelled_isequal(a0, a0)
   @test space_isequal(a0, dual(a0))
 
   a = 1:3
@@ -50,7 +52,7 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   @test !isdual(a)
   @test !isdual(ad)
   @test ad isa BlockedOneTo
-  @test space_isequal(ad, a)
+  @test blockisequal(ad, a)
 end
 
 @testset "GradedUnitRangeDual" begin

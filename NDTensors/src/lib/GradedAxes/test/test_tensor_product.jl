@@ -11,10 +11,11 @@ using NDTensors.GradedAxes:
   fusion_product,
   flip,
   gradedrange,
-  labelled_isequal,
   space_isequal,
   isdual,
   tensor_product
+
+using NDTensors.LabelledNumbers: labelled_isequal
 
 struct U1
   n::Int
@@ -27,6 +28,7 @@ GradedAxes.fuse_labels(x::U1, y::U1) = U1(x.n + y.n)
   GradedAxes.fuse_labels(x::String, y::String) = x * y
 
   g0 = OneToOne()
+  @test labelled_isequal(g0, g0)
   @test labelled_isequal(tensor_product(g0, g0), g0)
 
   a = gradedrange(["x" => 2, "y" => 3])

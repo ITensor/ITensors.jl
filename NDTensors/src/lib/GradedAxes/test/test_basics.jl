@@ -9,8 +9,7 @@ using BlockArrays:
   blocklength,
   blocklengths,
   blocks
-using NDTensors.GradedAxes:
-  GradedOneTo, GradedUnitRange, OneToOne, blocklabels, gradedisequal, gradedrange
+using NDTensors.GradedAxes: GradedOneTo, GradedUnitRange, OneToOne, blocklabels, gradedrange
 using NDTensors.LabelledNumbers:
   LabelledUnitRange, islabelled, label, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
@@ -20,13 +19,14 @@ using Test: @test, @test_broken, @testset
   @test a0 isa OneToOne{Bool}
   @test eltype(a0) == Bool
   @test length(a0) == 1
-  @test gradedisequal(a0, a0)
+  @test labelled_isequal(a0, a0)
 
-  @test gradedisequal(a0, 1:1)
-  @test gradedisequal(1:1, a0)
-  @test !gradedisequal(a0, 1:2)
-  @test !gradedisequal(1:2, a0)
+  @test labelled_isequal(a0, 1:1)
+  @test labelled_isequal(1:1, a0)
+  @test !labelled_isequal(a0, 1:2)
+  @test !labelled_isequal(1:2, a0)
 end
+
 @testset "GradedAxes basics" begin
   a0 = OneToOne()
   for a in (
@@ -35,10 +35,10 @@ end
     gradedrange(["x" => 2, "y" => 3]),
   )
     @test a isa GradedOneTo
-    @test gradedisequal(a, a)
-    @test !gradedisequal(a0, a)
-    @test !gradedisequal(a, a0)
-    @test !gradedisequal(a, 1:5)
+    @test labelled_isequal(a, a)
+    @test !labelled_isequal(a0, a)
+    @test !labelled_isequal(a, a0)
+    @test !labelled_isequal(a, 1:5)
     for x in iterate(a)
       @test x == 1
       @test label(x) == "x"

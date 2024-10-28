@@ -12,37 +12,26 @@ function tensor_product(
   return foldl(tensor_product, (a1, a2, a3, a_rest...))
 end
 
-function tensor_product(::AbstractUnitRange, ::AbstractUnitRange)
-  return error("Not implemented yet.")
+flip_dual(r::AbstractUnitRange) = r
+flip_dual(r::GradedUnitRangeDual) = flip(r)
+function tensor_product(a1::AbstractUnitRange, a2::AbstractUnitRange)
+  return tensor_product(flip_dual(a1), flip_dual(a2))
 end
 
 function tensor_product(a1::Base.OneTo, a2::Base.OneTo)
   return Base.OneTo(length(a1) * length(a2))
 end
 
-function tensor_product(::OneToOne, a2::AbstractBlockedUnitRange)
+function tensor_product(::OneToOne, a2::AbstractUnitRange)
   return a2
 end
 
-function tensor_product(a1::AbstractBlockedUnitRange, ::OneToOne)
+function tensor_product(a1::AbstractUnitRange, ::OneToOne)
   return a1
 end
 
 function tensor_product(::OneToOne, ::OneToOne)
   return OneToOne()
-end
-
-# Handle dual. Always return a non-dual GradedUnitRange.
-function tensor_product(a1::AbstractBlockedUnitRange, a2::GradedUnitRangeDual)
-  return tensor_product(a1, flip(a2))
-end
-
-function tensor_product(a1::GradedUnitRangeDual, a2::AbstractBlockedUnitRange)
-  return tensor_product(flip(a1), a2)
-end
-
-function tensor_product(a1::GradedUnitRangeDual, a2::GradedUnitRangeDual)
-  return tensor_product(flip(a1), flip(a2))
 end
 
 function fuse_labels(x, y)
@@ -98,7 +87,8 @@ end
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
-function blockmergesortperm(a::AbstractBlockedUnitRange)
+blockmergesort(g::AbstractUnitRange) = g
+function blockmergesortperm(a::AbstractUnitRange)
   return Block.(groupsortperm(blocklabels(a)))
 end
 
@@ -120,7 +110,6 @@ function blockmergesort(g::AbstractGradedUnitRange)
 end
 
 blockmergesort(g::GradedUnitRangeDual) = dual(blockmergesort(flip(g)))
-blockmergesort(g::OneToOne) = g
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
 function fusion_product(g1, g2)
