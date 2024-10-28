@@ -51,9 +51,6 @@ function fuse_blocklengths(x::LabelledInteger, y::LabelledInteger)
   return blockedrange([labelled(x * y, fuse_labels(label(x), label(y)))])
 end
 
-flatten_maybe_nested(v::Vector{<:Integer}) = v
-flatten_maybe_nested(v::Vector{<:AbstractGradedUnitRange}) = reduce(vcat, blocklengths.(v))
-
 using BlockArrays: blockedrange, blocks
 function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange)
   nested = map(Iterators.flatten((Iterators.product(blocks(a1), blocks(a2)),))) do it
@@ -63,13 +60,8 @@ function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRan
   return blockedrange(new_blocklengths)
 end
 
-# convention: sort UnitRangeDual according to nondual blocks
-function blocksortperm(a::AbstractUnitRange)
-  return Block.(sortperm(blocklabels(nondual(a))))
-end
-
 # convention: sort GradedUnitRangeDual according to nondual blocks
-function blocksortperm(a::GradedUnitRangeDual)
+function blocksortperm(a::AbstractUnitRange)
   return Block.(sortperm(blocklabels(nondual(a))))
 end
 
@@ -102,14 +94,13 @@ end
 function blockmergesort(g::AbstractGradedUnitRange)
   glabels = blocklabels(g)
   gblocklengths = blocklengths(g)
-  new_blocklengths = map(
-    la -> labelled(sum(gblocklengths[findall(==(la), glabels)]; init=0), la),
-    sort(unique(glabels)),
-  )
-  return GradedAxes.gradedrange(new_blocklengths)
+  new_blocklengths = map(sort(unique(glabels))) do la
+    return labelled(sum(gblocklengths[findall(==(la), glabels)]; init=0), la)
+  end
+  return gradedrange(new_blocklengths)
 end
 
-blockmergesort(g::GradedUnitRangeDual) = dual(blockmergesort(flip(g)))
+blockmergesort(g::GradedUnitRangeDual) = flip(blockmergesort(flip(g)))
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
 function fusion_product(g1, g2)
