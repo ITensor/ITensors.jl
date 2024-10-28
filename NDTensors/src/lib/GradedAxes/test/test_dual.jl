@@ -61,6 +61,8 @@ end
     ad = dual(a)
     @test ad isa GradedUnitRangeDual
     @test eltype(ad) == LabelledInteger{Int,U1}
+    @test blocklengths(ad) isa Vector
+    @test eltype(blocklengths(ad)) == eltype(blocklengths(a))
 
     @test space_isequal(dual(ad), a)
     @test space_isequal(nondual(ad), a)
