@@ -51,6 +51,12 @@ struct GradedOneTo{T,BlockLasts<:Vector{T}} <: AbstractGradedUnitRange{T,BlockLa
   end
 end
 
+function Base.show(io::IO, mimetype::MIME"text/plain", g::AbstractGradedUnitRange)
+  v = blocklabels(g) .=> Int.(blocklengths(g))
+  println(typeof(g))
+  return show(io, mimetype, v)
+end
+
 # == is just a range comparison that ignores labels. Need dedicated function to check equality.
 struct NoLabel end
 blocklabels(r::AbstractUnitRange) = Fill(NoLabel(), blocklength(r))
