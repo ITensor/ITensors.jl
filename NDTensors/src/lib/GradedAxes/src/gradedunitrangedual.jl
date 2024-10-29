@@ -1,6 +1,5 @@
-struct GradedUnitRangeDual{
-  T<:LabelledInteger,NondualUnitRange<:AbstractGradedUnitRange{T}
-} <: AbstractGradedUnitRange{T,Vector{T}}
+struct GradedUnitRangeDual{T,CS,NondualUnitRange<:AbstractGradedUnitRange{T,CS}} <:
+       AbstractGradedUnitRange{T,CS}
   nondual_unitrange::NondualUnitRange
 end
 

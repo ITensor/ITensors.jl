@@ -29,19 +29,26 @@ using ..LabelledNumbers:
   labelled_isequal,
   unlabel
 
-const AbstractGradedUnitRange{T<:LabelledInteger} = AbstractBlockedUnitRange{T}
+abstract type AbstractGradedUnitRange{T,CS} <: AbstractBlockedUnitRange{T,CS} end
 
-const GradedUnitRange{T<:LabelledInteger,BlockLasts<:Vector{T}} = BlockedUnitRange{
-  T,BlockLasts
-}
+struct GradedUnitRange{T,BlockLasts<:Vector{T}} <: AbstractGradedUnitRange{T,BlockLasts}
+  first::T
+  lasts::BlockLasts
+end
 
-const GradedOneTo{T<:LabelledInteger,BlockLasts<:Vector{T}} = BlockedOneTo{T,BlockLasts}
+struct GradedOneTo{T,BlockLasts<:Vector{T}} <: AbstractGradedUnitRange{T,BlockLasts}
+  lasts::BlockLasts
 
-# This is only needed in certain Julia versions below 1.10
-# (for example Julia 1.6).
-# TODO: Delete this once we drop Julia 1.6 support.
-function Base.OrdinalRange{T,T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
-  return unlabel_blocks(a)
+  # assume that lasts is sorted, no checks carried out here
+  function GradedOneTo(lasts::CS) where {T<:Integer,CS<:AbstractVector{T}}
+    Base.require_one_based_indexing(lasts)
+    isempty(lasts) || first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
+    return new{T,CS}(lasts)
+  end
+  function GradedOneTo(lasts::CS) where {T<:Integer,CS<:Tuple{T,Vararg{T}}}
+    first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
+    return new{T,CS}(lasts)
+  end
 end
 
 # == is just a range comparison that ignores labels. Need dedicated function to check equality.
@@ -90,7 +97,7 @@ Base.eltype(::Type{<:GradedUnitRange{T}}) where {T} = T
 function gradedrange(lblocklengths::AbstractVector{<:LabelledInteger})
   brange = blockedrange(unlabel.(lblocklengths))
   lblocklasts = labelled.(blocklasts(brange), label.(lblocklengths))
-  return BlockedOneTo(lblocklasts)
+  return GradedOneTo(lblocklasts)
 end
 
 # To help with generic code.
@@ -118,14 +125,12 @@ end
 function labelled_blocks(a::BlockedOneTo, labels)
   # TODO: Use `blocklasts(a)`? That might
   # cause a recursive loop.
-  return BlockedOneTo(labelled.(a.lasts, labels))
+  return GradedOneTo(labelled.(a.lasts, labels))
 end
 function labelled_blocks(a::BlockedUnitRange, labels)
   # TODO: Use `first(a)` and `blocklasts(a)`? Those might
   # cause a recursive loop.
-  return BlockArrays._BlockedUnitRange(
-    labelled(a.first, labels[1]), labelled.(a.lasts, labels)
-  )
+  return GradedUnitRange(labelled(a.first, labels[1]), labelled.(a.lasts, labels))
 end
 
 function BlockArrays.findblock(a::AbstractGradedUnitRange, index::Integer)
@@ -185,7 +190,15 @@ function unlabel_blocks(a::BlockedUnitRange)
   return BlockArrays._BlockedUnitRange(a.first, unlabel.(a.lasts))
 end
 
-## BlockedUnitRage interface
+function unlabel_blocks(a::GradedOneTo)
+  # TODO: Use `blocklasts(a)`.
+  return BlockedOneTo(unlabel.(a.lasts))
+end
+function unlabel_blocks(a::GradedUnitRange)
+  return BlockArrays._BlockedUnitRange(a.first, unlabel.(a.lasts))
+end
+
+## BlockedUnitRange interface
 
 function Base.axes(ga::AbstractGradedUnitRange)
   return map(axes(unlabel_blocks(ga))) do a
@@ -217,9 +230,6 @@ end
 function Base.first(a::AbstractGradedUnitRange)
   return gradedunitrange_first(a)
 end
-function Base.first(a::GradedOneTo)
-  return gradedunitrange_first(a)
-end
 
 Base.iterate(a::AbstractGradedUnitRange) = isempty(a) ? nothing : (first(a), first(a))
 function Base.iterate(a::AbstractGradedUnitRange, i)
@@ -232,7 +242,7 @@ function firstblockindices(a::AbstractGradedUnitRange)
   return labelled.(firstblockindices(unlabel_blocks(a)), blocklabels(a))
 end
 
-function blockedunitrange_getindex(a::AbstractGradedUnitRange, index)
+function gradedunitrange_getindices(a::AbstractGradedUnitRange, index)
   # This uses `blocklasts` since that is what is stored
   # in `BlockedUnitRange`, maybe abstract that away.
   return labelled(unlabel_blocks(a)[index], get_label(a, index))
@@ -245,27 +255,34 @@ function blocklabels(a::AbstractUnitRange, indices)
   end
 end
 
-function blockedunitrange_getindices(
+function gradedunitrange_getindices(
   ga::AbstractGradedUnitRange, indices::AbstractUnitRange{<:Integer}
 )
   a_indices = blockedunitrange_getindices(unlabel_blocks(ga), indices)
   return labelled_blocks(a_indices, blocklabels(ga, indices))
 end
 
+function gradedunitrange_getindices(
+  a::AbstractGradedUnitRange,
+  indices::Union{AbstractVector{<:Block{1}},AbstractVector{<:BlockIndexRange{1}}},
+)
+  return blockedunitrange_getindices(a, indices)
+end
+
 # Fixes ambiguity error with:
 # ```julia
-# blockedunitrange_getindices(::GradedUnitRange, ::AbstractUnitRange{<:Integer})
+# gradedunitrange_getindices(::GradedUnitRange, ::AbstractUnitRange{<:Integer})
 # ```
 # TODO: Try removing once GradedAxes is rewritten for BlockArrays v1.
-function blockedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockSlice)
+function gradedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockSlice)
   return a[indices.block]
 end
 
-function blockedunitrange_getindices(ga::AbstractGradedUnitRange, indices::BlockRange)
+function gradedunitrange_getindices(ga::AbstractGradedUnitRange, indices::BlockRange)
   return labelled_blocks(unlabel_blocks(ga)[indices], blocklabels(ga, indices))
 end
 
-function blockedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockIndex{1})
+function gradedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockIndex{1})
   return a[block(indices)][blockindex(indices)]
 end
 
@@ -276,7 +293,7 @@ function Base.getindex(a::AbstractGradedUnitRange, index::Integer)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, index::Block{1})
-  return blockedunitrange_getindex(a, index)
+  return gradedunitrange_getindices(a, index)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices::BlockIndexRange)
@@ -286,18 +303,18 @@ end
 function Base.getindex(
   a::AbstractGradedUnitRange, indices::BlockRange{1,<:Tuple{AbstractUnitRange{Int}}}
 )
-  return blockedunitrange_getindices(a, indices)
+  return gradedunitrange_getindices(a, indices)
 end
 
 # Fixes ambiguity error with `BlockArrays`.
 function Base.getindex(
   a::AbstractGradedUnitRange, indices::BlockRange{1,Tuple{Base.OneTo{Int}}}
 )
-  return blockedunitrange_getindices(a, indices)
+  return gradedunitrange_getindices(a, indices)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices::BlockIndex{1})
-  return blockedunitrange_getindices(a, indices)
+  return gradedunitrange_getindices(a, indices)
 end
 
 # Fixes ambiguity issues with:
@@ -310,15 +327,15 @@ end
 # TODO: Maybe not needed once GradedAxes is rewritten
 # for BlockArrays v1.
 function Base.getindex(a::AbstractGradedUnitRange, indices::BlockSlice)
-  return blockedunitrange_getindices(a, indices)
+  return gradedunitrange_getindices(a, indices)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices)
-  return blockedunitrange_getindices(a, indices)
+  return gradedunitrange_getindices(a, indices)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices::AbstractUnitRange{<:Integer})
-  return blockedunitrange_getindices(a, indices)
+  return gradedunitrange_getindices(a, indices)
 end
 
 # This fixes an issue that `combine_blockaxes` was promoting
@@ -352,7 +369,7 @@ end
 # blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
 # return blockedrange(blocklengths)
 # ```
-function blockedunitrange_getindices(
+function gradedunitrange_getindices(
   a::AbstractGradedUnitRange, indices::AbstractBlockVector{<:Block{1}}
 )
   blks = map(bs -> mortar(map(b -> a[b], bs)), blocks(indices))
