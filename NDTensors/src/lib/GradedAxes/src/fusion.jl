@@ -79,17 +79,12 @@ end
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 # Get the permutation for sorting, then group by common elements.
 # groupsortperm([2, 1, 2, 3]) == [[2], [1, 3], [4]]
-blockmergesort(g::AbstractUnitRange) = g
 function blockmergesortperm(a::AbstractUnitRange)
-  return Block.(groupsortperm(blocklabels(a)))
+  return Block.(groupsortperm(blocklabels(nondual(a))))
 end
 
 # Used by `TensorAlgebra.splitdims` in `BlockSparseArraysGradedAxesExt`.
 invblockperm(a::Vector{<:Block{1}}) = Block.(invperm(Int.(a)))
-
-function blockmergesortperm(a::GradedUnitRangeDual)
-  return Block.(groupsortperm(blocklabels(nondual(a))))
-end
 
 function blockmergesort(g::AbstractGradedUnitRange)
   glabels = blocklabels(g)
@@ -101,6 +96,7 @@ function blockmergesort(g::AbstractGradedUnitRange)
 end
 
 blockmergesort(g::GradedUnitRangeDual) = flip(blockmergesort(flip(g)))
+blockmergesort(g::AbstractUnitRange) = g
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
 function fusion_product(g1, g2)
