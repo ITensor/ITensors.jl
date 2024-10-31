@@ -20,6 +20,8 @@ using Test: @test, @test_broken, @testset
   @test eltype(a0) == Bool
   @test length(a0) == 1
   @test labelled_isequal(a0, a0)
+  @test a0[1] == true
+  @test a0[[1]] == [true]
 
   @test labelled_isequal(a0, 1:1)
   @test labelled_isequal(1:1, a0)
@@ -109,6 +111,7 @@ end
   @test blocklengths(ax) == blocklengths(a)
   @test blocklabels(ax) == blocklabels(a)
   @test blockfirsts(a) == [2, 3]
+  @test x[[2, 4]] == [labelled(2, "x"), labelled(4, "y")]
 
   # Regression test for ambiguity error.
   x = gradedrange(["x" => 2, "y" => 3])

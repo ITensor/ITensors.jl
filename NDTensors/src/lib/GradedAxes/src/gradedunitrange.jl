@@ -223,7 +223,9 @@ end
 
 function gradedunitrange_getindices(
   a::AbstractGradedUnitRange,
-  indices::Union{AbstractVector{<:Block{1}},AbstractVector{<:BlockIndexRange{1}}},
+  indices::Union{
+    AbstractVector{<:Block{1}},AbstractVector{<:BlockIndexRange{1}},Vector{<:Integer}
+  },
 )
   return blockedunitrange_getindices(a, indices)
 end
