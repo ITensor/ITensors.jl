@@ -17,16 +17,6 @@ Base.step(a::GradedUnitRangeDual) = label_dual(step(nondual(a)))
 
 Base.view(a::GradedUnitRangeDual, index::Block{1}) = a[index]
 
-function Base.show(io::IO, a::GradedUnitRangeDual)
-  return print(io, GradedUnitRangeDual, "(", blocklasts(a), ")")
-end
-
-function Base.show(io::IO, mimetype::MIME"text/plain", a::GradedUnitRangeDual)
-  return Base.invoke(
-    show, Tuple{typeof(io),MIME"text/plain",AbstractArray}, io, mimetype, a
-  )
-end
-
 function Base.getindex(a::GradedUnitRangeDual, indices::AbstractUnitRange{<:Integer})
   return dual(getindex(nondual(a), indices))
 end
@@ -88,10 +78,7 @@ function BlockArrays.BlockSlice(b::Block, r::GradedUnitRangeDual)
   return BlockSlice(b, dual(r))
 end
 
-using NDTensors.LabelledNumbers: LabelledNumbers, label
-LabelledNumbers.label(a::GradedUnitRangeDual) = dual(label(nondual(a)))
-
-using NDTensors.LabelledNumbers: LabelledUnitRange
+using NDTensors.LabelledNumbers: LabelledNumbers, LabelledUnitRange, label
 # The Base version of `length(::AbstractUnitRange)` drops the label.
 function Base.length(a::GradedUnitRangeDual{<:Any,<:LabelledUnitRange})
   return dual(length(nondual(a)))
@@ -129,15 +116,6 @@ function Base.OrdinalRange{Int,Int}(
   # TODO: Implement this broadcasting operation and use it here.
   # return Int.(r)
   return unlabel(nondual(r))
-end
-
-# This is only needed in certain Julia versions below 1.10
-# (for example Julia 1.6).
-# TODO: Delete this once we drop Julia 1.6 support.
-# The type constraint `T<:Integer` is needed to avoid an ambiguity
-# error with a conversion method in Base.
-function Base.UnitRange{T}(a::GradedUnitRangeDual{<:LabelledInteger{T}}) where {T<:Integer}
-  return UnitRange{T}(nondual(a))
 end
 
 function unlabel_blocks(a::GradedUnitRangeDual)

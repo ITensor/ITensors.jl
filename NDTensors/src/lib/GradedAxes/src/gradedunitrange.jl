@@ -69,11 +69,6 @@ function space_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
   return (isdual(a1) == isdual(a2)) && labelled_isequal(a1, a2)
 end
 
-# TODO: See if this is needed.
-function Base.AbstractUnitRange{T}(a::GradedOneTo{<:LabelledInteger{T}}) where {T}
-  return unlabel_blocks(a)
-end
-
 # TODO: Use `TypeParameterAccessors`.
 Base.eltype(::Type{<:GradedUnitRange{T}}) where {T} = T
 
