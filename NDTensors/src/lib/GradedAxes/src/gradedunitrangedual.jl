@@ -104,8 +104,6 @@ end
 Base.unitrange(a::GradedUnitRangeDual) = a
 
 using NDTensors.LabelledNumbers: LabelledInteger, label, labelled, unlabel
-dual(i::LabelledInteger) = labelled(unlabel(i), dual(label(i)))
-
 using BlockArrays: BlockArrays, blockaxes, blocklasts, combine_blockaxes, findblock
 BlockArrays.blockaxes(a::GradedUnitRangeDual) = blockaxes(nondual(a))
 BlockArrays.blockfirsts(a::GradedUnitRangeDual) = label_dual.(blockfirsts(nondual(a)))

@@ -12,6 +12,7 @@ using BlockArrays:
   blocks,
   findblock
 using NDTensors.GradedAxes:
+  AbstractGradedUnitRange,
   GradedAxes,
   GradedUnitRangeDual,
   OneToOne,
@@ -60,6 +61,7 @@ end
       [gradedrange([U1(0) => 2, U1(1) => 3]), gradedrange([U1(0) => 2, U1(1) => 3])[1:5]]
     ad = dual(a)
     @test ad isa GradedUnitRangeDual
+    @test ad isa AbstractGradedUnitRange
     @test eltype(ad) == LabelledInteger{Int,U1}
     @test blocklengths(ad) isa Vector
     @test eltype(blocklengths(ad)) == eltype(blocklengths(a))
@@ -78,6 +80,8 @@ end
     @test blocklasts(ad) == [labelled(2, U1(0)), labelled(5, U1(-1))]
     @test blocklength(ad) == 2
     @test blocklengths(ad) == [2, 3]
+    @test blocklabels(ad) == [U1(0), U1(-1)]
+    @test label.(blocklengths(ad)) == [U1(0), U1(-1)]
     @test findblock(ad, 4) == Block(2)
     @test only(blockaxes(ad)) == Block(1):Block(2)
     @test blocks(ad) == [labelled(1:2, U1(0)), labelled(3:5, U1(-1))]
