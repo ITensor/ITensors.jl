@@ -1,3 +1,5 @@
+using .TypeParameterAccessors: TypeParameterAccessors
+
 """
     BlockDim
 
@@ -18,7 +20,9 @@ const BlockDims{N} = NTuple{N,BlockDim}
 
 Base.ndims(ds::Type{<:BlockDims{N}}) where {N} = N
 
-similartype(::Type{<:BlockDims}, ::Type{Val{N}}) where {N} = BlockDims{N}
+function TypeParameterAccessors.similartype(::Type{<:BlockDims}, ::Type{Val{N}}) where {N}
+  return BlockDims{N}
+end
 
 Base.copy(ds::BlockDims) = ds
 

@@ -1,3 +1,5 @@
+using .TypeParameterAccessors: TypeParameterAccessors, set_indstype, similartype
+
 # NDTensors.similar
 similar(tensor::Tensor) = setstorage(tensor, similar(storage(tensor)))
 
@@ -56,11 +58,11 @@ function Base.similar(tensor::Tensor, eltype::Type, dims::Dims)
   return NDTensors.similar(tensor, eltype, dims)
 end
 
-function similartype(tensortype::Type{<:Tensor}, eltype::Type)
+function TypeParameterAccessors.similartype(tensortype::Type{<:Tensor}, eltype::Type)
   return set_storagetype(tensortype, similartype(storagetype(tensortype), eltype))
 end
 
-function similartype(tensortype::Type{<:Tensor}, dims::Tuple)
+function TypeParameterAccessors.similartype(tensortype::Type{<:Tensor}, dims::Tuple)
   tensortype_new_inds = set_indstype(tensortype, dims)
   # Need to pass `dims` in case that information is needed to make a storage type,
   # for example `BlockSparse` needs the number of dimensions.
