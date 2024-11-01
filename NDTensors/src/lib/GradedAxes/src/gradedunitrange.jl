@@ -17,7 +17,8 @@ using BlockArrays:
   blocklengths,
   findblock,
   findblockindex,
-  mortar
+  mortar,
+  sortedunion
 using Compat: allequal
 using FillArrays: Fill
 using ..LabelledNumbers:
@@ -304,15 +305,23 @@ end
 # that mixed dense and graded axes.
 # TODO: Maybe come up with a more general solution.
 function BlockArrays.combine_blockaxes(
-  a1::GradedOneTo{<:LabelledInteger{T}}, a2::Base.OneTo{T}
+  a1::AbstractGradedUnitRange{T}, a2::Base.OneTo{T}
 ) where {T<:Integer}
   combined_blocklasts = sort!(union(unlabel.(blocklasts(a1)), blocklasts(a2)))
   return BlockedOneTo(combined_blocklasts)
 end
 function BlockArrays.combine_blockaxes(
-  a1::Base.OneTo{T}, a2::GradedOneTo{<:LabelledInteger{T}}
+  a1::Base.OneTo{T}, a2::AbstractGradedUnitRange{T}
 ) where {T<:Integer}
   return BlockArrays.combine_blockaxes(a2, a1)
+end
+
+# preserve labels inside combine_blockaxes
+# TODO dual
+function BlockArrays.combine_blockaxes(
+  a::AbstractGradedUnitRange, b::AbstractGradedUnitRange
+)
+  return gradedrange(sortedunion(blocklasts(a), blocklasts(b)))
 end
 
 # Version of length that checks that all blocks have the same label

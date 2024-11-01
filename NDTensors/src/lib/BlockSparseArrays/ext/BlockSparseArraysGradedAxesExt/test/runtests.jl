@@ -39,6 +39,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     d2 = gradedrange([U1(0) => 2, U1(1) => 2])
     a = BlockSparseArray{elt}(d1, d2, d1, d2)
     blockdiagonal!(randn!, a)
+    @test axes(a, 1) isa GradedOneTo
+    @test axes(view(a, 1:4, 1:4), 1) isa GradedOneTo
 
     for b in (a + a, 2 * a)
       @test size(b) == (4, 4, 4, 4)
