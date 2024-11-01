@@ -25,6 +25,7 @@ using ..LabelledNumbers:
   LabelledInteger,
   LabelledUnitRange,
   label,
+  label_type,
   labelled,
   labelled_isequal,
   unlabel
@@ -78,6 +79,8 @@ end
 
 # TODO: Use `TypeParameterAccessors`.
 Base.eltype(::Type{<:GradedUnitRange{T}}) where {T} = T
+LabelledNumbers.label_type(g::AbstractGradedUnitRange) = label_type(typeof(g))
+LabelledNumbers.label_type(T::Type{<:AbstractGradedUnitRange}) = label_type(eltype(T))
 
 function gradedrange(lblocklengths::AbstractVector{<:LabelledInteger})
   brange = blockedrange(unlabel.(lblocklengths))
