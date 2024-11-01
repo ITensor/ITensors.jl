@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using BlockArrays:
   Block,
+  BlockRange,
   BlockSlice,
   BlockVector,
   blockedrange,
@@ -111,7 +112,9 @@ end
   @test blocklengths(ax) == blocklengths(a)
   @test blocklabels(ax) == blocklabels(a)
   @test blockfirsts(a) == [2, 3]
+
   @test x[[2, 4]] == [labelled(2, "x"), labelled(4, "y")]
+  @test labelled_isequal(x[BlockRange(1)], gradedrange(["x" => 2]))
 
   # Regression test for ambiguity error.
   x = gradedrange(["x" => 2, "y" => 3])

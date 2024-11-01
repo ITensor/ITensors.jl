@@ -256,9 +256,14 @@ function Base.getindex(a::AbstractGradedUnitRange, indices::BlockIndexRange)
   return blockedunitrange_getindices(a, indices)
 end
 
-# fix ambiguity
+# fix ambiguities
 function Base.getindex(
   a::AbstractGradedUnitRange, indices::BlockArrays.BlockRange{1,<:Tuple{Base.OneTo}}
+)
+  return gradedunitrange_getindices(a, indices)
+end
+function Base.getindex(
+  a::AbstractGradedUnitRange, indices::BlockRange{1,<:Tuple{AbstractUnitRange{Int}}}
 )
   return gradedunitrange_getindices(a, indices)
 end
