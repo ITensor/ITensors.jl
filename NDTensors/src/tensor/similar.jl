@@ -1,3 +1,5 @@
+using .TypeParameterAccessors: set_indstype
+
 # NDTensors.similar
 similar(tensor::Tensor) = setstorage(tensor, similar(storage(tensor)))
 
