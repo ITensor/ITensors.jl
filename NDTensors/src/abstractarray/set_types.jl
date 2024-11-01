@@ -1,4 +1,5 @@
-using .TypeParameterAccessors: TypeParameterAccessors, set_ndims
+using .TypeParameterAccessors: TypeParameterAccessors
+
 """
 # Do we still want to define things like this?
 TODO: Use `Accessors.jl` notation:
@@ -13,14 +14,4 @@ TODO: Use `Accessors.jl` notation:
 # to make things work with the current design.
 function TypeParameterAccessors.set_ndims(numbertype::Type{<:Number}, ndims)
   return numbertype
-end
-
-"""
-`set_indstype` should be overloaded for
-types with structured dimensions,
-like `OffsetArrays` or named indices
-(such as ITensors).
-"""
-function set_indstype(arraytype::Type{<:AbstractArray}, dims::Tuple)
-  return set_ndims(arraytype, length(dims))
 end

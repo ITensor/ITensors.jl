@@ -17,7 +17,7 @@ end
 
 # TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
 # TODO: Make a version that accepts `indstype::Type`?
-function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
+function TypeParameterAccessors.set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
   return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
 end
 
