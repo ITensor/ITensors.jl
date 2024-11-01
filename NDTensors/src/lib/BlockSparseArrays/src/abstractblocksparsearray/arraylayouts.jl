@@ -1,8 +1,7 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
 using BlockArrays: BlockLayout
 using ..SparseArrayInterface: SparseLayout
-# TODO: Move to `NDTensors.TypeParameterAccessors`.
-using ..NDTensors: similartype
+using ..TypeParameterAccessors: similartype
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
   outer_layout = typeof(MemoryLayout(blockstype(arraytype)))

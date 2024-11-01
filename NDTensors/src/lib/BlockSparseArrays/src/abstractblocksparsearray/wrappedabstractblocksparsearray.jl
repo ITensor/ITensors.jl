@@ -9,8 +9,7 @@ using BlockArrays:
   mortar,
   unblock
 using SplitApplyCombine: groupcount
-# TODO: Move to `NDTensors.TypeParameterAccessors`.
-using ..NDTensors: similartype
+using ..TypeParameterAccessors: similartype
 
 const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
   T,N,AbstractBlockSparseArray,AbstractBlockSparseArray{T,N}
