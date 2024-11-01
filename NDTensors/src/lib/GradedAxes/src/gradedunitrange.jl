@@ -69,6 +69,13 @@ function space_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
   return (isdual(a1) == isdual(a2)) && labelled_isequal(a1, a2)
 end
 
+# needed in BlockSparseArrays
+function Base.AbstractUnitRange{T}(
+  a::AbstractGradedUnitRange{<:LabelledInteger{T}}
+) where {T}
+  return unlabel_blocks(a)
+end
+
 # TODO: Use `TypeParameterAccessors`.
 Base.eltype(::Type{<:GradedUnitRange{T}}) where {T} = T
 
@@ -249,8 +256,9 @@ function Base.getindex(a::AbstractGradedUnitRange, indices::BlockIndexRange)
   return blockedunitrange_getindices(a, indices)
 end
 
+# fix ambiguity
 function Base.getindex(
-  a::AbstractGradedUnitRange, indices::BlockRange{1,<:Tuple{AbstractUnitRange{Int}}}
+  a::AbstractGradedUnitRange, indices::BlockArrays.BlockRange{1,<:Tuple{Base.OneTo}}
 )
   return gradedunitrange_getindices(a, indices)
 end
