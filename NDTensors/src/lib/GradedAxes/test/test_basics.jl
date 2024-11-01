@@ -9,7 +9,8 @@ using BlockArrays:
   blocklasts,
   blocklength,
   blocklengths,
-  blocks
+  blocks,
+  combine_blockaxes
 using NDTensors.GradedAxes: GradedOneTo, GradedUnitRange, OneToOne, blocklabels, gradedrange
 using NDTensors.LabelledNumbers:
   LabelledUnitRange, islabelled, label, labelled, labelled_isequal, unlabel
@@ -94,6 +95,8 @@ end
     @test length(a[Block(2)]) == 3
     @test blocklengths(only(axes(a))) == blocklengths(a)
     @test blocklabels(only(axes(a))) == blocklabels(a)
+
+    @test combine_blockaxes(a, a) isa GradedOneTo
   end
 
   # Slicing operations

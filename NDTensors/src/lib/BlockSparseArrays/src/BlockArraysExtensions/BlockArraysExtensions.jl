@@ -20,7 +20,7 @@ using BlockArrays:
   findblockindex
 using Compat: allequal
 using Dictionaries: Dictionary, Indices
-using ..GradedAxes: blockedunitrange_getindices, to_blockindices
+using ..GradedAxes: blockedunitrange_getindices, gradedunitrange_getindices, to_blockindices
 using ..SparseArrayInterface: SparseArrayInterface, nstored, stored_indices
 
 # A return type for `blocks(array)` when `array` isn't blocked.
