@@ -1,6 +1,8 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
 using BlockArrays: BlockLayout
 using ..SparseArrayInterface: SparseLayout
+# TODO: Move to `NDTensors.TypeParameterAccessors`.
+using ..NDTensors: similartype
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
   outer_layout = typeof(MemoryLayout(blockstype(arraytype)))
@@ -9,9 +11,14 @@ function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
 end
 
 function Base.similar(
-  ::MulAdd{<:BlockLayout{<:SparseLayout},<:BlockLayout{<:SparseLayout}}, elt::Type, axes
-)
-  return similar(BlockSparseArray{elt}, axes)
+  mul::MulAdd{<:BlockLayout{<:SparseLayout},<:BlockLayout{<:SparseLayout},<:Any,<:Any,A,B},
+  elt::Type,
+  axes,
+) where {A,B}
+  # TODO: Check that this equals `similartype(blocktype(B), elt, axes)`,
+  # or maybe promote them?
+  output_blocktype = similartype(blocktype(A), elt, axes)
+  return similar(BlockSparseArray{elt,length(axes),output_blocktype}, axes)
 end
 
 # Materialize a SubArray view.

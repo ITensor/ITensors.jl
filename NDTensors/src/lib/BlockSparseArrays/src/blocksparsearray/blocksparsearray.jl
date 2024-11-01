@@ -35,6 +35,18 @@ function BlockSparseArray(
   return BlockSparseArray(Dictionary(block_indices, block_data), axes)
 end
 
+function BlockSparseArray{T,N,A,Blocks}(
+  blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
+) where {T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N}}
+  return BlockSparseArray{T,N,A,Blocks,typeof(axes)}(blocks, axes)
+end
+
+function BlockSparseArray{T,N,A}(
+  blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
+) where {T,N,A<:AbstractArray{T,N}}
+  return BlockSparseArray{T,N,A,typeof(blocks)}(blocks, axes)
+end
+
 function BlockSparseArray{T,N}(
   blocks::AbstractArray{<:AbstractArray{T,N},N}, axes::Tuple{Vararg{AbstractUnitRange,N}}
 ) where {T,N}
@@ -49,9 +61,15 @@ function BlockSparseArray{T,N}(
   return BlockSparseArray{T,N}(blocks, axes)
 end
 
+function BlockSparseArray{T,N,A}(
+  axes::Tuple{Vararg{AbstractUnitRange,N}}
+) where {T,N,A<:AbstractArray{T,N}}
+  blocks = default_blocks(A, axes)
+  return BlockSparseArray{T,N,A}(blocks, axes)
+end
+
 function BlockSparseArray{T,N}(axes::Tuple{Vararg{AbstractUnitRange,N}}) where {T,N}
-  blocks = default_blocks(T, axes)
-  return BlockSparseArray{T,N}(blocks, axes)
+  return BlockSparseArray{T,N,default_arraytype(T, axes)}(axes)
 end
 
 function BlockSparseArray{T,N}(dims::Tuple{Vararg{Vector{Int},N}}) where {T,N}
@@ -72,6 +90,12 @@ end
 
 function BlockSparseArray{T}(axes::Vararg{AbstractUnitRange}) where {T}
   return BlockSparseArray{T}(axes)
+end
+
+function BlockSparseArray{T,N,A}(
+  ::UndefInitializer, dims::Tuple
+) where {T,N,A<:AbstractArray{T,N}}
+  return BlockSparseArray{T,N,A}(dims)
 end
 
 # undef
@@ -109,7 +133,23 @@ Base.axes(a::BlockSparseArray) = a.axes
 blocksparse_blocks(a::BlockSparseArray) = a.blocks
 
 # TODO: Use `TypeParameterAccessors`.
-blockstype(::Type{<:BlockSparseArray{<:Any,<:Any,<:Any,B}}) where {B} = B
+function blockstype(
+  arraytype::Type{<:BlockSparseArray{T,N,A,Blocks}}
+) where {T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N}}
+  return Blocks
+end
+function blockstype(
+  arraytype::Type{<:BlockSparseArray{T,N,A}}
+) where {T,N,A<:AbstractArray{T,N}}
+  return SparseArrayDOK{A,N}
+end
+function blockstype(arraytype::Type{<:BlockSparseArray{T,N}}) where {T,N}
+  return SparseArrayDOK{AbstractArray{T,N},N}
+end
+function blockstype(arraytype::Type{<:BlockSparseArray{T}}) where {T}
+  return SparseArrayDOK{AbstractArray{T}}
+end
+blockstype(arraytype::Type{<:BlockSparseArray}) = SparseArrayDOK{AbstractArray}
 
 ## # Base interface
 ## function Base.similar(
