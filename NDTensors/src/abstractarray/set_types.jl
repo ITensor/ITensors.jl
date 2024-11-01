@@ -1,4 +1,5 @@
-using .TypeParameterAccessors: TypeParameterAccessors, set_ndims
+using .TypeParameterAccessors: TypeParameterAccessors
+
 """
 # Do we still want to define things like this?
 TODO: Use `Accessors.jl` notation:

@@ -1,5 +1,5 @@
 using Base: DimOrInd, Dims, OneTo
-using .TypeParameterAccessors: IsWrappedArray, unwrap_array_type, set_eltype
+using .TypeParameterAccessors: IsWrappedArray, unwrap_array_type, set_eltype, similartype
 
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.
