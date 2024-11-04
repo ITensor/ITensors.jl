@@ -214,8 +214,35 @@ function firstblockindices(a::AbstractGradedUnitRange)
   return labelled.(firstblockindices(unlabel_blocks(a)), blocklabels(a))
 end
 
-function gradedunitrange_getindices(a::AbstractGradedUnitRange, index)
+function blockedunitrange_getindices(a::AbstractGradedUnitRange, index::Block{1})
   return labelled(unlabel_blocks(a)[index], get_label(a, index))
+end
+
+function blockedunitrange_getindices(a::AbstractGradedUnitRange, indices::Vector{<:Integer})
+  return map(index -> a[index], indices)
+end
+
+function blockedunitrange_getindices(a::AbstractGradedUnitRange, index)
+  return labelled(unlabel_blocks(a)[index], get_label(a, index))
+end
+
+function blockedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockIndexRange)
+  return a[block(indices)][only(indices.indices)]
+end
+
+function blockedunitrange_getindices(
+  a::AbstractGradedUnitRange, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
+)
+  # Without converting `indices` to `Vector`,
+  # mapping `indices` outputs a `BlockVector`
+  # which is harder to reason about.
+  blocks = map(index -> a[index], Vector(indices))
+  # We pass `length.(blocks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  return mortar(blocks, length.(blocks))
 end
 
 # The block labels of the corresponding slice.
@@ -225,31 +252,22 @@ function blocklabels(a::AbstractUnitRange, indices)
   end
 end
 
-function gradedunitrange_getindices(
+function blockedunitrange_getindices(
   ga::AbstractGradedUnitRange, indices::AbstractUnitRange{<:Integer}
 )
   a_indices = blockedunitrange_getindices(unlabel_blocks(ga), indices)
   return labelled_blocks(a_indices, blocklabels(ga, indices))
 end
 
-function gradedunitrange_getindices(
-  a::AbstractGradedUnitRange,
-  indices::Union{
-    AbstractVector{<:Block{1}},AbstractVector{<:BlockIndexRange{1}},Vector{<:Integer}
-  },
-)
-  return blockedunitrange_getindices(a, indices)
-end
-
-function gradedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockSlice)
+function blockedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockSlice)
   return a[indices.block]
 end
 
-function gradedunitrange_getindices(ga::AbstractGradedUnitRange, indices::BlockRange)
+function blockedunitrange_getindices(ga::AbstractGradedUnitRange, indices::BlockRange)
   return labelled_blocks(unlabel_blocks(ga)[indices], blocklabels(ga, indices))
 end
 
-function gradedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockIndex{1})
+function blockedunitrange_getindices(a::AbstractGradedUnitRange, indices::BlockIndex{1})
   return a[block(indices)][blockindex(indices)]
 end
 
@@ -258,7 +276,7 @@ function Base.getindex(a::AbstractGradedUnitRange, index::Integer)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, index::Block{1})
-  return gradedunitrange_getindices(a, index)
+  return blockedunitrange_getindices(a, index)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices::BlockIndexRange)
@@ -269,16 +287,16 @@ end
 function Base.getindex(
   a::AbstractGradedUnitRange, indices::BlockArrays.BlockRange{1,<:Tuple{Base.OneTo}}
 )
-  return gradedunitrange_getindices(a, indices)
+  return blockedunitrange_getindices(a, indices)
 end
 function Base.getindex(
   a::AbstractGradedUnitRange, indices::BlockRange{1,<:Tuple{AbstractUnitRange{Int}}}
 )
-  return gradedunitrange_getindices(a, indices)
+  return blockedunitrange_getindices(a, indices)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices::BlockIndex{1})
-  return gradedunitrange_getindices(a, indices)
+  return blockedunitrange_getindices(a, indices)
 end
 
 # Fixes ambiguity issues with:
@@ -289,15 +307,15 @@ end
 # getindex(::AbstractUnitRange, ::AbstractUnitRange{<:Integer})
 # ```
 function Base.getindex(a::AbstractGradedUnitRange, indices::BlockSlice)
-  return gradedunitrange_getindices(a, indices)
+  return blockedunitrange_getindices(a, indices)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices)
-  return gradedunitrange_getindices(a, indices)
+  return blockedunitrange_getindices(a, indices)
 end
 
 function Base.getindex(a::AbstractGradedUnitRange, indices::AbstractUnitRange{<:Integer})
-  return gradedunitrange_getindices(a, indices)
+  return blockedunitrange_getindices(a, indices)
 end
 
 # This fixes an issue that `combine_blockaxes` was promoting
@@ -318,10 +336,13 @@ end
 
 # preserve labels inside combine_blockaxes
 # TODO dual
-function BlockArrays.combine_blockaxes(
-  a::AbstractGradedUnitRange, b::AbstractGradedUnitRange
-)
-  return gradedrange(sortedunion(blocklasts(a), blocklasts(b)))
+function BlockArrays.combine_blockaxes(a::GradedOneTo, b::GradedOneTo)
+  return GradedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+end
+function BlockArrays.combine_blockaxes(a::GradedUnitRange, b::GradedUnitRange)
+  new_blocklasts = sortedunion(blocklasts(a), blocklasts(b))
+  new_first = labelled(oneunit(eltype(new_blocklasts)), label(first(new_blocklasts)))
+  return GradedUnitRange(new_first, new_blocklasts)
 end
 
 # Version of length that checks that all blocks have the same label
@@ -339,7 +360,7 @@ end
 # blocklengths = map(bs -> sum(b -> length(a[b]), bs), blocks(indices))
 # return blockedrange(blocklengths)
 # ```
-function gradedunitrange_getindices(
+function blockedunitrange_getindices(
   a::AbstractGradedUnitRange, indices::AbstractBlockVector{<:Block{1}}
 )
   blks = map(bs -> mortar(map(b -> a[b], bs)), blocks(indices))

@@ -30,7 +30,7 @@ end
 # https://github.com/ITensor/ITensors.jl/issues/1336.
 function blocksparse_to_indices(a, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}})
   bs1 = to_blockindices(inds[1], I[1])
-  I1 = BlockSlice(bs1, gradedunitrange_getindices(inds[1], I[1]))
+  I1 = BlockSlice(bs1, blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
@@ -45,7 +45,7 @@ end
 
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function blocksparse_to_indices(a, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}})
-  I1 = BlockIndices(I[1], gradedunitrange_getindices(inds[1], I[1]))
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
@@ -54,7 +54,7 @@ end
 function blocksparse_to_indices(
   a, inds, I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}}
 )
-  I1 = BlockIndices(I[1], gradedunitrange_getindices(inds[1], I[1]))
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 
@@ -64,7 +64,7 @@ end
 function blocksparse_to_indices(
   a, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}}
 )
-  I1 = BlockIndices(I[1], gradedunitrange_getindices(inds[1], I[1]))
+  I1 = BlockIndices(I[1], blockedunitrange_getindices(inds[1], I[1]))
   return (I1, to_indices(a, Base.tail(inds), Base.tail(I))...)
 end
 

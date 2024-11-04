@@ -17,7 +17,7 @@ Base.step(a::GradedUnitRangeDual) = label_dual(step(nondual(a)))
 
 Base.view(a::GradedUnitRangeDual, index::Block{1}) = a[index]
 
-function gradedunitrange_getindices(
+function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::AbstractUnitRange{<:Integer}
 )
   return dual(getindex(nondual(a), indices))
@@ -25,20 +25,20 @@ end
 
 using BlockArrays: Block, BlockIndexRange, BlockRange
 
-function gradedunitrange_getindices(a::GradedUnitRangeDual, indices::Integer)
+function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::Integer)
   return label_dual(getindex(nondual(a), indices))
 end
 
-function gradedunitrange_getindices(a::GradedUnitRangeDual, indices::Block{1})
+function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::Block{1})
   return label_dual(getindex(nondual(a), indices))
 end
 
-function gradedunitrange_getindices(a::GradedUnitRangeDual, indices::BlockRange)
+function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::BlockRange)
   return label_dual(getindex(nondual(a), indices))
 end
 
 # fix ambiguity
-function gradedunitrange_getindices(
+function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::BlockRange{1,<:Tuple{AbstractUnitRange{Int}}}
 )
   return dual(getindex(nondual(a), indices))
@@ -54,11 +54,11 @@ function unitrangedual_getindices_blocks(a::GradedUnitRangeDual, indices)
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
-function gradedunitrange_getindices(a::GradedUnitRangeDual, indices::Vector{<:Block{1}})
+function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::Vector{<:Block{1}})
   return unitrangedual_getindices_blocks(a, indices)
 end
 
-function gradedunitrange_getindices(
+function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::Vector{<:BlockIndexRange{1}}
 )
   return unitrangedual_getindices_blocks(a, indices)
