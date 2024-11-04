@@ -140,17 +140,16 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         @test a[I] == a_dense[I]
       end
       @test axes(a') == dual.(reverse(axes(a)))
-      # TODO: Define and use `isdual` here.
-      @test typeof(axes(a', 1)) === typeof(dual(axes(a, 2)))
-      @test typeof(axes(a', 2)) === typeof(dual(axes(a, 1)))
+
+      @test isdual(axes(a', 1)) ⊻ isdual(axes(a, 2))
+      @test isdual(axes(a', 2)) ⊻ isdual(axes(a, 1))
       @test isnothing(show(devnull, MIME("text/plain"), a))
 
       # Check preserving dual in tensor algebra.
       for b in (a + a, 2 * a, 3 * a - a)
         @test Array(b) ≈ 2 * Array(a)
-        # TODO: Define and use `isdual` here.
         for dim in 1:ndims(a)
-          @test typeof(axes(b, dim)) === typeof(axes(b, dim))
+          @test isdual(axes(b, dim)) == isdual(axes(a, dim))
         end
       end
 
