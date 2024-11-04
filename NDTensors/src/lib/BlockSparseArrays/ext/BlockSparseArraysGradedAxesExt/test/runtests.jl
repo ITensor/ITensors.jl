@@ -11,7 +11,8 @@ using NDTensors.GradedAxes:
   GradedUnitRangeDual,
   blocklabels,
   dual,
-  gradedrange
+  gradedrange,
+  isdual
 using NDTensors.LabelledNumbers: label
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
@@ -40,7 +41,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     a = BlockSparseArray{elt}(d1, d2, d1, d2)
     blockdiagonal!(randn!, a)
     @test axes(a, 1) isa GradedOneTo
-    @test axes(view(a, 1:4, 1:4), 1) isa GradedOneTo
+    @test axes(view(a, 1:4, 1:4, 1:4, 1:4), 1) isa GradedOneTo
 
     for b in (a + a, 2 * a)
       @test size(b) == (4, 4, 4, 4)
@@ -121,6 +122,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       # TODO: Define and use `isdual` here.
       for dim in 1:ndims(a)
         @test typeof(ax[dim]) === typeof(axes(a, dim))
+        @test isdual(ax[dim]) == isdual(axes(a, dim))
       end
       @test @view(a[Block(1, 1)])[1, 1] == a[1, 1]
       @test @view(a[Block(1, 1)])[2, 1] == a[2, 1]

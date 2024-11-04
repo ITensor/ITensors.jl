@@ -323,13 +323,13 @@ end
 # that mixed dense and graded axes.
 # TODO: Maybe come up with a more general solution.
 function BlockArrays.combine_blockaxes(
-  a1::AbstractGradedUnitRange{T}, a2::Base.OneTo{T}
+  a1::AbstractGradedUnitRange{<:LabelledInteger{T}}, a2::AbstractUnitRange{T}
 ) where {T<:Integer}
   combined_blocklasts = sort!(union(unlabel.(blocklasts(a1)), blocklasts(a2)))
   return BlockedOneTo(combined_blocklasts)
 end
 function BlockArrays.combine_blockaxes(
-  a1::Base.OneTo{T}, a2::AbstractGradedUnitRange{T}
+  a1::AbstractUnitRange{T}, a2::AbstractGradedUnitRange{<:LabelledInteger{T}}
 ) where {T<:Integer}
   return BlockArrays.combine_blockaxes(a2, a1)
 end
