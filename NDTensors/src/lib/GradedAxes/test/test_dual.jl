@@ -10,7 +10,8 @@ using BlockArrays:
   blocklength,
   blocklengths,
   blocks,
-  findblock
+  findblock,
+  mortar
 using NDTensors.GradedAxes:
   AbstractGradedUnitRange,
   GradedAxes,
@@ -26,7 +27,7 @@ using NDTensors.GradedAxes:
   isdual,
   nondual
 using NDTensors.LabelledNumbers: LabelledInteger, label, labelled, labelled_isequal
-using Test: @test, @testset
+using Test: @test, @test_broken, @testset
 struct U1
   n::Int
 end
@@ -75,6 +76,7 @@ end
 
     @test isdual(ad)
     @test !isdual(a)
+    @test axes(Base.Slice(a)) isa Tuple{typeof(a)}
 
     @test blockfirsts(ad) == [labelled(1, U1(0)), labelled(3, U1(-1))]
     @test blocklasts(ad) == [labelled(2, U1(0)), labelled(5, U1(-1))]
@@ -106,6 +108,12 @@ end
     @test blocklength(blockmergesortperm(ad)) == 2
     @test blockmergesortperm(a) == [Block(1), Block(2)]
     @test blockmergesortperm(ad) == [Block(1), Block(2)]
+
+    I = mortar([Block(2)[1:1]])
+    g = ad[I]
+    @test length(g) == 1
+    @test label(first(g)) == U1(-1)
+    @test_broken isdual(g[Block(1)])
   end
 end
 

@@ -112,6 +112,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test blocksize(m) == (3, 3)
     @test a == splitdims(m, (d1, d2), (d1, d2))
   end
+
   @testset "dual axes" begin
     r = gradedrange([U1(0) => 2, U1(1) => 2])
     for ax in ((r, r), (dual(r), r), (r, dual(r)), (dual(r), dual(r)))
@@ -119,7 +120,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @views for b in [Block(1, 1), Block(2, 2)]
         a[b] = randn(elt, size(a[b]))
       end
-      # TODO: Define and use `isdual` here.
       for dim in 1:ndims(a)
         @test typeof(ax[dim]) === typeof(axes(a, dim))
         @test isdual(ax[dim]) == isdual(axes(a, dim))
@@ -176,7 +176,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test a[I, :] isa AbstractBlockArray
       @test a[:, I] isa AbstractBlockArray
       @test size(a[I, I]) == (1, 1)
-      @test !GradedAxes.isdual(axes(a[I, I], 1))
+      @test !isdual(axes(a[I, I], 1))
     end
 
     @testset "GradedUnitRange" begin
@@ -190,14 +190,19 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test Array(b) == 2 * Array(a)
       for i in 1:2
         @test axes(b, i) isa GradedUnitRange
-        @test_broken axes(a[:, :], i) isa GradedUnitRange
+        @test axes(a[:, :], i) isa GradedUnitRange
       end
 
       I = [Block(1)[1:1]]
-      @test_broken a[I, :] isa AbstractBlockArray
-      @test_broken a[:, I] isa AbstractBlockArray
+      @test a[I, :] isa AbstractBlockArray
+      @test axes(a[I, :], 1) isa GradedOneTo
+      @test axes(a[I, :], 2) isa GradedUnitRange
+
+      @test a[:, I] isa AbstractBlockArray
+      @test axes(a[:, I], 2) isa GradedOneTo
+      @test axes(a[:, I], 1) isa GradedUnitRange
       @test size(a[I, I]) == (1, 1)
-      @test_broken GradedAxes.isdual(axes(a[I, I], 1))
+      @test !isdual(axes(a[I, I], 1))
     end
 
     # Test case when all axes are dual.
@@ -212,13 +217,18 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test Array(b) == 2 * Array(a)
       for i in 1:2
         @test axes(b, i) isa GradedUnitRangeDual
-        @test_broken axes(a[:, :], i) isa GradedUnitRangeDual
+        @test axes(a[:, :], i) isa GradedUnitRangeDual
       end
       I = [Block(1)[1:1]]
-      @test_broken a[I, :] isa AbstractBlockArray
-      @test_broken a[:, I] isa AbstractBlockArray
+      @test a[I, :] isa AbstractBlockArray
+      @test a[:, I] isa AbstractBlockArray
       @test size(a[I, I]) == (1, 1)
-      @test_broken GradedAxes.isdual(axes(a[I, I], 1))
+      @test isdual(axes(a[I, :], 2))
+      @test isdual(axes(a[:, I], 1))
+      @test_broken isdual(axes(a[I, :], 1))
+      @test_broken isdual(axes(a[:, I], 2))
+      @test_broken isdual(axes(a[I, I], 1))
+      @test_broken isdual(axes(a[I, I], 2))
     end
 
     @testset "dual GradedUnitRange" begin
@@ -232,14 +242,19 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test Array(b) == 2 * Array(a)
       for i in 1:2
         @test axes(b, i) isa GradedUnitRangeDual
-        @test_broken axes(a[:, :], i) isa GradedUnitRangeDual
+        @test axes(a[:, :], i) isa GradedUnitRangeDual
       end
 
       I = [Block(1)[1:1]]
-      @test_broken a[I, :] isa AbstractBlockArray
-      @test_broken a[:, I] isa AbstractBlockArray
+      @test a[I, :] isa AbstractBlockArray
+      @test a[:, I] isa AbstractBlockArray
       @test size(a[I, I]) == (1, 1)
-      @test_broken GradedAxes.isdual(axes(a[I, I], 1))
+      @test isdual(axes(a[I, :], 2))
+      @test isdual(axes(a[:, I], 1))
+      @test_broken isdual(axes(a[I, :], 1))
+      @test_broken isdual(axes(a[:, I], 2))
+      @test_broken isdual(axes(a[I, I], 1))
+      @test_broken isdual(axes(a[I, I], 2))
     end
 
     @testset "dual BlockedUnitRange" begin    # self dual
@@ -261,7 +276,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test a[I, :] isa BlockSparseArray
       @test a[:, I] isa BlockSparseArray
       @test size(a[I, I]) == (1, 1)
-      @test !GradedAxes.isdual(axes(a[I, I], 1))
+      @test !isdual(axes(a[I, I], 1))
     end
 
     # Test case when all axes are dual from taking the adjoint.
@@ -281,8 +296,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       end
 
       I = [Block(1)[1:1]]
-      @test_broken size(b[I, :]) == (1, 4)
-      @test_broken size(b[:, I]) == (4, 1)
+      @test size(b[I, :]) == (1, 4)
+      @test size(b[:, I]) == (4, 1)
       @test size(b[I, I]) == (1, 1)
     end
   end

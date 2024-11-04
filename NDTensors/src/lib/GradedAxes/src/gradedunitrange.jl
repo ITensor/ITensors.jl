@@ -222,6 +222,13 @@ function blockedunitrange_getindices(a::AbstractGradedUnitRange, indices::Vector
   return map(index -> a[index], indices)
 end
 
+function blockedunitrange_getindices(
+  a::AbstractGradedUnitRange,
+  indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},
+)
+  return mortar(map(b -> a[b], blocks(indices)))
+end
+
 function blockedunitrange_getindices(a::AbstractGradedUnitRange, index)
   return labelled(unlabel_blocks(a)[index], get_label(a, index))
 end
@@ -344,6 +351,9 @@ function BlockArrays.combine_blockaxes(a::GradedUnitRange, b::GradedUnitRange)
   new_first = labelled(oneunit(eltype(new_blocklasts)), label(first(new_blocklasts)))
   return GradedUnitRange(new_first, new_blocklasts)
 end
+
+# preserve axes in SubArray
+Base.axes(S::Base.Slice{<:AbstractGradedUnitRange}) = (S.indices,)
 
 # Version of length that checks that all blocks have the same label
 # and returns a labelled length with that label.
