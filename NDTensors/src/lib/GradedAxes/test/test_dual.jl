@@ -109,6 +109,8 @@ end
     @test blockmergesortperm(a) == [Block(1), Block(2)]
     @test blockmergesortperm(ad) == [Block(1), Block(2)]
 
+    @test_broken isdual(ad[Block(1)])
+    @test_broken isdual(ad[Block(1)[1:1]])
     I = mortar([Block(2)[1:1]])
     g = ad[I]
     @test length(g) == 1
