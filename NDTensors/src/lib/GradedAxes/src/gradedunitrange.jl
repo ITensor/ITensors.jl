@@ -31,7 +31,8 @@ using ..LabelledNumbers:
   labelled_isequal,
   unlabel
 
-abstract type AbstractGradedUnitRange{T,CS} <: AbstractBlockedUnitRange{T,CS} end
+abstract type AbstractGradedUnitRange{T,BlockLasts} <:
+              AbstractBlockedUnitRange{T,BlockLasts} end
 
 struct GradedUnitRange{T,BlockLasts<:Vector{T}} <: AbstractGradedUnitRange{T,BlockLasts}
   first::T
@@ -42,14 +43,14 @@ struct GradedOneTo{T,BlockLasts<:Vector{T}} <: AbstractGradedUnitRange{T,BlockLa
   lasts::BlockLasts
 
   # assume that lasts is sorted, no checks carried out here
-  function GradedOneTo(lasts::CS) where {T<:Integer,CS<:AbstractVector{T}}
+  function GradedOneTo(lasts::BlockLasts) where {T<:Integer,BlockLasts<:AbstractVector{T}}
     Base.require_one_based_indexing(lasts)
     isempty(lasts) || first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
-    return new{T,CS}(lasts)
+    return new{T,BlockLasts}(lasts)
   end
-  function GradedOneTo(lasts::CS) where {T<:Integer,CS<:Tuple{T,Vararg{T}}}
+  function GradedOneTo(lasts::BlockLasts) where {T<:Integer,BlockLasts<:Tuple{T,Vararg{T}}}
     first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
-    return new{T,CS}(lasts)
+    return new{T,BlockLasts}(lasts)
   end
 end
 

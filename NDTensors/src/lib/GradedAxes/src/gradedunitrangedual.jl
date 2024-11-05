@@ -1,5 +1,6 @@
-struct GradedUnitRangeDual{T,CS,NondualUnitRange<:AbstractGradedUnitRange{T,CS}} <:
-       AbstractGradedUnitRange{T,CS}
+struct GradedUnitRangeDual{
+  T,BlockLasts,NondualUnitRange<:AbstractGradedUnitRange{T,BlockLasts}
+} <: AbstractGradedUnitRange{T,BlockLasts}
   nondual_unitrange::NondualUnitRange
 end
 

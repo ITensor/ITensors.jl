@@ -141,8 +141,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       end
       @test axes(a') == dual.(reverse(axes(a)))
 
-      @test isdual(axes(a', 1)) ⊻ isdual(axes(a, 2))
-      @test isdual(axes(a', 2)) ⊻ isdual(axes(a, 1))
+      @test isdual(axes(a', 1)) ≠ isdual(axes(a, 2))
+      @test isdual(axes(a', 2)) ≠ isdual(axes(a, 1))
       @test isnothing(show(devnull, MIME("text/plain"), a))
 
       # Check preserving dual in tensor algebra.
