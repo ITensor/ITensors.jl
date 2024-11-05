@@ -305,5 +305,4 @@ function blocksparse_blocks(
 end
 
 using BlockArrays: BlocksView
-# TODO: Is this correct in general?
-SparseArrayInterface.nstored(a::BlocksView) = 1
+SparseArrayInterface.nstored(a::BlocksView) = length(a)
