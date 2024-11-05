@@ -31,11 +31,15 @@ function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::Integer)
 end
 
 function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::Block{1})
-  return label_dual(getindex(nondual(a), indices))
+  return dual(getindex(nondual(a), indices))
 end
 
 function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::BlockRange)
-  return label_dual(getindex(nondual(a), indices))
+  return dual(getindex(nondual(a), indices))
+end
+
+function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::BlockIndexRange)
+  return dual(nondual(a)[indices])
 end
 
 # fix ambiguity
