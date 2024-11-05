@@ -11,7 +11,8 @@ using BlockArrays:
   blocklengths,
   blocks,
   findblock,
-  mortar
+  mortar,
+  combine_blockaxes
 using NDTensors.GradedAxes:
   AbstractGradedUnitRange,
   GradedAxes,
@@ -77,6 +78,20 @@ end
     @test isdual(ad)
     @test !isdual(a)
     @test axes(Base.Slice(a)) isa Tuple{typeof(a)}
+    @test AbstractUnitRange{Int}(ad) == 1:5
+    b = combine_blockaxes(ad, ad)
+    @test b isa GradedUnitRangeDual
+    @test b == 1:5
+    @test space_isequal(b, ad)
+
+    for x in iterate(ad)
+      @test x == 1
+      @test label(x) == U1(0)
+    end
+    for x in iterate(ad, labelled(3, U1(-1)))
+      @test x == 4
+      @test label(x) == U1(-1)
+    end
 
     @test blockfirsts(ad) == [labelled(1, U1(0)), labelled(3, U1(-1))]
     @test blocklasts(ad) == [labelled(2, U1(0)), labelled(5, U1(-1))]

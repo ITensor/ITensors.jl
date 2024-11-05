@@ -12,7 +12,8 @@ using BlockArrays:
   blocks,
   combine_blockaxes,
   mortar
-using NDTensors.GradedAxes: GradedOneTo, GradedUnitRange, OneToOne, blocklabels, gradedrange
+using NDTensors.GradedAxes:
+  GradedOneTo, GradedUnitRange, OneToOne, blocklabels, gradedrange, space_isequal
 using NDTensors.LabelledNumbers:
   LabelledUnitRange, islabelled, label, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
@@ -97,8 +98,12 @@ end
     @test blocklengths(only(axes(a))) == blocklengths(a)
     @test blocklabels(only(axes(a))) == blocklabels(a)
 
-    @test combine_blockaxes(a, a) isa GradedOneTo
     @test axes(Base.Slice(a)) isa Tuple{typeof(a)}
+    @test AbstractUnitRange{Int}(a) == 1:5
+    b = combine_blockaxes(a, a)
+    @test b isa GradedOneTo
+    @test b == 1:5
+    @test space_isequal(b, a)
   end
 
   # Slicing operations
@@ -117,6 +122,11 @@ end
   @test blocklengths(ax) == blocklengths(a)
   @test blocklabels(ax) == blocklabels(a)
   @test blockfirsts(a) == [2, 3]
+
+  @test AbstractUnitRange{Int}(a) == 2:4
+  b = combine_blockaxes(a, a)
+  @test b isa GradedUnitRange
+  @test b == 1:4
 
   @test x[[2, 4]] == [labelled(2, "x"), labelled(4, "y")]
   @test labelled_isequal(x[BlockRange(1)], gradedrange(["x" => 2]))

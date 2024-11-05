@@ -96,7 +96,7 @@ end
 blocklabels(a::GradedUnitRangeDual) = dual.(blocklabels(nondual(a)))
 
 function BlockArrays.combine_blockaxes(a1::GradedUnitRangeDual, a2::GradedUnitRangeDual)
-  return dual(combine_blockaxes(dual(a1), dual(a2)))
+  return dual(combine_blockaxes(nondual(a1), nondual(a2)))
 end
 
 function unlabel_blocks(a::GradedUnitRangeDual)
