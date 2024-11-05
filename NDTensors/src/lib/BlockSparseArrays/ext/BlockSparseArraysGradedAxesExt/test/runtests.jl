@@ -205,8 +205,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     end
 
     # Test case when all axes are dual.
-    @testset "dual BlockedOneTo" begin
-      r = gradedrange([U1(0) => 2, U1(1) => 2])
+    @testset "dual GradedOneTo" begin
+      r = gradedrange([U1(-1) => 2, U1(1) => 2])
       a = BlockSparseArray{elt}(dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))

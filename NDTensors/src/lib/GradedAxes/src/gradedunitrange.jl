@@ -53,7 +53,7 @@ struct GradedOneTo{T,BlockLasts<:Vector{T}} <: AbstractGradedUnitRange{T,BlockLa
   end
 end
 
-function Base.show(io::IO, mimetype::MIME"text/plain", g::AbstractGradedUnitRange)
+function Base.show(io::IO, ::MIME"text/plain", g::AbstractGradedUnitRange)
   v = map(b -> label(b) => unlabel(b), blocks(g))
   println(io, typeof(g))
   return print(io, join(repr.(v), '\n'))
