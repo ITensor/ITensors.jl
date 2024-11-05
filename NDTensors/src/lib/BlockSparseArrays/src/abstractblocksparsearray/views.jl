@@ -1,5 +1,12 @@
 using BlockArrays:
-  BlockArrays, Block, BlockIndexRange, BlockedVector, blocklength, blocksize, viewblock
+  AbstractBlockedUnitRange,
+  BlockArrays,
+  Block,
+  BlockIndexRange,
+  BlockedVector,
+  blocklength,
+  blocksize,
+  viewblock
 
 # This splits `BlockIndexRange{N}` into
 # `NTuple{N,BlockIndexRange{1}}`.
@@ -191,7 +198,9 @@ function to_blockindexrange(
   # work right now.
   return blocks(a.blocks)[Int(I)]
 end
-function to_blockindexrange(a::Base.Slice{<:BlockedOneTo{<:Integer}}, I::Block{1})
+function to_blockindexrange(
+  a::Base.Slice{<:AbstractBlockedUnitRange{<:Integer}}, I::Block{1}
+)
   @assert I in only(blockaxes(a.indices))
   return I
 end

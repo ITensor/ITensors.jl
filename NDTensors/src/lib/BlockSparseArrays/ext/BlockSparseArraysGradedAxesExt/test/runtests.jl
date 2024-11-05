@@ -1,13 +1,22 @@
 @eval module $(gensym())
 using Compat: Returns
 using Test: @test, @testset, @test_broken
-using BlockArrays: Block, BlockedOneTo, blockedrange, blocklengths, blocksize
+using BlockArrays:
+  AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
 using NDTensors.GradedAxes:
-  GradedAxes, GradedOneTo, UnitRangeDual, blocklabels, dual, gradedrange
+  GradedAxes,
+  GradedOneTo,
+  GradedUnitRange,
+  GradedUnitRangeDual,
+  blocklabels,
+  dual,
+  gradedrange,
+  isdual
 using NDTensors.LabelledNumbers: label
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: fusedims, splitdims
+using LinearAlgebra: adjoint
 using Random: randn!
 function blockdiagonal!(f, a::AbstractArray)
   for i in 1:minimum(blocksize(a))
@@ -31,6 +40,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     d2 = gradedrange([U1(0) => 2, U1(1) => 2])
     a = BlockSparseArray{elt}(d1, d2, d1, d2)
     blockdiagonal!(randn!, a)
+    @test axes(a, 1) isa GradedOneTo
+    @test axes(view(a, 1:4, 1:4, 1:4, 1:4), 1) isa GradedOneTo
 
     for b in (a + a, 2 * a)
       @test size(b) == (4, 4, 4, 4)
@@ -38,8 +49,6 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test blocklengths.(axes(b)) == ([2, 2], [2, 2], [2, 2], [2, 2])
       @test nstored(b) == 32
       @test block_nstored(b) == 2
-      # TODO: Have to investigate why this fails
-      # on Julia v1.6, or drop support for v1.6.
       for i in 1:ndims(a)
         @test axes(b, i) isa GradedOneTo
       end
@@ -103,6 +112,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     @test blocksize(m) == (3, 3)
     @test a == splitdims(m, (d1, d2), (d1, d2))
   end
+
   @testset "dual axes" begin
     r = gradedrange([U1(0) => 2, U1(1) => 2])
     for ax in ((r, r), (dual(r), r), (r, dual(r)), (dual(r), dual(r)))
@@ -110,9 +120,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @views for b in [Block(1, 1), Block(2, 2)]
         a[b] = randn(elt, size(a[b]))
       end
-      # TODO: Define and use `isdual` here.
       for dim in 1:ndims(a)
         @test typeof(ax[dim]) === typeof(axes(a, dim))
+        @test isdual(ax[dim]) == isdual(axes(a, dim))
       end
       @test @view(a[Block(1, 1)])[1, 1] == a[1, 1]
       @test @view(a[Block(1, 1)])[2, 1] == a[2, 1]
@@ -130,17 +140,16 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         @test a[I] == a_dense[I]
       end
       @test axes(a') == dual.(reverse(axes(a)))
-      # TODO: Define and use `isdual` here.
-      @test typeof(axes(a', 1)) === typeof(dual(axes(a, 2)))
-      @test typeof(axes(a', 2)) === typeof(dual(axes(a, 1)))
+
+      @test isdual(axes(a', 1)) ≠ isdual(axes(a, 2))
+      @test isdual(axes(a', 2)) ≠ isdual(axes(a, 1))
       @test isnothing(show(devnull, MIME("text/plain"), a))
 
       # Check preserving dual in tensor algebra.
       for b in (a + a, 2 * a, 3 * a - a)
         @test Array(b) ≈ 2 * Array(a)
-        # TODO: Define and use `isdual` here.
         for dim in 1:ndims(a)
-          @test typeof(axes(b, dim)) === typeof(axes(b, dim))
+          @test isdual(axes(b, dim)) == isdual(axes(a, dim))
         end
       end
 
@@ -148,8 +157,56 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test @view(a[Block(1, 1)]) == a[Block(1, 1)]
     end
 
+    @testset "GradedOneTo" begin
+      r = gradedrange([U1(0) => 2, U1(1) => 2])
+      a = BlockSparseArray{elt}(r, r)
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)
+      for i in 1:2
+        @test axes(b, i) isa GradedOneTo
+        @test axes(a[:, :], i) isa GradedOneTo
+      end
+
+      I = [Block(1)[1:1]]
+      @test a[I, :] isa AbstractBlockArray
+      @test a[:, I] isa AbstractBlockArray
+      @test size(a[I, I]) == (1, 1)
+      @test !isdual(axes(a[I, I], 1))
+    end
+
+    @testset "GradedUnitRange" begin
+      r = gradedrange([U1(0) => 2, U1(1) => 2])[1:3]
+      a = BlockSparseArray{elt}(r, r)
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)
+      for i in 1:2
+        @test axes(b, i) isa GradedUnitRange
+        @test axes(a[:, :], i) isa GradedUnitRange
+      end
+
+      I = [Block(1)[1:1]]
+      @test a[I, :] isa AbstractBlockArray
+      @test axes(a[I, :], 1) isa GradedOneTo
+      @test axes(a[I, :], 2) isa GradedUnitRange
+
+      @test a[:, I] isa AbstractBlockArray
+      @test axes(a[:, I], 2) isa GradedOneTo
+      @test axes(a[:, I], 1) isa GradedUnitRange
+      @test size(a[I, I]) == (1, 1)
+      @test !isdual(axes(a[I, I], 1))
+    end
+
     # Test case when all axes are dual.
-    for r in (gradedrange([U1(0) => 2, U1(1) => 2]), blockedrange([2, 2]))
+    @testset "dual GradedOneTo" begin
+      r = gradedrange([U1(-1) => 2, U1(1) => 2])
       a = BlockSparseArray{elt}(dual(r), dual(r))
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
@@ -157,14 +214,75 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       b = 2 * a
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)
-      for ax in axes(b)
-        @test ax isa UnitRangeDual
+      for i in 1:2
+        @test axes(b, i) isa GradedUnitRangeDual
+        @test axes(a[:, :], i) isa GradedUnitRangeDual
       end
+      I = [Block(1)[1:1]]
+      @test a[I, :] isa AbstractBlockArray
+      @test a[:, I] isa AbstractBlockArray
+      @test size(a[I, I]) == (1, 1)
+      @test isdual(axes(a[I, :], 2))
+      @test isdual(axes(a[:, I], 1))
+      @test_broken isdual(axes(a[I, :], 1))
+      @test_broken isdual(axes(a[:, I], 2))
+      @test_broken isdual(axes(a[I, I], 1))
+      @test_broken isdual(axes(a[I, I], 2))
     end
 
-    # Test case when all axes are dual
-    # from taking the adjoint.
-    for r in (gradedrange([U1(0) => 2, U1(1) => 2]), blockedrange([2, 2]))
+    @testset "dual GradedUnitRange" begin
+      r = gradedrange([U1(0) => 2, U1(1) => 2])[1:3]
+      a = BlockSparseArray{elt}(dual(r), dual(r))
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)
+      for i in 1:2
+        @test axes(b, i) isa GradedUnitRangeDual
+        @test axes(a[:, :], i) isa GradedUnitRangeDual
+      end
+
+      I = [Block(1)[1:1]]
+      @test a[I, :] isa AbstractBlockArray
+      @test a[:, I] isa AbstractBlockArray
+      @test size(a[I, I]) == (1, 1)
+      @test isdual(axes(a[I, :], 2))
+      @test isdual(axes(a[:, I], 1))
+      @test_broken isdual(axes(a[I, :], 1))
+      @test_broken isdual(axes(a[:, I], 2))
+      @test_broken isdual(axes(a[I, I], 1))
+      @test_broken isdual(axes(a[I, I], 2))
+    end
+
+    @testset "dual BlockedUnitRange" begin    # self dual
+      r = blockedrange([2, 2])
+      a = BlockSparseArray{elt}(dual(r), dual(r))
+      @views for i in [Block(1, 1), Block(2, 2)]
+        a[i] = randn(elt, size(a[i]))
+      end
+      b = 2 * a
+      @test block_nstored(b) == 2
+      @test Array(b) == 2 * Array(a)
+      @test a[:, :] isa BlockSparseArray
+      for i in 1:2
+        @test axes(b, i) isa BlockedOneTo
+        @test axes(a[:, :], i) isa BlockedOneTo
+      end
+
+      I = [Block(1)[1:1]]
+      @test a[I, :] isa BlockSparseArray
+      @test a[:, I] isa BlockSparseArray
+      @test size(a[I, I]) == (1, 1)
+      @test !isdual(axes(a[I, I], 1))
+    end
+
+    # Test case when all axes are dual from taking the adjoint.
+    for r in (
+      gradedrange([U1(0) => 2, U1(1) => 2]),
+      gradedrange([U1(0) => 2, U1(1) => 2])[begin:end],
+    )
       a = BlockSparseArray{elt}(r, r)
       @views for i in [Block(1, 1), Block(2, 2)]
         a[i] = randn(elt, size(a[i]))
@@ -173,8 +291,13 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test block_nstored(b) == 2
       @test Array(b) == 2 * Array(a)'
       for ax in axes(b)
-        @test ax isa UnitRangeDual
+        @test ax isa typeof(dual(r))
       end
+
+      I = [Block(1)[1:1]]
+      @test size(b[I, :]) == (1, 4)
+      @test size(b[:, I]) == (4, 1)
+      @test size(b[I, I]) == (1, 1)
     end
   end
   @testset "Matrix multiplication" begin

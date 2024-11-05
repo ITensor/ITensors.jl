@@ -1,12 +1,5 @@
 using BlockArrays: AbstractBlockedUnitRange, blocklengths
 
-# Represents the range `1:1` or `Base.OneTo(1)`.
-struct OneToOne{T} <: AbstractUnitRange{T} end
-OneToOne() = OneToOne{Bool}()
-Base.first(a::OneToOne) = one(eltype(a))
-Base.last(a::OneToOne) = one(eltype(a))
-BlockArrays.blockaxes(g::OneToOne) = (Block.(g),)  # BlockArrays default crashes for OneToOne{Bool}
-
 # https://github.com/ITensor/ITensors.jl/blob/v0.3.57/NDTensors/src/lib/GradedAxes/src/tensor_product.jl
 # https://en.wikipedia.org/wiki/Tensor_product
 # https://github.com/KeitaNakamura/Tensorial.jl
@@ -20,7 +13,7 @@ function tensor_product(
 end
 
 flip_dual(r::AbstractUnitRange) = r
-flip_dual(r::UnitRangeDual) = flip(r)
+flip_dual(r::GradedUnitRangeDual) = flip(r)
 function tensor_product(a1::AbstractUnitRange, a2::AbstractUnitRange)
   return tensor_product(flip_dual(a1), flip_dual(a2))
 end
@@ -67,7 +60,7 @@ function tensor_product(a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRan
   return blockedrange(new_blocklengths)
 end
 
-# convention: sort UnitRangeDual according to nondual blocks
+# convention: sort GradedUnitRangeDual according to nondual blocks
 function blocksortperm(a::AbstractUnitRange)
   return Block.(sortperm(blocklabels(nondual(a))))
 end
@@ -102,7 +95,7 @@ function blockmergesort(g::AbstractGradedUnitRange)
   return gradedrange(new_blocklengths)
 end
 
-blockmergesort(g::UnitRangeDual) = flip(blockmergesort(flip(g)))
+blockmergesort(g::GradedUnitRangeDual) = flip(blockmergesort(flip(g)))
 blockmergesort(g::AbstractUnitRange) = g
 
 # fusion_product produces a sorted, non-dual GradedUnitRange
@@ -111,7 +104,7 @@ function fusion_product(g1, g2)
 end
 
 fusion_product(g::AbstractUnitRange) = blockmergesort(g)
-fusion_product(g::UnitRangeDual) = fusion_product(flip(g))
+fusion_product(g::GradedUnitRangeDual) = fusion_product(flip(g))
 
 # recursive fusion_product. Simpler than reduce + fix type stability issues with reduce
 function fusion_product(g1, g2, g3...)

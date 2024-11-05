@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using BlockArrays:
   Block,
+  BlockRange,
   BlockSlice,
   BlockVector,
   blockedrange,
@@ -8,18 +9,42 @@ using BlockArrays:
   blocklasts,
   blocklength,
   blocklengths,
-  blocks
-using NDTensors.GradedAxes: GradedOneTo, GradedUnitRange, blocklabels, gradedrange
+  blocks,
+  combine_blockaxes,
+  mortar
+using NDTensors.GradedAxes:
+  GradedOneTo, GradedUnitRange, OneToOne, blocklabels, gradedrange, space_isequal
 using NDTensors.LabelledNumbers:
   LabelledUnitRange, islabelled, label, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
+
+@testset "OneToOne" begin
+  a0 = OneToOne()
+  @test a0 isa OneToOne{Bool}
+  @test eltype(a0) == Bool
+  @test length(a0) == 1
+  @test labelled_isequal(a0, a0)
+  @test a0[1] == true
+  @test a0[[1]] == [true]
+
+  @test labelled_isequal(a0, 1:1)
+  @test labelled_isequal(1:1, a0)
+  @test !labelled_isequal(a0, 1:2)
+  @test !labelled_isequal(1:2, a0)
+end
+
 @testset "GradedAxes basics" begin
+  a0 = OneToOne()
   for a in (
     blockedrange([labelled(2, "x"), labelled(3, "y")]),
     gradedrange([labelled(2, "x"), labelled(3, "y")]),
     gradedrange(["x" => 2, "y" => 3]),
   )
     @test a isa GradedOneTo
+    @test labelled_isequal(a, a)
+    @test !labelled_isequal(a0, a)
+    @test !labelled_isequal(a, a0)
+    @test !labelled_isequal(a, 1:5)
     for x in iterate(a)
       @test x == 1
       @test label(x) == "x"
@@ -72,6 +97,13 @@ using Test: @test, @test_broken, @testset
     @test length(a[Block(2)]) == 3
     @test blocklengths(only(axes(a))) == blocklengths(a)
     @test blocklabels(only(axes(a))) == blocklabels(a)
+
+    @test axes(Base.Slice(a)) isa Tuple{typeof(a)}
+    @test AbstractUnitRange{Int}(a) == 1:5
+    b = combine_blockaxes(a, a)
+    @test b isa GradedOneTo
+    @test b == 1:5
+    @test space_isequal(b, a)
   end
 
   # Slicing operations
@@ -89,6 +121,15 @@ using Test: @test, @test_broken, @testset
   @test length(ax) == length(a)
   @test blocklengths(ax) == blocklengths(a)
   @test blocklabels(ax) == blocklabels(a)
+  @test blockfirsts(a) == [2, 3]
+
+  @test AbstractUnitRange{Int}(a) == 2:4
+  b = combine_blockaxes(a, a)
+  @test b isa GradedUnitRange
+  @test b == 1:4
+
+  @test x[[2, 4]] == [labelled(2, "x"), labelled(4, "y")]
+  @test labelled_isequal(x[BlockRange(1)], gradedrange(["x" => 2]))
 
   # Regression test for ambiguity error.
   x = gradedrange(["x" => 2, "y" => 3])
@@ -116,6 +157,7 @@ using Test: @test, @test_broken, @testset
   @test length(ax) == length(a)
   @test blocklengths(ax) == blocklengths(a)
   @test blocklabels(ax) == blocklabels(a)
+  @test axes(Base.Slice(a)) isa Tuple{typeof(a)}
 
   x = gradedrange(["x" => 2, "y" => 3])
   a = x[2:4][1:2]
@@ -198,5 +240,17 @@ using Test: @test, @test_broken, @testset
   # once `blocklengths(::BlockVector)` is defined.
   @test blocklengths(ax) == [2, 2]
   @test blocklabels(ax) == blocklabels(a)
+
+  x = gradedrange(["x" => 2, "y" => 3])
+  I = mortar([Block(1)[1:1]])
+  a = x[I]
+  @test length(a) == 1
+  @test label(first(a)) == "x"
+
+  x = gradedrange(["x" => 2, "y" => 3])[1:5]
+  I = mortar([Block(1)[1:1]])
+  a = x[I]
+  @test length(a) == 1
+  @test label(first(a)) == "x"
 end
 end
