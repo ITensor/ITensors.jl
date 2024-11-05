@@ -115,6 +115,6 @@ end
 function sparse_mapreduce(f, op, a::AbstractArray; init=reduce_init(f, op, a), kwargs...)
   output = mapreduce(f, op, sparse_storage(a); init, kwargs...)
   f_notstored = apply_notstored(f, a)
-  @assert op(output, eltype(output)(f_notstored)) == output
+  @assert isequal(op(output, eltype(output)(f_notstored)), output)
   return output
 end
