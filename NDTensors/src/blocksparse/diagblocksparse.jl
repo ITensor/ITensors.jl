@@ -1,3 +1,5 @@
+using .TypeParameterAccessors: similartype
+
 export DiagBlockSparse, DiagBlockSparseTensor
 
 # DiagBlockSparse can have either Vector storage, in which case
