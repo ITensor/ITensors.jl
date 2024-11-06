@@ -11,6 +11,7 @@ using LinearAlgebra:
   UnitUpperTriangular,
   UpperTriangular
 using NDTensors.TypeParameterAccessors:
+  NDims,
   TypeParameter,
   is_wrapped_array,
   parenttype,
@@ -33,6 +34,7 @@ include("utils/test_inferred.jl")
     @test_inferred set_eltype(array, Float32) ≈ array
     @test_inferred set_eltype(Array{<:Any,2}, Float64) == Matrix{Float64}
     @test_inferred set_ndims(Array{Float64}, 2) == Matrix{Float64} wrapped = true
+    @test_inferred set_ndims(Array{Float64}, NDims(2)) == Matrix{Float64} wrapped = true
     @test_inferred set_ndims(Array{Float64}, TypeParameter(2)) == Matrix{Float64}
     @test_inferred unwrap_array_type(array_type) == array_type
   end

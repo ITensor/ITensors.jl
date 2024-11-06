@@ -13,6 +13,9 @@ end
 function set_ndims(type::Type{<:AbstractArray}, param)
   return set_type_parameter(type, ndims, param)
 end
+function set_ndims(type::Type{<:AbstractArray}, param::NDims)
+  return set_type_parameter(type, ndims, ndims(param))
+end
 
 using SimpleTraits: SimpleTraits, @traitdef, @traitimpl
 
