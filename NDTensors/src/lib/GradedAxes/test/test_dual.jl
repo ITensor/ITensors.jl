@@ -17,6 +17,7 @@ using NDTensors.GradedAxes:
   AbstractGradedUnitRange,
   GradedAxes,
   GradedUnitRangeDual,
+  LabelledUnitRangeDual,
   OneToOne,
   blocklabels,
   blockmergesortperm,
@@ -27,7 +28,8 @@ using NDTensors.GradedAxes:
   gradedrange,
   isdual,
   nondual
-using NDTensors.LabelledNumbers: LabelledInteger, label, labelled, labelled_isequal
+using NDTensors.LabelledNumbers:
+  LabelledInteger, LabelledUnitRange, label, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
 struct U1
   n::Int
@@ -56,6 +58,24 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   @test !isdual(ad)
   @test ad isa BlockedOneTo
   @test blockisequal(ad, a)
+end
+
+@testset "LabelledUnitRangeDual" begin
+  la = labelled(1:2, U1(1))
+  @test la isa LabelledUnitRange
+  @test label(la) == U1(1)
+  @test unlabel(la) == 1:2
+  @test la == 1:2
+  @test !isdual(la)
+
+  lad = dual(la)
+  @test lad isa LabelledUnitRangeDual
+  @test label(lad) == U1(-1)
+  @test unlabel(lad) == 1:2
+  @test lad == 1:2
+  @test isdual(lad)
+  @test nondual(lad) === la
+  @test dual(lad) === la
 end
 
 @testset "GradedUnitRangeDual" begin
@@ -126,6 +146,11 @@ end
 
     @test isdual(ad[Block(1)])
     @test isdual(ad[Block(1)[1:1]])
+    @test ad[Block(1)] isa LabelledUnitRangeDual
+    @test ad[Block(1)[1:1]] isa LabelledUnitRangeDual
+    @test label(ad[Block(2)]) == U1(-1)
+    @test label(ad[Block(2)[1:1]]) == U1(-1)
+
     I = mortar([Block(2)[1:1]])
     g = ad[I]
     @test length(g) == 1
