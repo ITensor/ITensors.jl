@@ -65,14 +65,11 @@ function blockedunitrange_getindices(
   a::GradedUnitRangeDual,
   indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},
 )
-  arr = mortar(map(b -> a[b], blocks(indices)))
+  v = mortar(map(b -> a[b], blocks(indices)))
   # GradedOneTo appears in mortar
   # flip arr axis to preserve dual information
   # axes(arr) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
-  # TODO way to create BlockArray with specified axis without relying on internal?
-  block_axes = (flip(only(axes(arr))),)
-  flipped = BlockArrays._BlockArray(vec.(blocks(arr)), block_axes)
-  return flipped
+  return flip_blockvector(v)
 end
 
 function blockedunitrange_getindices(
@@ -88,12 +85,16 @@ function blockedunitrange_getindices(
   # `only(axes(a[indices])) isa `GradedUnitRange`
   # if `a isa `GradedUnitRange`, for example.
 
-  arr = mortar(vblocks, length.(vblocks))
+  v = mortar(vblocks, length.(vblocks))
   # GradedOneTo appears in mortar
   # axes(arr) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
+  return flip_blockvector(v)
+end
+
+function flip_blockvector(v::BlockVector)
   # TODO way to create BlockArray with specified axis without relying on internal?
-  block_axes = (flip(only(axes(arr))),)
-  flipped = BlockArrays._BlockArray(vec.(blocks(arr)), block_axes)
+  block_axes = flip.(axes(v))
+  flipped = BlockArrays._BlockArray(vec.(blocks(v)), block_axes)
   return flipped
 end
 
