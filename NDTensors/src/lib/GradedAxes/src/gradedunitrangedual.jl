@@ -67,8 +67,8 @@ function blockedunitrange_getindices(
 )
   v = mortar(map(b -> a[b], blocks(indices)))
   # GradedOneTo appears in mortar
-  # flip arr axis to preserve dual information
-  # axes(arr) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
+  # flip v axis to preserve dual information
+  # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
   return flip_blockvector(v)
 end
 
@@ -87,7 +87,8 @@ function blockedunitrange_getindices(
 
   v = mortar(vblocks, length.(vblocks))
   # GradedOneTo appears in mortar
-  # axes(arr) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
+  # flip v axis to preserve dual information
+  # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)]))
   return flip_blockvector(v)
 end
 

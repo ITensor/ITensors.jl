@@ -250,7 +250,7 @@ function blockedunitrange_getindices(
   # if they exist. This makes it so that
   # `only(axes(a[indices])) isa `GradedUnitRange`
   # if `a isa `GradedUnitRange`, for example.
-  return mortar(blocks, length.(blocks))   # LOOSE DUAL
+  return mortar(blocks, length.(blocks))
 end
 
 # The block labels of the corresponding slice.
