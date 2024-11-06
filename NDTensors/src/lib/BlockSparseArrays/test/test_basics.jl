@@ -15,7 +15,7 @@ using BlockArrays:
   blocksizes,
   mortar
 using Compat: @compat
-using LinearAlgebra: Adjoint, mul!
+using LinearAlgebra: Adjoint, mul!, norm
 using NDTensors.BlockSparseArrays:
   @view!,
   BlockSparseArray,
@@ -94,6 +94,9 @@ include("TestBlockSparseArraysUtils.jl")
         iszero(a[I])
       end
     end
+
+    a[3, 3] = NaN
+    @test isnan(norm(a))
   end
   @testset "Tensor algebra" begin
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
