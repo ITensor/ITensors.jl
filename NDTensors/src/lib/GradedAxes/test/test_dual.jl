@@ -131,6 +131,9 @@ end
     @test length(g) == 1
     @test label(first(g)) == U1(-1)
     @test isdual(g[Block(1)])
+
+    @test isdual(axes(ad[[Block(1)]], 1))  # used in view(::BlockSparseVector, [Block(1)])
+    @test isdual(axes(ad[mortar([Block(1)[1:1]])], 1))  # used in view(::BlockSparseVector, [Block(1)[1:1]])
   end
 end
 

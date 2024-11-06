@@ -59,14 +59,46 @@ function gradedunitrangedual_getindices_blocks(a::GradedUnitRangeDual, indices)
 end
 
 # TODO: Move this to a `BlockArraysExtensions` library.
-function blockedunitrange_getindices(a::GradedUnitRangeDual, indices::Vector{<:Block{1}})
-  return gradedunitrangedual_getindices_blocks(a, indices)
-end
-
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::Vector{<:BlockIndexRange{1}}
 )
   return gradedunitrangedual_getindices_blocks(a, indices)
+end
+
+function blockedunitrange_getindices(
+  a::GradedUnitRangeDual,
+  indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},
+)
+  arr = mortar(map(b -> a[b], blocks(indices)))
+  # GradedOneTo appears in mortar
+  # flip arr axis to preserve dual information
+  # axes(arr) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
+  # TODO way to create BlockArray with specified axis without relying on internal?
+  block_axes = (flip(only(axes(arr))),)
+  flipped = BlockArrays._BlockArray(vec.(blocks(arr)), block_axes)
+  return flipped
+end
+
+function blockedunitrange_getindices(
+  a::GradedUnitRangeDual, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
+)
+  # Without converting `indices` to `Vector`,
+  # mapping `indices` outputs a `BlockVector`
+  # which is harder to reason about.
+  vblocks = map(index -> a[index], Vector(indices))
+  # We pass `length.(blocks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+
+  arr = mortar(vblocks, length.(vblocks))
+  # GradedOneTo appears in mortar
+  # axes(arr) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
+  # TODO way to create BlockArray with specified axis without relying on internal?
+  block_axes = (flip(only(axes(arr))),)
+  flipped = BlockArrays._BlockArray(vec.(blocks(arr)), block_axes)
+  return flipped
 end
 
 Base.axes(a::GradedUnitRangeDual) = axes(nondual(a))
