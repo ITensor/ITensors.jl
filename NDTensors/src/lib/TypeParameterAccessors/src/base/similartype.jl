@@ -5,11 +5,21 @@ like `OffsetArrays` or named indices
 (such as ITensors).
 """
 function set_indstype(arraytype::Type{<:AbstractArray}, dims::Tuple)
-  return set_ndims(arraytype, length(dims))
+  return set_ndims(arraytype, NDims(length(dims)))
+end
+
+function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, ndims::NDims)
+  return similartype(similartype(arraytype, eltype), ndims)
 end
 
 function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, dims::Tuple)
   return similartype(similartype(arraytype, eltype), dims)
+end
+
+@traitfn function similartype(
+  arraytype::Type{ArrayT}
+) where {ArrayT; !IsWrappedArray{ArrayT}}
+  return arraytype
 end
 
 @traitfn function similartype(
@@ -24,25 +34,41 @@ end
   return set_indstype(arraytype, dims)
 end
 
-function similartype(arraytype::Type{<:AbstractArray}, dims::Base.DimOrInd...)
-  return similartype(arraytype, dims)
+@traitfn function similartype(
+  arraytype::Type{ArrayT}, ndims::NDims
+) where {ArrayT; !IsWrappedArray{ArrayT}}
+  return set_ndims(arraytype, ndims)
 end
 
-function similartype(arraytype::Type{<:AbstractArray})
-  return similartype(arraytype, eltype(arraytype))
+function similartype(
+  arraytype::Type{<:AbstractArray}, dim1::Base.DimOrInd, dim_rest::Base.DimOrInd...
+)
+  return similartype(arraytype, (dim1, dim_rest...))
 end
 
 ## Wrapped arrays
 @traitfn function similartype(
+  arraytype::Type{ArrayT}
+) where {ArrayT; IsWrappedArray{ArrayT}}
+  return similartype(unwrap_array_type(arraytype), NDims(arraytype))
+end
+
+@traitfn function similartype(
   arraytype::Type{ArrayT}, eltype::Type
 ) where {ArrayT; IsWrappedArray{ArrayT}}
-  return similartype(unwrap_array_type(arraytype), eltype)
+  return similartype(unwrap_array_type(arraytype), eltype, NDims(arraytype))
 end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, dims::Tuple
 ) where {ArrayT; IsWrappedArray{ArrayT}}
   return similartype(unwrap_array_type(arraytype), dims)
+end
+
+@traitfn function similartype(
+  arraytype::Type{ArrayT}, ndims::NDims
+) where {ArrayT; IsWrappedArray{ArrayT}}
+  return similartype(unwrap_array_type(arraytype), ndims)
 end
 
 # This is for uniform `Diag` storage which uses
