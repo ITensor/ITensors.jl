@@ -53,16 +53,12 @@ function BlockArrays.blocklengths(a::GradedUnitRangeDual)
   return dual.(blocklengths(nondual(a)))
 end
 
-function gradedunitrangedual_getindices_blocks(a::GradedUnitRangeDual, indices)
-  a_indices = getindex(nondual(a), indices)
-  return mortar([label_dual(b) for b in blocks(a_indices)])
-end
-
 # TODO: Move this to a `BlockArraysExtensions` library.
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::Vector{<:BlockIndexRange{1}}
 )
-  return gradedunitrangedual_getindices_blocks(a, indices)
+  a_indices = getindex(nondual(a), indices)
+  return mortar([label_dual(b) for b in blocks(a_indices)])
 end
 
 function blockedunitrange_getindices(
