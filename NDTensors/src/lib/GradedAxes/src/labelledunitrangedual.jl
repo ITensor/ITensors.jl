@@ -12,7 +12,7 @@ nondual(a::LabelledUnitRangeDual) = a.nondual_unitrange
 dual(a::LabelledUnitRangeDual) = nondual(a)
 flip(a::LabelledUnitRangeDual) = dual(flip(nondual(a)))
 isdual(::LabelledUnitRangeDual) = true
-blocklabels(la::LabelledUnitRangeDual) = label(la)
+blocklabels(la::LabelledUnitRangeDual) = [label(la)]
 
 LabelledNumbers.label(a::LabelledUnitRangeDual) = dual(label(nondual(a)))
 LabelledNumbers.unlabel(a::LabelledUnitRangeDual) = unlabel(nondual(a))
