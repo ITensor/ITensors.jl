@@ -64,15 +64,21 @@ end
   la = labelled(1:2, U1(1))
   @test la isa LabelledUnitRange
   @test label(la) == U1(1)
+  @test blocklabels(la) == U1(1)
   @test unlabel(la) == 1:2
   @test la == 1:2
   @test !isdual(la)
+  @test labelled_isequal(la, la)
+  @test space_isequal(la, la)
 
   lad = dual(la)
   @test lad isa LabelledUnitRangeDual
   @test label(lad) == U1(-1)
+  @test blocklabels(lad) == U1(-1)
   @test unlabel(lad) == 1:2
   @test lad == 1:2
+  @test labelled_isequal(lad, lad)
+  @test space_isequal(lad, lad)
   @test !labelled_isequal(la, lad)
   @test !space_isequal(la, lad)
   @test isdual(lad)
@@ -84,8 +90,11 @@ end
   lad = dual(la)
   @test lad isa LabelledUnitRangeDual
   @test label(lad) == 'x'
+  @test blocklabels(la) == 'x'
   @test unlabel(lad) == 1:2
   @test lad == 1:2
+  @test labelled_isequal(lad, lad)
+  @test space_isequal(lad, lad)
   @test labelled_isequal(la, lad)
   @test !space_isequal(la, lad)
   @test isdual(lad)
