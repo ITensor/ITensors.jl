@@ -1,9 +1,10 @@
 @eval module $(gensym())
 using FillArrays: FillArrays, AbstractFill, Fill, Zeros
 using NDTensors: NDTensors
-using NDTensors.UnallocatedArrays
+using NDTensors.UnallocatedArrays:
+  UnallocatedFill, UnallocatedZeros, allocate, alloctype, set_alloctype
 using LinearAlgebra: norm
-using Test: @test, @testset, @test_broken
+using Test: @test, @test_broken, @testset
 
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
@@ -247,7 +248,7 @@ end
 end
 
 using FillArrays: Fill, Zeros
-using NDTensors.UnallocatedArrays
+using NDTensors.UnallocatedArrays: UnallocatedFill, UnallocatedZeros
 using NDTensors.TypeParameterAccessors:
   Position, default_type_parameter, nparameters, set_type_parameter, type_parameter
 using Test: @test, @testset
