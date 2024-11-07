@@ -233,8 +233,12 @@ end
 
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
-struct SparseSubArrayBlocks{T,N,Array<:SubArray{T,N}} <: AbstractSparseArray{T,N}
+struct SparseSubArrayBlocks{T,N,BlockType<:AbstractArray{T,N},Array<:SubArray{T,N}} <:
+       AbstractSparseArray{BlockType,N}
   array::Array
+end
+function blocksparse_blocks(a::SubArray)
+  return SparseSubArrayBlocks{eltype(a),ndims(a),blocktype(parent(a)),typeof(a)}(a)
 end
 # TODO: Define this as `blockrange(a::AbstractArray, indices::Tuple{Vararg{AbstractUnitRange}})`.
 function blockrange(a::SparseSubArrayBlocks)
@@ -292,10 +296,6 @@ SparseArrayInterface.nstored(a::SparseSubArrayBlocks) = length(stored_indices(a)
 ## end
 function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
   return map(I -> a[I], stored_indices(a))
-end
-
-function blocksparse_blocks(a::SubArray)
-  return SparseSubArrayBlocks(a)
 end
 
 to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
