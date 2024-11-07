@@ -65,8 +65,8 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test_broken adjoint(a)[Block(1), :] isa Adjoint{elt,<:BlockSparseArray}
     # could also be directly a BlockSparseArray
 
-    a = BlockSparseArray{elt}([1], [1, 1])
-    a[1, 2] = 1
+    a = dev(BlockSparseArray{elt}([1], [1, 1]))
+    @allowscalar a[1, 2] = 1
     @test [a[Block(Tuple(it))] for it in eachindex(block_stored_indices(a))] isa Vector
     ah = adjoint(a)
     @test_broken [ah[Block(Tuple(it))] for it in eachindex(block_stored_indices(ah))] isa Vector

@@ -298,6 +298,12 @@ function SparseArrayInterface.sparse_storage(a::SparseSubArrayBlocks)
   return map(I -> a[I], stored_indices(a))
 end
 
+function SparseArrayInterface.getindex_zero_function(a::SparseSubArrayBlocks)
+  # TODO: Base it off of `getindex_zero_function(blocks(parent(a.array))`, but replace the
+  # axes with `axes(a.array)`.
+  return BlockZero(axes(a.array))
+end
+
 to_blocks_indices(I::BlockSlice{<:BlockRange{1}}) = Int.(I.block)
 to_blocks_indices(I::BlockIndices{<:Vector{<:Block{1}}}) = Int.(I.blocks)
 
