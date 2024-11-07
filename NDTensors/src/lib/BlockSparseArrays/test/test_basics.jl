@@ -36,8 +36,6 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
 @testset "BlockSparseArrays (dev=$dev, eltype=$elt)" for dev in devices_list(copy(ARGS)),
   elt in (Float32, Float64, Complex{Float32}, Complex{Float64})
 
-  @show dev, elt
-
   if !is_supported_eltype(dev, elt)
     continue
   end
