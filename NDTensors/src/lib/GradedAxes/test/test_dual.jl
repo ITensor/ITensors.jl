@@ -72,6 +72,11 @@ end
   @test space_isequal(la, la)
   @test label_type(la) == U1
 
+  @test iterate(la) == (1, 1)
+  @test iterate(la) == (1, 1)
+  @test iterate(la, 1) == (2, 2)
+  @test isnothing(iterate(la, 2))
+
   lad = dual(la)
   @test lad isa LabelledUnitRangeDual
   @test label(lad) == U1(-1)
@@ -87,10 +92,22 @@ end
   @test dual(lad) === la
   @test label_type(lad) == U1
 
+  @test iterate(lad) == (1, 1)
+  @test iterate(lad) == (1, 1)
+  @test iterate(lad, 1) == (2, 2)
+  @test isnothing(iterate(lad, 2))
+
+  lad2 = lad[1:1]
+  @test lad2 isa LabelledUnitRangeDual
+  @test label(lad2) == U1(-1)
+  @test unlabel(lad2) == 1:1
+
   laf = flip(la)
   @test laf isa LabelledUnitRangeDual
   @test label(laf) == U1(1)
   @test unlabel(laf) == 1:2
+  @test labelled_isequal(la, laf)
+  @test !space_isequal(la, laf)
 
   ladf = flip(dual(la))
   @test ladf isa LabelledUnitRange

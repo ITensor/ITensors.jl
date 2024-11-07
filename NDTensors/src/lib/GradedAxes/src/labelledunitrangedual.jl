@@ -25,6 +25,15 @@ end
 
 # fix ambiguities
 Base.getindex(a::LabelledUnitRangeDual, i::Integer) = dual(nondual(a)[i])
+function Base.getindex(a::LabelledUnitRangeDual, indices::AbstractUnitRange{<:Integer})
+  return dual(nondual(a)[indices])
+end
+
+function Base.iterate(a::LabelledUnitRangeDual, i)
+  i == last(a) && return nothing
+  next = convert(eltype(a), labelled(i + step(a), label(a)))
+  return (next, next)
+end
 
 function Base.show(io::IO, ::MIME"text/plain", a::LabelledUnitRangeDual)
   println(io, typeof(a))
