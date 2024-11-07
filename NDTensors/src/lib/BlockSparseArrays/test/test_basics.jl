@@ -98,6 +98,28 @@ include("TestBlockSparseArraysUtils.jl")
     a[3, 3] = NaN
     @test isnan(norm(a))
   end
+  @testset "Adjoint and transpose" begin
+    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    @views for b in [Block(1, 2), Block(2, 1)]
+      a[b] = randn(elt, size(a[b]))
+    end
+
+    ad = a'
+    @test ad isa BlockSparseMatrix
+    @test ad' == a
+    @test ad[Block(1, 1)] == adjoint(a[Block(1, 1)])
+    @test ad[Block(1, 2)] == adjoint(a[Block(2, 1)])
+    @test ad[1, 1] == conj(a[1, 1])
+    @test ad[1, 2] == conj(a[2, 1])
+
+    at = transpose(a)
+    @test at isa BlockSparseMatrix
+    @test traspose(at) == a
+    @test at[Block(1, 1)] == transpose(a[Block(1, 1)])
+    @test at[Block(1, 2)] == transpose(a[Block(2, 1)])
+    @test at[1, 1] == a[1, 1]
+    @test at[1, 2] == a[2, 1]
+  end
   @testset "Tensor algebra" begin
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]

@@ -1,6 +1,7 @@
 using BlockArrays: BlockArrays, Block, BlockedUnitRange, blockedrange, blocklength
 using Dictionaries: Dictionary
 using ..SparseArrayDOKs: SparseArrayDOK
+using ..GradedAxes: dual
 
 # TODO: Delete this.
 ## using BlockArrays: blocks
@@ -118,3 +119,12 @@ blockstype(::Type{<:BlockSparseArray{<:Any,<:Any,<:Any,B}}) where {B} = B
 ##   # TODO: Preserve GPU data!
 ##   return BlockSparseArray{elt}(undef, axes)
 ## end
+
+# Avoid proliferating wrapper types
+function Base.adjoint(A::BlockSparseMatrix)
+  return BlockSparseMatrix(adjoint(blocks(A)), dual.(reverse(axes(A))))
+end
+
+function Base.transpose(A::BlockSparseMatrix)
+  return BlockSparseMatrix(transpose(blocks(A)), reverse(axes(A)))
+end
