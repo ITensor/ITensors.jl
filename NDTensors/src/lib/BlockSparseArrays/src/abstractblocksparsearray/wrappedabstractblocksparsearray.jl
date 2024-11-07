@@ -189,7 +189,9 @@ function Base.similar(
 end
 
 function blocksparse_similar(a, elt::Type, axes::Tuple)
-  return BlockSparseArray{elt,length(axes),similartype(blocktype(a), axes)}(undef, axes)
+  return BlockSparseArray{elt,length(axes),similartype(blocktype(a), elt, axes)}(
+    undef, axes
+  )
 end
 
 # Needed by `BlockArrays` matrix multiplication interface

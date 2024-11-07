@@ -15,6 +15,7 @@ using BlockArrays:
   blocksizes,
   mortar
 using Compat: @compat
+using GPUArraysCore: @allowscalar
 using LinearAlgebra: Adjoint, mul!, norm
 using NDTensors.BlockSparseArrays:
   @view!,
@@ -28,27 +29,37 @@ using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset
 include("TestBlockSparseArraysUtils.jl")
-@testset "BlockSparseArrays (eltype=$elt)" for elt in
-                                               (Float32, Float64, ComplexF32, ComplexF64)
+
+using NDTensors: NDTensors
+include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
+using .NDTensorsTestUtils: devices_list, is_supported_eltype
+@testset "BlockSparseArrays (dev=$dev, eltype=$elt)" for dev in devices_list(copy(ARGS)),
+  elt in (Float32, Float64, Complex{Float32}, Complex{Float64})
+
+  @show dev, elt
+
+  if !is_supported_eltype(dev, elt)
+    continue
+  end
   @testset "Broken" begin
     # TODO: Fix this and turn it into a proper test.
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
-    a[Block(1, 1)] = randn(elt, 2, 2)
-    a[Block(2, 2)] = randn(elt, 3, 3)
+    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    a[Block(2, 2)] = dev(randn(elt, 3, 3))
     @test_broken a[:, 4]
 
     # TODO: Fix this and turn it into a proper test.
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
-    a[Block(1, 1)] = randn(elt, 2, 2)
-    a[Block(2, 2)] = randn(elt, 3, 3)
+    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    a[Block(2, 2)] = dev(randn(elt, 3, 3))
     @test_broken a[:, [2, 4]]
     @test_broken a[[3, 5], [2, 4]]
 
     # TODO: Fix this and turn it into a proper test.
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
-    a[Block(1, 1)] = randn(elt, 2, 2)
-    a[Block(2, 2)] = randn(elt, 3, 3)
-    @test a[2:4, 4] == Array(a)[2:4, 4]
+    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a[Block(1, 1)] = dev(randn(elt, 2, 2))
+    a[Block(2, 2)] = dev(randn(elt, 3, 3))
+    @allowscalar @test a[2:4, 4] == Array(a)[2:4, 4]
     @test_broken a[4, 2:4]
 
     @test a[Block(1), :] isa BlockSparseArray{elt}

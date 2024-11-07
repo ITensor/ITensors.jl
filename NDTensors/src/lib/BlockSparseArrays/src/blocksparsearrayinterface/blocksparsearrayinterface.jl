@@ -125,12 +125,13 @@ _getindices(i::CartesianIndex, indices) = CartesianIndex(_getindices(Tuple(i), i
 
 # Represents the array of arrays of a `PermutedDimsArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `PermutedDimsArray`.
-struct SparsePermutedDimsArrayBlocks{T,N,Array<:PermutedDimsArray{T,N}} <:
-       AbstractSparseArray{T,N}
+struct SparsePermutedDimsArrayBlocks{
+  T,N,BlockType<:AbstractArray{T,N},Array<:PermutedDimsArray{T,N}
+} <: AbstractSparseArray{BlockType,N}
   array::Array
 end
 function blocksparse_blocks(a::PermutedDimsArray)
-  return SparsePermutedDimsArrayBlocks(a)
+  return SparsePermutedDimsArrayBlocks{eltype(a),ndims(a),blocktype(parent(a)),typeof(a)}(a)
 end
 function Base.size(a::SparsePermutedDimsArrayBlocks)
   return _getindices(size(blocks(parent(a.array))), _perm(a.array))
@@ -158,11 +159,12 @@ reverse_index(index::CartesianIndex) = CartesianIndex(reverse(Tuple(index)))
 
 # Represents the array of arrays of a `Transpose`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Transpose`.
-struct SparseTransposeBlocks{T,Array<:Transpose{T}} <: AbstractSparseMatrix{T}
+struct SparseTransposeBlocks{T,BlockType<:AbstractMatrix{T},Array<:Transpose{T}} <:
+       AbstractSparseMatrix{BlockType}
   array::Array
 end
 function blocksparse_blocks(a::Transpose)
-  return SparseTransposeBlocks(a)
+  return SparseTransposeBlocks{eltype(a),blocktype(parent(a)),typeof(a)}(a)
 end
 function Base.size(a::SparseTransposeBlocks)
   return reverse(size(blocks(parent(a.array))))
@@ -192,11 +194,12 @@ end
 
 # Represents the array of arrays of a `Adjoint`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Adjoint`.
-struct SparseAdjointBlocks{T,Array<:Adjoint{T}} <: AbstractSparseMatrix{T}
+struct SparseAdjointBlocks{T,BlockType<:AbstractMatrix{T},Array<:Adjoint{T}} <:
+       AbstractSparseMatrix{BlockType}
   array::Array
 end
 function blocksparse_blocks(a::Adjoint)
-  return SparseAdjointBlocks(a)
+  return SparseAdjointBlocks{eltype(a),blocktype(parent(a)),typeof(a)}(a)
 end
 function Base.size(a::SparseAdjointBlocks)
   return reverse(size(blocks(parent(a.array))))
