@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using Compat: Returns
-using Test: @test, @testset, @test_broken
+using Test: @test, @testset
 using BlockArrays:
   AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
 using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
@@ -217,10 +217,10 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test size(a[I, I]) == (1, 1)
       @test isdual(axes(a[I, :], 2))
       @test isdual(axes(a[:, I], 1))
-      @test_broken isdual(axes(a[I, :], 1))
-      @test_broken isdual(axes(a[:, I], 2))
-      @test_broken isdual(axes(a[I, I], 1))
-      @test_broken isdual(axes(a[I, I], 2))
+      @test isdual(axes(a[I, :], 1))
+      @test isdual(axes(a[:, I], 2))
+      @test isdual(axes(a[I, I], 1))
+      @test isdual(axes(a[I, I], 2))
     end
 
     @testset "dual GradedUnitRange" begin
@@ -243,10 +243,10 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test size(a[I, I]) == (1, 1)
       @test isdual(axes(a[I, :], 2))
       @test isdual(axes(a[:, I], 1))
-      @test_broken isdual(axes(a[I, :], 1))
-      @test_broken isdual(axes(a[:, I], 2))
-      @test_broken isdual(axes(a[I, I], 1))
-      @test_broken isdual(axes(a[I, I], 2))
+      @test isdual(axes(a[I, :], 1))
+      @test isdual(axes(a[:, I], 2))
+      @test isdual(axes(a[I, I], 1))
+      @test isdual(axes(a[I, I], 2))
     end
 
     @testset "dual BlockedUnitRange" begin    # self dual
