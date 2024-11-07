@@ -173,5 +173,5 @@ blockstype(arraytype::Type{<:BlockSparseArray}) = SparseArrayDOK{AbstractArray}
 
 function Base.adjoint(A::BlockSparseMatrix)
   T = Base.promote_op(adjoint, eltype(A))
-  return BlockSparseArray{T,2}(adjoint(A.blocks), reverse(A.axes))
+  return BlockSparseMatrix{T}(adjoint(blocks(A)), dual.(reverse(axes(A))))
 end

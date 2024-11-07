@@ -52,7 +52,7 @@ function svd(A::BlockDiagonal; kwargs...)
 end
 function svd!(A::BlockDiagonal; full::Bool=false, alg::Algorithm=default_svd_alg(A))
   # TODO: handle full
-  F = map(a -> svd!(a; full, alg), A.blocks.diag)
+  F = map(a -> svd!(a; full, alg), blocks(A).diag)
   Us = map(Base.Fix2(getproperty, :U), F)
   Ss = map(Base.Fix2(getproperty, :S), F)
   Vts = map(Base.Fix2(getproperty, :Vt), F)

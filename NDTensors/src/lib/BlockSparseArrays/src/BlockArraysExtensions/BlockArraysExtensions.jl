@@ -615,11 +615,11 @@ function svd!(A::BlockedMatrix; full::Bool=false, alg::Algorithm=default_svd_alg
 
   # restore block pattern
   m = length(F.S)
-  bsz1, bsz2, bsz3 = BlockArrays.blocksizes(A, 1), [m], BlockArrays.blocksizes(A, 2)
+  bax1, bax2, bax3 = axes(A, 1), blockedrange([m]), axes(A, 2)
 
-  u = BlockedArray(F.U, bsz1, bsz2)
-  s = BlockedVector(F.S, bsz2)
-  vt = BlockedArray(F.Vt, bsz2, bsz3)
+  u = BlockedArray(F.U, (bax1, bax2))
+  s = BlockedVector(F.S, (bax2,))
+  vt = BlockedArray(F.Vt, (bax2, bax3))
   return SVD(u, s, vt)
 end
 
