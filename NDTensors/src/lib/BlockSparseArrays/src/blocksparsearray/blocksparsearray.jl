@@ -170,3 +170,8 @@ blockstype(arraytype::Type{<:BlockSparseArray}) = SparseArrayDOK{AbstractArray}
 ##   # TODO: Preserve GPU data!
 ##   return BlockSparseArray{elt}(undef, axes)
 ## end
+
+function Base.adjoint(A::BlockSparseMatrix)
+  T = Base.promote_op(adjoint, eltype(A))
+  return BlockSparseArray{T,2}(adjoint(A.blocks), reverse(A.axes))
+end
