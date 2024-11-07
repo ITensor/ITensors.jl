@@ -589,3 +589,37 @@ macro view!(expr)
   @capture(expr, array_[indices__])
   return :(view!($(esc(array)), $(esc.(indices)...)))
 end
+
+# Adjoint simplifications
+# -----------------------
+using LinearAlgebra: LinearAlgebra, Adjoint
+
+function Base.adjoint(A::BlockArrays.BlockMatrix)
+  return BlockArrays._BlockArray(adjoint(A.blocks), reverse(A.axes))
+end
+
+# SVD additions
+# -------------
+using LinearAlgebra: Algorithm
+using BlockArrays: BlockedMatrix
+
+# svd first calls `eigencopy_oftype` to create something that can be in-place SVD'd
+# Here, we hijack this system to determine if there is any structure we can exploit
+# default: SVD is most efficient with BlockedArray
+function LinearAlgebra.eigencopy_oftype(A::AbstractBlockArray, S)
+  return BlockedMatrix{S}(A)
+end
+
+function svd!(A::BlockedMatrix; full::Bool=false, alg::Algorithm=default_svd_alg(A))
+  F = svd!(parent(A); full, alg)
+
+  # restore block pattern
+  m = length(F.S)
+  bsz1, bsz2, bsz3 = BlockArrays.blocksizes(A, 1), [m], BlockArrays.blocksizes(A, 2)
+
+  u = BlockedArray(F.U, bsz1, bsz2)
+  s = BlockedVector(F.S, bsz2)
+  vt = BlockedArray(F.Vt, bsz2, bsz3)
+  return SVD(u, s, vt)
+end
+
