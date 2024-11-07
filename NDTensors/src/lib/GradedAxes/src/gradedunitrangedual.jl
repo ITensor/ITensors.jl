@@ -58,7 +58,9 @@ function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::Vector{<:BlockIndexRange{1}}
 )
   a_indices = getindex(nondual(a), indices)
-  return mortar([label_dual(b) for b in blocks(a_indices)])
+  v = mortar(dual.(blocks(a_indices)))
+  # flip v to stay consistent with other cases where axes(v) are used
+  return flip_blockvector(v)
 end
 
 function blockedunitrange_getindices(
