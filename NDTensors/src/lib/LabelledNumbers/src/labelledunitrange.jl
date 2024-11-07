@@ -52,3 +52,12 @@ function Base.iterate(a::LabelledUnitRange, i)
   next = convert(eltype(a), labelled(i + step(a), label(a)))
   return (next, next)
 end
+
+function Base.show(io::IO, ::MIME"text/plain", a::LabelledUnitRange)
+  println(io, typeof(a))
+  return print(io, label(a), " => ", unlabel(a))
+end
+
+function Base.show(io::IO, a::LabelledUnitRange)
+  return print(io, nameof(typeof(a)), " ", label(a), " => ", unlabel(a))
+end

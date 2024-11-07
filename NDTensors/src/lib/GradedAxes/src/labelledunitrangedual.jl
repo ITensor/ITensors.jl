@@ -24,14 +24,12 @@ end
 # fix ambiguities
 Base.getindex(a::LabelledUnitRangeDual, i::Integer) = dual(nondual(a)[i])
 
-function Base.show(
-  io::IO, ::MIME"text/plain", a::Union{LabelledUnitRange,LabelledUnitRangeDual}
-)
+function Base.show(io::IO, ::MIME"text/plain", a::LabelledUnitRangeDual)
   println(io, typeof(a))
   return print(io, label(a), " => ", unlabel(a))
 end
 
-function Base.show(io::IO, a::Union{LabelledUnitRange,LabelledUnitRangeDual})
+function Base.show(io::IO, a::LabelledUnitRangeDual)
   return print(io, nameof(typeof(a)), " ", label(a), " => ", unlabel(a))
 end
 
