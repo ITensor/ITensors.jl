@@ -73,6 +73,21 @@ end
   @test label(lad) == U1(-1)
   @test unlabel(lad) == 1:2
   @test lad == 1:2
+  @test !labelled_isequal(la, lad)
+  @test !space_isequal(la, lad)
+  @test isdual(lad)
+  @test nondual(lad) === la
+  @test dual(lad) === la
+
+  # check default behavior for objects without dual
+  la = labelled(1:2, 'x')
+  lad = dual(la)
+  @test lad isa LabelledUnitRangeDual
+  @test label(lad) == 'x'
+  @test unlabel(lad) == 1:2
+  @test lad == 1:2
+  @test labelled_isequal(la, lad)
+  @test !space_isequal(la, lad)
   @test isdual(lad)
   @test nondual(lad) === la
   @test dual(lad) === la
