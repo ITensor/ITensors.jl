@@ -1,5 +1,5 @@
-# default behavior: self-dual
-dual(r::AbstractUnitRange) = r
+# default behavior: any object is self-dual
+dual(x) = x
 nondual(r::AbstractUnitRange) = r
 isdual(::AbstractUnitRange) = false
 
@@ -11,4 +11,5 @@ label_dual(x) = label_dual(LabelledStyle(x), x)
 label_dual(::NotLabelled, x) = x
 label_dual(::IsLabelled, x) = labelled(unlabel(x), dual(label(x)))
 
+flip(a::AbstractUnitRange) = dual(label_dual(a))
 flip(g::AbstractGradedUnitRange) = dual(gradedrange(label_dual.(blocklengths(g))))

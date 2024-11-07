@@ -68,6 +68,7 @@ end
 # == is just a range comparison that ignores labels. Need dedicated function to check equality.
 struct NoLabel end
 blocklabels(r::AbstractUnitRange) = Fill(NoLabel(), blocklength(r))
+blocklabels(la::LabelledUnitRange) = [label(la)]
 
 function LabelledNumbers.labelled_isequal(a1::AbstractUnitRange, a2::AbstractUnitRange)
   return blockisequal(a1, a2) && (blocklabels(a1) == blocklabels(a2))

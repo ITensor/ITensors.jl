@@ -17,6 +17,7 @@ using NDTensors.GradedAxes:
   AbstractGradedUnitRange,
   GradedAxes,
   GradedUnitRangeDual,
+  LabelledUnitRangeDual,
   OneToOne,
   blocklabels,
   blockmergesortperm,
@@ -27,7 +28,8 @@ using NDTensors.GradedAxes:
   gradedrange,
   isdual,
   nondual
-using NDTensors.LabelledNumbers: LabelledInteger, label, labelled, labelled_isequal
+using NDTensors.LabelledNumbers:
+  LabelledInteger, LabelledUnitRange, label, label_type, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
 struct U1
   n::Int
@@ -56,6 +58,92 @@ Base.isless(c1::U1, c2::U1) = c1.n < c2.n
   @test !isdual(ad)
   @test ad isa BlockedOneTo
   @test blockisequal(ad, a)
+end
+
+@testset "LabelledUnitRangeDual" begin
+  la = labelled(1:2, U1(1))
+  @test la isa LabelledUnitRange
+  @test label(la) == U1(1)
+  @test blocklabels(la) == [U1(1)]
+  @test unlabel(la) == 1:2
+  @test la == 1:2
+  @test !isdual(la)
+  @test labelled_isequal(la, la)
+  @test space_isequal(la, la)
+  @test label_type(la) == U1
+
+  @test iterate(la) == (1, 1)
+  @test iterate(la) == (1, 1)
+  @test iterate(la, 1) == (2, 2)
+  @test isnothing(iterate(la, 2))
+
+  lad = dual(la)
+  @test lad isa LabelledUnitRangeDual
+  @test label(lad) == U1(-1)
+  @test blocklabels(lad) == [U1(-1)]
+  @test unlabel(lad) == 1:2
+  @test lad == 1:2
+  @test labelled_isequal(lad, lad)
+  @test space_isequal(lad, lad)
+  @test !labelled_isequal(la, lad)
+  @test !space_isequal(la, lad)
+  @test isdual(lad)
+  @test nondual(lad) === la
+  @test dual(lad) === la
+  @test label_type(lad) == U1
+
+  @test iterate(lad) == (1, 1)
+  @test iterate(lad) == (1, 1)
+  @test iterate(lad, 1) == (2, 2)
+  @test isnothing(iterate(lad, 2))
+
+  lad2 = lad[1:1]
+  @test lad2 isa LabelledUnitRangeDual
+  @test label(lad2) == U1(-1)
+  @test unlabel(lad2) == 1:1
+
+  laf = flip(la)
+  @test laf isa LabelledUnitRangeDual
+  @test label(laf) == U1(1)
+  @test unlabel(laf) == 1:2
+  @test labelled_isequal(la, laf)
+  @test !space_isequal(la, laf)
+
+  ladf = flip(dual(la))
+  @test ladf isa LabelledUnitRange
+  @test label(ladf) == U1(-1)
+  @test unlabel(ladf) == 1:2
+
+  lafd = dual(flip(la))
+  @test lafd isa LabelledUnitRange
+  @test label(lafd) == U1(-1)
+  @test unlabel(lafd) == 1:2
+
+  # check default behavior for objects without dual
+  la = labelled(1:2, 'x')
+  lad = dual(la)
+  @test lad isa LabelledUnitRangeDual
+  @test label(lad) == 'x'
+  @test blocklabels(lad) == ['x']
+  @test unlabel(lad) == 1:2
+  @test lad == 1:2
+  @test labelled_isequal(lad, lad)
+  @test space_isequal(lad, lad)
+  @test labelled_isequal(la, lad)
+  @test !space_isequal(la, lad)
+  @test isdual(lad)
+  @test nondual(lad) === la
+  @test dual(lad) === la
+
+  laf = flip(la)
+  @test laf isa LabelledUnitRangeDual
+  @test label(laf) == 'x'
+  @test unlabel(laf) == 1:2
+
+  ladf = flip(lad)
+  @test ladf isa LabelledUnitRange
+  @test label(ladf) == 'x'
+  @test unlabel(ladf) == 1:2
 end
 
 @testset "GradedUnitRangeDual" begin
@@ -124,13 +212,21 @@ end
     @test blockmergesortperm(a) == [Block(1), Block(2)]
     @test blockmergesortperm(ad) == [Block(1), Block(2)]
 
-    @test_broken isdual(ad[Block(1)])
-    @test_broken isdual(ad[Block(1)[1:1]])
+    @test isdual(ad[Block(1)])
+    @test isdual(ad[Block(1)[1:1]])
+    @test ad[Block(1)] isa LabelledUnitRangeDual
+    @test ad[Block(1)[1:1]] isa LabelledUnitRangeDual
+    @test label(ad[Block(2)]) == U1(-1)
+    @test label(ad[Block(2)[1:1]]) == U1(-1)
+
     I = mortar([Block(2)[1:1]])
     g = ad[I]
     @test length(g) == 1
     @test label(first(g)) == U1(-1)
-    @test_broken isdual(g[Block(1)])
+    @test isdual(g[Block(1)])
+
+    @test isdual(axes(ad[[Block(1)]], 1))  # used in view(::BlockSparseVector, [Block(1)])
+    @test isdual(axes(ad[mortar([Block(1)[1:1]])], 1))  # used in view(::BlockSparseVector, [Block(1)[1:1]])
   end
 end
 
