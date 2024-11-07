@@ -1,5 +1,5 @@
-# default behavior: self-dual
-dual(r::AbstractUnitRange) = r
+# default behavior: any object is self-dual
+dual(x) = x
 nondual(r::AbstractUnitRange) = r
 isdual(::AbstractUnitRange) = false
 
