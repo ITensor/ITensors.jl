@@ -93,9 +93,8 @@ function blockedunitrange_getindices(
 end
 
 function flip_blockvector(v::BlockVector)
-  # TODO way to create BlockArray with specified axis without relying on internal?
   block_axes = flip.(axes(v))
-  flipped = BlockArrays._BlockArray(vec.(blocks(v)), block_axes)
+  flipped = mortar(vec.(blocks(v)), block_axes)
   return flipped
 end
 
