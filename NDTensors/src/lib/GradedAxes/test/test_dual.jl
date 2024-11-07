@@ -29,7 +29,7 @@ using NDTensors.GradedAxes:
   isdual,
   nondual
 using NDTensors.LabelledNumbers:
-  LabelledInteger, LabelledUnitRange, label, labelled, labelled_isequal, unlabel
+  LabelledInteger, LabelledUnitRange, label, label_type, labelled, labelled_isequal, unlabel
 using Test: @test, @test_broken, @testset
 struct U1
   n::Int
@@ -70,6 +70,7 @@ end
   @test !isdual(la)
   @test labelled_isequal(la, la)
   @test space_isequal(la, la)
+  @test label_type(la) == U1
 
   lad = dual(la)
   @test lad isa LabelledUnitRangeDual
@@ -84,6 +85,22 @@ end
   @test isdual(lad)
   @test nondual(lad) === la
   @test dual(lad) === la
+  @test label_type(lad) == U1
+
+  laf = flip(la)
+  @test laf isa LabelledUnitRangeDual
+  @test label(laf) == U1(1)
+  @test unlabel(laf) == 1:2
+
+  ladf = flip(dual(la))
+  @test ladf isa LabelledUnitRange
+  @test label(ladf) == U1(-1)
+  @test unlabel(ladf) == 1:2
+
+  lafd = dual(flip(la))
+  @test lafd isa LabelledUnitRange
+  @test label(lafd) == U1(-1)
+  @test unlabel(lafd) == 1:2
 
   # check default behavior for objects without dual
   la = labelled(1:2, 'x')
@@ -100,6 +117,16 @@ end
   @test isdual(lad)
   @test nondual(lad) === la
   @test dual(lad) === la
+
+  laf = flip(la)
+  @test laf isa LabelledUnitRangeDual
+  @test label(laf) == 'x'
+  @test unlabel(laf) == 1:2
+
+  ladf = flip(lad)
+  @test ladf isa LabelledUnitRange
+  @test label(ladf) == 'x'
+  @test unlabel(ladf) == 1:2
 end
 
 @testset "GradedUnitRangeDual" begin
