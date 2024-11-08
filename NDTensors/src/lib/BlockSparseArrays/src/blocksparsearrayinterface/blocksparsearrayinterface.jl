@@ -22,6 +22,13 @@ function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where
   return a[findblockindex.(axes(a), I)...]
 end
 
+# Fix ambiguity error.
+function blocksparse_getindex(a::AbstractArray{<:Any,0})
+  # TODO: Use `Block()[]` once https://github.com/JuliaArrays/BlockArrays.jl/issues/430
+  # is fixed.
+  return a[BlockIndex{0,Tuple{},Tuple{}}((), ())]
+end
+
 # a[1:2, 1:2]
 # TODO: This definition means that the result of slicing a block sparse array
 # with a non-blocked unit range is blocked. We may want to change that behavior,
@@ -77,12 +84,29 @@ function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::Vararg{Int,N
   return a
 end
 
+# Fix ambiguity error.
+function blocksparse_setindex!(a::AbstractArray{<:Any,0}, value)
+  # TODO: Use `Block()[]` once https://github.com/JuliaArrays/BlockArrays.jl/issues/430
+  # is fixed.
+  a[BlockIndex{0,Tuple{},Tuple{}}((), ())] = value
+  return a
+end
+
 function blocksparse_setindex!(a::AbstractArray{<:Any,N}, value, I::BlockIndex{N}) where {N}
   i = Int.(Tuple(block(I)))
   a_b = blocks(a)[i...]
   a_b[I.α...] = value
   # Set the block, required if it is structurally zero.
   blocks(a)[i...] = a_b
+  return a
+end
+
+# Fix ambiguity error.
+function blocksparse_setindex!(a::AbstractArray{<:Any,0}, value, I::BlockIndex{0})
+  a_b = blocks(a)[]
+  a_b[] = value
+  # Set the block, required if it is structurally zero.
+  blocks(a)[] = a_b
   return a
 end
 

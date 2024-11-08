@@ -92,12 +92,21 @@ function Base.getindex(
 )
   return ArrayLayouts.layout_getindex(a, I...)
 end
+# Fixes ambiguity error.
+function Base.getindex(a::BlockSparseArrayLike{<:Any,0})
+  return ArrayLayouts.layout_getindex(a)
+end
 
 # TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
   a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
 ) where {N}
   return isassigned(blocks(a), Int.(index)...)
+end
+
+# Fix ambiguity error.
+function Base.isassigned(a::BlockSparseArrayLike{<:Any,0})
+  return isassigned(blocks(a))
 end
 
 function Base.isassigned(a::BlockSparseArrayLike{<:Any,N}, index::Block{N}) where {N}
