@@ -143,7 +143,8 @@ end
 using ..SparseArrayInterface:
   SparseArrayInterface, AbstractSparseArray, AbstractSparseMatrix
 
-_perm(::PermutedDimsArray{<:Any,<:Any,P}) where {P} = P
+_perm(::PermutedDimsArray{<:Any,<:Any,perm}) where {perm} = perm
+_invperm(::PermutedDimsArray{<:Any,<:Any,<:Any,invperm}) where {invperm} = invperm
 _getindices(t::Tuple, indices) = map(i -> t[i], indices)
 _getindices(i::CartesianIndex, indices) = CartesianIndex(_getindices(Tuple(i), indices))
 
@@ -164,7 +165,7 @@ function Base.getindex(
   a::SparsePermutedDimsArrayBlocks{<:Any,N}, index::Vararg{Int,N}
 ) where {N}
   return PermutedDimsArray(
-    blocks(parent(a.array))[_getindices(index, _perm(a.array))...], _perm(a.array)
+    blocks(parent(a.array))[_getindices(index, _invperm(a.array))...], _perm(a.array)
   )
 end
 function SparseArrayInterface.stored_indices(a::SparsePermutedDimsArrayBlocks)
