@@ -25,6 +25,7 @@ using NDTensors.BlockSparseArrays:
   block_reshape,
   block_stored_indices,
   view!
+using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors.SparseArrayInterface: nstored
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset
@@ -72,8 +73,10 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test_broken [ah[Block(Tuple(it))] for it in eachindex(block_stored_indices(ah))] isa Vector
   end
   @testset "Basics" begin
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
-    @test a == BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
+    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    @allowscalar @test a == dev(
+      BlockSparseArray{elt}(blockedrange([2, 3]), blockedrange([2, 3]))
+    )
     @test eltype(a) === elt
     @test axes(a) == (1:5, 1:5)
     @test all(aᵢ -> aᵢ isa BlockedOneTo, axes(a))
@@ -82,7 +85,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test size(a) == (5, 5)
     @test block_nstored(a) == 0
     @test iszero(a)
-    @test all(I -> iszero(a[I]), eachindex(a))
+    @allowscalar @test all(I -> iszero(a[I]), eachindex(a))
     @test_throws DimensionMismatch a[Block(1, 1)] = randn(elt, 2, 3)
 
     a = BlockSparseArray{elt}([2, 3], [2, 3])
@@ -108,14 +111,21 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test isnan(norm(a))
   end
   @testset "Tensor algebra" begin
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
-      a[b] = randn(elt, size(a[b]))
+      a[b] = dev(randn(elt, size(a[b])))
     end
     @test eltype(a) == elt
     @test block_nstored(a) == 2
     @test nstored(a) == 2 * 4 + 3 * 3
 
+    # TODO: Broken on GPU.
+    if dev ≠ cpu
+      a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
+      @test_broken a[Block(1, 2)] .= 2
+    end
+
+    # TODO: Broken on GPU.
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     a[Block(1, 2)] .= 2
     @test eltype(a) == elt
@@ -126,6 +136,13 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test block_nstored(a) == 1
     @test nstored(a) == 2 * 4
 
+    # TODO: Broken on GPU.
+    if dev ≠ cpu
+      a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
+      @test_broken a[Block(1, 2)] .= 0
+    end
+
+    # TODO: Broken on GPU.
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     a[Block(1, 2)] .= 0
     @test eltype(a) == elt
@@ -136,9 +153,9 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test block_nstored(a) == 1
     @test nstored(a) == 2 * 4
 
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
-      a[b] = randn(elt, size(a[b]))
+      a[b] = dev(randn(elt, size(a[b])))
     end
     b = similar(a, complex(elt))
     @test eltype(b) == complex(eltype(a))
@@ -148,21 +165,23 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test size(b) == size(a)
     @test blocksize(b) == blocksize(a)
 
-    a = BlockSparseArray{elt}([2, 3], [3, 4])
+    a = dev(BlockSparseArray{elt}([2, 3], [3, 4]))
     b = @view a[[Block(2), Block(1)], [Block(2), Block(1)]]
     c = @view b[Block(1, 1)]
     @test iszero(a)
     @test iszero(nstored(a))
     @test iszero(b)
     @test iszero(nstored(b))
-    @test iszero(c)
+    # TODO: Broken on GPU.
+    @test iszero(c) broken = dev ≠ cpu
     @test iszero(nstored(c))
-    a[5, 7] = 1
+    @allowscalar a[5, 7] = 1
     @test !iszero(a)
     @test nstored(a) == 3 * 4
     @test !iszero(b)
     @test nstored(b) == 3 * 4
-    @test !iszero(c)
+    # TODO: Broken on GPU.
+    @test !iszero(c) broken = dev ≠ cpu
     @test nstored(c) == 3 * 4
     d = @view a[1:4, 1:6]
     @test iszero(d)
@@ -193,12 +212,12 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     b ./= 2
     @test b ≈ a / 2
 
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
-      a[b] = randn(elt, size(a[b]))
+      a[b] = dev(randn(elt, size(a[b])))
     end
     b = 2 * a
-    @test Array(b) ≈ 2 * Array(a)
+    @allowscalar @test Array(b) ≈ 2 * Array(a)
     @test eltype(b) == elt
     @test block_nstored(b) == 2
     @test nstored(b) == 2 * 4 + 3 * 3
@@ -213,12 +232,12 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test block_nstored(b) == 2
     @test nstored(b) == 2 * 4 + 3 * 3
 
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
-      a[b] = randn(elt, size(a[b]))
+      a[b] = dev(randn(elt, size(a[b])))
     end
     b = a + a
-    @test Array(b) ≈ 2 * Array(a)
+    @allowscalar @test Array(b) ≈ 2 * Array(a)
     @test eltype(b) == elt
     @test block_nstored(b) == 2
     @test nstored(b) == 2 * 4 + 3 * 3
@@ -297,25 +316,28 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test nstored(b) == nstored(a[Block(1, 2)])
     @test block_nstored(b) == 1
 
-    a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
+    a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
     @views for b in [Block(1, 2), Block(2, 1)]
-      a[b] = randn(elt, size(a[b]))
+      a[b] = dev(randn(elt, size(a[b])))
     end
     for b in (a[2:4, 2:4], @view(a[2:4, 2:4]))
-      @test b == Array(a)[2:4, 2:4]
+      @allowscalar @test b == Array(a)[2:4, 2:4]
       @test size(b) == (3, 3)
       @test blocksize(b) == (2, 2)
       @test nstored(b) == 1 * 1 + 2 * 2
       @test block_nstored(b) == 2
       for f in (getindex, view)
-        @test size(f(b, Block(1, 1))) == (1, 2)
-        @test size(f(b, Block(2, 1))) == (2, 2)
-        @test size(f(b, Block(1, 2))) == (1, 1)
-        @test size(f(b, Block(2, 2))) == (2, 1)
-        @test f(b, Block(1, 1)) == a[Block(1, 1)[2:2, 2:3]]
-        @test f(b, Block(2, 1)) == a[Block(2, 1)[1:2, 2:3]]
-        @test f(b, Block(1, 2)) == a[Block(1, 2)[2:2, 1:1]]
-        @test f(b, Block(2, 2)) == a[Block(2, 2)[1:2, 1:1]]
+        # TODO: Broken on GPU.
+        @allowscalar begin
+          @test size(f(b, Block(1, 1))) == (1, 2)
+          @test size(f(b, Block(2, 1))) == (2, 2)
+          @test size(f(b, Block(1, 2))) == (1, 1)
+          @test size(f(b, Block(2, 2))) == (2, 1)
+          @test f(b, Block(1, 1)) == a[Block(1, 1)[2:2, 2:3]]
+          @test f(b, Block(2, 1)) == a[Block(2, 1)[1:2, 2:3]]
+          @test f(b, Block(1, 2)) == a[Block(1, 2)[2:2, 1:1]]
+          @test f(b, Block(2, 2)) == a[Block(2, 2)[1:2, 1:1]]
+        end
       end
     end
 
@@ -448,10 +470,10 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       end
     end
 
-    a = BlockSparseArray{elt}([2, 3], [2, 3])
+    a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
     @views for b in [Block(1, 1), Block(2, 2)]
       # TODO: Use `blocksizes(a)[Int.(Tuple(b))...]` once available.
-      a[b] = randn(elt, size(a[b]))
+      a[b] = dev(randn(elt, size(a[b])))
     end
     for I in ([Block(2), Block(1)],)
       b = @view a[I, I]
@@ -459,10 +481,12 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       @test b[Block(2, 1)] == a[Block(1, 2)]
       @test b[Block(1, 2)] == a[Block(2, 1)]
       @test b[Block(2, 2)] == a[Block(1, 1)]
-      @test b[1, 1] == a[3, 3]
-      @test b[4, 4] == a[1, 1]
-      b[4, 4] = 44
-      @test b[4, 4] == 44
+      @allowscalar begin
+        @test b[1, 1] == a[3, 3]
+        @test b[4, 4] == a[1, 1]
+        b[4, 4] = 44
+        @test b[4, 4] == 44
+      end
     end
 
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
@@ -490,10 +514,10 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       end
     end
 
-    a = BlockSparseArray{elt}(undef, ([3, 3], [3, 3]))
+    a = dev(BlockSparseArray{elt}(undef, ([3, 3], [3, 3])))
     # TODO: Define `block_diagindices`.
     @views for b in [Block(1, 1), Block(2, 2)]
-      a[b] = randn(elt, size(a[b]))
+      a[b] = dev(randn(elt, size(a[b])))
     end
     I = mortar([Block(1)[1:2], Block(2)[1:2]])
     b = a[:, I]
@@ -557,6 +581,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test iszero(a)
     @test iszero(block_nstored(a))
 
+    # TODO: Broken on GPU.
     a = BlockSparseArray{elt}([2, 3], [3, 4])
     for I in (Block.(1:2), [Block(1), Block(2)])
       b = @view a[I, I]
@@ -780,43 +805,45 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     end
   end
   @testset "LinearAlgebra" begin
-    a1 = BlockSparseArray{elt}([2, 3], [2, 3])
-    a1[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
-    a2 = BlockSparseArray{elt}([2, 3], [2, 3])
-    a2[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
+    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
     a_dest = a1 * a2
-    @test Array(a_dest) ≈ Array(a1) * Array(a2)
+    @allowscalar @test Array(a_dest) ≈ Array(a1) * Array(a2)
     @test a_dest isa BlockSparseArray{elt}
     @test block_nstored(a_dest) == 1
   end
   @testset "Matrix multiplication" begin
-    a1 = BlockSparseArray{elt}([2, 3], [2, 3])
-    a1[Block(1, 2)] = randn(elt, size(@view(a1[Block(1, 2)])))
-    a1[Block(2, 1)] = randn(elt, size(@view(a1[Block(2, 1)])))
-    a2 = BlockSparseArray{elt}([2, 3], [2, 3])
-    a2[Block(1, 2)] = randn(elt, size(@view(a2[Block(1, 2)])))
-    a2[Block(2, 1)] = randn(elt, size(@view(a2[Block(2, 1)])))
-    @test Array(a1 * a2) ≈ Array(a1) * Array(a2)
-    @test Array(a1' * a2) ≈ Array(a1') * Array(a2)
-    @test Array(a1 * a2') ≈ Array(a1) * Array(a2')
-    @test Array(a1' * a2') ≈ Array(a1') * Array(a2')
+    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1[Block(1, 2)] = dev(randn(elt, size(@view(a1[Block(1, 2)]))))
+    a1[Block(2, 1)] = dev(randn(elt, size(@view(a1[Block(2, 1)]))))
+    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2[Block(1, 2)] = dev(randn(elt, size(@view(a2[Block(1, 2)]))))
+    a2[Block(2, 1)] = dev(randn(elt, size(@view(a2[Block(2, 1)]))))
+    for (a1′, a2′) in ((a1, a2), (a1', a2), (a1, a2'), (a1', a2'))
+      a_dest = a1′ * a2′
+      @allowscalar @test Array(a_dest) ≈ Array(a1′) * Array(a2′)
+    end
   end
   @testset "TensorAlgebra" begin
-    a1 = BlockSparseArray{elt}([2, 3], [2, 3])
-    a1[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
-    a2 = BlockSparseArray{elt}([2, 3], [2, 3])
-    a2[Block(1, 1)] = randn(elt, size(@view(a1[Block(1, 1)])))
+    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
+    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))
     # TODO: Make this work, requires customization of `TensorAlgebra.fusedims` and
     # `TensorAlgebra.splitdims` in terms of `BlockSparseArrays.block_reshape`,
     # and customization of `TensorAlgebra.:⊗` in terms of `GradedAxes.tensor_product`.
     a_dest, dimnames_dest = contract(a1, (1, -1), a2, (-1, 2))
-    a_dest_dense, dimnames_dest_dense = contract(Array(a1), (1, -1), Array(a2), (-1, 2))
-    @test a_dest ≈ a_dest_dense
+    @allowscalar begin
+      a_dest_dense, dimnames_dest_dense = contract(Array(a1), (1, -1), Array(a2), (-1, 2))
+      @test a_dest ≈ a_dest_dense
+    end
   end
   @testset "block_reshape" begin
-    a = BlockSparseArray{elt}(undef, ([3, 4], [2, 3]))
-    a[Block(1, 2)] = randn(elt, size(@view(a[Block(1, 2)])))
-    a[Block(2, 1)] = randn(elt, size(@view(a[Block(2, 1)])))
+    a = dev(BlockSparseArray{elt}(undef, ([3, 4], [2, 3])))
+    a[Block(1, 2)] = dev(randn(elt, size(@view(a[Block(1, 2)]))))
+    a[Block(2, 1)] = dev(randn(elt, size(@view(a[Block(2, 1)]))))
     b = block_reshape(a, [6, 8, 9, 12])
     @test reshape(a[Block(1, 2)], 9) == b[Block(3)]
     @test reshape(a[Block(2, 1)], 8) == b[Block(2)]
