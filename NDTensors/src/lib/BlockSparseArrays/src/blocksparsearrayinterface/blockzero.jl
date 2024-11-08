@@ -29,7 +29,9 @@ end
 function (f::BlockZero)(arraytype::Type{<:AbstractArray}, I)
   # TODO: Make sure this works for sparse or block sparse blocks, immutable
   # blocks, diagonal blocks, etc.!
-  return fill!(arraytype(undef, block_size(f.axes, Block(Tuple(I)))), false)
+  blck_size = block_size(f.axes, Block(Tuple(I)))
+  blck_type = similartype(arraytype, blck_size)
+  return fill!(blck_type(undef, blck_size), false)
 end
 
 # Fallback so that `SparseArray` with scalar elements works.

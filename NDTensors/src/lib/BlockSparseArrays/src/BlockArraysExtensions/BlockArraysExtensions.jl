@@ -1,3 +1,4 @@
+using ArrayLayouts: ArrayLayouts, MemoryLayout, sub_materialize
 using BlockArrays:
   BlockArrays,
   AbstractBlockArray,
@@ -535,6 +536,20 @@ function SparseArrayInterface.nstored(a::BlockView)
     return nstored(blocks(a.array)[I])
   end
   return 0
+end
+
+## # Allow more fine-grained control:
+## function ArrayLayouts.sub_materialize(layout, a::BlockView, ax)
+##   return blocks(a.array)[Int.(a.block)...]
+## end
+## function ArrayLayouts.sub_materialize(layout, a::BlockView)
+##   return sub_materialize(layout, a, axes(a))
+## end
+## function ArrayLayouts.sub_materialize(a::BlockView)
+##   return sub_materialize(MemoryLayout(a), a)
+## end
+function ArrayLayouts.sub_materialize(a::BlockView)
+  return blocks(a.array)[Int.(a.block)...]
 end
 
 function view!(a::AbstractArray{<:Any,N}, index::Block{N}) where {N}

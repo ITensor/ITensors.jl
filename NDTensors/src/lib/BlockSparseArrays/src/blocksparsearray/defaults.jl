@@ -29,8 +29,8 @@ function default_arraytype(elt::Type, axes::Tuple{Vararg{AbstractUnitRange}})
   return Array{elt,length(axes)}
 end
 
-function default_blocks(elt::Type, axes::Tuple{Vararg{AbstractUnitRange}})
-  block_data = Dictionary{Block{length(axes),Int},default_arraytype(elt, axes)}()
+function default_blocks(blocktype::Type, axes::Tuple{Vararg{AbstractUnitRange}})
+  block_data = Dictionary{Block{length(axes),Int},blocktype}()
   return default_blocks(block_data, axes)
 end
 

@@ -1,6 +1,7 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
 using BlockArrays: BlockLayout
 using ..SparseArrayInterface: SparseLayout
+using ..TypeParameterAccessors: similartype
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
   outer_layout = typeof(MemoryLayout(blockstype(arraytype)))
@@ -9,15 +10,22 @@ function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
 end
 
 function Base.similar(
-  ::MulAdd{<:BlockLayout{<:SparseLayout},<:BlockLayout{<:SparseLayout}}, elt::Type, axes
-)
-  return similar(BlockSparseArray{elt}, axes)
+  mul::MulAdd{<:BlockLayout{<:SparseLayout},<:BlockLayout{<:SparseLayout},<:Any,<:Any,A,B},
+  elt::Type,
+  axes,
+) where {A,B}
+  # TODO: Check that this equals `similartype(blocktype(B), elt, axes)`,
+  # or maybe promote them?
+  output_blocktype = similartype(blocktype(A), elt, axes)
+  return similar(BlockSparseArray{elt,length(axes),output_blocktype}, axes)
 end
 
 # Materialize a SubArray view.
 function ArrayLayouts.sub_materialize(layout::BlockLayout{<:SparseLayout}, a, axes)
-  # TODO: Make more generic for GPU.
-  a_dest = BlockSparseArray{eltype(a)}(axes)
+  # TODO: Define `blocktype`/`blockstype` for `SubArray` wrapping `BlockSparseArray`.
+  # TODO: Use `similar`?
+  blocktype_a = blocktype(parent(a))
+  a_dest = BlockSparseArray{eltype(a),length(axes),blocktype_a}(axes)
   a_dest .= a
   return a_dest
 end
@@ -26,8 +34,7 @@ end
 function ArrayLayouts.sub_materialize(
   layout::BlockLayout{<:SparseLayout}, a, axes::Tuple{Vararg{Base.OneTo}}
 )
-  # TODO: Make more generic for GPU.
-  a_dest = Array{eltype(a)}(undef, length.(axes))
+  a_dest = blocktype(a)(undef, length.(axes))
   a_dest .= a
   return a_dest
 end
