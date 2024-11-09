@@ -1,5 +1,4 @@
 @eval module $(gensym())
-using Compat: Returns
 using Test: @test, @testset
 using BlockArrays:
   AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
@@ -286,6 +285,15 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       for ax in axes(b)
         @test ax isa typeof(dual(r))
       end
+
+      @test !isdual(axes(a, 1))
+      @test !isdual(axes(a, 2))
+      @test isdual(axes(a', 1))
+      @test isdual(axes(a', 2))
+      @test isdual(axes(b, 1))
+      @test isdual(axes(b, 2))
+      @test isdual(axes(copy(a'), 1))
+      @test isdual(axes(copy(a'), 2))
 
       I = [Block(1)[1:1]]
       @test size(b[I, :]) == (1, 4)
