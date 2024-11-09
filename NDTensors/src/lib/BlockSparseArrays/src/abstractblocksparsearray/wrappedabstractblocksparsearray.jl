@@ -220,6 +220,11 @@ function Base.similar(
   return blocksparse_similar(a, elt, axes)
 end
 
+# Fixes ambiguity error.
+function Base.similar(a::BlockSparseArrayLike{<:Any,0}, elt::Type, axes::Tuple{})
+  return blocksparse_similar(a, elt, axes)
+end
+
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
   a::BlockSparseArrayLike,

@@ -109,6 +109,37 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
 
     a[3, 3] = NaN
     @test isnan(norm(a))
+
+    # Empty constructor
+    for a in (dev(BlockSparseArray{elt}()), dev(BlockSparseArray{elt}(undef)))
+      @test size(a) == ()
+      @test isone(length(a))
+      @test blocksize(a) == ()
+      @test blocksizes(a) == fill(())
+      @test iszero(block_nstored(a))
+      @test iszero(@allowscalar(a[]))
+      @test iszero(@allowscalar(a[CartesianIndex()]))
+      @test a[Block()] == dev(fill(0))
+      @test iszero(@allowscalar(a[Block()][]))
+      # Broken:
+      ## @test b[Block()[]] == 2
+      for b in (
+        (b = copy(a); @allowscalar b[] = 2; b),
+        (b = copy(a); @allowscalar b[CartesianIndex()] = 2; b),
+      )
+        @test size(b) == ()
+        @test isone(length(b))
+        @test blocksize(b) == ()
+        @test blocksizes(b) == fill(())
+        @test isone(block_nstored(b))
+        @test @allowscalar(b[]) == 2
+        @test @allowscalar(b[CartesianIndex()]) == 2
+        @test b[Block()] == dev(fill(2))
+        @test @allowscalar(b[Block()][]) == 2
+        # Broken:
+        ## @test b[Block()[]] == 2
+      end
+    end
   end
   @testset "Tensor algebra" begin
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
