@@ -138,7 +138,7 @@ function Base.show(
   io::IO, mime::MIME"text/plain", a::Adjoint{<:Any,<:BlockSparseMatrix}; kwargs...
 )
   axes_a = axes(a)
-  a_nondual = BlockSparseArray(blocks(a'), dual.(nondual.(axes(a))))'
+  a_nondual = BlockSparseArray(blocks(a'), dual.(nondual.(axes(a'))))'
   return blocksparse_show(io, mime, a_nondual, axes_a; kwargs...)
 end
 

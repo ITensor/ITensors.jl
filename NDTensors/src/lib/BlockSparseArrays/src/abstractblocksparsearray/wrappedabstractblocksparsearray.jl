@@ -92,12 +92,21 @@ function Base.getindex(
 )
   return ArrayLayouts.layout_getindex(a, I...)
 end
+# Fixes ambiguity error.
+function Base.getindex(a::BlockSparseArrayLike{<:Any,0})
+  return ArrayLayouts.layout_getindex(a)
+end
 
 # TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
   a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
 ) where {N}
   return isassigned(blocks(a), Int.(index)...)
+end
+
+# Fix ambiguity error.
+function Base.isassigned(a::BlockSparseArrayLike{<:Any,0})
+  return isassigned(blocks(a))
 end
 
 function Base.isassigned(a::BlockSparseArrayLike{<:Any,N}, index::Block{N}) where {N}
@@ -211,6 +220,11 @@ function Base.similar(
   return blocksparse_similar(a, elt, axes)
 end
 
+# Fixes ambiguity error.
+function Base.similar(a::BlockSparseArrayLike{<:Any,0}, elt::Type, axes::Tuple{})
+  return blocksparse_similar(a, elt, axes)
+end
+
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
   a::BlockSparseArrayLike,
@@ -258,4 +272,23 @@ function Base.similar(
   a::BlockSparseArrayLike, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
 )
   return blocksparse_similar(a, elt, axes)
+end
+
+# TODO: Implement this in a more generic way using a smarter `copyto!`,
+# which is ultimately what `Array{T,N}(::AbstractArray{<:Any,N})` calls.
+# These are defined for now to avoid scalar indexing issues when there
+# are blocks on GPU.
+function Base.Array{T,N}(a::BlockSparseArrayLike{<:Any,N}) where {T,N}
+  # First make it dense, then move to CPU.
+  # Directly copying to CPU causes some issues with
+  # scalar indexing on GPU which we have to investigate.
+  a_dest = similartype(blocktype(a), T)(undef, size(a))
+  a_dest .= a
+  return Array{T,N}(a_dest)
+end
+function Base.Array{T}(a::BlockSparseArrayLike) where {T}
+  return Array{T,ndims(a)}(a)
+end
+function Base.Array(a::BlockSparseArrayLike)
+  return Array{eltype(a)}(a)
 end

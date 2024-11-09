@@ -22,9 +22,14 @@ function blockstype(arraytype::Type{<:AbstractBlockSparseArray{T,N}}) where {T,N
   return SparseArrayDOK{AbstractArray{T,N},N}
 end
 
-## # Specialized in order to fix ambiguity error with `BlockArrays`.
+# Specialized in order to fix ambiguity error with `BlockArrays`.
 function Base.getindex(a::AbstractBlockSparseArray{<:Any,N}, I::Vararg{Int,N}) where {N}
   return blocksparse_getindex(a, I...)
+end
+
+# Specialized in order to fix ambiguity error with `BlockArrays`.
+function Base.getindex(a::AbstractBlockSparseArray{<:Any,0})
+  return blocksparse_getindex(a)
 end
 
 ## # Fix ambiguity error with `BlockArrays`.
@@ -48,6 +53,12 @@ function Base.setindex!(
   a::AbstractBlockSparseArray{<:Any,N}, value, I::Vararg{Int,N}
 ) where {N}
   blocksparse_setindex!(a, value, I...)
+  return a
+end
+
+# Fix ambiguity error.
+function Base.setindex!(a::AbstractBlockSparseArray{<:Any,0}, value)
+  blocksparse_setindex!(a, value)
   return a
 end
 

@@ -82,6 +82,11 @@ function sparse_getindex(a::AbstractArray, I::Vararg{Int})
   return sparse_getindex(a, CartesianIndex(I))
 end
 
+# Fix ambiguity error.
+function sparse_getindex(a::AbstractArray{<:Any,0})
+  return sparse_getindex(a, CartesianIndex())
+end
+
 # Linear indexing
 function sparse_getindex(a::AbstractArray, I::CartesianIndex{1})
   return sparse_getindex(a, CartesianIndices(a)[I])

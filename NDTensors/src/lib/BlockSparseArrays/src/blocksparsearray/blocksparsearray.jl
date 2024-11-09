@@ -72,6 +72,10 @@ function BlockSparseArray{T,N}(axes::Tuple{Vararg{AbstractUnitRange,N}}) where {
   return BlockSparseArray{T,N,default_arraytype(T, axes)}(axes)
 end
 
+function BlockSparseArray{T,0}(axes::Tuple{}) where {T}
+  return BlockSparseArray{T,0,default_arraytype(T, axes)}(axes)
+end
+
 function BlockSparseArray{T,N}(dims::Tuple{Vararg{Vector{Int},N}}) where {T,N}
   return BlockSparseArray{T,N}(blockedrange.(dims))
 end
@@ -84,12 +88,20 @@ function BlockSparseArray{T}(axes::Tuple{Vararg{AbstractUnitRange}}) where {T}
   return BlockSparseArray{T,length(axes)}(axes)
 end
 
+function BlockSparseArray{T}(axes::Tuple{}) where {T}
+  return BlockSparseArray{T,length(axes)}(axes)
+end
+
 function BlockSparseArray{T}(dims::Vararg{Vector{Int}}) where {T}
   return BlockSparseArray{T}(dims)
 end
 
 function BlockSparseArray{T}(axes::Vararg{AbstractUnitRange}) where {T}
   return BlockSparseArray{T}(axes)
+end
+
+function BlockSparseArray{T}() where {T}
+  return BlockSparseArray{T}(())
 end
 
 function BlockSparseArray{T,N,A}(
