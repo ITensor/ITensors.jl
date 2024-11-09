@@ -273,3 +273,22 @@ function Base.similar(
 )
   return blocksparse_similar(a, elt, axes)
 end
+
+# TODO: Implement this in a more generic way using a smarter `copyto!`,
+# which is ultimately what `Array{T,N}(::AbstractArray{<:Any,N})` calls.
+# These are defined for now to avoid scalar indexing issues when there
+# are blocks on GPU.
+function Base.Array{T,N}(a::BlockSparseArrayLike{<:Any,N}) where {T,N}
+  # First make it dense, then move to CPU.
+  # Directly copying to CPU causes some issues with
+  # scalar indexing on GPU which we have to investigate.
+  a_dest = similartype(blocktype(a), T)(undef, size(a))
+  a_dest .= a
+  return Array{T,N}(a_dest)
+end
+function Base.Array{T}(a::BlockSparseArrayLike) where {T}
+  return Array{T,ndims(a)}(a)
+end
+function Base.Array(a::BlockSparseArrayLike)
+  return Array{eltype(a)}(a)
+end

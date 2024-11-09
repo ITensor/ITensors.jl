@@ -297,6 +297,15 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test block_nstored(b) == 2
     @test nstored(b) == 2 * 4 + 3 * 3
 
+    a = dev(BlockSparseArray{elt}([1, 1, 1], [1, 2, 3], [2, 2, 1], [1, 2, 1]))
+    a[Block(3, 2, 2, 3)] = dev(randn(1, 2, 2, 1))
+    perm = (2, 3, 4, 1)
+    for b in (PermutedDimsArray(a, perm), permutedims(a, perm))
+      @test Array(b) == permutedims(Array(a), perm)
+      @test issetequal(block_stored_indices(b), [Block(2, 2, 3, 3)])
+      @test @allowscalar b[Block(2, 2, 3, 3)] == permutedims(a[Block(3, 2, 2, 3)], perm)
+    end
+
     a = BlockSparseArray{elt}(undef, ([2, 3], [3, 4]))
     @views for b in [Block(1, 2), Block(2, 1)]
       a[b] = randn(elt, size(a[b]))
