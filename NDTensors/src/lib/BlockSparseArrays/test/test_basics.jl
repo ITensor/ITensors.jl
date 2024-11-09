@@ -298,7 +298,7 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test nstored(b) == 2 * 4 + 3 * 3
 
     a = dev(BlockSparseArray{elt}([1, 1, 1], [1, 2, 3], [2, 2, 1], [1, 2, 1]))
-    a[Block(3, 2, 2, 3)] = dev(randn(1, 2, 2, 1))
+    a[Block(3, 2, 2, 3)] = dev(randn(elt, 1, 2, 2, 1))
     perm = (2, 3, 4, 1)
     for b in (PermutedDimsArray(a, perm), permutedims(a, perm))
       @test Array(b) == permutedims(Array(a), perm)
