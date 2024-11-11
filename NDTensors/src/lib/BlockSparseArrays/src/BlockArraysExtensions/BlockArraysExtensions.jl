@@ -598,7 +598,7 @@ using BlockArrays: BlockedMatrix
 # svd first calls `eigencopy_oftype` to create something that can be in-place SVD'd
 # Here, we hijack this system to determine if there is any structure we can exploit
 # default: SVD is most efficient with BlockedArray
-function LinearAlgebra.eigencopy_oftype(A::AbstractBlockArray, S)
+function eigencopy_oftype(A::AbstractBlockArray, S)
   return BlockedMatrix{S}(A)
 end
 

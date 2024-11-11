@@ -42,7 +42,7 @@ end
 # TODO: block_stored_indices(BlockDiagonal) yields all indices
 
 # SVD implementation
-function LinearAlgebra.eigencopy_oftype(A::BlockDiagonal, S)
+function eigencopy_oftype(A::BlockDiagonal, S)
   diag = map(Base.Fix2(eigencopy_oftype, S), A.blocks.diag)
   return BlockDiagonal(diag)
 end

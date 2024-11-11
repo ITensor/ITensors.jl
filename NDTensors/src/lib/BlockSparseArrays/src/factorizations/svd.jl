@@ -1,6 +1,5 @@
 using LinearAlgebra:
   LinearAlgebra, Factorization, Algorithm, default_svd_alg, Adjoint, Transpose
-using LinearAlgebra: eigencopy_oftype
 using BlockArrays: AbstractBlockMatrix, BlockedArray, BlockedMatrix, BlockedVector
 using BlockArrays: BlockLayout
 
@@ -202,3 +201,6 @@ svd(A; kwargs...) =
   SVD(svd!(eigencopy_oftype(A, LinearAlgebra.eigtype(eltype(A))); kwargs...))
 
 LinearAlgebra.svdvals(usv::SVD{<:Any,T}) where {T} = (usv.S)::Vector{T}
+
+# Added here to avoid type-piracy
+eigencopy_oftype(A, S) = LinearAlgebra.eigencopy_oftype(A, S)
