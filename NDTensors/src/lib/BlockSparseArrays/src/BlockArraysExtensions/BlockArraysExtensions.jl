@@ -42,6 +42,10 @@ struct NonBlockedArray{T,N,Array<:AbstractArray{T,N}} <: AbstractArray{T,N}
 end
 Base.size(a::NonBlockedArray) = size(a.array)
 Base.getindex(a::NonBlockedArray{<:Any,N}, I::Vararg{Integer,N}) where {N} = a.array[I...]
+# Views of `NonBlockedArray`/`NonBlockedVector` are eager.
+# This fixes an issue in Julia 1.11 where reindexing defaults to using views.
+# TODO: Maybe reconsider this design, and allows views to work in slicing.
+Base.view(a::NonBlockedArray, I...) = a[I...]
 BlockArrays.blocks(a::NonBlockedArray) = SingleBlockView(a.array)
 const NonBlockedVector{T,Array} = NonBlockedArray{T,1,Array}
 NonBlockedVector(array::AbstractVector) = NonBlockedArray(array)
@@ -81,6 +85,9 @@ function Base.getindex(
 )
   return i
 end
+# Views of `BlockIndices` are eager.
+# This fixes an issue in Julia 1.11 where reindexing defaults to using views.
+Base.view(S::BlockIndices, i) = S[i]
 
 # Used in indexing such as:
 # ```julia
