@@ -590,14 +590,6 @@ macro view!(expr)
   return :(view!($(esc(array)), $(esc.(indices)...)))
 end
 
-# Adjoint simplifications
-# -----------------------
-using LinearAlgebra: LinearAlgebra, Adjoint
-
-function Base.adjoint(A::BlockArrays.BlockMatrix)
-  return BlockArrays._BlockArray(adjoint(A.blocks), reverse(A.axes))
-end
-
 # SVD additions
 # -------------
 using LinearAlgebra: Algorithm
@@ -622,4 +614,3 @@ function svd!(A::BlockedMatrix; full::Bool=false, alg::Algorithm=default_svd_alg
   vt = BlockedArray(F.Vt, (bax2, bax3))
   return SVD(u, s, vt)
 end
-
