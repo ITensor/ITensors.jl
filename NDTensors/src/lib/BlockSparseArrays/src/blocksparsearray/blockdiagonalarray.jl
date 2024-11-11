@@ -13,15 +13,13 @@ end
 
 # Cast to block-diagonal implementation if permuted-blockdiagonal
 function try_to_blockdiagonal_perm(A)
-  keys = map(Base.Fix2(getproperty, :n), collect(block_stored_indices(A)))
-  I = first.(keys)
+  inds = map(x -> Int.(Tuple(x)), vec(collect(block_stored_indices(A))))
+  I = first.(inds)
   allunique(I) || return nothing
-
-  J = last.(keys)
+  J = last.(inds)
   p = sortperm(J)
   Jsorted = J[p]
   allunique(Jsorted) || return nothing
-
   return I[p], Jsorted
 end
 
@@ -35,11 +33,9 @@ function try_to_blockdiagonal(A::AbstractBlockSparseMatrix)
   perm = try_to_blockdiagonal_perm(A)
   isnothing(perm) && return perm
   I, J = perm
-  diagblocks = blocks(A)[tuple.(invperm(I), J)]
+  diagblocks = blocks(A)[CartesianIndex.(invperm(I), J)]
   return BlockDiagonal(diagblocks), perm
 end
-
-# TODO: block_stored_indices(BlockDiagonal) yields all indices
 
 # SVD implementation
 function eigencopy_oftype(A::BlockDiagonal, S)
