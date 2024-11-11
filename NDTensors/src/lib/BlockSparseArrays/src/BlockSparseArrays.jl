@@ -2,6 +2,7 @@ module BlockSparseArrays
 
 # factorizations
 include("factorizations/svd.jl")
+include("factorizations/tsvd.jl")
 
 # possible upstream contributions
 include("BlockArraysExtensions/BlockArraysExtensions.jl")
