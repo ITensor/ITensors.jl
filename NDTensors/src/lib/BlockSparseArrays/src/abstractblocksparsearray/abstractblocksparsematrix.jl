@@ -7,7 +7,7 @@ function svd(
   A::AbstractBlockSparseMatrix; full::Bool=false, alg::Algorithm=default_svd_alg(A)
 )
   T = LinearAlgebra.eigtype(eltype(A))
-  A′ = try_make_blockdiagonal(A)
+  A′ = try_to_blockdiagonal(A)
 
   if isnothing(A′)
     # not block-diagonal, fall back to dense case

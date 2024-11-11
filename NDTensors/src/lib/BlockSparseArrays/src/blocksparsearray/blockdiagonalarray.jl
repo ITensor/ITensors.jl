@@ -12,8 +12,8 @@ function BlockDiagonal(blocks::AbstractVector{<:AbstractMatrix})
 end
 
 # Cast to block-diagonal implementation if permuted-blockdiagonal
-function find_permute_blockdiagonal(A)
-  @show keys = map(Base.Fix2(getproperty, :n), collect(block_stored_indices(A)))
+function try_to_blockdiagonal_perm(A)
+  keys = map(Base.Fix2(getproperty, :n), collect(block_stored_indices(A)))
   I = first.(keys)
   allunique(I) || return nothing
 
@@ -26,13 +26,13 @@ function find_permute_blockdiagonal(A)
 end
 
 """
-    try_make_blockdiagonal(A)
+    try_to_blockdiagonal(A)
 
 Attempt to find a permutation of blocks that makes `A` blockdiagonal. If unsuccesful,
 returns nothing, otherwise returns both the blockdiagonal `B` as well as the permutation `I, J`.
 """
-function try_make_blockdiagonal(A::AbstractBlockSparseMatrix)
-  perm = find_permute_blockdiagonal(A)
+function try_to_blockdiagonal(A::AbstractBlockSparseMatrix)
+  perm = try_to_blockdiagonal_perm(A)
   isnothing(perm) && return perm
   I, J = perm
   diagblocks = blocks(A)[tuple.(invperm(I), J)]
