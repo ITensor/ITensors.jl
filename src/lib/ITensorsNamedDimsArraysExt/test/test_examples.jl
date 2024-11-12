@@ -1,5 +1,17 @@
+@eval module $(gensym())
+using ITensors: ITensors
+using Suppressor: @suppress
 using Test: @testset
-
 @testset "examples" begin
-  include("../examples/example_readme.jl")
+  @suppress include(
+    joinpath(
+      pkgdir(ITensors),
+      "src",
+      "lib",
+      "ITensorsNamedDimsArraysExt",
+      "examples",
+      "example_readme.jl",
+    ),
+  )
+end
 end

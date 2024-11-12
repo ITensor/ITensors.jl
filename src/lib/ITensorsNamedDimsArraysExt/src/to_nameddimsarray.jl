@@ -63,6 +63,10 @@ using ITensors: QN
 using ..NDTensors.GradedAxes: GradedAxes
 GradedAxes.fuse_labels(l1::QN, l2::QN) = l1 + l2
 
+using ITensors: QN
+using ..NDTensors.SymmetrySectors: SymmetrySectors
+SymmetrySectors.dual(l::QN) = -l
+
 ## TODO: Add this back, define `CombinerArrays` library in NDTensors!
 ## using ..NDTensors: CombinerTensor, CombinerArray, storage
 ## # TODO: Delete when we directly use `CombinerArray` as storage.
