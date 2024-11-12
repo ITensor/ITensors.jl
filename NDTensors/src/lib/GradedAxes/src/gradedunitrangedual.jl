@@ -94,6 +94,21 @@ function blockedunitrange_getindices(
   return flip_blockvector(v)
 end
 
+# Fixes ambiguity error.
+# TODO: Write this in terms of `blockedunitrange_getindices(dual(a), indices)`.
+function blockedunitrange_getindices(
+  a::GradedUnitRangeDual, indices::AbstractBlockVector{<:Block{1}}
+)
+  blks = map(bs -> mortar(map(b -> a[b], bs)), blocks(indices))
+  # We pass `length.(blks)` to `mortar` in order
+  # to pass block labels to the axes of the output,
+  # if they exist. This makes it so that
+  # `only(axes(a[indices])) isa `GradedUnitRange`
+  # if `a isa `GradedUnitRange`, for example.
+  v = mortar(blks, labelled_length.(blks))
+  return flip_blockvector(v)
+end
+
 function flip_blockvector(v::BlockVector)
   block_axes = flip.(axes(v))
   flipped = mortar(vec.(blocks(v)), block_axes)
