@@ -184,7 +184,7 @@ reverse_index(index::CartesianIndex) = CartesianIndex(reverse(Tuple(index)))
 
 # Represents the array of arrays of a `Transpose`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Transpose`.
-struct SparseTransposeBlocks{T,BlockType<:AbstractMatrix{T},Array<:Transpose{T}} <:
+struct SparseTransposeBlocks{T,BlockType<:AbstractArray{T},Array<:Transpose{T}} <:
        AbstractSparseMatrix{BlockType}
   array::Array
 end
@@ -219,7 +219,7 @@ end
 
 # Represents the array of arrays of a `Adjoint`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Adjoint`.
-struct SparseAdjointBlocks{T,BlockType<:AbstractMatrix{T},Array<:Adjoint{T}} <:
+struct SparseAdjointBlocks{T,BlockType<:AbstractArray{T},Array<:Adjoint{T}} <:
        AbstractSparseMatrix{BlockType}
   array::Array
 end

@@ -16,7 +16,7 @@ using BlockArrays:
   mortar
 using Compat: @compat
 using GPUArraysCore: @allowscalar
-using LinearAlgebra: Adjoint, mul!, norm
+using LinearAlgebra: Adjoint, dot, mul!, norm
 using NDTensors.BlockSparseArrays:
   @view!,
   BlockSparseArray,
@@ -575,7 +575,11 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       a[b] = randn(elt, size(a[b]))
     end
     @test isassigned(a, 1, 1)
+    @test isassigned(a, 1, 1, 1)
+    @test !isassigned(a, 1, 1, 2)
     @test isassigned(a, 5, 7)
+    @test isassigned(a, 5, 7, 1)
+    @test !isassigned(a, 5, 7, 2)
     @test !isassigned(a, 0, 1)
     @test !isassigned(a, 5, 8)
     @test isassigned(a, Block(1), Block(1))
@@ -851,6 +855,16 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       a_dest = a1′ * a2′
       @allowscalar @test Array(a_dest) ≈ Array(a1′) * Array(a2′)
     end
+  end
+  @testset "Dot product" begin
+    a1 = dev(BlockSparseArray{elt}([2, 3, 4]))
+    a1[Block(1)] = dev(randn(elt, size(@view(a1[Block(1)]))))
+    a1[Block(3)] = dev(randn(elt, size(@view(a1[Block(3)]))))
+    a2 = dev(BlockSparseArray{elt}([2, 3, 4]))
+    a2[Block(2)] = dev(randn(elt, size(@view(a1[Block(2)]))))
+    a2[Block(3)] = dev(randn(elt, size(@view(a1[Block(3)]))))
+    @test a1' * a2 ≈ Array(a1)' * Array(a2)
+    @test dot(a1, a2) ≈ a1' * a2
   end
   @testset "TensorAlgebra" begin
     a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
