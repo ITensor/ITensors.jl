@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using LinearAlgebra: mul!, norm
+using LinearAlgebra: dot, mul!, norm
 using NDTensors.SparseArrayInterface: SparseArrayInterface
 include("SparseArrayInterfaceTestUtils/SparseArrayInterfaceTestUtils.jl")
 using .SparseArrayInterfaceTestUtils.AbstractSparseArrays: AbstractSparseArrays
@@ -298,6 +298,18 @@ using Test: @test, @testset
   @test Array(a_dest) ≈ Array(a1) * Array(a2)
   @test a_dest isa SparseArray{elt}
   @test SparseArrayInterface.nstored(a_dest) == 2
+
+  # Dot product
+  a1 = SparseArray{elt}(4)
+  a1[1] = randn()
+  a1[3] = randn()
+  a2 = SparseArray{elt}(4)
+  a2[2] = randn()
+  a2[3] = randn()
+  a_dest = a1' * a2
+  @test a_dest isa elt
+  @test a_dest ≈ Array(a1)' * Array(a2)
+  @test a_dest ≈ dot(a1, a2)
 
   # In-place matrix multiplication
   a1 = SparseArray{elt}(2, 3)

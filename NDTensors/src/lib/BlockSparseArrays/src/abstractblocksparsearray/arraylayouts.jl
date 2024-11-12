@@ -8,11 +8,14 @@ function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
   inner_layout = typeof(MemoryLayout(blocktype(arraytype)))
   return BlockLayout{outer_layout,inner_layout}()
 end
+
+# TODO: Generalize to `BlockSparseVectorLike`/`AnyBlockSparseVector`.
 function ArrayLayouts.MemoryLayout(
   arraytype::Type{<:Adjoint{<:Any,<:AbstractBlockSparseVector}}
 )
   return DualLayout{typeof(MemoryLayout(parenttype(arraytype)))}()
 end
+# TODO: Generalize to `BlockSparseVectorLike`/`AnyBlockSparseVector`.
 function ArrayLayouts.MemoryLayout(
   arraytype::Type{<:Transpose{<:Any,<:AbstractBlockSparseVector}}
 )

@@ -1,7 +1,20 @@
-using ArrayLayouts: ArrayLayouts, Dot, MatMulMatAdd, MatMulVecAdd, MulAdd
+using ArrayLayouts: ArrayLayouts, Dot, DualLayout, MatMulMatAdd, MatMulVecAdd, MulAdd
+using LinearAlgebra: Adjoint, Transpose
+using ..TypeParameterAccessors: parenttype
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:SparseArrayLike})
   return SparseLayout()
+end
+
+# TODO: Generalize to `SparseVectorLike`/`AnySparseVector`.
+function ArrayLayouts.MemoryLayout(arraytype::Type{<:Adjoint{<:Any,<:AbstractSparseVector}})
+  return DualLayout{typeof(MemoryLayout(parenttype(arraytype)))}()
+end
+# TODO: Generalize to `SparseVectorLike`/`AnySparseVector`.
+function ArrayLayouts.MemoryLayout(
+  arraytype::Type{<:Transpose{<:Any,<:AbstractSparseVector}}
+)
+  return DualLayout{typeof(MemoryLayout(parenttype(arraytype)))}()
 end
 
 function sparse_matmul!(m::MulAdd)

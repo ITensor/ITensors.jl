@@ -32,6 +32,10 @@ function LinearAlgebra.mul!(
   return a_dest
 end
 
+function LinearAlgebra.dot(a1::SparseArray, a2::SparseArray)
+  return SparseArrayInterface.sparse_dot(a1, a2)
+end
+
 # AbstractArray interface
 Base.size(a::SparseArray) = a.dims
 function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})

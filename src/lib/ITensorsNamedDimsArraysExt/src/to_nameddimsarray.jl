@@ -34,17 +34,19 @@ function to_nameddimsarray(x::DiagTensor)
   return named(DiagonalArray(data(x), size(x)), name.(inds(x)))
 end
 
-using ..NDTensors: BlockSparseTensor
+using ..NDTensors.BlockSparseArrays.BlockArrays: BlockArrays, blockedrange
+using ..NDTensors: BlockSparseTensor, array, blockdim, datatype, nblocks, nzblocks
 using ..NDTensors.BlockSparseArrays: BlockSparseArray
+using ..NDTensors.TypeParameterAccessors: set_ndims
 # TODO: Delete once `BlockSparse` is removed.
 function to_nameddimsarray(x::BlockSparseTensor)
-  blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], inds(x))
+  blockinds = map(i -> blockedrange([blockdim(i, b) for b in 1:nblocks(i)]), inds(x))
   blocktype = set_ndims(datatype(x), ndims(x))
   # TODO: Make a simpler constructor:
   # BlockSparseArray(blocktype, blockinds)
-  arraystorage = BlockSparseArray{eltype(x),ndims(x),blocktype}(blockinds)
+  arraystorage = BlockSparseArray{eltype(x),ndims(x),blocktype}(undef, blockinds)
   for b in nzblocks(x)
-    arraystorage[BlockArrays.Block(Tuple(b)...)] = x[b]
+    arraystorage[BlockArrays.Block(Int.(Tuple(b))...)] = array(x[b])
   end
   return named(arraystorage, name.(inds(x)))
 end
