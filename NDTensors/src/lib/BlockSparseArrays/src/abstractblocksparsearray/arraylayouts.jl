@@ -1,12 +1,22 @@
-using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
+using ArrayLayouts: ArrayLayouts, DualLayout, MemoryLayout, MulAdd
 using BlockArrays: BlockLayout
 using ..SparseArrayInterface: SparseLayout
-using ..TypeParameterAccessors: similartype
+using ..TypeParameterAccessors: parenttype, similartype
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:BlockSparseArrayLike})
   outer_layout = typeof(MemoryLayout(blockstype(arraytype)))
   inner_layout = typeof(MemoryLayout(blocktype(arraytype)))
   return BlockLayout{outer_layout,inner_layout}()
+end
+function ArrayLayouts.MemoryLayout(
+  arraytype::Type{<:Adjoint{<:Any,<:AbstractBlockSparseVector}}
+)
+  return DualLayout{typeof(MemoryLayout(parenttype(arraytype)))}()
+end
+function ArrayLayouts.MemoryLayout(
+  arraytype::Type{<:Transpose{<:Any,<:AbstractBlockSparseVector}}
+)
+  return DualLayout{typeof(MemoryLayout(parenttype(arraytype)))}()
 end
 
 function Base.similar(

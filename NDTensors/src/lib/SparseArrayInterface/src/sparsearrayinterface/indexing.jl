@@ -166,7 +166,10 @@ end
 function sparse_isassigned(a::AbstractArray{<:Any,N}, I::CartesianIndex{N}) where {N}
   return sparse_isassigned(a, Tuple(I)...)
 end
-function sparse_isassigned(a::AbstractArray{<:Any,N}, I::Vararg{Integer,N}) where {N}
+function sparse_isassigned(a::AbstractArray, I::Integer...)
+  # Check trailing dimensions are one. This is needed in generic
+  # AbstractArray show when `a isa AbstractVector`.
+  all(d -> isone(I[d]), (ndims(a) + 1):length(I)) || return false
   return all(dim -> I[dim] ∈ axes(a, dim), 1:ndims(a))
 end
 

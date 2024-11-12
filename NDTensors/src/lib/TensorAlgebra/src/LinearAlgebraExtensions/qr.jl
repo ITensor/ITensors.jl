@@ -1,3 +1,4 @@
+using ArrayLayouts: LayoutMatrix
 using LinearAlgebra: LinearAlgebra, qr
 using ..TensorAlgebra:
   TensorAlgebra,
@@ -8,6 +9,8 @@ using ..TensorAlgebra:
   fusedims,
   splitdims
 
+# TODO: Define as `tensor_qr`.
+# TODO: This look generic but doesn't work for `BlockSparseArrays`.
 function _qr(a::AbstractArray, biperm::BlockedPermutation{2})
   a_matricized = fusedims(a, biperm)
 
@@ -38,6 +41,12 @@ function LinearAlgebra.qr(a::AbstractMatrix, biperm::BlockedPermutation{2})
   return _qr(a, biperm)
 end
 
+# Fix ambiguity error with `ArrayLayouts`.
+function LinearAlgebra.qr(a::LayoutMatrix, biperm::BlockedPermutation{2})
+  return _qr(a, biperm)
+end
+
+# TODO: Define in terms of an inner function `_qr` or `tensor_qr`.
 function LinearAlgebra.qr(
   a::AbstractArray, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
 )
@@ -47,6 +56,13 @@ end
 # Fix ambiguity error with `LinearAlgebra`.
 function LinearAlgebra.qr(
   a::AbstractMatrix, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
+)
+  return qr(a, blockedperm_indexin(labels_a, labels_q, labels_r))
+end
+
+# Fix ambiguity error with `ArrayLayouts`.
+function LinearAlgebra.qr(
+  a::LayoutMatrix, labels_a::Tuple, labels_q::Tuple, labels_r::Tuple
 )
   return qr(a, blockedperm_indexin(labels_a, labels_q, labels_r))
 end

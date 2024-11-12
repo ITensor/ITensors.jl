@@ -158,6 +158,13 @@ function Base.similar(
   return similar(arraytype, eltype(arraytype), axes)
 end
 
+# Fixes ambiguity error.
+function Base.similar(
+  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
+)
+  return similar(arraytype, eltype(arraytype), axes)
+end
+
 # Needed by `BlockArrays` matrix multiplication interface
 # TODO: This fixes an ambiguity error with `OffsetArrays.jl`, but
 # is only appears to be needed in older versions of Julia like v1.6.
@@ -221,7 +228,7 @@ function Base.similar(
 end
 
 # Fixes ambiguity error.
-function Base.similar(a::BlockSparseArrayLike{<:Any,0}, elt::Type, axes::Tuple{})
+function Base.similar(a::BlockSparseArrayLike, elt::Type, axes::Tuple{})
   return blocksparse_similar(a, elt, axes)
 end
 
