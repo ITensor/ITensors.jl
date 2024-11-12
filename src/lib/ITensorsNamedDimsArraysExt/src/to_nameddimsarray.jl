@@ -1,5 +1,5 @@
-using ..NDTensors: data, inds
 using ITensors: ITensor
+using ..NDTensors: data, inds
 
 # TODO: Delete this, it is a hack to decide
 # if an Index is blocked.
@@ -34,20 +34,38 @@ function to_nameddimsarray(x::DiagTensor)
   return named(DiagonalArray(data(x), size(x)), name.(inds(x)))
 end
 
-using ..NDTensors: BlockSparseTensor
+using ITensors: ITensors, dir, qn
+using ..NDTensors: BlockSparseTensor, array, blockdim, datatype, nblocks, nzblocks
 using ..NDTensors.BlockSparseArrays: BlockSparseArray
+using ..NDTensors.BlockSparseArrays.BlockArrays: BlockArrays, blockedrange
+using ..NDTensors.GradedAxes: dual, gradedrange
+using ..NDTensors.TypeParameterAccessors: set_ndims
 # TODO: Delete once `BlockSparse` is removed.
 function to_nameddimsarray(x::BlockSparseTensor)
-  blockinds = map(i -> [blockdim(i, b) for b in 1:nblocks(i)], inds(x))
+  blockinds = map(inds(x)) do i
+    r = gradedrange([qn(i, b) => blockdim(i, b) for b in 1:nblocks(i)])
+    if dir(i) == ITensors.In
+      return dual(r)
+    end
+    return r
+  end
   blocktype = set_ndims(datatype(x), ndims(x))
   # TODO: Make a simpler constructor:
   # BlockSparseArray(blocktype, blockinds)
-  arraystorage = BlockSparseArray{eltype(x),ndims(x),blocktype}(blockinds)
+  arraystorage = BlockSparseArray{eltype(x),ndims(x),blocktype}(undef, blockinds)
   for b in nzblocks(x)
-    arraystorage[BlockArrays.Block(Tuple(b)...)] = x[b]
+    arraystorage[BlockArrays.Block(Int.(Tuple(b))...)] = array(x[b])
   end
   return named(arraystorage, name.(inds(x)))
 end
+
+using ITensors: QN
+using ..NDTensors.GradedAxes: GradedAxes
+GradedAxes.fuse_labels(l1::QN, l2::QN) = l1 + l2
+
+using ITensors: QN
+using ..NDTensors.SymmetrySectors: SymmetrySectors
+SymmetrySectors.dual(l::QN) = -l
 
 ## TODO: Add this back, define `CombinerArrays` library in NDTensors!
 ## using ..NDTensors: CombinerTensor, CombinerArray, storage

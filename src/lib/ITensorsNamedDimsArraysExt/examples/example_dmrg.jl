@@ -1,6 +1,5 @@
 using Adapt: adapt
-using ITensors: MPO, dmrg, random_mps, siteinds
-using ITensors.Ops: OpSum
+using ITensorMPS: MPO, OpSum, dmrg, random_mps, siteinds
 using ITensors.ITensorsNamedDimsArraysExt: to_nameddimsarray
 
 function main(; n, conserve_qns=false, nsweeps=3, cutoff=1e-4, arraytype=Array)
