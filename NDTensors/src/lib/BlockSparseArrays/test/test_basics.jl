@@ -866,6 +866,33 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test a1' * a2 ≈ Array(a1)' * Array(a2)
     @test dot(a1, a2) ≈ a1' * a2
   end
+  @testset "cat" begin
+    a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a1[Block(2, 1)] = dev(randn(elt, size(@view(a1[Block(2, 1)]))))
+    a2 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
+    a2[Block(1, 2)] = dev(randn(elt, size(@view(a2[Block(1, 2)]))))
+
+    a_dest = cat(a1, a2; dims=1)
+    @test block_nstored(a_dest) == 2
+    @test blocklengths.(axes(a_dest)) == ([2, 3, 2, 3], [2, 3])
+    @test issetequal(block_stored_indices(a_dest), [Block(2, 1), Block(3, 2)])
+    @test a_dest[Block(2, 1)] == a1[Block(2, 1)]
+    @test a_dest[Block(3, 2)] == a2[Block(1, 2)]
+
+    a_dest = cat(a1, a2; dims=2)
+    @test block_nstored(a_dest) == 2
+    @test blocklengths.(axes(a_dest)) == ([2, 3], [2, 3, 2, 3])
+    @test issetequal(block_stored_indices(a_dest), [Block(2, 1), Block(1, 4)])
+    @test a_dest[Block(2, 1)] == a1[Block(2, 1)]
+    @test a_dest[Block(1, 4)] == a2[Block(1, 2)]
+
+    a_dest = cat(a1, a2; dims=(1, 2))
+    @test block_nstored(a_dest) == 2
+    @test blocklengths.(axes(a_dest)) == ([2, 3, 2, 3], [2, 3, 2, 3])
+    @test issetequal(block_stored_indices(a_dest), [Block(2, 1), Block(3, 4)])
+    @test a_dest[Block(2, 1)] == a1[Block(2, 1)]
+    @test a_dest[Block(3, 4)] == a2[Block(1, 2)]
+  end
   @testset "TensorAlgebra" begin
     a1 = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
     a1[Block(1, 1)] = dev(randn(elt, size(@view(a1[Block(1, 1)]))))

@@ -342,6 +342,38 @@ using Test: @test, @testset
   @test a_dest isa SparseArray{elt}
   @test SparseArrayInterface.nstored(a_dest) == 2
 
+  # cat
+  a1 = SparseArray{elt}(2, 3)
+  a1[1, 2] = 12
+  a1[2, 1] = 21
+  a2 = SparseArray{elt}(2, 3)
+  a2[1, 1] = 11
+  a2[2, 2] = 22
+
+  a_dest = cat(a1, a2; dims=1)
+  @test size(a_dest) == (4, 3)
+  @test SparseArrayInterface.nstored(a_dest) == 4
+  @test a_dest[1, 2] == a1[1, 2]
+  @test a_dest[2, 1] == a1[2, 1]
+  @test a_dest[3, 1] == a2[1, 1]
+  @test a_dest[4, 2] == a2[2, 2]
+
+  a_dest = cat(a1, a2; dims=2)
+  @test size(a_dest) == (2, 6)
+  @test SparseArrayInterface.nstored(a_dest) == 4
+  @test a_dest[1, 2] == a1[1, 2]
+  @test a_dest[2, 1] == a1[2, 1]
+  @test a_dest[1, 4] == a2[1, 1]
+  @test a_dest[2, 5] == a2[2, 2]
+
+  a_dest = cat(a1, a2; dims=(1, 2))
+  @test size(a_dest) == (4, 6)
+  @test SparseArrayInterface.nstored(a_dest) == 4
+  @test a_dest[1, 2] == a1[1, 2]
+  @test a_dest[2, 1] == a1[2, 1]
+  @test a_dest[3, 4] == a2[1, 1]
+  @test a_dest[4, 5] == a2[2, 2]
+
   ## # Sparse matrix of matrix multiplication
   ## TODO: Make this work, seems to require
   ## a custom zero constructor.
