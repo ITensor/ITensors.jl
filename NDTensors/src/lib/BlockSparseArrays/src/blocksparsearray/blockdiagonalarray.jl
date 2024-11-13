@@ -20,7 +20,7 @@ function try_to_blockdiagonal_perm(A)
   p = sortperm(J)
   Jsorted = J[p]
   allunique(Jsorted) || return nothing
-  return I[p], Jsorted
+  return Block.(I[p], Jsorted)
 end
 
 """
@@ -32,8 +32,11 @@ returns nothing, otherwise returns both the blockdiagonal `B` as well as the per
 function try_to_blockdiagonal(A::AbstractBlockSparseMatrix)
   perm = try_to_blockdiagonal_perm(A)
   isnothing(perm) && return perm
-  I, J = perm
-  diagblocks = blocks(A)[CartesianIndex.(invperm(I), J)]
+  I = first.(Tuple.(perm))
+  J = last.(Tuple.(perm))
+  diagblocks = map(invperm(I), J) do i, j
+    return A[Block(i, j)]
+  end
   return BlockDiagonal(diagblocks), perm
 end
 
