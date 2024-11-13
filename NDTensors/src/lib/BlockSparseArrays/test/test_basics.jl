@@ -70,12 +70,6 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test adjoint(a) isa Adjoint{elt,<:BlockSparseArray}
     @test_broken adjoint(a)[Block(1), :] isa Adjoint{elt,<:BlockSparseArray}
     # could also be directly a BlockSparseArray
-
-    a = dev(BlockSparseArray{elt}([1], [1, 1]))
-    @allowscalar a[1, 2] = 1
-    @test [a[Block(Tuple(it))] for it in eachindex(block_stored_indices(a))] isa Vector
-    ah = adjoint(a)
-    @test_broken [ah[Block(Tuple(it))] for it in eachindex(block_stored_indices(ah))] isa Vector
   end
   @testset "Constructors" begin
     # BlockSparseMatrix
@@ -210,6 +204,15 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
         ## @test b[Block()[]] == 2
       end
     end
+
+    # adjoint and transpose
+    a = dev(BlockSparseArray{elt}([1], [1, 1]))
+    @allowscalar a[1, 2] = 1
+    @test [@views(a[it]) for it in block_stored_indices(a)] isa Vector
+    ah = adjoint(a)
+    @test [@views(ah[it]) for it in block_stored_indices(ah)] isa Vector
+    at = transpose(a)
+    @test [@views(at[it]) for it in block_stored_indices(at)] isa Vector
   end
   @testset "Tensor algebra" begin
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
