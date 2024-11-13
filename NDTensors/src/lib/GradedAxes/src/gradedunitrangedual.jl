@@ -60,7 +60,7 @@ function blockedunitrange_getindices(
   a_indices = getindex(nondual(a), indices)
   v = mortar(dual.(blocks(a_indices)))
   # flip v to stay consistent with other cases where axes(v) are used
-  return flip_blockvector(v)
+  return flip_axes(v)
 end
 
 function blockedunitrange_getindices(
@@ -71,7 +71,7 @@ function blockedunitrange_getindices(
   # GradedOneTo appears in mortar
   # flip v axis to preserve dual information
   # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
-  return flip_blockvector(v)
+  return flip_axes(v)
 end
 
 function blockedunitrange_getindices(
@@ -91,7 +91,7 @@ function blockedunitrange_getindices(
   # GradedOneTo appears in mortar
   # flip v axis to preserve dual information
   # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)]))
-  return flip_blockvector(v)
+  return flip_axes(v)
 end
 
 # Fixes ambiguity error.
@@ -106,10 +106,10 @@ function blockedunitrange_getindices(
   # `only(axes(a[indices])) isa `GradedUnitRange`
   # if `a isa `GradedUnitRange`, for example.
   v = mortar(blks, labelled_length.(blks))
-  return flip_blockvector(v)
+  return flip_axes(v)
 end
 
-function flip_blockvector(v::BlockVector)
+function flip_axes(v::BlockVector)
   block_axes = flip.(axes(v))
   flipped = mortar(vec.(blocks(v)), block_axes)
   return flipped
