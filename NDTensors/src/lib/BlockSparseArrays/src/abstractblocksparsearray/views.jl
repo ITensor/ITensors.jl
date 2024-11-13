@@ -278,3 +278,17 @@ function BlockArrays.viewblock(
 ) where {T,N}
   return view(viewblock(a, Block.(block)...), map(b -> only(b.indices), block)...)
 end
+
+# migrate wrapper layer for viewing `adjoint` and `transpose`.
+for (f, F) in ((:adjoint, :Adjoint), (:transpose, :Transpose))
+  @eval begin
+    function Base.view(A::$F{<:Any,<:AbstractBlockSparseVector}, b::Block{1})
+      return $f(view(parent(A), b))
+    end
+
+    Base.view(A::$F{<:Any,<:AbstractBlockSparseMatrix}, b::Block{2}) = view(A, Tuple(b)...)
+    function Base.view(A::$F{<:Any,<:AbstractBlockSparseMatrix}, b1::Block{1}, b2::Block{1})
+      return $f(view(parent(A), b2, b1))
+    end
+  end
+end
