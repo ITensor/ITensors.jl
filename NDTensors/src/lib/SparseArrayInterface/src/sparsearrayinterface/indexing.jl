@@ -137,6 +137,12 @@ function sparse_setindex!(a::AbstractArray, value, I::Vararg{Int})
   return a
 end
 
+# Fix ambiguity error
+function sparse_setindex!(a::AbstractArray, value)
+  sparse_setindex!(a, value, CartesianIndex())
+  return a
+end
+
 # Linear indexing
 function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex{1})
   sparse_setindex!(a, value, CartesianIndices(a)[I])
