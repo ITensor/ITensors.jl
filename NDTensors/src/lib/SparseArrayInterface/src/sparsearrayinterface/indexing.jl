@@ -143,6 +143,17 @@ function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex{1})
   return a
 end
 
+# Slicing
+function sparse_setindex!(a::AbstractArray, value, I::AbstractUnitRange...)
+  inds = CartesianIndices(I)
+  for i in stored_indices(value)
+    if i in CartesianIndices(inds)
+      a[inds[i]] = value[i]
+    end
+  end
+  return a
+end
+
 # Handle trailing indices
 function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex)
   t = Tuple(I)
