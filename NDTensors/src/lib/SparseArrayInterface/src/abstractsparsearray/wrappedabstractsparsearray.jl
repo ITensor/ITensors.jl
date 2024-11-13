@@ -7,3 +7,13 @@ const WrappedAbstractSparseArray{T,N,A} = WrappedArray{
 const AnyAbstractSparseArray{T,N} = Union{
   <:AbstractSparseArray{T,N},<:WrappedAbstractSparseArray{T,N}
 }
+
+function stored_indices(a::Adjoint)
+  return Iterators.map(I -> CartesianIndex(reverse(I.I)), stored_indices(parent(a)))
+end
+stored_length(a::Adjoint) = stored_length(parent(a))
+
+function stored_indices(a::Transpose)
+  return Iterators.map(I -> CartesianIndex(reverse(I.I)), stored_indices(parent(a)))
+end
+stored_length(a::Transpose) = stored_length(parent(a))
