@@ -80,12 +80,12 @@ end
   a = BlockDiagonal([rand(T, i, j) for (i, j) in zip(m, n)])
   usv = svd(a)
   # TODO: `BlockDiagonal * Adjoint` errors
-  # test_svd(a, usv)
+  test_svd(a, usv)
   @test usv.U isa BlockDiagonal
   @test usv.Vt isa BlockDiagonal
   @test usv.S isa BlockVector
 
-  # usv2 = tsvd(a)
+  usv2 = tsvd(a)
   test_svd(a, usv2)
   @test usv.U isa BlockDiagonal
   @test usv.Vt isa BlockDiagonal
