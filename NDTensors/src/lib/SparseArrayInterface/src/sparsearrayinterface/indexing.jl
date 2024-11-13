@@ -144,6 +144,8 @@ function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex{1})
 end
 
 # Slicing
+# TODO: Make this handle more general slicing operations,
+# base it off of `ArrayLayouts.sub_materialize`.
 function sparse_setindex!(a::AbstractArray, value, I::AbstractUnitRange...)
   inds = CartesianIndices(I)
   for i in stored_indices(value)
