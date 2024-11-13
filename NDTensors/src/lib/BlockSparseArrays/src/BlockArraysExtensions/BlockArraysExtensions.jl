@@ -589,3 +589,28 @@ macro view!(expr)
   @capture(expr, array_[indices__])
   return :(view!($(esc(array)), $(esc.(indices)...)))
 end
+
+# SVD additions
+# -------------
+using LinearAlgebra: Algorithm
+using BlockArrays: BlockedMatrix
+
+# svd first calls `eigencopy_oftype` to create something that can be in-place SVD'd
+# Here, we hijack this system to determine if there is any structure we can exploit
+# default: SVD is most efficient with BlockedArray
+function eigencopy_oftype(A::AbstractBlockArray, S)
+  return BlockedMatrix{S}(A)
+end
+
+function svd!(A::BlockedMatrix; full::Bool=false, alg::Algorithm=default_svd_alg(A))
+  F = svd!(parent(A); full, alg)
+
+  # restore block pattern
+  m = length(F.S)
+  bax1, bax2, bax3 = axes(A, 1), blockedrange([m]), axes(A, 2)
+
+  u = BlockedArray(F.U, (bax1, bax2))
+  s = BlockedVector(F.S, (bax2,))
+  vt = BlockedArray(F.Vt, (bax2, bax3))
+  return SVD(u, s, vt)
+end
