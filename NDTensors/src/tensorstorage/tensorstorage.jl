@@ -1,3 +1,5 @@
+using SparseArrays: SparseArrays
+
 abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
 data(S::TensorStorage) = S.data
@@ -98,6 +100,6 @@ nzblocks(T::TensorStorage) = nzblocks(blockoffsets(T))
 eachnzblock(T::TensorStorage) = eachnzblock(blockoffsets(T))
 
 nnzblocks(S::TensorStorage) = length(blockoffsets(S))
-nnz(S::TensorStorage) = length(S)
+SparseArrays.nnz(S::TensorStorage) = length(S)
 
 offset(S::TensorStorage, block) = offset(blockoffsets(S), block)

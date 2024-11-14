@@ -1,3 +1,4 @@
+using SparseArrays: SparseArrays
 using .TypeParameterAccessors: TypeParameterAccessors, set_eltype, similartype
 
 #
@@ -66,7 +67,7 @@ isempty(::EmptyStorage) = true
 
 nnzblocks(::EmptyStorage) = 0
 
-nnz(::EmptyStorage) = 0
+SparseArrays.nnz(::EmptyStorage) = 0
 
 function conj(::AllowAlias, S::EmptyStorage)
   return S

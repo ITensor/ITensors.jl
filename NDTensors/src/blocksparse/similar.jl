@@ -1,3 +1,4 @@
+using SparseArrays: nnz
 using .TypeParameterAccessors: similartype
 
 # NDTensors.similar

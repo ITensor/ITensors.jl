@@ -1,3 +1,4 @@
+using NDTensors: NDTensors, nnz
 using .TagSets: TagSets, hastags, replacetags
 
 # Private inner constructor
@@ -852,7 +853,11 @@ hasqns(T::Union{Tensor,ITensor}) = hasqns(inds(T))
 
 eachnzblock(T::ITensor) = eachnzblock(tensor(T))
 
-nnz(T::ITensor) = nnz(tensor(T))
+# TODO: Switch this to `SparseArrays.nnz`, it is written
+# this way for backwards compatibility since older versions
+# of NDTensors had their own `NDTensors.nnz` function
+# that didn't overload `SparseArrays.nnz`.
+NDTensors.nnz(T::ITensor) = nnz(tensor(T))
 
 nblocks(T::ITensor, args...) = nblocks(tensor(T), args...)
 
