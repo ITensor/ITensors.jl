@@ -57,62 +57,41 @@ end
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::Vector{<:BlockIndexRange{1}}
 )
-  a_indices = getindex(nondual(a), indices)
-  v = mortar(dual.(blocks(a_indices)))
-  # flip v to stay consistent with other cases where axes(v) are used
-  return flip_blockvector(v)
+  # dual v axes to stay consistent with other cases where axes(v) are used
+  return dual_axes(blockedunitrange_getindices(nondual(a), indices))
 end
 
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual,
   indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},
 )
-  v = mortar(map(b -> a[b], blocks(indices)))
-  # GradedOneTo appears in mortar
-  # flip v axis to preserve dual information
+  # dual v axis to preserve dual information
   # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
-  return flip_blockvector(v)
+  return dual_axes(blockedunitrange_getindices(nondual(a), indices))
 end
 
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
 )
-  # Without converting `indices` to `Vector`,
-  # mapping `indices` outputs a `BlockVector`
-  # which is harder to reason about.
-  vblocks = map(index -> a[index], Vector(indices))
-  # We pass `length.(blocks)` to `mortar` in order
-  # to pass block labels to the axes of the output,
-  # if they exist. This makes it so that
-  # `only(axes(a[indices])) isa `GradedUnitRange`
-  # if `a isa `GradedUnitRange`, for example.
-
-  v = mortar(vblocks, length.(vblocks))
-  # GradedOneTo appears in mortar
-  # flip v axis to preserve dual information
+  # dual v axis to preserve dual information
   # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)]))
-  return flip_blockvector(v)
+  return dual_axes(blockedunitrange_getindices(nondual(a), indices))
 end
 
 # Fixes ambiguity error.
-# TODO: Write this in terms of `blockedunitrange_getindices(dual(a), indices)`.
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::AbstractBlockVector{<:Block{1}}
 )
-  blks = map(bs -> mortar(map(b -> a[b], bs)), blocks(indices))
-  # We pass `length.(blks)` to `mortar` in order
-  # to pass block labels to the axes of the output,
-  # if they exist. This makes it so that
-  # `only(axes(a[indices])) isa `GradedUnitRange`
-  # if `a isa `GradedUnitRange`, for example.
-  v = mortar(blks, labelled_length.(blks))
-  return flip_blockvector(v)
+  v = blockedunitrange_getindices(nondual(a), indices)
+  # v elements are not dualled by dual_axes due to different structure.
+  # take element dual here.
+  return dual_axes(dual.(v))
 end
 
-function flip_blockvector(v::BlockVector)
-  block_axes = flip.(axes(v))
-  flipped = mortar(vec.(blocks(v)), block_axes)
-  return flipped
+function dual_axes(v::BlockVector)
+  # dual both v elements and v axes
+  block_axes = dual.(axes(v))
+  return mortar(dual.(blocks(v)), block_axes)
 end
 
 Base.axes(a::GradedUnitRangeDual) = axes(nondual(a))

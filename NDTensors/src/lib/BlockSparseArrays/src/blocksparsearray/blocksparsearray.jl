@@ -175,7 +175,7 @@ end
 Base.axes(a::BlockSparseArray) = a.axes
 
 # BlockArrays `AbstractBlockArray` interface.
-# This is used by `blocks(::BlockSparseArrayLike)`.
+# This is used by `blocks(::AnyAbstractBlockSparseArray)`.
 blocksparse_blocks(a::BlockSparseArray) = a.blocks
 
 # TODO: Use `TypeParameterAccessors`.

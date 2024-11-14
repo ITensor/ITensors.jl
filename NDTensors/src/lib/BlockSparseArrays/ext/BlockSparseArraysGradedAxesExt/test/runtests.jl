@@ -2,7 +2,7 @@
 using Test: @test, @testset
 using BlockArrays:
   AbstractBlockArray, Block, BlockedOneTo, blockedrange, blocklengths, blocksize
-using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
+using NDTensors.BlockSparseArrays: BlockSparseArray, block_stored_length
 using NDTensors.GradedAxes:
   GradedAxes,
   GradedOneTo,
@@ -13,7 +13,7 @@ using NDTensors.GradedAxes:
   gradedrange,
   isdual
 using NDTensors.LabelledNumbers: label
-using NDTensors.SparseArrayInterface: nstored
+using NDTensors.SparseArrayInterface: stored_length
 using NDTensors.SymmetrySectors: U1
 using NDTensors.TensorAlgebra: fusedims, splitdims
 using LinearAlgebra: adjoint
@@ -40,8 +40,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test size(b) == (4, 4, 4, 4)
       @test blocksize(b) == (2, 2, 2, 2)
       @test blocklengths.(axes(b)) == ([2, 2], [2, 2], [2, 2], [2, 2])
-      @test nstored(b) == 32
-      @test block_nstored(b) == 2
+      @test stored_length(b) == 32
+      @test block_stored_length(b) == 2
       for i in 1:ndims(a)
         @test axes(b, i) isa GradedOneTo
       end
@@ -58,8 +58,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
       @test size(b) == (4, 4, 4, 4)
       @test blocksize(b) == (2, 2, 2, 2)
       @test blocklengths.(axes(b)) == ([2, 2], [2, 2], [2, 2], [2, 2])
-      @test nstored(b) == 256
-      @test block_nstored(b) == 16
+      @test stored_length(b) == 256
+      @test block_stored_length(b) == 16
       for i in 1:ndims(a)
         @test axes(b, i) isa BlockedOneTo{Int}
       end
@@ -71,8 +71,8 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
     b = a[2:3, 2:3, 2:3, 2:3]
     @test size(b) == (2, 2, 2, 2)
     @test blocksize(b) == (2, 2, 2, 2)
-    @test nstored(b) == 2
-    @test block_nstored(b) == 2
+    @test stored_length(b) == 2
+    @test block_stored_length(b) == 2
     for i in 1:ndims(a)
       @test axes(b, i) isa GradedOneTo
     end
@@ -156,7 +156,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         a[i] = randn(elt, size(a[i]))
       end
       b = 2 * a
-      @test block_nstored(b) == 2
+      @test block_stored_length(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
         @test axes(b, i) isa GradedOneTo
@@ -177,7 +177,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         a[i] = randn(elt, size(a[i]))
       end
       b = 2 * a
-      @test block_nstored(b) == 2
+      @test block_stored_length(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
         @test axes(b, i) isa GradedUnitRange
@@ -204,7 +204,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         a[i] = randn(elt, size(a[i]))
       end
       b = 2 * a
-      @test block_nstored(b) == 2
+      @test block_stored_length(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
         @test axes(b, i) isa GradedUnitRangeDual
@@ -229,7 +229,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         a[i] = randn(elt, size(a[i]))
       end
       b = 2 * a
-      @test block_nstored(b) == 2
+      @test block_stored_length(b) == 2
       @test Array(b) == 2 * Array(a)
       for i in 1:2
         @test axes(b, i) isa GradedUnitRangeDual
@@ -255,7 +255,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         a[i] = randn(elt, size(a[i]))
       end
       b = 2 * a
-      @test block_nstored(b) == 2
+      @test block_stored_length(b) == 2
       @test Array(b) == 2 * Array(a)
       @test a[:, :] isa BlockSparseArray
       for i in 1:2
@@ -280,7 +280,7 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
         a[i] = randn(elt, size(a[i]))
       end
       b = 2 * a'
-      @test block_nstored(b) == 2
+      @test block_stored_length(b) == 2
       @test Array(b) == 2 * Array(a)'
       for ax in axes(b)
         @test ax isa typeof(dual(r))

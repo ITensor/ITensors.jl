@@ -9,7 +9,7 @@ using Dictionaries: Dictionary
 using Test: @test, @testset, @test_broken
 using NDTensors.SparseArrayDOKs:
   SparseArrayDOKs, SparseArrayDOK, SparseMatrixDOK, @maybe_grow
-using NDTensors.SparseArrayInterface: storage_indices, nstored
+using NDTensors.SparseArrayInterface: storage_indices, stored_length
 using SparseArrays: SparseMatrixCSC, nnz
 @testset "SparseArrayDOK (eltype=$elt)" for elt in
                                             (Float32, ComplexF32, Float64, ComplexF64)
@@ -20,7 +20,7 @@ using SparseArrays: SparseMatrixCSC, nnz
     @test a == SparseArrayDOK{elt}(undef, (3, 4))
     @test iszero(a)
     @test iszero(nnz(a))
-    @test nstored(a) == nnz(a)
+    @test stored_length(a) == nnz(a)
     @test size(a) == (3, 4)
     @test eltype(a) == elt
     for I in eachindex(a)
@@ -40,16 +40,16 @@ using SparseArrays: SparseMatrixCSC, nnz
     @test !iszero(b)
     @test b[1, 2] == x12
     @test b[2, 3] == x23
-    @test iszero(nstored(a))
-    @test nstored(b) == 2
+    @test iszero(stored_length(a))
+    @test stored_length(b) == 2
   end
   @testset "map/broadcast" begin
     a = SparseArrayDOK{elt}(3, 4)
     a[1, 1] = 11
     a[3, 4] = 34
-    @test nstored(a) == 2
+    @test stored_length(a) == 2
     b = 2 * a
-    @test nstored(b) == 2
+    @test stored_length(b) == 2
     @test b[1, 1] == 2 * 11
     @test b[3, 4] == 2 * 34
   end
@@ -71,14 +71,14 @@ using SparseArrays: SparseMatrixCSC, nnz
     # TODO: Use `densearray` to make generic to GPU.
     @test Array(a_dest) ≈ Array(a1) * Array(a2)
     # TODO: Make this work with `ArrayLayouts`.
-    @test nstored(a_dest) == 2
+    @test stored_length(a_dest) == 2
     @test a_dest isa SparseMatrixDOK{elt}
 
     a2 = randn(elt, (3, 4))
     a_dest = a1 * a2
     # TODO: Use `densearray` to make generic to GPU.
     @test Array(a_dest) ≈ Array(a1) * Array(a2)
-    @test nstored(a_dest) == 8
+    @test stored_length(a_dest) == 8
     @test a_dest isa Matrix{elt}
   end
   @testset "SparseMatrixCSC" begin

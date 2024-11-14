@@ -219,14 +219,35 @@ end
     @test label(ad[Block(2)]) == U1(-1)
     @test label(ad[Block(2)[1:1]]) == U1(-1)
 
-    I = mortar([Block(2)[1:1]])
-    g = ad[I]
-    @test length(g) == 1
-    @test label(first(g)) == U1(-1)
-    @test isdual(g[Block(1)])
+    v = ad[[Block(2)[1:1]]]
+    @test v isa AbstractVector{LabelledInteger{Int64,U1}}
+    @test length(v) == 1
+    @test label(first(v)) == U1(-1)
+    @test unlabel(first(v)) == 3
+    @test isdual(v[Block(1)])
+    @test isdual(axes(v, 1))
+    @test blocklabels(axes(v, 1)) == [U1(-1)]
 
-    @test isdual(axes(ad[[Block(1)]], 1))  # used in view(::BlockSparseVector, [Block(1)])
-    @test isdual(axes(ad[mortar([Block(1)[1:1]])], 1))  # used in view(::BlockSparseVector, [Block(1)[1:1]])
+    v = ad[mortar([Block(2)[1:1]])]
+    @test v isa AbstractVector{LabelledInteger{Int64,U1}}
+    @test isdual(axes(v, 1))  # used in view(::BlockSparseVector, [Block(1)[1:1]])
+    @test label(first(v)) == U1(-1)
+    @test unlabel(first(v)) == 3
+    @test blocklabels(axes(v, 1)) == [U1(-1)]
+
+    v = ad[[Block(2)]]
+    @test v isa AbstractVector{LabelledInteger{Int64,U1}}
+    @test isdual(axes(v, 1))  # used in view(::BlockSparseVector, [Block(1)])
+    @test label(first(v)) == U1(-1)
+    @test unlabel(first(v)) == 3
+    @test blocklabels(axes(v, 1)) == [U1(-1)]
+
+    v = ad[mortar([[Block(2)], [Block(1)]])]
+    @test v isa AbstractVector{LabelledInteger{Int64,U1}}
+    @test isdual(axes(v, 1))
+    @test label(first(v)) == U1(-1)
+    @test unlabel(first(v)) == 3
+    @test blocklabels(axes(v, 1)) == [U1(-1), U1(0)]
   end
 end
 

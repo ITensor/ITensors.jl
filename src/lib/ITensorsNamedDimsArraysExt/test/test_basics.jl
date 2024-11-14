@@ -3,7 +3,7 @@ using BlockArrays: blocklengths
 using ITensors: ITensor, Index, QN, dag, inds, plev, random_itensor
 using ITensors.ITensorsNamedDimsArraysExt: to_nameddimsarray
 using NDTensors: tensor
-using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
+using NDTensors.BlockSparseArrays: BlockSparseArray, block_stored_length
 using NDTensors.GradedAxes: isdual
 using NDTensors.LabelledNumbers: label
 using NDTensors.NamedDimsArrays: NamedDimsArray, unname
@@ -27,7 +27,7 @@ using Test: @test, @testset
   @test blocklengths(axes(bb, 2)) == [2, 3]
   @test label.(blocklengths(axes(bb, 1))) == [QN(0), QN(1)]
   @test label.(blocklengths(axes(bb, 2))) == [QN(0), QN(-1)]
-  @test block_nstored(bb) == 2
+  @test block_stored_length(bb) == 2
   @test b' * b ≈ to_nameddimsarray(a' * a)
 end
 end

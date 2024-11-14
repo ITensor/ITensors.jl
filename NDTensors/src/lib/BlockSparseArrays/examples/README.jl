@@ -7,7 +7,7 @@
 # `BlockArrays` reinterprets the `SparseArray` as a blocked data structure.
 
 using BlockArrays: BlockArrays, PseudoBlockVector, blockedrange
-using NDTensors.BlockSparseArrays: BlockSparseArray, block_nstored
+using NDTensors.BlockSparseArrays: BlockSparseArray, block_stored_length
 using Test: @test, @test_broken
 
 function main()
@@ -36,13 +36,13 @@ function main()
   ]
   b = BlockSparseArray(nz_blocks, d_blocks, i_axes)
 
-  @test block_nstored(b) == 2
+  @test block_stored_length(b) == 2
 
   ## Blocks with discontiguous underlying data
   d_blocks = randn.(nz_block_sizes)
   b = BlockSparseArray(nz_blocks, d_blocks, i_axes)
 
-  @test block_nstored(b) == 2
+  @test block_stored_length(b) == 2
 
   ## Access a block
   @test b[Block(1, 1)] == d_blocks[1]
@@ -65,7 +65,7 @@ function main()
 
   @test b + b ≈ Array(b) + Array(b)
   @test b + b isa BlockSparseArray
-  @test block_nstored(b + b) == 2
+  @test block_stored_length(b + b) == 2
 
   scaled_b = 2b
   @test scaled_b ≈ 2Array(b)
