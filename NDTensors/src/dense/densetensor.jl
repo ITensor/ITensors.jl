@@ -1,3 +1,5 @@
+using SparseArrays: nnz
+
 #
 # DenseTensor (Tensor using Dense storage)
 #

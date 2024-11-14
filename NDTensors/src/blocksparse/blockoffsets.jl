@@ -1,3 +1,5 @@
+using SparseArrays: SparseArrays
+
 #
 # BlockOffsets
 #
@@ -57,7 +59,7 @@ function offset(bofs::BlockOffsets{N}, block::Block{N}) where {N}
   return bofs[block]
 end
 
-function nnz(bofs::BlockOffsets, inds)
+function SparseArrays.nnz(bofs::BlockOffsets, inds)
   _nnz = 0
   nnzblocks(bofs) == 0 && return _nnz
   for block in eachnzblock(bofs)
