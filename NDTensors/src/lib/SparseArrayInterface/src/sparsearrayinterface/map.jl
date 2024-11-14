@@ -8,7 +8,7 @@ struct NotStoredValue{Value}
   value::Value
 end
 value(v::NotStoredValue) = v.value
-nstored(::NotStoredValue) = false
+stored_length(::NotStoredValue) = false
 Base.:*(x::Number, y::NotStoredValue) = false
 Base.:*(x::NotStoredValue, y::Number) = false
 Base.:/(x::NotStoredValue, y::Number) = false

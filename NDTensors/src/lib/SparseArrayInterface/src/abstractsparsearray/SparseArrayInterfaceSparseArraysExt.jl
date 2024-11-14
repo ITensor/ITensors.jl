@@ -1,9 +1,9 @@
 using Base: Forward
 using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, getcolptr, nonzeros, rowvals
-using ..SparseArrayInterface: nstored
+using ..SparseArrayInterface: stored_length
 
 # Julia Base `AbstractSparseArray` interface
-SparseArrays.nnz(a::AbstractSparseArray) = nstored(a)
+SparseArrays.nnz(a::AbstractSparseArray) = stored_length(a)
 
 sparse_storage(a::SparseMatrixCSC) = nonzeros(a)
 function storage_index_to_index(a::SparseMatrixCSC, I)

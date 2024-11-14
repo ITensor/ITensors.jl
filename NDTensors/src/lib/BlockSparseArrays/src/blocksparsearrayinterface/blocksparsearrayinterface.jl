@@ -13,7 +13,7 @@ using BlockArrays:
   blocks,
   findblockindex
 using LinearAlgebra: Adjoint, Transpose
-using ..SparseArrayInterface: perm, iperm, nstored, sparse_zero!
+using ..SparseArrayInterface: perm, iperm, stored_length, sparse_zero!
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
@@ -134,8 +134,8 @@ function blocksparse_fill!(a::AbstractArray, value)
   return a
 end
 
-function block_nstored(a::AbstractArray)
-  return nstored(blocks(a))
+function block_stored_length(a::AbstractArray)
+  return stored_length(blocks(a))
 end
 
 # BlockArrays
@@ -174,7 +174,9 @@ end
 # TODO: Either make this the generic interface or define
 # `SparseArrayInterface.sparse_storage`, which is used
 # to defined this.
-SparseArrayInterface.nstored(a::SparsePermutedDimsArrayBlocks) = length(stored_indices(a))
+function SparseArrayInterface.stored_length(a::SparsePermutedDimsArrayBlocks)
+  return length(stored_indices(a))
+end
 function SparseArrayInterface.sparse_storage(a::SparsePermutedDimsArrayBlocks)
   return error("Not implemented")
 end
@@ -212,7 +214,7 @@ end
 # TODO: Either make this the generic interface or define
 # `SparseArrayInterface.sparse_storage`, which is used
 # to defined this.
-SparseArrayInterface.nstored(a::SparseTransposeBlocks) = length(stored_indices(a))
+SparseArrayInterface.stored_length(a::SparseTransposeBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparseTransposeBlocks)
   return error("Not implemented")
 end
@@ -251,7 +253,7 @@ end
 # TODO: Either make this the generic interface or define
 # `SparseArrayInterface.sparse_storage`, which is used
 # to defined this.
-SparseArrayInterface.nstored(a::SparseAdjointBlocks) = length(stored_indices(a))
+SparseArrayInterface.stored_length(a::SparseAdjointBlocks) = length(stored_indices(a))
 function SparseArrayInterface.sparse_storage(a::SparseAdjointBlocks)
   return error("Not implemented")
 end
@@ -314,7 +316,7 @@ end
 # TODO: Either make this the generic interface or define
 # `SparseArrayInterface.sparse_storage`, which is used
 # to defined this.
-SparseArrayInterface.nstored(a::SparseSubArrayBlocks) = length(stored_indices(a))
+SparseArrayInterface.stored_length(a::SparseSubArrayBlocks) = length(stored_indices(a))
 
 ## struct SparseSubArrayBlocksStorage{Array<:SparseSubArrayBlocks}
 ##   array::Array
@@ -339,4 +341,4 @@ function blocksparse_blocks(
 end
 
 using BlockArrays: BlocksView
-SparseArrayInterface.nstored(a::BlocksView) = length(a)
+SparseArrayInterface.stored_length(a::BlocksView) = length(a)
