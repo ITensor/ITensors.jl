@@ -1,4 +1,5 @@
 using Adapt: WrappedArray
+using LinearAlgebra: Adjoint, Transpose
 
 const WrappedAbstractSparseArray{T,N,A} = WrappedArray{
   T,N,<:AbstractSparseArray,<:AbstractSparseArray{T,N}
