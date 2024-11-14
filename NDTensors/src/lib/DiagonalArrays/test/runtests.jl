@@ -2,7 +2,7 @@
 using Test: @test, @testset, @test_broken
 using NDTensors.DiagonalArrays: DiagonalArrays, DiagonalArray, DiagonalMatrix, diaglength
 using NDTensors.SparseArrayDOKs: SparseArrayDOK
-using NDTensors.SparseArrayInterface: nstored
+using NDTensors.SparseArrayInterface: stored_length
 @testset "Test NDTensors.DiagonalArrays" begin
   @testset "README" begin
     @test include(
@@ -31,7 +31,7 @@ using NDTensors.SparseArrayInterface: nstored
       # TODO: Use `densearray` to make generic to GPU.
       @test Array(a_dest) ≈ Array(a1) * Array(a2)
       # TODO: Make this work with `ArrayLayouts`.
-      @test nstored(a_dest) == 2
+      @test stored_length(a_dest) == 2
       @test a_dest isa DiagonalMatrix{elt}
 
       # TODO: Make generic to GPU, use `allocate_randn`?
@@ -39,7 +39,7 @@ using NDTensors.SparseArrayInterface: nstored
       a_dest = a1 * a2
       # TODO: Use `densearray` to make generic to GPU.
       @test Array(a_dest) ≈ Array(a1) * Array(a2)
-      @test nstored(a_dest) == 8
+      @test stored_length(a_dest) == 8
       @test a_dest isa Matrix{elt}
 
       a2 = SparseArrayDOK{elt}(3, 4)
@@ -51,7 +51,7 @@ using NDTensors.SparseArrayInterface: nstored
       @test Array(a_dest) ≈ Array(a1) * Array(a2)
       # TODO: Define `SparseMatrixDOK`.
       # TODO: Make this work with `ArrayLayouts`.
-      @test nstored(a_dest) == 2
+      @test stored_length(a_dest) == 2
       @test a_dest isa SparseArrayDOK{elt,2}
     end
   end

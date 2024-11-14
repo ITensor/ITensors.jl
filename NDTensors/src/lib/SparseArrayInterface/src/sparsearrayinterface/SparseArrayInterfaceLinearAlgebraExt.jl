@@ -61,7 +61,7 @@ function sparse_dot(a1::AbstractArray, a2::AbstractArray)
   size(a1) == size(a2) ||
     throw(DimensionMismatch("Sizes $(size(a1)) and $(size(a2)) don't match."))
   dot_dest = zero(Base.promote_op(dot, eltype(a1), eltype(a2)))
-  # TODO: First check if the number of stored elements (`nstored`, to be renamed
+  # TODO: First check if the number of stored elements (`stored_length`, to be renamed
   # `stored_length`) is smaller in `a1` or `a2` and use whicheven one is smallar
   # as the outer loop.
   for I1 in stored_indices(a1)

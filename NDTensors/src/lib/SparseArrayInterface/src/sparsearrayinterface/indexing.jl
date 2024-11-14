@@ -20,7 +20,7 @@ end
 index(i::StoredIndex) = i.iouter
 StorageIndex(i::StoredIndex) = i.istorage
 
-nstored(a::AbstractArray) = length(sparse_storage(a))
+stored_length(a::AbstractArray) = length(sparse_storage(a))
 
 struct NotStoredIndex{Iouter} <: MaybeStoredIndex{Iouter}
   iouter::Iouter

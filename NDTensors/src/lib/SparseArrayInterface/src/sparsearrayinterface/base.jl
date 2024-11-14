@@ -99,7 +99,7 @@ end
 function sparse_isequal(a1::AbstractArray, a2::AbstractArray)
   Is = collect(stored_indices(a1))
   intersect!(Is, stored_indices(a2))
-  if !(length(Is) == nstored(a1) == nstored(a2))
+  if !(length(Is) == stored_length(a1) == stored_length(a2))
     return false
   end
   for I in Is
