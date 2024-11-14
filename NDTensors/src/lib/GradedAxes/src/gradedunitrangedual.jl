@@ -57,7 +57,7 @@ end
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::Vector{<:BlockIndexRange{1}}
 )
-  # flip v to stay consistent with other cases where axes(v) are used
+  # dual v axes to stay consistent with other cases where axes(v) are used
   return dual_axes(blockedunitrange_getindices(nondual(a), indices))
 end
 
@@ -65,7 +65,7 @@ function blockedunitrange_getindices(
   a::GradedUnitRangeDual,
   indices::BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},
 )
-  # flip v axis to preserve dual information
+  # dual v axis to preserve dual information
   # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)[1:1]]))
   return dual_axes(blockedunitrange_getindices(nondual(a), indices))
 end
@@ -73,7 +73,7 @@ end
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::AbstractVector{<:Union{Block{1},BlockIndexRange{1}}}
 )
-  # flip v axis to preserve dual information
+  # dual v axis to preserve dual information
   # axes(v) will appear in axes(view(::BlockSparseArray, [Block(1)]))
   return dual_axes(blockedunitrange_getindices(nondual(a), indices))
 end
@@ -82,7 +82,10 @@ end
 function blockedunitrange_getindices(
   a::GradedUnitRangeDual, indices::AbstractBlockVector{<:Block{1}}
 )
-  return dual_axes(blockedunitrange_getindices(nondual(a), indices))
+  v = blockedunitrange_getindices(nondual(a), indices)
+  # v elements are not dualled by dual_axes due to different structure.
+  # take element dual here.
+  return dual_axes(dual.(v))
 end
 
 function dual_axes(v::BlockVector)
