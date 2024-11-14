@@ -2,7 +2,7 @@ using ArrayLayouts: ArrayLayouts, Dot, DualLayout, MatMulMatAdd, MatMulVecAdd, M
 using LinearAlgebra: Adjoint, Transpose
 using ..TypeParameterAccessors: parenttype
 
-function ArrayLayouts.MemoryLayout(arraytype::Type{<:SparseArrayLike})
+function ArrayLayouts.MemoryLayout(arraytype::Type{<:AnyAbstractSparseArray})
   return SparseLayout()
 end
 

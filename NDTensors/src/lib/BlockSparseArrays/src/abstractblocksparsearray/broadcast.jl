@@ -1,7 +1,7 @@
 using BlockArrays: AbstractBlockedUnitRange, BlockSlice
 using Base.Broadcast: Broadcast
 
-function Broadcast.BroadcastStyle(arraytype::Type{<:BlockSparseArrayLike})
+function Broadcast.BroadcastStyle(arraytype::Type{<:AnyAbstractBlockSparseArray})
   return BlockSparseArrayStyle{ndims(arraytype)}()
 end
 
