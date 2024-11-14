@@ -84,10 +84,10 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       BlockSparseArray{elt},
       BlockSparseArray{elt,2},
       BlockSparseMatrix{elt},
-      ## BlockSparseArray{elt,2,Matrix{elt}},
-      ## BlockSparseMatrix{elt,Matrix{elt}},
-      ## BlockSparseArray{elt,2,Matrix{elt},SparseMatrixDOK{Matrix{elt}}},
-      ## BlockSparseMatrix{elt,Matrix{elt},SparseMatrixDOK{Matrix{elt}}},
+      BlockSparseArray{elt,2,Matrix{elt}},
+      BlockSparseMatrix{elt,Matrix{elt}},
+      ## BlockSparseArray{elt,2,Matrix{elt},SparseMatrixDOK{Matrix{elt}}}, # TODO
+      ## BlockSparseMatrix{elt,Matrix{elt},SparseMatrixDOK{Matrix{elt}}}, # TODO
     )
       for args in (
         bs,
@@ -116,10 +116,10 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       BlockSparseArray{elt},
       BlockSparseArray{elt,1},
       BlockSparseVector{elt},
-      ## BlockSparseArray{elt,1,Vector{elt}},
-      ## BlockSparseVector{elt,Vector{elt}},
-      ## BlockSparseArray{elt,1,Vector{elt},SparseVectorDOK{Vector{elt}}},
-      ## BlockSparseVector{elt,Vector{elt},SparseVectorDOK{Vector{elt}}},
+      BlockSparseArray{elt,1,Vector{elt}},
+      BlockSparseVector{elt,Vector{elt}},
+      ## BlockSparseArray{elt,1,Vector{elt},SparseVectorDOK{Vector{elt}}}, # TODO
+      ## BlockSparseVector{elt,Vector{elt},SparseVectorDOK{Vector{elt}}}, # TODO
     )
       for args in (
         bs,
