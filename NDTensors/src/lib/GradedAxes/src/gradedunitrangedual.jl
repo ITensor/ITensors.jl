@@ -91,8 +91,7 @@ end
 function dual_axes(v::BlockVector)
   # dual both v elements and v axes
   block_axes = dual.(axes(v))
-  flipped = mortar(dual.(vec.(blocks(v))), block_axes)
-  return flipped
+  return mortar(dual.(blocks(v)), block_axes)
 end
 
 Base.axes(a::GradedUnitRangeDual) = axes(nondual(a))
