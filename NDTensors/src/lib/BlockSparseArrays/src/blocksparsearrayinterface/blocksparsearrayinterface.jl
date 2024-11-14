@@ -17,6 +17,8 @@ using ..SparseArrayInterface: perm, iperm, stored_length, sparse_zero!
 
 blocksparse_blocks(a::AbstractArray) = error("Not implemented")
 
+blockstype(a::AbstractArray) = blockstype(typeof(a))
+
 function blocksparse_getindex(a::AbstractArray{<:Any,N}, I::Vararg{Int,N}) where {N}
   @boundscheck checkbounds(a, I...)
   return a[findblockindex.(axes(a), I)...]

@@ -16,8 +16,15 @@ struct BlockSparseArray{
   axes::Axes
 end
 
-const BlockSparseMatrix{T,A,Blocks,Axes} = BlockSparseArray{T,2,A,Blocks,Axes}
-const BlockSparseVector{T,A,Blocks,Axes} = BlockSparseArray{T,1,A,Blocks,Axes}
+# TODO: Can this definition be shortened?
+const BlockSparseMatrix{T,A<:AbstractMatrix{T},Blocks<:AbstractMatrix{A},Axes<:Tuple{AbstractUnitRange,AbstractUnitRange}} = BlockSparseArray{
+  T,2,A,Blocks,Axes
+}
+
+# TODO: Can this definition be shortened?
+const BlockSparseVector{T,A<:AbstractVector{T},Blocks<:AbstractVector{A},Axes<:Tuple{AbstractUnitRange}} = BlockSparseArray{
+  T,1,A,Blocks,Axes
+}
 
 function BlockSparseArray(
   block_data::Dictionary{<:Block{N},<:AbstractArray{<:Any,N}},
@@ -68,8 +75,36 @@ function BlockSparseArray{T,N,A}(
   return BlockSparseArray{T,N,A}(blocks, axes)
 end
 
+function BlockSparseArray{T,N,A}(
+  axes::Vararg{AbstractUnitRange,N}
+) where {T,N,A<:AbstractArray{T,N}}
+  return BlockSparseArray{T,N,A}(axes)
+end
+
+function BlockSparseArray{T,N,A}(
+  dims::Tuple{Vararg{Vector{Int},N}}
+) where {T,N,A<:AbstractArray{T,N}}
+  return BlockSparseArray{T,N,A}(blockedrange.(dims))
+end
+
+# Fix ambiguity error.
+function BlockSparseArray{T,0,A}(axes::Tuple{}) where {T,A<:AbstractArray{T,0}}
+  blocks = default_blocks(A, axes)
+  return BlockSparseArray{T,0,A}(blocks, axes)
+end
+
+function BlockSparseArray{T,N,A}(
+  dims::Vararg{Vector{Int},N}
+) where {T,N,A<:AbstractArray{T,N}}
+  return BlockSparseArray{T,N,A}(dims)
+end
+
 function BlockSparseArray{T,N}(axes::Tuple{Vararg{AbstractUnitRange,N}}) where {T,N}
   return BlockSparseArray{T,N,default_arraytype(T, axes)}(axes)
+end
+
+function BlockSparseArray{T,N}(axes::Vararg{AbstractUnitRange,N}) where {T,N}
+  return BlockSparseArray{T,N}(axes)
 end
 
 function BlockSparseArray{T,0}(axes::Tuple{}) where {T}
@@ -78,6 +113,10 @@ end
 
 function BlockSparseArray{T,N}(dims::Tuple{Vararg{Vector{Int},N}}) where {T,N}
   return BlockSparseArray{T,N}(blockedrange.(dims))
+end
+
+function BlockSparseArray{T,N}(dims::Vararg{Vector{Int},N}) where {T,N}
+  return BlockSparseArray{T,N}(dims)
 end
 
 function BlockSparseArray{T}(dims::Tuple{Vararg{Vector{Int}}}) where {T}
@@ -104,37 +143,25 @@ function BlockSparseArray{T}() where {T}
   return BlockSparseArray{T}(())
 end
 
-function BlockSparseArray{T,N,A}(
-  ::UndefInitializer, dims::Tuple
-) where {T,N,A<:AbstractArray{T,N}}
-  return BlockSparseArray{T,N,A}(dims)
-end
-
 # undef
-function BlockSparseArray{T,N}(
-  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange,N}}
-) where {T,N}
-  return BlockSparseArray{T,N}(axes)
+function BlockSparseArray{T,N,A,Blocks}(
+  ::UndefInitializer, args...
+) where {T,N,A<:AbstractArray{T,N},Blocks<:AbstractArray{A,N}}
+  return BlockSparseArray{T,N,A,Blocks}(args...)
 end
 
-function BlockSparseArray{T,N}(
-  ::UndefInitializer, dims::Tuple{Vararg{Vector{Int},N}}
-) where {T,N}
-  return BlockSparseArray{T,N}(dims)
+function BlockSparseArray{T,N,A}(
+  ::UndefInitializer, args...
+) where {T,N,A<:AbstractArray{T,N}}
+  return BlockSparseArray{T,N,A}(args...)
 end
 
-function BlockSparseArray{T}(
-  ::UndefInitializer, axes::Tuple{Vararg{AbstractUnitRange}}
-) where {T}
-  return BlockSparseArray{T}(axes)
+function BlockSparseArray{T,N}(::UndefInitializer, args...) where {T,N}
+  return BlockSparseArray{T,N}(args...)
 end
 
-function BlockSparseArray{T}(::UndefInitializer, dims::Tuple{Vararg{Vector{Int}}}) where {T}
-  return BlockSparseArray{T}(dims)
-end
-
-function BlockSparseArray{T}(::UndefInitializer, dims::Vararg{Vector{Int}}) where {T}
-  return BlockSparseArray{T}(dims...)
+function BlockSparseArray{T}(::UndefInitializer, args...) where {T}
+  return BlockSparseArray{T}(args...)
 end
 
 # Base `AbstractArray` interface
