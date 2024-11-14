@@ -16,20 +16,20 @@ const WrappedAbstractBlockSparseArray{T,N} = WrappedArray{
 }
 
 # TODO: Rename `AnyBlockSparseArray`.
-const BlockSparseArrayLike{T,N} = Union{
+const AnyAbstractBlockSparseArray{T,N} = Union{
   <:AbstractBlockSparseArray{T,N},<:WrappedAbstractBlockSparseArray{T,N}
 }
 
 # a[1:2, 1:2]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}}
+  a::AnyAbstractBlockSparseArray, inds, I::Tuple{UnitRange{<:Integer},Vararg{Any}}
 )
   return blocksparse_to_indices(a, inds, I)
 end
 
 # a[[Block(2), Block(1)], [Block(2), Block(1)]]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
+  a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:Block{1}},Vararg{Any}}
 )
   return blocksparse_to_indices(a, inds, I)
 end
@@ -37,14 +37,16 @@ end
 # a[BlockVector([Block(2), Block(1)], [2]), BlockVector([Block(2), Block(1)], [2])]
 # a[BlockedVector([Block(2), Block(1)], [2]), BlockedVector([Block(2), Block(1)], [2])]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}}
+  a::AnyAbstractBlockSparseArray,
+  inds,
+  I::Tuple{AbstractBlockVector{<:Block{1}},Vararg{Any}},
 )
   return blocksparse_to_indices(a, inds, I)
 end
 
 # a[mortar([Block(1)[1:2], Block(2)[1:3]])]
 function Base.to_indices(
-  a::BlockSparseArrayLike,
+  a::AnyAbstractBlockSparseArray,
   inds,
   I::Tuple{BlockVector{<:BlockIndex{1},<:Vector{<:BlockIndexRange{1}}},Vararg{Any}},
 )
@@ -53,13 +55,13 @@ end
 
 # a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]]
 function Base.to_indices(
-  a::BlockSparseArrayLike, inds, I::Tuple{Vector{<:BlockIndexRange{1}},Vararg{Any}}
+  a::AnyAbstractBlockSparseArray, inds, I::Tuple{Vector{<:BlockIndexRange{1}},Vararg{Any}}
 )
   return to_indices(a, inds, (mortar(I[1]), Base.tail(I)...))
 end
 
 # BlockArrays `AbstractBlockArray` interface
-BlockArrays.blocks(a::BlockSparseArrayLike) = blocksparse_blocks(a)
+BlockArrays.blocks(a::AnyAbstractBlockSparseArray) = blocksparse_blocks(a)
 
 # Fix ambiguity error with `BlockArrays`
 using BlockArrays: BlockSlice
@@ -74,59 +76,63 @@ function blockstype(arraytype::Type{<:WrappedAbstractBlockSparseArray})
   return blockstype(parenttype(arraytype))
 end
 
-blocktype(a::BlockSparseArrayLike) = eltype(blocks(a))
-blocktype(arraytype::Type{<:BlockSparseArrayLike}) = eltype(blockstype(arraytype))
+blocktype(a::AnyAbstractBlockSparseArray) = eltype(blocks(a))
+blocktype(arraytype::Type{<:AnyAbstractBlockSparseArray}) = eltype(blockstype(arraytype))
 
 using ArrayLayouts: ArrayLayouts
-function Base.getindex(a::BlockSparseArrayLike{<:Any,N}, I::CartesianIndices{N}) where {N}
+function Base.getindex(
+  a::AnyAbstractBlockSparseArray{<:Any,N}, I::CartesianIndices{N}
+) where {N}
   return ArrayLayouts.layout_getindex(a, I)
 end
 function Base.getindex(
-  a::BlockSparseArrayLike{<:Any,N}, I::Vararg{AbstractUnitRange{<:Integer},N}
+  a::AnyAbstractBlockSparseArray{<:Any,N}, I::Vararg{AbstractUnitRange{<:Integer},N}
 ) where {N}
   return ArrayLayouts.layout_getindex(a, I...)
 end
 # TODO: Define `AnyBlockSparseMatrix`.
 function Base.getindex(
-  a::BlockSparseArrayLike{<:Any,2}, I::Vararg{AbstractUnitRange{<:Integer},2}
+  a::AnyAbstractBlockSparseArray{<:Any,2}, I::Vararg{AbstractUnitRange{<:Integer},2}
 )
   return ArrayLayouts.layout_getindex(a, I...)
 end
 # Fixes ambiguity error.
-function Base.getindex(a::BlockSparseArrayLike{<:Any,0})
+function Base.getindex(a::AnyAbstractBlockSparseArray{<:Any,0})
   return ArrayLayouts.layout_getindex(a)
 end
 
 # TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
-  a::BlockSparseArrayLike{<:Any,N}, index::Vararg{Block{1},N}
+  a::AnyAbstractBlockSparseArray{<:Any,N}, index::Vararg{Block{1},N}
 ) where {N}
   return isassigned(blocks(a), Int.(index)...)
 end
 
 # Fix ambiguity error.
-function Base.isassigned(a::BlockSparseArrayLike{<:Any,0})
+function Base.isassigned(a::AnyAbstractBlockSparseArray{<:Any,0})
   return isassigned(blocks(a))
 end
 
-function Base.isassigned(a::BlockSparseArrayLike{<:Any,N}, index::Block{N}) where {N}
+function Base.isassigned(a::AnyAbstractBlockSparseArray{<:Any,N}, index::Block{N}) where {N}
   return isassigned(a, Tuple(index)...)
 end
 
 # TODO: Define `blocksparse_isassigned`.
 function Base.isassigned(
-  a::BlockSparseArrayLike{<:Any,N}, index::Vararg{BlockIndex{1},N}
+  a::AnyAbstractBlockSparseArray{<:Any,N}, index::Vararg{BlockIndex{1},N}
 ) where {N}
   b = block.(index)
   return isassigned(a, b...) && isassigned(@view(a[b...]), blockindex.(index)...)
 end
 
-function Base.setindex!(a::BlockSparseArrayLike{<:Any,N}, value, I::BlockIndex{N}) where {N}
+function Base.setindex!(
+  a::AnyAbstractBlockSparseArray{<:Any,N}, value, I::BlockIndex{N}
+) where {N}
   blocksparse_setindex!(a, value, I)
   return a
 end
 # Fixes ambiguity error with BlockArrays.jl
-function Base.setindex!(a::BlockSparseArrayLike{<:Any,1}, value, I::BlockIndex{1})
+function Base.setindex!(a::AnyAbstractBlockSparseArray{<:Any,1}, value, I::BlockIndex{1})
   blocksparse_setindex!(a, value, I)
   return a
 end
@@ -141,7 +147,7 @@ function Base.fill!(a::AbstractBlockSparseArray, value)
   return a
 end
 
-function Base.fill!(a::BlockSparseArrayLike, value)
+function Base.fill!(a::AnyAbstractBlockSparseArray, value)
   # TODO: Even if `iszero(value)`, this doesn't drop
   # blocks from `a`, and additionally allocates
   # new blocks filled with zeros, unlike
@@ -153,14 +159,15 @@ end
 
 # Needed by `BlockArrays` matrix multiplication interface
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}}
+  arraytype::Type{<:AnyAbstractBlockSparseArray},
+  axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
 
 # Fixes ambiguity error.
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike}, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
+  arraytype::Type{<:AnyAbstractBlockSparseArray}, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
 )
   return similar(arraytype, eltype(arraytype), axes)
 end
@@ -170,7 +177,7 @@ end
 # is only appears to be needed in older versions of Julia like v1.6.
 # Delete once we drop support for older versions of Julia.
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike},
+  arraytype::Type{<:AnyAbstractBlockSparseArray},
   axes::Tuple{AbstractUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
   return similar(arraytype, eltype(arraytype), axes)
@@ -178,7 +185,7 @@ end
 
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike},
+  arraytype::Type{<:AnyAbstractBlockSparseArray},
   axes::Tuple{AbstractBlockedUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
   return similar(arraytype, eltype(arraytype), axes)
@@ -186,7 +193,7 @@ end
 
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike},
+  arraytype::Type{<:AnyAbstractBlockSparseArray},
   axes::Tuple{
     AbstractUnitRange{<:Integer},
     AbstractBlockedUnitRange{<:Integer},
@@ -198,7 +205,7 @@ end
 
 # Needed for disambiguation
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike},
+  arraytype::Type{<:AnyAbstractBlockSparseArray},
   axes::Tuple{Vararg{AbstractBlockedUnitRange{<:Integer}}},
 )
   return similar(arraytype, eltype(arraytype), axes)
@@ -213,7 +220,7 @@ end
 # Needed by `BlockArrays` matrix multiplication interface
 # TODO: Define a `blocksparse_similar` function.
 function Base.similar(
-  arraytype::Type{<:BlockSparseArrayLike},
+  arraytype::Type{<:AnyAbstractBlockSparseArray},
   elt::Type,
   axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
@@ -222,19 +229,21 @@ end
 
 # TODO: Define a `blocksparse_similar` function.
 function Base.similar(
-  a::BlockSparseArrayLike, elt::Type, axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}}
+  a::AnyAbstractBlockSparseArray,
+  elt::Type,
+  axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}},
 )
   return blocksparse_similar(a, elt, axes)
 end
 
 # Fixes ambiguity error.
-function Base.similar(a::BlockSparseArrayLike, elt::Type, axes::Tuple{})
+function Base.similar(a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{})
   return blocksparse_similar(a, elt, axes)
 end
 
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
-  a::BlockSparseArrayLike,
+  a::AnyAbstractBlockSparseArray,
   elt::Type,
   axes::Tuple{
     AbstractBlockedUnitRange{<:Integer},Vararg{AbstractBlockedUnitRange{<:Integer}}
@@ -245,7 +254,7 @@ end
 
 # Fixes ambiguity error with `OffsetArrays`.
 function Base.similar(
-  a::BlockSparseArrayLike,
+  a::AnyAbstractBlockSparseArray,
   elt::Type,
   axes::Tuple{AbstractUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
@@ -254,7 +263,7 @@ end
 
 # Fixes ambiguity error with `BlockArrays`.
 function Base.similar(
-  a::BlockSparseArrayLike,
+  a::AnyAbstractBlockSparseArray,
   elt::Type,
   axes::Tuple{AbstractBlockedUnitRange{<:Integer},Vararg{AbstractUnitRange{<:Integer}}},
 )
@@ -263,7 +272,7 @@ end
 
 # Fixes ambiguity errors with BlockArrays.
 function Base.similar(
-  a::BlockSparseArrayLike,
+  a::AnyAbstractBlockSparseArray,
   elt::Type,
   axes::Tuple{
     AbstractUnitRange{<:Integer},
@@ -276,7 +285,7 @@ end
 
 # Fixes ambiguity error with `StaticArrays`.
 function Base.similar(
-  a::BlockSparseArrayLike, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
+  a::AnyAbstractBlockSparseArray, elt::Type, axes::Tuple{Base.OneTo,Vararg{Base.OneTo}}
 )
   return blocksparse_similar(a, elt, axes)
 end
@@ -285,7 +294,7 @@ end
 # which is ultimately what `Array{T,N}(::AbstractArray{<:Any,N})` calls.
 # These are defined for now to avoid scalar indexing issues when there
 # are blocks on GPU.
-function Base.Array{T,N}(a::BlockSparseArrayLike{<:Any,N}) where {T,N}
+function Base.Array{T,N}(a::AnyAbstractBlockSparseArray{<:Any,N}) where {T,N}
   # First make it dense, then move to CPU.
   # Directly copying to CPU causes some issues with
   # scalar indexing on GPU which we have to investigate.
@@ -293,9 +302,9 @@ function Base.Array{T,N}(a::BlockSparseArrayLike{<:Any,N}) where {T,N}
   a_dest .= a
   return Array{T,N}(a_dest)
 end
-function Base.Array{T}(a::BlockSparseArrayLike) where {T}
+function Base.Array{T}(a::AnyAbstractBlockSparseArray) where {T}
   return Array{T,ndims(a)}(a)
 end
-function Base.Array(a::BlockSparseArrayLike)
+function Base.Array(a::AnyAbstractBlockSparseArray)
   return Array{eltype(a)}(a)
 end
