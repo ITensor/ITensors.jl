@@ -1,3 +1,4 @@
+using SparseArrays: SparseArrays, nnz
 using .TagSets: TagSets, hastags, replacetags
 
 # Private inner constructor
@@ -852,7 +853,7 @@ hasqns(T::Union{Tensor,ITensor}) = hasqns(inds(T))
 
 eachnzblock(T::ITensor) = eachnzblock(tensor(T))
 
-nnz(T::ITensor) = nnz(tensor(T))
+SparseArrays.nnz(T::ITensor) = nnz(tensor(T))
 
 nblocks(T::ITensor, args...) = nblocks(tensor(T), args...)
 
