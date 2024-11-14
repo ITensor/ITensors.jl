@@ -227,6 +227,7 @@ end
 
     @test isdual(axes(ad[[Block(1)]], 1))  # used in view(::BlockSparseVector, [Block(1)])
     @test isdual(axes(ad[mortar([Block(1)[1:1]])], 1))  # used in view(::BlockSparseVector, [Block(1)[1:1]])
+    @test isdual(axes(ad[mortar([[Block(1)], [Block(2)]])]))
   end
 end
 
