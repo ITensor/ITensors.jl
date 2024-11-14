@@ -137,9 +137,28 @@ function sparse_setindex!(a::AbstractArray, value, I::Vararg{Int})
   return a
 end
 
+# Fix ambiguity error
+function sparse_setindex!(a::AbstractArray, value)
+  sparse_setindex!(a, value, CartesianIndex())
+  return a
+end
+
 # Linear indexing
 function sparse_setindex!(a::AbstractArray, value, I::CartesianIndex{1})
   sparse_setindex!(a, value, CartesianIndices(a)[I])
+  return a
+end
+
+# Slicing
+# TODO: Make this handle more general slicing operations,
+# base it off of `ArrayLayouts.sub_materialize`.
+function sparse_setindex!(a::AbstractArray, value, I::AbstractUnitRange...)
+  inds = CartesianIndices(I)
+  for i in stored_indices(value)
+    if i in CartesianIndices(inds)
+      a[inds[i]] = value[i]
+    end
+  end
   return a
 end
 
