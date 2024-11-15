@@ -20,13 +20,18 @@ using LinearAlgebra: Adjoint, dot, mul!, norm
 using NDTensors.BlockSparseArrays:
   @view!,
   BlockSparseArray,
+  BlockSparseMatrix,
+  BlockSparseVector,
   BlockView,
   block_stored_length,
   block_reshape,
   block_stored_indices,
+  blockstype,
+  blocktype,
   view!
 using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors.SparseArrayInterface: stored_length
+using NDTensors.SparseArrayDOKs: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset
 include("TestBlockSparseArraysUtils.jl")
@@ -71,6 +76,71 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @test [a[Block(Tuple(it))] for it in eachindex(block_stored_indices(a))] isa Vector
     ah = adjoint(a)
     @test_broken [ah[Block(Tuple(it))] for it in eachindex(block_stored_indices(ah))] isa Vector
+  end
+  @testset "Constructors" begin
+    # BlockSparseMatrix
+    bs = ([2, 3], [3, 4])
+    for T in (
+      BlockSparseArray{elt},
+      BlockSparseArray{elt,2},
+      BlockSparseMatrix{elt},
+      BlockSparseArray{elt,2,Matrix{elt}},
+      BlockSparseMatrix{elt,Matrix{elt}},
+      ## BlockSparseArray{elt,2,Matrix{elt},SparseMatrixDOK{Matrix{elt}}}, # TODO
+      ## BlockSparseMatrix{elt,Matrix{elt},SparseMatrixDOK{Matrix{elt}}}, # TODO
+    )
+      for args in (
+        bs,
+        (bs,),
+        blockedrange.(bs),
+        (blockedrange.(bs),),
+        (undef, bs),
+        (undef, bs...),
+        (undef, blockedrange.(bs)),
+        (undef, blockedrange.(bs)...),
+      )
+        a = T(args...)
+        @test eltype(a) == elt
+        @test blocktype(a) == Matrix{elt}
+        @test blockstype(a) <: SparseMatrixDOK{Matrix{elt}}
+        @test blocklengths.(axes(a)) == ([2, 3], [3, 4])
+        @test iszero(a)
+        @test iszero(block_stored_length(a))
+        @test iszero(stored_length(a))
+      end
+    end
+
+    # BlockSparseVector
+    bs = ([2, 3],)
+    for T in (
+      BlockSparseArray{elt},
+      BlockSparseArray{elt,1},
+      BlockSparseVector{elt},
+      BlockSparseArray{elt,1,Vector{elt}},
+      BlockSparseVector{elt,Vector{elt}},
+      ## BlockSparseArray{elt,1,Vector{elt},SparseVectorDOK{Vector{elt}}}, # TODO
+      ## BlockSparseVector{elt,Vector{elt},SparseVectorDOK{Vector{elt}}}, # TODO
+    )
+      for args in (
+        bs,
+        (bs,),
+        blockedrange.(bs),
+        (blockedrange.(bs),),
+        (undef, bs),
+        (undef, bs...),
+        (undef, blockedrange.(bs)),
+        (undef, blockedrange.(bs)...),
+      )
+        a = T(args...)
+        @test eltype(a) == elt
+        @test blocktype(a) == Vector{elt}
+        @test blockstype(a) <: SparseVectorDOK{Vector{elt}}
+        @test blocklengths.(axes(a)) == ([2, 3],)
+        @test iszero(a)
+        @test iszero(block_stored_length(a))
+        @test iszero(stored_length(a))
+      end
+    end
   end
   @testset "Basics" begin
     a = dev(BlockSparseArray{elt}([2, 3], [2, 3]))
