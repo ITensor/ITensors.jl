@@ -1,15 +1,16 @@
 # Mostly copied from https://github.com/JuliaLang/julia/blob/master/base/permuteddimsarray.jl
-# Like `PermutedDimsArrays` but recursive, similar to `Adjoint` and `Transpose`.
-module RecursivePermutedDimsArrays
+# Like `PermutedDimsArrays` but singly nested, similar to `Adjoint` and `Transpose`
+# (though those are fully recursive).
+module NestedPermutedDimsArrays
 
 import Base: permutedims, permutedims!
-export RecursivePermutedDimsArray
+export NestedPermutedDimsArray
 
 # Some day we will want storage-order-aware iteration, so put perm in the parameters
-struct RecursivePermutedDimsArray{T,N,perm,iperm,AA<:AbstractArray} <: AbstractArray{T,N}
+struct NestedPermutedDimsArray{T,N,perm,iperm,AA<:AbstractArray} <: AbstractArray{T,N}
   parent::AA
 
-  function RecursivePermutedDimsArray{T,N,perm,iperm,AA}(
+  function NestedPermutedDimsArray{T,N,perm,iperm,AA}(
     data::AA
   ) where {T,N,perm,iperm,AA<:AbstractArray}
     (isa(perm, NTuple{N,Int}) && isa(iperm, NTuple{N,Int})) ||
@@ -23,7 +24,7 @@ struct RecursivePermutedDimsArray{T,N,perm,iperm,AA<:AbstractArray} <: AbstractA
 end
 
 """
-    RecursivePermutedDimsArray(A, perm) -> B
+    NestedPermutedDimsArray(A, perm) -> B
 
 Given an AbstractArray `A`, create a view `B` such that the
 dimensions appear to be permuted. Similar to `permutedims`, except
@@ -35,7 +36,7 @@ See also [`permutedims`](@ref), [`invperm`](@ref).
 ```jldoctest
 julia> A = rand(3,5,4);
 
-julia> B = RecursivePermutedDimsArray(A, (3,1,2));
+julia> B = NestedPermutedDimsArray(A, (3,1,2));
 
 julia> size(B)
 (4, 3, 5)
@@ -44,50 +45,44 @@ julia> B[3,1,2] == A[1,2,3]
 true
 ```
 """
-Base.@constprop :aggressive function RecursivePermutedDimsArray(
+Base.@constprop :aggressive function NestedPermutedDimsArray(
   data::AbstractArray{T,N}, perm
 ) where {T,N}
   length(perm) == N ||
     throw(ArgumentError(string(perm, " is not a valid permutation of dimensions 1:", N)))
   iperm = invperm(perm)
-  return RecursivePermutedDimsArray{
-    recursivepermuteddimsarraytype(T, perm),N,(perm...,),(iperm...,),typeof(data)
+  return NestedPermutedDimsArray{
+    maybe_permuteddimsarraytype(T, perm),N,(perm...,),(iperm...,),typeof(data)
   }(
     data
   )
 end
 
-# Ideally we would use `Base.promote_op(recursivepermuteddimsarray, type, perm)` but
-# that doesn't seem to preserve the `perm`/`iperm` type parameters.
-function recursivepermuteddimsarraytype(type::Type{<:AbstractArray{<:AbstractArray}}, perm)
-  return RecursivePermutedDimsArray{
-    recursivepermuteddimsarraytype(eltype(type), perm),ndims(type),perm,invperm(perm),type
-  }
-end
-function recursivepermuteddimsarraytype(type::Type{<:AbstractArray}, perm)
+# Ideally would use `Base.promote_op(maybe_permuteddimsarraytype, type, perm)`
+# but it doesn't handle `perm` properly.
+function maybe_permuteddimsarraytype(type::Type{<:AbstractArray}, perm)
   return PermutedDimsArray{eltype(type),ndims(type),perm,invperm(perm),type}
 end
-recursivepermuteddimsarraytype(type::Type, perm) = type
+maybe_permuteddimsarraytype(type::Type, perm) = type
 
-function recursivepermuteddimsarray(A::AbstractArray{<:AbstractArray}, perm)
-  return RecursivePermutedDimsArray(A, perm)
+function maybe_permuteddimsarray(A::AbstractArray, perm)
+  return PermutedDimsArray(A, perm)
 end
-recursivepermuteddimsarray(A::AbstractArray, perm) = PermutedDimsArray(A, perm)
 # By default, assume scalar and don't permute.
-recursivepermuteddimsarray(x, perm) = x
+maybe_permuteddimsarray(x, perm) = x
 
-Base.parent(A::RecursivePermutedDimsArray) = A.parent
-function Base.size(A::RecursivePermutedDimsArray{T,N,perm}) where {T,N,perm}
+Base.parent(A::NestedPermutedDimsArray) = A.parent
+function Base.size(A::NestedPermutedDimsArray{T,N,perm}) where {T,N,perm}
   return genperm(size(parent(A)), perm)
 end
-function Base.axes(A::RecursivePermutedDimsArray{T,N,perm}) where {T,N,perm}
+function Base.axes(A::NestedPermutedDimsArray{T,N,perm}) where {T,N,perm}
   return genperm(axes(parent(A)), perm)
 end
-Base.has_offset_axes(A::RecursivePermutedDimsArray) = Base.has_offset_axes(A.parent)
-function Base.similar(A::RecursivePermutedDimsArray, T::Type, dims::Base.Dims)
+Base.has_offset_axes(A::NestedPermutedDimsArray) = Base.has_offset_axes(A.parent)
+function Base.similar(A::NestedPermutedDimsArray, T::Type, dims::Base.Dims)
   return similar(parent(A), T, dims)
 end
-function Base.cconvert(::Type{Ptr{T}}, A::RecursivePermutedDimsArray{T}) where {T}
+function Base.cconvert(::Type{Ptr{T}}, A::NestedPermutedDimsArray{T}) where {T}
   return Base.cconvert(Ptr{T}, parent(A))
 end
 
@@ -96,41 +91,37 @@ end
 # order than used by Julia. But for an array with unconventional
 # storage order, a linear offset is ambiguous---is it a memory offset
 # or a linear index?
-function Base.pointer(A::RecursivePermutedDimsArray, i::Integer)
+function Base.pointer(A::NestedPermutedDimsArray, i::Integer)
   throw(
-    ArgumentError(
-      "pointer(A, i) is deliberately unsupported for RecursivePermutedDimsArray"
-    ),
+    ArgumentError("pointer(A, i) is deliberately unsupported for NestedPermutedDimsArray")
   )
 end
 
-function Base.strides(A::RecursivePermutedDimsArray{T,N,perm}) where {T,N,perm}
+function Base.strides(A::NestedPermutedDimsArray{T,N,perm}) where {T,N,perm}
   s = strides(parent(A))
   return ntuple(d -> s[perm[d]], Val(N))
 end
-function Base.elsize(
-  ::Type{<:RecursivePermutedDimsArray{<:Any,<:Any,<:Any,<:Any,P}}
-) where {P}
+function Base.elsize(::Type{<:NestedPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,P}}) where {P}
   return Base.elsize(P)
 end
 
 @inline function Base.getindex(
-  A::RecursivePermutedDimsArray{T,N,perm,iperm}, I::Vararg{Int,N}
+  A::NestedPermutedDimsArray{T,N,perm,iperm}, I::Vararg{Int,N}
 ) where {T,N,perm,iperm}
   @boundscheck checkbounds(A, I...)
-  @inbounds val = recursivepermuteddimsarray(getindex(A.parent, genperm(I, iperm)...), perm)
+  @inbounds val = maybe_permuteddimsarray(getindex(A.parent, genperm(I, iperm)...), perm)
   return val
 end
 @inline function Base.setindex!(
-  A::RecursivePermutedDimsArray{T,N,perm,iperm}, val, I::Vararg{Int,N}
+  A::NestedPermutedDimsArray{T,N,perm,iperm}, val, I::Vararg{Int,N}
 ) where {T,N,perm,iperm}
   @boundscheck checkbounds(A, I...)
-  @inbounds setindex!(A.parent, recursivepermuteddimsarray(val, perm), genperm(I, iperm)...)
+  @inbounds setindex!(A.parent, maybe_permuteddimsarray(val, perm), genperm(I, iperm)...)
   return val
 end
 
 function Base.isassigned(
-  A::RecursivePermutedDimsArray{T,N,perm,iperm}, I::Vararg{Int,N}
+  A::NestedPermutedDimsArray{T,N,perm,iperm}, I::Vararg{Int,N}
 ) where {T,N,perm,iperm}
   @boundscheck checkbounds(Bool, A, I...) || return false
   @inbounds x = isassigned(A.parent, genperm(I, iperm)...)
@@ -141,14 +132,14 @@ end
 @inline genperm(I, perm::AbstractVector{Int}) = genperm(I, (perm...,))
 
 function Base.copyto!(
-  dest::RecursivePermutedDimsArray{T,N}, src::AbstractArray{T,N}
+  dest::NestedPermutedDimsArray{T,N}, src::AbstractArray{T,N}
 ) where {T,N}
   checkbounds(dest, axes(src)...)
   return _copy!(dest, src)
 end
-Base.copyto!(dest::RecursivePermutedDimsArray, src::AbstractArray) = _copy!(dest, src)
+Base.copyto!(dest::NestedPermutedDimsArray, src::AbstractArray) = _copy!(dest, src)
 
-function _copy!(P::RecursivePermutedDimsArray{T,N,perm}, src) where {T,N,perm}
+function _copy!(P::NestedPermutedDimsArray{T,N,perm}, src) where {T,N,perm}
   # If dest/src are "close to dense," then it pays to be cache-friendly.
   # Determine the first permuted dimension
   d = 0  # d+1 will hold the first permuted dimension of src
@@ -168,7 +159,7 @@ function _copy!(P::RecursivePermutedDimsArray{T,N,perm}, src) where {T,N,perm}
 end
 
 @noinline function _permutedims!(
-  P::RecursivePermutedDimsArray, src, R1::CartesianIndices{0}, R2, R3, ds, dp
+  P::NestedPermutedDimsArray, src, R1::CartesianIndices{0}, R2, R3, ds, dp
 )
   ip, is = axes(src, dp), axes(src, ds)
   for jo in first(ip):8:last(ip), io in first(is):8:last(is)
@@ -183,7 +174,7 @@ end
   return P
 end
 
-@noinline function _permutedims!(P::RecursivePermutedDimsArray, src, R1, R2, R3, ds, dp)
+@noinline function _permutedims!(P::NestedPermutedDimsArray, src, R1, R2, R3, ds, dp)
   ip, is = axes(src, dp), axes(src, ds)
   for jo in first(ip):8:last(ip), io in first(is):8:last(is)
     for I3 in R3, I2 in R2
@@ -210,11 +201,7 @@ const CommutativeOps = Union{
 }
 
 function Base._mapreduce_dim(
-  f,
-  op::CommutativeOps,
-  init::Base._InitialValue,
-  A::RecursivePermutedDimsArray,
-  dims::Colon,
+  f, op::CommutativeOps, init::Base._InitialValue, A::NestedPermutedDimsArray, dims::Colon
 )
   return Base._mapreduce_dim(f, op, init, parent(A), dims)
 end
@@ -222,19 +209,16 @@ function Base._mapreduce_dim(
   f::typeof(identity),
   op::Union{typeof(Base.mul_prod),typeof(*)},
   init::Base._InitialValue,
-  A::RecursivePermutedDimsArray{<:Union{Real,Complex}},
+  A::NestedPermutedDimsArray{<:Union{Real,Complex}},
   dims::Colon,
 )
   return Base._mapreduce_dim(f, op, init, parent(A), dims)
 end
 
 function Base.mapreducedim!(
-  f,
-  op::CommutativeOps,
-  B::AbstractArray{T,N},
-  A::RecursivePermutedDimsArray{S,N,perm,iperm},
+  f, op::CommutativeOps, B::AbstractArray{T,N}, A::NestedPermutedDimsArray{S,N,perm,iperm}
 ) where {T,S,N,perm,iperm}
-  C = RecursivePermutedDimsArray{T,N,iperm,perm,typeof(B)}(B) # make the inverse permutation for the output
+  C = NestedPermutedDimsArray{T,N,iperm,perm,typeof(B)}(B) # make the inverse permutation for the output
   Base.mapreducedim!(f, op, C, parent(A))
   return B
 end
@@ -242,17 +226,17 @@ function Base.mapreducedim!(
   f::typeof(identity),
   op::Union{typeof(Base.mul_prod),typeof(*)},
   B::AbstractArray{T,N},
-  A::RecursivePermutedDimsArray{<:Union{Real,Complex},N,perm,iperm},
+  A::NestedPermutedDimsArray{<:Union{Real,Complex},N,perm,iperm},
 ) where {T,N,perm,iperm}
-  C = RecursivePermutedDimsArray{T,N,iperm,perm,typeof(B)}(B) # make the inverse permutation for the output
+  C = NestedPermutedDimsArray{T,N,iperm,perm,typeof(B)}(B) # make the inverse permutation for the output
   Base.mapreducedim!(f, op, C, parent(A))
   return B
 end
 
 function Base.showarg(
-  io::IO, A::RecursivePermutedDimsArray{T,N,perm}, toplevel
+  io::IO, A::NestedPermutedDimsArray{T,N,perm}, toplevel
 ) where {T,N,perm}
-  print(io, "RecursivePermutedDimsArray(")
+  print(io, "NestedPermutedDimsArray(")
   Base.showarg(io, parent(A), false)
   print(io, ", ", perm, ')')
   toplevel && print(io, " with eltype ", eltype(A))

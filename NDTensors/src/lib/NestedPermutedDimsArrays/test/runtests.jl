@@ -1,14 +1,14 @@
 @eval module $(gensym())
-using NDTensors.RecursivePermutedDimsArrays: RecursivePermutedDimsArray
+using NDTensors.NestedPermutedDimsArrays: NestedPermutedDimsArray
 using Test: @test, @testset
-@testset "RecursivePermutedDimsArrays" for elt in (
+@testset "NestedPermutedDimsArrays" for elt in (
   Float32, Float64, Complex{Float32}, Complex{Float64}
 )
   a = map(_ -> randn(elt, 2, 3, 4), CartesianIndices((2, 3, 4)))
   perm = (3, 2, 1)
-  p = RecursivePermutedDimsArray(a, perm)
+  p = NestedPermutedDimsArray(a, perm)
   T = PermutedDimsArray{elt,3,perm,invperm(perm),eltype(a)}
-  @test typeof(p) === RecursivePermutedDimsArray{T,3,perm,invperm(perm),typeof(a)}
+  @test typeof(p) === NestedPermutedDimsArray{T,3,perm,invperm(perm),typeof(a)}
   @test size(p) == (4, 3, 2)
   @test eltype(p) === T
   for I in eachindex(p)

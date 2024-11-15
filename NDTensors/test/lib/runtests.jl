@@ -15,7 +15,7 @@ using Test: @testset
   "LabelledNumbers",
   "MetalExtensions",
   "NamedDimsArrays",
-  "RecursivePermutedDimsArrays",
+  "NestedPermutedDimsArrays",
   "SmallVectors",
   "SortedSets",
   "SparseArrayDOKs",
