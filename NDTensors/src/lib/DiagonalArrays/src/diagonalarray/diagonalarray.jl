@@ -1,4 +1,4 @@
-using ..SparseArrayInterface: Zero, getindex_zero_function
+using ..SparseArraysBase: Zero, getindex_zero_function
 # TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
 using ..SparseArrayDOKs: SparseArrayDOKs, SparseArrayDOK
 
@@ -88,20 +88,20 @@ function Base.similar(a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}})
   return DiagonalArray{elt}(undef, dims, getindex_zero_function(a))
 end
 
-# Minimal `SparseArrayInterface` interface
-SparseArrayInterface.sparse_storage(a::DiagonalArray) = a.diag
+# Minimal `SparseArraysBase` interface
+SparseArraysBase.sparse_storage(a::DiagonalArray) = a.diag
 
-# `SparseArrayInterface`
+# `SparseArraysBase`
 # Defines similar when the output can't be `DiagonalArray`,
 # such as in `reshape`.
 # TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
 # TODO: Special case 2D to output `SparseMatrixCSC`?
-function SparseArrayInterface.sparse_similar(
+function SparseArraysBase.sparse_similar(
   a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}}
 )
   return SparseArrayDOK{elt}(undef, dims, getindex_zero_function(a))
 end
 
-function SparseArrayInterface.getindex_zero_function(a::DiagonalArray)
+function SparseArraysBase.getindex_zero_function(a::DiagonalArray)
   return a.zero
 end

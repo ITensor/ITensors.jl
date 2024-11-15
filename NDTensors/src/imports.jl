@@ -38,7 +38,7 @@ for lib in [
   :SymmetrySectors,
   :TensorAlgebra,
   :NestedPermutedDimsArrays,
-  :SparseArrayInterface,
+  :SparseArraysBase,
   :SparseArrayDOKs,
   :DiagonalArrays,
   :BlockSparseArrays,

@@ -1,4 +1,4 @@
-# TODO: Define in `SparseArrayInterface`.
+# TODO: Define in `SparseArraysBase`.
 using ..SparseArrayDOKs: SparseArrayDOK
 
 # TODO: This is inefficient, need to optimize.

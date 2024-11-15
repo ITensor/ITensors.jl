@@ -1,6 +1,6 @@
 module AbstractSparseArrays
 using ArrayLayouts: ArrayLayouts, MatMulMatAdd, MemoryLayout, MulAdd
-using NDTensors.SparseArrayInterface: SparseArrayInterface, AbstractSparseArray, Zero
+using NDTensors.SparseArraysBase: SparseArraysBase, AbstractSparseArray, Zero
 
 struct SparseArray{T,N,Zero} <: AbstractSparseArray{T,N}
   data::Vector{T}
@@ -35,7 +35,7 @@ function ArrayLayouts.materialize!(
   m::MatMulMatAdd{<:SparseLayout,<:SparseLayout,<:SparseLayout}
 )
   α, a1, a2, β, a_dest = m.α, m.A, m.B, m.β, m.C
-  SparseArrayInterface.sparse_mul!(a_dest, a1, a2, α, β)
+  SparseArraysBase.sparse_mul!(a_dest, a1, a2, α, β)
   return a_dest
 end
 
@@ -46,15 +46,15 @@ function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})
 end
 
 # Minimal interface
-SparseArrayInterface.getindex_zero_function(a::SparseArray) = a.zero
-SparseArrayInterface.sparse_storage(a::SparseArray) = a.data
-function SparseArrayInterface.index_to_storage_index(
+SparseArraysBase.getindex_zero_function(a::SparseArray) = a.zero
+SparseArraysBase.sparse_storage(a::SparseArray) = a.data
+function SparseArraysBase.index_to_storage_index(
   a::SparseArray{<:Any,N}, I::CartesianIndex{N}
 ) where {N}
   return get(a.index_to_dataindex, I, nothing)
 end
-SparseArrayInterface.storage_index_to_index(a::SparseArray, I) = a.dataindex_to_index[I]
-function SparseArrayInterface.setindex_notstored!(
+SparseArraysBase.storage_index_to_index(a::SparseArray, I) = a.dataindex_to_index[I]
+function SparseArraysBase.setindex_notstored!(
   a::SparseArray{<:Any,N}, value, I::CartesianIndex{N}
 ) where {N}
   push!(a.data, value)
@@ -65,7 +65,7 @@ end
 
 # Empty the storage, helps with efficiency in `map!` to drop
 # zeros.
-function SparseArrayInterface.dropall!(a::SparseArray)
+function SparseArraysBase.dropall!(a::SparseArray)
   empty!(a.data)
   empty!(a.index_to_dataindex)
   empty!(a.dataindex_to_index)

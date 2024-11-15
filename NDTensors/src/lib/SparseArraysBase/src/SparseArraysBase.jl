@@ -1,4 +1,4 @@
-module SparseArrayInterface
+module SparseArraysBase
 include("sparsearrayinterface/arraylayouts.jl")
 include("sparsearrayinterface/densearray.jl")
 include("sparsearrayinterface/vectorinterface.jl")
@@ -13,7 +13,7 @@ include("sparsearrayinterface/conversion.jl")
 include("sparsearrayinterface/wrappers.jl")
 include("sparsearrayinterface/zero.jl")
 include("sparsearrayinterface/cat.jl")
-include("sparsearrayinterface/SparseArrayInterfaceLinearAlgebraExt.jl")
+include("sparsearrayinterface/SparseArraysBaseLinearAlgebraExt.jl")
 include("abstractsparsearray/abstractsparsearray.jl")
 include("abstractsparsearray/abstractsparsematrix.jl")
 include("abstractsparsearray/abstractsparsevector.jl")
@@ -26,6 +26,6 @@ include("abstractsparsearray/map.jl")
 include("abstractsparsearray/baseinterface.jl")
 include("abstractsparsearray/convert.jl")
 include("abstractsparsearray/cat.jl")
-include("abstractsparsearray/SparseArrayInterfaceSparseArraysExt.jl")
-include("abstractsparsearray/SparseArrayInterfaceLinearAlgebraExt.jl")
+include("abstractsparsearray/SparseArraysBaseSparseArraysExt.jl")
+include("abstractsparsearray/SparseArraysBaseLinearAlgebraExt.jl")
 end

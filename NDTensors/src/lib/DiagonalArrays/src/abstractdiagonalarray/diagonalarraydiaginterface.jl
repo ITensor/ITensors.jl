@@ -1,6 +1,6 @@
-using ..SparseArrayInterface: SparseArrayInterface, StorageIndex, StorageIndices
+using ..SparseArraysBase: SparseArraysBase, StorageIndex, StorageIndices
 
-SparseArrayInterface.StorageIndex(i::DiagIndex) = StorageIndex(index(i))
+SparseArraysBase.StorageIndex(i::DiagIndex) = StorageIndex(index(i))
 
 function Base.getindex(a::AbstractDiagonalArray, i::DiagIndex)
   return a[StorageIndex(i)]
@@ -11,7 +11,7 @@ function Base.setindex!(a::AbstractDiagonalArray, value, i::DiagIndex)
   return a
 end
 
-SparseArrayInterface.StorageIndices(i::DiagIndices) = StorageIndices(indices(i))
+SparseArraysBase.StorageIndices(i::DiagIndices) = StorageIndices(indices(i))
 
 function Base.getindex(a::AbstractDiagonalArray, i::DiagIndices)
   return a[StorageIndices(i)]

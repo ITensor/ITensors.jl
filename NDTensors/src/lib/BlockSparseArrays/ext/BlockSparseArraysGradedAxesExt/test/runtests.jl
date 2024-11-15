@@ -13,7 +13,7 @@ using NDTensors.GradedAxes:
   gradedrange,
   isdual
 using NDTensors.LabelledNumbers: label
-using NDTensors.SparseArrayInterface: stored_length
+using NDTensors.SparseArraysBase: stored_length
 using NDTensors.SymmetrySectors: U1
 using NDTensors.TensorAlgebra: fusedims, splitdims
 using LinearAlgebra: adjoint

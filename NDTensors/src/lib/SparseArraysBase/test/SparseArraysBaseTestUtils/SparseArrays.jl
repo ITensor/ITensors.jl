@@ -1,6 +1,6 @@
 module SparseArrays
 using LinearAlgebra: LinearAlgebra
-using NDTensors.SparseArrayInterface: SparseArrayInterface, Zero
+using NDTensors.SparseArraysBase: SparseArraysBase, Zero
 
 struct SparseArray{T,N,Zero} <: AbstractArray{T,N}
   data::Vector{T}
@@ -33,12 +33,12 @@ function LinearAlgebra.mul!(
   α::Number,
   β::Number,
 )
-  SparseArrayInterface.sparse_mul!(a_dest, a1, a2, α, β)
+  SparseArraysBase.sparse_mul!(a_dest, a1, a2, α, β)
   return a_dest
 end
 
 function LinearAlgebra.dot(a1::SparseArray, a2::SparseArray)
-  return SparseArrayInterface.sparse_dot(a1, a2)
+  return SparseArraysBase.sparse_dot(a1, a2)
 end
 
 # AbstractArray interface
@@ -48,25 +48,25 @@ function Base.similar(a::SparseArray, elt::Type, dims::Tuple{Vararg{Int}})
 end
 
 function Base.getindex(a::SparseArray, I...)
-  return SparseArrayInterface.sparse_getindex(a, I...)
+  return SparseArraysBase.sparse_getindex(a, I...)
 end
 function Base.setindex!(a::SparseArray, value, I...)
-  return SparseArrayInterface.sparse_setindex!(a, value, I...)
+  return SparseArraysBase.sparse_setindex!(a, value, I...)
 end
 function Base.fill!(a::SparseArray, value)
-  return SparseArrayInterface.sparse_fill!(a, value)
+  return SparseArraysBase.sparse_fill!(a, value)
 end
 
 # Minimal interface
-SparseArrayInterface.getindex_zero_function(a::SparseArray) = a.zero
-SparseArrayInterface.sparse_storage(a::SparseArray) = a.data
-function SparseArrayInterface.index_to_storage_index(
+SparseArraysBase.getindex_zero_function(a::SparseArray) = a.zero
+SparseArraysBase.sparse_storage(a::SparseArray) = a.data
+function SparseArraysBase.index_to_storage_index(
   a::SparseArray{<:Any,N}, I::CartesianIndex{N}
 ) where {N}
   return get(a.index_to_dataindex, I, nothing)
 end
-SparseArrayInterface.storage_index_to_index(a::SparseArray, I) = a.dataindex_to_index[I]
-function SparseArrayInterface.setindex_notstored!(
+SparseArraysBase.storage_index_to_index(a::SparseArray, I) = a.dataindex_to_index[I]
+function SparseArraysBase.setindex_notstored!(
   a::SparseArray{<:Any,N}, value, I::CartesianIndex{N}
 ) where {N}
   push!(a.data, value)
@@ -76,8 +76,8 @@ function SparseArrayInterface.setindex_notstored!(
 end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
-using NDTensors.SparseArrayInterface: perm, stored_indices
-function SparseArrayInterface.stored_indices(
+using NDTensors.SparseArraysBase: perm, stored_indices
+function SparseArraysBase.stored_indices(
   a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
 )
   return Iterators.map(
@@ -86,8 +86,8 @@ function SparseArrayInterface.stored_indices(
 end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
-using NDTensors.SparseArrayInterface: sparse_storage
-function SparseArrayInterface.sparse_storage(
+using NDTensors.SparseArraysBase: sparse_storage
+function SparseArraysBase.sparse_storage(
   a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
 )
   return sparse_storage(parent(a))
@@ -95,7 +95,7 @@ end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
 using NDTensors.NestedPermutedDimsArrays: NestedPermutedDimsArray
-function SparseArrayInterface.stored_indices(
+function SparseArraysBase.stored_indices(
   a::NestedPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
 )
   return Iterators.map(
@@ -105,8 +105,8 @@ end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
 using NDTensors.NestedPermutedDimsArrays: NestedPermutedDimsArray
-using NDTensors.SparseArrayInterface: sparse_storage
-function SparseArrayInterface.sparse_storage(
+using NDTensors.SparseArraysBase: sparse_storage
+function SparseArraysBase.sparse_storage(
   a::NestedPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
 )
   return sparse_storage(parent(a))
@@ -114,7 +114,7 @@ end
 
 # Empty the storage, helps with efficiency in `map!` to drop
 # zeros.
-function SparseArrayInterface.dropall!(a::SparseArray)
+function SparseArraysBase.dropall!(a::SparseArray)
   empty!(a.data)
   empty!(a.index_to_dataindex)
   empty!(a.dataindex_to_index)
@@ -123,44 +123,44 @@ end
 
 # Broadcasting
 function Broadcast.BroadcastStyle(arraytype::Type{<:SparseArray})
-  return SparseArrayInterface.SparseArrayStyle{ndims(arraytype)}()
+  return SparseArraysBase.SparseArrayStyle{ndims(arraytype)}()
 end
 
 # Map
 function Base.map!(f, dest::AbstractArray, src::SparseArray)
-  SparseArrayInterface.sparse_map!(f, dest, src)
+  SparseArraysBase.sparse_map!(f, dest, src)
   return dest
 end
 function Base.copy!(dest::AbstractArray, src::SparseArray)
-  SparseArrayInterface.sparse_copy!(dest, src)
+  SparseArraysBase.sparse_copy!(dest, src)
   return dest
 end
 function Base.copyto!(dest::AbstractArray, src::SparseArray)
-  SparseArrayInterface.sparse_copyto!(dest, src)
+  SparseArraysBase.sparse_copyto!(dest, src)
   return dest
 end
 function Base.permutedims!(dest::AbstractArray, src::SparseArray, perm)
-  SparseArrayInterface.sparse_permutedims!(dest, src, perm)
+  SparseArraysBase.sparse_permutedims!(dest, src, perm)
   return dest
 end
 
 # Base
 function Base.:(==)(a1::SparseArray, a2::SparseArray)
-  return SparseArrayInterface.sparse_isequal(a1, a2)
+  return SparseArraysBase.sparse_isequal(a1, a2)
 end
 function Base.reshape(a::SparseArray, dims::Tuple{Vararg{Int}})
-  return SparseArrayInterface.sparse_reshape(a, dims)
+  return SparseArraysBase.sparse_reshape(a, dims)
 end
 function Base.iszero(a::SparseArray)
-  return SparseArrayInterface.sparse_iszero(a)
+  return SparseArraysBase.sparse_iszero(a)
 end
 function Base.isreal(a::SparseArray)
-  return SparseArrayInterface.sparse_isreal(a)
+  return SparseArraysBase.sparse_isreal(a)
 end
 function Base.zero(a::SparseArray)
-  return SparseArrayInterface.sparse_zero(a)
+  return SparseArraysBase.sparse_zero(a)
 end
 function Base.one(a::SparseArray)
-  return SparseArrayInterface.sparse_one(a)
+  return SparseArraysBase.sparse_one(a)
 end
 end

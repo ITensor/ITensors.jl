@@ -1,4 +1,4 @@
-using .SparseArrayInterface: densearray
+using .SparseArraysBase: densearray
 using .DiagonalArrays: DiagIndex, diaglength
 using .TypeParameterAccessors: unwrap_array_type
 

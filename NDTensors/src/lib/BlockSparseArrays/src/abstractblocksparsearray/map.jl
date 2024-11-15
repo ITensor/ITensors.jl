@@ -1,8 +1,8 @@
 using ArrayLayouts: LayoutArray
 using BlockArrays: blockisequal
 using LinearAlgebra: Adjoint, Transpose
-using ..SparseArrayInterface:
-  SparseArrayInterface,
+using ..SparseArraysBase:
+  SparseArraysBase,
   SparseArrayStyle,
   sparse_map!,
   sparse_copy!,
@@ -62,7 +62,7 @@ end
 # is used to determine `union_stored_blocked_cartesianindices(...)`).
 # `reblock` is a partial solution to that, but a bit ad-hoc.
 # TODO: Move to `blocksparsearrayinterface/map.jl`.
-function SparseArrayInterface.sparse_map!(
+function SparseArraysBase.sparse_map!(
   ::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray}
 )
   a_dest, a_srcs = reblock(a_dest), reblock.(a_srcs)
@@ -89,7 +89,7 @@ function SparseArrayInterface.sparse_map!(
 end
 
 # TODO: Implement this.
-# function SparseArrayInterface.sparse_mapreduce(::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray})
+# function SparseArraysBase.sparse_mapreduce(::BlockSparseArrayStyle, f, a_dest::AbstractArray, a_srcs::Vararg{AbstractArray})
 # end
 
 function Base.map!(f, a_dest::AbstractArray, a_srcs::Vararg{AnyAbstractBlockSparseArray})

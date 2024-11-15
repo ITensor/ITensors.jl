@@ -30,7 +30,7 @@ using NDTensors.BlockSparseArrays:
   blocktype,
   view!
 using NDTensors.GPUArraysCoreExtensions: cpu
-using NDTensors.SparseArrayInterface: stored_length
+using NDTensors.SparseArraysBase: stored_length
 using NDTensors.SparseArrayDOKs: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred

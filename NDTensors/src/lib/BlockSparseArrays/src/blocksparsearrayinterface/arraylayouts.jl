@@ -1,6 +1,6 @@
 using ArrayLayouts: ArrayLayouts, Dot, MatMulMatAdd, MatMulVecAdd, MulAdd
 using BlockArrays: BlockLayout
-using ..SparseArrayInterface: SparseLayout
+using ..SparseArraysBase: SparseLayout
 using LinearAlgebra: dot, mul!
 
 function blocksparse_muladd!(

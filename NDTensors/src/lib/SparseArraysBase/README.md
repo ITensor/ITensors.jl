@@ -1,4 +1,4 @@
-# SparseArrayInterface
+# SparseArraysBase
 
 Defines a generic interface for sparse arrays in Julia.
 
@@ -7,18 +7,18 @@ The minimal interface is:
 nonzeros(a::AbstractArray) = ...
 nonzero_index_to_index(a::AbstractArray, Inz) = ...
 index_to_nonzero_index(a::AbstractArray{<:Any,N}, I::CartesianIndex{N}) where {N} = ...
-Broadcast.BroadcastStyle(arraytype::Type{<:AbstractArray}) = SparseArrayInterface.SparseArrayStyle{ndims(arraytype)}()
+Broadcast.BroadcastStyle(arraytype::Type{<:AbstractArray}) = SparseArraysBase.SparseArrayStyle{ndims(arraytype)}()
 ```
 Once these are defined, along with Julia AbstractArray interface functions like
 `Base.size` and `Base.similar`, functions like the following will take advantage of sparsity:
 ```julia
-SparseArrayInterface.nonzero_length # SparseArrays.nnz
-SparseArrayInterface.sparse_getindex
-SparseArrayInterface.sparse_setindex!
-SparseArrayInterface.sparse_map!
-SparseArrayInterface.sparse_copy!
-SparseArrayInterface.sparse_copyto!
-SparseArrayInterface.sparse_permutedims!
+SparseArraysBase.nonzero_length # SparseArrays.nnz
+SparseArraysBase.sparse_getindex
+SparseArraysBase.sparse_setindex!
+SparseArraysBase.sparse_map!
+SparseArraysBase.sparse_copy!
+SparseArraysBase.sparse_copyto!
+SparseArraysBase.sparse_permutedims!
 ```
 which can be used to define the corresponding `Base` functions.
 
