@@ -16,7 +16,7 @@ using BlockArrays:
   mortar
 using Compat: @compat
 using GPUArraysCore: @allowscalar
-using LinearAlgebra: Adjoint, dot, mul!, norm
+using LinearAlgebra: Adjoint, Transpose, dot, mul!, norm
 using NDTensors.BlockSparseArrays:
   @view!,
   BlockSparseArray,
@@ -33,7 +33,7 @@ using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors.SparseArrayInterface: stored_length
 using NDTensors.SparseArrayDOKs: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK
 using NDTensors.TensorAlgebra: contract
-using Test: @test, @test_broken, @test_throws, @testset
+using Test: @test, @test_broken, @test_throws, @testset, @inferred
 include("TestBlockSparseArraysUtils.jl")
 
 using NDTensors: NDTensors
@@ -205,14 +205,53 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
       end
     end
 
-    # adjoint and transpose
-    a = dev(BlockSparseArray{elt}([1], [1, 1]))
-    @allowscalar a[1, 2] = 1
-    @test [@views(a[it]) for it in block_stored_indices(a)] isa Vector
-    ah = adjoint(a)
-    @test [@views(ah[it]) for it in block_stored_indices(ah)] isa Vector
-    at = transpose(a)
-    @test [@views(at[it]) for it in block_stored_indices(at)] isa Vector
+    @testset "Transpose" begin
+      a = dev(BlockSparseArray{elt}([2, 2], [3, 3, 1]))
+      a[Block(1, 1)] = dev(randn(elt, 2, 3))
+      a[Block(2, 3)] = dev(randn(elt, 2, 1))
+
+      at = @inferred transpose(a)
+      @test at isa Transpose
+      @test size(at) == reverse(size(a))
+      @test blocksize(at) == reverse(blocksize(a))
+      @test stored_length(at) == stored_length(a)
+      @test block_stored_length(at) == block_stored_length(a)
+      for bind in block_stored_indices(a)
+        bindt = Block(reverse(Int.(Tuple(bind))))
+        @test bindt in block_stored_indices(at)
+      end
+
+      @test @views(at[Block(1, 1)]) == transpose(a[Block(1, 1)])
+      @test @views(at[Block(1, 1)]) isa Transpose
+      @test @views(at[Block(3, 2)]) == transpose(a[Block(2, 3)])
+      # TODO: BlockView == AbstractArray calls scalar code
+      @test @allowscalar @views(at[Block(1, 2)]) == transpose(a[Block(2, 1)])
+      @test @views(at[Block(1, 2)]) isa Transpose
+    end
+
+    @testset "Adjoint" begin
+      a = dev(BlockSparseArray{elt}([2, 2], [3, 3, 1]))
+      a[Block(1, 1)] = dev(randn(elt, 2, 3))
+      a[Block(2, 3)] = dev(randn(elt, 2, 1))
+
+      at = @inferred adjoint(a)
+      @test at isa Adjoint
+      @test size(at) == reverse(size(a))
+      @test blocksize(at) == reverse(blocksize(a))
+      @test stored_length(at) == stored_length(a)
+      @test block_stored_length(at) == block_stored_length(a)
+      for bind in block_stored_indices(a)
+        bindt = Block(reverse(Int.(Tuple(bind))))
+        @test bindt in block_stored_indices(at)
+      end
+
+      @test @views(at[Block(1, 1)]) == adjoint(a[Block(1, 1)])
+      @test @views(at[Block(1, 1)]) isa Adjoint
+      @test @views(at[Block(3, 2)]) == adjoint(a[Block(2, 3)])
+      # TODO: BlockView == AbstractArray calls scalar code
+      @test @allowscalar @views(at[Block(1, 2)]) == adjoint(a[Block(2, 1)])
+      @test @views(at[Block(1, 2)]) isa Adjoint
+    end
   end
   @testset "Tensor algebra" begin
     a = dev(BlockSparseArray{elt}(undef, ([2, 3], [3, 4])))
