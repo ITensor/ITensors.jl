@@ -186,79 +186,8 @@ end
 reverse_index(index) = reverse(index)
 reverse_index(index::CartesianIndex) = CartesianIndex(reverse(Tuple(index)))
 
-# Represents the array of arrays of a `Transpose`
-# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Transpose`.
-struct SparseTransposeBlocks{T,BlockType<:AbstractArray{T},Array<:Transpose{T}} <:
-       AbstractSparseMatrix{BlockType}
-  array::Array
-end
-function blocksparse_blocks(a::Transpose)
-  return SparseTransposeBlocks{eltype(a),blocktype(parent(a)),typeof(a)}(a)
-end
-function Base.size(a::SparseTransposeBlocks)
-  return reverse(size(blocks(parent(a.array))))
-end
-function Base.getindex(a::SparseTransposeBlocks, index::Vararg{Int,2})
-  return transpose(blocks(parent(a.array))[reverse(index)...])
-end
-# TODO: This should be handled by generic `AbstractSparseArray` code.
-function Base.getindex(a::SparseTransposeBlocks, index::CartesianIndex{2})
-  return a[Tuple(index)...]
-end
-# TODO: Create a generic `parent_index` function to map an index
-# a parent index.
-function Base.isassigned(a::SparseTransposeBlocks, index::Vararg{Int,2})
-  return isassigned(blocks(parent(a.array)), reverse(index)...)
-end
-function SparseArrayInterface.stored_indices(a::SparseTransposeBlocks)
-  return map(reverse_index, stored_indices(blocks(parent(a.array))))
-end
-# TODO: Either make this the generic interface or define
-# `SparseArrayInterface.sparse_storage`, which is used
-# to defined this.
-SparseArrayInterface.stored_length(a::SparseTransposeBlocks) = length(stored_indices(a))
-function SparseArrayInterface.sparse_storage(a::SparseTransposeBlocks)
-  return error("Not implemented")
-end
-
-# Represents the array of arrays of a `Adjoint`
-# wrapping a block spare array, i.e. `blocks(array)` where `a` is a `Adjoint`.
-struct SparseAdjointBlocks{T,BlockType<:AbstractArray{T},Array<:Adjoint{T}} <:
-       AbstractSparseMatrix{BlockType}
-  array::Array
-end
-function blocksparse_blocks(a::Adjoint)
-  return SparseAdjointBlocks{eltype(a),blocktype(parent(a)),typeof(a)}(a)
-end
-function Base.size(a::SparseAdjointBlocks)
-  return reverse(size(blocks(parent(a.array))))
-end
-# TODO: Create a generic `parent_index` function to map an index
-# a parent index.
-function Base.getindex(a::SparseAdjointBlocks, index::Vararg{Int,2})
-  return blocks(parent(a.array))[reverse(index)...]'
-end
-# TODO: Create a generic `parent_index` function to map an index
-# a parent index.
-# TODO: This should be handled by generic `AbstractSparseArray` code.
-function Base.getindex(a::SparseAdjointBlocks, index::CartesianIndex{2})
-  return a[Tuple(index)...]
-end
-# TODO: Create a generic `parent_index` function to map an index
-# a parent index.
-function Base.isassigned(a::SparseAdjointBlocks, index::Vararg{Int,2})
-  return isassigned(blocks(parent(a.array)), reverse(index)...)
-end
-function SparseArrayInterface.stored_indices(a::SparseAdjointBlocks)
-  return map(reverse_index, stored_indices(blocks(parent(a.array))))
-end
-# TODO: Either make this the generic interface or define
-# `SparseArrayInterface.sparse_storage`, which is used
-# to defined this.
-SparseArrayInterface.stored_length(a::SparseAdjointBlocks) = length(stored_indices(a))
-function SparseArrayInterface.sparse_storage(a::SparseAdjointBlocks)
-  return error("Not implemented")
-end
+blocksparse_blocks(a::Transpose) = transpose(blocks(parent(a)))
+blocksparse_blocks(a::Adjoint) = adjoint(blocks(parent(a)))
 
 # Represents the array of arrays of a `SubArray`
 # wrapping a block spare array, i.e. `blocks(array)` where `a` is a `SubArray`.
