@@ -52,24 +52,15 @@ Base.@constprop :aggressive function NestedPermutedDimsArray(
     throw(ArgumentError(string(perm, " is not a valid permutation of dimensions 1:", N)))
   iperm = invperm(perm)
   return NestedPermutedDimsArray{
-    maybe_permuteddimsarraytype(T, perm),N,(perm...,),(iperm...,),typeof(data)
+    PermutedDimsArray{eltype(T),N,(perm...,),(iperm...,),T},
+    N,
+    (perm...,),
+    (iperm...,),
+    typeof(data),
   }(
     data
   )
 end
-
-# Ideally would use `Base.promote_op(maybe_permuteddimsarraytype, type, perm)`
-# but it doesn't handle `perm` properly.
-function maybe_permuteddimsarraytype(type::Type{<:AbstractArray}, perm)
-  return PermutedDimsArray{eltype(type),ndims(type),perm,invperm(perm),type}
-end
-maybe_permuteddimsarraytype(type::Type, perm) = type
-
-function maybe_permuteddimsarray(A::AbstractArray, perm)
-  return PermutedDimsArray(A, perm)
-end
-# By default, assume scalar and don't permute.
-maybe_permuteddimsarray(x, perm) = x
 
 Base.parent(A::NestedPermutedDimsArray) = A.parent
 function Base.size(A::NestedPermutedDimsArray{T,N,perm}) where {T,N,perm}
@@ -109,14 +100,14 @@ end
   A::NestedPermutedDimsArray{T,N,perm,iperm}, I::Vararg{Int,N}
 ) where {T,N,perm,iperm}
   @boundscheck checkbounds(A, I...)
-  @inbounds val = maybe_permuteddimsarray(getindex(A.parent, genperm(I, iperm)...), perm)
+  @inbounds val = PermutedDimsArray(getindex(A.parent, genperm(I, iperm)...), perm)
   return val
 end
 @inline function Base.setindex!(
   A::NestedPermutedDimsArray{T,N,perm,iperm}, val, I::Vararg{Int,N}
 ) where {T,N,perm,iperm}
   @boundscheck checkbounds(A, I...)
-  @inbounds setindex!(A.parent, maybe_permuteddimsarray(val, perm), genperm(I, iperm)...)
+  @inbounds setindex!(A.parent, PermutedDimsArray(val, perm), genperm(I, iperm)...)
   return val
 end
 
