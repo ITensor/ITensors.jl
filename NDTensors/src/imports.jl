@@ -37,6 +37,7 @@ for lib in [
   :GradedAxes,
   :SymmetrySectors,
   :TensorAlgebra,
+  :NestedPermutedDimsArrays,
   :SparseArrayInterface,
   :SparseArrayDOKs,
   :DiagonalArrays,
