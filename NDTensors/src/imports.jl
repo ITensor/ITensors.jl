@@ -40,6 +40,7 @@ for lib in [
   :SparseArrayInterface,
   :SparseArrayDOKs,
   :DiagonalArrays,
+  :RecursivePermutedDimsArrays,
   :BlockSparseArrays,
   :NamedDimsArrays,
   :SmallVectors,
