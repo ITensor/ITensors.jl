@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using LinearAlgebra: dot, mul!, norm
 using NDTensors.SparseArrayInterface: SparseArrayInterface
+using NDTensors.NestedPermutedDimsArrays: NestedPermutedDimsArray
 include("SparseArrayInterfaceTestUtils/SparseArrayInterfaceTestUtils.jl")
 using .SparseArrayInterfaceTestUtils.AbstractSparseArrays: AbstractSparseArrays
 using .SparseArrayInterfaceTestUtils.SparseArrays: SparseArrays
@@ -219,6 +220,44 @@ using Test: @test, @testset
   for I in eachindex(b)
     if I == CartesianIndex(2, 1)
       @test b[I] == 12
+    else
+      @test iszero(b[I])
+    end
+  end
+
+  a = SparseArray{elt}(2, 3)
+  a[1, 2] = 12
+  b = PermutedDimsArray(a, (2, 1))
+  @test size(b) == (3, 2)
+  @test axes(b) == (1:3, 1:2)
+  @test SparseArrayInterface.sparse_storage(b) == elt[12]
+  @test SparseArrayInterface.stored_length(b) == 1
+  @test collect(SparseArrayInterface.stored_indices(b)) == [CartesianIndex(2, 1)]
+  @test !iszero(b)
+  @test !iszero(norm(b))
+  for I in eachindex(b)
+    if I == CartesianIndex(2, 1)
+      @test b[I] == 12
+    else
+      @test iszero(b[I])
+    end
+  end
+
+  a = SparseArray{Matrix{elt}}(
+    2, 3; zero=(a, I) -> (z = similar(eltype(a), 2, 3); fill!(z, false); z)
+  )
+  a[1, 2] = randn(elt, 2, 3)
+  b = NestedPermutedDimsArray(a, (2, 1))
+  @test size(b) == (3, 2)
+  @test axes(b) == (1:3, 1:2)
+  @test SparseArrayInterface.sparse_storage(b) == [a[1, 2]]
+  @test SparseArrayInterface.stored_length(b) == 1
+  @test collect(SparseArrayInterface.stored_indices(b)) == [CartesianIndex(2, 1)]
+  @test !iszero(b)
+  @test !iszero(norm(b))
+  for I in eachindex(b)
+    if I == CartesianIndex(2, 1)
+      @test b[I] == permutedims(a[1, 2], (2, 1))
     else
       @test iszero(b[I])
     end

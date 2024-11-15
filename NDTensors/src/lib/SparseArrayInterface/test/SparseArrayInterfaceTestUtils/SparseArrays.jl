@@ -1,24 +1,29 @@
 module SparseArrays
 using LinearAlgebra: LinearAlgebra
-using NDTensors.SparseArrayInterface: SparseArrayInterface
+using NDTensors.SparseArrayInterface: SparseArrayInterface, Zero
 
-struct SparseArray{T,N} <: AbstractArray{T,N}
+struct SparseArray{T,N,Zero} <: AbstractArray{T,N}
   data::Vector{T}
   dims::Tuple{Vararg{Int,N}}
   index_to_dataindex::Dict{CartesianIndex{N},Int}
   dataindex_to_index::Vector{CartesianIndex{N}}
+  zero::Zero
 end
-function SparseArray{T,N}(dims::Tuple{Vararg{Int,N}}) where {T,N}
-  return SparseArray{T,N}(
-    T[], dims, Dict{CartesianIndex{N},Int}(), Vector{CartesianIndex{N}}()
+function SparseArray{T,N}(dims::Tuple{Vararg{Int,N}}; zero=Zero()) where {T,N}
+  return SparseArray{T,N,typeof(zero)}(
+    T[], dims, Dict{CartesianIndex{N},Int}(), Vector{CartesianIndex{N}}(), zero
   )
 end
-SparseArray{T,N}(dims::Vararg{Int,N}) where {T,N} = SparseArray{T,N}(dims)
-SparseArray{T}(dims::Tuple{Vararg{Int}}) where {T} = SparseArray{T,length(dims)}(dims)
-function SparseArray{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}) where {T}
-  return SparseArray{T}(dims)
+function SparseArray{T,N}(dims::Vararg{Int,N}; kwargs...) where {T,N}
+  return SparseArray{T,N}(dims; kwargs...)
 end
-SparseArray{T}(dims::Vararg{Int}) where {T} = SparseArray{T}(dims)
+function SparseArray{T}(dims::Tuple{Vararg{Int}}; kwargs...) where {T}
+  return SparseArray{T,length(dims)}(dims; kwargs...)
+end
+function SparseArray{T}(::UndefInitializer, dims::Tuple{Vararg{Int}}; kwargs...) where {T}
+  return SparseArray{T}(dims; kwargs...)
+end
+SparseArray{T}(dims::Vararg{Int}; kwargs...) where {T} = SparseArray{T}(dims; kwargs...)
 
 # LinearAlgebra interface
 function LinearAlgebra.mul!(
@@ -53,6 +58,7 @@ function Base.fill!(a::SparseArray, value)
 end
 
 # Minimal interface
+SparseArrayInterface.getindex_zero_function(a::SparseArray) = a.zero
 SparseArrayInterface.sparse_storage(a::SparseArray) = a.data
 function SparseArrayInterface.index_to_storage_index(
   a::SparseArray{<:Any,N}, I::CartesianIndex{N}
@@ -77,6 +83,33 @@ function SparseArrayInterface.stored_indices(
   return Iterators.map(
     I -> CartesianIndex(map(i -> I[i], perm(a))), stored_indices(parent(a))
   )
+end
+
+# TODO: Make this into a generic definition of all `AbstractArray`?
+using NDTensors.SparseArrayInterface: sparse_storage
+function SparseArrayInterface.sparse_storage(
+  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
+)
+  return sparse_storage(parent(a))
+end
+
+# TODO: Make this into a generic definition of all `AbstractArray`?
+using NDTensors.NestedPermutedDimsArrays: NestedPermutedDimsArray
+function SparseArrayInterface.stored_indices(
+  a::NestedPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
+)
+  return Iterators.map(
+    I -> CartesianIndex(map(i -> I[i], perm(a))), stored_indices(parent(a))
+  )
+end
+
+# TODO: Make this into a generic definition of all `AbstractArray`?
+using NDTensors.NestedPermutedDimsArrays: NestedPermutedDimsArray
+using NDTensors.SparseArrayInterface: sparse_storage
+function SparseArrayInterface.sparse_storage(
+  a::NestedPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:SparseArray}
+)
+  return sparse_storage(parent(a))
 end
 
 # Empty the storage, helps with efficiency in `map!` to drop

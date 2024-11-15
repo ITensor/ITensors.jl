@@ -32,7 +32,7 @@ end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
 function SparseArrayInterface.stored_indices(
-  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
+  a::AnyPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
 )
   return Iterators.map(
     I -> CartesianIndex(map(i -> I[i], perm(a))), stored_indices(parent(a))
@@ -41,7 +41,7 @@ end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
 function SparseArrayInterface.sparse_storage(
-  a::PermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
+  a::AnyPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
 )
   return sparse_storage(parent(a))
 end

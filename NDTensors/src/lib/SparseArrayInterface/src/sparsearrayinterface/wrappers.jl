@@ -1,19 +1,26 @@
+using ..NestedPermutedDimsArrays: NestedPermutedDimsArray
+
 ## PermutedDimsArray
 
-perm(::PermutedDimsArray{<:Any,<:Any,P}) where {P} = P
-iperm(::PermutedDimsArray{<:Any,<:Any,<:Any,IP}) where {IP} = IP
+const AnyPermutedDimsArray{T,N,perm,iperm,P} = Union{
+  PermutedDimsArray{T,N,perm,iperm,P},NestedPermutedDimsArray{T,N,perm,iperm,P}
+}
+
+# TODO: Use `TypeParameterAccessors`.
+perm(::AnyPermutedDimsArray{<:Any,<:Any,Perm}) where {Perm} = Perm
+iperm(::AnyPermutedDimsArray{<:Any,<:Any,<:Any,IPerm}) where {IPerm} = IPerm
 
 # TODO: Use `Base.PermutedDimsArrays.genperm` or
 # https://github.com/jipolanco/StaticPermutations.jl?
 genperm(v, perm) = map(j -> v[j], perm)
 genperm(v::CartesianIndex, perm) = CartesianIndex(map(j -> Tuple(v)[j], perm))
 
-function storage_index_to_index(a::PermutedDimsArray, I)
+function storage_index_to_index(a::AnyPermutedDimsArray, I)
   return genperm(storage_index_to_index(parent(a), I), perm(a))
 end
 
 function index_to_storage_index(
-  a::PermutedDimsArray{<:Any,N}, I::CartesianIndex{N}
+  a::AnyPermutedDimsArray{<:Any,N}, I::CartesianIndex{N}
 ) where {N}
   return index_to_storage_index(parent(a), genperm(I, perm(a)))
 end
