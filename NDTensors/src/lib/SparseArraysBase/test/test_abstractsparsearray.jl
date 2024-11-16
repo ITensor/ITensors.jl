@@ -1,10 +1,10 @@
 @eval module $(gensym())
 using LinearAlgebra: dot, mul!, norm
-using NDTensors.SparseArrayInterface: SparseArrayInterface
+using NDTensors.SparseArraysBase: SparseArraysBase
 using NDTensors.NestedPermutedDimsArrays: NestedPermutedDimsArray
-include("SparseArrayInterfaceTestUtils/SparseArrayInterfaceTestUtils.jl")
-using .SparseArrayInterfaceTestUtils.AbstractSparseArrays: AbstractSparseArrays
-using .SparseArrayInterfaceTestUtils.SparseArrays: SparseArrays
+include("SparseArraysBaseTestUtils/SparseArraysBaseTestUtils.jl")
+using .SparseArraysBaseTestUtils.AbstractSparseArrays: AbstractSparseArrays
+using .SparseArraysBaseTestUtils.SparseArrays: SparseArrays
 using Test: @test, @testset
 @testset "AbstractSparseArray (arraytype=$SparseArray, eltype=$elt)" for SparseArray in (
     AbstractSparseArrays.SparseArray, SparseArrays.SparseArray
@@ -14,9 +14,9 @@ using Test: @test, @testset
   a = SparseArray{elt}(2, 3)
   @test size(a) == (2, 3)
   @test axes(a) == (1:2, 1:3)
-  @test SparseArrayInterface.sparse_storage(a) == elt[]
-  @test iszero(SparseArrayInterface.stored_length(a))
-  @test collect(SparseArrayInterface.stored_indices(a)) == CartesianIndex{2}[]
+  @test SparseArraysBase.sparse_storage(a) == elt[]
+  @test iszero(SparseArraysBase.stored_length(a))
+  @test collect(SparseArraysBase.stored_indices(a)) == CartesianIndex{2}[]
   @test iszero(a)
   @test iszero(norm(a))
   for I in eachindex(a)
@@ -35,9 +35,9 @@ using Test: @test, @testset
   fill!(a, 0)
   @test size(a) == (2, 3)
   @test iszero(a)
-  @test iszero(SparseArrayInterface.stored_length(a))
+  @test iszero(SparseArraysBase.stored_length(a))
 
-  a_dense = SparseArrayInterface.densearray(a)
+  a_dense = SparseArraysBase.densearray(a)
   @test a_dense == a
   @test a_dense isa Array{elt,ndims(a)}
 
@@ -45,7 +45,7 @@ using Test: @test, @testset
   fill!(a, 2)
   @test size(a) == (2, 3)
   @test !iszero(a)
-  @test SparseArrayInterface.stored_length(a) == length(a)
+  @test SparseArraysBase.stored_length(a) == length(a)
   for I in eachindex(a)
     @test a[I] == 2
   end
@@ -56,10 +56,10 @@ using Test: @test, @testset
   @test a[3] == 12 # linear indexing
   @test size(a) == (2, 3)
   @test axes(a) == (1:2, 1:3)
-  @test a[SparseArrayInterface.StorageIndex(1)] == 12
-  @test SparseArrayInterface.sparse_storage(a) == elt[12]
-  @test isone(SparseArrayInterface.stored_length(a))
-  @test collect(SparseArrayInterface.stored_indices(a)) == [CartesianIndex(1, 2)]
+  @test a[SparseArraysBase.StorageIndex(1)] == 12
+  @test SparseArraysBase.sparse_storage(a) == elt[12]
+  @test isone(SparseArraysBase.stored_length(a))
+  @test collect(SparseArraysBase.stored_indices(a)) == [CartesianIndex(1, 2)]
   @test !iszero(a)
   @test !iszero(norm(a))
   for I in eachindex(a)
@@ -98,7 +98,7 @@ using Test: @test, @testset
   a[1, 2] = 12
   a = zero(a)
   @test size(a) == (2, 3)
-  @test iszero(SparseArrayInterface.stored_length(a))
+  @test iszero(SparseArraysBase.stored_length(a))
 
   a = SparseArray{elt}(2, 3)
   a[1, 2] = 12
@@ -145,17 +145,17 @@ using Test: @test, @testset
   a[1, 2] = 12
   a = zero(a)
   @test size(a) == (2, 3)
-  @test iszero(SparseArrayInterface.stored_length(a))
+  @test iszero(SparseArraysBase.stored_length(a))
 
   a = SparseArray{elt}(2, 3)
   a[1, 2] = 12
   a = copy(a)
   @test size(a) == (2, 3)
   @test axes(a) == (1:2, 1:3)
-  @test SparseArrayInterface.sparse_storage(a) == elt[12]
-  @test isone(SparseArrayInterface.stored_length(a))
-  @test SparseArrayInterface.storage_indices(a) == 1:1
-  @test collect(SparseArrayInterface.stored_indices(a)) == [CartesianIndex(1, 2)]
+  @test SparseArraysBase.sparse_storage(a) == elt[12]
+  @test isone(SparseArraysBase.stored_length(a))
+  @test SparseArraysBase.storage_indices(a) == 1:1
+  @test collect(SparseArraysBase.stored_indices(a)) == [CartesianIndex(1, 2)]
   @test !iszero(a)
   @test !iszero(norm(a))
   for I in eachindex(a)
@@ -171,9 +171,9 @@ using Test: @test, @testset
   a = 2 * a
   @test size(a) == (2, 3)
   @test axes(a) == (1:2, 1:3)
-  @test SparseArrayInterface.sparse_storage(a) == elt[24]
-  @test isone(SparseArrayInterface.stored_length(a))
-  @test collect(SparseArrayInterface.stored_indices(a)) == [CartesianIndex(1, 2)]
+  @test SparseArraysBase.sparse_storage(a) == elt[24]
+  @test isone(SparseArraysBase.stored_length(a))
+  @test collect(SparseArraysBase.stored_indices(a)) == [CartesianIndex(1, 2)]
   @test !iszero(a)
   @test !iszero(norm(a))
   for I in eachindex(a)
@@ -191,9 +191,9 @@ using Test: @test, @testset
   c = a + b
   @test size(c) == (2, 3)
   @test axes(c) == (1:2, 1:3)
-  @test SparseArrayInterface.sparse_storage(c) == elt[12, 21]
-  @test SparseArrayInterface.stored_length(c) == 2
-  @test collect(SparseArrayInterface.stored_indices(c)) ==
+  @test SparseArraysBase.sparse_storage(c) == elt[12, 21]
+  @test SparseArraysBase.stored_length(c) == 2
+  @test collect(SparseArraysBase.stored_indices(c)) ==
     [CartesianIndex(1, 2), CartesianIndex(2, 1)]
   @test !iszero(c)
   @test !iszero(norm(c))
@@ -212,9 +212,9 @@ using Test: @test, @testset
   b = permutedims(a, (2, 1))
   @test size(b) == (3, 2)
   @test axes(b) == (1:3, 1:2)
-  @test SparseArrayInterface.sparse_storage(b) == elt[12]
-  @test SparseArrayInterface.stored_length(b) == 1
-  @test collect(SparseArrayInterface.stored_indices(b)) == [CartesianIndex(2, 1)]
+  @test SparseArraysBase.sparse_storage(b) == elt[12]
+  @test SparseArraysBase.stored_length(b) == 1
+  @test collect(SparseArraysBase.stored_indices(b)) == [CartesianIndex(2, 1)]
   @test !iszero(b)
   @test !iszero(norm(b))
   for I in eachindex(b)
@@ -230,9 +230,9 @@ using Test: @test, @testset
   b = PermutedDimsArray(a, (2, 1))
   @test size(b) == (3, 2)
   @test axes(b) == (1:3, 1:2)
-  @test SparseArrayInterface.sparse_storage(b) == elt[12]
-  @test SparseArrayInterface.stored_length(b) == 1
-  @test collect(SparseArrayInterface.stored_indices(b)) == [CartesianIndex(2, 1)]
+  @test SparseArraysBase.sparse_storage(b) == elt[12]
+  @test SparseArraysBase.stored_length(b) == 1
+  @test collect(SparseArraysBase.stored_indices(b)) == [CartesianIndex(2, 1)]
   @test !iszero(b)
   @test !iszero(norm(b))
   for I in eachindex(b)
@@ -250,9 +250,9 @@ using Test: @test, @testset
   b = NestedPermutedDimsArray(a, (2, 1))
   @test size(b) == (3, 2)
   @test axes(b) == (1:3, 1:2)
-  @test SparseArrayInterface.sparse_storage(b) == [a[1, 2]]
-  @test SparseArrayInterface.stored_length(b) == 1
-  @test collect(SparseArrayInterface.stored_indices(b)) == [CartesianIndex(2, 1)]
+  @test SparseArraysBase.sparse_storage(b) == [a[1, 2]]
+  @test SparseArraysBase.stored_length(b) == 1
+  @test collect(SparseArraysBase.stored_indices(b)) == [CartesianIndex(2, 1)]
   @test !iszero(b)
   @test !iszero(norm(b))
   for I in eachindex(b)
@@ -310,7 +310,7 @@ using Test: @test, @testset
   @test a .+ 2 .* b == Array(a) + 2b
   @test a + b isa Matrix{elt}
   @test b + a isa Matrix{elt}
-  @test SparseArrayInterface.stored_length(a + b) == length(a)
+  @test SparseArraysBase.stored_length(a + b) == length(a)
 
   a = SparseArray{elt}(2, 3)
   a[1, 2] = 12
@@ -321,10 +321,10 @@ using Test: @test, @testset
   @test a′ == a + b
   # TODO: Should this be:
   # ```julia
-  # @test SparseArrayInterface.stored_length(a′) == 2
+  # @test SparseArraysBase.stored_length(a′) == 2
   # ```
   # ? I.e. should it only store the nonzero values?
-  @test SparseArrayInterface.stored_length(a′) == 6
+  @test SparseArraysBase.stored_length(a′) == 6
 
   # Matrix multiplication
   a1 = SparseArray{elt}(2, 3)
@@ -336,7 +336,7 @@ using Test: @test, @testset
   a_dest = a1 * a2
   @test Array(a_dest) ≈ Array(a1) * Array(a2)
   @test a_dest isa SparseArray{elt}
-  @test SparseArrayInterface.stored_length(a_dest) == 2
+  @test SparseArraysBase.stored_length(a_dest) == 2
 
   # Dot product
   a1 = SparseArray{elt}(4)
@@ -361,7 +361,7 @@ using Test: @test, @testset
   mul!(a_dest, a1, a2)
   @test Array(a_dest) ≈ Array(a1) * Array(a2)
   @test a_dest isa SparseArray{elt}
-  @test SparseArrayInterface.stored_length(a_dest) == 2
+  @test SparseArraysBase.stored_length(a_dest) == 2
 
   # In-place matrix multiplication
   a1 = SparseArray{elt}(2, 3)
@@ -379,7 +379,7 @@ using Test: @test, @testset
   mul!(a_dest, a1, a2, α, β)
   @test Array(a_dest) ≈ Array(a1) * Array(a2) * α + Array(a_dest′) * β
   @test a_dest isa SparseArray{elt}
-  @test SparseArrayInterface.stored_length(a_dest) == 2
+  @test SparseArraysBase.stored_length(a_dest) == 2
 
   # cat
   a1 = SparseArray{elt}(2, 3)
@@ -391,7 +391,7 @@ using Test: @test, @testset
 
   a_dest = cat(a1, a2; dims=1)
   @test size(a_dest) == (4, 3)
-  @test SparseArrayInterface.stored_length(a_dest) == 4
+  @test SparseArraysBase.stored_length(a_dest) == 4
   @test a_dest[1, 2] == a1[1, 2]
   @test a_dest[2, 1] == a1[2, 1]
   @test a_dest[3, 1] == a2[1, 1]
@@ -399,7 +399,7 @@ using Test: @test, @testset
 
   a_dest = cat(a1, a2; dims=2)
   @test size(a_dest) == (2, 6)
-  @test SparseArrayInterface.stored_length(a_dest) == 4
+  @test SparseArraysBase.stored_length(a_dest) == 4
   @test a_dest[1, 2] == a1[1, 2]
   @test a_dest[2, 1] == a1[2, 1]
   @test a_dest[1, 4] == a2[1, 1]
@@ -407,7 +407,7 @@ using Test: @test, @testset
 
   a_dest = cat(a1, a2; dims=(1, 2))
   @test size(a_dest) == (4, 6)
-  @test SparseArrayInterface.stored_length(a_dest) == 4
+  @test SparseArraysBase.stored_length(a_dest) == 4
   @test a_dest[1, 2] == a1[1, 2]
   @test a_dest[2, 1] == a1[2, 1]
   @test a_dest[3, 4] == a2[1, 1]
@@ -434,6 +434,6 @@ using Test: @test, @testset
   ## mul!(a_dest, a1, a2)
   ## @test Array(a_dest) ≈ Array(a1) * Array(a2)
   ## @test a_dest isa SparseArray{Matrix{elt}}
-  ## @test SparseArrayInterface.stored_length(a_dest) == 2
+  ## @test SparseArraysBase.stored_length(a_dest) == 2
 end
 end

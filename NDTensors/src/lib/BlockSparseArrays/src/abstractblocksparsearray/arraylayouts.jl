@@ -1,6 +1,6 @@
 using ArrayLayouts: ArrayLayouts, DualLayout, MemoryLayout, MulAdd
 using BlockArrays: BlockLayout
-using ..SparseArrayInterface: SparseLayout
+using ..SparseArraysBase: SparseLayout
 using ..TypeParameterAccessors: parenttype, similartype
 
 function ArrayLayouts.MemoryLayout(arraytype::Type{<:AnyAbstractBlockSparseArray})

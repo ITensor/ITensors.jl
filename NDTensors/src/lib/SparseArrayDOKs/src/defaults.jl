@@ -1,5 +1,5 @@
 using Dictionaries: Dictionary
-using ..SparseArrayInterface: Zero
+using ..SparseArraysBase: Zero
 
 default_zero() = Zero()
 default_data(type::Type, ndims::Int) = Dictionary{default_keytype(ndims),type}()

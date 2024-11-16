@@ -1,5 +1,5 @@
 using Test: @testset
 
 @testset "NamedDimsArrays $(@__FILE__)" begin
-  include("../ext/NamedDimsArraysSparseArrayInterfaceExt/test/runtests.jl")
+  include("../ext/NamedDimsArraysSparseArraysBaseExt/test/runtests.jl")
 end

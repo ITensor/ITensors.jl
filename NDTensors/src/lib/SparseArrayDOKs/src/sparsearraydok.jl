@@ -1,8 +1,7 @@
 using Accessors: @set
 using Dictionaries: Dictionary, set!
 using MacroTools: @capture
-using ..SparseArrayInterface:
-  SparseArrayInterface, AbstractSparseArray, getindex_zero_function
+using ..SparseArraysBase: SparseArraysBase, AbstractSparseArray, getindex_zero_function
 
 # TODO: Parametrize by `data`?
 struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
@@ -82,15 +81,15 @@ end
 # Base `AbstractArray` interface
 Base.size(a::SparseArrayDOK) = a.dims[]
 
-SparseArrayInterface.getindex_zero_function(a::SparseArrayDOK) = a.zero
-function SparseArrayInterface.set_getindex_zero_function(a::SparseArrayDOK, f)
+SparseArraysBase.getindex_zero_function(a::SparseArrayDOK) = a.zero
+function SparseArraysBase.set_getindex_zero_function(a::SparseArrayDOK, f)
   return @set a.zero = f
 end
 
-function SparseArrayInterface.setindex_notstored!(
+function SparseArraysBase.setindex_notstored!(
   a::SparseArrayDOK{<:Any,N}, value, I::CartesianIndex{N}
 ) where {N}
-  set!(SparseArrayInterface.sparse_storage(a), I, value)
+  set!(SparseArraysBase.sparse_storage(a), I, value)
   return a
 end
 
@@ -98,11 +97,11 @@ function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
   return SparseArrayDOK{elt}(undef, dims, getindex_zero_function(a))
 end
 
-# `SparseArrayInterface` interface
-SparseArrayInterface.sparse_storage(a::SparseArrayDOK) = a.data
+# `SparseArraysBase` interface
+SparseArraysBase.sparse_storage(a::SparseArrayDOK) = a.data
 
-function SparseArrayInterface.dropall!(a::SparseArrayDOK)
-  return empty!(SparseArrayInterface.sparse_storage(a))
+function SparseArraysBase.dropall!(a::SparseArrayDOK)
+  return empty!(SparseArraysBase.sparse_storage(a))
 end
 
 SparseArrayDOK(a::AbstractArray) = SparseArrayDOK{eltype(a)}(a)
@@ -110,7 +109,7 @@ SparseArrayDOK(a::AbstractArray) = SparseArrayDOK{eltype(a)}(a)
 SparseArrayDOK{T}(a::AbstractArray) where {T} = SparseArrayDOK{T,ndims(a)}(a)
 
 function SparseArrayDOK{T,N}(a::AbstractArray) where {T,N}
-  return SparseArrayInterface.sparse_convert(SparseArrayDOK{T,N}, a)
+  return SparseArraysBase.sparse_convert(SparseArrayDOK{T,N}, a)
 end
 
 function Base.resize!(a::SparseArrayDOK{<:Any,N}, new_size::NTuple{N,Integer}) where {N}

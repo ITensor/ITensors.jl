@@ -1,5 +1,5 @@
 using ArrayLayouts: ArrayLayouts, MemoryLayout, MulAdd
-using ..SparseArrayInterface: AbstractSparseLayout, SparseLayout
+using ..SparseArraysBase: AbstractSparseLayout, SparseLayout
 
 ArrayLayouts.MemoryLayout(::Type{<:SparseArrayDOK}) = SparseLayout()
 

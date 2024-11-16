@@ -1,6 +1,6 @@
 using Base: Forward
 using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, getcolptr, nonzeros, rowvals
-using ..SparseArrayInterface: stored_length
+using ..SparseArraysBase: stored_length
 
 # Julia Base `AbstractSparseArray` interface
 SparseArrays.nnz(a::AbstractSparseArray) = stored_length(a)

@@ -2,7 +2,7 @@
 using Test: @test, @testset, @test_broken
 using NDTensors.DiagonalArrays: DiagonalArrays, DiagonalArray, DiagonalMatrix, diaglength
 using NDTensors.SparseArrayDOKs: SparseArrayDOK
-using NDTensors.SparseArrayInterface: stored_length
+using NDTensors.SparseArraysBase: stored_length
 @testset "Test NDTensors.DiagonalArrays" begin
   @testset "README" begin
     @test include(

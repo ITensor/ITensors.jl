@@ -1,5 +1,5 @@
 using ArrayLayouts: ArrayLayouts
-using ..SparseArrayInterface: AbstractSparseLayout
+using ..SparseArraysBase: AbstractSparseLayout
 
 abstract type AbstractDiagonalLayout <: AbstractSparseLayout end
 struct DiagonalLayout <: AbstractDiagonalLayout end

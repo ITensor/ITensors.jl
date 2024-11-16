@@ -22,7 +22,7 @@ using BlockArrays:
 using Compat: allequal
 using Dictionaries: Dictionary, Indices
 using ..GradedAxes: blockedunitrange_getindices, to_blockindices
-using ..SparseArrayInterface: SparseArrayInterface, stored_length, stored_indices
+using ..SparseArraysBase: SparseArraysBase, stored_length, stored_indices
 
 # A return type for `blocks(array)` when `array` isn't blocked.
 # Represents a vector with just that single block.
@@ -534,7 +534,7 @@ function Base.setindex!(a::BlockView{<:Any,N}, value, index::Vararg{Int,N}) wher
   return a
 end
 
-function SparseArrayInterface.stored_length(a::BlockView)
+function SparseArraysBase.stored_length(a::BlockView)
   # TODO: Store whether or not the block is stored already as
   # a Bool in `BlockView`.
   I = CartesianIndex(Int.(a.block))

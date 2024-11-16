@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using NDTensors: contract, tensor
-using NDTensors.SparseArrayInterface: densearray
+using NDTensors.SparseArraysBase: densearray
 using NDTensors.DiagonalArrays: DiagonalArray
 using Test: @test, @testset
 @testset "Tensor wrapping DiagonalArray" begin

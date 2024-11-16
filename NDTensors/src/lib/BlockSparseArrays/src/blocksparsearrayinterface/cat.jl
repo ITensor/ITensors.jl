@@ -1,9 +1,9 @@
 using BlockArrays: AbstractBlockedUnitRange, blockedrange, blocklengths
-using NDTensors.SparseArrayInterface: SparseArrayInterface, allocate_cat_output, sparse_cat!
+using NDTensors.SparseArraysBase: SparseArraysBase, allocate_cat_output, sparse_cat!
 
-# TODO: Maybe move to `SparseArrayInterfaceBlockArraysExt`.
-# TODO: Handle dual graded unit ranges, for example in a new `SparseArrayInterfaceGradedAxesExt`.
-function SparseArrayInterface.axis_cat(
+# TODO: Maybe move to `SparseArraysBaseBlockArraysExt`.
+# TODO: Handle dual graded unit ranges, for example in a new `SparseArraysBaseGradedAxesExt`.
+function SparseArraysBase.axis_cat(
   a1::AbstractBlockedUnitRange, a2::AbstractBlockedUnitRange
 )
   return blockedrange(vcat(blocklengths(a1), blocklengths(a2)))
