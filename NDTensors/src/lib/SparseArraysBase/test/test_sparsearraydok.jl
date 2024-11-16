@@ -7,8 +7,8 @@
 
 using Dictionaries: Dictionary
 using Test: @test, @testset, @test_broken
-using NDTensors.SparseArrayDOKs:
-  SparseArrayDOKs, SparseArrayDOK, SparseMatrixDOK, @maybe_grow
+using NDTensors.SparseArraysBase:
+  SparseArraysBase, SparseArrayDOK, SparseMatrixDOK, @maybe_grow
 using NDTensors.SparseArraysBase: storage_indices, stored_length
 using SparseArrays: SparseMatrixCSC, nnz
 @testset "SparseArrayDOK (eltype=$elt)" for elt in
@@ -98,7 +98,7 @@ using SparseArrays: SparseMatrixCSC, nnz
   end
   @testset "Maybe Grow Feature" begin
     a = SparseArrayDOK{elt,2}((0, 0))
-    SparseArrayDOKs.setindex_maybe_grow!(a, 230, 2, 3)
+    SparseArraysBase.setindex_maybe_grow!(a, 230, 2, 3)
     @test size(a) == (2, 3)
     @test a[2, 3] == 230
     # Test @maybe_grow macro

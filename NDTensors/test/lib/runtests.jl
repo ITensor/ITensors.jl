@@ -18,7 +18,7 @@ using Test: @testset
   "NestedPermutedDimsArrays",
   "SmallVectors",
   "SortedSets",
-  "SparseArrayDOKs",
+  "SparseArraysBase",
   "SymmetrySectors",
   "TagSets",
   "TensorAlgebra",

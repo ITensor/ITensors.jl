@@ -39,7 +39,6 @@ for lib in [
   :TensorAlgebra,
   :NestedPermutedDimsArrays,
   :SparseArraysBase,
-  :SparseArrayDOKs,
   :DiagonalArrays,
   :BlockSparseArrays,
   :NamedDimsArrays,

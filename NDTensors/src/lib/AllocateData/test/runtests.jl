@@ -3,7 +3,7 @@ using NDTensors.AllocateData: AllocateData, allocate, allocate_zeros, zero_init
 using LinearAlgebra: Diagonal, Hermitian
 using NDTensors.DiagonalArrays: DiagonalArray
 using NDTensors.BlockSparseArrays: BlockSparseArray
-using NDTensors.SparseArrayDOKs: SparseArrayDOK
+using NDTensors.SparseArraysBase: SparseArrayDOK
 using Test: @test, @testset, @test_broken, @test_throws
 
 const arraytypes = (

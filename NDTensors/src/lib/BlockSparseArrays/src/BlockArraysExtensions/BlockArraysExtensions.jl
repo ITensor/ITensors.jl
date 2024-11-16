@@ -581,7 +581,7 @@ function view!(a::AbstractArray{<:Any,N}, index::Vararg{BlockIndexRange{1},N}) w
 end
 
 using MacroTools: @capture
-using NDTensors.SparseArrayDOKs: is_getindex_expr
+using NDTensors.SparseArraysBase: is_getindex_expr
 macro view!(expr)
   if !is_getindex_expr(expr)
     error("@view must be used with getindex syntax (as `@view! a[i,j,...]`)")

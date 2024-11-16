@@ -1,6 +1,6 @@
 using BlockArrays: Block
 using Dictionaries: Dictionary
-using ..SparseArrayDOKs: SparseArrayDOK
+using ..SparseArraysBase: SparseArrayDOK
 
 # Construct the sparse structure storing the blocks
 function default_blockdata(
