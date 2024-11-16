@@ -1,4 +1,4 @@
-using ...SparseArrayDOKs: SparseArrayDOK
+using ...SparseArraysBase: SparseArrayDOK
 
 # Check if the matrix has 1 or fewer entries
 # per row/column.

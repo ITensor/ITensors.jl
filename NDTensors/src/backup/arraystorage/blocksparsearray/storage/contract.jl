@@ -1,5 +1,5 @@
 # TODO: Define in `SparseArraysBase`.
-using ..SparseArrayDOKs: SparseArrayDOK
+using ..SparseArraysBase: SparseArrayDOK
 
 # TODO: This is inefficient, need to optimize.
 # Look at `contract_labels`, `contract_blocks` and `maybe_contract_blocks!` in:

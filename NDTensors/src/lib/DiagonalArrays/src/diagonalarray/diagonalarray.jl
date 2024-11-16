@@ -1,6 +1,6 @@
 using ..SparseArraysBase: Zero, getindex_zero_function
-# TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
-using ..SparseArrayDOKs: SparseArrayDOKs, SparseArrayDOK
+# TODO: Put into `DiagonalArraysSparseArraysBaseExt`?
+using ..SparseArraysBase: SparseArraysBase, SparseArrayDOK
 
 struct DiagonalArray{T,N,Diag<:AbstractVector{T},Zero} <: AbstractDiagonalArray{T,N}
   diag::Diag
@@ -94,7 +94,7 @@ SparseArraysBase.sparse_storage(a::DiagonalArray) = a.diag
 # `SparseArraysBase`
 # Defines similar when the output can't be `DiagonalArray`,
 # such as in `reshape`.
-# TODO: Put into `DiagonalArraysSparseArrayDOKsExt`?
+# TODO: Put into `DiagonalArraysSparseArraysBaseExt`?
 # TODO: Special case 2D to output `SparseMatrixCSC`?
 function SparseArraysBase.sparse_similar(
   a::DiagonalArray, elt::Type, dims::Tuple{Vararg{Int}}

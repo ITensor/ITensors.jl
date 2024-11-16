@@ -31,7 +31,7 @@ using NDTensors.BlockSparseArrays:
   view!
 using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors.SparseArraysBase: stored_length
-using NDTensors.SparseArrayDOKs: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK
+using NDTensors.SparseArraysBase: SparseArrayDOK, SparseMatrixDOK, SparseVectorDOK
 using NDTensors.TensorAlgebra: contract
 using Test: @test, @test_broken, @test_throws, @testset, @inferred
 include("TestBlockSparseArraysUtils.jl")
