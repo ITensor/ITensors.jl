@@ -1,6 +1,45 @@
 # Mostly copied from https://github.com/JuliaLang/julia/blob/master/base/permuteddimsarray.jl
 # Like `PermutedDimsArrays` but singly nested, similar to `Adjoint` and `Transpose`
 # (though those are fully recursive).
+#=
+TODO: Investigate replacing this with a `PermutedDimsArray` wrapped around a `MappedArrays.MappedArray`.
+There are a few issues with that:
+1. Just using a type alias leads to type piracy, for example the constructor is type piracy.
+2. `setindex!(::NestedPermutedDimsArray, I...)` fails because no conversion is defined between `Array`
+and `PermutedDimsArray`.
+3. The type alias is tricky to define, ideally it would have similar type parameters to the current
+`NestedPermutedDimsArrays.NestedPermutedDimsArray` definition which matches the type parameters
+of `PermutedDimsArrays.PermutedDimsArray` but that seems to be difficult to achieve.
+```julia
+module NestedPermutedDimsArrays
+
+using MappedArrays: MultiMappedArray, mappedarray
+export NestedPermutedDimsArray
+
+const NestedPermutedDimsArray{TT,T<:AbstractArray{TT},N,perm,iperm,AA<:AbstractArray{T}} = PermutedDimsArray{
+  PermutedDimsArray{TT,N,perm,iperm,T},
+  N,
+  perm,
+  iperm,
+  MultiMappedArray{
+    PermutedDimsArray{TT,N,perm,iperm,T},
+    N,
+    Tuple{AA},
+    Type{PermutedDimsArray{TT,N,perm,iperm,T}},
+    Type{PermutedDimsArray{TT,N,iperm,perm,T}},
+  },
+}
+
+function NestedPermutedDimsArray(a::AbstractArray, perm)
+  iperm = invperm(perm)
+  f = PermutedDimsArray{eltype(eltype(a)),ndims(a),perm,iperm,eltype(a)}
+  finv = PermutedDimsArray{eltype(eltype(a)),ndims(a),iperm,perm,eltype(a)}
+  return PermutedDimsArray(mappedarray(f, finv, a), perm)
+end
+
+end
+```
+=#
 module NestedPermutedDimsArrays
 
 import Base: permutedims, permutedims!
@@ -107,7 +146,7 @@ end
   A::NestedPermutedDimsArray{T,N,perm,iperm}, val, I::Vararg{Int,N}
 ) where {T,N,perm,iperm}
   @boundscheck checkbounds(A, I...)
-  @inbounds setindex!(A.parent, PermutedDimsArray(val, perm), genperm(I, iperm)...)
+  @inbounds setindex!(A.parent, PermutedDimsArray(val, iperm), genperm(I, iperm)...)
   return val
 end
 
