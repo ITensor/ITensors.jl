@@ -1,7 +1,6 @@
 using Accessors: @set
 using Dictionaries: Dictionary, set!
 using MacroTools: @capture
-using ..SparseArraysBase: SparseArraysBase, AbstractSparseArray, getindex_zero_function
 
 # TODO: Parametrize by `data`?
 struct SparseArrayDOK{T,N,Zero} <: AbstractSparseArray{T,N}
@@ -81,15 +80,15 @@ end
 # Base `AbstractArray` interface
 Base.size(a::SparseArrayDOK) = a.dims[]
 
-SparseArraysBase.getindex_zero_function(a::SparseArrayDOK) = a.zero
-function SparseArraysBase.set_getindex_zero_function(a::SparseArrayDOK, f)
+getindex_zero_function(a::SparseArrayDOK) = a.zero
+function set_getindex_zero_function(a::SparseArrayDOK, f)
   return @set a.zero = f
 end
 
-function SparseArraysBase.setindex_notstored!(
+function setindex_notstored!(
   a::SparseArrayDOK{<:Any,N}, value, I::CartesianIndex{N}
 ) where {N}
-  set!(SparseArraysBase.sparse_storage(a), I, value)
+  set!(sparse_storage(a), I, value)
   return a
 end
 
@@ -98,10 +97,10 @@ function Base.similar(a::SparseArrayDOK, elt::Type, dims::Tuple{Vararg{Int}})
 end
 
 # `SparseArraysBase` interface
-SparseArraysBase.sparse_storage(a::SparseArrayDOK) = a.data
+sparse_storage(a::SparseArrayDOK) = a.data
 
-function SparseArraysBase.dropall!(a::SparseArrayDOK)
-  return empty!(SparseArraysBase.sparse_storage(a))
+function dropall!(a::SparseArrayDOK)
+  return empty!(sparse_storage(a))
 end
 
 SparseArrayDOK(a::AbstractArray) = SparseArrayDOK{eltype(a)}(a)
@@ -109,7 +108,7 @@ SparseArrayDOK(a::AbstractArray) = SparseArrayDOK{eltype(a)}(a)
 SparseArrayDOK{T}(a::AbstractArray) where {T} = SparseArrayDOK{T,ndims(a)}(a)
 
 function SparseArrayDOK{T,N}(a::AbstractArray) where {T,N}
-  return SparseArraysBase.sparse_convert(SparseArrayDOK{T,N}, a)
+  return sparse_convert(SparseArrayDOK{T,N}, a)
 end
 
 function Base.resize!(a::SparseArrayDOK{<:Any,N}, new_size::NTuple{N,Integer}) where {N}
