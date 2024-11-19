@@ -1,16 +1,15 @@
 using Dictionaries: set!
-using ..SparseArraysBase: SparseArraysBase
 
-SparseArraysBase.sparse_storage(::AbstractSparseArray) = error("Not implemented")
+sparse_storage(::AbstractSparseArray) = error("Not implemented")
 
-function SparseArraysBase.index_to_storage_index(
+function index_to_storage_index(
   a::AbstractSparseArray{<:Any,N}, I::CartesianIndex{N}
 ) where {N}
-  !isassigned(SparseArraysBase.sparse_storage(a), I) && return nothing
+  !isassigned(sparse_storage(a), I) && return nothing
   return I
 end
 
-function SparseArraysBase.setindex_notstored!(
+function setindex_notstored!(
   a::AbstractSparseArray{<:Any,N}, value, I::CartesianIndex{N}
 ) where {N}
   iszero(value) && return a
@@ -20,7 +19,7 @@ end
 # TODO: Make this into a generic definition of all `AbstractArray`?
 # TODO: Check if this is efficient, or determine if this mapping should
 # be performed in `storage_index_to_index` and/or `index_to_storage_index`.
-function SparseArraysBase.sparse_storage(a::SubArray{<:Any,<:Any,<:AbstractSparseArray})
+function sparse_storage(a::SubArray{<:Any,<:Any,<:AbstractSparseArray})
   parent_storage = sparse_storage(parent(a))
   all_sliced_storage_indices = map(keys(parent_storage)) do I
     return map_index(a.indices, I)
@@ -31,7 +30,7 @@ function SparseArraysBase.sparse_storage(a::SubArray{<:Any,<:Any,<:AbstractSpars
 end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
-function SparseArraysBase.stored_indices(
+function stored_indices(
   a::AnyPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
 )
   return Iterators.map(
@@ -40,7 +39,7 @@ function SparseArraysBase.stored_indices(
 end
 
 # TODO: Make this into a generic definition of all `AbstractArray`?
-function SparseArraysBase.sparse_storage(
+function sparse_storage(
   a::AnyPermutedDimsArray{<:Any,<:Any,<:Any,<:Any,<:AbstractSparseArray}
 )
   return sparse_storage(parent(a))
