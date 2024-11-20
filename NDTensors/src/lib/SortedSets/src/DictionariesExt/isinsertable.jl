@@ -1,1 +1,0 @@
-Dictionaries.isinsertable(::AbstractArray) = true
