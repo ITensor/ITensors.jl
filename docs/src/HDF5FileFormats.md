@@ -156,7 +156,7 @@ Datasets and Subgroups:
 
 ## [MPS](@id mps_hdf5)
 
-HDF5 file format for `ITensors.MPS`
+HDF5 file format for `ITensorMPS.MPS`
 
 Attributes:
 * "version" = 1
@@ -171,7 +171,7 @@ Datasets and Subgroups:
 
 ## [MPO](@id mpo_hdf5)
 
-HDF5 file format for `ITensors.MPO`
+HDF5 file format for `ITensorMPS.MPO`
 
 Attributes:
 * "version" = 1
