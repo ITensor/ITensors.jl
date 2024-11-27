@@ -2,10 +2,8 @@
 using NDTensors: NDTensors
 using Test: @testset
 @testset "Test NDTensors lib $lib" for lib in [
-  "AllocateData",
   "AMDGPUExtensions",
   "BackendSelection",
-  "BaseExtensions",
   "CUDAExtensions",
   "GPUArraysCoreExtensions",
   "MetalExtensions",
