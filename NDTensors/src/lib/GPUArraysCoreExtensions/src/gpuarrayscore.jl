@@ -1,6 +1,5 @@
-using NDTensors.Expose: Exposed, unexpose
-using NDTensors.TypeParameterAccessors:
-  TypeParameterAccessors, type_parameter, set_type_parameter
+using ..Expose: Exposed, unexpose
+using TypeParameterAccessors: TypeParameterAccessors, type_parameter, set_type_parameter
 
 function storagemode(object)
   return storagemode(typeof(object))

@@ -17,6 +17,7 @@ include("abstractarray/similar.jl")
 include("abstractarray/mul.jl")
 include("abstractarray/permutedims.jl")
 include("abstractarray/generic_array_constructors.jl")
+include("abstractarray/diaginterface.jl")
 include("array/permutedims.jl")
 include("array/mul.jl")
 include("tupletools.jl")
@@ -90,15 +91,6 @@ include("empty/adapt.jl")
 # Deprecations
 #
 include("deprecated.jl")
-
-#####################################
-# NDTensorsNamedDimsArraysExt
-# I tried putting this inside of an
-# `NDTensorsNamedDimsArraysExt` module
-# but for some reason it kept overloading
-# `Base.similar` instead of `NDTensors.similar`.
-#
-include("NDTensorsNamedDimsArraysExt/NDTensorsNamedDimsArraysExt.jl")
 
 #####################################
 # A global timer used with TimerOutputs.jl

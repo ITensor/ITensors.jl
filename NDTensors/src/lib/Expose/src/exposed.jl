@@ -1,4 +1,4 @@
-using NDTensors.TypeParameterAccessors:
+using TypeParameterAccessors:
   TypeParameterAccessors, unwrap_array_type, parameter, parenttype, type_parameter
 struct Exposed{Unwrapped,Object}
   object::Object
