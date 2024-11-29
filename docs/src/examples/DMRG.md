@@ -383,7 +383,7 @@ using ITensors, ITensorMPS
 mutable struct EntanglementObserver <: AbstractObserver
 end
 
-function ITensors.measure!(o::EntanglementObserver; bond, psi, half_sweep, kwargs...)
+function ITensorMPS.measure!(o::EntanglementObserver; bond, psi, half_sweep, kwargs...)
   wf_center, other = half_sweep==1 ? (psi[bond+1],psi[bond]) : (psi[bond],psi[bond+1])
   U,S,V = svd(wf_center, uniqueinds(wf_center,other))
   SvN = 0.0
@@ -406,7 +406,7 @@ using ITensors, ITensorMPS
 mutable struct EntanglementObserver <: AbstractObserver
 end
 
-function ITensors.measure!(o::EntanglementObserver; bond, psi, half_sweep, kwargs...)
+function ITensorMPS.measure!(o::EntanglementObserver; bond, psi, half_sweep, kwargs...)
   wf_center, other = half_sweep==1 ? (psi[bond+1],psi[bond]) : (psi[bond],psi[bond+1])
   U,S,V = svd(wf_center, uniqueinds(wf_center,other))
   SvN = 0.0
@@ -481,7 +481,7 @@ using ITensors, ITensorMPS
 mutable struct SizeObserver <: AbstractObserver
 end
 
-function ITensors.measure!(o::SizeObserver; bond, half_sweep, psi, projected_operator, kwargs...)
+function ITensorMPS.measure!(o::SizeObserver; bond, half_sweep, psi, projected_operator, kwargs...)
   if bond==1 && half_sweep==2
     psi_size =  Base.format_bytes(Base.summarysize(psi))
     PH_size =  Base.format_bytes(Base.summarysize(projected_operator))
@@ -503,7 +503,7 @@ using ITensors, ITensorMPS
 mutable struct SizeObserver <: AbstractObserver
 end
 
-function ITensors.measure!(o::SizeObserver; bond, sweep, half_sweep, psi, projected_operator, kwargs...)
+function ITensorMPS.measure!(o::SizeObserver; bond, sweep, half_sweep, psi, projected_operator, kwargs...)
   if bond==1 && half_sweep==2
     psi_size =  Base.format_bytes(Base.summarysize(psi))
     PH_size =  Base.format_bytes(Base.summarysize(projected_operator))

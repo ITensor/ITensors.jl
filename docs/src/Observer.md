@@ -70,7 +70,7 @@ In our example, we will just compare the `energy` keyword
 argument to the `last_energy` variable held inside the `DemoObserver`:
 
 ```julia
-function ITensors.checkdone!(o::DemoObserver;kwargs...)
+function ITensorMPS.checkdone!(o::DemoObserver;kwargs...)
   sw = kwargs[:sweep]
   energy = kwargs[:energy]
   if abs(energy-o.last_energy)/abs(energy) < o.energy_tol
@@ -110,7 +110,7 @@ that prints out some of the information above, but in a more realistic setting o
 could use the MPS `psi` to perform essentially arbitrary measurements.
 
 ```julia
-function ITensors.measure!(o::DemoObserver; kwargs...)
+function ITensorMPS.measure!(o::DemoObserver; kwargs...)
   energy = kwargs[:energy]
   sweep = kwargs[:sweep]
   bond = kwargs[:bond]
@@ -148,7 +148,7 @@ mutable struct DemoObserver <: AbstractObserver
    DemoObserver(energy_tol=0.0) = new(energy_tol,1000.0)
 end
 
-function ITensors.checkdone!(o::DemoObserver;kwargs...)
+function ITensorMPS.checkdone!(o::DemoObserver;kwargs...)
   sw = kwargs[:sweep]
   energy = kwargs[:energy]
   if abs(energy-o.last_energy)/abs(energy) < o.energy_tol
@@ -160,7 +160,7 @@ function ITensors.checkdone!(o::DemoObserver;kwargs...)
   return false
 end
 
-function ITensors.measure!(o::DemoObserver; kwargs...)
+function ITensorMPS.measure!(o::DemoObserver; kwargs...)
   energy = kwargs[:energy]
   sweep = kwargs[:sweep]
   bond = kwargs[:bond]
