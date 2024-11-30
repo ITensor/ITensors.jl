@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 # The state of the `svd_recursive` algorithm.
 function svd_recursive_state(S::AbstractArray, thresh::Float64)
   return svd_recursive_state(unwrap_array_type(S), S, thresh)

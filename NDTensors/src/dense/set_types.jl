@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
+using TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
   return Dense{eltype(datatype),datatype}

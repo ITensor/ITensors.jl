@@ -1,5 +1,4 @@
-using .DiagonalArrays: DiagonalArrays
-using .TypeParameterAccessors: TypeParameterAccessors
+using TypeParameterAccessors: TypeParameterAccessors
 
 export dense, dims, dim, mindim, diaglength
 
@@ -29,7 +28,7 @@ mindim(inds::Tuple) = minimum(dims(inds))
 
 mindim(::Tuple{}) = 1
 
-DiagonalArrays.diaglength(inds::Tuple) = mindim(inds)
+diaglength(inds::Tuple) = mindim(inds)
 
 """
     dim_to_strides(ds)

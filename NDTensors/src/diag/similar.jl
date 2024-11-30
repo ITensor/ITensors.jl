@@ -1,4 +1,4 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors
+using TypeParameterAccessors: TypeParameterAccessors
 
 # NDTensors.similar
 function similar(storagetype::Type{<:Diag}, dims::Dims)

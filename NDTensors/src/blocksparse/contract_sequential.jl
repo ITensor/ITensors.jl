@@ -55,7 +55,7 @@ function contract!(
     R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor
   )
 end
-using NDTensors.Expose: expose
+using .Expose: expose
 ###########################################################################
 # Old version
 # TODO: DELETE, keeping around for now for testing/benchmarking.

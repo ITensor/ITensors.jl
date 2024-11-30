@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: similartype
+using TypeParameterAccessors: similartype
 
 export DiagBlockSparse, DiagBlockSparseTensor
 

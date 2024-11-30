@@ -29,6 +29,7 @@ Strided = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
 StridedViews = "4db3bf67-4bd7-4b4e-b153-31dc3fb37143"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
+TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 
 [weakdeps]
@@ -54,6 +55,9 @@ NDTensorsMetalExt = ["GPUArraysCore", "Metal"]
 NDTensorsOctavianExt = "Octavian"
 NDTensorsTBLISExt = "TBLIS"
 NDTensorscuTENSORExt = "cuTENSOR"
+
+[sources]
+TypeParameterAccessors = {url = "https://github.com/ITensor/TypeParameterAccessors.jl"}
 
 [compat]
 AMDGPU = "0.9, 1"

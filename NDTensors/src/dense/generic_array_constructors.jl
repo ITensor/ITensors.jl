@@ -1,4 +1,4 @@
-using .TypeParameterAccessors:
+using TypeParameterAccessors:
   default_type_parameter,
   parenttype,
   set_eltype,

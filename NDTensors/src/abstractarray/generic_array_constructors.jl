@@ -1,4 +1,4 @@
-using .TypeParameterAccessors:
+using TypeParameterAccessors:
   unwrap_array_type, specify_default_type_parameters, type_parameter
 
 # Convert to Array, avoiding copying if possible

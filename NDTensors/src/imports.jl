@@ -21,31 +21,13 @@ using TimerOutputs
 using TupleTools
 
 for lib in [
-  :AllocateData,
   :BackendSelection,
-  :BaseExtensions,
-  :UnspecifiedTypes,
-  :TypeParameterAccessors,
   :Expose,
   :GPUArraysCoreExtensions,
   :AMDGPUExtensions,
   :CUDAExtensions,
   :MetalExtensions,
-  :BroadcastMapConversion,
   :RankFactorization,
-  :LabelledNumbers,
-  :GradedAxes,
-  :SymmetrySectors,
-  :TensorAlgebra,
-  :NestedPermutedDimsArrays,
-  :SparseArraysBase,
-  :DiagonalArrays,
-  :BlockSparseArrays,
-  :NamedDimsArrays,
-  :SmallVectors,
-  :SortedSets,
-  :TagSets,
-  :UnallocatedArrays,
 ]
   include("lib/$(lib)/src/$(lib).jl")
   @eval using .$lib: $lib

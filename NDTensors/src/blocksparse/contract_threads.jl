@@ -1,4 +1,4 @@
-using NDTensors.Expose: expose
+using .Expose: expose
 # TODO: This seems to be faster than the newer version using `Folds.jl`
 # in `contract_folds.jl`, investigate why.
 function contract_blocks!(

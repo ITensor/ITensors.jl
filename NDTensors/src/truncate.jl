@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 ## TODO write Exposed version of truncate
 function truncate!!(P::AbstractArray; kwargs...)
   return truncate!!(unwrap_array_type(P), P; kwargs...)
@@ -10,7 +10,7 @@ function truncate!!(::Type{<:Array}, P::AbstractArray; kwargs...)
   return P, truncerr, docut
 end
 
-using .TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 # GPU fallback version, convert to CPU.
 function truncate!!(::Type{<:AbstractArray}, P::AbstractArray; kwargs...)
   P_cpu = cpu(P)

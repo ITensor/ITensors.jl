@@ -27,7 +27,7 @@ double_precision(x) = fmap(x -> adapt(double_precision(eltype(x)), x), x)
 # Used to adapt `EmptyStorage` types
 #
 
-using .TypeParameterAccessors: specify_type_parameter, specify_type_parameters
+using TypeParameterAccessors: specify_type_parameter, specify_type_parameters
 function adapt_storagetype(to::Type{<:AbstractVector}, x::Type{<:TensorStorage})
   return set_datatype(x, specify_type_parameter(to, eltype, eltype(x)))
 end
