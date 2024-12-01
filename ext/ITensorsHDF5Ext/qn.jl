@@ -5,9 +5,9 @@ function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, gname::AbstractString, 
   g = create_group(parent, gname)
   attributes(g)["type"] = "QN"
   attributes(g)["version"] = 1
-  names = [String(name(q[n])) for n in 1:max_qn]
-  vals = [val(q[n]) for n in 1:max_qn]
-  mods = [modulus(q[n]) for n in 1:max_qn]
+  names = [String(name(q[n])) for n in 1:maxQNs]
+  vals = [val(q[n]) for n in 1:maxQNs]
+  mods = [modulus(q[n]) for n in 1:maxQNs]
   write(g, "names", names)
   write(g, "vals", vals)
   return write(g, "mods", mods)
