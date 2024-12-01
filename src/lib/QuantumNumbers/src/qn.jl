@@ -3,7 +3,7 @@ using NDTensors: NDTensors
 using ..SmallStrings: SmallString
 using StaticArrays: MVector, SVector
 
-const maxQNs = 4
+const maxQNs = 10
 const QNStorage = SVector{maxQNs,QNVal}
 const MQNStorage = MVector{maxQNs,QNVal}
 
