@@ -1,5 +1,5 @@
 using HDF5: HDF5, attributes, create_group, open_group, read, write
-using ITensors: maxQNs, modulus, name, QN, QNVal, val, maxQNs_read
+using ITensors: maxQNs, modulus, name, QN, QNVal, val
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, gname::AbstractString, q::QN)
   g = create_group(parent, gname)
@@ -21,6 +21,12 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::
   names = read(g, "names")
   vals = read(g, "vals")
   mods = read(g, "mods")
-  mqn = ntuple(n -> QNVal(names[n], vals[n], mods[n]), length(names))
+  nemptyQN = maxQNs - length(names)
+  if (nemptyQN > 0)
+    append!(names, fill("", nemptyQN))
+    append!(vals, fill(0, nemptyQN))
+    append!(mods, fill(0, nemptyQN))
+  end
+  mqn = ntuple(n -> QNVal(names[n], vals[n], mods[n]), maxQNs)
   return QN(mqn)
 end
