@@ -5,15 +5,15 @@ function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, gname::AbstractString, 
   g = create_group(parent, gname)
   attributes(g)["type"] = "QN"
   attributes(g)["version"] = 1
-  names = [String(name(q[n])) for n in 1:maxQNs]
-  vals = [val(q[n]) for n in 1:maxQNs]
-  mods = [modulus(q[n]) for n in 1:maxQNs]
+  names = [String(name(q[n])) for n in 1:max_qn]
+  vals = [val(q[n]) for n in 1:max_qn]
+  mods = [modulus(q[n]) for n in 1:max_qn]
   write(g, "names", names)
   write(g, "vals", vals)
   return write(g, "mods", mods)
 end
 
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{QN})
+function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{QN} ; max_qn = maxQNs)
   g = open_group(parent, name)
   if read(attributes(g)["type"]) != "QN"
     error("HDF5 group or file does not contain QN data")
@@ -21,6 +21,6 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::
   names = read(g, "names")
   vals = read(g, "vals")
   mods = read(g, "mods")
-  mqn = ntuple(n -> QNVal(names[n], vals[n], mods[n]), maxQNs)
+  mqn = ntuple(n -> QNVal(names[n], vals[n], mods[n]), max_qn)
   return QN(mqn)
 end
