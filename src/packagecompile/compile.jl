@@ -50,5 +50,11 @@ This will take some time, perhaps a few minutes.
 This will create a system image containing the compiled version of ITensors
 located at `dir/filename`, by default `$(default_compile_path())`.
 
+!!! compat "ITensors 0.7"
+    As of ITensors 0.7, you must now install and load the
+    [ITensorMPS.jl](https://github.com/ITensor/ITensorMPS.jl) package
+    in order to use `ITensors.compile()`, since it relies on running MPS/MPO
+    functionality as example code for Julia to compile.
+
 $(compile_note())
 """ compile
