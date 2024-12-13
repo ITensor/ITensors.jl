@@ -44,17 +44,19 @@ end
     ITensors.compile(; dir = "$(default_compile_dir())",
                        filename = "$(default_compile_filename())")
 
-Compile ITensors.jl with [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/).
+Compile ITensors.jl with [PackageCompiler.jl](https://julialang.github.io/PackageCompiler.jl/dev/).
 This will take some time, perhaps a few minutes.
 
 This will create a system image containing the compiled version of ITensors
 located at `dir/filename`, by default `$(default_compile_path())`.
 
 !!! compat "ITensors 0.7"
-    As of ITensors 0.7, you must now install and load the
+    As of ITensors 0.7, you must now install and load both the
     [ITensorMPS.jl](https://github.com/ITensor/ITensorMPS.jl) package
-    in order to use `ITensors.compile()`, since it relies on running MPS/MPO
-    functionality as example code for Julia to compile.
+    and the [PackageCompiler.jl](https://github.com/JuliaLang/PackageCompiler.jl)
+    package in order to use `ITensors.compile()`, since it relies on running MPS/MPO
+    functionality as example code for Julia to compile and is based in a package
+    extension in order to make `PackageCompiler.jl` an optional dependency.
 
 $(compile_note())
 """ compile
