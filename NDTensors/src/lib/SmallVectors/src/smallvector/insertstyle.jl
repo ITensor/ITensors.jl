@@ -1,1 +1,0 @@
-InsertStyle(::Type{<:SmallVector}) = FastCopy()

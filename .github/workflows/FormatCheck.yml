@@ -1,0 +1,13 @@
+name: "Format Check"
+
+on:
+  push:
+    branches:
+      - 'main'
+    tags: '*'
+  pull_request:
+
+jobs:
+  format-check:
+    name: "Format Check"
+    uses: "ITensor/ITensorActions/.github/workflows/FormatCheck.yml@main"
