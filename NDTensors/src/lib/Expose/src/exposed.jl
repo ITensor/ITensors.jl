@@ -1,5 +1,5 @@
 using TypeParameterAccessors:
-  TypeParameterAccessors, unwrap_array_type, parameter, parenttype, type_parameter
+  TypeParameterAccessors, unwrap_array_type, parenttype, type_parameters
 struct Exposed{Unwrapped,Object}
   object::Object
 end
@@ -9,7 +9,7 @@ expose(object) = Exposed{unwrap_array_type(object),typeof(object)}(object)
 unexpose(E::Exposed) = E.object
 
 ## TODO remove TypeParameterAccessors when SetParameters is removed
-TypeParameterAccessors.parenttype(type::Type{<:Exposed}) = parameter(type, parenttype)
+TypeParameterAccessors.parenttype(type::Type{<:Exposed}) = type_parameters(type, parenttype)
 function TypeParameterAccessors.position(::Type{<:Exposed}, ::typeof(parenttype))
   return TypeParameterAccessors.Position(1)
 end
