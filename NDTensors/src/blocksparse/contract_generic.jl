@@ -104,7 +104,7 @@ function contract!(
   return R
 end
 
-using NDTensors.Expose: expose
+using .Expose: expose
 # Function barrier to improve type stability,
 # since `Folds`/`FLoops` is not type stable:
 # https://discourse.julialang.org/t/type-instability-in-floop-reduction/68598

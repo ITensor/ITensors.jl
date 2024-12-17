@@ -3,7 +3,7 @@
 default_datatype(eltype::Type=default_eltype()) = Vector{eltype}
 default_eltype() = Float64
 
-using .TypeParameterAccessors: specify_default_type_parameters
+using TypeParameterAccessors: specify_default_type_parameters
 ## TODO use multiple dispace to make this pick between dense and blocksparse
 function default_storagetype(datatype::Type{<:AbstractArray}, inds::Tuple)
   datatype = specify_default_type_parameters(datatype)

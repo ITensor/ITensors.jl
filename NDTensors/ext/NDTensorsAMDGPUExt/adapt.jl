@@ -2,16 +2,14 @@ using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
 using NDTensors.AMDGPUExtensions: AMDGPUExtensions, ROCArrayAdaptor
 using NDTensors.GPUArraysCoreExtensions: storagemode
 using NDTensors.TypeParameterAccessors:
-  default_type_parameter,
-  set_type_parameter,
-  set_type_parameters,
-  type_parameter,
-  type_parameters
+  default_type_parameters, set_type_parameters, type_parameters
 using Adapt: Adapt, adapt
 using AMDGPU: AMDGPU, ROCArray, ROCVector
 using Functors: fmap
 
-function AMDGPUExtensions.roc(xs; storagemode=default_type_parameter(ROCArray, storagemode))
+function AMDGPUExtensions.roc(
+  xs; storagemode=default_type_parameters(ROCArray, storagemode)
+)
   return fmap(x -> adapt(ROCArrayAdaptor{storagemode}(), x), xs)
 end
 

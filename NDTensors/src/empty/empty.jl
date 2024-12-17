@@ -1,5 +1,5 @@
 using SparseArrays: SparseArrays
-using .TypeParameterAccessors: TypeParameterAccessors, set_eltype, similartype
+using TypeParameterAccessors: TypeParameterAccessors, set_eltype, similartype
 
 #
 # Represents a tensor order that could be set to any order.
@@ -95,6 +95,6 @@ function Base.show(io::IO, mime::MIME"text/plain", S::EmptyStorage)
   return println(io, typeof(S))
 end
 
-using .TypeParameterAccessors: TypeParameterAccessors
+using TypeParameterAccessors: TypeParameterAccessors
 TypeParameterAccessors.parenttype(empty::Type{<:EmptyStorage}) = storagetype(empty)
 zero(empty::EmptyStorage) = empty

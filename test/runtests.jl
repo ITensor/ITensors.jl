@@ -19,7 +19,6 @@ ITensors.disable_threaded_blocksparse()
       "base",
       "threading",
       "lib/ContractionSequenceOptimization",
-      "lib/ITensorsNamedDimsArraysExt",
       "ext/ITensorsChainRulesCoreExt",
       "ext/ITensorsVectorInterfaceExt",
       "ext/NDTensorsMappedArraysExt",

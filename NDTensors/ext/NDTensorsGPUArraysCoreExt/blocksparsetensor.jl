@@ -1,6 +1,5 @@
 using GPUArraysCore: @allowscalar, AbstractGPUArray
-using NDTensors: NDTensors, BlockSparseTensor, dense, diag, map_diag!
-using NDTensors.DiagonalArrays: diaglength
+using NDTensors: NDTensors, BlockSparseTensor, dense, diag, diaglength, map_diag!
 using NDTensors.Expose: Exposed, unexpose
 
 ## TODO to circumvent issues with blocksparse and scalar indexing
@@ -11,7 +10,7 @@ function NDTensors.diag(ETensor::Exposed{<:AbstractGPUArray,<:BlockSparseTensor}
   return diag(dense(unexpose(ETensor)))
 end
 
-## TODO scalar indexing is slow here 
+## TODO scalar indexing is slow here
 function NDTensors.map_diag!(
   f::Function,
   exposed_t_destination::Exposed{<:AbstractGPUArray,<:BlockSparseTensor},
