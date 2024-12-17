@@ -1,0 +1,15 @@
+name: "Literate Check"
+
+on:
+  push:
+    branches:
+      - 'main'
+    tags: '*'
+  pull_request:
+
+jobs:
+  literate:
+    name: "Literate Check"
+    uses: "ITensor/ITensorActions/.github/workflows/LiterateCheck.yml@main"
+    with:
+      localregistry: https://github.com/ITensor/ITensorRegistry.git

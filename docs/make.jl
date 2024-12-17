@@ -1,19 +1,18 @@
-include("settings.jl")
+using ITensors: ITensors
+using Documenter: Documenter, DocMeta, deploydocs, makedocs
 
-makedocs(; sitename=sitename, settings...)
+DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
 
-# If ENV["GITHUB_EVENT_NAME"] == "workflow_dispatch"
-# it indicates the Documenter build was launched manually,
-# by a GitHub action run through the GitHub website.
-# As of Dec 2022, Documenter does not build the dev branch
-# in this case, so change the value to "push" to fix:
-if get(ENV, "GITHUB_EVENT_NAME", nothing) == "workflow_dispatch"
-  ENV["GITHUB_EVENT_NAME"] = "push"
-end
+include("make_index.jl")
 
-deploydocs(;
-  repo="github.com/ITensor/ITensors.jl.git",
-  devbranch="main",
-  push_preview=true,
-  deploy_config=Documenter.GitHubActions(),
+makedocs(;
+  modules=[ITensors],
+  authors="ITensor developers <support@itensor.org> and contributors",
+  sitename="ITensors.jl",
+  format=Documenter.HTML(;
+    canonical="https://ITensor.github.io/ITensors.jl", edit_link="main", assets=String[]
+  ),
+  pages=["Home" => "index.md"],
 )
+
+deploydocs(; repo="github.com/ITensor/ITensors.jl", devbranch="main", push_preview=true)

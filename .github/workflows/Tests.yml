@@ -1,0 +1,42 @@
+name: Tests
+on:
+  push:
+    branches:
+      - 'master'
+      - 'main'
+      - 'release-'
+    tags: '*'
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Cancel intermediate builds: only if it is a pull request build.
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  tests:
+    name: "Tests"
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - 'lts' # minimal supported version
+          - '1' # latest released Julia version
+        # group:
+        #   - 'core'
+        #   - 'optional'
+        os:
+          - ubuntu-latest
+          - macOS-latest
+          - windows-latest
+    uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@main"
+    with:
+      group: "${{ matrix.group }}"
+      julia-version: "${{ matrix.version }}"
+      os: "${{ matrix.os }}"
+      localregistry: https://github.com/ITensor/ITensorRegistry.git
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

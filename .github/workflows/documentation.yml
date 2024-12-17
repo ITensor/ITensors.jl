@@ -1,4 +1,4 @@
-name: Documentation
+name: "Documentation"
 
 on:
   push:
@@ -6,26 +6,18 @@ on:
       - main
     tags: '*'
   pull_request:
-    branches:
-      - main
-    tags: '*'
-  workflow_dispatch:
-    branches:
-      - main
-    tags: '*'
+  schedule:
+    - cron: '1 4 * * 4'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != github.event.repository.default_branch || github.ref != 'refs/tags/v*' }}
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@latest
-        with:
-          version: '1'
-      - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(path="./NDTensors"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-      - name: Build and deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-        run: julia --project=docs/ docs/make.jl
+  build-and-deploy-docs:
+    name: "Documentation"
+    uses: "ITensor/ITensorActions/.github/workflows/Documentation.yml@main"
+    with:
+      localregistry: https://github.com/ITensor/ITensorRegistry.git
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
