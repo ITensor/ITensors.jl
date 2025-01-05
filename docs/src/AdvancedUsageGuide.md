@@ -816,8 +816,21 @@ julia> @time svd(A, i');
 ITensors provides the command `ITensors.compile()` to create what is
 called a "custom system image", a custom version of Julia that
 includes a compiled version of ITensors (see the [PackageCompiler documentation](https://julialang.github.io/PackageCompiler.jl/dev/) for more details).
-Just run the command:
+
+!!! compat "ITensors 0.7"
+    As of ITensors 0.7, you must now install and load both the
+    [ITensorMPS.jl](https://github.com/ITensor/ITensorMPS.jl) package
+    and the [PackageCompiler.jl](https://github.com/JuliaLang/PackageCompiler.jl)
+    package in order to use `ITensors.compile()`, since it relies on running MPS/MPO
+    functionality as example code for Julia to compile and is based in a package
+    extension in order to make `PackageCompiler.jl` an optional dependency.
+
+Just run the commands:
 ```
+julia> using ITensors, ITensorMPS
+
+julia> using PackageCompiler
+
 julia> ITensors.compile()
 [...]
 ```
