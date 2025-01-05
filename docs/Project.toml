@@ -1,4 +1,4 @@
 [deps]
-ITensors = "3b3c2350-9fb7-4c22-a0c2-b3f20f86ea25"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
