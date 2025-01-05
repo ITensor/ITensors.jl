@@ -3,5 +3,11 @@ uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
 version = "0.8.0"
 
+[deps]
+BroadcastMapConversion = "4a4adec5-520f-4750-bb37-d5e66b4ddeb2"
+NamedDimsArrays = "60cbd0c0-df58-4cb7-918c-6f5607b73fde"
+
 [compat]
+BroadcastMapConversion = "0.1.2"
+NamedDimsArrays = "0.3.0"
 julia = "1.10"
