@@ -1,4 +1,5 @@
 [deps]
-ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
+NamedDimsArrays = "60cbd0c0-df58-4cb7-918c-6f5607b73fde"

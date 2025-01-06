@@ -1,3 +1,4 @@
 [deps]
 ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NamedDimsArrays = "60cbd0c0-df58-4cb7-918c-6f5607b73fde"
