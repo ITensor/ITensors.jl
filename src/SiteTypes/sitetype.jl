@@ -194,6 +194,10 @@ end
 
 _sitetypes(i::Index) = _sitetypes(tags(i))
 
+function commontags(i::Index...)
+  return union(tags.(i)...)
+end
+
 """
     op(opname::String, s::Index; kwargs...)
 
