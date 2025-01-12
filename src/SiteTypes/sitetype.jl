@@ -1,6 +1,6 @@
 using ChainRulesCore: @ignore_derivatives
 using ..ITensors:
-  ITensors, Index, ITensor, itensor, dag, onehot, prime, product, swapprime, tags
+  ITensors, Index, ITensor, itensor, addtags, dag, onehot, prime, product, swapprime, tags
 
 @eval struct SiteType{T}
   (f::Type{<:SiteType})() = $(Expr(:new, :f))

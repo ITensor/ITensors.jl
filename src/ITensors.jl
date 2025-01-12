@@ -1,13 +1,16 @@
 module ITensors
 
 using TensorAlgebra: contract
-using ITensorBase: ITensor, Index
+using ITensorBase: ITensor, Index, addtags, tags
 include("SiteTypes/SiteTypes.jl")
 using .SiteTypes: SiteTypes
 include("LazyApply/LazyApply.jl")
 using .LazyApply: LazyApply
 include("Ops/Ops.jl")
 using .Ops: Ops
+
+# Quirks, decide where or if to define.
+using ITensorBase: dag, dim, hasqns
 
 # TODO: Used in `ITensorMPS.jl`, define in `BackendSelection.jl`.
 struct Algorithm{algname} end
@@ -30,11 +33,10 @@ macro ts_str(tags) end
 struct OneITensor end
 
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
-function addtags end
+# function addtags end
 function addtags! end
 function commonind end
 function commoninds end
-function dag end
 function noprime end
 function noprime! end
 function prime end
