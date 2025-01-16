@@ -3,10 +3,21 @@ module ITensors
 export ITensor, Index
 
 using TensorAlgebra: contract
-using ITensorBase: ITensor, Index, addtags, prime, tags
+using ITensorBase:
+  ITensor,
+  Index,
+  addtags,
+  commonind,
+  commoninds,
+  inds,
+  plev,
+  prime,
+  tags,
+  uniqueind,
+  uniqueinds
 
 # Quirks, decide where or if to define.
-using ITensorBase: dag, dim, hasqns, inds, itensor
+using ITensorBase: dag, dim, factorize, hasqns, itensor, onehot
 
 include("SiteTypes/SiteTypes.jl")
 using .SiteTypes: SiteTypes
@@ -39,8 +50,6 @@ macro ts_str(tags) end
 struct OneITensor end
 
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
-function commonind end
-function commoninds end
 function noprime end
 function removetags end
 function replaceprime end
@@ -49,8 +58,6 @@ function setprime end
 function settags end
 function sim end
 function swapprime end
-function uniqueind end
-function uniqueinds end
 
 # TODO: Delete these in-place versions, only define
 # them in `ITensorMPS.jl`.
