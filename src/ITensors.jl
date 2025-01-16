@@ -1,5 +1,7 @@
 module ITensors
 
+export ITensor, Index
+
 using TensorAlgebra: contract
 using ITensorBase: ITensor, Index, addtags, prime, tags
 
