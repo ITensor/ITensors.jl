@@ -20,9 +20,8 @@ julia> Pkg.add("ITensors")
 # ## Examples
 
 using ITensors: ITensors, ITensor, Index
-# TODO: This should be `TensorAlgebra.qr`.
 using LinearAlgebra: qr
-using NamedDimsArrays: NamedDimsArray, aligndims, dimnames, name, unname
+using NamedDimsArrays: aligndims, unname
 using Test: @test
 i = Index(2)
 j = Index(2)
