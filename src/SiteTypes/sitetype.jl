@@ -609,12 +609,14 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
     end
   end
 
-  # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index;kwargs...)
-  T = ITensor(s)
-  for st in stypes
-    state!(T, sname, st, s; kwargs...)
-    !isempty(T) && return T
-  end
+  ## TODO: Bring this back, it is broken right now.
+  ## `isempty` isn't the correct function, it should use `isallocated`.
+  ## # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index;kwargs...)
+  ## T = ITensor(s)
+  ## for st in stypes
+  ##   state!(T, sname, st, s; kwargs...)
+  ##   !isempty(T) && return T
+  ## end
 
   #
   # otherwise try calling a function of the form:

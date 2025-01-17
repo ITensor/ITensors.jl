@@ -10,6 +10,7 @@ using ITensorBase:
   commonind,
   commoninds,
   inds,
+  noprime,
   plev,
   prime,
   tags,
@@ -17,7 +18,7 @@ using ITensorBase:
   uniqueinds
 
 # Quirks, decide where or if to define.
-using ITensorBase: dag, dim, factorize, hasqns, itensor, onehot
+using ITensorBase: OneITensor, dag, dim, factorize, hasqns, itensor, onehot, order, permute
 
 include("SiteTypes/SiteTypes.jl")
 using .SiteTypes: SiteTypes
@@ -46,14 +47,10 @@ end
 # constructing a set of tags.
 macro ts_str(tags) end
 
-# TODO: Used in `ITensorMPS.jl`, decide where or if to define it.
-struct OneITensor end
-
 # TODO: Used in `ITensors.SiteTypes`, need to define.
 function product end
 
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
-function noprime end
 function removetags end
 function replaceprime end
 function replacetags end
