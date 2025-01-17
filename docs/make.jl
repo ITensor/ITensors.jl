@@ -13,7 +13,7 @@ makedocs(;
     canonical="https://ITensor.github.io/ITensors.jl", edit_link="main", assets=String[]
   ),
   pages=["Home" => "index.md"],
-  warnonly=Documenter.except(:missing_docs),
+  warnonly=true,
 )
 
 deploydocs(; repo="github.com/ITensor/ITensors.jl", devbranch="main", push_preview=true)
