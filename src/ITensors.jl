@@ -49,6 +49,9 @@ macro ts_str(tags) end
 # TODO: Used in `ITensorMPS.jl`, decide where or if to define it.
 struct OneITensor end
 
+# TODO: Used in `ITensors.SiteTypes`, need to define.
+function product end
+
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
 function noprime end
 function removetags end

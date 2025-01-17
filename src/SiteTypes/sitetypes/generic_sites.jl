@@ -1,5 +1,8 @@
 using LinearAlgebra: I
-using ..ITensors: ITensor, itensor, settensor!
+using ..ITensors: ITensor, itensor
+
+# TODO: Need to define or replace.
+# using ..ITensors: settensor!
 
 function op!(
   o::ITensor, ::OpName"Id", ::SiteType"Generic", s1::Index, sn::Index...; eltype=Float64
