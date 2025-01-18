@@ -10,9 +10,12 @@ using ITensorBase:
   commonind,
   commoninds,
   inds,
+  mapinds,
   noprime,
   plev,
   prime,
+  replaceinds,
+  sim,
   tags,
   uniqueind,
   uniqueinds
@@ -56,7 +59,6 @@ function replaceprime end
 function replacetags end
 function setprime end
 function settags end
-function sim end
 function swapprime end
 
 # TODO: Delete these in-place versions, only define
