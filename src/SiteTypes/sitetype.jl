@@ -337,14 +337,14 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   # otherwise try calling a function of the form:
   #    op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...)
   #
-  Op = ITensor(prime.(s)..., dag.(s)...)
-  for st in common_stypes
-    op!(Op, opn, st, s...; kwargs...)
-    if !isempty(Op)
-      adjoint && return swapprime(dag(Op), 0 => 1)
-      return Op
-    end
-  end
+  ## Op = ITensor(prime.(s)..., dag.(s)...)
+  ## for st in common_stypes
+  ##   op!(Op, opn, st, s...; kwargs...)
+  ##   if !isempty(Op)
+  ##     adjoint && return swapprime(dag(Op), 0 => 1)
+  ##     return Op
+  ##   end
+  ## end
 
   if length(s) > 1
     # No overloads for common tags found. It might be a

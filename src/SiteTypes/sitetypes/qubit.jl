@@ -90,6 +90,11 @@ state(::StateName"Tetra4", t::SiteType"Qubit") = [
   √2 / √3 * exp(im * 4π / 3)
 ]
 
+op(::OpName"Id", ::SiteType"Qubit") = [
+  1 0
+  0 1
+]
+
 #
 # 1-Qubit gates
 #

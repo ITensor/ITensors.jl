@@ -54,6 +54,12 @@ state(::StateName"Y+", ::SiteType"S=1") = [-1 / 2, -im / sqrt(2), 1 / 2]
 state(::StateName"Y0", ::SiteType"S=1") = [1 / sqrt(2), 0, 1 / sqrt(2)]
 state(::StateName"Y-", ::SiteType"S=1") = [-1 / 2, im / sqrt(2), 1 / 2]
 
+op(::OpName"Id", ::SiteType"S=1") = [
+  1.0 0.0 0.0
+  0.0 1.0 0.0
+  0.0 0.0 1.0
+]
+
 op(::OpName"Sz", ::SiteType"S=1") = [
   1.0 0.0 0.0
   0.0 0.0 0.0
