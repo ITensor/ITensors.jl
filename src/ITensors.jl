@@ -23,14 +23,7 @@ using ITensorBase:
 # Quirks, decide where or if to define.
 using ITensorBase: OneITensor, dag, dim, factorize, hasqns, itensor, onehot, order, permute
 
-include("SiteTypes/SiteTypes.jl")
-using .SiteTypes: SiteTypes
-include("LazyApply/LazyApply.jl")
-using .LazyApply: LazyApply
-include("Ops/Ops.jl")
-using .Ops: Ops
-
-# TODO: Used in `ITensorMPS.jl`, define in `BackendSelection.jl`.
+# TODO: Used in `ITensorMPS.jl`, define in `BackendSelection.jl` or `AlgorithmSelection.jl`.
 struct Algorithm{algname} end
 macro Algorithm_str(algname)
   return :(Algorithm{$(Expr(:quote, Symbol(algname)))})

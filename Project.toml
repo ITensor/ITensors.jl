@@ -4,13 +4,11 @@ authors = ["ITensor developers <support@itensor.org> and contributors"]
 version = "0.8.0"
 
 [deps]
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 
 [compat]
-ChainRulesCore = "1.25.1"
 ITensorBase = "0.1.2"
 LinearAlgebra = "1.10.0"
 TensorAlgebra = "0.1.1"
