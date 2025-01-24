@@ -6,19 +6,21 @@ using TensorAlgebra: contract
 using ITensorBase:
   ITensor,
   Index,
-  addtags,
   commonind,
   commoninds,
+  gettag,
   inds,
   mapinds,
   noprime,
   plev,
   prime,
   replaceinds,
+  settag,
   sim,
   tags,
   uniqueind,
-  uniqueinds
+  uniqueinds,
+  unsettag
 
 # Quirks, decide where or if to define.
 using ITensorBase: OneITensor, dag, dim, factorize, hasqns, itensor, onehot, order, permute
