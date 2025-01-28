@@ -31,11 +31,6 @@ macro Algorithm_str(algname)
   return :(Algorithm{$(Expr(:quote, Symbol(algname)))})
 end
 
-# TODO: Used in `ITensorMPS.jl`, decide where or if to define it.
-# Probably define in `ITensorBase.jl` as a shorthand for
-# constructing a set of tags.
-macro ts_str(tags) end
-
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
 function replaceprime end
 function setprime end
