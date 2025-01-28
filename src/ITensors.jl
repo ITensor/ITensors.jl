@@ -2,7 +2,9 @@ module ITensors
 
 export ITensor, Index
 
+# TODO: Delete this and require loading instead?
 using TensorAlgebra: contract
+
 using ITensorBase:
   ITensor,
   Index,
@@ -24,12 +26,6 @@ using ITensorBase:
 
 # Quirks, decide where or if to define.
 using ITensorBase: dag, dim, factorize, hasqns, onehot
-
-# TODO: Used in `ITensorMPS.jl`, define in `BackendSelection.jl` or `AlgorithmSelection.jl`.
-struct Algorithm{algname} end
-macro Algorithm_str(algname)
-  return :(Algorithm{$(Expr(:quote, Symbol(algname)))})
-end
 
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
 function replaceprime end
