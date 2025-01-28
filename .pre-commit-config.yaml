@@ -6,11 +6,9 @@ repos:
   - id: check-toml
   - id: check-yaml
   - id: end-of-file-fixer
-    exclude: '.*references/.*\.txt$'  # do not check reference TN images
     exclude_types: [markdown]  # incompatible with Literate.jl
-  - id: trailing-whitespace
-    exclude: '.*references/.*\.txt$'  # do not check reference TN images
-- repo: https://github.com/qiaojunfeng/pre-commit-julia-format
-  rev: v0.2.0
+
+- repo: "https://github.com/domluna/JuliaFormatter.jl"
+  rev: v1.0.62  
   hooks:
-  - id: julia-format
+  - id: "julia-formatter"
