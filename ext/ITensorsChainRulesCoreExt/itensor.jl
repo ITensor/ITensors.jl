@@ -27,7 +27,7 @@ function rrule(::Type{ITensor}, x1::AllowAlias, x2::TensorStorage, x3)
   y = ITensor(x1, x2, x3)
   function ITensor_pullback(ȳ)
     x̄1 = NoTangent()
-    x̄2 = ȳ.tensor.storage
+    x̄2 = unthunk(ȳ).tensor.storage
     x̄3 = NoTangent()
     return (NoTangent(), x̄1, x̄2, x̄3)
   end
@@ -84,7 +84,7 @@ end
 function rrule(::typeof(tensor), x1::ITensor)
   y = tensor(x1)
   function tensor_pullback(ȳ)
-    x̄1 = ITensor(typeof(storage(x1))(ȳ.storage.data), inds(x1))
+    x̄1 = ITensor(typeof(storage(x1))(unthunk(ȳ).storage.data), inds(x1))
     return (NoTangent(), x̄1)
   end
   return y, tensor_pullback
