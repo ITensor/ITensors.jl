@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using ITensors: Index, dag, inds, random_itensor
+using ITensors: ITensor, Index, dag, inds, random_itensor
 using Test: @test, @testset
 using VectorInterface:
   add,
@@ -68,6 +68,9 @@ const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
   # scalartype
   @test scalartype(a) === elt
   @test scalartype(b) === elt
+  @test scalartype([a, b]) === elt
+  @test scalartype([a, random_itensor(Float32, i, j)]) === elt
+  @test scalartype(ITensor[]) === Bool
 
   # scale
   @test scale(a, α) ≈ α * a
