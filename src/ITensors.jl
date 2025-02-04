@@ -142,8 +142,6 @@ include("nullspace.jl")
 include("lib/ITensorsOpsExt/src/ITensorsOpsExt.jl")
 include("fermions/fermions.jl")
 export fparity, isfermionic
-include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
-using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
 include("../ext/ITensorsChainRulesCoreExt/ITensorsChainRulesCoreExt.jl")
 include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
 # TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore, ...`.

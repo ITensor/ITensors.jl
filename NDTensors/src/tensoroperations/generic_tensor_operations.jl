@@ -116,7 +116,7 @@ function contract(
   return output_tensor
 end
 
-using NDTensors.Expose: Exposed, expose, unexpose
+using .Expose: Exposed, expose, unexpose
 # Overload this function for immutable storage types
 function _contract!!(
   output_tensor::Tensor,

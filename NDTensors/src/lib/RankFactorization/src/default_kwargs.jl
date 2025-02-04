@@ -1,4 +1,4 @@
-using NDTensors.TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 replace_nothing(::Nothing, replacement) = replacement
 replace_nothing(value, replacement) = value
 
