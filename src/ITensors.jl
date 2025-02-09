@@ -25,7 +25,7 @@ using ITensorBase:
   unsettag
 
 # Quirks, decide where or if to define.
-using ITensorBase: dag, dim, factorize, hasqns
+using ITensorBase: dim, factorize, hasqns
 
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
 function replaceprime end
