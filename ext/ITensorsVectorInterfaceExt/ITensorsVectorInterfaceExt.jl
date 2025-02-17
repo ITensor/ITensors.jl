@@ -58,6 +58,15 @@ function VectorInterface.scalartype(a::ITensor)
   return ITensors.scalartype(a)
 end
 
+# Circumvent issue that `VectorInterface.jl` computes
+# the scalartype in the type domain, which isn't known
+# for ITensors.
+function VectorInterface.scalartype(a::AbstractArray{ITensor})
+  # Like the implementation of `LinearAlgebra.promote_leaf_eltypes`:
+  # https://github.com/JuliaLang/LinearAlgebra.jl/blob/e7da19f2764ba36bd0a9eb8ec67dddce19d87114/src/generic.jl#L1933
+  return mapreduce(VectorInterface.scalartype, promote_type, a; init=Bool)
+end
+
 function VectorInterface.scale(a::ITensor, α::Number)
   return a * α
 end

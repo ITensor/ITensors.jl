@@ -1,5 +1,5 @@
-using NDTensors.TypeParameterAccessors: TypeParameterAccessors, Position
-using NDTensors.GPUArraysCoreExtensions: storagemode
+using TypeParameterAccessors: TypeParameterAccessors, Position
+using ..GPUArraysCoreExtensions: storagemode
 # Implemented in NDTensorsMetalExt
 function mtl end
 

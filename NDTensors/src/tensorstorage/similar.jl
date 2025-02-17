@@ -1,4 +1,4 @@
-using .TypeParameterAccessors: TypeParameterAccessors, set_ndims, similartype
+using TypeParameterAccessors: TypeParameterAccessors, set_ndims, similartype
 
 # NDTensors.similar
 similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(data(storage)))

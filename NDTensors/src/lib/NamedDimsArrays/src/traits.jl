@@ -1,1 +1,0 @@
-isnamed(::Any) = false
