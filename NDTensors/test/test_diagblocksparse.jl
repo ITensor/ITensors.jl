@@ -11,6 +11,7 @@ using NDTensors:
   blockoffsets,
   contract,
   dense,
+  denseblocks,
   inds,
   nzblocks
 using Random: randn!
@@ -85,4 +86,14 @@ using .NDTensorsTestUtils: devices_list
   @test_broken contract(dev(A), (-1, -2), dev(t), (-1, -2))[] ≈
     contract(dense(A), (-1, -2), dense(t), (-1, -2))[]
 end
+
+@testset "DiagBlockSparse denseblocks" begin
+  elt = Float64
+  blockoffsets_a = Dictionary([Block(1, 1)], [0])
+  inds_a = ([2], [1, 1])
+  a = Tensor(DiagBlockSparse(one(elt), blockoffsets_a), inds_a)
+  a′ = denseblocks(a)
+  @test dense(a) == dense(a′)
+end
+
 end

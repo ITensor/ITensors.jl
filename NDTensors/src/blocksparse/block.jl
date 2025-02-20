@@ -75,6 +75,7 @@ sethash!(b::Block, h::UInt) = (b.hash[] = h; return b)
 #
 
 length(::Block{N}) where {N} = N
+length(::Type{<:Block{N}}) where {N} = N
 
 isless(b1::Block, b2::Block) = isless(Tuple(b1), Tuple(b2))
 
