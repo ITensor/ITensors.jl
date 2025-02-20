@@ -105,6 +105,11 @@ function copy(D::Dense)
   return Dense(copy(expose(data(D))))
 end
 
+function Base.copyto!(R::Dense, T::Dense)
+  copyto!(expose(data(R)), expose(data(T)))
+  return R
+end
+
 function Base.real(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), real(eltype(T))))
 end
