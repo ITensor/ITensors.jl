@@ -1,7 +1,7 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.8.0"
+version = "0.9.0"
 
 [deps]
 ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
