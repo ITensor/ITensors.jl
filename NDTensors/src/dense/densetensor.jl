@@ -66,6 +66,11 @@ end
 
 convert(::Type{Array}, T::DenseTensor) = reshape(data(storage(T)), dims(inds(T)))
 
+function Base.copyto!(R::DenseTensor, T::DenseTensor)
+  copyto!(storage(R), storage(T))
+  return R
+end
+
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
 array(T::DenseTensor) = convert(Array, T)

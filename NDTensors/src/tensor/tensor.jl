@@ -204,7 +204,9 @@ end
 
 copy(T::Tensor) = setstorage(T, copy(storage(T)))
 
-copyto!(R::Tensor, T::Tensor) = (copyto!(storage(R), storage(T)); R)
+function copyto!(R::Tensor, T::Tensor)
+  return error("Not implemented.")
+end
 
 complex(T::Tensor) = setstorage(T, complex(storage(T)))
 

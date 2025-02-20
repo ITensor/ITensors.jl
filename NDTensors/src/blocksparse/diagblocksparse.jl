@@ -455,7 +455,7 @@ end
 # convert to BlockSparse
 function denseblocks(D::Tensor)
   nzblocksD = nzblocks(D)
-  T = BlockSparseTensor(eltype(D), nzblocksD, inds(D))
+  T = BlockSparseTensor(datatype(D), nzblocksD, inds(D))
   for b in nzblocksD
     T[b] = D[b]
   end

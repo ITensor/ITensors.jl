@@ -79,15 +79,26 @@ using .NDTensorsTestUtils: devices_list
   A = BlockSparseTensor{elt}([(1, 1), (2, 2)], [3, 2, 3], [2, 2])
   randn!(A)
   t = Tensor(DiagBlockSparse(one(elt), blockoffsets(A)), inds(A))
-  @test_broken dense(contract(A, (1, -2), (t), (3, -2))) ≈
+  @test dense(contract(A, (1, -2), (t), (3, -2))) ≈
     contract(dense(A), (1, -2), dense(t), (3, -2))
-  @test_broken dense(contract(A, (-2, 1), t, (-2, 3))) ≈
+  @test dense(contract(A, (-2, 1), t, (-2, 3))) ≈
     contract(dense(A), (-2, 1), dense(t), (-2, 3))
-  @test_broken contract(dev(A), (-1, -2), dev(t), (-1, -2))[] ≈
+  @test contract(dev(A), (-1, -2), dev(t), (-1, -2))[] ≈
     contract(dense(A), (-1, -2), dense(t), (-1, -2))[]
 end
 
 @testset "DiagBlockSparse denseblocks" begin
+  elt = Float64
+  blockoffsets_a = Dictionary([Block(1, 1), Block(2, 2)], [0, 2])
+  inds_a = ([2, 2], [2, 2])
+  a = Tensor(DiagBlockSparse(elt, blockoffsets_a, 4), inds_a)
+  a[Block(1, 1)][1, 1] = 1
+  a[Block(1, 1)][2, 2] = 2
+  a[Block(2, 2)][1, 1] = 3
+  a[Block(2, 2)][2, 2] = 4
+  a′ = denseblocks(a)
+  @test dense(a) == dense(a′)
+
   elt = Float64
   blockoffsets_a = Dictionary([Block(1, 1)], [0])
   inds_a = ([2], [1, 1])
