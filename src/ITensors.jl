@@ -17,6 +17,7 @@ using ITensorBase:
   plev,
   prime,
   replaceinds,
+  setprime,
   settag,
   sim,
   tags,
@@ -29,7 +30,6 @@ using ITensorBase: dim, factorize, hasqns
 
 # TODO: Used in `ITensorMPS.jl`, define in `ITensorBase.jl`.
 function replaceprime end
-function setprime end
 function swapprime end
 
 # TODO: Update tag functions for tagdict.
