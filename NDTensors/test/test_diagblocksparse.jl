@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using Dictionaries: Dictionary
 using GPUArraysCore: @allowscalar
+using LinearAlgebra: norm
 using NDTensors:
   NDTensors,
   Block,
@@ -85,6 +86,18 @@ using .NDTensorsTestUtils: devices_list
     contract(dense(A), (-2, 1), dense(t), (-2, 3))
   @test contract(dev(A), (-1, -2), dev(t), (-1, -2))[] ≈
     contract(dense(A), (-1, -2), dense(t), (-1, -2))[]
+end
+
+@testset "UniformDiagBlockSparse norm" begin
+  elt = Float64
+  storage = DiagBlockSparse(one(elt), Dictionary([Block(1, 1), Block(2, 2)], [0, 2]))
+  tensor = Tensor(storage, ([2, 2], [2, 2]))
+  @test norm(tensor) ≈ norm(dense(tensor))
+
+  elt = Float64
+  storage = DiagBlockSparse(one(elt), Dictionary([Block(1, 1)], [0]))
+  tensor = Tensor(storage, ([2], [1, 1]))
+  @test norm(tensor) ≈ norm(dense(tensor))
 end
 
 @testset "DiagBlockSparse denseblocks" begin

@@ -1,3 +1,4 @@
+using LinearAlgebra: LinearAlgebra
 using TypeParameterAccessors: similartype
 
 export DiagBlockSparse, DiagBlockSparseTensor
@@ -582,8 +583,13 @@ function _contract!!(
   return R
 end
 
-# TODO: Improve this with FillArrays.jl
-norm(S::UniformDiagBlockSparseTensor) = sqrt(mindim(S) * abs2(data(S)))
+function LinearAlgebra.norm(D::UniformDiagBlockSparseTensor)
+  normD² = zero(eltype(D))
+  for b in nzblocks(D)
+    normD² += sum(abs2, D[b])
+  end
+  return √(abs(normD²))
+end
 
 function contraction_output(
   T1::TensorT1, labelsT1, T2::TensorT2, labelsT2, labelsR
