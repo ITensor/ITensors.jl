@@ -586,7 +586,7 @@ end
 function LinearAlgebra.norm(D::UniformDiagBlockSparseTensor)
   normD² = zero(eltype(D))
   for b in nzblocks(D)
-    normD² += sum(abs2, D[b])
+    normD² += norm(D[b])^2
   end
   return √(abs(normD²))
 end
