@@ -70,6 +70,11 @@ Set the entire diagonal of a uniform DiagTensor.
 """
 setdiag(T::UniformDiagTensor, val) = tensor(Diag(val), inds(T))
 
+function Base.copyto!(R::DenseTensor, T::DiagTensor)
+  diagview(R) .= diagview(T)
+  return R
+end
+
 @propagate_inbounds function getindex(
   T::DiagTensor{ElT,N}, inds::Vararg{Int,N}
 ) where {ElT,N}
