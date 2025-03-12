@@ -149,7 +149,7 @@ sites = siteinds("S=1",N; conserve_sz=true, qnname_sz="TotalSz")
 The available state names for "S=1" sites are:
 - `"Up"` (aliases: `"Z+"`, `"↑"`) spin in the up state
 - `"Z0"` (aliases: `"0"`) spin in the Sz=0 state
-- `"Dn"` (aliases: `"Z-"`, `"↓"`) spin in the Sz=0 state
+- `"Dn"` (aliases: `"Z-"`, `"↓"`) spin in the down state
 
 #### "S=1" Operators
 
