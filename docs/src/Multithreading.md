@@ -88,7 +88,7 @@ Here is a simple example of using block sparse multithreading to speed up a spar
 tensor contraction:
 ```julia
 using BenchmarkTools
-using ITensors, ITensorMPS
+using ITensors
 using LinearAlgebra
 using Strided
 
@@ -103,7 +103,7 @@ function main(; d = 20, order = 4)
   println()
 
   i(n) = Index(QN(0) => d, QN(1) => d; tags = "i$n")
-  is = IndexSet(i, order ÷ 2)
+  is = ntuple(i, order ÷ 2)
   A = random_itensor(is'..., dag(is)...)
   B = random_itensor(is'..., dag(is)...)
 
