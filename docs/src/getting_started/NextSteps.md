@@ -4,7 +4,7 @@
 
 * Read the [ITensor Paper](https://www.scipost.org/SciPostPhysCodeb.4) for a long-form introduction to the design and main features of the ITensor library
 
-* Refer to the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorDocs/ITensorMPS) for information on running finite MPS/MPO calculations such as DMRG.
+* Refer to the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorMPS.jl) for information on running finite MPS/MPO calculations such as DMRG.
 
 * More Julia language tutorials and resources
     - [From zero to Julia!](https://techytok.com/from-zero-to-julia/)

@@ -5,7 +5,7 @@ tensor network algorithms.
 
 | **Documentation**|**Citation**|
 |:----------------:|:----------:|
-|[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensorDocs/ITensors/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensorDocs/ITensors/dev/)|[![SciPost](https://img.shields.io/badge/SciPost-10.21468-blue.svg)](https://scipost.org/SciPostPhysCodeb.4) [![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
+|[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/)|[![SciPost](https://img.shields.io/badge/SciPost-10.21468-blue.svg)](https://scipost.org/SciPostPhysCodeb.4) [![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
 
 |**Version**|**Download Statistics**|**Style Guide**|**License**|
 |:---------:|:---------------------:|:-------------:|:---------:|
@@ -24,7 +24,7 @@ The [ITensorMPS.jl library](https://github.com/ITensor/ITensorMPS.jl)
 includes composable and extensible algorithms for optimizing and transforming
 tensor networks, such as matrix product state and matrix product operators, such as
 the DMRG algorithm. If you are looking for information on running finite MPS/MPO
-calculations such as DMRG, take a look at the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorDocs/ITensorMPS).
+calculations such as DMRG, take a look at the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorMPS.jl).
 
 Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
@@ -47,7 +47,7 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 - March 25, 2022: ITensors.jl v0.3 has been released. The main breaking change is that we no longer support versions of Julia below 1.6. Julia 1.6 is the long term support version of Julia (LTS), which means that going forward versions below Julia 1.6 won't be as well supported with bug fixes and improvements. Additionally, Julia 1.6 introduced many improvements including syntax improvements that we would like to start using with ITensors.jl, which becomes challenging if we try to support Julia versions below 1.6. See [here](https://www.oxinabox.net/2021/02/13/Julia-1.6-what-has-changed-since-1.0.html) and [here](https://julialang.org/blog/2021/03/julia-1.6-highlights/) for some nice summaries of the Julia 1.6 release.
 
 -  Jun 09, 2021: ITensors.jl v0.2 has been released, with a few breaking changes as well as a variety of bug fixes
-and new features. Take a look at the [upgrade guide](https://itensor.github.io/ITensorDocs/ITensors/dev/UpgradeGuide_0.1_to_0.2.html)
+and new features. Take a look at the [upgrade guide](https://itensor.github.io/ITensors.jl/stable/UpgradeGuide_0.1_to_0.2.html)
 for help upgrading your code.
 
 ## Installation
