@@ -21,7 +21,6 @@ settings = Dict(
       ["Index" => "IndexType.md", "ITensor" => "ITensorType.md", "QN" => "QN.md"],
     "Frequently Asked Questions" => [
       "Programming Language (Julia, C++, ...) FAQs" => "faq/JuliaAndCpp.md",
-      "Quantum Number (QN) FAQs" => "faq/QN.md",
       "ITensor Development FAQs" => "faq/Development.md",
       "Julia Package Manager FAQs" => "faq/JuliaPkg.md",
       "High-Performance Computing FAQs" => "faq/HPC.md",
@@ -33,7 +32,6 @@ settings = Dict(
       "Contraction sequence optimization" => "ContractionSequenceOptimization.md",
       "HDF5 File Formats" => "HDF5FileFormats.md",
     ],
-    "Developer Guide" => "DeveloperGuide.md",
   ],
   :format => Documenter.HTML(; assets=["assets/favicon.ico"], prettyurls=false),
   :doctest => true,

@@ -2,7 +2,7 @@
 
 When contracting a tensor network, the sequence of contraction makes a big difference in the computational cost. However, the complexity of determining the optimal sequence grows exponentially with the number of tensors, but there are many heuristic algorithms available for computing optimal sequences for small networks[^1][^2][^3][^4][^5][^6]. ITensors.jl provides some functionality for helping you find the optimal contraction sequence for small tensor network, as we will show below.
 
-The algorithm in ITensors.jl currently uses a modified version of[^1] with simplifications for outer product contractions similar to those used in [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl).
+The algorithm in ITensors.jl currently uses a modified version of[^1] with simplifications for outer product contractions and is based on the implementation in [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl).
 
 [^1]: [Faster identification of optimal contraction sequences for tensor networks](https://arxiv.org/abs/1304.6112)
 [^2]: [Improving the efficiency of variational tensor network algorithms](https://arxiv.org/abs/1310.8023)
