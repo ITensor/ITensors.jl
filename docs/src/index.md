@@ -30,7 +30,7 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ## News
 
-- March 21, 2025: As part of the latest release of ITensors.jl (v0.8.3), all documentation related to MPS/MPO functionality has been moved to the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorMPS.jl).
+- March 22, 2025: As part of the latest release of ITensors.jl (v0.8.3), all documentation related to MPS/MPO functionality has been moved to the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorMPS.jl).
 
 - February 22, 2025: Please note that there were issues installing the latest version of ITensors.jl (ITensors.jl v0.8) in older versions of Julia v1.10 and v1.11 ([https://github.com/ITensor/ITensors.jl/issues/1618](https://github.com/ITensor/ITensors.jl/issues/1618), [https://itensor.discourse.group/t/typeparameteraccessors-not-found-error-on-julia-v-1-10-0/2260](https://itensor.discourse.group/t/typeparameteraccessors-not-found-error-on-julia-v-1-10-0/2260)). This issue has been fixed in [NDTensors.jl v0.4.4](https://github.com/ITensor/ITensors.jl/pull/1623), so please try updating your packages if you are using older versions of Julia v1.10 or v1.11 and running into issues installing ITensors.jl.
 
