@@ -139,8 +139,7 @@ function Index(qnblocks::QNBlocks; dir::Arrow=Out, tags="", plev=0)
 end
 
 """
-    Index(qnblocks::Vector{Pair{QN, Int64}}, tags; dir::Arrow = Out,
-                                                   plev::Integer = 0)
+    Index(qnblocks::Vector{Pair{QN, Int64}}, tags; plev::Integer = 0)
 
 Construct a QN Index from a Vector of pairs of QN and block
 dimensions.
@@ -148,7 +147,8 @@ dimensions.
 # Example
 
 ```
-Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1], "i"; dir = In)
+i = Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1], "i")
+idag = dag(i) # Same Index with arrow direction flipped
 ```
 """
 function Index(qnblocks::QNBlocks, tags; dir::Arrow=Out, plev::Integer=0)
@@ -156,8 +156,7 @@ function Index(qnblocks::QNBlocks, tags; dir::Arrow=Out, plev::Integer=0)
 end
 
 """
-    Index(qnblocks::Pair{QN, Int64}...; dir::Arrow = Out,
-                                        tags = "",
+    Index(qnblocks::Pair{QN, Int64}...; tags = "",
                                         plev::Integer = 0)
 
 Construct a QN Index from a list of pairs of QN and block
