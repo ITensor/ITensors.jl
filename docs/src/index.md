@@ -5,29 +5,32 @@ tensor network algorithms.
 
 | **Documentation**|**Citation**|
 |:----------------:|:----------:|
-|[![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://itensor.github.io/ITensors.jl/dev/)|[![SciPost](https://img.shields.io/badge/SciPost-10.21468-blue.svg)](https://scipost.org/SciPostPhysCodeb.4) [![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
+|[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/)|[![SciPost](https://img.shields.io/badge/SciPost-10.21468-blue.svg)](https://scipost.org/SciPostPhysCodeb.4) [![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
 
 |**Version**|**Download Statistics**|**Style Guide**|**License**|
 |:---------:|:---------------------:|:-------------:|:---------:|
 |[![version](https://juliahub.com/docs/ITensors/version.svg)](https://juliahub.com/ui/Packages/ITensors/P3pqL)|[![ITensor Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FITensors&query=total_requests&suffix=%2Fmonth&label=Downloads)](http://juliapkgstats.com/pkg/ITensors)|[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|[![license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/ITensor/ITensors.jl/blob/main/LICENSE)|
 
-The source code for ITensor can be found [on Github](https://github.com/ITensor/ITensors.jl).
+The source code for ITensors.jl can be found [on Github](https://github.com/ITensor/ITensors.jl).
 
-Additional documentation can be found on the ITensor website [itensor.org](https://itensor.org/).
+Additional documentation can be found on the ITensor website [itensor.org](https://itensor.org).
 
 An ITensor is a tensor whose interface
 is independent of its memory layout. ITensor indices are
 objects which carry extra information and which
 'recognize' each other (compare equal to each other).
 
-The ITensor library also includes composable and extensible
-algorithms for optimizing and transforming tensor networks, such as
-matrix product state and matrix product operators, such as
-the DMRG algorithm.
+The [ITensorMPS.jl library](https://github.com/ITensor/ITensorMPS.jl)
+includes composable and extensible algorithms for optimizing and transforming
+tensor networks, such as matrix product state and matrix product operators, such as
+the DMRG algorithm. If you are looking for information on running finite MPS/MPO
+calculations such as DMRG, take a look at the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorMPS.jl).
 
 Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
 ## News
+
+- March 22, 2025: As part of the latest release of ITensors.jl (v0.8.3), all documentation related to MPS/MPO functionality has been moved to the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorMPS.jl).
 
 - February 22, 2025: Please note that there were issues installing the latest version of ITensors.jl (ITensors.jl v0.8) in older versions of Julia v1.10 and v1.11 ([https://github.com/ITensor/ITensors.jl/issues/1618](https://github.com/ITensor/ITensors.jl/issues/1618), [https://itensor.discourse.group/t/typeparameteraccessors-not-found-error-on-julia-v-1-10-0/2260](https://itensor.discourse.group/t/typeparameteraccessors-not-found-error-on-julia-v-1-10-0/2260)). This issue has been fixed in [NDTensors.jl v0.4.4](https://github.com/ITensor/ITensors.jl/pull/1623), so please try updating your packages if you are using older versions of Julia v1.10 or v1.11 and running into issues installing ITensors.jl.
 
@@ -271,61 +274,3 @@ hastags(s, "Site") = true
 hastags(s, "n=1") = true
 i1 == i = false
 ```
-
-### DMRG Calculation
-
-DMRG is an iterative algorithm for finding the dominant
-eigenvector of an exponentially large, Hermitian matrix.
-It originates in physics with the purpose of finding
-eigenvectors of Hamiltonian (energy) matrices which model
-the behavior of quantum systems.
-
-```julia
-using ITensors, ITensorMPS
-let
-  # Create 100 spin-one indices
-  N = 100
-  sites = siteinds("S=1",N)
-
-  # Input operator terms which define
-  # a Hamiltonian matrix, and convert
-  # these terms to an MPO tensor network
-  # (here we make the 1D Heisenberg model)
-  os = OpSum()
-  for j=1:N-1
-    os += "Sz",j,"Sz",j+1
-    os += 0.5,"S+",j,"S-",j+1
-    os += 0.5,"S-",j,"S+",j+1
-  end
-  H = MPO(os,sites)
-
-  # Create an initial random matrix product state
-  psi0 = random_mps(sites)
-
-  # Plan to do 5 passes or 'sweeps' of DMRG,
-  # setting maximum MPS internal dimensions
-  # for each sweep and maximum truncation cutoff
-  # used when adapting internal dimensions:
-  nsweeps = 5
-  maxdim = [10,20,100,100,200]
-  cutoff = 1E-10
-
-  # Run the DMRG algorithm, returning energy
-  # (dominant eigenvalue) and optimized MPS
-  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
-  println("Final energy = $energy")
-
-  nothing
-end
-
-# output
-
-After sweep 1 energy=-137.954199761732 maxlinkdim=9 maxerr=2.43E-16 time=9.356
-After sweep 2 energy=-138.935058943878 maxlinkdim=20 maxerr=4.97E-06 time=0.671
-After sweep 3 energy=-138.940080155429 maxlinkdim=92 maxerr=1.00E-10 time=4.522
-After sweep 4 energy=-138.940086009318 maxlinkdim=100 maxerr=1.05E-10 time=11.644
-After sweep 5 energy=-138.940086058840 maxlinkdim=96 maxerr=1.00E-10 time=12.771
-Final energy = -138.94008605883985
-```
-You can find more examples of running `dmrg` and related algorithms [here](https://github.com/ITensor/ITensorMPS.jl/tree/main/examples).
-
