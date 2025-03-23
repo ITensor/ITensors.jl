@@ -127,7 +127,7 @@ Create a copy of index `i` with identical `id`, `space`, `dir` and `tags`.
 copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 
 """
-    sim(i::Index; tags = tags(i), plev = plev(i), dir = dir(i))
+    sim(i::Index; tags = tags(i), plev = plev(i))
 
 Produces an `Index` with the same properties (dimension or QN structure)
 but with a new `id`.

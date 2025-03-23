@@ -114,16 +114,10 @@ function QuantumNumbers.have_same_mods(qnblocks::QNBlocks)
 end
 
 """
-    Index(qnblocks::Vector{Pair{QN, Int64}}; dir::Arrow = Out,
-                                             tags = "",
-                                             plev::Integer = 0)
+    Index(qnblocks::Vector{Pair{QN, Int64}}; tags = "", plev::Integer = 0)
 
 Construct a QN Index from a Vector of pairs of QN and block
 dimensions.
-
-Note: in the future, this may enforce that all blocks have the
-same QNs (which would allow for some optimizations, for example
-when constructing random QN ITensors).
 
 # Example
 
