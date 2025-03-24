@@ -10,6 +10,7 @@ benchmark/mult
 benchmark/*.json
 docs/Manifest.toml
 docs/build/
+docs/src/index.md
 NDTensors/Manifest.toml
 NDTensors/test/Manifest.toml
 precompile/tmp
