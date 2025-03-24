@@ -5,6 +5,19 @@ using ITensors
 # https://github.com/JuliaDocs/Documenter.jl/issues/1734
 DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
 
+readme_ccq_logo = """<img src="docs/src/assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo.">"""
+index_ccq_logo = """
+  ```@raw html
+  <img src="assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo.">
+  ```
+  """
+
+readme_str = read(joinpath(@__DIR__, "..", "README.md"), String)
+write(
+  joinpath(@__DIR__, "src", "index.md"),
+  replace(readme_str, readme_ccq_logo => index_ccq_logo),
+)
+
 sitename = "ITensors.jl"
 
 settings = Dict(
