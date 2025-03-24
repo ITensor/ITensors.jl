@@ -26,7 +26,11 @@ tensor networks, such as matrix product state and matrix product operators, such
 the DMRG algorithm. If you are looking for information on running finite MPS/MPO
 calculations such as DMRG, take a look at the [ITensorMPS.jl documentation](https://itensor.github.io/ITensorMPS.jl).
 
-Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
+## Support
+
+<img src="docs/src/assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo.">
+
+ITensors.jl is supported by the Flatiron Institute, a division of the Simons Foundation.
 
 ## News
 
