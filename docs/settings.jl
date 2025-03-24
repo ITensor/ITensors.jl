@@ -5,6 +5,12 @@ using ITensors
 # https://github.com/JuliaDocs/Documenter.jl/issues/1734
 DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
 
+readme_str = read(joinpath(@__DIR__, "..", "README.md"), String)
+write(
+  joinpath(@__DIR__, "src", "index.md"),
+  replace(readme_str, "docs/src/assets/CCQ.png" => "assets/CCQ.png"),
+)
+
 sitename = "ITensors.jl"
 
 settings = Dict(
