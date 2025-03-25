@@ -134,7 +134,7 @@ function optimal_contraction_sequence(As)
   return throw(
     ArgumentError(
       "Optimal contraction sequence isn't defined. Try loading a backend package like 
-        TensorOperations.jl",
+        TensorOperations.jl"
     ),
   )
 end

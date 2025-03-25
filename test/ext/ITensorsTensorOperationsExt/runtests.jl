@@ -84,7 +84,7 @@ using TensorOperations: TensorOperations
 
   seq = ITensors.optimal_contraction_sequence([A, A'', A', A'''])
   @test length(seq) == 2
-  @test issetequal(Any[3,1], first(seq)) || issetequal(Any[2,4], first(seq))
+  @test issetequal(Any[3, 1], first(seq)) || issetequal(Any[2, 4], first(seq))
 
   time_without_opt = @elapsed A * A'' * A' * A'''
 
