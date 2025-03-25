@@ -29,6 +29,7 @@ Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 
 [weakdeps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
