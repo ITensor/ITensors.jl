@@ -229,7 +229,7 @@ Sz = op("Sz", s)
 ```
 
 You can see all of the operator names defined for the site types included
-with ITensor [here](https://itensor.github.io/ITensors.jl/dev/IncludedSiteTypes.html).
+with ITensor [here](https://docs.itensor.org/ITensorMPS/stable/IncludedSiteTypes.html).
 Note that some site types such as "S=1/2" and "Qubit"
 are aliases for each other and share operator definitions.
 """
