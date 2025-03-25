@@ -1,19 +1,18 @@
+@eval module $(gensym())
+
 using ITensors
 using Test
 import Random: seed!
 
 seed!(12345)
 
-using ITensors.ContractionSequenceOptimization: optimal_contraction_sequence, deepmap
+using ITensors: dim, optimal_contraction_sequence
+using TensorOperations: TensorOperations
 
 @testset "ITensor contraction sequence optimization" begin
   d = 100
   i = Index(d, "i")
   A = random_itensor(i', dag(i))
-
-  # Low level functions
-  @test dim([1, 2], [4, 5, 6]) == 4 * 5
-  @test dim(Int[], [4, 5, 6]) == 1
 
   @test !ITensors.using_contraction_sequence_optimization()
 
@@ -57,7 +56,7 @@ using ITensors.ContractionSequenceOptimization: optimal_contraction_sequence, de
   @test !ITensors.using_contraction_sequence_optimization()
 
   # This is not the only sequence
-  @test ITensors.optimal_contraction_sequence([A, A'', A']) == Any[1, Any[2, 3]]
+  @test ITensors.optimal_contraction_sequence([A, A'', A']) == Any[1, Any[3, 2]]
 
   time_without_opt = @elapsed A * A'' * A'
 
@@ -83,9 +82,9 @@ using ITensors.ContractionSequenceOptimization: optimal_contraction_sequence, de
   ITensors.disable_contraction_sequence_optimization()
   @test !ITensors.using_contraction_sequence_optimization()
 
-  # This is not the only sequence
-  @test ITensors.optimal_contraction_sequence([A, A'', A', A''']) ==
-    Any[Any[1, 3], Any[2, 4]]
+  seq = ITensors.optimal_contraction_sequence([A, A'', A', A'''])
+  @test length(seq) == 2
+  @test issetequal(Any[3,1], first(seq)) || issetequal(Any[2,4], first(seq))
 
   time_without_opt = @elapsed A * A'' * A' * A'''
 
@@ -105,7 +104,7 @@ end
   # so that tensor allocations dominate over network
   # analysis for testing the number of allocations below.
   d0 = 2
-  δd = 1000
+  δd = 5000
   ntensors = 6
   ElType = Float64
   d = [d0 + (n - 1) * δd for n in 1:ntensors]
@@ -127,9 +126,11 @@ end
   @test allocations_left_associative ≈ allocations_left_associative_pairwise rtol = 0.01
 
   sequence = foldr((x, y) -> [x, y], 1:ntensors)
-  @test sequence == optimal_contraction_sequence(As)
+  b1 = optimal_contraction_sequence(As) == Any[1, Any[2, Any[3, Any[4, [5, 6]]]]]
+  b2 = optimal_contraction_sequence(As) == Any[1, Any[2, Any[3, Any[4, [6, 5]]]]]
+  @test b1 || b2
+
   As_network = foldr((x, y) -> [x, y], As)
-  @test deepmap(n -> As[n], sequence) == As_network
 
   # Warmup
   contract(As; sequence=sequence)
@@ -158,4 +159,5 @@ end
   @test allocations_right_associative_2 < allocations_left_associative
   @test allocations_right_associative_3 < allocations_left_associative
   @test allocations_right_associative_4 < allocations_left_associative
+end
 end

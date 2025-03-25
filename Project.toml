@@ -34,6 +34,7 @@ ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
 ITensorsHDF5Ext = "HDF5"
+ITensorsTensorOperationsExt = "TensorOperations"
 ITensorsVectorInterfaceExt = "VectorInterface"
 ITensorsZygoteRulesExt = "ZygoteRules"
 
@@ -58,6 +59,7 @@ SimpleTraits = "0.9.4"
 SparseArrays = "<0.0.1, 1.10"
 StaticArrays = "0.12, 1.0"
 Strided = "1.1, 2"
+TensorOperations = "5.1.4"
 TimerOutputs = "0.5.5"
 TupleTools = "1.2"
 VectorInterface = "0.4, 0.5"
@@ -68,5 +70,6 @@ julia = "1.10"
 [extras]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
