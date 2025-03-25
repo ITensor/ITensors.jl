@@ -34,7 +34,7 @@ There are currently a few built-in site types
 recognized by `jl`. The system is easily extensible
 by users. To add new operators to an existing site type,
 or to create new site types, you can follow the instructions
-[here](https://itensor.github.io/ITensors.jl/stable/examples/Physics.html).
+[here](https://docs.itensor.org/ITensorMPS/stable/examples/Physics.html).
 
 The current built-in site types are:
 
@@ -107,7 +107,7 @@ Many operators are available, for example:
 - ...
 
 You can view the internal SiteType definitions and operators
-[here](https://itensor.github.io/ITensors.jl/stable/IncludedSiteTypes.html).
+[here](https://docs.itensor.org/ITensorMPS/stable/IncludedSiteTypes.html).
 """
 SiteType(s::AbstractString) = SiteType{SmallString(s)}()
 
