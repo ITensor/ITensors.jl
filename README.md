@@ -37,6 +37,8 @@ ITensors.jl is supported by the Flatiron Institute, a division of the Simons Fou
 
 ## News
 
+- March 26, 2025: ITensors.jl v0.9 has been released. This is a minor breaking change since the `optimal_contraction_sequence` function now passes to the `optimaltree` function from [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl). The `TensorOperations` package therefore needs to be loaded in order for `optimal_contraction_sequence` to be used or if the flag `ITensors.enable_contraction_sequence_optimization()` is switched on.
+
 - March 22, 2025: As part of the latest release of ITensors.jl (v0.8.3), all documentation related to MPS/MPO functionality has been moved to the [ITensorMPS.jl documentation](https://docs.itensor.org/ITensorMPS).
 
 - February 22, 2025: Please note that there were issues installing the latest version of ITensors.jl (ITensors.jl v0.8) in older versions of Julia v1.10 and v1.11 ([https://github.com/ITensor/ITensors.jl/issues/1618](https://github.com/ITensor/ITensors.jl/issues/1618), [https://itensor.discourse.group/t/typeparameteraccessors-not-found-error-on-julia-v-1-10-0/2260](https://itensor.discourse.group/t/typeparameteraccessors-not-found-error-on-julia-v-1-10-0/2260)). This issue has been fixed in [NDTensors.jl v0.4.4](https://github.com/ITensor/ITensors.jl/pull/1623), so please try updating your packages if you are using older versions of Julia v1.10 or v1.11 and running into issues installing ITensors.jl.

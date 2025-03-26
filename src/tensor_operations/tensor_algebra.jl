@@ -74,41 +74,6 @@ function contract(A::ITensor, B::ITensor)::ITensor
   return _contract(A, B)
 end
 
-function optimal_contraction_sequence(A::Union{Vector{<:ITensor},Tuple{Vararg{ITensor}}})
-  if length(A) == 1
-    return optimal_contraction_sequence(A[1])
-  elseif length(A) == 2
-    return optimal_contraction_sequence(A[1], A[2])
-  elseif length(A) == 3
-    return optimal_contraction_sequence(A[1], A[2], A[3])
-  else
-    return _optimal_contraction_sequence(A)
-  end
-end
-
-optimal_contraction_sequence(A::ITensor) = Any[1]
-optimal_contraction_sequence(A1::ITensor, A2::ITensor) = Any[1, 2]
-function optimal_contraction_sequence(A1::ITensor, A2::ITensor, A3::ITensor)
-  return optimal_contraction_sequence(inds(A1), inds(A2), inds(A3))
-end
-optimal_contraction_sequence(As::ITensor...) = _optimal_contraction_sequence(As)
-
-_optimal_contraction_sequence(As::Tuple{<:ITensor}) = Any[1]
-_optimal_contraction_sequence(As::Tuple{<:ITensor,<:ITensor}) = Any[1, 2]
-function _optimal_contraction_sequence(As::Tuple{<:ITensor,<:ITensor,<:ITensor})
-  return optimal_contraction_sequence(inds(As[1]), inds(As[2]), inds(As[3]))
-end
-function _optimal_contraction_sequence(As::Tuple{Vararg{ITensor}})
-  return __optimal_contraction_sequence(As)
-end
-
-_optimal_contraction_sequence(As::Vector{<:ITensor}) = __optimal_contraction_sequence(As)
-
-function __optimal_contraction_sequence(As)
-  indsAs = [inds(A) for A in As]
-  return optimal_contraction_sequence(indsAs)
-end
-
 function default_sequence()
   return using_contraction_sequence_optimization() ? "automatic" : "left_associative"
 end
@@ -163,6 +128,21 @@ function contract(
   else
     return _contract(As, sequence; kwargs...)
   end
+end
+
+"""
+    optimal_contraction_sequence(T)
+
+Returns a contraction sequence for contracting the tensors `T`. The sequence is
+generally optimal and is found via the optimaltree function in TensorOperations.jl which must be loaded.
+"""
+function optimal_contraction_sequence(As)
+  return throw(
+    ArgumentError(
+      "Optimal contraction sequence isn't defined. Try loading a backend package like 
+        TensorOperations.jl"
+    ),
+  )
 end
 
 contract(As::ITensor...; kwargs...)::ITensor = contract(As; kwargs...)

@@ -7,6 +7,7 @@ using ChainRulesCore: rrule_via_ad
 
 include("utils/chainrulestestutils.jl")
 
+using TensorOperations: TensorOperations
 using Zygote: ZygoteRuleConfig, gradient
 
 Random.seed!(1234)
