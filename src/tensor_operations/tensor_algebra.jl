@@ -130,6 +130,12 @@ function contract(
   end
 end
 
+"""
+    optimal_contraction_sequence(T)
+
+Returns a contraction sequence for contracting the tensors `T`. The sequence is
+generally optimal and is found via the optimaltree function in TensorOperations.jl which must be loaded.
+"""
 function optimal_contraction_sequence(As)
   return throw(
     ArgumentError(
