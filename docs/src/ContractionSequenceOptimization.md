@@ -68,7 +68,7 @@ using ITensors
 using Symbolics
 
 using ITensors: contraction_cost, optimal_contraction_sequence
-using TensorOperations
+using TensorOperations: TensorOperations
 
 function tensor_network(; m, k, d)
   l = Index(m, "l")
