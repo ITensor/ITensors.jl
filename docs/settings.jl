@@ -52,7 +52,8 @@ settings = Dict(
       "HDF5 File Formats" => "HDF5FileFormats.md",
     ],
   ],
-  :format => Documenter.HTML(; assets=["assets/favicon.ico"], prettyurls=false),
+  :format =>
+    Documenter.HTML(; assets=["assets/favicon.ico", "assets/extras.css"], prettyurls=false),
   :doctest => true,
   :checkdocs => :none,
 )
