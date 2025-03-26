@@ -1,8 +1,7 @@
 module ITensorsTensorOperationsExt
 
 using ITensors: ITensors, ITensor, dim, inds
-using NDTensors.AlgorithmSelection: @Algorithm_str
-using TensorOperations: TensorOperations, optimaltree
+using TensorOperations: optimaltree
 
 function ITensors.optimal_contraction_sequence(
   As::Union{Vector{<:ITensor},Tuple{Vararg{ITensor}}}
