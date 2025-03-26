@@ -4,12 +4,6 @@ using ITensors: ITensors, ITensor, dim, inds
 using NDTensors.AlgorithmSelection: @Algorithm_str
 using TensorOperations: TensorOperations, optimaltree
 
-"""
-    optimal_contraction_sequence(T)
-
-Returns a contraction sequence for contracting the tensors `T`. The sequence is
-generally optimal and is found via the optimaltree function in TensorOperations.jl which must be loaded.
-"""
 function ITensors.optimal_contraction_sequence(
   As::Union{Vector{<:ITensor},Tuple{Vararg{ITensor}}}
 )
