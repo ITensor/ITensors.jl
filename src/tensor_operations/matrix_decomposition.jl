@@ -590,6 +590,19 @@ function sqrt_decomp(D::ITensor, u::Index, v::Index)
   return sqrtDL, prime(δᵤᵥ), sqrtDR
 end
 
+# Take the square root of T assuming it is Hermitian
+# TODO: add more general index structures
+function Base.sqrt(T::ITensor; ishermitian=true, atol=1e-15)
+  @assert ishermitian
+  # TODO diagonal version
+  #if isdiag(T) && order(T) == 2
+  #  return itensor(sqrt(tensor(T)))
+  #end
+  D, U = eigen(T; ishermitian=ishermitian)
+  sqrtD = map_diag(x -> x < 0 && abs(x) < atol ? 0 : sqrt(x), D)
+  return U' * sqrtD * dag(U)
+end
+
 function factorize_svd(
   A::ITensor,
   Linds...;
