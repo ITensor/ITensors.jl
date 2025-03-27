@@ -1,16 +1,16 @@
-name: CompatHelper
+name: "CompatHelper"
+
 on:
   schedule:
     - cron: 0 0 * * *
   workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  CompatHelper:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Pkg.add("CompatHelper")
-        run: julia -e 'using Pkg; Pkg.add("CompatHelper")'
-      - name: CompatHelper.main()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMPATHELPER_PRIV: ${{ secrets.DOCUMENTER_KEY }}
-        run: julia -e 'using CompatHelper; CompatHelper.main()'
+  compat-helper:
+    name: "CompatHelper"
+    uses: "ITensor/ITensorActions/.github/workflows/CompatHelper.yml@main"
+    with:
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"

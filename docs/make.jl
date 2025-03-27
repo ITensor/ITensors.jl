@@ -10,10 +10,11 @@ makedocs(;
   authors="ITensor developers <support@itensor.org> and contributors",
   sitename="ITensors.jl",
   format=Documenter.HTML(;
-    canonical="https://ITensor.github.io/ITensors.jl", edit_link="main", assets=String[]
+    canonical="https://itensor.github.io/ITensors.jl",
+    edit_link="main",
+    assets=["assets/favicon.ico", "assets/extras.css"],
   ),
-  pages=["Home" => "index.md"],
-  warnonly=true,
+  pages=["Home" => "index.md", "Reference" => "reference.md"],
 )
 
 deploydocs(; repo="github.com/ITensor/ITensors.jl", devbranch="main", push_preview=true)
