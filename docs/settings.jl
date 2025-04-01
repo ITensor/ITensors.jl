@@ -39,10 +39,8 @@ settings = Dict(
     "Documentation" =>
       ["Index" => "IndexType.md", "ITensor" => "ITensorType.md", "QN" => "QN.md"],
     "Frequently Asked Questions" => [
-      "Programming Language (Julia, C++, ...) FAQs" => "faq/JuliaAndCpp.md",
       "ITensor Development FAQs" => "faq/Development.md",
       "Julia Package Manager FAQs" => "faq/JuliaPkg.md",
-      "High-Performance Computing FAQs" => "faq/HPC.md",
     ],
     "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
     "Advanced Usage Guide" => [
