@@ -51,9 +51,6 @@ Documentation: https://itensor.github.io/ITensors.jl/stable/
 module ITensors
 include("usings.jl")
 include("utils.jl")
-include("lib/ContractionSequenceOptimization/src/ContractionSequenceOptimization.jl")
-# TODO: `using .ContractionSequenceOptimization: ContractionSequenceOptimization, ...`.
-using .ContractionSequenceOptimization
 include("lib/LazyApply/src/LazyApply.jl")
 # TODO: `using .LazyApply: LazyApply, ...`.
 using .LazyApply
@@ -105,6 +102,7 @@ include("indexset.jl")
 include("itensor.jl")
 include("qn/flux.jl")
 include("oneitensor.jl")
+include("tensor_operations/contraction_cost.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")

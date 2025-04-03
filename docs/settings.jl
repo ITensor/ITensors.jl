@@ -5,10 +5,16 @@ using ITensors
 # https://github.com/JuliaDocs/Documenter.jl/issues/1734
 DocMeta.setdocmeta!(ITensors, :DocTestSetup, :(using ITensors); recursive=true)
 
-readme_ccq_logo = """<img src="docs/src/assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo.">"""
+readme_ccq_logo = """
+  <picture>
+    <source media="(prefers-color-scheme: dark)" width="20%" srcset="docs/src/assets/CCQ-dark.png">
+    <img alt="Flatiron Center for Computational Quantum Physics logo." width="20%" src="docs/src/assets/CCQ.png">
+  </picture>
+  """
 index_ccq_logo = """
   ```@raw html
-  <img src="assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo.">
+  <img class="display-light-only" src="assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo."/>
+  <img class="display-dark-only" src="assets/CCQ-dark.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo."/>
   ```
   """
 
@@ -33,10 +39,8 @@ settings = Dict(
     "Documentation" =>
       ["Index" => "IndexType.md", "ITensor" => "ITensorType.md", "QN" => "QN.md"],
     "Frequently Asked Questions" => [
-      "Programming Language (Julia, C++, ...) FAQs" => "faq/JuliaAndCpp.md",
       "ITensor Development FAQs" => "faq/Development.md",
       "Julia Package Manager FAQs" => "faq/JuliaPkg.md",
-      "High-Performance Computing FAQs" => "faq/HPC.md",
     ],
     "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
     "Advanced Usage Guide" => [
@@ -46,7 +50,8 @@ settings = Dict(
       "HDF5 File Formats" => "HDF5FileFormats.md",
     ],
   ],
-  :format => Documenter.HTML(; assets=["assets/favicon.ico"], prettyurls=false),
+  :format =>
+    Documenter.HTML(; assets=["assets/favicon.ico", "assets/extras.css"], prettyurls=false),
   :doctest => true,
   :checkdocs => :none,
 )

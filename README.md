@@ -28,11 +28,16 @@ calculations such as DMRG, take a look at the [ITensorMPS.jl documentation](http
 
 ## Support
 
-<img src="docs/src/assets/CCQ.png" width="20%" alt="Flatiron Center for Computational Quantum Physics logo.">
+<picture>
+  <source media="(prefers-color-scheme: dark)" width="20%" srcset="docs/src/assets/CCQ-dark.png">
+  <img alt="Flatiron Center for Computational Quantum Physics logo." width="20%" src="docs/src/assets/CCQ.png">
+</picture>
 
 ITensors.jl is supported by the Flatiron Institute, a division of the Simons Foundation.
 
 ## News
+
+- March 26, 2025: ITensors.jl v0.9 has been released. This is a minor breaking change since the `optimal_contraction_sequence` function now passes to the `optimaltree` function from [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl). The `TensorOperations` package therefore needs to be loaded in order for `optimal_contraction_sequence` to be used or if the flag `ITensors.enable_contraction_sequence_optimization()` is switched on.
 
 - March 22, 2025: As part of the latest release of ITensors.jl (v0.8.3), all documentation related to MPS/MPO functionality has been moved to the [ITensorMPS.jl documentation](https://docs.itensor.org/ITensorMPS).
 
