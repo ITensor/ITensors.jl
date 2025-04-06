@@ -119,8 +119,9 @@ Constructor for an ITensor from a TensorStorage
 and a set of indices.
 The ITensor stores a view of the TensorStorage.
 """
-ITensor(as::AliasStyle, st::TensorStorage, is)::ITensor =
-  ITensor(as, Tensor(as, st, Tuple(is)))
+ITensor(as::AliasStyle, st::TensorStorage, is)::ITensor = ITensor(
+  as, Tensor(as, st, Tuple(is))
+)
 ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 
 ITensor(st::TensorStorage, is)::ITensor = itensor(Tensor(NeverAlias(), st, Tuple(is)))
@@ -137,8 +138,9 @@ of the input data when possible.
 """
 itensor(args...; kwargs...)::ITensor = ITensor(AllowAlias(), args...; kwargs...)
 
-ITensor(::AliasStyle, args...; kwargs...)::ITensor =
-  error("ITensor constructor with input arguments of types `$(typeof.(args))` not defined.")
+ITensor(::AliasStyle, args...; kwargs...)::ITensor = error(
+  "ITensor constructor with input arguments of types `$(typeof.(args))` not defined."
+)
 
 """
     Tensor(::ITensor)
@@ -300,7 +302,7 @@ emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
 
 emptyITensor(is...) = emptyITensor(EmptyNumber, indices(is...))
 
-function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
+function emptyITensor((::Type{ElT})=EmptyNumber) where {ElT<:Number}
   return itensor(EmptyTensor(ElT, ()))
 end
 
@@ -1092,8 +1094,9 @@ A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 end
 
 # Special case that handles indexing with `end` like `A[i => end, j => 3]`
-@propagate_inbounds getindex(T::ITensor, I::Union{Integer,LastVal}...)::Any =
-  _getindex(tensor(T), I...)
+@propagate_inbounds getindex(T::ITensor, I::Union{Integer,LastVal}...)::Any = _getindex(
+  tensor(T), I...
+)
 
 # Simple version with just integer indexing, bounds checking gets done by NDTensors
 
@@ -1119,8 +1122,9 @@ A = ITensor(2.0, i, i')
 A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 ```
 """
-@propagate_inbounds (getindex(T::ITensor, ivs::Vararg{Any,N})::Any) where {N} =
-  _getindex(tensor(T), ivs...)
+@propagate_inbounds (getindex(T::ITensor, ivs::Vararg{Any,N})::Any) where {N} = _getindex(
+  tensor(T), ivs...
+)
 
 ## Allowing one to get the first ITensor element if its an order 0 tensor or an order 1 tensor with a dimension of 1. Also convert GPU back to CPU
 @propagate_inbounds function getindex(T::ITensor)::Any

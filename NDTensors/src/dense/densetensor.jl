@@ -134,7 +134,7 @@ end
 @propagate_inbounds @inline getindex(T::DenseTensor, i::Integer) = storage(T)[i]
 
 @propagate_inbounds @inline function setindex!(T::DenseTensor, v, i::Integer)
-  return (storage(T)[i] = v; T)
+  return (storage(T)[i]=v; T)
 end
 
 #
