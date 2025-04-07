@@ -742,6 +742,10 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
     @test Sx ≈ [0.0 0.0 0; 0 0 0.5; 0 0.5 0]
     Sx = Array(op(s, "Sˣ"), s', s)
     @test Sx ≈ [0.0 0.0 0; 0 0 0.5; 0 0.5 0]
+    Sy = Array(op(s, "Sy"), s', s)
+    @test Sy ≈ [0.0 0.0 0; 0 0 -0.5im; 0 0.5im 0]
+    Sy = Array(op(s, "Sʸ"), s', s)
+    @test Sy ≈ [0.0 0.0 0; 0 0 -0.5im; 0 0.5im 0]
     Sp = Array(op(s, "Splus"), s', s)
     @test Sp ≈ [0.0 0.0 0; 0 0 1.0; 0 0 0]
     Sp = Array(op(s, "Sp"), s', s)
