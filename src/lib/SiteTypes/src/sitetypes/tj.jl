@@ -189,7 +189,7 @@ function op!(Op::ITensor, ::OpName"Sy", ::SiteType"tJ", s::Index)
 end
 function op!(Op::ITensor, ::OpName"Sʸ", st::SiteType"tJ", s::Index)
   return op!(Op, OpName("Sy"), st, s)
-end 
+end
 function op!(Op::ITensor, ::OpName"Sˣ", st::SiteType"tJ", s::Index)
   return op!(Op, OpName("Sx"), st, s)
 end
