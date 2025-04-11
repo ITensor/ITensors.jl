@@ -9,7 +9,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 TensorAlgebra = "68bd88dc-f39d-4e12-b2ca-f046b68fcc6a"
 
 [compat]
-ITensorBase = "0.1.2"
+ITensorBase = "0.2.2"
 LinearAlgebra = "1.10.0"
-TensorAlgebra = "0.2"
+TensorAlgebra = "0.3"
 julia = "1.10"
