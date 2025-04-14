@@ -226,7 +226,7 @@ end
 
       o = op("$(ot)_op_1", s, 1, 2)
       @test o ≈ itensor(
-        [i * j for i in 1:(d^2), j in 1:(d^2)], s[2]', s[1]', dag(s[2]), dag(s[1])
+        [i * j for i in 1:(d ^ 2), j in 1:(d ^ 2)], s[2]', s[1]', dag(s[2]), dag(s[1])
       )
 
       d = 4

@@ -68,7 +68,7 @@ convert(::Type{Block{N}}, t::Tuple) where {N} = Block{N}(t)
 
 gethash(b::Block) = b.hash[]
 
-sethash!(b::Block, h::UInt) = (b.hash[] = h; return b)
+sethash!(b::Block, h::UInt) = (b.hash[]=h; return b)
 
 #
 # Basic functions
