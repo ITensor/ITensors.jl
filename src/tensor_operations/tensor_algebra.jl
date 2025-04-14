@@ -139,7 +139,7 @@ generally optimal and is found via the optimaltree function in TensorOperations.
 function optimal_contraction_sequence(As)
   return throw(
     ArgumentError(
-      "Optimal contraction sequence isn't defined. Try loading a backend package like 
+      "Optimal contraction sequence isn't defined. Try loading a backend package like
         TensorOperations.jl"
     ),
   )
