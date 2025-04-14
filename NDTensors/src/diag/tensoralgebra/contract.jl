@@ -93,7 +93,7 @@ function contract!(
     # elements of A and B.
     # `expose` allows dispatching on the data type
     # in order to allow scalar indexing on GPU.
-    expose(R)[] = mapreduce(*, +, diagview(T1), diagview(T2))
+    expose(R)[] = mapreduce(*,+,diagview(T1),diagview(T2))
   else
     diagview(R) .= diagview(T1) .* diagview(T2)
   end
