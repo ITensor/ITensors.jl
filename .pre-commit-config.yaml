@@ -15,6 +15,6 @@ repos:
     exclude: '.*references/.*\.txt$'  # do not check reference TN images
 
 - repo: "https://github.com/domluna/JuliaFormatter.jl"
-  rev: v2.1.0
+  rev: v2.1.1
   hooks:
   - id: "julia-formatter"
