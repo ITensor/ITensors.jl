@@ -1,6 +1,6 @@
 using NDTensors: NDTensors, sim
 using .QuantumNumbers: QuantumNumbers, Arrow, In, Neither, Out
-using Random: Random
+using Random: Xoshiro
 using .TagSets:
   TagSets, TagSet, @ts_str, addtags, commontags, hastags, removetags, replacetags
 
