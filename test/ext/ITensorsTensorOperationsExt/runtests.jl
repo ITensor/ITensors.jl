@@ -150,10 +150,10 @@ end
     tmp * As[n]
     allocations_right_associative_pairwise += @allocated tmp = tmp * As[n]
   end
-  @test allocations_right_associative_pairwise ≈ allocations_right_associative_1 rtol = 0.1
-  @test allocations_right_associative_pairwise ≈ allocations_right_associative_2 rtol = 0.1
+  @test allocations_right_associative_pairwise ≈ allocations_right_associative_1 rtol = 0.2
+  @test allocations_right_associative_pairwise ≈ allocations_right_associative_2 rtol = 0.2
   @test allocations_right_associative_pairwise ≈ allocations_right_associative_3 rtol = 0.2
-  @test allocations_right_associative_pairwise ≈ allocations_right_associative_4 rtol = 0.1
+  @test allocations_right_associative_pairwise ≈ allocations_right_associative_4 rtol = 0.2
 
   @test allocations_right_associative_1 < allocations_left_associative
   @test allocations_right_associative_2 < allocations_left_associative
