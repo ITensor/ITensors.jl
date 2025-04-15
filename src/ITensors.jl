@@ -155,8 +155,4 @@ include("deprecated.jl")
 include("argsdict/argsdict.jl")
 include("packagecompile/compile.jl")
 include("developer_tools.jl")
-
-function __init__()
-  return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
-end
 end

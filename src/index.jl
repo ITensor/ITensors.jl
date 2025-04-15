@@ -1,26 +1,14 @@
 using NDTensors: NDTensors, sim
 using .QuantumNumbers: QuantumNumbers, Arrow, In, Neither, Out
+using Random: Xoshiro
 using .TagSets:
   TagSets, TagSet, @ts_str, addtags, commontags, hastags, removetags, replacetags
 
 #const IDType = UInt128
 const IDType = UInt64
 
-# Custom RNG for Index id
-# Vector of RNGs, one for each thread
-const INDEX_ID_RNGs = MersenneTwister[]
-@inline index_id_rng() = index_id_rng(Threads.threadid())
-@noinline function index_id_rng(tid::Int)
-  0 < tid <= length(INDEX_ID_RNGs) || _index_id_rng_length_assert()
-  if @inbounds isassigned(INDEX_ID_RNGs, tid)
-    @inbounds MT = INDEX_ID_RNGs[tid]
-  else
-    MT = MersenneTwister()
-    @inbounds INDEX_ID_RNGs[tid] = MT
-  end
-  return MT
-end
-@noinline _index_id_rng_length_assert() = @assert false "0 < tid <= length(INDEX_ID_RNGs)"
+const _INDEX_ID_RNG_KEY = :ITensors_index_id_rng_bLeTZeEsme4bG3vD
+index_id_rng() = get!(task_local_storage(), _INDEX_ID_RNG_KEY, Xoshiro())::Xoshiro
 
 """
 An `Index` represents a single tensor index with fixed dimension `dim`. Copies of an Index compare equal unless their
