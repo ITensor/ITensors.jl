@@ -8,7 +8,7 @@ using .TagSets:
 const IDType = UInt64
 
 const _INDEX_ID_RNG_KEY = :ITensors_index_id_rng_bLeTZeEsme4bG3vD
-index_id_rng() = get!(task_local_storage(), _INDEX_ID_RNG_KEY, Xoshiro())
+index_id_rng() = get!(task_local_storage(), _INDEX_ID_RNG_KEY, Xoshiro())::Xoshiro
 
 """
 An `Index` represents a single tensor index with fixed dimension `dim`. Copies of an Index compare equal unless their
