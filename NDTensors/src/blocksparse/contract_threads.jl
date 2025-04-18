@@ -19,7 +19,7 @@ function contract_blocks!(
       @spawn for block1 in blocks1_partition
         for block2 in blocks2
           maybe_contract_blocks!(
-            contraction_plans[threadid()],
+            contraction_plans[threadid() - nthreads(:interactive)],
             block1,
             block2,
             labels1_to_labels2,
@@ -36,7 +36,7 @@ function contract_blocks!(
       @spawn for block2 in blocks2_partition
         for block1 in blocks1
           maybe_contract_blocks!(
-            contraction_plans[threadid()],
+            contraction_plans[threadid() - nthreads(:interactive)],
             block1,
             block2,
             labels1_to_labels2,
