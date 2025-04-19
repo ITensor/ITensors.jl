@@ -15,7 +15,7 @@ function contract_blocks!(
     Folds.foreach(eachnzblock(boffs1).values, ThreadedEx()) do block1
       for block2 in eachnzblock(boffs2)
         maybe_contract_blocks!(
-          contraction_plans[threadid()],
+          contraction_plans[threadid() - nthreads(:interactive)],
           block1,
           block2,
           labels1_to_labels2,
@@ -29,7 +29,7 @@ function contract_blocks!(
     Folds.foreach(eachnzblock(boffs2).values, ThreadedEx()) do block2
       for block1 in eachnzblock(boffs1)
         maybe_contract_blocks!(
-          contraction_plans[threadid()],
+          contraction_plans[threadid() - nthreads(:interactive)],
           block1,
           block2,
           labels1_to_labels2,

@@ -148,8 +148,8 @@ ITensor(::AliasStyle, args...; kwargs...)::ITensor = error(
 Create a `Tensor` that stores a copy of the storage and
 indices of the input `ITensor`.
 """
-Tensor(T::ITensor)::Tensor = Tensor(NeverAlias(), T)
-Tensor(as::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
+NDTensors.Tensor(T::ITensor)::Tensor = Tensor(NeverAlias(), T)
+NDTensors.Tensor(as::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
 
 """
     tensor(::ITensor)
@@ -157,7 +157,7 @@ Tensor(as::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
 Convert the `ITensor` to a `Tensor` that shares the same
 storage and indices as the `ITensor`.
 """
-Tensor(::AllowAlias, A::ITensor) = A.tensor
+NDTensors.Tensor(::AllowAlias, A::ITensor) = A.tensor
 
 """
     ITensor([::Type{ElT} = Float64, ]inds)
