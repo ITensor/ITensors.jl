@@ -12,52 +12,65 @@ function contract_blocks(
   N2 = length(blocktype(boffs2))
   blocks1 = keys(boffs1)
   blocks2 = keys(boffs2)
+  T = Tuple{Block{N1},Block{N2},Block{NR}}
   return if length(blocks1) > length(blocks2)
     tasks = map(
       Iterators.partition(blocks1, max(1, length(blocks1) ÷ nthreads()))
     ) do blocks1_partition
       @spawn begin
-        block_contractions = Tuple{Block{N1},Block{N2},Block{NR}}[]
-        foreach(Iterators.product(blocks1_partition, blocks2)) do (block1, block2)
-          block_contraction = maybe_contract_blocks(
-            block1,
-            block2,
-            labels1_to_labels2,
-            labels1_to_labelsR,
-            labels2_to_labelsR,
-            ValNR,
-          )
-          if !isnothing(block_contraction)
-            push!(block_contractions, block_contraction)
+        block_contractions = T[]
+        for block1 in blocks1_partition
+          for block2 in blocks2
+            block_contraction = maybe_contract_blocks(
+              block1,
+              block2,
+              labels1_to_labels2,
+              labels1_to_labelsR,
+              labels2_to_labelsR,
+              ValNR,
+            )
+            if !isnothing(block_contraction)
+              push!(block_contractions, block_contraction)
+            end
           end
         end
         return block_contractions
       end
     end
-    mapreduce(fetch, vcat, tasks)
+    all_block_contractions = T[]
+    for task in tasks
+      append!(all_block_contractions, fetch(task))
+    end
+    return all_block_contractions
   else
     tasks = map(
       Iterators.partition(blocks2, max(1, length(blocks2) ÷ nthreads()))
     ) do blocks2_partition
       @spawn begin
-        block_contractions = Tuple{Block{N1},Block{N2},Block{NR}}[]
-        foreach(Iterators.product(blocks1, blocks2_partition)) do (block1, block2)
-          block_contraction = maybe_contract_blocks(
-            block1,
-            block2,
-            labels1_to_labels2,
-            labels1_to_labelsR,
-            labels2_to_labelsR,
-            ValNR,
-          )
-          if !isnothing(block_contraction)
-            push!(block_contractions, block_contraction)
+        block_contractions = T[]
+        for block2 in blocks2_partition
+          for block1 in blocks1
+            block_contraction = maybe_contract_blocks(
+              block1,
+              block2,
+              labels1_to_labels2,
+              labels1_to_labelsR,
+              labels2_to_labelsR,
+              ValNR,
+            )
+            if !isnothing(block_contraction)
+              push!(block_contractions, block_contraction)
+            end
           end
         end
         return block_contractions
       end
     end
-    mapreduce(fetch, vcat, tasks)
+    all_block_contractions = T[]
+    for task in tasks
+      append!(all_block_contractions, fetch(task))
+    end
+    return all_block_contractions
   end
 end
 
