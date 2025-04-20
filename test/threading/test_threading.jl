@@ -1,4 +1,3 @@
-using Compat
 using ITensors
 using Test
 using LinearAlgebra
@@ -8,7 +7,7 @@ if isone(Threads.nthreads())
 end
 
 @testset "Threading" begin
-  blas_num_threads = Compat.get_num_threads()
+  blas_num_threads = BLAS.get_num_threads()
   strided_num_threads = ITensors.NDTensors.Strided.get_num_threads()
 
   BLAS.set_num_threads(1)
