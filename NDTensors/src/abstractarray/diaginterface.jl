@@ -16,7 +16,11 @@ function diagstride(a::AbstractArray)
 end
 
 function diagindices(a::AbstractArray)
-  maxdiag = LinearIndices(a)[CartesianIndex(ntuple(Returns(diaglength(a)), ndims(a)))]
+  maxdiag = if isempty(a)
+    0
+  else
+    LinearIndices(a)[CartesianIndex(ntuple(Returns(diaglength(a)), ndims(a)))]
+  end
   return 1:diagstride(a):maxdiag
 end
 
