@@ -221,9 +221,4 @@ end
 
 function backend_octavian end
 
-using PackageExtensionCompat
-function __init__()
-  @require_extensions
-end
-
 end # module NDTensors
