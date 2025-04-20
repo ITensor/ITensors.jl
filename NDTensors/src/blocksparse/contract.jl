@@ -46,8 +46,6 @@ function contract_blockoffsets(
   alg = Algorithm"sequential"()
   if using_threaded_blocksparse() && nthreads() > 1
     alg = Algorithm"threaded_threads"()
-    # This code is a bit cleaner but slower:
-    # alg = Algorithm"threaded_folds"()
   end
   return contract_blockoffsets(
     alg, boffs1, inds1, labels1, boffs2, inds2, labels2, indsR, labelsR
