@@ -13,6 +13,7 @@ using NDTensors:
   data,
   dense,
   diaglength,
+  diagindices,
   matrix,
   randomTensor,
   tensor
@@ -78,6 +79,15 @@ using .NDTensorsTestUtils: devices_list, is_supported_eltype
     @allowscalar for i in 1:diaglength(S)
       @test S[i, i] == 2 * D[i, i]
     end
+
+    a = dev(tensor(Dense(randn(elt, 3)), (3,)))
+    @test diagindices(a) == 1:1:3
+    a = dev(tensor(Dense(randn(elt, 9)), (3, 3)))
+    @test diagindices(a) == 1:4:9
+    a = dev(tensor(Dense(randn(elt, 36)), (3, 4, 3)))
+    @test diagindices(a) == 1:16:33
+    a = dev(tensor(Dense(randn(elt, 0)), (3, 0)))
+    @test diagindices(a) == 1:1:0
 
     # Regression test for https://github.com/ITensor/ITensors.jl/issues/1199
     S = dev(tensor(Diag(randn(elt, 2)), (2, 2)))
