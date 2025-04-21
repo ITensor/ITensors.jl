@@ -592,14 +592,10 @@ end
 
 # Take the square root of T assuming it is Hermitian
 # TODO: add more general index structures
-function Base.sqrt(T::ITensor; ishermitian=true, atol=1e-15)
+function Base.sqrt(T::ITensor; ishermitian=true, atol=eps(real(eltype(T))))
   @assert ishermitian
-  # TODO diagonal version
-  #if isdiag(T) && order(T) == 2
-  #  return itensor(sqrt(tensor(T)))
-  #end
-  D, U = eigen(T; ishermitian=ishermitian)
-  sqrtD = map_diag(x -> x < 0 && abs(x) < atol ? 0 : sqrt(x), D)
+  D, U = eigen(T; ishermitian)
+  sqrtD = map_diag(x -> x < 0 && abs(x) < atol ? zero(real(eltype(T))) : sqrt(Complex(x)), D)
   return U' * sqrtD * dag(U)
 end
 
