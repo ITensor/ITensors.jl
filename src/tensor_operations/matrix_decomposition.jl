@@ -595,7 +595,9 @@ end
 function Base.sqrt(T::ITensor; ishermitian=true, atol=eps(real(eltype(T))))
   @assert ishermitian
   D, U = eigen(T; ishermitian)
-  sqrtD = map_diag(x -> x < 0 && abs(x) < atol ? zero(real(eltype(T))) : sqrt(Complex(x)), D)
+  sqrtD = map_diag(
+    x -> x < 0 && abs(x) < atol ? zero(real(eltype(T))) : sqrt(Complex(x)), D
+  )
   return U' * sqrtD * dag(U)
 end
 
