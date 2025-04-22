@@ -1,3 +1,5 @@
+using SparseArrays: SparseArrays
+
 #
 # BlockOffsets
 #
@@ -9,10 +11,6 @@ const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Dictionary{Block{N},Int}
 
 BlockOffset(block::Block{N}, offset::Int) where {N} = BlockOffset{N}(block, offset)
-
-Base.ndims(::Blocks{N}) where {N} = N
-Base.ndims(::BlockOffset{N}) where {N} = N
-Base.ndims(::BlockOffsets{N}) where {N} = N
 
 blocktype(bofs::BlockOffsets) = keytype(bofs)
 
@@ -57,7 +55,7 @@ function offset(bofs::BlockOffsets{N}, block::Block{N}) where {N}
   return bofs[block]
 end
 
-function nnz(bofs::BlockOffsets, inds)
+function SparseArrays.nnz(bofs::BlockOffsets, inds)
   _nnz = 0
   nnzblocks(bofs) == 0 && return _nnz
   for block in eachnzblock(bofs)

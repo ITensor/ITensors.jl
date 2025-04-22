@@ -68,13 +68,14 @@ convert(::Type{Block{N}}, t::Tuple) where {N} = Block{N}(t)
 
 gethash(b::Block) = b.hash[]
 
-sethash!(b::Block, h::UInt) = (b.hash[] = h; return b)
+sethash!(b::Block, h::UInt) = (b.hash[]=h; return b)
 
 #
 # Basic functions
 #
 
 length(::Block{N}) where {N} = N
+length(::Type{<:Block{N}}) where {N} = N
 
 isless(b1::Block, b2::Block) = isless(Tuple(b1), Tuple(b2))
 

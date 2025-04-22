@@ -38,7 +38,7 @@ NDTensors.dim(i::MyInd) = i.dim
 
       Aview = A[2:3, 2:3]
       @test dims(Aview) == (2, 2)
-      ## Added for issue 1431 create a tensor from 
+      ## Added for issue 1431 create a tensor from
       ## a sliced view of another tensor
       Acopy = Tensor(NDTensors.storage(Aview), (1, 4))
       @test NDTensors.cpu(data(Acopy)) == NDTensors.cpu(data(Aview))
@@ -233,7 +233,7 @@ NDTensors.dim(i::MyInd) = i.dim
     @testset "Contraction with size 1 block and NaN" begin
       @testset "No permutation" begin
         R = dev(Tensor(complex(elt), (2, 2, 1)))
-        fill!(R, NaN)
+        fill!(R, elt(NaN))
         @test @allowscalar any(isnan, R)
         T1 = dev(randomTensor(elt, (2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))
@@ -244,7 +244,7 @@ NDTensors.dim(i::MyInd) = i.dim
 
       @testset "Permutation" begin
         R = dev(Tensor(complex(elt), (2, 2, 1)))
-        fill!(R, NaN)
+        fill!(R, elt(NaN))
         @test @allowscalar any(isnan, R)
         T1 = dev(randomTensor(elt, (2, 2, 1)))
         T2 = dev(randomTensor(complex(elt), (1, 1)))

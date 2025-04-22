@@ -1,5 +1,3 @@
-using .DiagonalArrays: diaglength, diagview
-
 const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
 const NonuniformDiagTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:NonuniformDiag}
@@ -31,7 +29,7 @@ function Array(T::DiagTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
 end
 
-function DiagonalArrays.diagview(T::NonuniformDiagTensor)
+function diagview(T::NonuniformDiagTensor)
   return data(T)
 end
 
@@ -72,6 +70,11 @@ Set the entire diagonal of a uniform DiagTensor.
 """
 setdiag(T::UniformDiagTensor, val) = tensor(Diag(val), inds(T))
 
+function Base.copyto!(R::DenseTensor, T::DiagTensor)
+  diagview(R) .= diagview(T)
+  return R
+end
+
 @propagate_inbounds function getindex(
   T::DiagTensor{ElT,N}, inds::Vararg{Int,N}
 ) where {ElT,N}
@@ -82,7 +85,7 @@ setdiag(T::UniformDiagTensor, val) = tensor(Diag(val), inds(T))
   end
 end
 @propagate_inbounds getindex(T::DiagTensor{<:Number,1}, ind::Int) = storage(T)[ind]
-using NDTensors.Expose: expose
+using .Expose: expose
 @propagate_inbounds getindex(T::DiagTensor{<:Number,0}) = getindex(expose(storage(T)))
 
 # Set diagonal elements
@@ -110,7 +113,7 @@ function dense(::Type{<:Tensor{ElT,N,StoreT,IndsT}}) where {ElT,N,StoreT<:Diag,I
   return Tensor{ElT,N,dense(StoreT),IndsT}
 end
 
-using .TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 # convert to Dense
 function dense(T::DiagTensor)
   R = zeros(dense(typeof(T)), inds(T))

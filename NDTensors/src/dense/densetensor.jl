@@ -1,3 +1,5 @@
+using SparseArrays: nnz
+
 #
 # DenseTensor (Tensor using Dense storage)
 #
@@ -64,13 +66,16 @@ end
 
 convert(::Type{Array}, T::DenseTensor) = reshape(data(storage(T)), dims(inds(T)))
 
+function Base.copyto!(R::DenseTensor, T::DenseTensor)
+  copyto!(storage(R), storage(T))
+  return R
+end
+
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
 array(T::DenseTensor) = convert(Array, T)
 
-using .DiagonalArrays: DiagonalArrays, diagview
-
-function DiagonalArrays.diagview(T::DenseTensor)
+function diagview(T::DenseTensor)
   return diagview(array(T))
 end
 
@@ -129,7 +134,7 @@ end
 @propagate_inbounds @inline getindex(T::DenseTensor, i::Integer) = storage(T)[i]
 
 @propagate_inbounds @inline function setindex!(T::DenseTensor, v, i::Integer)
-  return (storage(T)[i] = v; T)
+  return (storage(T)[i]=v; T)
 end
 
 #

@@ -1,3 +1,6 @@
+using SparseArrays: nnz
+using TypeParameterAccessors: similartype
+
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, blockoffsets::BlockOffsets, dims::Tuple)
   data = similar(datatype(storagetype), nnz(blockoffsets, dims))

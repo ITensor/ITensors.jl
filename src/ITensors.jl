@@ -51,20 +51,15 @@ Documentation: https://itensor.github.io/ITensors.jl/stable/
 module ITensors
 include("usings.jl")
 include("utils.jl")
-include("lib/ContractionSequenceOptimization/src/ContractionSequenceOptimization.jl")
-# TODO: `using .ContractionSequenceOptimization: ContractionSequenceOptimization, ...`.
-using .ContractionSequenceOptimization
 include("lib/LazyApply/src/LazyApply.jl")
 # TODO: `using .LazyApply: LazyApply, ...`.
 using .LazyApply
 using .LazyApply: Prod, Scaled, Sum, coefficient
-export Prod, Scaled, Sum, coefficient
 include("lib/Ops/src/Ops.jl")
 # TODO: `using .Ops: Ops, ...`.
 using .Ops
 using .Ops: Ops, Op, Trotter
 import .Ops: sites, name
-export Ops, Op, Trotter
 include("exports.jl")
 include("imports.jl")
 include("global_variables.jl")
@@ -107,6 +102,7 @@ include("indexset.jl")
 include("itensor.jl")
 include("qn/flux.jl")
 include("oneitensor.jl")
+include("tensor_operations/contraction_cost.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
@@ -128,22 +124,9 @@ using .SiteTypes:
   op,
   op!,
   ops,
+  siteind,
+  siteinds,
   state
-export OpName,
-  SiteType,
-  StateName,
-  TagType,
-  ValName,
-  @OpName_str,
-  @SiteType_str,
-  @StateName_str,
-  @TagType_str,
-  @ValName_str,
-  has_fermion_string,
-  op,
-  ops,
-  state,
-  val
 include("lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
@@ -157,21 +140,6 @@ include("nullspace.jl")
 include("lib/ITensorsOpsExt/src/ITensorsOpsExt.jl")
 include("fermions/fermions.jl")
 export fparity, isfermionic
-include("lib/ITensorMPS/src/ITensorMPS.jl")
-using .ITensorMPS: ITensorMPS
-# Reexport everything exported by `ITensors.ITensorMPS`
-# except for `ITensorMPS` itself. Ideally we would use
-# `Reexport.jl` but that is not supported right now:
-# https://github.com/simonster/Reexport.jl/issues/27
-# https://github.com/simonster/Reexport.jl/issues/39
-for name in names(ITensorMPS)
-  if name ≠ :ITensorMPS
-    @eval using .ITensorMPS: $name
-    @eval export $name
-  end
-end
-include("lib/ITensorsNamedDimsArraysExt/src/ITensorsNamedDimsArraysExt.jl")
-using .ITensorsNamedDimsArraysExt: ITensorsNamedDimsArraysExt
 include("../ext/ITensorsChainRulesCoreExt/ITensorsChainRulesCoreExt.jl")
 include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
 # TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore, ...`.
@@ -183,20 +151,8 @@ using .ITensorVisualizationCore:
   @visualize_noeval!,
   @visualize_sequence,
   @visualize_sequence_noeval
-export @visualize,
-  @visualize!,
-  @visualize_noeval,
-  @visualize_noeval!,
-  @visualize_sequence,
-  @visualize_sequence_noeval
 include("deprecated.jl")
 include("argsdict/argsdict.jl")
 include("packagecompile/compile.jl")
 include("developer_tools.jl")
-
-using PackageExtensionCompat: @require_extensions
-function __init__()
-  @require_extensions
-  return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
-end
 end

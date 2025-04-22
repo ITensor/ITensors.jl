@@ -11,7 +11,7 @@ using ITensors, Test
 
   @test hassameinds(Ap, (i', j, k''))
 
-  Ap = prime(A; tags=!ts"j")
+  Ap = prime(A; tags=(!ts"j"))
 
   @test hassameinds(Ap, (i', j, k''))
 
@@ -23,7 +23,7 @@ using ITensors, Test
 
   @test hassameinds(Ap2, (i, j'', k'''))
 
-  Ap2 = prime(A, 2; inds=!i)
+  Ap2 = prime(A, 2; inds=(!i))
 
   @test hassameinds(Ap2, (i, j'', k'''))
 
@@ -39,7 +39,7 @@ using ITensors, Test
 
   @test hassameinds(At2, (settags(i, "y"), j, k'))
 
-  At2 = settags(A, "y"; inds=!IndexSet(j, k'))
+  At2 = settags(A, "y"; inds=(!IndexSet(j, k')))
 
   @test hassameinds(At2, (settags(i, "y"), j, k'))
 

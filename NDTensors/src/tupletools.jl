@@ -60,7 +60,7 @@ permute(s::AbstractVector, perm) = _permute(s, perm)
 sim(s::NTuple) = s
 
 # type stable findfirst
-@inline _findfirst(args...) = (i = findfirst(args...); i === nothing ? 0 : i)
+@inline _findfirst(args...) = (i=findfirst(args...); i === nothing ? 0 : i)
 
 """
     getperm(col1,col2)

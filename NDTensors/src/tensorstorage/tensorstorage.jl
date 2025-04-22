@@ -1,3 +1,5 @@
+using SparseArrays: SparseArrays
+
 abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
 data(S::TensorStorage) = S.data
@@ -60,9 +62,8 @@ Base.real(S::TensorStorage) = setdata(S, real(data(S)))
 
 Base.imag(S::TensorStorage) = setdata(S, imag(data(S)))
 
-function copyto!(S1::TensorStorage, S2::TensorStorage)
-  copyto!(expose(data(S1)), expose(data(S2)))
-  return S1
+function Base.copyto!(S1::TensorStorage, S2::TensorStorage)
+  return error("Not implemented.")
 end
 
 Random.randn!(S::TensorStorage) = randn!(Random.default_rng(), S)
@@ -98,6 +99,6 @@ nzblocks(T::TensorStorage) = nzblocks(blockoffsets(T))
 eachnzblock(T::TensorStorage) = eachnzblock(blockoffsets(T))
 
 nnzblocks(S::TensorStorage) = length(blockoffsets(S))
-nnz(S::TensorStorage) = length(S)
+SparseArrays.nnz(S::TensorStorage) = length(S)
 
 offset(S::TensorStorage, block) = offset(blockoffsets(S), block)

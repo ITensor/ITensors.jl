@@ -1,3 +1,5 @@
+using SparseArrays: SparseArrays, nnz
+
 """
 Tensor{StoreT,IndsT}
 
@@ -202,7 +204,9 @@ end
 
 copy(T::Tensor) = setstorage(T, copy(storage(T)))
 
-copyto!(R::Tensor, T::Tensor) = (copyto!(storage(R), storage(T)); R)
+function copyto!(R::Tensor, T::Tensor)
+  return error("Not implemented.")
+end
 
 complex(T::Tensor) = setstorage(T, complex(storage(T)))
 
@@ -307,7 +311,7 @@ eachnzblock(T::Tensor) = eachnzblock(storage(T))
 
 blockoffsets(T::Tensor) = blockoffsets(storage(T))
 nnzblocks(T::Tensor) = nnzblocks(storage(T))
-nnz(T::Tensor) = nnz(storage(T))
+SparseArrays.nnz(T::Tensor) = nnz(storage(T))
 nblocks(T::Tensor) = nblocks(inds(T))
 blockdims(T::Tensor, block) = blockdims(inds(T), block)
 blockdim(T::Tensor, block) = blockdim(inds(T), block)

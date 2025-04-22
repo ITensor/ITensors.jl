@@ -81,9 +81,6 @@ import Base.Broadcast:
   broadcastable,
   instantiate
 
-import ITensors.ContractionSequenceOptimization:
-  contraction_cost, optimal_contraction_sequence
-
 import Adapt: adapt_structure, adapt_storage
 
 import LinearAlgebra:

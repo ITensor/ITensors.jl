@@ -1,4 +1,4 @@
-using .DiagonalArrays: DiagonalArrays
+using TypeParameterAccessors: TypeParameterAccessors
 
 export dense, dims, dim, mindim, diaglength
 
@@ -28,7 +28,7 @@ mindim(inds::Tuple) = minimum(dims(inds))
 
 mindim(::Tuple{}) = 1
 
-DiagonalArrays.diaglength(inds::Tuple) = mindim(inds)
+diaglength(inds::Tuple) = mindim(inds)
 
 """
     dim_to_strides(ds)
@@ -52,7 +52,7 @@ dim_to_stride(ds, k::Int) = dim_to_strides(ds)[k]
 # code (it helps to construct a Tuple(::NTuple{N,Int}) where the
 # only known thing for dispatch is a concrete type such
 # as Dims{4})
-similartype(::Type{<:Dims}, ::Type{Val{N}}) where {N} = Dims{N}
+TypeParameterAccessors.similartype(::Type{<:Dims}, ::Type{Val{N}}) where {N} = Dims{N}
 
 # This is to help with ITensor compatibility
 dim(i::Int) = i

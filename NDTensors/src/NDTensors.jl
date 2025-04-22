@@ -17,6 +17,7 @@ include("abstractarray/similar.jl")
 include("abstractarray/mul.jl")
 include("abstractarray/permutedims.jl")
 include("abstractarray/generic_array_constructors.jl")
+include("abstractarray/diaginterface.jl")
 include("array/permutedims.jl")
 include("array/mul.jl")
 include("tupletools.jl")
@@ -71,8 +72,7 @@ include("blocksparse/contract.jl")
 include("blocksparse/contract_utilities.jl")
 include("blocksparse/contract_generic.jl")
 include("blocksparse/contract_sequential.jl")
-include("blocksparse/contract_folds.jl")
-include("blocksparse/contract_threads.jl")
+include("blocksparse/contract_threaded.jl")
 include("blocksparse/diagblocksparse.jl")
 include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
@@ -90,15 +90,6 @@ include("empty/adapt.jl")
 # Deprecations
 #
 include("deprecated.jl")
-
-#####################################
-# NDTensorsNamedDimsArraysExt
-# I tried putting this inside of an
-# `NDTensorsNamedDimsArraysExt` module
-# but for some reason it kept overloading
-# `Base.similar` instead of `NDTensors.similar`.
-#
-include("NDTensorsNamedDimsArraysExt/NDTensorsNamedDimsArraysExt.jl")
 
 #####################################
 # A global timer used with TimerOutputs.jl
@@ -228,10 +219,5 @@ function disable_tblis()
 end
 
 function backend_octavian end
-
-using PackageExtensionCompat
-function __init__()
-  @require_extensions
-end
 
 end # module NDTensors

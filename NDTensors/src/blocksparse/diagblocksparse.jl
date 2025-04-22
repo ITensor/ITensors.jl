@@ -1,3 +1,6 @@
+using LinearAlgebra: LinearAlgebra
+using TypeParameterAccessors: similartype
+
 export DiagBlockSparse, DiagBlockSparseTensor
 
 # DiagBlockSparse can have either Vector storage, in which case
@@ -446,22 +449,16 @@ function dense(
 end
 
 # convert to Dense
-function dense(T::TensorT) where {TensorT<:DiagBlockSparseTensor}
-  R = zeros(dense(TensorT), inds(T))
-  for i in 1:diaglength(T)
-    setdiagindex!(R, getdiagindex(T, i), i)
-  end
-  return R
+function dense(T::DiagBlockSparseTensor)
+  return dense(denseblocks(T))
 end
 
 # convert to BlockSparse
 function denseblocks(D::Tensor)
   nzblocksD = nzblocks(D)
-  T = BlockSparseTensor(eltype(D), nzblocksD, inds(D))
+  T = BlockSparseTensor(datatype(D), nzblocksD, inds(D))
   for b in nzblocksD
-    for n in 1:diaglength(D)
-      setdiagindex!(T, getdiagindex(D, n), n)
-    end
+    T[b] = D[b]
   end
   return T
 end
@@ -586,8 +583,13 @@ function _contract!!(
   return R
 end
 
-# TODO: Improve this with FillArrays.jl
-norm(S::UniformDiagBlockSparseTensor) = sqrt(mindim(S) * abs2(data(S)))
+function LinearAlgebra.norm(D::UniformDiagBlockSparseTensor)
+  normD² = zero(eltype(D))
+  for b in nzblocks(D)
+    normD² += norm(D[b])^2
+  end
+  return √(abs(normD²))
+end
 
 function contraction_output(
   T1::TensorT1, labelsT1, T2::TensorT2, labelsT2, labelsR

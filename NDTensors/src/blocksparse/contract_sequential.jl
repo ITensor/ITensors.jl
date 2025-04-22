@@ -9,8 +9,8 @@ function contract_blockoffsets(
   indsR,
   labelsR,
 )
-  N1 = ndims(boffs1)
-  N2 = ndims(boffs2)
+  N1 = length(blocktype(boffs1))
+  N2 = length(blocktype(boffs2))
   NR = length(labelsR)
   ValNR = ValLength(labelsR)
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
@@ -55,7 +55,7 @@ function contract!(
     R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor
   )
 end
-using NDTensors.Expose: expose
+using .Expose: expose
 ###########################################################################
 # Old version
 # TODO: DELETE, keeping around for now for testing/benchmarking.

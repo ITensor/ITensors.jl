@@ -105,6 +105,11 @@ function copy(D::Dense)
   return Dense(copy(expose(data(D))))
 end
 
+function Base.copyto!(R::Dense, T::Dense)
+  copyto!(expose(data(R)), expose(data(T)))
+  return R
+end
+
 function Base.real(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), real(eltype(T))))
 end
@@ -119,7 +124,7 @@ dense(storagetype::Type{<:Dense}) = storagetype
 # TODO: make these more general, move to tensorstorage.jl
 datatype(storetype::Type{<:Dense{<:Any,DataT}}) where {DataT} = DataT
 
-using .TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 function promote_rule(
   ::Type{<:Dense{ElT1,DataT1}}, ::Type{<:Dense{ElT2,DataT2}}
 ) where {ElT1,DataT1,ElT2,DataT2}

@@ -1,3 +1,5 @@
+using SparseArrays: SparseArrays
+using TypeParameterAccessors: TypeParameterAccessors, set_eltype, similartype
 
 #
 # Represents a tensor order that could be set to any order.
@@ -5,18 +7,20 @@
 
 struct EmptyOrder end
 
-function similartype(StoreT::Type{<:TensorStorage{EmptyNumber}}, ElT::Type)
+function TypeParameterAccessors.similartype(
+  StoreT::Type{<:TensorStorage{EmptyNumber}}, ElT::Type
+)
   return set_eltype(StoreT, ElT)
 end
 
-function similartype(
+function TypeParameterAccessors.similartype(
   StoreT::Type{<:TensorStorage{EmptyNumber}}, DataT::Type{<:AbstractArray}
 )
   return set_datatype(StoreT, DataT)
 end
 
 ## TODO fix this similartype to use set eltype for BlockSparse
-function similartype(
+function TypeParameterAccessors.similartype(
   ::Type{StoreT}, ::Type{ElT}
 ) where {StoreT<:BlockSparse{EmptyNumber},ElT}
   return BlockSparse{ElT,similartype(datatype(StoreT), ElT),ndims(StoreT)}
@@ -63,7 +67,7 @@ isempty(::EmptyStorage) = true
 
 nnzblocks(::EmptyStorage) = 0
 
-nnz(::EmptyStorage) = 0
+SparseArrays.nnz(::EmptyStorage) = 0
 
 function conj(::AllowAlias, S::EmptyStorage)
   return S
@@ -91,6 +95,6 @@ function Base.show(io::IO, mime::MIME"text/plain", S::EmptyStorage)
   return println(io, typeof(S))
 end
 
-using .TypeParameterAccessors: TypeParameterAccessors
+using TypeParameterAccessors: TypeParameterAccessors
 TypeParameterAccessors.parenttype(empty::Type{<:EmptyStorage}) = storagetype(empty)
 zero(empty::EmptyStorage) = empty

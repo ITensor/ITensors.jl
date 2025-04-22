@@ -6,7 +6,6 @@
 
 using Adapt
 using Base.Threads
-using Compat
 using Dictionaries
 using Folds
 using InlineStrings
@@ -21,31 +20,13 @@ using TimerOutputs
 using TupleTools
 
 for lib in [
-  :AllocateData,
   :BackendSelection,
-  :BaseExtensions,
-  :UnspecifiedTypes,
-  :TypeParameterAccessors,
   :Expose,
   :GPUArraysCoreExtensions,
   :AMDGPUExtensions,
   :CUDAExtensions,
   :MetalExtensions,
-  :BroadcastMapConversion,
   :RankFactorization,
-  :Sectors,
-  :LabelledNumbers,
-  :GradedAxes,
-  :TensorAlgebra,
-  :SparseArrayInterface,
-  :SparseArrayDOKs,
-  :DiagonalArrays,
-  :BlockSparseArrays,
-  :NamedDimsArrays,
-  :SmallVectors,
-  :SortedSets,
-  :TagSets,
-  :UnallocatedArrays,
 ]
   include("lib/$(lib)/src/$(lib).jl")
   @eval using .$lib: $lib
