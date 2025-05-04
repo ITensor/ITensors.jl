@@ -2,4 +2,5 @@
 GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
 JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
 NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
+StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
