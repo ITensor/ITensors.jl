@@ -84,10 +84,12 @@ The above strategy of running code in the Julia REPL (interactive mode) works we
 To use this approach, we have provided a convenient one-line command:
 
 ```julia
-julia> using ITensors; ITensors.compile()
+julia> using ITensors, ITensorMPS, PackageCompiler
+
+julia> ITensors.compile()
 ```
 
-Once ITensors.jl is installed, you can just run this command in an interactive Julia session. It can take a few minutes to run, but you only have to run it once for a given version of ITensors.jl. When it is done, it will create a file `sys_itensors.so` in the directory `~/.julia/sysimages/`.
+Note that you need to have ITensors.jl, ITensorMPS.jl, and PackageCompiler.jl installed. It can take a few minutes to run, but you only have to run it once for a given version of ITensors.jl. When it is done, it will create a file `sys_itensors.so` in the directory `~/.julia/sysimages/`.
 
 To use the compiled system image together with Julia, run the `julia` command (for interactive mode or scripts) in the following way:
 
