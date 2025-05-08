@@ -1,7 +1,5 @@
 @eval module $(gensym())
-using Test: @testset, @test, @test_broken
-using NDTensors.Expose
-using NDTensors: NDTensors, mul!!
+using GPUArraysCore: @allowscalar
 using LinearAlgebra:
   LinearAlgebra,
   Adjoint,
@@ -14,19 +12,25 @@ using LinearAlgebra:
   norm,
   qr,
   svd
-using GPUArraysCore: @allowscalar
+using NDTensors: NDTensors, mul!!
+using NDTensors.Expose: Expose, Exposed, expose
+using NDTensors.GPUArraysCoreExtensions: cpu
+using StableRNGs: StableRNG
+using Test: @testset, @test, @test_broken
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
-using NDTensors.GPUArraysCoreExtensions: cpu
 
 @testset "Testing Expose $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
 
-  v = dev(randn(elt, 10))
+  rng = StableRNG(1234)
+  v = dev(randn(rng, elt, 10))
   vt = transpose(v)
   va = v'
 
   E = expose(v)
+  @test any(>(0) ∘ real, E)
+
   Et = expose(vt)
   Ea = expose(va)
   v_type = typeof(v)
