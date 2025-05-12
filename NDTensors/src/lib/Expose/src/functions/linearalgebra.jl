@@ -20,6 +20,20 @@ function ql_positive(E::Exposed)
   return ql_positive(unexpose(E))
 end
 
+function LinearAlgebra.eigen(E::Exposed{<:Any,<:Union{Hermitian,Symmmetric}})
+  if VERSION ≥ v"1.12-"
+    # The default algorithm for eigenvalue decomposition in Julia 1.12 and later
+    # changed from `syevr` (`LinearAlgebra.RobustRepresentations()`) to `syevd`
+    # (`LinearAlgebra.DivideAndConquer()`) in https://github.com/JuliaLang/julia/pull/49262,
+    # https://github.com/JuliaLang/julia/pull/49355.
+    # However, there are cases where `syevd` fails, see:
+    # https://itensor.discourse.group/t/issue-with-linearalgebra-and-julia-1-12/2362,
+    # https://github.com/JuliaLang/LinearAlgebra.jl/issues/1313.
+    return eigen(unexpose(E); alg=LinearAlgebra.RobustRepresentations())
+  end
+  return eigen(unexpose(E))
+end
+
 function LinearAlgebra.eigen(E::Exposed)
   return eigen(unexpose(E))
 end
