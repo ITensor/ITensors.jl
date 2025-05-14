@@ -1,7 +1,5 @@
 @eval module $(gensym())
-using Test: @testset, @test, @test_broken
-using NDTensors.Expose
-using NDTensors: NDTensors, mul!!
+using GPUArraysCore: @allowscalar
 using LinearAlgebra:
   LinearAlgebra,
   Adjoint,
@@ -14,19 +12,25 @@ using LinearAlgebra:
   norm,
   qr,
   svd
-using GPUArraysCore: @allowscalar
+using NDTensors: NDTensors, mul!!
+using NDTensors.Expose: Expose, Exposed, expose
+using NDTensors.GPUArraysCoreExtensions: cpu
+using StableRNGs: StableRNG
+using Test: @testset, @test, @test_broken
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
-using NDTensors.GPUArraysCoreExtensions: cpu
 
 @testset "Testing Expose $dev, $elt" for dev in devices_list(ARGS),
   elt in (Float32, ComplexF32)
 
-  v = dev(randn(elt, 10))
+  rng = StableRNG(1234)
+  v = dev(randn(rng, elt, 10))
   vt = transpose(v)
   va = v'
 
   E = expose(v)
+  @test any(>(0) ∘ real, E)
+
   Et = expose(vt)
   Ea = expose(va)
   v_type = typeof(v)
@@ -58,12 +62,12 @@ using NDTensors.GPUArraysCoreExtensions: cpu
   expose(o)[] = 2
   @test expose(o)[] == 2
 
-  fill!(m, 0)
+  fill!(m, zero(elt))
   @test any(!Base.isinf, expose(m))
 
   mp = copy(Ea)
   @test mp == ma
-  fill!(ma, 2.0)
+  fill!(ma, elt(2))
   copyto!(expose(mp), expose(ma))
   @test mp == ma
 
@@ -112,7 +116,7 @@ using NDTensors.GPUArraysCoreExtensions: cpu
   @test norm(m) ≈ sqrt(6^2 * 10)
 
   m = reshape(m, (5, 2, 1))
-  mt = fill!(similar(m), 3.0)
+  mt = fill!(similar(m), elt(3))
   m = permutedims(expose(m), (2, 1, 3))
   @test size(m) == (2, 5, 1)
   permutedims!(expose(m), expose(mt), (2, 1, 3))
@@ -184,7 +188,7 @@ using NDTensors.GPUArraysCoreExtensions: cpu
   copyto!(expose(y), expose(x))
   @allowscalar begin
     @test y == x
-    ## temporarily use expose copy because this is broken in Metal 1.1 
+    ## temporarily use expose copy because this is broken in Metal 1.1
     @test copy(expose(x)) == x
   end
 

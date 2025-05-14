@@ -16,7 +16,9 @@ function Base.getindex(E::Exposed{<:CuArray,<:Adjoint}, i, j)
   return (expose(parent(E))[j, i])'
 end
 
-Base.any(f, E::Exposed{<:CuArray,<:NDTensors.Tensor}) = any(f, data(unexpose(E)))
+function Base.any(f, E::Exposed{<:CuArray,<:NDTensors.Tensor})
+  return any(f, NDTensors.data(unexpose(E)))
+end
 
 function Base.print_array(io::IO, E::Exposed{<:CuArray})
   return Base.print_array(io, expose(NDTensors.cpu(E)))

@@ -1,5 +1,0 @@
-# DMRG
-
-```@docs
-dmrg
-```

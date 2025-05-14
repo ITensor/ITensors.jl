@@ -183,7 +183,13 @@ function op!(Op::ITensor, ::OpName"Sx", ::SiteType"tJ", s::Index)
   Op[s' => 2, s => 3] = 0.5
   return Op[s' => 3, s => 2] = 0.5
 end
-
+function op!(Op::ITensor, ::OpName"Sy", ::SiteType"tJ", s::Index)
+  Op[s' => 2, s => 3] = -0.5im
+  return Op[s' => 3, s => 2] = 0.5im
+end
+function op!(Op::ITensor, ::OpName"Sʸ", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("Sy"), st, s)
+end
 function op!(Op::ITensor, ::OpName"Sˣ", st::SiteType"tJ", s::Index)
   return op!(Op, OpName("Sx"), st, s)
 end

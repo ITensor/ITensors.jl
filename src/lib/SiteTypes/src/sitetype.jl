@@ -34,7 +34,7 @@ There are currently a few built-in site types
 recognized by `jl`. The system is easily extensible
 by users. To add new operators to an existing site type,
 or to create new site types, you can follow the instructions
-[here](https://itensor.github.io/jl/stable/examples/Physics.html).
+[here](https://docs.itensor.org/ITensorMPS/stable/examples/Physics.html).
 
 The current built-in site types are:
 
@@ -106,8 +106,8 @@ Many operators are available, for example:
    `"Cdagup"`, `"Cdn"`, `"Cdagdn"`, `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
 - ...
 
-You can view the source code for the internal SiteType definitions
-and operators that are defined [here](https://github.com/ITensor/jl/tree/main/src/physics/site_types).
+You can view the internal SiteType definitions and operators
+[here](https://docs.itensor.org/ITensorMPS/stable/IncludedSiteTypes.html).
 """
 SiteType(s::AbstractString) = SiteType{SmallString(s)}()
 
@@ -228,9 +228,9 @@ s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 
-To see all of the operator names defined for the site types included with
-ITensor, please view the [source code](https://github.com/ITensor/jl/tree/main/src/physics/site_types)
-for each site type. Note that some site types such as "S=1/2" and "Qubit"
+You can see all of the operator names defined for the site types included
+with ITensor [here](https://docs.itensor.org/ITensorMPS/stable/IncludedSiteTypes.html).
+Note that some site types such as "S=1/2" and "Qubit"
 are aliases for each other and share operator definitions.
 """
 function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)

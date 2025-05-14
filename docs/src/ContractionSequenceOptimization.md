@@ -1,8 +1,6 @@
 # Contraction sequence optimization
 
-When contracting a tensor network, the sequence of contraction makes a big difference in the computational cost. However, the complexity of determining the optimal sequence grows exponentially with the number of tensors, but there are many heuristic algorithms available for computing optimal sequences for small networks[^1][^2][^3][^4][^5][^6]. ITensors.jl provides some functionality for helping you find the optimal contraction sequence for small tensor network, as we will show below.
-
-The algorithm in ITensors.jl currently uses a modified version of[^1] with simplifications for outer product contractions similar to those used in [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl).
+When contracting a tensor network, the sequence of contraction makes a big difference in the computational cost. However, the complexity of determining the optimal sequence grows exponentially with the number of tensors, but there are many heuristic algorithms available for computing optimal sequences for small networks[^1][^2][^3][^4][^5][^6]. ITensors.jl imports functionality from [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl) for helping you find the optimal contraction sequence for small tensor network, as we will show below.
 
 [^1]: [Faster identification of optimal contraction sequences for tensor networks](https://arxiv.org/abs/1304.6112)
 [^2]: [Improving the efficiency of variational tensor network algorithms](https://arxiv.org/abs/1310.8023)
@@ -64,12 +62,13 @@ display(cost2)
 ```
 This example helps us learn that in the limit of large MPS bond dimension `m`, the first contraction sequence is faster, while in the limit of large MPO bond dimension `k`, the second sequence is faster. This has practical implications for writing an efficient DMRG algorithm in both limits, which we plan to incorporate into ITensors.jl.
 
-Here is a more systematic example of searching through the parameter space to find optimal contraction sequences:
+Here is a more systematic example of searching through the parameter space to find optimal contraction sequences. Note, the TensorOperations.jl library must be loaded to use the optimal_contraction_sequence function:
 ```julia
 using ITensors
 using Symbolics
 
 using ITensors: contraction_cost, optimal_contraction_sequence
+using TensorOperations: TensorOperations
 
 function tensor_network(; m, k, d)
   l = Index(m, "l")

@@ -6,7 +6,6 @@
 
 using Adapt
 using Base.Threads
-using Compat
 using Dictionaries
 using Folds
 using InlineStrings
