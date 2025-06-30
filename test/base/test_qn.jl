@@ -103,6 +103,10 @@ import ITensors: nactive
     @test QN("Sz", 2) - QN() == QN("Sz", 2)
     @test QN() - QN(("Sz", 2), ("N", 1)) == QN(("Sz", -2), ("N", -1))
     @test QN("N", 1) - QN("Sz", 2) == QN(("N", 1), ("Sz", -2))
+
+    # Regression test for https://github.com/ITensor/ITensors.jl/issues/1658
+    @test QN("S3", 3) + QN(("S1", 1), ("S2", 2)) == QN(("S1", 1), ("S2", 2), ("S3", 3))
+    @test QN(("S1", 1), ("S2", 2)) + QN("S3", 3) == QN(("S1", 1), ("S2", 2), ("S3", 3))
   end
 
   @testset "Ordering" begin

@@ -176,29 +176,34 @@ function Base.:(-)(qn::QN)
 end
 
 function Base.:(+)(a::QN, b::QN)
-  !isactive(b[1]) && return a
-  ma = MQNStorage(data(a))
-  @inbounds for nb in 1:maxQNs
-    !isactive(b[nb]) && break
-    bname = name(b[nb])
-    for na in 1:maxQNs
-      aname = name(a[na])
-      if !isactive(ma[na])
-        ma[na] = b[nb]
-        break
-      elseif name(ma[na]) == bname
-        ma[na] = ma[na] + b[nb]
-        break
-      elseif (bname < aname) && (na == 1 || bname > name(ma[na - 1]))
-        for j in maxQNs:-1:(na + 1)
-          ma[j] = ma[j - 1]
-        end
-        ma[na] = b[nb]
-        break
+  na = nactive(a)
+  iszero(na) && return b
+  nb = nactive(b)
+  iszero(nb) && return a
+  sectors_a = data(a)
+  sectors_b = data(b)
+  msectors_c = MQNStorage(sectors_a)
+  nc = na
+  @inbounds for ib in 1:nb
+    sector_b = sectors_b[ib]
+    found = false
+    for ia in 1:na
+      sector_a = sectors_a[ia]
+      if name(sector_b) == name(sector_a)
+        msectors_c[ia] = sector_a + sector_b
+        found = true
+        continue
       end
     end
+    if !found
+      if nc >= length(msectors_c)
+        error("Cannot add QN, maximum number of QNVals reached")
+      end
+      msectors_c[nc += 1] = sector_b
+    end
   end
-  return QN(QNStorage(ma))
+  sort!(view(msectors_c, 1:nc); by=name)
+  return QN(msectors_c)
 end
 
 Base.:(-)(a::QN, b::QN) = (a + (-b))
