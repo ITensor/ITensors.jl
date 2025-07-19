@@ -56,7 +56,7 @@ NDTensorsTBLISExt = "TBLIS"
 NDTensorscuTENSORExt = "cuTENSOR"
 
 [compat]
-AMDGPU = "0.9, 1"
+AMDGPU = "0.9, 1, 2"
 Accessors = "0.1.33"
 Adapt = "3.7, 4"
 ArrayLayouts = "1.4"
