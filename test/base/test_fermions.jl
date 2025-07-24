@@ -1,6 +1,6 @@
 using ITensors, Test
 import ITensors: Out, In
-using ITensors.SiteTypes: op, siteinds
+using ITensors.SiteTypes: op, siteind, siteinds
 
 @testset "Fermions" begin
   ITensors.enable_auto_fermion()
@@ -776,6 +776,22 @@ using ITensors.SiteTypes: op, siteinds
     a = random_itensor(i', i)
     d, u = eigen(a)
     @test norm(a * u - u' * d) ≈ 0 atol = √(eps(real(eltype(a))))
+  end
+
+  @testset "Fermion exp Tests" begin
+    s = siteinds("Fermion", 2; conserve_qns=true)
+
+    # Matrix test
+    id_tensor = op("I", s[1])
+    @test id_tensor ≈ exp(0.0 * id_tensor)
+
+    # Tensor test
+    id_tensor = op("I", s[1]) * op("I", s[2])
+    @test id_tensor ≈ exp(0.0 * id_tensor)
+
+    # Permute and test again
+    id_tensor = permute(id_tensor, s[2], s[1], s[2]', s[1]')
+    @test id_tensor ≈ exp(0.0 * id_tensor)
   end
 
   ITensors.disable_auto_fermion()

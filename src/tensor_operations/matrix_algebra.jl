@@ -57,27 +57,46 @@ function exp(A::ITensor, Linds, Rinds; ishermitian=false)
 
   # Ensure the indices have the correct directions,
   # QNs, etc.
-  # First grab the indices in A, then permute them
-  # correctly.
+
+  # Permute Lis, Ris to be in same order as on A
   Lis = permute(commoninds(A, Lis), Lis)
   Ris = permute(commoninds(A, Ris), Ris)
 
   for (l, r) in zip(Lis, Ris)
-    if space(l) != space(r)
-      error("In exp, indices must come in pairs with equal spaces.")
+    dir_check = hasqns(A) ? dir(l) == dir(dag(r)) : true
+    if !(dir_check && noprime(l) == noprime(r))
+      dir_msg = hasqns(A) ? " and opposite directions" : ""
+      error("In exp, indices must come in pairs with equal spaces$dir_msg.")
     end
-    if hasqns(A)
-      if dir(l) == dir(r)
-        error("In exp, indices must come in pairs with opposite directions")
-      end
+  end
+
+  # <fermions>
+  auto_fermion_enabled = using_auto_fermion()
+  if auto_fermion_enabled
+    if all(j->dir(j)==Out, Lis)
+      ordered_inds = [Lis..., reverse(Ris)...]
+    elseif all(j->dir(j)==In, Lis)
+      ordered_inds = [reverse(Ris)..., Lis...]
+    else
+      error("For fermionic exp, Linds must have same direction, dir.(Linds)=", dir.(Linds))
     end
+    A = permute(A, ordered_inds)
+    disable_auto_fermion()
   end
 
   CL = combiner(Lis...; dir=Out)
   CR = combiner(Ris...; dir=In)
   AC = (A * CR) * CL
   expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
-  return (itensor(expAT) * dag(CR)) * dag(CL)
+  expA = (itensor(expAT) * dag(CR)) * dag(CL)
+
+  # <fermions>
+  if auto_fermion_enabled
+    expA = permute(expA, ordered_inds)
+    enable_auto_fermion()
+  end
+
+  return expA
 end
 
 function exp(A::ITensor; kwargs...)
