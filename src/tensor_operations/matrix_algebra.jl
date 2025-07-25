@@ -43,24 +43,23 @@ function exp(A::ITensor, Linds, Rinds; ishermitian=false)
     end
   end
 
-  N = ndims(A)
   NL = length(Linds)
   NR = length(Rinds)
   NL != NR && error("Must have equal number of left and right indices")
-  N != NL + NR &&
+  ndims(A) != NL + NR &&
     error("Number of left and right indices must add up to total number of indices")
 
   # Permute Lis, Ris to be in same order as on A
   Lis = permute(commoninds(A, Linds), Linds)
   Ris = permute(commoninds(A, Rinds), Rinds)
 
-  # Ensure the indices have the correct directions,
-  # QNs, etc.
+  # Ensure indices have correct directions, QNs, etc.
   for (l, r) in zip(Lis, Ris)
-    dir_check = hasqns(A) ? dir(l) == dir(dag(r)) : true
-    if !(dir_check && noprime(l) == noprime(r))
-      dir_msg = hasqns(A) ? " and opposite directions" : ""
-      error("In exp, indices must come in pairs with equal spaces$dir_msg.")
+    if space(l) != space(r)
+      error("In exp, indices must come in pairs with equal spaces.")
+    end
+    if hasqns(A) && dir(l) == dir(r)
+      error("In exp, indices must come in pairs with opposite directions")
     end
   end
 
