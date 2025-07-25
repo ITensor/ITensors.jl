@@ -50,18 +50,12 @@ function exp(A::ITensor, Linds, Rinds; ishermitian=false)
   N != NL + NR &&
     error("Number of left and right indices must add up to total number of indices")
 
-  # Linds, Rinds may not have the correct directions
-  # TODO: does the need a conversion?
-  Lis = Linds
-  Ris = Rinds
+  # Permute Lis, Ris to be in same order as on A
+  Lis = permute(commoninds(A, Linds), Linds)
+  Ris = permute(commoninds(A, Rinds), Rinds)
 
   # Ensure the indices have the correct directions,
   # QNs, etc.
-
-  # Permute Lis, Ris to be in same order as on A
-  Lis = permute(commoninds(A, Lis), Lis)
-  Ris = permute(commoninds(A, Ris), Ris)
-
   for (l, r) in zip(Lis, Ris)
     dir_check = hasqns(A) ? dir(l) == dir(dag(r)) : true
     if !(dir_check && noprime(l) == noprime(r))
