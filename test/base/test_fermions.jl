@@ -792,6 +792,15 @@ using ITensors.SiteTypes: op, siteind, siteinds
     # Permute and test again
     id_tensor = permute(id_tensor, s[2], s[1], s[2]', s[1]')
     @test id_tensor ≈ exp(0.0 * id_tensor)
+
+    # Explicitly passing indices in different, valid orders
+    @test id_tensor ≈ exp(0.0 * id_tensor, (s[1]', s[2]'), (dag(s[1]), dag(s[2])))
+    @test id_tensor ≈ exp(0.0 * id_tensor, (s[2]', s[1]'), (dag(s[2]), dag(s[1])))
+    @test id_tensor ≈ exp(0.0 * id_tensor, (dag(s[1]), dag(s[2])), (s[1]', s[2]'))
+    @test id_tensor ≈ exp(0.0 * id_tensor, (dag(s[2]), dag(s[1])), (s[2]', s[1]'))
+
+    # Check wrong index ordering fails (i.e. we are actually paying attention to it)
+    @test norm(id_tensor - exp(0.0 * id_tensor, (dag(s[1]), dag(s[2])), (s[2]', s[1]'))) > 1
   end
 
   ITensors.disable_auto_fermion()

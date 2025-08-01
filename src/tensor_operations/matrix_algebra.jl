@@ -49,12 +49,13 @@ function exp(A::ITensor, Linds, Rinds; ishermitian=false)
   ndims(A) != NL + NR &&
     error("Number of left and right indices must add up to total number of indices")
 
-  # Permute Lis, Ris to be in same order as on A
-  Lis = permute(commoninds(A, Linds), Linds)
-  Ris = permute(commoninds(A, Rinds), Rinds)
+  # Replace Linds and Rinds with index sets having
+  # same id's but arrow directions as on A
+  Linds = permute(commoninds(A, Linds), Linds)
+  Rinds = permute(commoninds(A, Rinds), Rinds)
 
   # Ensure indices have correct directions, QNs, etc.
-  for (l, r) in zip(Lis, Ris)
+  for (l, r) in zip(Linds, Rinds)
     if space(l) != space(r)
       error("In exp, indices must come in pairs with equal spaces.")
     end
@@ -66,25 +67,36 @@ function exp(A::ITensor, Linds, Rinds; ishermitian=false)
   # <fermions>
   auto_fermion_enabled = using_auto_fermion()
   if auto_fermion_enabled
-    if all(j->dir(j)==Out, Lis)
-      ordered_inds = [Lis..., reverse(Ris)...]
-    elseif all(j->dir(j)==In, Lis)
-      ordered_inds = [reverse(Ris)..., Lis...]
+    # If fermionic, bring indices into i',j',..,dag(j),dag(i)
+    # ordering with Out indices coming before In indices
+    # Resulting tensor acts like a normal matrix (no extra signs
+    # when taking powers A^n)
+    if all(j->dir(j)==Out, Linds) && all(j->dir(j)==In, Rinds)
+      ordered_inds = [Linds..., reverse(Rinds)...]
+    elseif all(j->dir(j)==Out, Rinds) && all(j->dir(j)==In, Linds)
+      ordered_inds = [Rinds..., reverse(Linds)...]
     else
-      error("For fermionic exp, Linds must have same direction, dir.(Linds)=", dir.(Linds))
+      error(
+        "For fermionic exp, Linds and Rinds must have same directions within each set. Got dir.(Linds)=",
+        dir.(Linds),
+        ", dir.(Rinds)=",
+        dir.(Rinds),
+      )
     end
     A = permute(A, ordered_inds)
+    # A^n now sign free, ok to temporarily disable fermion system
     disable_auto_fermion()
   end
 
-  CL = combiner(Lis...; dir=Out)
-  CR = combiner(Ris...; dir=In)
+  CL = combiner(Linds...; dir=Out)
+  CR = combiner(Rinds...; dir=In)
   AC = (A * CR) * CL
   expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
   expA = (itensor(expAT) * dag(CR)) * dag(CL)
 
   # <fermions>
   if auto_fermion_enabled
+    # Ensure expA indices in "matrix" form before re-enabling fermion system
     expA = permute(expA, ordered_inds)
     enable_auto_fermion()
   end
@@ -94,7 +106,7 @@ end
 
 function exp(A::ITensor; kwargs...)
   Ris = filterinds(A; plev=0)
-  Lis = Ris'
+  Lis = dag.(prime.(Ris))
   return exp(A, Lis, Ris; kwargs...)
 end
 
