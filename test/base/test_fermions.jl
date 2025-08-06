@@ -802,6 +802,29 @@ using ITensors.SiteTypes: op, siteind, siteinds
 
     # Check wrong index ordering fails (i.e. we are actually paying attention to it)
     @test norm(id_tensor - exp(0.0 * id_tensor, (dag(s[1]), dag(s[2])), (s[2]', s[1]'))) > 1
+
+    # Test a different, random tensor
+    T = random_itensor(s[1]', dag(s[1]))
+    T = 1/2*(T+swapprime(dag(T), 0=>1))
+    t = 0.01
+    eT = exp(t*T)
+    eT_taylor = (op("I", s[1])+t*T+t^2*apply(T, T)/2)
+    @test norm(eT - eT_taylor) < 1E-5
+
+    #
+    # Test that bosonic tensor exp works with auto fermion enabled
+    # 
+    j1 = Index([QN("Nb", 0)=>2, QN("Nb", 1)=>2])
+    j2 = Index([QN("Nb", 0)=>2, QN("Nb", 1)=>2])
+    id_tensor = op("I", j1) * op("I", j2)
+    @test id_tensor ≈ exp(0.0 * id_tensor)
+
+    T = random_itensor(j1', dag(j1))
+    T = 1/2*(T+swapprime(dag(T), 0=>1))
+    t = 0.01
+    eT = exp(t*T)
+    eT_taylor = (op("I", j1)+t*T+t^2*apply(T, T)/2)
+    @test norm(eT - eT_taylor) < 1E-5
   end
 
   ITensors.disable_auto_fermion()
