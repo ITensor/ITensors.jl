@@ -1,11 +1,10 @@
 @eval module $(gensym())
 using ITensors
 using ITensors.NDTensors
-using ITensors.SiteTypes: siteind, siteinds
+using ITensors.SiteTypes: op, siteind, siteinds
 using LinearAlgebra
 using Random
 using Test
-using ITensors.SiteTypes: op
 
 Random.seed!(1234)
 
