@@ -813,7 +813,7 @@ using ITensors.SiteTypes: op, siteind, siteinds
 
     #
     # Test that bosonic tensor exp works with auto fermion enabled
-    # 
+    #
     j1 = Index([QN("Nb", 0)=>2, QN("Nb", 1)=>2])
     j2 = Index([QN("Nb", 0)=>2, QN("Nb", 1)=>2])
     id_tensor = op("I", j1) * op("I", j2)
