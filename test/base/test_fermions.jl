@@ -1,3 +1,4 @@
+@eval module $(gensym())
 using ITensors, Test
 import ITensors: Out, In
 using ITensors.SiteTypes: op, siteind, siteinds
@@ -805,3 +806,5 @@ using ITensors.SiteTypes: op, siteind, siteinds
 
   ITensors.disable_auto_fermion()
 end
+
+end # module

@@ -1,9 +1,11 @@
+@eval module $(gensym())
 using ITensors
 using ITensors.NDTensors
 using ITensors.SiteTypes: siteind, siteinds
 using LinearAlgebra
 using Random
 using Test
+using ITensors.SiteTypes: op
 
 Random.seed!(1234)
 
@@ -1915,3 +1917,5 @@ Random.seed!(1234)
     @test !ITensors.have_same_qns([QN(0) => 1, QN(0) => 2, QN(("Sz", 2)) => 1])
   end
 end
+
+end # module

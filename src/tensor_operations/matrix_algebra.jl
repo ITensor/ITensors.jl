@@ -65,8 +65,8 @@ function exp(A::ITensor, Linds, Rinds; ishermitian=false)
   end
 
   # <fermions>
-  auto_fermion_enabled = using_auto_fermion()
-  if auto_fermion_enabled
+  fermionic_itensor = using_auto_fermion() && has_fermionic_subspaces(inds(A))
+  if fermionic_itensor
     # If fermionic, bring indices into i',j',..,dag(j),dag(i)
     # ordering with Out indices coming before In indices
     # Resulting tensor acts like a normal matrix (no extra signs
@@ -95,7 +95,7 @@ function exp(A::ITensor, Linds, Rinds; ishermitian=false)
   expA = (itensor(expAT) * dag(CR)) * dag(CL)
 
   # <fermions>
-  if auto_fermion_enabled
+  if fermionic_itensor
     # Ensure expA indices in "matrix" form before re-enabling fermion system
     expA = permute(expA, ordered_inds)
     enable_auto_fermion()
