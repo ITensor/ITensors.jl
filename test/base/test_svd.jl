@@ -206,6 +206,8 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
 
     for dir in [ITensors.Out, ITensors.In]
       L, R, spec = ITensors.factorize_svd(A, l1, l2; dir, ortho="none")
+      @test datatype(L) == datatype(A)
+      @test datatype(R) == datatype(A)
       @test dir == ITensors.dir(commonind(L, R))
       @test norm(L * R - A) <= 1e-14
     end
