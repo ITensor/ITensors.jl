@@ -510,7 +510,7 @@ end
     # HPSD Operator (Out,In) case
     #
     M = random_itensor(s, dag(t))
-    O = prime(M,s)*dag(M)
+    O = prime(M, s)*dag(M)
 
     @test dir(inds(O)[1]) == ITensors.Out
     @test dir(inds(O)[2]) == ITensors.In
@@ -518,7 +518,7 @@ end
     rinds = [dag(s)]
     D_O, U = eigen(O, linds, rinds; ishermitian=true)
     @test norm(prime(U)*D_O*dag(U)-O) < 1E-10
-    @test all(>=(0.),diag(array(D_O)))
+    @test all(>=(0.0), diag(array(D_O)))
 
     println()
 
@@ -527,18 +527,18 @@ end
     #
     # Make ρ out of two squared states
     # to populate both blocks: (0,0) and (1,1)
-    ψ0 = random_itensor(t,s)
-    ρ0 = prime(dag(ψ0),s)*ψ0
+    ψ0 = random_itensor(t, s)
+    ρ0 = prime(dag(ψ0), s)*ψ0
 
-    ψ2 = random_itensor(QN("Nf",2,-1),t,s)
-    ρ2 = prime(dag(ψ2),s)*ψ2
+    ψ2 = random_itensor(QN("Nf", 2, -1), t, s)
+    ρ2 = prime(dag(ψ2), s)*ψ2
 
     ρ = ρ0/2 + ρ2/2
     @test dir(inds(ρ)[1]) == ITensors.In
     @test dir(inds(ρ)[2]) == ITensors.Out
 
     D_ρ, U = eigen(ρ, [dag(s)'], [s]; ishermitian=true)
-    @test all(>=(0.),diag(array(D_ρ)))
+    @test all(>=(0.0), diag(array(D_ρ)))
     @test norm(prime(U)*D_ρ*dag(U)-ρ) < 1E-10
     ITensors.disable_auto_fermion()
   end
