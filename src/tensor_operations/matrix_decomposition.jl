@@ -355,16 +355,15 @@ function eigen(
   # <fermions>
   L_arrow_dir = Out
   if hasqns(A) && using_auto_fermion()
-    # Make arrows of combined ITensor 
-    # match those of index sets
-    # TODO: also support Out,Out and In,In cases?
-    #       I.e. through a R_arrow_dir variable?
+    # Make arrows of combined ITensor match those of index sets
     if all(i -> dir(i) == Out, Lis) && all(i -> dir(i) == In, Ris)
       L_arrow_dir = Out
     elseif all(i -> dir(i) == In, Lis) && all(i -> dir(i) == Out, Ris)
       L_arrow_dir = In
     else
-      error("With auto_fermion enabled, index sets in eigen must have all arrows the same, and opposite between the sets")
+      error(
+        "With auto_fermion enabled, index sets in eigen must have all arrows the same, and opposite between the sets",
+      )
     end
   end
 
