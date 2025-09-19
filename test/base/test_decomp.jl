@@ -520,8 +520,6 @@ end
     @test norm(prime(U)*D_O*dag(U)-O) < 1E-10
     @test all(>=(0.0), diag(array(D_O)))
 
-    println()
-
     #
     # HPSD Dual operator (In,Out) case
     #
