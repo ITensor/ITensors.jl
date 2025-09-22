@@ -353,17 +353,22 @@ function eigen(
   end
 
   # <fermions>
+  L_arrow_dir = Out
   if hasqns(A) && using_auto_fermion()
-    if !all(i -> dir(i) == Out, Lis)
-      error("With auto_fermion enabled, left inds in eigen must have Out arrows")
-    end
-    if !all(i -> dir(i) == In, Ris)
-      error("With auto_fermion enabled, right inds in eigen must have Out arrows")
+    # Make arrows of combined ITensor match those of index sets
+    if all(i -> dir(i) == Out, Lis) && all(i -> dir(i) == In, Ris)
+      L_arrow_dir = Out
+    elseif all(i -> dir(i) == In, Lis) && all(i -> dir(i) == Out, Ris)
+      L_arrow_dir = In
+    else
+      error(
+        "With auto_fermion enabled, index sets in eigen must have all arrows the same, and opposite between the sets",
+      )
     end
   end
 
-  CL = combiner(Lis...; dir=Out, tags="CMB,left")
-  CR = combiner(dag(Ris)...; dir=Out, tags="CMB,right")
+  CL = combiner(Lis...; dir=L_arrow_dir, tags="CMB,left")
+  CR = combiner(dag(Ris)...; dir=L_arrow_dir, tags="CMB,right")
 
   AC = A * dag(CR) * CL
 
