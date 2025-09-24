@@ -28,6 +28,9 @@ function space(
   if !isnothing(conserve_parity)
     conserve_nfparity = conserve_parity
   end
+  if conserve_nf && conserve_nfparity
+    @warn "Setting conserve_nfparity=true when conserve_nf=true for \"Fermion\" SiteType will have no effect, and only the \"Nf\" quantum number will be explicitly conserved."
+  end
   if conserve_sz == true
     conserve_sz = "Up"
   end

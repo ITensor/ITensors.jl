@@ -27,6 +27,9 @@ function space(
   if !isnothing(conserve_parity)
     conserve_nfparity = conserve_parity
   end
+  if conserve_nf && conserve_nfparity
+    @warn "Setting conserve_nfparity=true when conserve_nf=true for \"Electron\" SiteType will have no effect, and only the \"Nf\" quantum number will be explicitly conserved."
+  end
   if conserve_sz && conserve_nf
     return [
       QN((qnname_nf, 0, -1), (qnname_sz, 0)) => 1
