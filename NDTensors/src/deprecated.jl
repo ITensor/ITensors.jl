@@ -1,4 +1,3 @@
-
 # NDTensors.jl
 @deprecate use_tblis() NDTensors.using_tblis()
 @deprecate enable_tblis!() NDTensors.enable_tblis()

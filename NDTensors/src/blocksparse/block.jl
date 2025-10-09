@@ -1,26 +1,25 @@
-
 #
 # Block
 #
 
 struct Block{N}
-  data::NTuple{N,UInt}
-  hash::UInt
-  function Block{N}(data::NTuple{N,UInt}) where {N}
-    h = _hash(data)
-    return new{N}(data, h)
-  end
-  function Block{0}(::Tuple{})
-    h = _hash(())
-    return new{0}((), h)
-  end
+    data::NTuple{N, UInt}
+    hash::UInt
+    function Block{N}(data::NTuple{N, UInt}) where {N}
+        h = _hash(data)
+        return new{N}(data, h)
+    end
+    function Block{0}(::Tuple{})
+        h = _hash(())
+        return new{0}((), h)
+    end
 end
 
 #
 # Constructors
 #
 
-Block{N}(t::Tuple{Vararg{Any,N}}) where {N} = Block{N}(UInt.(t))
+Block{N}(t::Tuple{Vararg{Any, N}}) where {N} = Block{N}(UInt.(t))
 
 Block{N}(I::CartesianIndex{N}) where {N} = Block{N}(I.I)
 
@@ -36,13 +35,13 @@ Block(v::MVector{N}) where {N} = Block{N}(v)
 
 Block(v::SVector{N}) where {N} = Block{N}(v)
 
-Block(t::NTuple{N,UInt}) where {N} = Block{N}(t)
+Block(t::NTuple{N, UInt}) where {N} = Block{N}(t)
 
-Block(t::Tuple{Vararg{Any,N}}) where {N} = Block{N}(t)
+Block(t::Tuple{Vararg{Any, N}}) where {N} = Block{N}(t)
 
 Block(::Tuple{}) = Block{0}(())
 
-Block(I::Union{Integer,Block{1}}...) = Block(I)
+Block(I::Union{Integer, Block{1}}...) = Block(I)
 
 #
 # Conversions
@@ -50,7 +49,7 @@ Block(I::Union{Integer,Block{1}}...) = Block(I)
 
 CartesianIndex(b::Block) = CartesianIndex(Tuple(b))
 
-Tuple(b::Block{N}) where {N} = NTuple{N,UInt}(b.data)
+Tuple(b::Block{N}) where {N} = NTuple{N, UInt}(b.data)
 
 convert(::Type{Block}, I::CartesianIndex{N}) where {N} = Block{N}(I.I)
 
@@ -60,7 +59,7 @@ convert(::Type{Block}, t::Tuple) = Block(t)
 
 convert(::Type{Block{N}}, t::Tuple) where {N} = Block{N}(t)
 
-(::Type{IntT})(b::Block{1}) where {IntT<:Integer} = IntT(only(b))
+(::Type{IntT})(b::Block{1}) where {IntT <: Integer} = IntT(only(b))
 
 #
 # Getting and setting fields
@@ -68,7 +67,7 @@ convert(::Type{Block{N}}, t::Tuple) where {N} = Block{N}(t)
 
 gethash(b::Block) = b.hash[]
 
-sethash!(b::Block, h::UInt) = (b.hash[]=h; return b)
+sethash!(b::Block, h::UInt) = (b.hash[] = h; return b)
 
 #
 # Basic functions
@@ -82,11 +81,11 @@ isless(b1::Block, b2::Block) = isless(Tuple(b1), Tuple(b2))
 iterate(b::Block, args...) = iterate(b.data, args...)
 
 @propagate_inbounds function getindex(b::Block, i::Integer)
-  return b.data[i]
+    return b.data[i]
 end
 
 @propagate_inbounds function setindex(b::Block{N}, val, i::Integer) where {N}
-  return Block{N}(setindex(b.data, UInt(val), i))
+    return Block{N}(setindex(b.data, UInt(val), i))
 end
 
 ValLength(::Type{<:Block{N}}) where {N} = Val{N}
@@ -115,30 +114,30 @@ checkbounds(::Tensor, ::Block) = nothing
 _hash(t::Tuple) = _hash(t, zero(UInt))
 _hash(::Tuple{}, h::UInt) = h + Base.tuplehash_seed
 @generated function _hash(b::NTuple{N}, h::UInt) where {N}
-  quote
-    out = h + Base.tuplehash_seed
-    @nexprs $N i -> out = hash(b[$N - i + 1], out)
-  end
+    return quote
+        out = h + Base.tuplehash_seed
+        @nexprs $N i -> out = hash(b[$N - i + 1], out)
+    end
 end
 
 if VERSION < v"1.7.0-DEV.933"
-  # Stop inlining after some number of arguments to avoid code blowup
-  function _hash(t::Base.Any16, h::UInt)
-    out = h + Base.tuplehash_seed
-    for i in length(t):-1:1
-      out = hash(t[i], out)
+    # Stop inlining after some number of arguments to avoid code blowup
+    function _hash(t::Base.Any16, h::UInt)
+        out = h + Base.tuplehash_seed
+        for i in length(t):-1:1
+            out = hash(t[i], out)
+        end
+        return out
     end
-    return out
-  end
 else
-  # Stop inlining after some number of arguments to avoid code blowup
-  function _hash(t::Base.Any32, h::UInt)
-    out = h + Base.tuplehash_seed
-    for i in length(t):-1:1
-      out = hash(t[i], out)
+    # Stop inlining after some number of arguments to avoid code blowup
+    function _hash(t::Base.Any32, h::UInt)
+        out = h + Base.tuplehash_seed
+        for i in length(t):-1:1
+            out = hash(t[i], out)
+        end
+        return out
     end
-    return out
-  end
 end
 
 hash(b::Block) = UInt(b.hash)

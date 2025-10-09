@@ -1,4 +1,3 @@
-
 """
     flux(T::ITensor)
 
@@ -54,10 +53,10 @@ has. If the Tensor is not blocked or has no non-zero blocks,
 this function returns `nothing`.
 """
 function flux(T::Tensor)
-  (!hasqns(T) || isempty(T)) && return nothing
-  @debug_check checkflux(T)
-  block1 = first(eachnzblock(T))
-  return flux(T, block1)
+    (!hasqns(T) || isempty(T)) && return nothing
+    @debug_check checkflux(T)
+    block1 = first(eachnzblock(T))
+    return flux(T, block1)
 end
 
 allfluxequal(T::Tensor, flux_to_check) = all(b -> flux(T, b) == flux_to_check, nzblocks(T))
@@ -71,8 +70,8 @@ are equal. Throws an error if one or more blocks have a different flux.
 If the tensor is dense (is not blocked) then `checkflux` returns `nothing`.
 """
 function checkflux(T::Tensor)
-  (!hasqns(T) || isempty(T)) && return nothing
-  return allfluxequal(T) ? nothing : error("Fluxes not all equal")
+    (!hasqns(T) || isempty(T)) && return nothing
+    return allfluxequal(T) ? nothing : error("Fluxes not all equal")
 end
 
 """

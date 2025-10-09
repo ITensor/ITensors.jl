@@ -83,20 +83,20 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 ```
 """
 mutable struct ITensor
-  tensor
-  global @inline _ITensor(parent) = new(parent)
+    tensor
+    global @inline _ITensor(parent) = new(parent)
 end
 
-function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:Any,<:Tuple})
-  @debug_check begin
-    is = inds(T)
-    if !allunique(is)
-      error(
-        "Trying to create ITensors with collection of indices $is. Indices must be unique."
-      )
+function ITensor(::AllowAlias, T::Tensor{<:Any, <:Any, <:Any, <:Tuple})
+    @debug_check begin
+        is = inds(T)
+        if !allunique(is)
+            error(
+                "Trying to create ITensors with collection of indices $is. Indices must be unique."
+            )
+        end
     end
-  end
-  return _ITensor(T)
+    return _ITensor(T)
 end
 
 #########################
@@ -105,7 +105,7 @@ end
 
 # Version where the indices are not Tuple, so convert to Tuple
 function ITensor(::AllowAlias, T::Tensor)::ITensor
-  return ITensor(AllowAlias(), setinds(T, NTuple{ndims(T)}(inds(T))))
+    return ITensor(AllowAlias(), setinds(T, NTuple{ndims(T)}(inds(T))))
 end
 
 ITensor(::NeverAlias, T::Tensor)::ITensor = ITensor(AllowAlias(), copy(T))
@@ -120,7 +120,7 @@ and a set of indices.
 The ITensor stores a view of the TensorStorage.
 """
 ITensor(as::AliasStyle, st::TensorStorage, is)::ITensor = ITensor(
-  as, Tensor(as, st, Tuple(is))
+    as, Tensor(as, st, Tuple(is))
 )
 ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 
@@ -139,7 +139,7 @@ of the input data when possible.
 itensor(args...; kwargs...)::ITensor = ITensor(AllowAlias(), args...; kwargs...)
 
 ITensor(::AliasStyle, args...; kwargs...)::ITensor = error(
-  "ITensor constructor with input arguments of types `$(typeof.(args))` not defined."
+    "ITensor constructor with input arguments of types `$(typeof.(args))` not defined."
 )
 
 """
@@ -180,7 +180,7 @@ B = ITensor(ComplexF64,k,j)
 ```
 """
 function ITensor(eltype::Type{<:Number}, is::Indices)
-  return itensor(EmptyStorage(eltype), is)
+    return itensor(EmptyStorage(eltype), is)
 end
 
 ITensor(eltype::Type{<:Number}, is...) = ITensor(eltype, indices(is...))
@@ -189,11 +189,11 @@ ITensor(is...) = ITensor(EmptyNumber, is...)
 
 # To fix ambiguity with QN Index version
 # TODO: define as `emptyITensor(ElT)`
-ITensor(eltype::Type{<:Number}=EmptyNumber) = ITensor(eltype, ())
+ITensor(eltype::Type{<:Number} = EmptyNumber) = ITensor(eltype, ())
 
 # TODO: define as `emptyITensor(ElT)`
-function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  return ITensor(EmptyStorage(ElT), inds)
+function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT <: Number}
+    return ITensor(EmptyStorage(ElT), inds)
 end
 
 """
@@ -218,12 +218,12 @@ A = ITensor(undef,i,j)
 B = ITensor(ComplexF64,undef,k,j)
 ```
 """
-function ITensor(::Type{ElT}, ::UndefInitializer, inds::Indices) where {ElT<:Number}
-  return itensor(Dense(ElT, undef, dim(inds)), indices(inds))
+function ITensor(::Type{ElT}, ::UndefInitializer, inds::Indices) where {ElT <: Number}
+    return itensor(Dense(ElT, undef, dim(inds)), indices(inds))
 end
 
-function ITensor(::Type{ElT}, ::UndefInitializer, inds...) where {ElT<:Number}
-  return ITensor(ElT, undef, indices(inds...))
+function ITensor(::Type{ElT}, ::UndefInitializer, inds...) where {ElT <: Number}
+    return ITensor(ElT, undef, indices(inds...))
 end
 
 ITensor(::UndefInitializer, inds::Indices) = ITensor(Float64, undef, inds)
@@ -260,14 +260,14 @@ ITensor(eltype::Type{<:Number}, x::Number, is::Indices) = _ITensor(eltype, x, is
 ITensor(eltype::Type{<:Number}, x::Number, is::Tuple{}) = _ITensor(eltype, x, is)
 
 function _ITensor(eltype::Type{<:Number}, x::Number, is::Indices)
-  return ITensor(Dense(convert(eltype, x), dim(is)), is)
+    return ITensor(Dense(convert(eltype, x), dim(is)), is)
 end
 
 ITensor(eltype::Type{<:Number}, x::Number, is...) = ITensor(eltype, x, indices(is...))
 
 ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
 
-const RealOrComplex{T} = Union{T,Complex{T}}
+const RealOrComplex{T} = Union{T, Complex{T}}
 
 ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 
@@ -280,7 +280,7 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 # This is only used internally inside the implementation of `directsum`
 # right now.
 function zeros_itensor(elt::Type{<:Number}, inds::Index...)
-  return ITensor(elt, zero(elt), inds...)
+    return ITensor(elt, zero(elt), inds...)
 end
 
 # TODO: Deprecated!
@@ -290,20 +290,20 @@ end
 
 Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.EmptyNumber`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
 """
-function emptyITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
-  return itensor(EmptyTensor(ElT, is))
+function emptyITensor(::Type{ElT}, is::Indices) where {ElT <: Number}
+    return itensor(EmptyTensor(ElT, is))
 end
 
-function emptyITensor(::Type{ElT}, is...) where {ElT<:Number}
-  return emptyITensor(ElT, indices(is...))
+function emptyITensor(::Type{ElT}, is...) where {ElT <: Number}
+    return emptyITensor(ElT, indices(is...))
 end
 
 emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
 
 emptyITensor(is...) = emptyITensor(EmptyNumber, indices(is...))
 
-function emptyITensor((::Type{ElT})=EmptyNumber) where {ElT<:Number}
-  return itensor(EmptyTensor(ElT, ()))
+function emptyITensor((::Type{ElT}) = EmptyNumber) where {ElT <: Number}
+    return itensor(EmptyTensor(ElT, ()))
 end
 
 using NDTensors.TypeParameterAccessors: set_eltype, type_parameters, specify_type_parameters
@@ -349,82 +349,82 @@ T[i => 1, j => 1] == 3.3
     In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
 """
 function ITensor(
-  as::AliasStyle,
-  eltype::Type{<:Number},
-  A::AbstractArray{<:Number},
-  inds::Indices;
-  kwargs...,
-)
-  length(A) ≠ dim(inds) && throw(
-    DimensionMismatch(
-      "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
-    ),
-  )
-  data = set_eltype(typeof(A), eltype)(as, A)
-  return itensor(Dense(data), inds)
+        as::AliasStyle,
+        eltype::Type{<:Number},
+        A::AbstractArray{<:Number},
+        inds::Indices;
+        kwargs...,
+    )
+    length(A) ≠ dim(inds) && throw(
+        DimensionMismatch(
+            "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+        ),
+    )
+    data = set_eltype(typeof(A), eltype)(as, A)
+    return itensor(Dense(data), inds)
 end
 
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
-)
-  is = indices(inds)
-  if !isa(is, Indices)
-    error("Indices $inds are not valid for constructing an ITensor.")
-  end
-  return ITensor(as, eltype, A, is; kwargs...)
+        as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
+    )
+    is = indices(inds)
+    if !isa(is, Indices)
+        error("Indices $inds are not valid for constructing an ITensor.")
+    end
+    return ITensor(as, eltype, A, is; kwargs...)
 end
 
 # Convert `Adjoint` to `Matrix`
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
-)
-  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+        as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+    )
+    return ITensor(as, eltype, Matrix(A), inds; kwargs...)
 end
 
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
-)
-  return ITensor(as, eltype, A, indices(is...); kwargs...)
+        as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
+    )
+    return ITensor(as, eltype, A, indices(is...); kwargs...)
 end
 
 function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
-  return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
+    return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
 end
 
 # For now, it's not well defined to construct an ITensor without indices
 # from a non-zero dimensional AbstractArray
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
-)
-  if length(A) > 1
-    error(
-      "Trying to create an ITensor without any indices from $(typeof(A)) $A of dimensions $(size(A)). Cannot construct an ITensor from an $(typeof(A)) with more than one element without any indices.",
+        as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
     )
-  end
-  return ITensor(eltype, A[]; kwargs...)
+    if length(A) > 1
+        error(
+            "Trying to create an ITensor without any indices from $(typeof(A)) $A of dimensions $(size(A)). Cannot construct an ITensor from an $(typeof(A)) with more than one element without any indices.",
+        )
+    end
+    return ITensor(eltype, A[]; kwargs...)
 end
 
 function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
-  return ITensor(NeverAlias(), eltype, A; kwargs...)
+    return ITensor(NeverAlias(), eltype, A; kwargs...)
 end
 function ITensor(A::AbstractArray{<:Number}; kwargs...)
-  return ITensor(NeverAlias(), eltype(A), A; kwargs...)
+    return ITensor(NeverAlias(), eltype(A), A; kwargs...)
 end
 
 function ITensor(
-  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
-) where {ElT<:Number}
-  return ITensor(as, ElT, A, indices(is...); kwargs...)
+        as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
+    ) where {ElT <: Number}
+    return ITensor(as, ElT, A, indices(is...); kwargs...)
 end
 
 function ITensor(
-  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
-) where {ElT<:RealOrComplex{Int}}
-  return ITensor(as, float(ElT), A, is...; kwargs...)
+        as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
+    ) where {ElT <: RealOrComplex{Int}}
+    return ITensor(as, float(ElT), A, is...; kwargs...)
 end
 
 function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
-  return ITensor(NeverAlias(), A, is...; kwargs...)
+    return ITensor(NeverAlias(), A, is...; kwargs...)
 end
 
 #
@@ -441,11 +441,11 @@ the diagonal.
 
 The storage will have `NDTensors.Diag` type.
 """
-function diag_itensor(::Type{ElT}, is::Indices) where {ElT<:Number}
-  return itensor(Diag(ElT, mindim(is)), is)
+function diag_itensor(::Type{ElT}, is::Indices) where {ElT <: Number}
+    return itensor(Diag(ElT, mindim(is)), is)
 end
 
-diag_itensor(::Type{ElT}, is...) where {ElT<:Number} = diag_itensor(ElT, indices(is...))
+diag_itensor(::Type{ElT}, is...) where {ElT <: Number} = diag_itensor(ElT, indices(is...))
 
 diag_itensor(is::Indices) = diag_itensor(Float64, is)
 diag_itensor(is...) = diag_itensor(indices(is...))
@@ -470,32 +470,32 @@ The version `diagitensor` might output an ITensor whose storage data
 is an alias of the input vector data in order to minimize operations.
 """
 function diag_itensor(
-  as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
-)
-  length(v) ≠ mindim(is) && error(
-    "Length of vector for diagonal must equal minimum of the dimension of the input indices",
-  )
-  data = set_eltype(typeof(v), eltype)(as, v)
-  return itensor(Diag(data), is)
+        as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
+    )
+    length(v) ≠ mindim(is) && error(
+        "Length of vector for diagonal must equal minimum of the dimension of the input indices",
+    )
+    data = set_eltype(typeof(v), eltype)(as, v)
+    return itensor(Diag(data), is)
 end
 
 function diag_itensor(
-  as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is...
-)
-  return diag_itensor(as, eltype, v, indices(is...))
+        as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is...
+    )
+    return diag_itensor(as, eltype, v, indices(is...))
 end
 
 function diag_itensor(as::AliasStyle, v::AbstractVector, is...)
-  return diag_itensor(as, eltype(v), v, is...)
+    return diag_itensor(as, eltype(v), v, is...)
 end
 
 function diag_itensor(as::AliasStyle, v::AbstractVector{<:RealOrComplex{Int}}, is...)
-  return diag_itensor(AllowAlias(), float(eltype(v)), v, is...)
+    return diag_itensor(AllowAlias(), float(eltype(v)), v, is...)
 end
 
 diag_itensor(v::AbstractVector{<:Number}, is...) = diag_itensor(NeverAlias(), v, is...)
 function diag_itensor(eltype::Type{<:Number}, v::AbstractVector{<:Number}, is...)
-  return diag_itensor(NeverAlias(), eltype, v, is...)
+    return diag_itensor(NeverAlias(), eltype, v, is...)
 end
 
 diagitensor(args...; kwargs...) = diag_itensor(AllowAlias(), args...; kwargs...)
@@ -516,23 +516,23 @@ be converted to `float(x)`. Note that this behavior is subject to change
 in the future.
 """
 function diag_itensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is::Indices)
-  return diag_itensor(AllowAlias(), eltype, fill(eltype(x), mindim(is)), is...)
+    return diag_itensor(AllowAlias(), eltype, fill(eltype(x), mindim(is)), is...)
 end
 
 function diag_itensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is...)
-  return diag_itensor(as, eltype, x, indices(is...))
+    return diag_itensor(as, eltype, x, indices(is...))
 end
 
 function diag_itensor(as::AliasStyle, x::Number, is...)
-  return diag_itensor(as, typeof(x), x, is...)
+    return diag_itensor(as, typeof(x), x, is...)
 end
 
 function diag_itensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
-  return diag_itensor(as, float(typeof(x)), x, is...)
+    return diag_itensor(as, float(typeof(x)), x, is...)
 end
 
 function diag_itensor(eltype::Type{<:Number}, x::Number, is...)
-  return diag_itensor(NeverAlias(), eltype, x, is...)
+    return diag_itensor(NeverAlias(), eltype, x, is...)
 end
 
 diag_itensor(x::Number, is...) = diag_itensor(NeverAlias(), x, is...)
@@ -547,11 +547,11 @@ Make a uniform diagonal ITensor with all diagonal elements
 This function has an alias `δ`.
 """
 function delta(eltype::Type{<:Number}, is::Indices)
-  return itensor(Diag(one(eltype)), is)
+    return itensor(Diag(one(eltype)), is)
 end
 
 function delta(eltype::Type{<:Number}, is...)
-  return delta(eltype, indices(is...))
+    return delta(eltype, indices(is...))
 end
 
 delta(is...) = delta(Float64, is...)
@@ -559,17 +559,17 @@ delta(is...) = delta(Float64, is...)
 const δ = delta
 
 function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
-  return onehot(NDTensors.default_datatype(eltype), ivs...)
+    return onehot(NDTensors.default_datatype(eltype), ivs...)
 end
 function onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}})
-  return onehot(NDTensors.default_datatype(eltype), ivs...)
+    return onehot(NDTensors.default_datatype(eltype), ivs...)
 end
 function setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
-  return onehot(NDTensors.default_datatype(eltype), ivs...)
+    return onehot(NDTensors.default_datatype(eltype), ivs...)
 end
 
 function onehot(ivs::Pair{<:Index}...)
-  return onehot(NDTensors.default_datatype(NDTensors.default_eltype()), ivs...)
+    return onehot(NDTensors.default_datatype(NDTensors.default_eltype()), ivs...)
 end
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
@@ -583,7 +583,7 @@ For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
 function dense(A::ITensor)
-  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
+    return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
 
 """
@@ -605,52 +605,52 @@ A = random_itensor(i,j)
 B = random_itensor(ComplexF64,undef,k,j)
 ```
 """
-function random_itensor(::Type{S}, is::Indices) where {S<:Number}
-  return random_itensor(Random.default_rng(), S, is)
+function random_itensor(::Type{S}, is::Indices) where {S <: Number}
+    return random_itensor(Random.default_rng(), S, is)
 end
 
-function random_itensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
-  T = ITensor(S, undef, is)
-  randn!(rng, T)
-  return T
+function random_itensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S <: Number}
+    T = ITensor(S, undef, is)
+    randn!(rng, T)
+    return T
 end
 
-function random_itensor(::Type{S}, is...) where {S<:Number}
-  return random_itensor(Random.default_rng(), S, is...)
+function random_itensor(::Type{S}, is...) where {S <: Number}
+    return random_itensor(Random.default_rng(), S, is...)
 end
 
-function random_itensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
-  return random_itensor(rng, S, indices(is...))
-end
-
-# To fix ambiguity with QN version
-function random_itensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return random_itensor(Random.default_rng(), ElT, is)
+function random_itensor(rng::AbstractRNG, ::Type{S}, is...) where {S <: Number}
+    return random_itensor(rng, S, indices(is...))
 end
 
 # To fix ambiguity with QN version
-function random_itensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
-  return random_itensor(rng, ElT, Index{Int}[])
+function random_itensor(::Type{ElT}, is::Tuple{}) where {ElT <: Number}
+    return random_itensor(Random.default_rng(), ElT, is)
+end
+
+# To fix ambiguity with QN version
+function random_itensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT <: Number}
+    return random_itensor(rng, ElT, Index{Int}[])
 end
 
 # To fix ambiguity with QN version
 function random_itensor(is::Tuple{})
-  return random_itensor(Random.default_rng(), is)
+    return random_itensor(Random.default_rng(), is)
 end
 
 # To fix ambiguity with QN version
 function random_itensor(rng::AbstractRNG, is::Tuple{})
-  return random_itensor(rng, Float64, is)
+    return random_itensor(rng, Float64, is)
 end
 
 # To fix ambiguity errors with QN version
-function random_itensor(::Type{ElT}) where {ElT<:Number}
-  return random_itensor(Random.default_rng(), ElT)
+function random_itensor(::Type{ElT}) where {ElT <: Number}
+    return random_itensor(Random.default_rng(), ElT)
 end
 
 # To fix ambiguity errors with QN version
-function random_itensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
-  return random_itensor(rng, ElT, ())
+function random_itensor(rng::AbstractRNG, ::Type{ElT}) where {ElT <: Number}
+    return random_itensor(rng, ElT, ())
 end
 
 random_itensor(is::Indices) = random_itensor(Random.default_rng(), is)
@@ -674,11 +674,11 @@ zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 # Helper functions for different view behaviors
 # TODO: Move to NDTensors.jl
 function (arraytype::Type{<:AbstractArray})(::NeverAlias, A::AbstractArray)
-  return specify_type_parameters(arraytype, type_parameters(A))(A)
+    return specify_type_parameters(arraytype, type_parameters(A))(A)
 end
 
 function (arraytype::Type{<:AbstractArray})(::AllowAlias, A::AbstractArray)
-  return convert(specify_type_parameters(arraytype, type_parameters(A)), A)
+    return convert(specify_type_parameters(arraytype, type_parameters(A)), A)
 end
 
 """
@@ -697,45 +697,45 @@ an Array with a copy of the ITensor's elements. The
 order in which the indices are provided indicates
 the order of the data in the resulting Array.
 """
-function Array{ElT,N}(T::ITensor, is::Indices) where {ElT,N}
-  ndims(T) != N && throw(
-    DimensionMismatch(
-      "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."
-    ),
-  )
-  TT = tensor(permute(T, is))
-  return Array{ElT,N}(TT)::Array{ElT,N}
+function Array{ElT, N}(T::ITensor, is::Indices) where {ElT, N}
+    ndims(T) != N && throw(
+        DimensionMismatch(
+            "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."
+        ),
+    )
+    TT = tensor(permute(T, is))
+    return Array{ElT, N}(TT)::Array{ElT, N}
 end
 
-function Array{ElT,N}(T::ITensor, is...) where {ElT,N}
-  return Array{ElT,N}(T, indices(is...))
+function Array{ElT, N}(T::ITensor, is...) where {ElT, N}
+    return Array{ElT, N}(T, indices(is...))
 end
 
 function Array{ElT}(T::ITensor, is::Indices) where {ElT}
-  return Array{ElT,length(is)}(T, is)
+    return Array{ElT, length(is)}(T, is)
 end
 
 function Array{ElT}(T::ITensor, is...) where {ElT}
-  return Array{ElT}(T, indices(is...))
+    return Array{ElT}(T, indices(is...))
 end
 
 function Array(T::ITensor, is...)
-  return Array{eltype(T)}(T, is...)
+    return Array{eltype(T)}(T, is...)
 end
 
-function Array{<:Any,N}(T::ITensor, is...) where {N}
-  return Array{eltype(T),N}(T, is...)
+function Array{<:Any, N}(T::ITensor, is...) where {N}
+    return Array{eltype(T), N}(T, is...)
 end
 
 function Vector{ElT}(T::ITensor)::Vector{ElT} where {ElT}
-  ndims(T) != 1 && throw(
-    DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector.")
-  )
-  return Array{ElT}(T, inds(T)...)
+    ndims(T) != 1 && throw(
+        DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector.")
+    )
+    return Array{ElT}(T, inds(T)...)
 end
 
 function Vector(T::ITensor)::Vector
-  return Array(T, inds(T)...)
+    return Array(T, inds(T)...)
 end
 #########################
 # End ITensor constructors
@@ -851,7 +851,7 @@ diaglength(T::ITensor) = diaglength(tensor(T))
 # (Maybe create fallback definitions for dense tensors)
 #
 
-hasqns(T::Union{Tensor,ITensor}) = hasqns(inds(T))
+hasqns(T::Union{Tensor, ITensor}) = hasqns(inds(T))
 
 eachnzblock(T::ITensor) = eachnzblock(tensor(T))
 
@@ -955,26 +955,26 @@ iterate(A::ITensor, args...) = iterate(tensor(A), args...)
 #
 
 function settensor!(T::ITensor, t)::ITensor
-  T.tensor = t
-  return T
+    T.tensor = t
+    return T
 end
 
 function setinds!(T::ITensor, is)::ITensor
-  # TODO: always convert to Tuple with Tensor type?
-  return settensor!(T, setinds(tensor(T), Tuple(is)))
+    # TODO: always convert to Tuple with Tensor type?
+    return settensor!(T, setinds(tensor(T), Tuple(is)))
 end
 
 function setstorage!(T::ITensor, st)::ITensor
-  return settensor!(T, setstorage(tensor(T), st))
+    return settensor!(T, setstorage(tensor(T), st))
 end
 
 function setinds(T::ITensor, is)::ITensor
-  # TODO: always convert to Tuple with Tensor type?
-  return itensor(setinds(tensor(T), Tuple(is)))
+    # TODO: always convert to Tuple with Tensor type?
+    return itensor(setinds(tensor(T), Tuple(is)))
 end
 
 function setstorage(T::ITensor, st)::ITensor
-  return itensor(setstorage(tensor(T), st))
+    return itensor(setstorage(tensor(T), st))
 end
 
 removeqns(T::ITensor) = dense(T)
@@ -999,21 +999,21 @@ Convert to the complex version of the storage.
 complex(T::ITensor) = itensor(complex(tensor(T)))
 
 function complex!(T::ITensor)
-  ct = complex(tensor(T))
-  setstorage!(T, storage(ct))
-  setinds!(T, inds(ct))
-  return T
+    ct = complex(tensor(T))
+    setstorage!(T, storage(ct))
+    setinds!(T, inds(ct))
+    return T
 end
 
 function convert_eltype(ElType::Type, T::ITensor)
-  if eltype(T) == ElType
-    return T
-  end
-  return itensor(adapt(ElType, tensor(T)))
+    if eltype(T) == ElType
+        return T
+    end
+    return itensor(adapt(ElType, tensor(T)))
 end
 
 function convert_leaf_eltype(ElType::Type, T::ITensor)
-  return convert_eltype(ElType, T)
+    return convert_eltype(ElType, T)
 end
 
 """
@@ -1024,7 +1024,7 @@ Convert the element type of the lowest level containers
 an Vector of Vectors.
 """
 function convert_leaf_eltype(ElType::Type, A::Array)
-  return map(x -> convert_leaf_eltype(ElType, x), A)
+    return map(x -> convert_leaf_eltype(ElType, x), A)
 end
 
 """
@@ -1045,8 +1045,8 @@ lastindex(A::ITensor) = LastVal()
 Fill all values of the ITensor with the specified value.
 """
 function fill!(T::ITensor, x::Number)
-  # Use broadcasting `T .= x`?
-  return settensor!(T, fill!!(tensor(T), x))
+    # Use broadcasting `T .= x`?
+    return settensor!(T, fill!!(tensor(T), x))
 end
 
 #
@@ -1055,20 +1055,20 @@ end
 #
 
 function insertblock!(T::ITensor, args...)
-  (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
-    error("Block does not match current flux")
-  TR = insertblock!!(tensor(T), args...)
-  settensor!(T, TR)
-  return T
+    (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
+        error("Block does not match current flux")
+    TR = insertblock!!(tensor(T), args...)
+    settensor!(T, TR)
+    return T
 end
 
 function insert_diag_blocks!(T::ITensor)
-  ## TODO: Add a check that all diag blocks
-  ## have the correct flux
-  ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
-  ##   error("Block does not match current flux")
-  insert_diag_blocks!(tensor(T))
-  return T
+    ## TODO: Add a check that all diag blocks
+    ## have the correct flux
+    ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
+    ##   error("Block does not match current flux")
+    insert_diag_blocks!(tensor(T))
+    return T
 end
 
 """
@@ -1089,20 +1089,20 @@ A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 @propagate_inbounds @inline _getindex(T::Tensor, I::Integer...) = T[I...]
 
 # TODO: move to NDTensors (would require moving `LastVal` to NDTensors)
-@propagate_inbounds @inline function _getindex(T::Tensor, I::Union{Integer,LastVal}...)
-  return T[lastval_to_int(T, I)...]
+@propagate_inbounds @inline function _getindex(T::Tensor, I::Union{Integer, LastVal}...)
+    return T[lastval_to_int(T, I)...]
 end
 
 # Special case that handles indexing with `end` like `A[i => end, j => 3]`
-@propagate_inbounds getindex(T::ITensor, I::Union{Integer,LastVal}...)::Any = _getindex(
-  tensor(T), I...
+@propagate_inbounds getindex(T::ITensor, I::Union{Integer, LastVal}...)::Any = _getindex(
+    tensor(T), I...
 )
 
 # Simple version with just integer indexing, bounds checking gets done by NDTensors
 
 @propagate_inbounds function getindex(T::ITensor, b::Block{N}) where {N}
-  # XXX: this should return an ITensor view
-  return tensor(T)[b]
+    # XXX: this should return an ITensor view
+    return tensor(T)[b]
 end
 
 # Version accepting CartesianIndex, useful when iterating over
@@ -1122,29 +1122,29 @@ A = ITensor(2.0, i, i')
 A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 ```
 """
-@propagate_inbounds (getindex(T::ITensor, ivs::Vararg{Any,N})::Any) where {N} = _getindex(
-  tensor(T), ivs...
+@propagate_inbounds (getindex(T::ITensor, ivs::Vararg{Any, N})::Any) where {N} = _getindex(
+    tensor(T), ivs...
 )
 
 ## Allowing one to get the first ITensor element if its an order 0 tensor or an order 1 tensor with a dimension of 1. Also convert GPU back to CPU
 @propagate_inbounds function getindex(T::ITensor)::Any
-  if order(T) != 0 && dim(T) != 1
-    throw(
-      DimensionMismatch(
-        "In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."
-      ),
-    )
-  end
-  return tensor(T)[]
+    if order(T) != 0 && dim(T) != 1
+        throw(
+            DimensionMismatch(
+                "In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."
+            ),
+        )
+    end
+    return tensor(T)[]
 end
 
 function _vals(T::ITensor, I::String...)
-  return _vals(inds(T), I...)
+    return _vals(inds(T), I...)
 end
 
 # Enable indexing with string values, like `A["Up"]`.
 function getindex(T::ITensor, I1::String, Is::String...)
-  return T[_vals(T, I1, Is...)...]
+    return T[_vals(T, I1, Is...)...]
 end
 
 # Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integer...` is much faster:
@@ -1158,25 +1158,25 @@ end
 # for some reason! Maybe it helps with inlining?
 #
 @propagate_inbounds @inline function _setindex!!(
-  ::SymmetryStyle, T::Tensor, x::Number, I::Vararg{Integer,N}
-) where {N}
-  # Generic version, doesn't check the flux
-  return setindex!!(T, x, I...)
+        ::SymmetryStyle, T::Tensor, x::Number, I::Vararg{Integer, N}
+    ) where {N}
+    # Generic version, doesn't check the flux
+    return setindex!!(T, x, I...)
 end
 
 @propagate_inbounds @inline function _setindex!!(
-  T::Tensor, x::Number, I::Vararg{Integer,N}
-) where {N}
-  # Use type trait dispatch to split off between QN version that checks the flux
-  # and non-QN version that doesn't
+        T::Tensor, x::Number, I::Vararg{Integer, N}
+    ) where {N}
+    # Use type trait dispatch to split off between QN version that checks the flux
+    # and non-QN version that doesn't
 
-  return _setindex!!(symmetrystyle(T), T, x, I...)
+    return _setindex!!(symmetrystyle(T), T, x, I...)
 end
 
 @propagate_inbounds @inline function _setindex!!(
-  T::Tensor, x::Number, I::Vararg{Union{Integer,LastVal},N}
-) where {N}
-  return _setindex!!(T, x, lastval_to_int(T, I)...)
+        T::Tensor, x::Number, I::Vararg{Union{Integer, LastVal}, N}
+    ) where {N}
+    return _setindex!!(T, x, lastval_to_int(T, I)...)
 end
 
 """
@@ -1206,33 +1206,33 @@ A[2, :] = [2.0 3.0]
 ```
 """
 @propagate_inbounds @inline function setindex!(
-  T::ITensor, x::Number, I::Vararg{Integer,N}
-) where {N}
-  # XXX: for some reason this is slow (257.467 ns (6 allocations: 1.14 KiB) for `A[1, 1, 1] = 1`)
-  # Calling `setindex!` directly here is faster (56.635 ns (1 allocation: 368 bytes) for `A[1, 1, 1] = 1`)
-  # but of course less generic. Can't figure out how to optimize it,
-  # even the generic IndexVal version above is faster (126.818 ns (5 allocations: 768 bytes) for `A[i'' => 1, i' => 1, i => 1] = 1`)
-  return settensor!(T, _setindex!!(tensor(T), x, I...))
+        T::ITensor, x::Number, I::Vararg{Integer, N}
+    ) where {N}
+    # XXX: for some reason this is slow (257.467 ns (6 allocations: 1.14 KiB) for `A[1, 1, 1] = 1`)
+    # Calling `setindex!` directly here is faster (56.635 ns (1 allocation: 368 bytes) for `A[1, 1, 1] = 1`)
+    # but of course less generic. Can't figure out how to optimize it,
+    # even the generic IndexVal version above is faster (126.818 ns (5 allocations: 768 bytes) for `A[i'' => 1, i' => 1, i => 1] = 1`)
+    return settensor!(T, _setindex!!(tensor(T), x, I...))
 end
 
 @propagate_inbounds function setindex!(T::ITensor, x::Number, I::CartesianIndex)
-  return setindex!(T, x, Tuple(I)...)
+    return setindex!(T, x, Tuple(I)...)
 end
 
 @propagate_inbounds @inline function setindex!(
-  T::ITensor, x::Number, I::Vararg{Any,N}
-) where {N}
-  return settensor!(T, _setindex!!(tensor(T), x, I...))
+        T::ITensor, x::Number, I::Vararg{Any, N}
+    ) where {N}
+    return settensor!(T, _setindex!!(tensor(T), x, I...))
 end
 
 # XXX: what is this definition for?
 Base.checkbounds(::Any, ::Block) = nothing
 
 @propagate_inbounds function setindex!(T::ITensor, A::AbstractArray, I...)
-  @boundscheck checkbounds(tensor(T), I...)
-  TR = setindex!!(tensor(T), A, I...)
-  setstorage!(T, storage(TR))
-  return T
+    @boundscheck checkbounds(tensor(T), I...)
+    TR = setindex!!(tensor(T), A, I...)
+    setstorage!(T, storage(TR))
+    return T
 end
 
 #function setindex!(T::ITensor, A::AbstractArray, b::Block)
@@ -1242,23 +1242,23 @@ end
 #end
 
 function setindex!(T::ITensor, A::AbstractArray, ivs::Pair{<:Index}...)
-  input_inds = first.(ivs)
-  p = NDTensors.getperm(inds(T), input_inds)
-  # Base.to_indices changes Colons into proper ranges, here
-  # using the dimensions of the indices.
-  vals = to_indices(CartesianIndices(input_inds), last.(ivs))
-  # Lazily permute the array to correctly fit into the ITensor,
-  # accounting for the input indices being in a different order
-  # from the ITensor indices.
-  pvals = NDTensors.permute(vals, p)
-  T[pvals...] = PermutedDimsArray(reshape(A, length.(vals)), p)
-  return T
+    input_inds = first.(ivs)
+    p = NDTensors.getperm(inds(T), input_inds)
+    # Base.to_indices changes Colons into proper ranges, here
+    # using the dimensions of the indices.
+    vals = to_indices(CartesianIndices(input_inds), last.(ivs))
+    # Lazily permute the array to correctly fit into the ITensor,
+    # accounting for the input indices being in a different order
+    # from the ITensor indices.
+    pvals = NDTensors.permute(vals, p)
+    T[pvals...] = PermutedDimsArray(reshape(A, length.(vals)), p)
+    return T
 end
 
 # Enable indexing with string values, like `A["Up"]`.
 function setindex!(T::ITensor, x::Number, I1::String, Is::String...)
-  T[_vals(T, I1, Is...)...] = x
-  return T
+    T[_vals(T, I1, Is...)...] = x
+    return T
 end
 
 #function setindex!(::ITensor{Any}, ::Number, ivs...)
@@ -1303,8 +1303,8 @@ itensor2inds(A::ITensor)::Any = inds(A)
 itensor2inds(A::Tensor) = inds(A)
 itensor2inds(i::Index) = (i,)
 itensor2inds(A) = A
-function map_itensor2inds(A::Tuple{Vararg{Any,N}}) where {N}
-  return ntuple(i -> itensor2inds(A[i]), Val(N))
+function map_itensor2inds(A::Tuple{Vararg{Any, N}}) where {N}
+    return ntuple(i -> itensor2inds(A[i]), Val(N))
 end
 
 # in
@@ -1344,39 +1344,39 @@ hassameinds(A, B) = issetequal(itensor2inds(A), itensor2inds(B))
 
 # Apply the Index set function and then filter the results
 function filter_inds_set_function(
-  ffilter::Function, fset::Function, A::Vararg{Any,N}
-) where {N}
-  return filter(ffilter, fset(map_itensor2inds(A)...))
+        ffilter::Function, fset::Function, A::Vararg{Any, N}
+    ) where {N}
+    return filter(ffilter, fset(map_itensor2inds(A)...))
 end
 
 function filter_inds_set_function(fset::Function, A...; kwargs...)
-  return filter_inds_set_function(fmatch(; kwargs...), fset, A...)
+    return filter_inds_set_function(fmatch(; kwargs...), fset, A...)
 end
 
 for (finds, fset) in (
-  (:commoninds, :_intersect),
-  (:noncommoninds, :_symdiff),
-  (:uniqueinds, :_setdiff),
-  (:unioninds, :_union),
-)
-  @eval begin
-    $finds(args...; kwargs...) = filter_inds_set_function($fset, args...; kwargs...)
-  end
+        (:commoninds, :_intersect),
+        (:noncommoninds, :_symdiff),
+        (:uniqueinds, :_setdiff),
+        (:unioninds, :_union),
+    )
+    @eval begin
+        $finds(args...; kwargs...) = filter_inds_set_function($fset, args...; kwargs...)
+    end
 end
 
 for find in (:commonind, :noncommonind, :uniqueind, :unionind)
-  @eval begin
-    $find(args...; kwargs...) = getfirst($(Symbol(find, :s))(args...; kwargs...))
-  end
+    @eval begin
+        $find(args...; kwargs...) = getfirst($(Symbol(find, :s))(args...; kwargs...))
+    end
 end
 
 function index_filter_kwargs_docstring()
-  return """
-  Optional keyword arguments:
-  * tags::String - a tag name or comma separated list of tag names that the returned indices must all have
-  * plev::Int - common prime level that the returned indices must all have
-  * inds - Index or collection of indices. Returned indices must come from this set of indices.
-  """
+    return """
+    Optional keyword arguments:
+    * tags::String - a tag name or comma separated list of tag names that the returned indices must all have
+    * plev::Int - common prime level that the returned indices must all have
+    * inds - Index or collection of indices. Returned indices must come from this set of indices.
+    """
 end
 
 # intersect
@@ -1477,44 +1477,44 @@ inds(A...; kwargs...) = filterinds(A...; kwargs...)
 
 # in-place versions of priming and tagging
 for (fname, fname!) in [
-  (:(prime), :(prime!)),
-  (:(setprime), :(setprime!)),
-  (:(noprime), :(noprime!)),
-  (:(replaceprime), :(replaceprime!)),
-  (:(swapprime), :(swapprime!)),
-  (:(TagSets.addtags), :(addtags!)),
-  (:(TagSets.removetags), :(removetags!)),
-  (:(TagSets.replacetags), :(replacetags!)),
-  (:(settags), :(settags!)),
-  (:(swaptags), :(swaptags!)),
-  (:(replaceind), :(replaceind!)),
-  (:(replaceinds), :(replaceinds!)),
-  (:(swapind), :(swapind!)),
-  (:(swapinds), :(swapinds!)),
-]
-  @eval begin
-    $fname(f::Function, A::ITensor, args...) = ITensor($fname(f, tensor(A), args...))
+        (:(prime), :(prime!)),
+        (:(setprime), :(setprime!)),
+        (:(noprime), :(noprime!)),
+        (:(replaceprime), :(replaceprime!)),
+        (:(swapprime), :(swapprime!)),
+        (:(TagSets.addtags), :(addtags!)),
+        (:(TagSets.removetags), :(removetags!)),
+        (:(TagSets.replacetags), :(replacetags!)),
+        (:(settags), :(settags!)),
+        (:(swaptags), :(swaptags!)),
+        (:(replaceind), :(replaceind!)),
+        (:(replaceinds), :(replaceinds!)),
+        (:(swapind), :(swapind!)),
+        (:(swapinds), :(swapinds!)),
+    ]
+    @eval begin
+        $fname(f::Function, A::ITensor, args...) = ITensor($fname(f, tensor(A), args...))
 
-    # Inlining makes the ITensor functions slower
-    @noinline function $fname(f::Function, A::Tensor, args...)
-      return setinds(A, $fname(f, inds(A), args...))
+        # Inlining makes the ITensor functions slower
+        @noinline function $fname(f::Function, A::Tensor, args...)
+            return setinds(A, $fname(f, inds(A), args...))
+        end
+
+        function $(fname!)(f::Function, A::ITensor, args...)
+            return settensor!(A, $fname(f, tensor(A), args...))
+        end
+
+        $fname(A::ITensor, args...; kwargs...) = itensor($fname(tensor(A), args...; kwargs...))
+
+        # Inlining makes the ITensor functions slower
+        @noinline function $fname(A::Tensor, args...; kwargs...)
+            return setinds(A, $fname(inds(A), args...; kwargs...))
+        end
+
+        function $(fname!)(A::ITensor, args...; kwargs...)
+            return settensor!(A, $fname(tensor(A), args...; kwargs...))
+        end
     end
-
-    function $(fname!)(f::Function, A::ITensor, args...)
-      return settensor!(A, $fname(f, tensor(A), args...))
-    end
-
-    $fname(A::ITensor, args...; kwargs...) = itensor($fname(tensor(A), args...; kwargs...))
-
-    # Inlining makes the ITensor functions slower
-    @noinline function $fname(A::Tensor, args...; kwargs...)
-      return setinds(A, $fname(inds(A), args...; kwargs...))
-    end
-
-    function $(fname!)(A::ITensor, args...; kwargs...)
-      return settensor!(A, $fname(tensor(A), args...; kwargs...))
-    end
-  end
 end
 
 priming_tagging_doc = """
@@ -1707,16 +1707,16 @@ allhastags(A::ITensor, ts) = allhastags(inds(A), ts)
 # Returns a tuple of pairs of indices, where the pairs
 # are determined by the prime level pairs `plev` and
 # tag pairs `tags`.
-function indpairs(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
-  is1 = filterinds(T; plev=first(plev), tags=first(tags))
-  is2 = filterinds(T; plev=last(plev), tags=last(tags))
-  is2to1 = replacetags(mapprime(is2, last(plev) => first(plev)), last(tags) => first(tags))
-  is_first = commoninds(is1, is2to1)
-  is_last = replacetags(
-    mapprime(is_first, first(plev) => last(plev)), first(tags) => last(tags)
-  )
-  is_last = permute(commoninds(T, is_last), is_last)
-  return is_first .=> is_last
+function indpairs(T::ITensor; plev::Pair{Int, Int} = 0 => 1, tags::Pair = ts"" => ts"")
+    is1 = filterinds(T; plev = first(plev), tags = first(tags))
+    is2 = filterinds(T; plev = last(plev), tags = last(tags))
+    is2to1 = replacetags(mapprime(is2, last(plev) => first(plev)), last(tags) => first(tags))
+    is_first = commoninds(is1, is2to1)
+    is_last = replacetags(
+        mapprime(is_first, first(plev) => last(plev)), first(tags) => last(tags)
+    )
+    is_last = permute(commoninds(T, is_last), is_last)
+    return is_first .=> is_last
 end
 
 #########################
@@ -1730,36 +1730,36 @@ end
 similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), args...))
 
 function isapprox(A::ITensor, B::ITensor; kwargs...)
-  if !hassameinds(A, B)
-    error("In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors do not
-          match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the second
-          ITensor has indices: \n\n$(inds(B))")
-  end
-  B = permute(B, inds(A))
-  return isapprox(array(A), array(B); kwargs...)
+    if !hassameinds(A, B)
+        error("In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors do not
+      match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the second
+      ITensor has indices: \n\n$(inds(B))")
+    end
+    B = permute(B, inds(A))
+    return isapprox(array(A), array(B); kwargs...)
 end
 
 function randn!(T::ITensor)
-  return randn!(Random.default_rng(), T)
+    return randn!(Random.default_rng(), T)
 end
 
 function randn!(rng::AbstractRNG, T::ITensor)
-  return settensor!(T, randn!!(rng, tensor(T)))
+    return settensor!(T, randn!!(rng, tensor(T)))
 end
 
 norm(T::ITensor) = norm(tensor(T))
 
-function dag(as::AliasStyle, T::Tensor{ElT,N}) where {ElT,N}
-  if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
-    CT = conj(NeverAlias(), T)
-    NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(reverse(1:N), block, inds(T)))
-    return setinds(CT, dag(inds(T)))
-  end
-  return setinds(conj(as, T), dag(inds(T)))
+function dag(as::AliasStyle, T::Tensor{ElT, N}) where {ElT, N}
+    if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
+        CT = conj(NeverAlias(), T)
+        NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(reverse(1:N), block, inds(T)))
+        return setinds(CT, dag(inds(T)))
+    end
+    return setinds(conj(as, T), dag(inds(T)))
 end
 
 function dag(as::AliasStyle, T::ITensor)
-  return itensor(dag(as, tensor(T)))
+    return itensor(dag(as, tensor(T)))
 end
 
 # Helpful for generic code
@@ -1775,21 +1775,21 @@ may share data with the input ITensor). If `allow_alias = false`,
 an alias is never returned.
 """
 function dag(T::ITensor; kwargs...)
-  allow_alias::Bool = deprecated_keyword_argument(
-    Bool,
-    kwargs;
-    new_kw=:allow_alias,
-    old_kw=:always_copy,
-    default=true,
-    funcsym=:dag,
-    map=!,
-  )
-  aliasstyle::Union{AllowAlias,NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
-  return dag(aliasstyle, T)
+    allow_alias::Bool = deprecated_keyword_argument(
+        Bool,
+        kwargs;
+        new_kw = :allow_alias,
+        old_kw = :always_copy,
+        default = true,
+        funcsym = :dag,
+        map = !,
+    )
+    aliasstyle::Union{AllowAlias, NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
+    return dag(aliasstyle, T)
 end
 
 function (T::ITensor * x::Number)::ITensor
-  return itensor(x * tensor(T))
+    return itensor(x * tensor(T))
 end
 
 # TODO: what about noncommutative number types?
@@ -1802,39 +1802,39 @@ end
 -(A::ITensor) = itensor(-tensor(A))
 
 function _add(A::Tensor, B::Tensor)
-  if _isemptyscalar(A) && ndims(B) > 0
-    return itensor(B)
-  elseif _isemptyscalar(B) && ndims(A) > 0
-    return itensor(A)
-  end
-  ndims(A) != ndims(B) &&
-    throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
-  itA = itensor(A)
-  itB = itensor(B)
-  itC = copy(itA)
-  itC .+= itB
-  return itC
+    if _isemptyscalar(A) && ndims(B) > 0
+        return itensor(B)
+    elseif _isemptyscalar(B) && ndims(A) > 0
+        return itensor(A)
+    end
+    ndims(A) != ndims(B) &&
+        throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
+    itA = itensor(A)
+    itB = itensor(B)
+    itC = copy(itA)
+    itC .+= itB
+    return itC
 end
 
 # TODO: move the order-0 EmptyStorage ITensor special case to NDTensors.
 # Unfortunately this is more complicated than it might seem since it
 # has to pass through the broadcasting mechanism first.
 function (A::ITensor + B::ITensor)
-  return itensor(_add(tensor(A), tensor(B)))
+    return itensor(_add(tensor(A), tensor(B)))
 end
 
 # TODO: move the order-0 EmptyStorage ITensor special to NDTensors
 function (A::ITensor - B::ITensor)
-  if _isemptyscalar(A) && ndims(B) > 0
-    return -B
-  elseif _isemptyscalar(B) && ndims(A) > 0
-    return A
-  end
-  ndims(A) != ndims(B) &&
-    throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
-  C = copy(A)
-  C .-= B
-  return C
+    if _isemptyscalar(A) && ndims(B) > 0
+        return -B
+    elseif _isemptyscalar(B) && ndims(A) > 0
+        return A
+    end
+    ndims(A) != ndims(B) &&
+        throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
+    C = copy(A)
+    C .-= B
+    return C
 end
 
 real(T::ITensor)::ITensor = itensor(real(tensor(T)))
@@ -1846,8 +1846,8 @@ conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
 dag(::Nothing) = nothing
 
 function (A::ITensor == B::ITensor)
-  !hassameinds(A, B) && return false
-  return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
+    !hassameinds(A, B) && return false
+    return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
 LinearAlgebra.promote_leaf_eltypes(A::ITensor) = eltype(A)
@@ -1881,42 +1881,44 @@ B .= A
 ```
 """
 function copyto!(R::ITensor, T::ITensor)
-  R .= T
-  return R
+    R .= T
+    return R
 end
 
 # Note this already assumes R === T1, which will be lifted
 # in the future.
 function _map!!(f::Function, R::Tensor, T1::Tensor, T2::Tensor)
-  perm = NDTensors.getperm(inds(R), inds(T2))
-  if !isperm(perm)
-    error("""
-          You are trying to add an ITensor with indices:
+    perm = NDTensors.getperm(inds(R), inds(T2))
+    if !isperm(perm)
+        error(
+            """
+            You are trying to add an ITensor with indices:
 
-          $(inds(T2))
+            $(inds(T2))
 
-          into an ITensor with indices:
+            into an ITensor with indices:
 
-          $(inds(R))
+            $(inds(R))
 
-          but the indices are not permutations of each other.
-          """)
-  end
-  if hasqns(T2) && hasqns(R)
-    # Check that Index arrows match
-    for (n, p) in enumerate(perm)
-      if dir(inds(R)[n]) != dir(inds(T2)[p])
-        #println("Mismatched Index: \n$(inds(R)[n])")
-        error("Index arrows must be the same to add, subtract, map, or scale QN ITensors")
-      end
+            but the indices are not permutations of each other.
+            """
+        )
     end
-  end
-  return permutedims!!(R, T2, perm, f)
+    if hasqns(T2) && hasqns(R)
+        # Check that Index arrows match
+        for (n, p) in enumerate(perm)
+            if dir(inds(R)[n]) != dir(inds(T2)[p])
+                #println("Mismatched Index: \n$(inds(R)[n])")
+                error("Index arrows must be the same to add, subtract, map, or scale QN ITensors")
+            end
+        end
+    end
+    return permutedims!!(R, T2, perm, f)
 end
 
 function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
-  R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
-  return settensor!(R, _map!!(f, tensor(R), tensor(T1), tensor(T2)))
+    R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
+    return settensor!(R, _map!!(f, tensor(R), tensor(T1), tensor(T2)))
 end
 
 map(f, x::ITensor) = itensor(map(f, tensor(x)))
@@ -1976,26 +1978,26 @@ mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
 
 # Helper function for deprecating a keyword argument
 function deprecated_keyword_argument(
-  ::Type{T}, kwargs; new_kw, old_kw, default, funcsym, map=identity
-)::T where {T}
-  has_new_kw = haskey(kwargs, new_kw)
-  has_old_kw = haskey(kwargs, old_kw)
-  res::T = if has_old_kw
-    Base.depwarn(
-      "In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.", func
-    )
-    if has_new_kw
-      println(
-        "Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.",
-      )
-      kwargs[new_kw]
+        ::Type{T}, kwargs; new_kw, old_kw, default, funcsym, map = identity
+    )::T where {T}
+    has_new_kw = haskey(kwargs, new_kw)
+    has_old_kw = haskey(kwargs, old_kw)
+    res::T = if has_old_kw
+        Base.depwarn(
+            "In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.", func
+        )
+        if has_new_kw
+            println(
+                "Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.",
+            )
+            kwargs[new_kw]
+        else
+            map(kwargs[old_kw])
+        end
     else
-      map(kwargs[old_kw])
+        get(kwargs, new_kw, default)
     end
-  else
-    get(kwargs, new_kw, default)
-  end
-  return res
+    return res
 end
 
 #######################################################################
@@ -2004,74 +2006,74 @@ end
 #
 
 function summary(io::IO, T::ITensor)
-  print(io, "ITensor ord=$(order(T))")
-  if hasqns(T)
-    println(io)
-    for i in 1:order(T)
-      print(io, inds(T)[i])
-      println(io)
+    print(io, "ITensor ord=$(order(T))")
+    if hasqns(T)
+        println(io)
+        for i in 1:order(T)
+            print(io, inds(T)[i])
+            println(io)
+        end
+    else
+        for i in 1:order(T)
+            print(io, " ", inds(T)[i])
+        end
+        println(io)
     end
-  else
-    for i in 1:order(T)
-      print(io, " ", inds(T)[i])
-    end
-    println(io)
-  end
-  return print(io, typeof(storage(T)))
+    return print(io, typeof(storage(T)))
 end
 
 # TODO: make a specialized printing from Diag
 # that emphasizes the missing elements
 function show(io::IO, T::ITensor)
-  println(io, "ITensor ord=$(order(T))")
-  return show(io, MIME"text/plain"(), tensor(T))
+    println(io, "ITensor ord=$(order(T))")
+    return show(io, MIME"text/plain"(), tensor(T))
 end
 
 function show(io::IO, mime::MIME"text/plain", T::ITensor)
-  return summary(io, T)
+    return summary(io, T)
 end
 
-function readcpp(io::IO, ::Type{Dense{ValT}}; format="v3") where {ValT}
-  if format == "v3"
-    size = read(io, UInt64)
-    data = Vector{ValT}(undef, size)
-    for n in 1:size
-      data[n] = read(io, ValT)
-    end
-    return Dense(data)
-  else
-    throw(ArgumentError("read Dense: format=$format not supported"))
-  end
-end
-
-function readcpp(io::IO, ::Type{ITensor}; format="v3")
-  if format == "v3"
-    # TODO: use Vector{Index} here?
-    inds = readcpp(io, IndexSet; kwargs...)
-    read(io, 12) # ignore scale factor by reading 12 bytes
-    storage_type = read(io, Int32)
-    if storage_type == 0 # Null
-      storage = Dense{Nothing}()
-    elseif storage_type == 1  # DenseReal
-      storage = readcpp(io, Dense{Float64}; kwargs...)
-    elseif storage_type == 2  # DenseCplx
-      storage = readcpp(io, Dense{ComplexF64}; kwargs...)
-    elseif storage_type == 3  # Combiner
-      storage = CombinerStorage(T.inds[1])
-      #elseif storage_type==4  # DiagReal
-      #elseif storage_type==5  # DiagCplx
-      #elseif storage_type==6  # QDenseReal
-      #elseif storage_type==7  # QDenseCplx
-      #elseif storage_type==8  # QCombiner
-      #elseif storage_type==9  # QDiagReal
-      #elseif storage_type==10 # QDiagCplx
-      #elseif storage_type==11 # ScalarReal
-      #elseif storage_type==12 # ScalarCplx
+function readcpp(io::IO, ::Type{Dense{ValT}}; format = "v3") where {ValT}
+    if format == "v3"
+        size = read(io, UInt64)
+        data = Vector{ValT}(undef, size)
+        for n in 1:size
+            data[n] = read(io, ValT)
+        end
+        return Dense(data)
     else
-      throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+        throw(ArgumentError("read Dense: format=$format not supported"))
     end
-    return itensor(storage, inds)
-  else
-    throw(ArgumentError("read ITensor: format=$format not supported"))
-  end
+end
+
+function readcpp(io::IO, ::Type{ITensor}; format = "v3")
+    if format == "v3"
+        # TODO: use Vector{Index} here?
+        inds = readcpp(io, IndexSet; kwargs...)
+        read(io, 12) # ignore scale factor by reading 12 bytes
+        storage_type = read(io, Int32)
+        if storage_type == 0 # Null
+            storage = Dense{Nothing}()
+        elseif storage_type == 1  # DenseReal
+            storage = readcpp(io, Dense{Float64}; kwargs...)
+        elseif storage_type == 2  # DenseCplx
+            storage = readcpp(io, Dense{ComplexF64}; kwargs...)
+        elseif storage_type == 3  # Combiner
+            storage = CombinerStorage(T.inds[1])
+            #elseif storage_type==4  # DiagReal
+            #elseif storage_type==5  # DiagCplx
+            #elseif storage_type==6  # QDenseReal
+            #elseif storage_type==7  # QDenseCplx
+            #elseif storage_type==8  # QCombiner
+            #elseif storage_type==9  # QDiagReal
+            #elseif storage_type==10 # QDiagCplx
+            #elseif storage_type==11 # ScalarReal
+            #elseif storage_type==12 # ScalarCplx
+        else
+            throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+        end
+        return itensor(storage, inds)
+    else
+        throw(ArgumentError("read ITensor: format=$format not supported"))
+    end
 end
