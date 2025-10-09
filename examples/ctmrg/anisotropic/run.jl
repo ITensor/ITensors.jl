@@ -24,4 +24,4 @@ check_environment(T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad))
 # Run ctmrg
 @show κave = ctmrg(T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad))
 
-@assert isapprox(κave, exp(-β * ising_free_energy(β)); rtol=1e-10)
+@assert isapprox(κave, exp(-β * ising_free_energy(β)); rtol = 1.0e-10)

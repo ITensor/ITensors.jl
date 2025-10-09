@@ -2,7 +2,7 @@ using NDTensors: NDTensors, sim
 using .QuantumNumbers: QuantumNumbers, Arrow, In, Neither, Out
 using Random: Xoshiro
 using .TagSets:
-  TagSets, TagSet, @ts_str, addtags, commontags, hastags, removetags, replacetags
+    TagSets, TagSet, @ts_str, addtags, commontags, hastags, removetags, replacetags
 
 #const IDType = UInt128
 const IDType = UInt64
@@ -22,14 +22,14 @@ Internally, an `Index` has a fixed `id` number, which is how the ITensor library
 single original `Index`. `Index` objects must have the same `id`, as well as the `tags` to compare equal.
 """
 struct Index{T}
-  id::IDType
-  space::T
-  dir::Arrow
-  tags::TagSet
-  plev::Int
-  function Index{T}(id, space::T, dir::Arrow, tags, plev) where {T}
-    return new{T}(id, space, dir, tags, plev)
-  end
+    id::IDType
+    space::T
+    dir::Arrow
+    tags::TagSet
+    plev::Int
+    function Index{T}(id, space::T, dir::Arrow, tags, plev) where {T}
+        return new{T}(id, space, dir, tags, plev)
+    end
 end
 
 #######################
@@ -42,11 +42,11 @@ Index{T}(dim::T) where {T} = Index(dim)
 
 # `Nothing` direction gets converted to `Neither`.
 function Index{T}(id, space::T, dir::Nothing, tags, plev) where {T}
-  return Index{T}(id, space, Neither, tags, plev)
+    return Index{T}(id, space, Neither, tags, plev)
 end
 
 function Index(id, space::T, dir, tags, plev) where {T}
-  return Index{T}(id, space, dir, tags, plev)
+    return Index{T}(id, space, dir, tags, plev)
 end
 
 """
@@ -72,8 +72,8 @@ julia> tags(i)
 "l"
 ```
 """
-function Index(dim::Number; tags="", plev=0, dir=Neither)
-  return Index(rand(index_id_rng(), IDType), dim, dir, tags, plev)
+function Index(dim::Number; tags = "", plev = 0, dir = Neither)
+    return Index(rand(index_id_rng(), IDType), dim, dir, tags, plev)
 end
 
 """
@@ -97,8 +97,8 @@ julia> tags(i)
 "l,tag"
 ```
 """
-function Index(dim::Number, tags::Union{AbstractString,TagSet}; plev::Int=0)
-  return Index(dim; tags, plev)
+function Index(dim::Number, tags::Union{AbstractString, TagSet}; plev::Int = 0)
+    return Index(dim; tags, plev)
 end
 
 # This is so that when IndexSets are converted
@@ -120,8 +120,8 @@ copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 Produces an `Index` with the same properties (dimension or QN structure)
 but with a new `id`.
 """
-function NDTensors.sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
-  return Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
+function NDTensors.sim(i::Index; tags = copy(tags(i)), plev = plev(i), dir = dir(i))
+    return Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
 end
 
 trivial_space(i::Index) = 1
@@ -222,9 +222,9 @@ julia> hastags(i, "Link")
 false
 ```
 """
-TagSets.hastags(i::Index, ts::Union{AbstractString,TagSet}) = hastags(tags(i), ts)
+TagSets.hastags(i::Index, ts::Union{AbstractString, TagSet}) = hastags(tags(i), ts)
 
-TagSets.hastags(ts::Union{AbstractString,TagSet}) = x -> hastags(x, ts)
+TagSets.hastags(ts::Union{AbstractString, TagSet}) = x -> hastags(x, ts)
 
 """
     hasplev(i::Index, plev::Int)
@@ -316,7 +316,7 @@ hasqns(i::Index) = hasqns(space(i))
 Create a copy of Index i with the specified direction.
 """
 function setdir(i::Index, dir::Arrow)
-  return Index(id(i), copy(space(i)), dir, copy(tags(i)), plev(i))
+    return Index(id(i), copy(space(i)), dir, copy(tags(i)), plev(i))
 end
 
 """
@@ -337,9 +337,9 @@ not(id::IDType) = Not(id)
 # identity of an Index.
 # Currently only used for hashing an Index.
 struct IndexID
-  id::IDType
-  tags::TagSet
-  plev::Int
+    id::IDType
+    tags::TagSet
+    plev::Int
 end
 IndexID(i::Index) = IndexID(id(i), tags(i), plev(i))
 hash(i::Index, h::UInt) = hash(IndexID(i), h)
@@ -352,7 +352,7 @@ then the prime levels are compared, and finally the
 tags are compared.
 """
 (i1::Index == i2::Index) =
-  (id(i1) == id(i2)) && (plev(i1) == plev(i2)) && (tags(i1) == tags(i2))
+    (id(i1) == id(i2)) && (plev(i1) == plev(i2)) && (tags(i1) == tags(i2))
 
 """
     dag(i::Index)
@@ -447,7 +447,7 @@ TagSets.replacetags(i::Index, rep_ts::Pair) = replacetags(i, rep_ts...)
 Return a copy of Index `i` with its
 prime level incremented by the amount `plinc`
 """
-prime(i::Index, plinc::Int=1) = setprime(i, plev(i) + plinc)
+prime(i::Index, plinc::Int = 1) = setprime(i, plev(i) + plinc)
 
 """
     setprime(i::Index, plev::Int)
@@ -482,12 +482,12 @@ Base.:^(i::Index, pl::Int) = prime(i, pl)
 """
 Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
-function Base.iterate(i::Index, state::Int=1)
-  Base.depwarn(
-    "iteration of `Index` is deprecated, use `eachindval` or `eachval` instead.", :iterate
-  )
-  (state > dim(i)) && return nothing
-  return (i => state, state + 1)
+function Base.iterate(i::Index, state::Int = 1)
+    Base.depwarn(
+        "iteration of `Index` is deprecated, use `eachindval` or `eachval` instead.", :iterate
+    )
+    (state > dim(i)) && return nothing
+    return (i => state, state + 1)
 end
 
 # Treat Index as a scalar for the sake of broadcast.
@@ -526,21 +526,21 @@ eachindval(i::Index) = (i => n for n in eachval(i))
 
 # This is a trivial definition for use in NDTensors
 # XXX: rename tensorproduct with ⊗ alias
-function NDTensors.outer(i::Index; dir=dir(i), tags="", plev::Int=0)
-  return sim(i; tags=tags, plev=plev, dir=dir)
+function NDTensors.outer(i::Index; dir = dir(i), tags = "", plev::Int = 0)
+    return sim(i; tags = tags, plev = plev, dir = dir)
 end
 
 # This is for use in NDTensors
 # XXX: rename tensorproduct with ⊗ alias
-function NDTensors.outer(i1::Index, i2::Index; tags="")
-  return Index(dim(i1) * dim(i2), tags)
+function NDTensors.outer(i1::Index, i2::Index; tags = "")
+    return Index(dim(i1) * dim(i2), tags)
 end
 
 # Non-qn Index
 # TODO: add ⊕ alias
-directsum(i::Index, j::Index; tags="sum") = Index(dim(i) + dim(j); tags=tags)
-function directsum(i::Index, j::Index, k::Index, inds::Index...; tags="sum")
-  return directsum(directsum(i, j; tags), k, inds...; tags)
+directsum(i::Index, j::Index; tags = "sum") = Index(dim(i) + dim(j); tags = tags)
+function directsum(i::Index, j::Index, k::Index, inds::Index...; tags = "sum")
+    return directsum(directsum(i, j; tags), k, inds...; tags)
 end
 
 #
@@ -578,13 +578,13 @@ mergeblocks(i::Index) = i
 #
 
 # Keep partial backwards compatibility by defining IndexVal as follows:
-const IndexVal{IndexT} = Pair{IndexT,Int}
+const IndexVal{IndexT} = Pair{IndexT, Int}
 
 IndexVal(i::Index, n::Int) = (i => n)
 
 function (i::Index)(n::Integer)
-  Base.depwarn("Index(::Int) is deprecated, for an Index i use i=>n instead.", :Index)
-  return i => n
+    Base.depwarn("Index(::Int) is deprecated, for an Index i use i=>n instead.", :Index)
+    return i => n
 end
 
 NDTensors.ind(iv::Pair{<:Index}) = first(iv)
@@ -617,39 +617,39 @@ dir(iv::Pair{<:Index}) = dir(ind(iv))
 #
 
 function primestring(plev)
-  if plev < 0
-    return " (warning: prime level $plev is less than 0)"
-  end
-  if plev == 0
-    return ""
-  elseif plev > 3
-    return "'$plev"
-  else
-    return "'"^plev
-  end
+    if plev < 0
+        return " (warning: prime level $plev is less than 0)"
+    end
+    if plev == 0
+        return ""
+    elseif plev > 3
+        return "'$plev"
+    else
+        return "'"^plev
+    end
 end
 
 function Base.show(io::IO, i::Index)
-  idstr = "$(id(i) % 1000)"
-  if length(tags(i)) > 0
-    print(
-      io,
-      "(dim=$(space(i))|id=$(idstr)|\"$(TagSets.tagstring(tags(i)))\")$(primestring(plev(i)))",
-    )
-  else
-    print(io, "(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
-  end
+    idstr = "$(id(i) % 1000)"
+    return if length(tags(i)) > 0
+        print(
+            io,
+            "(dim=$(space(i))|id=$(idstr)|\"$(TagSets.tagstring(tags(i)))\")$(primestring(plev(i)))",
+        )
+    else
+        print(io, "(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
+    end
 end
 
-function readcpp(io::IO, ::Type{Index}; format="v3")
-  if format != "v3"
-    throw(ArgumentError("read Index: format=$format not supported"))
-  end
-  tags = readcpp(io, TagSet; kwargs...)
-  id = read(io, IDType)
-  dim = convert(Int64, read(io, Int32))
-  dir_int = read(io, Int32)
-  dir = dir_int < 0 ? In : Out
-  read(io, 8) # Read default IQIndexDat size, 8 bytes
-  return Index(id, dim, dir, tags)
+function readcpp(io::IO, ::Type{Index}; format = "v3")
+    if format != "v3"
+        throw(ArgumentError("read Index: format=$format not supported"))
+    end
+    tags = readcpp(io, TagSet; kwargs...)
+    id = read(io, IDType)
+    dim = convert(Int64, read(io, Int32))
+    dir_int = read(io, Int32)
+    dir = dir_int < 0 ? In : Out
+    read(io, 8) # Read default IQIndexDat size, 8 bytes
+    return Index(id, dim, dir, tags)
 end

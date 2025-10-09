@@ -1,26 +1,26 @@
 function _contract(A::Tensor, B::Tensor)
-  labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
-  return contract(A, labelsA, B, labelsB)
-  # TODO: Alternative to try (`noncommoninds` is too slow right now)
-  #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
+    labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
+    return contract(A, labelsA, B, labelsB)
+    # TODO: Alternative to try (`noncommoninds` is too slow right now)
+    #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
 end
 
 function _contract(A::ITensor, B::ITensor)::ITensor
-  C = itensor(_contract(tensor(A), tensor(B)))
-  warnTensorOrder = get_warn_order()
-  if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
-    println("Contraction resulted in ITensor with $(order(C)) indices, which is greater
-            than or equal to the ITensor order warning threshold $warnTensorOrder.
-            You can modify the threshold with macros like `@set_warn_order N`,
-            `@reset_warn_order`, and `@disable_warn_order` or functions like
-            `ITensors.set_warn_order(N::Int)`, `ITensors.reset_warn_order()`, and
-            `ITensors.disable_warn_order()`.")
-    # This prints a vector, not formatted well
-    #show(stdout, MIME"text/plain"(), stacktrace())
-    Base.show_backtrace(stdout, backtrace())
-    println()
-  end
-  return C
+    C = itensor(_contract(tensor(A), tensor(B)))
+    warnTensorOrder = get_warn_order()
+    if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
+        println("Contraction resulted in ITensor with $(order(C)) indices, which is greater
+        than or equal to the ITensor order warning threshold $warnTensorOrder.
+        You can modify the threshold with macros like `@set_warn_order N`,
+        `@reset_warn_order`, and `@disable_warn_order` or functions like
+        `ITensors.set_warn_order(N::Int)`, `ITensors.reset_warn_order()`, and
+        `ITensors.disable_warn_order()`.")
+        # This prints a vector, not formatted well
+        #show(stdout, MIME"text/plain"(), stacktrace())
+        Base.show_backtrace(stdout, backtrace())
+        println()
+    end
+    return C
 end
 
 """
@@ -58,29 +58,29 @@ C = A * B # inner product of A and B, all indices contracted
 ```
 """
 function (A::ITensor * B::ITensor)::ITensor
-  return contract(A, B)
+    return contract(A, B)
 end
 
 function contract(A::ITensor, B::ITensor)::ITensor
-  NA::Int = ndims(A)
-  NB::Int = ndims(B)
-  if NA == 0 && NB == 0
-    return (iscombiner(A) || iscombiner(B)) ? _contract(A, B) : ITensor(A[] * B[])
-  elseif NA == 0
-    return iscombiner(A) ? _contract(A, B) : A[] * B
-  elseif NB == 0
-    return iscombiner(B) ? _contract(B, A) : B[] * A
-  end
-  return _contract(A, B)
+    NA::Int = ndims(A)
+    NB::Int = ndims(B)
+    if NA == 0 && NB == 0
+        return (iscombiner(A) || iscombiner(B)) ? _contract(A, B) : ITensor(A[] * B[])
+    elseif NA == 0
+        return iscombiner(A) ? _contract(A, B) : A[] * B
+    elseif NB == 0
+        return iscombiner(B) ? _contract(B, A) : B[] * A
+    end
+    return _contract(A, B)
 end
 
 function default_sequence()
-  return using_contraction_sequence_optimization() ? "automatic" : "left_associative"
+    return using_contraction_sequence_optimization() ? "automatic" : "left_associative"
 end
 
-function contraction_cost(As::Union{Vector{<:ITensor},Tuple{Vararg{ITensor}}}; kwargs...)
-  indsAs = [inds(A) for A in As]
-  return contraction_cost(indsAs; kwargs...)
+function contraction_cost(As::Union{Vector{<:ITensor}, Tuple{Vararg{ITensor}}}; kwargs...)
+    indsAs = [inds(A) for A in As]
+    return contraction_cost(indsAs; kwargs...)
 end
 
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
@@ -102,32 +102,32 @@ integers `n` specifying the ITensor `As[n]` and branches are accessed
 by indexing with `1` or `2`, i.e. `sequence = Any[Any[1, 3], Any[2, 4]]`.
 """
 function contract(tn::AbstractVector; kwargs...)
-  return if all(x -> x isa ITensor, tn)
-    contract(convert(Vector{ITensor}, tn); kwargs...)
-  else
-    deepcontract(tn; kwargs...)
-  end
+    return if all(x -> x isa ITensor, tn)
+        contract(convert(Vector{ITensor}, tn); kwargs...)
+    else
+        deepcontract(tn; kwargs...)
+    end
 end
 
 # Contract a tensor network such as:
 # [A, B, [[C, D], [E, [F, G]]]]
 deepcontract(t::ITensor, ts::ITensor...) = *(t, ts...)
 function deepcontract(tn::AbstractVector)
-  return deepcontract(deepcontract.(tn)...)
+    return deepcontract(deepcontract.(tn)...)
 end
 
 function contract(
-  As::Union{Vector{ITensor},Tuple{Vararg{ITensor}}}; sequence=default_sequence(), kwargs...
-)::ITensor
-  if sequence == "left_associative"
-    return foldl((A, B) -> contract(A, B; kwargs...), As)
-  elseif sequence == "right_associative"
-    return foldr((A, B) -> contract(A, B; kwargs...), As)
-  elseif sequence == "automatic"
-    return _contract(As, optimal_contraction_sequence(As); kwargs...)
-  else
-    return _contract(As, sequence; kwargs...)
-  end
+        As::Union{Vector{ITensor}, Tuple{Vararg{ITensor}}}; sequence = default_sequence(), kwargs...
+    )::ITensor
+    if sequence == "left_associative"
+        return foldl((A, B) -> contract(A, B; kwargs...), As)
+    elseif sequence == "right_associative"
+        return foldr((A, B) -> contract(A, B; kwargs...), As)
+    elseif sequence == "automatic"
+        return _contract(As, optimal_contraction_sequence(As); kwargs...)
+    else
+        return _contract(As, sequence; kwargs...)
+    end
 end
 
 """
@@ -137,12 +137,12 @@ Returns a contraction sequence for contracting the tensors `T`. The sequence is
 generally optimal and is found via the optimaltree function in TensorOperations.jl which must be loaded.
 """
 function optimal_contraction_sequence(As)
-  return throw(
-    ArgumentError(
-      "Optimal contraction sequence isn't defined. Try loading a backend package like
-        TensorOperations.jl"
-    ),
-  )
+    return throw(
+        ArgumentError(
+            "Optimal contraction sequence isn't defined. Try loading a backend package like
+  TensorOperations.jl"
+        ),
+    )
 end
 
 contract(As::ITensor...; kwargs...)::ITensor = contract(As; kwargs...)
@@ -152,33 +152,33 @@ _contract(As, sequence::Int) = As[sequence]
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
 function _contract(As, sequence::AbstractVector; kwargs...)::ITensor
-  return contract(_contract.((As,), sequence)...; kwargs...)
+    return contract(_contract.((As,), sequence)...; kwargs...)
 end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
-  labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
-  labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(
-    tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB), α, β
-  )
-  setstorage!(C, storage(CT))
-  setinds!(C, inds(C))
-  return C
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number = 0)::ITensor
+    labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
+    labelsC, labelsA, labelsB = labelsCAB
+    CT = NDTensors.contract!!(
+        tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB), α, β
+    )
+    setstorage!(C, storage(CT))
+    setinds!(C, inds(C))
+    return C
 end
 
 function _contract!!(C::Tensor, A::Tensor, B::Tensor)
-  labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
-  labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(C, labelsC, A, labelsA, B, labelsB)
-  return CT
+    labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
+    labelsC, labelsA, labelsB = labelsCAB
+    CT = NDTensors.contract!!(C, labelsC, A, labelsA, B, labelsB)
+    return CT
 end
 
 # This is necessary for now since not all types implement contract!!
 # with non-trivial α and β
 function contract!(C::ITensor, A::ITensor, B::ITensor)::ITensor
-  return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B)))
+    return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B)))
 end
 
 """
@@ -191,132 +191,134 @@ Elementwise product of 2 ITensors with the same indices.
 Alternative syntax `⊙` can be typed in the REPL with `\\odot <tab>`.
 """
 function hadamard_product!(R::ITensor, T1::ITensor, T2::ITensor)
-  if !hassameinds(T1, T2)
-    error("ITensors must have some indices to perform Hadamard product")
-  end
-  # Permute the indices to the same order
-  #if inds(A) ≠ inds(B)
-  #  B = permute(B, inds(A))
-  #end
-  #tensor(C) .= tensor(A) .* tensor(B)
-  map!((t1, t2) -> *(t1, t2), R, T1, T2)
-  return R
+    if !hassameinds(T1, T2)
+        error("ITensors must have some indices to perform Hadamard product")
+    end
+    # Permute the indices to the same order
+    #if inds(A) ≠ inds(B)
+    #  B = permute(B, inds(A))
+    #end
+    #tensor(C) .= tensor(A) .* tensor(B)
+    map!((t1, t2) -> *(t1, t2), R, T1, T2)
+    return R
 end
 
 # TODO: instead of copy, use promote(A, B)
 function hadamard_product(A::ITensor, B::ITensor)
-  Ac = copy(A)
-  return hadamard_product!(Ac, Ac, B)
+    Ac = copy(A)
+    return hadamard_product!(Ac, Ac, B)
 end
 
 ⊙(A::ITensor, B::ITensor) = hadamard_product(A, B)
 
 function directsum_projectors!(D1::Tensor, D2::Tensor)
-  d1 = size(D1, 1)
-  for ii in 1:d1
-    D1[ii, ii] = one(eltype(D1))
-  end
-  d2 = size(D2, 1)
-  for jj in 1:d2
-    D2[jj, d1 + jj] = one(eltype(D1))
-  end
-  return D1, D2
+    d1 = size(D1, 1)
+    for ii in 1:d1
+        D1[ii, ii] = one(eltype(D1))
+    end
+    d2 = size(D2, 1)
+    for jj in 1:d2
+        D2[jj, d1 + jj] = one(eltype(D1))
+    end
+    return D1, D2
 end
 
 # Helper tensors for performing a partial direct sum
 function directsum_projectors(
-  elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index
-)
-  # Ideally we would just use the following but it gives
-  # an error that `setindex!` isn't defined:
-  # D1 = ITensor(elt1, dag(i), ij)
-  # D2 = ITensor(elt1, dag(j), ij)
-  # Or with new notation:
-  # D1 = zeros(elt1, dag(i), ij)
-  # D2 = zeros(elt1, dag(j), ij)
-  elt = promote_type(elt1, elt2)
-  D1 = zeros_itensor(elt, dag(i), ij)
-  D2 = zeros_itensor(elt, dag(j), ij)
-  directsum_projectors!(tensor(D1), tensor(D2))
-  return D1, D2
+        elt1::Type{<:Number}, elt2::Type{<:Number}, i::Index, j::Index, ij::Index
+    )
+    # Ideally we would just use the following but it gives
+    # an error that `setindex!` isn't defined:
+    # D1 = ITensor(elt1, dag(i), ij)
+    # D2 = ITensor(elt1, dag(j), ij)
+    # Or with new notation:
+    # D1 = zeros(elt1, dag(i), ij)
+    # D2 = zeros(elt1, dag(j), ij)
+    elt = promote_type(elt1, elt2)
+    D1 = zeros_itensor(elt, dag(i), ij)
+    D2 = zeros_itensor(elt, dag(j), ij)
+    directsum_projectors!(tensor(D1), tensor(D2))
+    return D1, D2
 end
 
 function directsum_projectors(
-  ::Type{<:EmptyNumber}, ::Type{<:EmptyNumber}, ::Index, ::Index, ::Index
-)
-  return error(
-    "It is not possible to call directsum on two tensors with element type EmptyNumber.
+        ::Type{<:EmptyNumber}, ::Type{<:EmptyNumber}, ::Index, ::Index, ::Index
+    )
+    return error(
+        "It is not possible to call directsum on two tensors with element type EmptyNumber.
 If you are inputting ITensors constructed like `ITensor(i, j)`, try specifying the element type,
 e.g. `ITensor(Float64, i, j)`, or fill them with zero values, e.g. `ITensor(zero(Float64), i, j)`.",
-  )
+    )
 end
 
 function check_directsum_inds(A::ITensor, I, B::ITensor, J)
-  a = uniqueinds(A, I)
-  b = uniqueinds(B, J)
-  if !hassameinds(a, b)
-    error("""In directsum, attemptying to direct sum ITensors A and B with indices:
+    a = uniqueinds(A, I)
+    b = uniqueinds(B, J)
+    return if !hassameinds(a, b)
+        error(
+            """In directsum, attemptying to direct sum ITensors A and B with indices:
 
-          $(inds(A))
+            $(inds(A))
 
-          and
+            and
 
-          $(inds(B))
+            $(inds(B))
 
-          over the indices
+            over the indices
 
-          $(I)
+            $(I)
 
-          and
+            and
 
-          $(J)
+            $(J)
 
-          The indices not being direct summed must match, however they are
+            The indices not being direct summed must match, however they are
 
-          $a
+            $a
 
-          and
+            and
 
-          $b
-          """)
-  end
+            $b
+            """
+        )
+    end
 end
 
 function _directsum(
-  IJ::Nothing, A::ITensor, I, B::ITensor, J; tags=default_directsum_tags(A => I)
-)
-  N = length(I)
-  (N != length(J)) &&
-    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
-  check_directsum_inds(A, I, B, J)
-  # Fix the Index direction for QN indices
-  # TODO: Define `getfirstind`?
-  I = map(In -> getfirst(==(In), inds(A)), I)
-  J = map(Jn -> getfirst(==(Jn), inds(B)), J)
-  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
-  for n in 1:N
-    IJ[n] = directsum(I[n], J[n]; tags=tags[n])
-  end
-  return _directsum(IJ, A, I, B, J)
+        IJ::Nothing, A::ITensor, I, B::ITensor, J; tags = default_directsum_tags(A => I)
+    )
+    N = length(I)
+    (N != length(J)) &&
+        error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+    check_directsum_inds(A, I, B, J)
+    # Fix the Index direction for QN indices
+    # TODO: Define `getfirstind`?
+    I = map(In -> getfirst(==(In), inds(A)), I)
+    J = map(Jn -> getfirst(==(Jn), inds(B)), J)
+    IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
+    for n in 1:N
+        IJ[n] = directsum(I[n], J[n]; tags = tags[n])
+    end
+    return _directsum(IJ, A, I, B, J)
 end
 
-function _directsum(IJ, A::ITensor, I, B::ITensor, J; tags=nothing)
-  N = length(I)
-  (N != length(J)) &&
-    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
-  check_directsum_inds(A, I, B, J)
-  # Fix the Index direction for QN indices
-  # TODO: Define `getfirstind`?
-  I = map(In -> getfirst(==(In), inds(A)), I)
-  J = map(Jn -> getfirst(==(Jn), inds(B)), J)
-  for n in 1:N
-    # TODO: Pass the entire `datatype` instead of just the `eltype`.
-    D1, D2 = directsum_projectors(eltype(A), eltype(B), I[n], J[n], IJ[n])
-    A *= adapt(datatype(A), D1)
-    B *= adapt(datatype(B), D2)
-  end
-  C = A + B
-  return C => IJ
+function _directsum(IJ, A::ITensor, I, B::ITensor, J; tags = nothing)
+    N = length(I)
+    (N != length(J)) &&
+        error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+    check_directsum_inds(A, I, B, J)
+    # Fix the Index direction for QN indices
+    # TODO: Define `getfirstind`?
+    I = map(In -> getfirst(==(In), inds(A)), I)
+    J = map(Jn -> getfirst(==(Jn), inds(B)), J)
+    for n in 1:N
+        # TODO: Pass the entire `datatype` instead of just the `eltype`.
+        D1, D2 = directsum_projectors(eltype(A), eltype(B), I[n], J[n], IJ[n])
+        A *= adapt(datatype(A), D1)
+        B *= adapt(datatype(B), D2)
+    end
+    C = A + B
+    return C => IJ
 end
 
 to_inds(i::Index) = (i,)
@@ -324,26 +326,26 @@ to_inds(i::Indices) = i
 to_inds(::Nothing) = nothing
 
 function __directsum(
-  ij, A::ITensor, i::Index, B::ITensor, j::Index; tags=default_directsum_tags(A => i)
-)
-  C, (ij,) = _directsum(to_inds(ij), A, to_inds(i), B, to_inds(j); tags=[tags])
-  return C => ij
+        ij, A::ITensor, i::Index, B::ITensor, j::Index; tags = default_directsum_tags(A => i)
+    )
+    C, (ij,) = _directsum(to_inds(ij), A, to_inds(i), B, to_inds(j); tags = [tags])
+    return C => ij
 end
 
 function _directsum(ij::Nothing, A::ITensor, i::Index, B::ITensor, j::Index; kwargs...)
-  return __directsum(ij, A, i, B, j; kwargs...)
+    return __directsum(ij, A, i, B, j; kwargs...)
 end
 
 function _directsum(ij::Index, A::ITensor, i::Index, B::ITensor, j::Index; kwargs...)
-  return __directsum(ij, A, i, B, j; kwargs...)
+    return __directsum(ij, A, i, B, j; kwargs...)
 end
 
 function default_directsum_tags(A_and_I::Pair{ITensor})
-  return ["sum$i" for i in 1:length(last(A_and_I))]
+    return ["sum$i" for i in 1:length(last(A_and_I))]
 end
 
-function default_directsum_tags(A_and_I::Pair{ITensor,<:Index})
-  return "sum"
+function default_directsum_tags(A_and_I::Pair{ITensor, <:Index})
+    return "sum"
 end
 
 """
@@ -401,66 +403,66 @@ dim(s[2]) == dim(j1) + dim(j2)
 ```
 """
 function directsum(
-  A_and_I::Pair{ITensor},
-  B_and_J::Pair{ITensor},
-  C_and_K::Pair{ITensor},
-  itensor_and_inds...;
-  tags=default_directsum_tags(A_and_I),
-)
-  return directsum(nothing, A_and_I, B_and_J, C_and_K, itensor_and_inds...; tags)
+        A_and_I::Pair{ITensor},
+        B_and_J::Pair{ITensor},
+        C_and_K::Pair{ITensor},
+        itensor_and_inds...;
+        tags = default_directsum_tags(A_and_I),
+    )
+    return directsum(nothing, A_and_I, B_and_J, C_and_K, itensor_and_inds...; tags)
 end
 
 function directsum(
-  output_inds::Nothing,
-  A_and_I::Pair{ITensor},
-  B_and_J::Pair{ITensor},
-  C_and_K::Pair{ITensor},
-  itensor_and_inds...;
-  tags=default_directsum_tags(A_and_I),
-)
-  return directsum(
-    output_inds,
-    directsum(nothing, A_and_I, B_and_J; tags),
-    C_and_K,
-    itensor_and_inds...;
-    tags,
-  )
+        output_inds::Nothing,
+        A_and_I::Pair{ITensor},
+        B_and_J::Pair{ITensor},
+        C_and_K::Pair{ITensor},
+        itensor_and_inds...;
+        tags = default_directsum_tags(A_and_I),
+    )
+    return directsum(
+        output_inds,
+        directsum(nothing, A_and_I, B_and_J; tags),
+        C_and_K,
+        itensor_and_inds...;
+        tags,
+    )
 end
 
 function directsum(
-  output_inds::Union{Index,Indices},
-  A_and_I::Pair{ITensor},
-  B_and_J::Pair{ITensor},
-  C_and_K::Pair{ITensor},
-  itensor_and_inds...;
-  tags=default_directsum_tags(A_and_I),
-)
-  return directsum(
-    output_inds,
-    directsum(nothing, A_and_I, B_and_J; tags),
-    C_and_K,
-    itensor_and_inds...;
-    tags,
-  )
+        output_inds::Union{Index, Indices},
+        A_and_I::Pair{ITensor},
+        B_and_J::Pair{ITensor},
+        C_and_K::Pair{ITensor},
+        itensor_and_inds...;
+        tags = default_directsum_tags(A_and_I),
+    )
+    return directsum(
+        output_inds,
+        directsum(nothing, A_and_I, B_and_J; tags),
+        C_and_K,
+        itensor_and_inds...;
+        tags,
+    )
 end
 
 function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
-  return directsum(nothing, A_and_I, B_and_J; kwargs...)
+    return directsum(nothing, A_and_I, B_and_J; kwargs...)
 end
 
 function directsum(
-  output_inds::Nothing, A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...
-)
-  return _directsum(output_inds, A_and_I..., B_and_J...; kwargs...)
+        output_inds::Nothing, A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...
+    )
+    return _directsum(output_inds, A_and_I..., B_and_J...; kwargs...)
 end
 
 function directsum(
-  output_inds::Union{Index,Indices},
-  A_and_I::Pair{ITensor},
-  B_and_J::Pair{ITensor};
-  kwargs...,
-)
-  return first(_directsum(output_inds, A_and_I..., B_and_J...; kwargs...))
+        output_inds::Union{Index, Indices},
+        A_and_I::Pair{ITensor},
+        B_and_J::Pair{ITensor};
+        kwargs...,
+    )
+    return first(_directsum(output_inds, A_and_I..., B_and_J...; kwargs...))
 end
 
 const ⊕ = directsum
@@ -557,48 +559,48 @@ Again, like in the matrix-matrix product above, you can have
 dangling indices to do "batched" vector-vector products, or
 sum over a batch of vector-vector products.
 """
-function product(A::ITensor, B::ITensor; apply_dag::Bool=false)
-  commonindsAB = commoninds(A, B; plev=0)
-  isempty(commonindsAB) && error("In product, must have common indices with prime level 0.")
-  common_paired_indsA = filterinds(
-    i -> hasind(commonindsAB, i) && hasind(A, setprime(i, 1)), A
-  )
-  common_paired_indsB = filterinds(
-    i -> hasind(commonindsAB, i) && hasind(B, setprime(i, 1)), B
-  )
+function product(A::ITensor, B::ITensor; apply_dag::Bool = false)
+    commonindsAB = commoninds(A, B; plev = 0)
+    isempty(commonindsAB) && error("In product, must have common indices with prime level 0.")
+    common_paired_indsA = filterinds(
+        i -> hasind(commonindsAB, i) && hasind(A, setprime(i, 1)), A
+    )
+    common_paired_indsB = filterinds(
+        i -> hasind(commonindsAB, i) && hasind(B, setprime(i, 1)), B
+    )
 
-  if !isempty(common_paired_indsA)
-    commoninds_pairs = unioninds(common_paired_indsA, common_paired_indsA')
-  elseif !isempty(common_paired_indsB)
-    commoninds_pairs = unioninds(common_paired_indsB, common_paired_indsB')
-  else
-    # vector-vector product
-    apply_dag && error("apply_dag not supported for vector-vector product")
-    return A * B
-  end
-  danglings_indsA = uniqueinds(A, commoninds_pairs)
-  danglings_indsB = uniqueinds(B, commoninds_pairs)
-  danglings_inds = unioninds(danglings_indsA, danglings_indsB)
-  if hassameinds(common_paired_indsA, common_paired_indsB)
-    # matrix-matrix product
-    A′ = prime(A; inds=(!danglings_inds))
-    AB = mapprime(A′ * B, 2 => 1; inds=(!danglings_inds))
-    if apply_dag
-      AB′ = prime(AB; inds=(!danglings_inds))
-      Adag = swapprime(dag(A), 0 => 1; inds=(!danglings_inds))
-      return mapprime(AB′ * Adag, 2 => 1; inds=(!danglings_inds))
+    if !isempty(common_paired_indsA)
+        commoninds_pairs = unioninds(common_paired_indsA, common_paired_indsA')
+    elseif !isempty(common_paired_indsB)
+        commoninds_pairs = unioninds(common_paired_indsB, common_paired_indsB')
+    else
+        # vector-vector product
+        apply_dag && error("apply_dag not supported for vector-vector product")
+        return A * B
     end
-    return AB
-  elseif isempty(common_paired_indsA) && !isempty(common_paired_indsB)
-    # vector-matrix product
-    apply_dag && error("apply_dag not supported for matrix-vector product")
-    A′ = prime(A; inds=(!danglings_inds))
-    return A′ * B
-  elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
-    # matrix-vector product
-    apply_dag && error("apply_dag not supported for vector-matrix product")
-    return replaceprime(A * B, 1 => 0; inds=(!danglings_inds))
-  end
+    danglings_indsA = uniqueinds(A, commoninds_pairs)
+    danglings_indsB = uniqueinds(B, commoninds_pairs)
+    danglings_inds = unioninds(danglings_indsA, danglings_indsB)
+    if hassameinds(common_paired_indsA, common_paired_indsB)
+        # matrix-matrix product
+        A′ = prime(A; inds = (!danglings_inds))
+        AB = mapprime(A′ * B, 2 => 1; inds = (!danglings_inds))
+        if apply_dag
+            AB′ = prime(AB; inds = (!danglings_inds))
+            Adag = swapprime(dag(A), 0 => 1; inds = (!danglings_inds))
+            return mapprime(AB′ * Adag, 2 => 1; inds = (!danglings_inds))
+        end
+        return AB
+    elseif isempty(common_paired_indsA) && !isempty(common_paired_indsB)
+        # vector-matrix product
+        apply_dag && error("apply_dag not supported for matrix-vector product")
+        A′ = prime(A; inds = (!danglings_inds))
+        return A′ * B
+    elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
+        # matrix-vector product
+        apply_dag && error("apply_dag not supported for vector-matrix product")
+        return replaceprime(A * B, 1 => 0; inds = (!danglings_inds))
+    end
 end
 
 """
@@ -607,11 +609,11 @@ end
 Product the ITensors pairwise.
 """
 function product(As::Vector{<:ITensor}, B::ITensor; kwargs...)
-  AB = B
-  for A in As
-    AB = product(A, AB; kwargs...)
-  end
-  return AB
+    AB = B
+    for A in As
+        AB = product(A, AB; kwargs...)
+    end
+    return AB
 end
 
 # Alias apply with product
@@ -619,4 +621,4 @@ const apply = product
 
 (A::ITensor)(B::ITensor) = apply(A, B)
 
-const Apply{Args} = Applied{typeof(apply),Args}
+const Apply{Args} = Applied{typeof(apply), Args}

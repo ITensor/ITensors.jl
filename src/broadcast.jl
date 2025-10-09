@@ -1,4 +1,3 @@
-
 #
 # Broadcasting for IndexSets
 #
@@ -60,9 +59,9 @@ BroadcastStyle(::Type{<:ITensor}) = ITensorStyle()
 
 broadcastable(T::ITensor) = T
 
-function Base.similar(bc::Broadcasted{ITensorStyle}, ::Type{ElT}) where {ElT<:Number}
-  A = find_type(ITensor, bc.args)
-  return similar(A, ElT)
+function Base.similar(bc::Broadcasted{ITensorStyle}, ::Type{ElT}) where {ElT <: Number}
+    A = find_type(ITensor, bc.args)
+    return similar(A, ElT)
 end
 
 #
@@ -73,7 +72,7 @@ end
 struct ITensorOpScalarStyle <: BroadcastStyle end
 
 function Base.BroadcastStyle(::ITensorStyle, ::DefaultArrayStyle{0})
-  return ITensorOpScalarStyle()
+    return ITensorOpScalarStyle()
 end
 
 Base.BroadcastStyle(::ITensorStyle, ::ITensorOpScalarStyle) = ITensorOpScalarStyle()
@@ -81,33 +80,33 @@ Base.BroadcastStyle(::ITensorStyle, ::ITensorOpScalarStyle) = ITensorOpScalarSty
 instantiate(bc::Broadcasted{ITensorOpScalarStyle}) = bc
 
 function broadcasted(::typeof(Base.literal_pow), ::typeof(^), T::ITensor, x::Val)
-  return broadcasted(ITensorOpScalarStyle(), Base.literal_pow, Ref(^), T, Ref(x))
+    return broadcasted(ITensorOpScalarStyle(), Base.literal_pow, Ref(^), T, Ref(x))
 end
 
 function Base.similar(
-  bc::Broadcasted{ITensorOpScalarStyle}, ::Type{ElT}
-) where {ElT<:Number}
-  A = find_type(ITensor, bc.args)
-  return similar(A, ElT)
+        bc::Broadcasted{ITensorOpScalarStyle}, ::Type{ElT}
+    ) where {ElT <: Number}
+    A = find_type(ITensor, bc.args)
+    return similar(A, ElT)
 end
 
 #
 # For arbitrary function chaining f.(g.(h.(x)))
 #
 
-function instantiate(bc::Broadcasted{ITensorStyle,<:Any,<:Function,<:Tuple{Broadcasted}})
-  return instantiate(broadcasted(bc.f ∘ bc.args[1].f, bc.args[1].args...))
+function instantiate(bc::Broadcasted{ITensorStyle, <:Any, <:Function, <:Tuple{Broadcasted}})
+    return instantiate(broadcasted(bc.f ∘ bc.args[1].f, bc.args[1].args...))
 end
 
 function instantiate(
-  bc::Broadcasted{
-    ITensorStyle,
-    <:Any,
-    <:Function,
-    <:Tuple{Broadcasted{ITensorStyle,<:Any,<:Function,<:Tuple{<:ITensor}}},
-  },
-)
-  return broadcasted(bc.f ∘ bc.args[1].f, bc.args[1].args...)
+        bc::Broadcasted{
+            ITensorStyle,
+            <:Any,
+            <:Function,
+            <:Tuple{Broadcasted{ITensorStyle, <:Any, <:Function, <:Tuple{<:ITensor}}},
+        },
+    )
+    return broadcasted(bc.f ∘ bc.args[1].f, bc.args[1].args...)
 end
 
 instantiate(bc::Broadcasted{ITensorStyle}) = bc
@@ -121,7 +120,7 @@ instantiate(bc::Broadcasted{ITensorStyle}) = bc
 `A = find_type(::Type,As)` returns the first of type Type among the arguments.
 """
 function find_type(::Type{T}, args::Tuple) where {T}
-  return find_type(T, find_type(T, args[1]), Base.tail(args))
+    return find_type(T, find_type(T, args[1]), Base.tail(args))
 end
 find_type(::Type{T}, x) where {T} = x
 find_type(::Type{T}, a::T, rest) where {T} = a
@@ -134,9 +133,9 @@ find_type(::Type{T}, ::Tuple{}) where {T} = nothing
 #
 
 function Base.copyto!(T::ITensor, bc::Broadcasted)
-  return error(
-    "The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.",
-  )
+    return error(
+        "The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.",
+    )
 end
 
 #
@@ -145,18 +144,18 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor,
-  bc::Broadcasted{
-    ITensorOpScalarStyle,
-    <:Any,
-    typeof(*),
-    <:Tuple{<:Union{<:Number,<:ITensor},<:Union{<:Number,<:ITensor}},
-  },
-)
-  α = find_type(Number, bc.args)
-  A = find_type(ITensor, bc.args)
-  map!((t, a) -> α * a, T, T, A)
-  return T
+        T::ITensor,
+        bc::Broadcasted{
+            ITensorOpScalarStyle,
+            <:Any,
+            typeof(*),
+            <:Tuple{<:Union{<:Number, <:ITensor}, <:Union{<:Number, <:ITensor}},
+        },
+    )
+    α = find_type(Number, bc.args)
+    A = find_type(ITensor, bc.args)
+    map!((t, a) -> α * a, T, T, A)
+    return T
 end
 
 #
@@ -165,17 +164,17 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor,
-  bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(/),<:Tuple{<:ITensor,<:Number}},
-)
-  α = find_type(Number, bc.args)
-  A = find_type(ITensor, bc.args)
-  ## GPU compilers can have a problem when map is
-  ## Given bc.f. map seems to make a closure with a
-  ## relatively complicated signature
-  f = bc.f
-  map!((t, a) -> f(a, α), T, T, A)
-  return T
+        T::ITensor,
+        bc::Broadcasted{ITensorOpScalarStyle, <:Any, typeof(/), <:Tuple{<:ITensor, <:Number}},
+    )
+    α = find_type(Number, bc.args)
+    A = find_type(ITensor, bc.args)
+    ## GPU compilers can have a problem when map is
+    ## Given bc.f. map seems to make a closure with a
+    ## relatively complicated signature
+    f = bc.f
+    map!((t, a) -> f(a, α), T, T, A)
+    return T
 end
 
 #
@@ -183,21 +182,21 @@ end
 #
 
 function Base.copyto!(
-  R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(/),<:Tuple{<:ITensor,<:ITensor}}
-)
-  T1, T2 = bc.args
-  f = bc.f
-  if R === T1
-    map!((t1, t2) -> f(t1, t2), R, T1, T2)
-    ## I tried this and it is numberically wrong
-    #map!(f, R, T1, T2)
-  elseif R === T2
-    map!((t1, t2) -> f(t2, t1), R, T2, T1)
-    #map!(f, R, T2, T1)
-  else
-    error("When dividing two ITensors in-place, one must be the same as the output ITensor")
-  end
-  return R
+        R::ITensor, bc::Broadcasted{ITensorStyle, <:Any, typeof(/), <:Tuple{<:ITensor, <:ITensor}}
+    )
+    T1, T2 = bc.args
+    f = bc.f
+    if R === T1
+        map!((t1, t2) -> f(t1, t2), R, T1, T2)
+        ## I tried this and it is numberically wrong
+        #map!(f, R, T1, T2)
+    elseif R === T2
+        map!((t1, t2) -> f(t2, t1), R, T2, T1)
+        #map!(f, R, T2, T1)
+    else
+        error("When dividing two ITensors in-place, one must be the same as the output ITensor")
+    end
+    return R
 end
 
 #
@@ -205,19 +204,19 @@ end
 #
 
 function Base.copyto!(
-  R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(⊙),<:Tuple{<:ITensor,<:ITensor}}
-)
-  T1, T2 = bc.args
-  if R === T1
-    map!((t1, t2) -> *(t1, t2), R, T1, T2)
-  elseif R === T2
-    map!((t1, t2) -> *(t2, t1), R, T2, T1)
-  else
-    error(
-      "When Hadamard producting two ITensors in-place, one must be the same as the output ITensor",
+        R::ITensor, bc::Broadcasted{ITensorStyle, <:Any, typeof(⊙), <:Tuple{<:ITensor, <:ITensor}}
     )
-  end
-  return R
+    T1, T2 = bc.args
+    if R === T1
+        map!((t1, t2) -> *(t1, t2), R, T1, T2)
+    elseif R === T2
+        map!((t1, t2) -> *(t2, t1), R, T2, T1)
+    else
+        error(
+            "When Hadamard producting two ITensors in-place, one must be the same as the output ITensor",
+        )
+    end
+    return R
 end
 
 #
@@ -225,25 +224,25 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor,
-  bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(/),<:Tuple{<:Number,<:ITensor}},
-)
-  α = find_type(Number, bc.args)
-  A = find_type(ITensor, bc.args)
-  f = bc.f
-  map!((t, a) -> f(α, a), T, T, A)
-  return T
+        T::ITensor,
+        bc::Broadcasted{ITensorOpScalarStyle, <:Any, typeof(/), <:Tuple{<:Number, <:ITensor}},
+    )
+    α = find_type(Number, bc.args)
+    A = find_type(ITensor, bc.args)
+    f = bc.f
+    map!((t, a) -> f(α, a), T, T, A)
+    return T
 end
 
 #
 # For B .= A .^ 2.5
 #
 
-function Base.copyto!(R::ITensor, bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(^)})
-  α = find_type(Number, bc.args)
-  T = find_type(ITensor, bc.args)
-  map!((r, t) -> t^α, R, R, T)
-  return R
+function Base.copyto!(R::ITensor, bc::Broadcasted{ITensorOpScalarStyle, <:Any, typeof(^)})
+    α = find_type(Number, bc.args)
+    T = find_type(ITensor, bc.args)
+    map!((r, t) -> t^α, R, R, T)
+    return R
 end
 
 #
@@ -251,15 +250,15 @@ end
 #
 
 function Base.copyto!(
-  R::ITensor, bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(Base.literal_pow)}
-)
-  α = find_type(Base.RefValue{<:Val}, bc.args).x
-  powf = find_type(Base.RefValue{<:Function}, bc.args).x
-  @assert !isnothing(powf)
-  T = find_type(ITensor, bc.args)
-  f = bc.f
-  map!((r, t) -> f(^, t, α), R, R, T)
-  return R
+        R::ITensor, bc::Broadcasted{ITensorOpScalarStyle, <:Any, typeof(Base.literal_pow)}
+    )
+    α = find_type(Base.RefValue{<:Val}, bc.args).x
+    powf = find_type(Base.RefValue{<:Function}, bc.args).x
+    @assert !isnothing(powf)
+    T = find_type(ITensor, bc.args)
+    f = bc.f
+    map!((r, t) -> f(^, t, α), R, R, T)
+    return R
 end
 
 #
@@ -267,10 +266,10 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{DefaultArrayStyle{0},<:Any,typeof(identity),<:Tuple{<:Number}}
-)
-  fill!(T, bc.args[1])
-  return T
+        T::ITensor, bc::Broadcasted{DefaultArrayStyle{0}, <:Any, typeof(identity), <:Tuple{<:Number}}
+    )
+    fill!(T, bc.args[1])
+    return T
 end
 
 #
@@ -278,19 +277,19 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(identity),<:Tuple{<:ITensor}}
-)
-  A = bc.args[1]
-  map!((r, t) -> t, T, T, A)
-  return T
+        T::ITensor, bc::Broadcasted{ITensorStyle, <:Any, typeof(identity), <:Tuple{<:ITensor}}
+    )
+    A = bc.args[1]
+    map!((r, t) -> t, T, T, A)
+    return T
 end
 
-function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}})
-  return +
+function fmap(bc::Broadcasted{ITensorStyle, <:Any, typeof(+), <:Tuple{Vararg{ITensor}}})
+    return +
 end
 
-function fmap(bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}})
-  return -
+function fmap(bc::Broadcasted{ITensorStyle, <:Any, typeof(-), <:Tuple{Vararg{ITensor}}})
+    return -
 end
 
 #
@@ -298,17 +297,17 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{ITensor}}}
-)
-  if T === bc.args[1]
-    A = bc.args[2]
-  elseif T === bc.args[2]
-    A = bc.args[1]
-  else
-    error("When adding two ITensors in-place, one must be the same as the output ITensor")
-  end
-  map!(fmap(bc), T, T, A)
-  return T
+        T::ITensor, bc::Broadcasted{ITensorStyle, <:Any, typeof(+), <:Tuple{Vararg{ITensor}}}
+    )
+    if T === bc.args[1]
+        A = bc.args[2]
+    elseif T === bc.args[2]
+        A = bc.args[1]
+    else
+        error("When adding two ITensors in-place, one must be the same as the output ITensor")
+    end
+    map!(fmap(bc), T, T, A)
+    return T
 end
 
 #
@@ -316,19 +315,19 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(-),<:Tuple{Vararg{ITensor}}}
-)
-  if T === bc.args[1]
-    A = bc.args[2]
-  elseif T === bc.args[2]
-    A = bc.args[1]
-  else
-    error(
-      "When subtracting two ITensors in-place, one must be the same as the output ITensor"
+        T::ITensor, bc::Broadcasted{ITensorStyle, <:Any, typeof(-), <:Tuple{Vararg{ITensor}}}
     )
-  end
-  map!(fmap(bc), T, T, A)
-  return T
+    if T === bc.args[1]
+        A = bc.args[2]
+    elseif T === bc.args[2]
+        A = bc.args[1]
+    else
+        error(
+            "When subtracting two ITensors in-place, one must be the same as the output ITensor"
+        )
+    end
+    map!(fmap(bc), T, T, A)
+    return T
 end
 
 #
@@ -348,46 +347,46 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{ITensorOpScalarStyle,<:Any,<:Union{typeof(+),typeof(-)}}
-)
-  C = find_type(ITensor, bc.args)
-  bc_bc = find_type(Broadcasted, bc.args)
+        T::ITensor, bc::Broadcasted{ITensorOpScalarStyle, <:Any, <:Union{typeof(+), typeof(-)}}
+    )
+    C = find_type(ITensor, bc.args)
+    bc_bc = find_type(Broadcasted, bc.args)
 
-  if T === C
-    A = find_type(ITensor, bc_bc.args)
-    α = find_type(Number, bc_bc.args)
+    if T === C
+        A = find_type(ITensor, bc_bc.args)
+        α = find_type(Number, bc_bc.args)
 
-    # Check if it is the case .^(::Int)
-    γ = find_type(Base.RefValue{<:Val}, bc_bc.args)
-    powf = find_type(Base.RefValue{<:Function}, bc_bc.args)
-    ## Putting fmap in the map call still doesn't actually grab the function and causes GPU to fail so just realize the function slightly earlier here
-    f1 = bc.f
-    f2 = bc_bc.f
+        # Check if it is the case .^(::Int)
+        γ = find_type(Base.RefValue{<:Val}, bc_bc.args)
+        powf = find_type(Base.RefValue{<:Function}, bc_bc.args)
+        ## Putting fmap in the map call still doesn't actually grab the function and causes GPU to fail so just realize the function slightly earlier here
+        f1 = bc.f
+        f2 = bc_bc.f
 
-    if !isnothing(α) && !isnothing(A)
-      if bc_bc.args[1] isa Number
-        map!((r, t) -> f1(r, f2(α, t)), T, T, A)
-      else
-        map!((r, t) -> f1(r, f2(t, α)), T, T, A)
-      end
-    elseif !isnothing(γ) && !isnothing(A) && !isnothing(powf)
-      map!((r, t) -> f1(r, f2(powf[], t, γ[])), T, T, A)
+        if !isnothing(α) && !isnothing(A)
+            if bc_bc.args[1] isa Number
+                map!((r, t) -> f1(r, f2(α, t)), T, T, A)
+            else
+                map!((r, t) -> f1(r, f2(t, α)), T, T, A)
+            end
+        elseif !isnothing(γ) && !isnothing(A) && !isnothing(powf)
+            map!((r, t) -> f1(r, f2(powf[], t, γ[])), T, T, A)
+        else
+            # In-place contraction:
+            # C .+= α .* A .* B
+            bc_bc_bc = find_type(Broadcasted, bc_bc.args)
+            if isnothing(α)
+                β = find_type(Number, bc_bc_bc.args)
+                B = find_type(ITensor, bc_bc_bc.args)
+            else
+                A, B = bc_bc_bc.args
+            end
+            mul!(T, A, B, β, f1(1))
+        end
     else
-      # In-place contraction:
-      # C .+= α .* A .* B
-      bc_bc_bc = find_type(Broadcasted, bc_bc.args)
-      if isnothing(α)
-        β = find_type(Number, bc_bc_bc.args)
-        B = find_type(ITensor, bc_bc_bc.args)
-      else
-        A, B = bc_bc_bc.args
-      end
-      mul!(T, A, B, β, f1(1))
+        error("When adding two ITensors in-place, one must be the same as the output ITensor")
     end
-  else
-    error("When adding two ITensors in-place, one must be the same as the output ITensor")
-  end
-  return T
+    return T
 end
 
 #
@@ -395,46 +394,46 @@ end
 # C .= β .* C .+ α .* A .* B
 #
 
-struct axpby{Alpha,Beta} <: Function
-  alpha::Alpha
-  beta::Beta
+struct axpby{Alpha, Beta} <: Function
+    alpha::Alpha
+    beta::Beta
 end
 
 (f::axpby)(y, x) = x * f.alpha + y * f.beta
 
 ## TODO this code doesn't actually get called
 function Base.copyto!(
-  T::ITensor,
-  bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}},
-)
-  bc_α = bc.args[1]
-  bc_β = bc.args[2]
-  α = find_type(Number, bc_α.args)
-  A = find_type(ITensor, bc_α.args)
-  β = find_type(Number, bc_β.args)
-  C = find_type(ITensor, bc_β.args)
-  (T !== A && T !== C) &&
-    error("When adding two ITensors in-place, one must be the same as the output ITensor")
-  if T === A
-    bc_α, bc_β = bc_β, bc_α
-    α, β = β, α
-    A, C = C, A
-  end
-  if !isnothing(A) && !isnothing(C) && !isnothing(α) && !isnothing(β)
-    # The following fails to compile on some GPU backends.
-    # map!((r, t) -> β * r + α * t, T, T, A)
-    map!(axpby(α, β), T, T, A)
-  else
-    bc_bc_α = find_type(Broadcasted, bc_α.args)
-    if isnothing(α)
-      α = find_type(Number, bc_bc_α.args)
-      B = find_type(ITensor, bc_bc_α.args)
-    else
-      A, B = bc_bc_α.args
+        T::ITensor,
+        bc::Broadcasted{ITensorOpScalarStyle, <:Any, typeof(+), <:Tuple{Vararg{Broadcasted}}},
+    )
+    bc_α = bc.args[1]
+    bc_β = bc.args[2]
+    α = find_type(Number, bc_α.args)
+    A = find_type(ITensor, bc_α.args)
+    β = find_type(Number, bc_β.args)
+    C = find_type(ITensor, bc_β.args)
+    (T !== A && T !== C) &&
+        error("When adding two ITensors in-place, one must be the same as the output ITensor")
+    if T === A
+        bc_α, bc_β = bc_β, bc_α
+        α, β = β, α
+        A, C = C, A
     end
-    mul!(T, A, B, α, β)
-  end
-  return T
+    if !isnothing(A) && !isnothing(C) && !isnothing(α) && !isnothing(β)
+        # The following fails to compile on some GPU backends.
+        # map!((r, t) -> β * r + α * t, T, T, A)
+        map!(axpby(α, β), T, T, A)
+    else
+        bc_bc_α = find_type(Broadcasted, bc_α.args)
+        if isnothing(α)
+            α = find_type(Number, bc_bc_α.args)
+            B = find_type(ITensor, bc_bc_α.args)
+        else
+            A, B = bc_bc_α.args
+        end
+        mul!(T, A, B, α, β)
+    end
+    return T
 end
 
 #
@@ -443,21 +442,21 @@ end
 
 ## TODO this code fails because of scalar indexing
 function Base.copyto!(
-  T::ITensor,
-  bc::Broadcasted{
-    ITensorOpScalarStyle,<:Any,typeof(+),<:Tuple{Vararg{Union{<:ITensor,<:Number}}}
-  },
-)
-  α = find_type(Number, bc.args)
-  A = find_type(ITensor, bc.args)
-  if A === T
-    tensor(T) .= tensor(A) .+ α
-  else
-    error(
-      "Currently, we don't support `B .= A .+ α` if `B !== A` (i.e. only `A .+= α` is supported",
+        T::ITensor,
+        bc::Broadcasted{
+            ITensorOpScalarStyle, <:Any, typeof(+), <:Tuple{Vararg{Union{<:ITensor, <:Number}}},
+        },
     )
-  end
-  return T
+    α = find_type(Number, bc.args)
+    A = find_type(ITensor, bc.args)
+    if A === T
+        tensor(T) .= tensor(A) .+ α
+    else
+        error(
+            "Currently, we don't support `B .= A .+ α` if `B !== A` (i.e. only `A .+= α` is supported",
+        )
+    end
+    return T
 end
 
 #
@@ -465,25 +464,25 @@ end
 #
 
 function Base.copyto!(
-  T::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(*),<:Tuple{<:ITensor,<:ITensor}}
-)
-  mul!(T, bc.args[1], bc.args[2])
-  return T
+        T::ITensor, bc::Broadcasted{ITensorStyle, <:Any, typeof(*), <:Tuple{<:ITensor, <:ITensor}}
+    )
+    mul!(T, bc.args[1], bc.args[2])
+    return T
 end
 
 #
 # For C .= α .* A .* B
 #
 
-function Base.copyto!(T::ITensor, bc::Broadcasted{ITensorOpScalarStyle,<:Any,typeof(*)})
-  A = find_type(Union{<:Number,<:ITensor}, bc.args)
-  bc_bc = find_type(Broadcasted, bc.args)
-  if A isa Number
-    mul!(T, bc_bc.args[1], bc_bc.args[2], A)
-  else
-    mul!(T, A, find_type(ITensor, bc_bc.args), find_type(Number, bc_bc.args))
-  end
-  return T
+function Base.copyto!(T::ITensor, bc::Broadcasted{ITensorOpScalarStyle, <:Any, typeof(*)})
+    A = find_type(Union{<:Number, <:ITensor}, bc.args)
+    bc_bc = find_type(Broadcasted, bc.args)
+    if A isa Number
+        mul!(T, bc_bc.args[1], bc_bc.args[2], A)
+    else
+        mul!(T, A, find_type(ITensor, bc_bc.args), find_type(Number, bc_bc.args))
+    end
+    return T
 end
 
 #
@@ -491,12 +490,12 @@ end
 #
 
 function Base.copyto!(
-  R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,<:Function,<:Tuple{<:ITensor}}
-)
-  f = bc.f
-  T = bc.args[1]
-  map!((r, t) -> f(t), R, R, T)
-  return R
+        R::ITensor, bc::Broadcasted{ITensorStyle, <:Any, <:Function, <:Tuple{<:ITensor}}
+    )
+    f = bc.f
+    T = bc.args[1]
+    map!((r, t) -> f(t), R, R, T)
+    return R
 end
 
 #
@@ -504,20 +503,20 @@ end
 #
 
 function Base.copyto!(
-  R::ITensor,
-  bc::Broadcasted{
-    ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{Union{<:ITensor,<:Broadcasted}}}
-  },
-)
-  R̃ = find_type(ITensor, bc.args)
-  bc2 = find_type(Broadcasted, bc.args)
-  f = bc2.f
-  if R === R̃
-    map!((r, t) -> r + f(t), R, R, bc2.args[1])
-  else
-    error("In C .= B .+ f.(A), C and B must be the same ITensor")
-  end
-  return R
+        R::ITensor,
+        bc::Broadcasted{
+            ITensorStyle, <:Any, typeof(+), <:Tuple{Vararg{Union{<:ITensor, <:Broadcasted}}},
+        },
+    )
+    R̃ = find_type(ITensor, bc.args)
+    bc2 = find_type(Broadcasted, bc.args)
+    f = bc2.f
+    if R === R̃
+        map!((r, t) -> r + f(t), R, R, bc2.args[1])
+    else
+        error("In C .= B .+ f.(A), C and B must be the same ITensor")
+    end
+    return R
 end
 
 #
@@ -526,20 +525,20 @@ end
 
 ## TODO check to see if this code is being called as expected
 function Base.copyto!(
-  R::ITensor, bc::Broadcasted{ITensorStyle,<:Any,typeof(+),<:Tuple{Vararg{Broadcasted}}}
-)
-  bc1 = bc.args[1]
-  bc2 = bc.args[2]
-  T1 = bc1.args[1]
-  f1 = bc1.f
-  T2 = bc2.args[1]
-  f2 = bc2.f
-  if R === T1
-    map!((r, t) -> f1(r) + f2(t), R, R, T2)
-  elseif R === T2
-    map!((r, t) -> f2(r) + f1(t), R, R, T1)
-  else
-    error("In C .= f.(B) .+ g.(A), C and B or A must be the same ITensor")
-  end
-  return R
+        R::ITensor, bc::Broadcasted{ITensorStyle, <:Any, typeof(+), <:Tuple{Vararg{Broadcasted}}}
+    )
+    bc1 = bc.args[1]
+    bc2 = bc.args[2]
+    T1 = bc1.args[1]
+    f1 = bc1.f
+    T2 = bc2.args[1]
+    f2 = bc2.f
+    if R === T1
+        map!((r, t) -> f1(r) + f2(t), R, R, T2)
+    elseif R === T2
+        map!((r, t) -> f2(r) + f1(t), R, R, T1)
+    else
+        error("In C .= f.(B) .+ g.(A), C and B or A must be the same ITensor")
+    end
+    return R
 end

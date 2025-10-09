@@ -1,4 +1,3 @@
-
 left_associative_contraction_sequence(N::Integer) = reduce((x, y) -> Any[y, x], 1:N)
 left_associative_contraction_sequence(A) = left_associative_contraction_sequence(length(A))
 
@@ -16,22 +15,22 @@ contraction.
 If no sequence is specified, left associative contraction is used, in other words the sequence
 is equivalent to `[[[[1, 2], 3], 4], …]`.
 """
-function contraction_cost(A; sequence=left_associative_contraction_sequence(A))
-  pairwise_costs = Number[]
-  _contraction_cost!(pairwise_costs, A, sequence)
-  return pairwise_costs
+function contraction_cost(A; sequence = left_associative_contraction_sequence(A))
+    pairwise_costs = Number[]
+    _contraction_cost!(pairwise_costs, A, sequence)
+    return pairwise_costs
 end
 
 function _contraction_cost!(pairwise_costs, A, sequence)
-  inds1 = _contraction_cost!(pairwise_costs, A, sequence[1])
-  inds2 = _contraction_cost!(pairwise_costs, A, sequence[2])
-  return _pairwise_contraction_cost!(pairwise_costs, inds1, inds2)
+    inds1 = _contraction_cost!(pairwise_costs, A, sequence[1])
+    inds2 = _contraction_cost!(pairwise_costs, A, sequence[2])
+    return _pairwise_contraction_cost!(pairwise_costs, inds1, inds2)
 end
 
 _contraction_cost!(pairwise_costs, As, sequence::Integer) = As[sequence]
 
 function _pairwise_contraction_cost!(pairwise_costs, A1, A2)
-  cost = dim(union(A1, A2))
-  push!(pairwise_costs, cost)
-  return symdiff(A1, A2)
+    cost = dim(union(A1, A2))
+    push!(pairwise_costs, cost)
+    return symdiff(A1, A2)
 end
