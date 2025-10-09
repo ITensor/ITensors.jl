@@ -9,8 +9,8 @@ repos:
   - id: check-toml
   - id: check-yaml
   - id: end-of-file-fixer
-    exclude: '.*references/.*\.txt$'  # do not check reference TN images
-    exclude_types: [markdown]  # incompatible with Literate.jl
+exclude_types: [markdown]  # incompatible with Literate.jl
+exclude: '.*references/.*\.txt$'  # do not check reference TN images
 
 - repo: https://github.com/fredrikekre/runic-pre-commit
   rev: v2.0.1
