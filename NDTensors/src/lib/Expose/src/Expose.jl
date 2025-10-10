@@ -5,6 +5,13 @@ using Base: ReshapedArray
 using StridedViews
 using Adapt: Adapt, adapt, adapt_structure
 
+module Vendored
+    include(joinpath(
+        "..", "..", "..", "vendored", "TypeParameterAccessors", "src",
+        "TypeParameterAccessors.jl",
+    ))
+end
+
 include("exposed.jl")
 
 include("import.jl")

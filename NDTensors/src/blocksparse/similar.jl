@@ -1,35 +1,35 @@
 using SparseArrays: nnz
-using TypeParameterAccessors: similartype
+using .Vendored.TypeParameterAccessors: similartype
 
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, blockoffsets::BlockOffsets, dims::Tuple)
-  data = similar(datatype(storagetype), nnz(blockoffsets, dims))
-  return BlockSparse(data, blockoffsets)
+    data = similar(datatype(storagetype), nnz(blockoffsets, dims))
+    return BlockSparse(data, blockoffsets)
 end
 
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, dims::Tuple)
-  # Create an empty BlockSparse storage
-  return similartype(storagetype, dims)()
+    # Create an empty BlockSparse storage
+    return similartype(storagetype, dims)()
 end
 
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, dims::Dims)
-  # Create an empty BlockSparse storage
-  return similartype(storagetype, dims)()
+    # Create an empty BlockSparse storage
+    return similartype(storagetype, dims)()
 end
 
 ## TODO: Is there a way to make this generic?
 # NDTensors.similar
 function similar(
-  tensortype::Type{<:BlockSparseTensor}, blockoffsets::BlockOffsets, dims::Tuple
-)
-  return Tensor(similar(storagetype(tensortype), blockoffsets, dims), dims)
+        tensortype::Type{<:BlockSparseTensor}, blockoffsets::BlockOffsets, dims::Tuple
+    )
+    return Tensor(similar(storagetype(tensortype), blockoffsets, dims), dims)
 end
 
 # NDTensors.similar
 function similar(tensor::BlockSparseTensor, blockoffsets::BlockOffsets, dims::Tuple)
-  return similar(typeof(tensor), blockoffsets, dims)
+    return similar(typeof(tensor), blockoffsets, dims)
 end
 
 ## ## TODO: Determine if the methods below are needed.
