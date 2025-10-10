@@ -1,7 +1,7 @@
-function combiner(is::Indices; dir=nothing, tags="CMB,Link")
-  new_ind = Index(prod(dims(is)); dir, tags)
-  new_is = (new_ind, is...)
-  return itensor(Combiner(), new_is)
+function combiner(is::Indices; dir = nothing, tags = "CMB,Link")
+    new_ind = Index(prod(dims(is)); dir, tags)
+    new_is = (new_ind, is...)
+    return itensor(Combiner(), new_is)
 end
 
 combiner(is...; kwargs...) = combiner(indices(is...); kwargs...)
@@ -9,7 +9,7 @@ combiner(i::Index; kwargs...) = combiner((i,); kwargs...)
 
 # Special case when no indices are combined (useful for generic code)
 function combiner(; kwargs...)
-  return itensor(Combiner(), ())
+    return itensor(Combiner(), ())
 end
 
 """
@@ -22,10 +22,10 @@ the other indices given to the combiner when it is made
 For more information, see the `combiner` function.
 """
 function combinedind(T::ITensor)
-  if storage(T) isa Combiner && order(T) > 0
-    return inds(T)[1]
-  end
-  return nothing
+    if storage(T) isa Combiner && order(T) > 0
+        return inds(T)[1]
+    end
+    return nothing
 end
 
 # TODO: add iscombiner(::Tensor) to NDTensors

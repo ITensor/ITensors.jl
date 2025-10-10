@@ -3,7 +3,7 @@
 # with custom index types.
 # NDTensors.to_shape
 function to_shape(arraytype::Type{<:AbstractArray}, dims::Tuple)
-  return NDTensors.to_shape(dims)
+    return NDTensors.to_shape(dims)
 end
 # NDTensors.to_shape
 to_shape(dims) = Base.to_shape(dims)

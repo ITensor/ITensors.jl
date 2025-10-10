@@ -6,55 +6,55 @@ Tensor{StoreT,IndsT}
 A plain old tensor (with order independent
 interface and no assumption of labels)
 """
-struct Tensor{ElT,N,StoreT,IndsT} <: AbstractArray{ElT,N}
-  storage::StoreT
-  inds::IndsT
+struct Tensor{ElT, N, StoreT, IndsT} <: AbstractArray{ElT, N}
+    storage::StoreT
+    inds::IndsT
 
-  """
-      Tensor{ElT,N,StoreT,IndsT}(inds, store::StorageType)
+    """
+        Tensor{ElT,N,StoreT,IndsT}(inds, store::StorageType)
 
-  Internal constructor for creating a Tensor from the
-  storage and indices.
+    Internal constructor for creating a Tensor from the
+    storage and indices.
 
-  The Tensor is a view of the tensor storage.
+    The Tensor is a view of the tensor storage.
 
-  For normal usage, use the Tensor(store::TensorStorage, inds)
-  and tensor(store::TensorStorage, inds) constructors.
-  """
-  function Tensor{ElT,N,StoreT,IndsT}(
-    ::AllowAlias, storage, inds::Tuple
-  ) where {ElT,N,StoreT,IndsT}
-    @assert ElT == eltype(StoreT)
-    @assert length(inds) == N
-    return new{ElT,N,StoreT,IndsT}(storage, inds)
-  end
+    For normal usage, use the Tensor(store::TensorStorage, inds)
+    and tensor(store::TensorStorage, inds) constructors.
+    """
+    function Tensor{ElT, N, StoreT, IndsT}(
+            ::AllowAlias, storage, inds::Tuple
+        ) where {ElT, N, StoreT, IndsT}
+        @assert ElT == eltype(StoreT)
+        @assert length(inds) == N
+        return new{ElT, N, StoreT, IndsT}(storage, inds)
+    end
 end
 
 ## Tensor constructors
 
-function Tensor{ElT,N,StoreT,IndsT}(
-  ::NeverAlias, storage::TensorStorage, inds
-) where {ElT,N,StoreT<:TensorStorage,IndsT}
-  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), copy(storage), inds)
+function Tensor{ElT, N, StoreT, IndsT}(
+        ::NeverAlias, storage::TensorStorage, inds
+    ) where {ElT, N, StoreT <: TensorStorage, IndsT}
+    return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), copy(storage), inds)
 end
 
 # Constructs with undef
-function Tensor{ElT,N,StoreT,IndsT}(
-  ::UndefInitializer, inds::Tuple
-) where {ElT,N,StoreT<:TensorStorage,IndsT}
-  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), similar(StoreT, inds), inds)
+function Tensor{ElT, N, StoreT, IndsT}(
+        ::UndefInitializer, inds::Tuple
+    ) where {ElT, N, StoreT <: TensorStorage, IndsT}
+    return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), similar(StoreT, inds), inds)
 end
 
 # constructs with the value x
-function Tensor{ElT,N,StoreT,IndsT}(
-  x::S, inds::Tuple
-) where {S,ElT,N,StoreT<:TensorStorage,IndsT}
-  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), fill!(similar(StoreT, inds), x), inds)
+function Tensor{ElT, N, StoreT, IndsT}(
+        x::S, inds::Tuple
+    ) where {S, ElT, N, StoreT <: TensorStorage, IndsT}
+    return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), fill!(similar(StoreT, inds), x), inds)
 end
 
 # constructs with zeros
-function Tensor{ElT,N,StoreT,IndsT}(inds::Tuple) where {ElT,N,StoreT<:TensorStorage,IndsT}
-  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), StoreT(dim(inds)), inds)
+function Tensor{ElT, N, StoreT, IndsT}(inds::Tuple) where {ElT, N, StoreT <: TensorStorage, IndsT}
+    return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), StoreT(dim(inds)), inds)
 end
 
 """
@@ -66,13 +66,13 @@ The Tensor holds a copy of the storage data.
 The indices `inds` will be converted to a `Tuple`.
 """
 function Tensor(as::AliasStyle, storage::TensorStorage, inds::Tuple)
-  return Tensor{eltype(storage),length(inds),typeof(storage),typeof(inds)}(
-    as, storage, inds
-  )
+    return Tensor{eltype(storage), length(inds), typeof(storage), typeof(inds)}(
+        as, storage, inds
+    )
 end
 
 function Tensor(as::NeverAlias, storage::TensorStorage, inds::Tuple)
-  return Tensor(AllowAlias(), copy(storage), inds)
+    return Tensor(AllowAlias(), copy(storage), inds)
 end
 
 # Automatically convert to Tuple if the indices are not a Tuple
@@ -80,36 +80,36 @@ end
 # to allow for very large tensor orders in which case Tuple
 # operations may become too slow.
 function Tensor(as::AliasStyle, storage, inds)
-  return Tensor(as, storage, Tuple(inds))
+    return Tensor(as, storage, Tuple(inds))
 end
 
 tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
 Tensor(storage::TensorStorage, inds::Tuple) = Tensor(NeverAlias(), storage, inds)
 
 function Tensor(eltype::Type, inds::Tuple)
-  return Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
+    return Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
 end
 
 Tensor(inds::Tuple) = Tensor(default_eltype(), inds)
 
 function Tensor(eltype::Type, ::UndefInitializer, inds::Tuple)
-  return Tensor(
-    AllowAlias(), default_storagetype(default_datatype(eltype), inds)(undef, inds), inds
-  )
+    return Tensor(
+        AllowAlias(), default_storagetype(default_datatype(eltype), inds)(undef, inds), inds
+    )
 end
 
 Tensor(::UndefInitializer, inds::Tuple) = Tensor(default_eltype(), undef, inds)
 
-function Tensor(data::AbstractArray{<:Any,1}, inds::Tuple)
-  return Tensor(AllowAlias(), default_storagetype(typeof(data), inds)(data), inds)
+function Tensor(data::AbstractArray{<:Any, 1}, inds::Tuple)
+    return Tensor(AllowAlias(), default_storagetype(typeof(data), inds)(data), inds)
 end
 
-function Tensor(data::AbstractArray{<:Any,N}, inds::Tuple) where {N}
-  return Tensor(vec(data), inds)
+function Tensor(data::AbstractArray{<:Any, N}, inds::Tuple) where {N}
+    return Tensor(vec(data), inds)
 end
 
 function Tensor(datatype::Type{<:AbstractArray}, inds::Tuple)
-  return Tensor(generic_zeros(datatype, dim(inds)), inds)
+    return Tensor(generic_zeros(datatype, dim(inds)), inds)
 end
 
 ## End Tensor constructors
@@ -122,33 +122,33 @@ end
 # end
 
 function randomTensor(::Type{ElT}, inds::Tuple) where {ElT}
-  return tensor(generic_randn(default_storagetype(default_datatype(ElT)), dim(inds)), inds)
+    return tensor(generic_randn(default_storagetype(default_datatype(ElT)), dim(inds)), inds)
 end
 
 randomTensor(inds::Tuple) = randomDenseTensor(default_eltype(), inds)
 
 function randomTensor(DataT::Type{<:AbstractArray}, inds::Tuple)
-  return tensor(generic_randn(default_storagetype(DataT), dim(inds)), inds)
+    return tensor(generic_randn(default_storagetype(DataT), dim(inds)), inds)
 end
 
 function randomTensor(StoreT::Type{<:TensorStorage}, inds::Tuple)
-  return tensor(generic_randn(StoreT, dim(inds)), inds)
+    return tensor(generic_randn(StoreT, dim(inds)), inds)
 end
 ## End Random Tensor
 
-Base.ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
+Base.ndims(::Type{<:Tensor{<:Any, N}}) where {N} = N
 
 # Like `Base.to_shape` but more general, can return
 # `Index`, etc. Customize for an array/tensor
 # with custom index types.
 # NDTensors.to_shape
 function to_shape(arraytype::Type{<:Tensor}, shape::Tuple)
-  return shape
+    return shape
 end
 
 # Allow the storage and indices to be input in opposite ordering
 function (tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage)
-  return tensortype(as, storage, inds)
+    return tensortype(as, storage, inds)
 end
 
 storage(T::Tensor) = T.storage
@@ -161,10 +161,10 @@ data(T::Tensor) = data(storage(T))
 datatype(T::Tensor) = datatype(storage(T))
 datatype(tensortype::Type{<:Tensor}) = datatype(storagetype(tensortype))
 
-indstype(::Type{<:Tensor{<:Any,<:Any,<:Any,IndsT}}) where {IndsT} = IndsT
+indstype(::Type{<:Tensor{<:Any, <:Any, <:Any, IndsT}}) where {IndsT} = IndsT
 indstype(T::Tensor) = indstype(typeof(T))
 
-storagetype(::Type{<:Tensor{<:Any,<:Any,StoreT}}) where {StoreT} = StoreT
+storagetype(::Type{<:Tensor{<:Any, <:Any, StoreT}}) where {StoreT} = StoreT
 storagetype(T::Tensor) = storagetype(typeof(T))
 
 # TODO: deprecate
@@ -199,13 +199,13 @@ size(T::Tensor, i::Int) = dim(T, i)
 # Needed for passing Tensor{T,2} to BLAS/LAPACK
 # TODO: maybe this should only be for DenseTensor?
 function unsafe_convert(::Type{Ptr{ElT}}, T::Tensor{ElT}) where {ElT}
-  return unsafe_convert(Ptr{ElT}, storage(T))
+    return unsafe_convert(Ptr{ElT}, storage(T))
 end
 
 copy(T::Tensor) = setstorage(T, copy(storage(T)))
 
 function copyto!(R::Tensor, T::Tensor)
-  return error("Not implemented.")
+    return error("Not implemented.")
 end
 
 complex(T::Tensor) = setstorage(T, complex(storage(T)))
@@ -215,20 +215,20 @@ real(T::Tensor) = setstorage(T, real(storage(T)))
 imag(T::Tensor) = setstorage(T, imag(storage(T)))
 
 function Base.map(f, t1::Tensor, t_tail::Tensor...; kwargs...)
-  elt = mapreduce(eltype, promote_type, (t1, t_tail...))
-  if !iszero(f(zero(elt)))
-    # TODO: Do a better job of preserving the storage type, if possible.
-    return tensor(Dense(map(f, array(t1), array.(t_tail)...; kwargs...)), inds(t1))
-  end
-  return setstorage(t1, map(f, storage(t1), storage.(t_tail)...; kwargs...))
+    elt = mapreduce(eltype, promote_type, (t1, t_tail...))
+    if !iszero(f(zero(elt)))
+        # TODO: Do a better job of preserving the storage type, if possible.
+        return tensor(Dense(map(f, array(t1), array.(t_tail)...; kwargs...)), inds(t1))
+    end
+    return setstorage(t1, map(f, storage(t1), storage.(t_tail)...; kwargs...))
 end
 
 function Base.mapreduce(f, op, t1::Tensor, t_tail::Tensor...; kwargs...)
-  elt = mapreduce(eltype, promote_type, (t1, t_tail...))
-  if !iszero(f(zero(elt)))
-    return mapreduce(f, op, array(t1), array.(t_tail)...; kwargs...)
-  end
-  return mapreduce(f, op, storage(t1), storage.(t_tail)...; kwargs...)
+    elt = mapreduce(eltype, promote_type, (t1, t_tail...))
+    if !iszero(f(zero(elt)))
+        return mapreduce(f, op, array(t1), array.(t_tail)...; kwargs...)
+    end
+    return mapreduce(f, op, storage(t1), storage.(t_tail)...; kwargs...)
 end
 
 #
@@ -255,46 +255,46 @@ fill!(T::Tensor, α::Number) = (fill!(storage(T), α); T)
 -(T::Tensor) = setstorage(T, -storage(T))
 
 function convert(
-  ::Type{<:Tensor{<:Number,N,StoreR,Inds}}, T::Tensor{<:Number,N,<:Any,Inds}
-) where {N,Inds,StoreR}
-  return setstorage(T, convert(StoreR, storage(T)))
+        ::Type{<:Tensor{<:Number, N, StoreR, Inds}}, T::Tensor{<:Number, N, <:Any, Inds}
+    ) where {N, Inds, StoreR}
+    return setstorage(T, convert(StoreR, storage(T)))
 end
 
-function zeros(TensorT::Type{<:Tensor{ElT,N,StoreT}}, inds) where {ElT,N,StoreT}
-  return error("zeros(::Type{$TensorT}, inds) not implemented yet")
-end
-
-function promote_rule(
-  ::Type{<:Tensor{ElT1,N1,StoreT1,IndsT1}}, ::Type{<:Tensor{ElT2,N2,StoreT2,IndsT2}}
-) where {ElT1,ElT2,N1,N2,StoreT1,StoreT2,IndsT1,IndsT2}
-  StoreR = promote_type(StoreT1, StoreT2)
-  ElR = eltype(StoreR)
-  return Tensor{ElR,N3,StoreR,IndsR} where {N3,IndsR}
+function zeros(TensorT::Type{<:Tensor{ElT, N, StoreT}}, inds) where {ElT, N, StoreT}
+    return error("zeros(::Type{$TensorT}, inds) not implemented yet")
 end
 
 function promote_rule(
-  ::Type{<:Tensor{ElT1,N,StoreT1,Inds}}, ::Type{<:Tensor{ElT2,N,StoreT2,Inds}}
-) where {ElT1,ElT2,N,StoreT1,StoreT2,Inds}
-  StoreR = promote_type(StoreT1, StoreT2)
-  ElR = eltype(StoreR)
-  return Tensor{ElR,N,StoreR,Inds}
+        ::Type{<:Tensor{ElT1, N1, StoreT1, IndsT1}}, ::Type{<:Tensor{ElT2, N2, StoreT2, IndsT2}}
+    ) where {ElT1, ElT2, N1, N2, StoreT1, StoreT2, IndsT1, IndsT2}
+    StoreR = promote_type(StoreT1, StoreT2)
+    ElR = eltype(StoreR)
+    return Tensor{ElR, N3, StoreR, IndsR} where {N3, IndsR}
+end
+
+function promote_rule(
+        ::Type{<:Tensor{ElT1, N, StoreT1, Inds}}, ::Type{<:Tensor{ElT2, N, StoreT2, Inds}}
+    ) where {ElT1, ElT2, N, StoreT1, StoreT2, Inds}
+    StoreR = promote_type(StoreT1, StoreT2)
+    ElR = eltype(StoreR)
+    return Tensor{ElR, N, StoreR, Inds}
 end
 
 # Convert the tensor type to the closest dense
 # type
-function dense(::Type{<:Tensor{ElT,NT,StoreT,IndsT}}) where {ElT,NT,StoreT,IndsT}
-  return Tensor{ElT,NT,dense(StoreT),IndsT}
+function dense(::Type{<:Tensor{ElT, NT, StoreT, IndsT}}) where {ElT, NT, StoreT, IndsT}
+    return Tensor{ElT, NT, dense(StoreT), IndsT}
 end
 
 dense(T::Tensor) = setstorage(T, dense(storage(T)))
 
 # Convert to Array, avoiding copying if possible
 array(T::Tensor) = array(dense(T))
-matrix(T::Tensor{<:Number,2}) = array(T)
-vector(T::Tensor{<:Number,1}) = array(T)
+matrix(T::Tensor{<:Number, 2}) = array(T)
+vector(T::Tensor{<:Number, 1}) = array(T)
 
-array(T::Transpose{<:Any,<:Tensor}) = transpose(array(transpose(T)))
-matrix(T::Transpose{<:Any,<:Tensor}) = transpose(array(transpose(T)))
+array(T::Transpose{<:Any, <:Tensor}) = transpose(array(transpose(T)))
+matrix(T::Transpose{<:Any, <:Tensor}) = transpose(array(transpose(T)))
 
 #
 # Helper functions for BlockSparse-type storage
@@ -337,26 +337,26 @@ Check if the specified block is non-zero
 """
 isblocknz(T::Tensor, block) = isblocknz(storage(T), block)
 
-function blockstart(T::Tensor{<:Number,N}, block) where {N}
-  start_index = @MVector ones(Int, N)
-  for j in 1:N
-    ind_j = ind(T, j)
-    for block_j in 1:(block[j] - 1)
-      start_index[j] += blockdim(ind_j, block_j)
+function blockstart(T::Tensor{<:Number, N}, block) where {N}
+    start_index = @MVector ones(Int, N)
+    for j in 1:N
+        ind_j = ind(T, j)
+        for block_j in 1:(block[j] - 1)
+            start_index[j] += blockdim(ind_j, block_j)
+        end
     end
-  end
-  return Tuple(start_index)
+    return Tuple(start_index)
 end
 
-function blockend(T::Tensor{<:Number,N}, block) where {N}
-  end_index = @MVector zeros(Int, N)
-  for j in 1:N
-    ind_j = ind(T, j)
-    for block_j in 1:block[j]
-      end_index[j] += blockdim(ind_j, block_j)
+function blockend(T::Tensor{<:Number, N}, block) where {N}
+    end_index = @MVector zeros(Int, N)
+    for j in 1:N
+        ind_j = ind(T, j)
+        for block_j in 1:block[j]
+            end_index[j] += blockdim(ind_j, block_j)
+        end
     end
-  end
-  return Tuple(end_index)
+    return Tuple(end_index)
 end
 
 #
@@ -368,39 +368,39 @@ end
 insertblock!!(T::Tensor, block) = insertblock!(T, block)
 
 function tensor_isequal(x, y)
-  # TODO: Use a reduction to avoid intermediates.
-  # This doesn't work right now because `mapreduce`
-  # on `Tensor`s is limited to functions that preserve
-  # zeros.
-  # return mapreduce(==, ==, x, y)
+    # TODO: Use a reduction to avoid intermediates.
+    # This doesn't work right now because `mapreduce`
+    # on `Tensor`s is limited to functions that preserve
+    # zeros.
+    # return mapreduce(==, ==, x, y)
 
-  # TODO: Use `x - y` instead of `map(-, x, y)`.
-  # `x - y` calls `x .- y` and broadcasting isn't
-  # defined properly for sparse Tensor storage
-  # like `Diag` and `BlockSparse`.
-  return iszero(norm(map(-, x, y)))
+    # TODO: Use `x - y` instead of `map(-, x, y)`.
+    # `x - y` calls `x .- y` and broadcasting isn't
+    # defined properly for sparse Tensor storage
+    # like `Diag` and `BlockSparse`.
+    return iszero(norm(map(-, x, y)))
 end
 
 function Base.:(==)(x::Tensor, y::Tensor)
-  return tensor_isequal(x, y)
+    return tensor_isequal(x, y)
 end
 
 function Base.:(==)(x::AbstractArray, y::Tensor)
-  return array(x) == array(y)
+    return array(x) == array(y)
 end
 function Base.:(==)(x::Tensor, y::AbstractArray)
-  return array(x) == array(y)
+    return array(x) == array(y)
 end
 
 function Base.isequal(x::Tensor, y::Tensor)
-  return tensor_isequal(x, y)
+    return tensor_isequal(x, y)
 end
 
 function Base.isequal(x::AbstractArray, y::Tensor)
-  return isequal(array(x), array(y))
+    return isequal(array(x), array(y))
 end
 function Base.isequal(x::Tensor, y::AbstractArray)
-  return isequal(array(x), array(y))
+    return isequal(array(x), array(y))
 end
 
 """
@@ -408,8 +408,8 @@ getdiagindex
 
 Get the specified value on the diagonal
 """
-function getdiagindex(T::Tensor{<:Number,N}, ind::Int) where {N}
-  return getindex(T, CartesianIndex(ntuple(_ -> ind, Val(N))))
+function getdiagindex(T::Tensor{<:Number, N}, ind::Int) where {N}
+    return getindex(T, CartesianIndex(ntuple(_ -> ind, Val(N))))
 end
 
 using .Expose: Exposed, expose, unexpose
@@ -418,13 +418,13 @@ using .Expose: Exposed, expose, unexpose
 diag(tensor::Tensor) = diag(expose(tensor))
 
 function diag(ETensor::Exposed)
-  tensor = unexpose(ETensor)
-  ## d = NDTensors.similar(T, ElT, (diaglength(T),))
-  tensordiag = NDTensors.similar(
-    dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
-  )
-  array(tensordiag) .= diagview(tensor)
-  return tensordiag
+    tensor = unexpose(ETensor)
+    ## d = NDTensors.similar(T, ElT, (diaglength(T),))
+    tensordiag = NDTensors.similar(
+        dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
+    )
+    array(tensordiag) .= diagview(tensor)
+    return tensordiag
 end
 
 """
@@ -432,25 +432,25 @@ setdiagindex!
 
 Set the specified value on the diagonal
 """
-function setdiagindex!(T::Tensor{<:Number,N}, val, ind::Int) where {N}
-  setindex!(T, val, CartesianIndex(ntuple(_ -> ind, Val(N))))
-  return T
+function setdiagindex!(T::Tensor{<:Number, N}, val, ind::Int) where {N}
+    setindex!(T, val, CartesianIndex(ntuple(_ -> ind, Val(N))))
+    return T
 end
 
 function map_diag!(f::Function, t_dest::Tensor, t_src::Tensor)
-  map_diag!(f, expose(t_dest), expose(t_src))
-  return t_dest
+    map_diag!(f, expose(t_dest), expose(t_src))
+    return t_dest
 end
 function map_diag!(f::Function, exposed_t_dest::Exposed, exposed_t_src::Exposed)
-  diagview(unexpose(exposed_t_dest)) .= f.(diagview(unexpose(exposed_t_src)))
-  return unexpose(exposed_t_dest)
+    diagview(unexpose(exposed_t_dest)) .= f.(diagview(unexpose(exposed_t_src)))
+    return unexpose(exposed_t_dest)
 end
 
 map_diag(f::Function, t::Tensor) = map_diag(f, expose(t))
 function map_diag(f::Function, exposed_t::Exposed)
-  t_dest = copy(exposed_t)
-  map_diag!(f, expose(t_dest), exposed_t)
-  return t_dest
+    t_dest = copy(exposed_t)
+    map_diag!(f, expose(t_dest), exposed_t)
+    return t_dest
 end
 
 #
@@ -458,22 +458,22 @@ end
 #
 
 function zero_contraction_output(
-  T1::TensorT1, T2::TensorT2, indsR::IndsR
-) where {TensorT1<:Tensor,TensorT2<:Tensor,IndsR}
-  return zeros(contraction_output_type(TensorT1, TensorT2, indsR), indsR)
+        T1::TensorT1, T2::TensorT2, indsR::IndsR
+    ) where {TensorT1 <: Tensor, TensorT2 <: Tensor, IndsR}
+    return zeros(contraction_output_type(TensorT1, TensorT2, indsR), indsR)
 end
 
 #
 # Broadcasting
 #
 
-BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
+BroadcastStyle(::Type{T}) where {T <: Tensor} = Broadcast.ArrayStyle{T}()
 
 function Base.similar(
-  bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}}, ::Type{ElT}
-) where {T<:Tensor,ElT}
-  A = find_tensor(bc)
-  return NDTensors.similar(A, ElT)
+        bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}}, ::Type{ElT}
+    ) where {T <: Tensor, ElT}
+    A = find_tensor(bc)
+    return NDTensors.similar(A, ElT)
 end
 
 "`A = find_tensor(As)` returns the first Tensor among the arguments."
@@ -484,11 +484,11 @@ find_tensor(a::Tensor, rest) = a
 find_tensor(::Any, rest) = find_tensor(rest)
 
 function summary(io::IO, T::Tensor)
-  for (dim, ind) in enumerate(inds(T))
-    println(io, "Dim $dim: ", ind)
-  end
-  println(io, typeof(storage(T)))
-  return println(io, " ", Base.dims2string(dims(T)))
+    for (dim, ind) in enumerate(inds(T))
+        println(io, "Dim $dim: ", ind)
+    end
+    println(io, typeof(storage(T)))
+    return println(io, " ", Base.dims2string(dims(T)))
 end
 
 #
@@ -496,4 +496,4 @@ end
 #
 
 print_tensor(io::IO, T::Tensor) = Base.print_array(io, expose(T))
-print_tensor(io::IO, T::Tensor{<:Number,1}) = Base.print_array(io, reshape(T, (dim(T), 1)))
+print_tensor(io::IO, T::Tensor{<:Number, 1}) = Base.print_array(io, reshape(T, (dim(T), 1)))

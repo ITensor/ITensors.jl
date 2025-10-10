@@ -1,6 +1,6 @@
 using ChainRulesCore: @non_differentiable
 using ITensors:
-  ITensors, Index, addtags, commoninds, dag, delta, inds, noncommoninds, onehot, uniqueinds
+    ITensors, Index, addtags, commoninds, dag, delta, inds, noncommoninds, onehot, uniqueinds
 using ITensors.TagSets: TagSet
 
 @non_differentiable map_notangent(::Any)

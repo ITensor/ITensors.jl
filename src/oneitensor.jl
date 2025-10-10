@@ -16,4 +16,4 @@ dag(t::OneITensor) = t
 (::OneITensor * A::ITensor) = A
 (A::ITensor * ::OneITensor) = A
 *(t::OneITensor) = t
-deepcontract(ts::Union{ITensor,OneITensor}...) = *(ts...)
+deepcontract(ts::Union{ITensor, OneITensor}...) = *(ts...)
