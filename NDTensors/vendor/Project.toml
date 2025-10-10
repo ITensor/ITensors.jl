@@ -1,5 +1,7 @@
 [deps]
 PackageAnalyzer = "e713c705-17e4-4cec-abe0-95bf5bf3e10c"
+Runic = "62bfec6d-59d7-401d-8490-b29ee721c001"
 
 [compat]
 PackageAnalyzer = "3.1"
+Runic = "1.5.1"

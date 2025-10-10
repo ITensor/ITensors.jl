@@ -1,4 +1,5 @@
 using PackageAnalyzer: PackageAnalyzer
+using Runic: Runic
 
 deps = [("TypeParameterAccessors", v"0.3.10")]
 
@@ -15,4 +16,5 @@ for (name, version) in deps
     cp(joinpath(local_path, "src"), joinpath(p, "src"); force = true)
     # Make files writable so we can format.
     chmod(p, 0o755; recursive = true)
+    Runic.main(["--inplace", p])
 end
