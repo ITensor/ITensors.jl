@@ -1,5 +1,5 @@
 using SparseArrays: nnz
-using TypeParameterAccessors: similartype
+using .Vendored.TypeParameterAccessors: similartype
 
 #
 # BlockSparseTensor (Tensor using BlockSparse storage)
@@ -258,7 +258,7 @@ end
 # Defaults to adding zeros.
 # Returns the offset of the new block added.
 # XXX rename to insertblock!, no need to return offset
-using TypeParameterAccessors: unwrap_array_type
+using .Vendored.TypeParameterAccessors: unwrap_array_type
 using .Expose: Exposed, expose, unexpose
 function insertblock_offset!(T::BlockSparseTensor{ElT, N}, newblock::Block{N}) where {ElT, N}
     newdim = blockdim(T, newblock)
@@ -792,7 +792,7 @@ end
 # <fermions>
 permfactor(perm, block, inds) = 1
 
-using TypeParameterAccessors: set_type_parameters, parenttype
+using .Vendored.TypeParameterAccessors: set_type_parameters, parenttype
 function permutedims!(
         R::BlockSparseTensor{<:Number, N},
         T::BlockSparseTensor{<:Number, N},

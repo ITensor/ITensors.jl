@@ -113,7 +113,7 @@ function dense(::Type{<:Tensor{ElT, N, StoreT, IndsT}}) where {ElT, N, StoreT <:
     return Tensor{ElT, N, dense(StoreT), IndsT}
 end
 
-using TypeParameterAccessors: unwrap_array_type
+using .Vendored.TypeParameterAccessors: unwrap_array_type
 # convert to Dense
 function dense(T::DiagTensor)
     R = zeros(dense(typeof(T)), inds(T))

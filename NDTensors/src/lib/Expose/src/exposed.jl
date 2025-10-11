@@ -1,4 +1,4 @@
-using TypeParameterAccessors:
+using ..Vendored.TypeParameterAccessors:
     TypeParameterAccessors, unwrap_array_type, parenttype, type_parameters
 struct Exposed{Unwrapped, Object}
     object::Object

@@ -124,7 +124,7 @@ dense(storagetype::Type{<:Dense}) = storagetype
 # TODO: make these more general, move to tensorstorage.jl
 datatype(storetype::Type{<:Dense{<:Any, DataT}}) where {DataT} = DataT
 
-using TypeParameterAccessors: unwrap_array_type
+using .Vendored.TypeParameterAccessors: unwrap_array_type
 function promote_rule(
         ::Type{<:Dense{ElT1, DataT1}}, ::Type{<:Dense{ElT2, DataT2}}
     ) where {ElT1, DataT1, ElT2, DataT2}

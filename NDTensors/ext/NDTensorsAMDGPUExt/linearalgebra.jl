@@ -1,7 +1,7 @@
 using NDTensors.AMDGPUExtensions: roc
 using NDTensors.Expose: Expose, Exposed, expose, ql, ql_positive
 using NDTensors.GPUArraysCoreExtensions: cpu
-using NDTensors.TypeParameterAccessors: unwrap_array_type
+using NDTensors.Vendored.TypeParameterAccessors: unwrap_array_type
 using LinearAlgebra: svd
 using Adapt: adapt
 using AMDGPU: ROCMatrix

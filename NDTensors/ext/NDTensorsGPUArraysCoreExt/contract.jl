@@ -2,7 +2,7 @@ using Adapt: adapt
 using GPUArraysCore: AbstractGPUArray
 using NDTensors: NDTensors, DenseTensor, DiagTensor, contract!, dense, inds, Tensor
 using NDTensors.Expose: Exposed, expose, unexpose
-using NDTensors.TypeParameterAccessors: parenttype, set_ndims
+using NDTensors.Vendored.TypeParameterAccessors: parenttype, set_ndims
 
 function NDTensors.contract!(
         output_tensor::Exposed{<:AbstractGPUArray, <:DenseTensor},

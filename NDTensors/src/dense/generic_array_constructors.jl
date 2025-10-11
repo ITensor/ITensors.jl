@@ -1,4 +1,4 @@
-using TypeParameterAccessors:
+using .Vendored.TypeParameterAccessors:
     default_type_parameters,
     parenttype,
     set_eltype,

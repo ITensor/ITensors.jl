@@ -1,4 +1,4 @@
-using TypeParameterAccessors:
+using .Vendored.TypeParameterAccessors:
     unwrap_array_type,
     specify_default_type_parameters,
     specify_type_parameters,

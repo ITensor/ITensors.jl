@@ -1,4 +1,4 @@
-using TypeParameterAccessors: unwrap_array_type
+using .Vendored.TypeParameterAccessors: unwrap_array_type
 # TODO: Make `isgpu`, `ismtl`, etc.
 # For `isgpu`, will require a `NDTensorsGPUArrayCoreExt`.
 iscu(A::AbstractArray) = iscu(typeof(A))

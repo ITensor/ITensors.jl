@@ -1,4 +1,25 @@
 module NDTensors
+
+module Vendored
+    include(
+        joinpath(
+            "vendored", "TypeParameterAccessors", "src", "TypeParameterAccessors.jl"
+        )
+    )
+    include(
+        joinpath(
+            "vendored", "TypeParameterAccessors", "ext",
+            "TypeParameterAccessorsFillArraysExt.jl"
+        )
+    )
+    include(
+        joinpath(
+            "vendored", "TypeParameterAccessors", "ext",
+            "TypeParameterAccessorsStridedViewsExt.jl"
+        )
+    )
+end
+
 #####################################
 # Imports and exports
 #

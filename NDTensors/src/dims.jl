@@ -1,4 +1,4 @@
-using TypeParameterAccessors: TypeParameterAccessors
+using .Vendored.TypeParameterAccessors: TypeParameterAccessors
 
 export dense, dims, dim, mindim, diaglength
 
