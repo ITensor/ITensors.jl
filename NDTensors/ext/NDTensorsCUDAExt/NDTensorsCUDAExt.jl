@@ -1,5 +1,14 @@
 module NDTensorsCUDAExt
 
+module Vendored
+    include(
+        joinpath(
+            "..", "..", "src", "vendored", "TypeParameterAccessors", "ext",
+            "TypeParameterAccessorsCUDAExt.jl"
+        )
+    )
+end
+
 include("append.jl")
 include("default_kwargs.jl")
 include("copyto.jl")
