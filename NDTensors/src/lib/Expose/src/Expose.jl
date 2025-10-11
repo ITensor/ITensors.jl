@@ -1,4 +1,14 @@
 module Expose
+
+module Vendored
+    include(
+        joinpath(
+            "..", "..", "..", "vendored", "TypeParameterAccessors", "src",
+            "TypeParameterAccessors.jl",
+        )
+    )
+end
+
 using SimpleTraits
 using LinearAlgebra
 using Base: ReshapedArray
