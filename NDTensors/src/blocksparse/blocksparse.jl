@@ -2,81 +2,81 @@
 # BlockSparse storage
 #
 
-struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
-  data::VecT
-  blockoffsets::BlockOffsets{N}  # Block number-offset pairs
-  function BlockSparse(
-    data::VecT, blockoffsets::BlockOffsets{N}
-  ) where {VecT<:AbstractVector{ElT},N} where {ElT}
-    return new{ElT,VecT,N}(data, blockoffsets)
-  end
+struct BlockSparse{ElT, VecT, N} <: TensorStorage{ElT}
+    data::VecT
+    blockoffsets::BlockOffsets{N}  # Block number-offset pairs
+    function BlockSparse(
+            data::VecT, blockoffsets::BlockOffsets{N}
+        ) where {VecT <: AbstractVector{ElT}, N} where {ElT}
+        return new{ElT, VecT, N}(data, blockoffsets)
+    end
 end
 
 # TODO: Implement as `fieldtype(storagetype, :data)`.
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
+datatype(::Type{<:BlockSparse{<:Any, DataT}}) where {DataT} = DataT
 # TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
-Base.ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+Base.ndims(storagetype::Type{<:BlockSparse{<:Any, <:Any, N}}) where {N} = N
 # TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
 blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
 
 function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
-  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
+    return BlockSparse{eltype(datatype), datatype, ndims(storagetype)}
 end
 
 function TypeParameterAccessors.set_ndims(storagetype::Type{<:BlockSparse}, ndims::Int)
-  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
+    return BlockSparse{eltype(storagetype), datatype(storagetype), ndims}
 end
 
 # TODO: Write as `(::Type{<:BlockSparse})()`.
-BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
+BlockSparse{ElT, DataT, N}() where {ElT, DataT, N} = BlockSparse(DataT(), BlockOffsets{N}())
 
 function BlockSparse(
-  datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
-)
-  return BlockSparse(
-    fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
-  )
+        datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
+    )
+    return BlockSparse(
+        fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
+    )
 end
 
 function BlockSparse(
-  eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
-)
-  return BlockSparse(Vector{eltype}, blockoffsets, dim; vargs...)
+        eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
+    )
+    return BlockSparse(Vector{eltype}, blockoffsets, dim; vargs...)
 end
 
 function BlockSparse(x::Number, blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(fill(x, dim), blockoffsets; vargs...)
+    return BlockSparse(fill(x, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(
-  ::Type{ElT}, ::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...
-) where {ElT<:Number}
-  return BlockSparse(Vector{ElT}(undef, dim), blockoffsets; vargs...)
+        ::Type{ElT}, ::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...
+    ) where {ElT <: Number}
+    return BlockSparse(Vector{ElT}(undef, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(
-  datatype::Type{<:AbstractArray},
-  ::UndefInitializer,
-  blockoffsets::BlockOffsets,
-  dim::Integer;
-  vargs...,
-)
-  return BlockSparse(datatype(undef, dim), blockoffsets; vargs...)
+        datatype::Type{<:AbstractArray},
+        ::UndefInitializer,
+        blockoffsets::BlockOffsets,
+        dim::Integer;
+        vargs...,
+    )
+    return BlockSparse(datatype(undef, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(Float64, blockoffsets, dim; vargs...)
+    return BlockSparse(Float64, blockoffsets, dim; vargs...)
 end
 
 function BlockSparse(::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...)
-  return BlockSparse(Float64, undef, blockoffsets, dim; vargs...)
+    return BlockSparse(Float64, undef, blockoffsets, dim; vargs...)
 end
 
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, copy(blockoffsets(B)))
 function setdata(storagetype::Type{<:BlockSparse}, data)
-  return error("Not implemented, must specify block offsets as well")
+    return error("Not implemented, must specify block offsets as well")
 end
 
 #
@@ -84,15 +84,15 @@ end
 #
 
 function randn(
-  StorageT::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
-) where {ElT<:Number}
-  return randn(Random.default_rng(), StorageT, blockoffsets, dim)
+        StorageT::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
+    ) where {ElT <: Number}
+    return randn(Random.default_rng(), StorageT, blockoffsets, dim)
 end
 
 function randn(
-  rng::AbstractRNG, ::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
-) where {ElT<:Number}
-  return BlockSparse(randn(rng, ElT, dim), blockoffsets)
+        rng::AbstractRNG, ::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
+    ) where {ElT <: Number}
+    return BlockSparse(randn(rng, ElT, dim), blockoffsets)
 end
 
 #function BlockSparse{ElR}(data::VecT,offsets) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
@@ -102,17 +102,17 @@ end
 
 # TODO: check the offsets are the same?
 function copyto!(D1::BlockSparse, D2::BlockSparse)
-  blockoffsets(D1) ≠ blockoffsets(D1) &&
-    error("Cannot copy between BlockSparse storages with different offsets")
-  copyto!(expose(data(D1)), expose(data(D2)))
-  return D1
+    blockoffsets(D1) ≠ blockoffsets(D1) &&
+        error("Cannot copy between BlockSparse storages with different offsets")
+    copyto!(expose(data(D1)), expose(data(D2)))
+    return D1
 end
 
 Base.real(::Type{BlockSparse{T}}) where {T} = BlockSparse{real(T)}
 
 complex(::Type{BlockSparse{T}}) where {T} = BlockSparse{complex(T)}
 
-Base.ndims(::BlockSparse{T,V,N}) where {T,V,N} = N
+Base.ndims(::BlockSparse{T, V, N}) where {T, V, N} = N
 
 eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
@@ -120,41 +120,41 @@ eltype(::BlockSparse{T}) where {T} = eltype(T)
 eltype(::BlockSparse{Nothing}) = Nothing
 eltype(::Type{BlockSparse{T}}) where {T} = eltype(T)
 
-dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
+dense(::Type{<:BlockSparse{ElT, VecT}}) where {ElT, VecT} = Dense{ElT, VecT}
 
 can_contract(T1::Type{<:Dense}, T2::Type{<:BlockSparse}) = false
 can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
 
 function promote_rule(
-  ::Type{<:BlockSparse{ElT1,VecT1,N}}, ::Type{<:BlockSparse{ElT2,VecT2,N}}
-) where {ElT1,ElT2,VecT1,VecT2,N}
-  # Promote the element types properly.
-  ElT = promote_type(ElT1, ElT2)
-  VecT = promote_type(set_eltype(VecT1, ElT), set_eltype(VecT2, ElT))
-  return BlockSparse{ElT,VecT,N}
+        ::Type{<:BlockSparse{ElT1, VecT1, N}}, ::Type{<:BlockSparse{ElT2, VecT2, N}}
+    ) where {ElT1, ElT2, VecT1, VecT2, N}
+    # Promote the element types properly.
+    ElT = promote_type(ElT1, ElT2)
+    VecT = promote_type(set_eltype(VecT1, ElT), set_eltype(VecT2, ElT))
+    return BlockSparse{ElT, VecT, N}
 end
 
 function promote_rule(
-  ::Type{<:BlockSparse{ElT1,VecT1,N1}}, ::Type{<:BlockSparse{ElT2,VecT2,N2}}
-) where {ElT1,ElT2,VecT1,VecT2,N1,N2}
-  # Promote the element types properly.
-  ElT = promote_type(ElT1, ElT2)
-  VecT = promote_type(set_eltype(VecT1, ElT), set_eltype(VecT2, ElT))
-  return BlockSparse{ElT,VecT,NR} where {NR}
+        ::Type{<:BlockSparse{ElT1, VecT1, N1}}, ::Type{<:BlockSparse{ElT2, VecT2, N2}}
+    ) where {ElT1, ElT2, VecT1, VecT2, N1, N2}
+    # Promote the element types properly.
+    ElT = promote_type(ElT1, ElT2)
+    VecT = promote_type(set_eltype(VecT1, ElT), set_eltype(VecT2, ElT))
+    return BlockSparse{ElT, VecT, NR} where {NR}
 end
 
 function promote_rule(
-  ::Type{<:BlockSparse{ElT1,VecT1,N1}}, ::Type{ElT2}
-) where {ElT1,VecT1<:AbstractVector{ElT1},ElT2<:Number,N1}
-  ElR = promote_type(ElT1, ElT2)
-  VecR = set_eltype(VecT1, ElR)
-  return BlockSparse{ElR,VecR,N1}
+        ::Type{<:BlockSparse{ElT1, VecT1, N1}}, ::Type{ElT2}
+    ) where {ElT1, VecT1 <: AbstractVector{ElT1}, ElT2 <: Number, N1}
+    ElR = promote_type(ElT1, ElT2)
+    VecR = set_eltype(VecT1, ElR)
+    return BlockSparse{ElR, VecR, N1}
 end
 
 function convert(
-  ::Type{<:BlockSparse{ElR,VecR,N}}, D::BlockSparse{ElD,VecD,N}
-) where {ElR,VecR,N,ElD,VecD}
-  return setdata(D, convert(VecR, data(D)))
+        ::Type{<:BlockSparse{ElR, VecR, N}}, D::BlockSparse{ElD, VecD, N}
+    ) where {ElR, VecR, N, ElD, VecD}
+    return setdata(D, convert(VecR, data(D)))
 end
 
 """
@@ -163,8 +163,8 @@ isblocknz(T::BlockSparse,
 
 Check if the specified block is non-zero.
 """
-function isblocknz(T::BlockSparse{ElT,VecT,N}, block::Block{N}) where {ElT,VecT,N}
-  return isassigned(blockoffsets(T), block)
+function isblocknz(T::BlockSparse{ElT, VecT, N}, block::Block{N}) where {ElT, VecT, N}
+    return isassigned(blockoffsets(T), block)
 end
 
 # If block is input as Tuple
@@ -173,12 +173,12 @@ isblocknz(T::BlockSparse, block) = isblocknz(T, Block(block))
 # Given a specified block, return a Dense storage that is a view to the data
 # in that block. Return nothing if the block is structurally zero
 function blockview(T::BlockSparse, block)
-  #error("Block must be structurally non-zero to get a view")
-  !isblocknz(T, block) && return nothing
-  blockoffsetT = offset(T, block)
-  blockdimT = blockdim(T, block)
-  dataTslice = @view data(T)[(blockoffsetT + 1):(blockoffsetT + blockdimT)]
-  return Dense(dataTslice)
+    #error("Block must be structurally non-zero to get a view")
+    !isblocknz(T, block) && return nothing
+    blockoffsetT = offset(T, block)
+    blockdimT = blockdim(T, block)
+    dataTslice = @view data(T)[(blockoffsetT + 1):(blockoffsetT + blockdimT)]
+    return Dense(dataTslice)
 end
 
 # XXX this is not well defined with new Dictionary design

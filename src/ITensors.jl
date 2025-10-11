@@ -81,19 +81,19 @@ include("val.jl")
 export val
 include("lib/QuantumNumbers/src/QuantumNumbers.jl")
 using .QuantumNumbers:
-  Arrow,
-  In,
-  Neither,
-  Out,
-  QN,
-  QNVal,
-  hasname,
-  have_same_mods,
-  have_same_qns,
-  isactive,
-  maxQNs,
-  modulus,
-  nactive
+    Arrow,
+    In,
+    Neither,
+    Out,
+    QN,
+    QNVal,
+    hasname,
+    have_same_mods,
+    have_same_qns,
+    isactive,
+    maxQNs,
+    modulus,
+    nactive
 export QN, isactive, modulus
 include("symmetrystyle.jl")
 include("index.jl")
@@ -108,25 +108,25 @@ include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
 include("lib/SiteTypes/src/SiteTypes.jl")
 using .SiteTypes:
-  SiteTypes,
-  OpName,
-  SiteType,
-  StateName,
-  TagType,
-  ValName,
-  @OpName_str,
-  @SiteType_str,
-  @StateName_str,
-  @TagType_str,
-  @ValName_str,
-  alias,
-  has_fermion_string,
-  op,
-  op!,
-  ops,
-  siteind,
-  siteinds,
-  state
+    SiteTypes,
+    OpName,
+    SiteType,
+    StateName,
+    TagType,
+    ValName,
+    @OpName_str,
+    @SiteType_str,
+    @StateName_str,
+    @TagType_str,
+    @ValName_str,
+    alias,
+    has_fermion_string,
+    op,
+    op!,
+    ops,
+    siteind,
+    siteinds,
+    state
 include("lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
@@ -145,12 +145,12 @@ include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
 # TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore, ...`.
 using .ITensorVisualizationCore
 using .ITensorVisualizationCore:
-  @visualize,
-  @visualize!,
-  @visualize_noeval,
-  @visualize_noeval!,
-  @visualize_sequence,
-  @visualize_sequence_noeval
+    @visualize,
+    @visualize!,
+    @visualize_noeval,
+    @visualize_noeval!,
+    @visualize_sequence,
+    @visualize_sequence_noeval
 include("deprecated.jl")
 include("argsdict/argsdict.jl")
 include("packagecompile/compile.jl")

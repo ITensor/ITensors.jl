@@ -36,46 +36,46 @@ T[1, 1, 1] == pT_alias[1, 1, 1]
 ```
 """
 function permute(T::ITensor, new_inds...; kwargs...)
-  if !hassameinds(T, indices(new_inds...))
-    error(
-      "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds...))",
+    if !hassameinds(T, indices(new_inds...))
+        error(
+            "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds...))",
+        )
+    end
+    allow_alias = deprecated_keyword_argument(
+        Bool,
+        kwargs;
+        new_kw = :allow_alias,
+        old_kw = :always_copy,
+        default = false,
+        funcsym = :permute,
+        map = !,
     )
-  end
-  allow_alias = deprecated_keyword_argument(
-    Bool,
-    kwargs;
-    new_kw=:allow_alias,
-    old_kw=:always_copy,
-    default=false,
-    funcsym=:permute,
-    map=!,
-  )
-  aliasstyle::Union{AllowAlias,NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
-  return permute(aliasstyle, T, new_inds...)
+    aliasstyle::Union{AllowAlias, NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
+    return permute(aliasstyle, T, new_inds...)
 end
 
 # TODO: move to NDTensors
 function NDTensors.permutedims(::AllowAlias, T::Tensor, perm)
-  return NDTensors.is_trivial_permutation(perm) ? T : permutedims(NeverAlias(), T, perm)
+    return NDTensors.is_trivial_permutation(perm) ? T : permutedims(NeverAlias(), T, perm)
 end
 
 # TODO: move to NDTensors, define `permutedims` in terms of `NeverAlias`
 function NDTensors.permutedims(::NeverAlias, T::Tensor, perm)
-  return permutedims(T, perm)
+    return permutedims(T, perm)
 end
 
 function _permute(as::AliasStyle, T::Tensor, new_inds)
-  perm = NDTensors.getperm(new_inds, inds(T))
-  return permutedims(as, T, perm)
+    perm = NDTensors.getperm(new_inds, inds(T))
+    return permutedims(as, T, perm)
 end
 
 function permute(as::AliasStyle, T::ITensor, new_inds)
-  return itensor(_permute(as, tensor(T), new_inds))
+    return itensor(_permute(as, tensor(T), new_inds))
 end
 
 # Version listing indices
 function permute(as::AliasStyle, T::ITensor, new_inds::Index...)
-  return permute(as, T, new_inds)
+    return permute(as, T, new_inds)
 end
 
 """
@@ -98,7 +98,7 @@ transposing its indices returns numerically
 the same ITensor.
 """
 function ishermitian(T::ITensor; kwargs...)
-  return isapprox(T, dag(transpose(T)); kwargs...)
+    return isapprox(T, dag(transpose(T)); kwargs...)
 end
 
 """
@@ -156,7 +156,7 @@ so that no permutation is required.
 
 See also [`matrix`](@ref), [`vector`](@ref).
 """
-array(T::ITensor, inds...) = array(permute(T, inds...; allow_alias=true))
+array(T::ITensor, inds...) = array(permute(T, inds...; allow_alias = true))
 
 """
     matrix(T::ITensor)
@@ -179,8 +179,8 @@ column, depends on the internal layout of the ITensor.
 See also [`array`](@ref), [`vector`](@ref).
 """
 function matrix(T::ITensor)
-  ndims(T) != 2 && throw(DimensionMismatch())
-  return array(tensor(T))
+    ndims(T) != 2 && throw(DimensionMismatch())
+    return array(tensor(T))
 end
 
 """
@@ -204,7 +204,7 @@ so that no permutation is required.
 
 See also [`array`](@ref), [`vector`](@ref).
 """
-matrix(T::ITensor, inds...) = matrix(permute(T, inds...; allow_alias=true))
+matrix(T::ITensor, inds...) = matrix(permute(T, inds...; allow_alias = true))
 
 """
     vector(T::ITensor)
@@ -216,8 +216,8 @@ or a view in the case the ITensor's storage is Dense.
 See also [`array`](@ref), [`matrix`](@ref).
 """
 function vector(T::ITensor)
-  ndims(T) != 1 && throw(DimensionMismatch())
-  return array(tensor(T))
+    ndims(T) != 1 && throw(DimensionMismatch())
+    return array(tensor(T))
 end
 
 """
@@ -241,4 +241,4 @@ so that no permutation is required.
 
 See also [`array`](@ref), [`matrix`](@ref).
 """
-vector(T::ITensor, inds...) = vector(permute(T, inds...; allow_alias=true))
+vector(T::ITensor, inds...) = vector(permute(T, inds...; allow_alias = true))

@@ -4,40 +4,40 @@ default_compile_filename() = "sys_itensors.so"
 
 default_compile_path() = joinpath(default_compile_dir(), default_compile_filename())
 
-function compile_note(; dir=default_compile_dir(), filename=default_compile_filename())
-  path = joinpath(dir, filename)
-  return """
-  You will be able to start Julia with a compiled version of ITensors using:
+function compile_note(; dir = default_compile_dir(), filename = default_compile_filename())
+    path = joinpath(dir, filename)
+    return """
+    You will be able to start Julia with a compiled version of ITensors using:
 
-  ```
-  ~ julia --sysimage $path
-  ```
+    ```
+    ~ julia --sysimage $path
+    ```
 
-  and you should see that the startup times and JIT compilation times are substantially improved when you are using ITensors.
+    and you should see that the startup times and JIT compilation times are substantially improved when you are using ITensors.
 
-  In unix, you can create an alias with the Bash command:
+    In unix, you can create an alias with the Bash command:
 
-  ```
-  ~ alias julia_itensors="julia --sysimage $path -e 'using ITensors' -i"
-  ```
+    ```
+    ~ alias julia_itensors="julia --sysimage $path -e 'using ITensors' -i"
+    ```
 
-  which you can put in your `~/.bashrc`, `~/.zshrc`, etc. This also executes
-  `using ITensors` so that ITensors is loaded and ready to use, you can leave off `
-  -e 'using ITensors' -i` if you don't want that. Then you can start Julia with a
-  version of ITensors installed with the command:
+    which you can put in your `~/.bashrc`, `~/.zshrc`, etc. This also executes
+    `using ITensors` so that ITensors is loaded and ready to use, you can leave off `
+    -e 'using ITensors' -i` if you don't want that. Then you can start Julia with a
+    version of ITensors installed with the command:
 
-  ```
-  ~ julia_itensors
-  ```
+    ```
+    ~ julia_itensors
+    ```
 
-  Note that if you update ITensors to a new version, for example with `using
-  Pkg; Pkg.update("ITensors")`, you will need to run the `ITensors.compile()`
-  command again to recompile the new version of ITensors.
-  """
+    Note that if you update ITensors to a new version, for example with `using
+    Pkg; Pkg.update("ITensors")`, you will need to run the `ITensors.compile()`
+    command again to recompile the new version of ITensors.
+    """
 end
 
-function compile(; backend=Algorithm"PackageCompiler"(), kwargs...)
-  return compile(backend; kwargs...)
+function compile(; backend = Algorithm"PackageCompiler"(), kwargs...)
+    return compile(backend; kwargs...)
 end
 
 @doc """

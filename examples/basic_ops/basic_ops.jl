@@ -41,23 +41,23 @@ println("S = Y - X =\n", T, "\n")
 
 # Check that adding incompatible tensors cause an error
 try
-  U = Z + X
+    U = Z + X
 catch
-  println("Cannot add Z and X")
+    println("Cannot add Z and X")
 end
 
 # Compare calculations to Julia arrays
 jZ = [
-  1.0 0.0
-  0.0 -1.0
+    1.0 0.0
+    0.0 -1.0
 ]
 jX = [
-  0.0 1.0
-  1.0 0.0
+    0.0 1.0
+    1.0 0.0
 ]
 jY = [
-  1.0 0.0
-  0.0 1.0
+    1.0 0.0
+    0.0 1.0
 ]
 @assert Array(R, a, c) == jZ * jX
 @assert Array(S, b, c) == jY + jX

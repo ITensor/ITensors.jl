@@ -13,5 +13,5 @@ TODO: Use `Accessors.jl` notation:
 # `FillArray` instead. This is a stand-in
 # to make things work with the current design.
 function TypeParameterAccessors.set_ndims(numbertype::Type{<:Number}, ndims)
-  return numbertype
+    return numbertype
 end

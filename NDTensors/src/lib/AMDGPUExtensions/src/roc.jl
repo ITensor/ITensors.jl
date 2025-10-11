@@ -10,5 +10,5 @@ function roc end
 struct ROCArrayAdaptor{B} end
 
 function TypeParameterAccessors.position(::Type{<:ROCArrayAdaptor}, ::typeof(storagemode))
-  return Position(1)
+    return Position(1)
 end
