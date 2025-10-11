@@ -1,3 +1,5 @@
+# Based on https://github.com/JuliaTesting/ExplicitImports.jl/tree/v1.13.2/vendor
+
 using PackageAnalyzer: PackageAnalyzer
 
 deps = [("TypeParameterAccessors", v"0.3.11")]

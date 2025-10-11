@@ -11,3 +11,5 @@ To update the dependencies, install the `vendor` environment and invoke `run.jl`
 julia --project=vendor -e 'using Pkg; Pkg.instantiate()'
 julia --project=vendor vendor/run.jl
 ```
+
+Note that this is based on https://github.com/JuliaTesting/ExplicitImports.jl/tree/v1.13.2/vendor.
