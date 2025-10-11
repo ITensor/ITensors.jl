@@ -15,4 +15,12 @@ for (name, version) in deps
     cp(joinpath(local_path, "src"), joinpath(p, "src"); force = true)
     mkpath(joinpath(p, "ext"))
     cp(joinpath(local_path, "ext"), joinpath(p, "ext"); force = true)
+
+    for filename in readdir(joinpath(p, "ext"); join = true)
+        txt = read(filename, String)
+        open(filename, "w") do f
+            replacement = "using $name" => "using NDTensors.Vendored.$name"
+            return write(f, replace(txt, replacement))
+        end
+    end
 end
