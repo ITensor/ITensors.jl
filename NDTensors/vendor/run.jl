@@ -13,4 +13,6 @@ for (name, version) in deps
     end
     mkpath(joinpath(p, "src"))
     cp(joinpath(local_path, "src"), joinpath(p, "src"); force = true)
+    mkpath(joinpath(p, "ext"))
+    cp(joinpath(local_path, "ext"), joinpath(p, "ext"); force = true)
 end

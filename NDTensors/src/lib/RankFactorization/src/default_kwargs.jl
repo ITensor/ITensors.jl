@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: unwrap_array_type
+using ..Vendored.TypeParameterAccessors: unwrap_array_type
 replace_nothing(::Nothing, replacement) = replacement
 replace_nothing(value, replacement) = value
 

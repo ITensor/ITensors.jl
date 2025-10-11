@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: unwrap_array_type
+using ..Vendored.TypeParameterAccessors: unwrap_array_type
 
 ## TODO write Exposed version of truncate
 function truncate!!(P::AbstractArray; kwargs...)

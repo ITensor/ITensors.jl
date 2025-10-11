@@ -1,5 +1,5 @@
 using ..Expose: Exposed, unexpose
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, type_parameters, set_type_parameters
+using ..Vendored.TypeParameterAccessors: TypeParameterAccessors, type_parameters, set_type_parameters
 
 function storagemode(object)
     return storagemode(typeof(object))

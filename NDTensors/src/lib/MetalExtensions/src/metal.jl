@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
+using ..Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
 using ..GPUArraysCoreExtensions: storagemode
 # Implemented in NDTensorsMetalExt
 function mtl end
