@@ -387,7 +387,7 @@ function qr_positive(M::AbstractMatrix)
     return (Q, R)
 end
 
-using TypeParameterAccessors: unwrap_array_type
+using .Vendored.TypeParameterAccessors: unwrap_array_type
 """
     ql_positive(M::AbstractMatrix)
 

@@ -1,4 +1,4 @@
-using TypeParameterAccessors: TypeParameterAccessors, Position
+using .Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
 using ..GPUArraysCoreExtensions: storagemode
 # Implemented in NDTensorsAMDGPUExt
 function roc end

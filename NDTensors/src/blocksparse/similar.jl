@@ -1,5 +1,5 @@
 using SparseArrays: nnz
-using TypeParameterAccessors: similartype
+using .Vendored.TypeParameterAccessors: similartype
 
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, blockoffsets::BlockOffsets, dims::Tuple)

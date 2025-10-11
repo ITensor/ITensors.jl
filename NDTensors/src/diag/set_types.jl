@@ -1,4 +1,4 @@
-using TypeParameterAccessors: TypeParameterAccessors
+using .Vendored.TypeParameterAccessors: TypeParameterAccessors
 
 function TypeParameterAccessors.set_eltype(storagetype::Type{<:UniformDiag}, eltype::Type)
     return Diag{eltype, eltype}
