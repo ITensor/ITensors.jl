@@ -1,5 +1,6 @@
 @eval module $(gensym())
 using NDTensors
+using NDTensors: denseblocks
 using NDTensors.MetalExtensions: mtl
 using Test: @testset, @test, @test_throws, @test_broken
 using GPUArraysCore: @allowscalar
@@ -29,6 +30,9 @@ NDTensors.dim(i::MyInd) = i.dim
             @test dims(A[2:3, 2:4]) == (2, 3)
             @test dims(A[2:3, 2:end]) == (2, 3)
             @test dims(A[3, 2:end]) == (3,)
+
+            @test dense(A) ≡ A
+            @test denseblocks(A) ≡ A
 
             randn!(A)
 
