@@ -75,6 +75,8 @@ end
 # Useful for using Base Array functions
 array(T::DenseTensor) = convert(Array, T)
 
+denseblocks(T::DenseTensor) = T
+
 function diagview(T::DenseTensor)
     return diagview(array(T))
 end
