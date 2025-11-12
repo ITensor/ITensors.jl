@@ -2025,8 +2025,16 @@ end
 # TODO: make a specialized printing from Diag
 # that emphasizes the missing elements
 function show(io::IO, T::ITensor)
-    println(io, "ITensor ord=$(order(T))")
-    return show(io, MIME"text/plain"(), tensor(T))
+    if get(io, :compact, false)
+        # Just show the indices in compact view, used in some
+        # cases when printing arrays of ITensors (similar to
+        # printing of MPS in ITensorMPS.jl).
+        show(io, inds(T))
+    else
+        println(io, "ITensor ord=$(order(T))")
+        show(io, MIME"text/plain"(), tensor(T))
+    end
+    return nothing
 end
 
 function show(io::IO, mime::MIME"text/plain", T::ITensor)
