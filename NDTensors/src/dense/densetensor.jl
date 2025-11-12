@@ -319,5 +319,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", T::DenseTensor)
     summary(io, T)
-    return print_tensor(io, T)
+    print_tensor(io, T)
+    println(io)
+    return nothing
 end
