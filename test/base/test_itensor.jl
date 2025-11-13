@@ -7,6 +7,7 @@ using ITensors:
     ITensor,
     Order,
     QN,
+    TagSet,
     ⊕,
     δ,
     addtags,
@@ -100,6 +101,24 @@ end
             i, j, k, l = Index.(2, ("i", "j", "k", "l"))
             A = ITensor(i, j)
             @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
+        end
+
+        @testset "show" begin
+            i = Index{Int}(1, 2, ITensors.Neither, TagSet(), 0)
+            a = ITensor([1, 2], i)
+            function res_show(prefix = "")
+                return "ITensor ord=1\nDim 1: (dim=2|id=1)\n" *
+                    "$(prefix)Dense{Float64, Vector{Float64}}\n" *
+                    " 2-element\n 1.0\n 2.0\n"
+            end
+            @test sprint(show, a) in (res_show(), res_show("NDTensors."))
+            @test sprint(show, a; context = :compact => true) == "((dim=2|id=1),)"
+            function res_show_text(prefix = "")
+                return "ITensor ord=1 (dim=2|id=1)\n" *
+                    "$(prefix)Dense{Float64, Vector{Float64}}"
+            end
+            @test sprint(show, MIME"text/plain"(), a) in
+                (res_show_text(), res_show_text("NDTensors."))
         end
 
         @testset "diag" for ElType in (Float32, Float64, ComplexF32, ComplexF64)
