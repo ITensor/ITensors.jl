@@ -495,5 +495,9 @@ end
 # Printing
 #
 
-print_tensor(io::IO, T::Tensor) = Base.print_array(io, expose(T))
-print_tensor(io::IO, T::Tensor{<:Number, 1}) = Base.print_array(io, reshape(T, (dim(T), 1)))
+function print_tensor(io::IO, T::Tensor)
+    return Base.print_array(IOContext(io, :limit => true), expose(T))
+end
+function print_tensor(io::IO, T::Tensor{<:Number, 1})
+    return Base.print_array(IOContext(io, :limit => true), reshape(T, (dim(T), 1)))
+end

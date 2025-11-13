@@ -1,7 +1,7 @@
 name = "NDTensors"
 uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>"]
-version = "0.4.15"
+version = "0.4.16"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
