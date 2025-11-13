@@ -20,16 +20,16 @@ using TimerOutputs
 using TupleTools
 
 for lib in [
-  :BackendSelection,
-  :Expose,
-  :GPUArraysCoreExtensions,
-  :AMDGPUExtensions,
-  :CUDAExtensions,
-  :MetalExtensions,
-  :RankFactorization,
-]
-  include("lib/$(lib)/src/$(lib).jl")
-  @eval using .$lib: $lib
+        :BackendSelection,
+        :Expose,
+        :GPUArraysCoreExtensions,
+        :AMDGPUExtensions,
+        :CUDAExtensions,
+        :MetalExtensions,
+        :RankFactorization,
+    ]
+    include("lib/$(lib)/src/$(lib).jl")
+    @eval using .$lib: $lib
 end
 # TODO: This is defined for backwards compatibility,
 # delete this alias once downstream packages change over
@@ -48,57 +48,57 @@ using .GPUArraysCoreExtensions: cpu
 using .MetalExtensions: mtl
 
 import Base:
-  # Types
-  AbstractFloat,
-  Array,
-  CartesianIndex,
-  Complex,
-  IndexStyle,
-  Tuple,
-  # Symbols
-  +,
-  -,
-  *,
-  /,
-  # Methods
-  checkbounds,
-  complex,
-  convert,
-  conj,
-  copy,
-  copyto!,
-  eachindex,
-  eltype,
-  empty,
-  fill,
-  fill!,
-  getindex,
-  hash,
-  imag,
-  isempty,
-  isless,
-  iterate,
-  length,
-  map,
-  permutedims,
-  permutedims!,
-  print,
-  promote_rule,
-  randn,
-  real,
-  reshape,
-  setindex,
-  setindex!,
-  show,
-  size,
-  stride,
-  strides,
-  summary,
-  to_indices,
-  unsafe_convert,
-  view,
-  zero,
-  zeros
+    # Types
+    AbstractFloat,
+    Array,
+    CartesianIndex,
+    Complex,
+    IndexStyle,
+    Tuple,
+    # Symbols
+    +,
+    -,
+    *,
+    /,
+    # Methods
+    checkbounds,
+    complex,
+    convert,
+    conj,
+    copy,
+    copyto!,
+    eachindex,
+    eltype,
+    empty,
+    fill,
+    fill!,
+    getindex,
+    hash,
+    imag,
+    isempty,
+    isless,
+    iterate,
+    length,
+    map,
+    permutedims,
+    permutedims!,
+    print,
+    promote_rule,
+    randn,
+    real,
+    reshape,
+    setindex,
+    setindex!,
+    show,
+    size,
+    stride,
+    strides,
+    summary,
+    to_indices,
+    unsafe_convert,
+    view,
+    zero,
+    zeros
 
 import Base.Broadcast: Broadcasted, BroadcastStyle
 

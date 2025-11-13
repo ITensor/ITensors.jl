@@ -20,7 +20,6 @@ StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 StridedViews = "4db3bf67-4bd7-4b4e-b153-31dc3fb37143"
 TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]

@@ -1,7 +1,7 @@
 name = "NDTensors"
 uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>"]
-version = "0.4.9"
+version = "0.4.15"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -28,7 +28,6 @@ Strided = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
 StridedViews = "4db3bf67-4bd7-4b4e-b153-31dc3fb37143"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
-TypeParameterAccessors = "7e5a90cf-f82e-492e-a09b-e3e26432c138"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 
 [weakdeps]
@@ -56,7 +55,7 @@ NDTensorsTBLISExt = "TBLIS"
 NDTensorscuTENSORExt = "cuTENSOR"
 
 [compat]
-AMDGPU = "0.9, 1"
+AMDGPU = "0.9, 1, 2"
 Accessors = "0.1.33"
 Adapt = "3.7, 4"
 ArrayLayouts = "1.4"
@@ -72,7 +71,7 @@ GPUArraysCore = "0.1, 0.2"
 HDF5 = "0.14, 0.15, 0.16, 0.17"
 HalfIntegers = "1"
 InlineStrings = "1"
-JLArrays = "0.1, 0.2"
+JLArrays = "0.1, 0.2, 0.3"
 LinearAlgebra = "<0.0.1, 1.10"
 MacroTools = "0.5"
 MappedArrays = "0.4"
@@ -88,7 +87,6 @@ StridedViews = "0.2.2, 0.3, 0.4"
 TBLIS = "0.2"
 TimerOutputs = "0.5.5"
 TupleTools = "1.2.0"
-TypeParameterAccessors = "0.3"
 VectorInterface = "0.4.2, 0.5"
 cuTENSOR = "2"
 julia = "1.10"

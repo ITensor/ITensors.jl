@@ -1,4 +1,5 @@
 module Expose
+
 using SimpleTraits
 using LinearAlgebra
 using Base: ReshapedArray

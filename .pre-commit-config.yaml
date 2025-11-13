@@ -1,20 +1,18 @@
 ci:
-  skip: [julia-formatter]
+  skip: [runic]
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: check-merge-conflict
   - id: check-toml
   - id: check-yaml
   - id: end-of-file-fixer
-    exclude: '.*references/.*\.txt$'  # do not check reference TN images
     exclude_types: [markdown]  # incompatible with Literate.jl
-  - id: trailing-whitespace
     exclude: '.*references/.*\.txt$'  # do not check reference TN images
 
-- repo: "https://github.com/domluna/JuliaFormatter.jl"
-  rev: v2.1.2
+- repo: https://github.com/fredrikekre/runic-pre-commit
+  rev: v2.0.1
   hooks:
-  - id: "julia-formatter"
+    - id: runic

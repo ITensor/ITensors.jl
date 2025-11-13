@@ -1,7 +1,7 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
-version = "0.9.6"
+version = "0.9.14"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -64,7 +64,7 @@ TensorOperations = "5.1.4"
 TimerOutputs = "0.5.5"
 TupleTools = "1.2"
 VectorInterface = "0.4, 0.5"
-Zeros = "0.3.0"
+Zeros = "0.3.0, 0.4"
 ZygoteRules = "0.2.2"
 julia = "1.10"
 

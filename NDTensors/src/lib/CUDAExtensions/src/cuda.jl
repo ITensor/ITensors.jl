@@ -1,4 +1,4 @@
-using TypeParameterAccessors: TypeParameterAccessors, Position
+using ..Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
 using ..GPUArraysCoreExtensions: storagemode
 # Implemented in NDTensorsCUDAExt
 function cu end
@@ -10,5 +10,5 @@ function cu end
 struct CuArrayAdaptor{B} end
 
 function TypeParameterAccessors.position(::Type{<:CuArrayAdaptor}, ::typeof(storagemode))
-  return Position(1)
+    return Position(1)
 end

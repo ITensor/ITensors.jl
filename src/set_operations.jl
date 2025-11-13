@@ -1,4 +1,3 @@
-
 #
 # Set operations
 # These are custom implementations of the set operations in
@@ -16,18 +15,18 @@
 _setdiff(s) = Base.copymutable(s)
 _setdiff(s, itrs...) = _setdiff!(Base.copymutable(s), itrs...)
 function _setdiff!(s, itrs...)
-  for x in itrs
-    _setdiff!(s, x)
-  end
-  return s
+    for x in itrs
+        _setdiff!(s, x)
+    end
+    return s
 end
 function _setdiff!(s, itr)
-  isempty(s) && return s
-  for x in itr
-    n = findfirst(==(x), s)
-    !isnothing(n) && deleteat!(s, n)
-  end
-  return s
+    isempty(s) && return s
+    for x in itr
+        n = findfirst(==(x), s)
+        !isnothing(n) && deleteat!(s, n)
+    end
+    return s
 end
 
 # A version of Base.intersect that scales quadratically in the number of elements
@@ -38,10 +37,10 @@ _intersect(s, itr, itrs...) = _intersect!(_intersect(s, itr), itrs...)
 # Is this special case needed, or is `filter!` sufficient?
 _intersect(s, itr) = Base.mapfilter(in(itr), push!, s, Base.emptymutable(s, eltype(s)))
 function _intersect!(s, itrs...)
-  for x in itrs
-    _intersect!(s, x)
-  end
-  return s
+    for x in itrs
+        _intersect!(s, x)
+    end
+    return s
 end
 _intersect!(s, s2) = filter!(in(s2), s)
 
@@ -49,42 +48,42 @@ _intersect!(s, s2) = filter!(in(s2), s)
 # and assumes the elements of each input set are already unique.
 _symdiff(s) = Base.copymutable(s)
 function _symdiff(s, itrs...)
-  return _symdiff!(Base.emptymutable(s, Base.promote_eltype(s, itrs...)), s, itrs...)
+    return _symdiff!(Base.emptymutable(s, Base.promote_eltype(s, itrs...)), s, itrs...)
 end
 function _symdiff!(s, itrs...)
-  for x in itrs
-    _symdiff!(s, x)
-  end
-  return s
+    for x in itrs
+        _symdiff!(s, x)
+    end
+    return s
 end
 function _symdiff!(s, itr)
-  if isempty(s)
-    append!(s, itr)
+    if isempty(s)
+        append!(s, itr)
+        return s
+    end
+    for x in itr
+        n = findfirst(==(x), s)
+        !isnothing(n) ? deleteat!(s, n) : push!(s, x)
+    end
     return s
-  end
-  for x in itr
-    n = findfirst(==(x), s)
-    !isnothing(n) ? deleteat!(s, n) : push!(s, x)
-  end
-  return s
 end
 
 # A version of Base.union that scales quadratically in the number of elements
 # and assumes the elements of each input set are already unique.
 _union(s) = Base.copymutable(s)
 function _union(s, sets...)
-  return _union!(Base.emptymutable(s, Base.promote_eltype(s, sets...)), s, sets...)
+    return _union!(Base.emptymutable(s, Base.promote_eltype(s, sets...)), s, sets...)
 end
 function _union!(s, sets...)
-  for x in sets
-    _union!(s, x)
-  end
-  return s
+    for x in sets
+        _union!(s, x)
+    end
+    return s
 end
 function _union!(s, itr)
-  Base.haslength(itr) && sizehint!(s, length(s) + Int(length(itr))::Int)
-  for x in itr
-    x ∉ s && push!(s, x)
-  end
-  return s
+    Base.haslength(itr) && sizehint!(s, length(s) + Int(length(itr))::Int)
+    for x in itr
+        x ∉ s && push!(s, x)
+    end
+    return s
 end

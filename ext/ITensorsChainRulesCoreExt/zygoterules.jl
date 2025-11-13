@@ -4,7 +4,7 @@ using ZygoteRules: @adjoint
 # which currently doesn't work by overloading `ChainRulesCore.rrule`
 # since it is defined in `Zygote`, which takes precedent.
 @adjoint function Base.adjoint(x::ITensor)
-  y, adjoint_rrule_pullback = rrule(adjoint, x)
-  adjoint_pullback(ȳ) = Base.tail(adjoint_rrule_pullback(ȳ))
-  return y, adjoint_pullback
+    y, adjoint_rrule_pullback = rrule(adjoint, x)
+    adjoint_pullback(ȳ) = Base.tail(adjoint_rrule_pullback(ȳ))
+    return y, adjoint_pullback
 end

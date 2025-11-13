@@ -1,0 +1,5 @@
+[deps]
+PackageAnalyzer = "e713c705-17e4-4cec-abe0-95bf5bf3e10c"
+
+[compat]
+PackageAnalyzer = "3.1"

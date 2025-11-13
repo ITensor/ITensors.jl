@@ -4,7 +4,7 @@ using SparseArrays: nnz
 # DenseTensor (Tensor using Dense storage)
 #
 
-const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
+const DenseTensor{ElT, N, StoreT, IndsT} = Tensor{ElT, N, StoreT, IndsT} where {StoreT <: Dense}
 
 DenseTensor(::Type{ElT}, inds) where {ElT} = tensor(Dense(ElT, dim(inds)), inds)
 
@@ -17,11 +17,11 @@ DenseTensor(inds) = tensor(Dense(dim(inds)), inds)
 DenseTensor(inds::Int...) = DenseTensor(inds)
 
 function DenseTensor(::Type{ElT}, ::UndefInitializer, inds) where {ElT}
-  return tensor(Dense(ElT, undef, dim(inds)), inds)
+    return tensor(Dense(ElT, undef, dim(inds)), inds)
 end
 
 function DenseTensor(::Type{ElT}, ::UndefInitializer, inds::Int...) where {ElT}
-  return DenseTensor(ElT, undef, inds)
+    return DenseTensor(ElT, undef, inds)
 end
 
 DenseTensor(::UndefInitializer, inds) = tensor(Dense(undef, dim(inds)), inds)
@@ -33,7 +33,7 @@ DenseTensor(::UndefInitializer, inds::Int...) = DenseTensor(undef, inds)
 #
 
 function randomDenseTensor(::Type{ElT}, inds) where {ElT}
-  return tensor(generic_randn(Dense{ElT}, dim(inds)), inds)
+    return tensor(generic_randn(Dense{ElT}, dim(inds)), inds)
 end
 
 randomDenseTensor(inds) = randomDenseTensor(default_eltype(), inds)
@@ -48,43 +48,45 @@ IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 iterate(T::DenseTensor, args...) = iterate(storage(T), args...)
 
 function _zeros(TensorT::Type{<:DenseTensor}, inds)
-  return tensor(generic_zeros(storagetype(TensorT), dim(inds)), inds)
+    return tensor(generic_zeros(storagetype(TensorT), dim(inds)), inds)
 end
 
 function zeros(TensorT::Type{<:DenseTensor}, inds)
-  return _zeros(TensorT, inds)
+    return _zeros(TensorT, inds)
 end
 
 # To fix method ambiguity with zeros(::Type, ::Tuple)
 function zeros(TensorT::Type{<:DenseTensor}, inds::Dims)
-  return _zeros(TensorT, inds)
+    return _zeros(TensorT, inds)
 end
 
 function zeros(TensorT::Type{<:DenseTensor}, inds::Tuple{})
-  return _zeros(TensorT, inds)
+    return _zeros(TensorT, inds)
 end
 
 convert(::Type{Array}, T::DenseTensor) = reshape(data(storage(T)), dims(inds(T)))
 
 function Base.copyto!(R::DenseTensor, T::DenseTensor)
-  copyto!(storage(R), storage(T))
-  return R
+    copyto!(storage(R), storage(T))
+    return R
 end
 
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
 array(T::DenseTensor) = convert(Array, T)
 
+denseblocks(T::DenseTensor) = T
+
 function diagview(T::DenseTensor)
-  return diagview(array(T))
+    return diagview(array(T))
 end
 
-function Array{ElT,N}(T::DenseTensor{ElT,N}) where {ElT,N}
-  return copy(array(T))
+function Array{ElT, N}(T::DenseTensor{ElT, N}) where {ElT, N}
+    return copy(array(T))
 end
 
-function Array(T::DenseTensor{ElT,N}) where {ElT,N}
-  return Array{ElT,N}(T)
+function Array(T::DenseTensor{ElT, N}) where {ElT, N}
+    return Array{ElT, N}(T)
 end
 
 #
@@ -93,38 +95,38 @@ end
 
 ## TODO replace this with Exposed
 @propagate_inbounds function getindex(T::DenseTensor{<:Number})
-  return getindex(expose(data(T)))
+    return getindex(expose(data(T)))
 end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::Integer...)
-  Base.@_inline_meta
-  return getindex(expose(data(T)), Base._sub2ind(T, I...))
+    Base.@_inline_meta
+    return getindex(expose(data(T)), Base._sub2ind(T, I...))
 end
 
 @propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::CartesianIndex)
-  Base.@_inline_meta
-  return getindex(T, I.I...)
+    Base.@_inline_meta
+    return getindex(T, I.I...)
 end
 
 @propagate_inbounds function setindex!(
-  T::DenseTensor{<:Number}, x::Number, I::Vararg{Integer}
-)
-  Base.@_inline_meta
-  setindex!(data(T), x, Base._sub2ind(T, I...))
-  return T
+        T::DenseTensor{<:Number}, x::Number, I::Vararg{Integer}
+    )
+    Base.@_inline_meta
+    setindex!(data(T), x, Base._sub2ind(T, I...))
+    return T
 end
 
 @propagate_inbounds function setindex!(
-  T::DenseTensor{<:Number}, x::Number, I::CartesianIndex
-)
-  Base.@_inline_meta
-  setindex!(T, x, I.I...)
-  return T
+        T::DenseTensor{<:Number}, x::Number, I::CartesianIndex
+    )
+    Base.@_inline_meta
+    setindex!(T, x, I.I...)
+    return T
 end
 
 @propagate_inbounds function setindex!(T::DenseTensor{<:Number}, x::Number)
-  setindex!(expose(data(T)), x)
-  return T
+    setindex!(expose(data(T)), x)
+    return T
 end
 
 #
@@ -134,7 +136,7 @@ end
 @propagate_inbounds @inline getindex(T::DenseTensor, i::Integer) = storage(T)[i]
 
 @propagate_inbounds @inline function setindex!(T::DenseTensor, v, i::Integer)
-  return (storage(T)[i]=v; T)
+    return (storage(T)[i] = v; T)
 end
 
 #
@@ -156,116 +158,116 @@ end
 ## end
 
 @propagate_inbounds function getindex(T::DenseTensor, I...)
-  AI = @view array(T)[I...]
-  storeR = Dense(vec(AI))
-  indsR = size(AI)
-  return tensor(storeR, indsR)
+    AI = @view array(T)[I...]
+    storeR = Dense(vec(AI))
+    indsR = size(AI)
+    return tensor(storeR, indsR)
 end
 
 # Reshape a DenseTensor using the specified dimensions
 # This returns a view into the same Tensor data
 function reshape(T::DenseTensor, dims)
-  dim(T) == dim(dims) || error("Total new dimension must be the same as the old dimension")
-  return tensor(storage(T), dims)
+    dim(T) == dim(dims) || error("Total new dimension must be the same as the old dimension")
+    return tensor(storage(T), dims)
 end
 
 # This version fixes method ambiguity with AbstractArray reshape
 function reshape(T::DenseTensor, dims::Dims)
-  dim(T) == dim(dims) || error("Total new dimension must be the same as the old dimension")
-  return tensor(storage(T), dims)
+    dim(T) == dim(dims) || error("Total new dimension must be the same as the old dimension")
+    return tensor(storage(T), dims)
 end
 
 function reshape(T::DenseTensor, dims::Int...)
-  return tensor(storage(T), tuple(dims...))
+    return tensor(storage(T), tuple(dims...))
 end
 
 ## TODO might have to look into these functions more
 # If the storage data are regular Vectors, use Base.copyto!
 function copyto!(
-  R::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
-  T::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
-) where {N}
-  RA = array(R)
-  TA = array(T)
-  RA .= TA
-  return R
+        R::Tensor{<:Number, N, <:Dense{<:Number, <:Vector}},
+        T::Tensor{<:Number, N, <:Dense{<:Number, <:Vector}},
+    ) where {N}
+    RA = array(R)
+    TA = array(T)
+    RA .= TA
+    return R
 end
 
 # If they are something more complicated like views, use Strided copyto!
 function copyto!(
-  R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}
-) where {N,StoreT<:StridedArray}
-  RA = array(R)
-  TA = array(T)
-  @strided RA .= TA
-  return R
+        R::DenseTensor{<:Number, N, StoreT}, T::DenseTensor{<:Number, N, StoreT}
+    ) where {N, StoreT <: StridedArray}
+    RA = array(R)
+    TA = array(T)
+    @strided RA .= TA
+    return R
 end
 
 # Maybe allocate output data.
 # TODO: Remove this in favor of `map!`
 # applied to `PermutedDimsArray`.
 function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function)
-  Base.checkdims_perm(R, T, perm)
-  RR = convert(promote_type(typeof(R), typeof(T)), R)
-  permutedims!(RR, T, perm, f)
-  return RR
+    Base.checkdims_perm(R, T, perm)
+    RR = convert(promote_type(typeof(R), typeof(T)), R)
+    permutedims!(RR, T, perm, f)
+    return RR
 end
 
 function permutedims!!(R::DenseTensor, T::DenseTensor, perm)
-  Base.checkdims_perm(R, T, perm)
-  RR = convert(promote_type(typeof(R), typeof(T)), R)
-  permutedims!(RR, T, perm)
-  return RR
+    Base.checkdims_perm(R, T, perm)
+    RR = convert(promote_type(typeof(R), typeof(T)), R)
+    permutedims!(RR, T, perm)
+    return RR
 end
 
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function permutedims!(
-  R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, perm::NTuple{N,Int}
-) where {N,StoreT<:StridedArray}
-  RA = array(R)
-  TA = array(T)
-  permutedims!(expose(RA), expose(TA), perm)
-  return R
+        R::DenseTensor{<:Number, N, StoreT}, T::DenseTensor{<:Number, N, StoreT}, perm::NTuple{N, Int}
+    ) where {N, StoreT <: StridedArray}
+    RA = array(R)
+    TA = array(T)
+    permutedims!(expose(RA), expose(TA), perm)
+    return R
 end
 
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function permutedims!(
-  R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm::NTuple{N,Int}
-) where {N}
-  RA = array(R)
-  TA = array(T)
-  permutedims!(expose(RA), expose(TA), perm)
-  return R
+        R::DenseTensor{<:Number, N}, T::DenseTensor{<:Number, N}, perm::NTuple{N, Int}
+    ) where {N}
+    RA = array(R)
+    TA = array(T)
+    permutedims!(expose(RA), expose(TA), perm)
+    return R
 end
 
 function apply!(
-  R::DenseTensor{<:Number,N,StoreT},
-  T::DenseTensor{<:Number,N,StoreT},
-  f::Function=(r, t) -> t,
-) where {N,StoreT<:StridedArray}
-  RA = array(R)
-  TA = array(T)
-  @strided RA .= f.(RA, TA)
-  return R
+        R::DenseTensor{<:Number, N, StoreT},
+        T::DenseTensor{<:Number, N, StoreT},
+        f::Function = (r, t) -> t,
+    ) where {N, StoreT <: StridedArray}
+    RA = array(R)
+    TA = array(T)
+    @strided RA .= f.(RA, TA)
+    return R
 end
 
-function apply!(R::DenseTensor, T::DenseTensor, f::Function=(r, t) -> t)
-  RA = array(R)
-  TA = array(T)
-  RA .= f.(RA, TA)
-  return R
+function apply!(R::DenseTensor, T::DenseTensor, f::Function = (r, t) -> t)
+    RA = array(R)
+    TA = array(T)
+    RA .= f.(RA, TA)
+    return R
 end
 
 function permutedims!(
-  R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm, f::Function
-) where {N}
-  if nnz(R) == 1 && nnz(T) == 1
-    R[] = f(R[], T[])
-    return R
-  end
-  RA = array(R)
-  TA = array(T)
-  return permutedims!!(RA, TA, perm, f)
+        R::DenseTensor{<:Number, N}, T::DenseTensor{<:Number, N}, perm, f::Function
+    ) where {N}
+    if nnz(R) == 1 && nnz(T) == 1
+        R[] = f(R[], T[])
+        return R
+    end
+    RA = array(R)
+    TA = array(T)
+    return permutedims!!(RA, TA, perm, f)
 end
 
 """
@@ -282,40 +284,40 @@ First T is permuted as `permutedims(3,2,1)`, then reshaped such
 that the original indices 3 and 2 are combined.
 """
 function permute_reshape(
-  T::DenseTensor{ElT,NT,IndsT}, pos::Vararg{Any,N}
-) where {ElT,NT,IndsT,N}
-  perm = flatten(pos...)
+        T::DenseTensor{ElT, NT, IndsT}, pos::Vararg{Any, N}
+    ) where {ElT, NT, IndsT, N}
+    perm = flatten(pos...)
 
-  length(perm) ≠ NT && error("Index positions must add up to order of Tensor ($N)")
-  isperm(perm) || error("Index positions must be a permutation")
+    length(perm) ≠ NT && error("Index positions must add up to order of Tensor ($N)")
+    isperm(perm) || error("Index positions must be a permutation")
 
-  dimsT = dims(T)
-  indsT = inds(T)
-  if !is_trivial_permutation(perm)
-    T = permutedims(T, perm)
-  end
-  if all(p -> length(p) == 1, pos) && N == NT
-    return T
-  end
-  newdims = MVector(ntuple(_ -> eltype(IndsT)(1), Val(N)))
-  for i in 1:N
-    if length(pos[i]) == 1
-      # No reshape needed, just use the
-      # original index
-      newdims[i] = indsT[pos[i][1]]
-    else
-      newdim_i = 1
-      for p in pos[i]
-        newdim_i *= dimsT[p]
-      end
-      newdims[i] = eltype(IndsT)(newdim_i)
+    dimsT = dims(T)
+    indsT = inds(T)
+    if !is_trivial_permutation(perm)
+        T = permutedims(T, perm)
     end
-  end
-  newinds = similartype(IndsT, Val{N})(Tuple(newdims))
-  return reshape(T, newinds)
+    if all(p -> length(p) == 1, pos) && N == NT
+        return T
+    end
+    newdims = MVector(ntuple(_ -> eltype(IndsT)(1), Val(N)))
+    for i in 1:N
+        if length(pos[i]) == 1
+            # No reshape needed, just use the
+            # original index
+            newdims[i] = indsT[pos[i][1]]
+        else
+            newdim_i = 1
+            for p in pos[i]
+                newdim_i *= dimsT[p]
+            end
+            newdims[i] = eltype(IndsT)(newdim_i)
+        end
+    end
+    newinds = similartype(IndsT, Val{N})(Tuple(newdims))
+    return reshape(T, newinds)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", T::DenseTensor)
-  summary(io, T)
-  return print_tensor(io, T)
+    summary(io, T)
+    return print_tensor(io, T)
 end

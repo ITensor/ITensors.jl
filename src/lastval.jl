@@ -1,6 +1,5 @@
-
 struct LastVal{F}
-  f::F
+    f::F
 end
 
 LastVal() = LastVal(identity)

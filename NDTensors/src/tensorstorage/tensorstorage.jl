@@ -27,7 +27,7 @@ Base.size(S::TensorStorage) = size(data(S))
 
 Base.@propagate_inbounds Base.getindex(S::TensorStorage, i::Integer) = data(S)[i]
 Base.@propagate_inbounds function Base.setindex!(S::TensorStorage, v, i::Integer)
-  return (setindex!(data(S), v, i); S)
+    return (setindex!(data(S), v, i); S)
 end
 
 (S::TensorStorage * x::Number) = setdata(S, x * data(S))
@@ -38,7 +38,7 @@ end
 
 # Needed for passing Tensor{T,2} to BLAS/LAPACK
 function Base.unsafe_convert(::Type{Ptr{ElT}}, T::TensorStorage{ElT}) where {ElT}
-  return Base.unsafe_convert(Ptr{ElT}, data(T))
+    return Base.unsafe_convert(Ptr{ElT}, data(T))
 end
 
 # This may need to be overloaded, since storage types
@@ -49,11 +49,11 @@ Base.conj!(S::TensorStorage) = (conj!(data(S)); return S)
 Base.conj(S::TensorStorage) = conj(AllowAlias(), S)
 
 function Base.conj(::AllowAlias, S::TensorStorage)
-  return setdata(S, conj(data(S)))
+    return setdata(S, conj(data(S)))
 end
 
 function Base.conj(::NeverAlias, S::TensorStorage)
-  return conj!(copy(S))
+    return conj!(copy(S))
 end
 
 Base.complex(S::TensorStorage) = setdata(S, complex(data(S)))
@@ -63,18 +63,18 @@ Base.real(S::TensorStorage) = setdata(S, real(data(S)))
 Base.imag(S::TensorStorage) = setdata(S, imag(data(S)))
 
 function Base.copyto!(S1::TensorStorage, S2::TensorStorage)
-  return error("Not implemented.")
+    return error("Not implemented.")
 end
 
 Random.randn!(S::TensorStorage) = randn!(Random.default_rng(), S)
 Random.randn!(rng::AbstractRNG, S::TensorStorage) = (randn!(rng, data(S)); S)
 
 function Base.map(f, t1::TensorStorage, t_tail::TensorStorage...; kwargs...)
-  return setdata(t1, map(f, data(t1), data.(t_tail)...; kwargs...))
+    return setdata(t1, map(f, data(t1), data.(t_tail)...; kwargs...))
 end
 
 function Base.mapreduce(f, op, t1::TensorStorage, t_tail::TensorStorage...; kwargs...)
-  return mapreduce(f, op, data(t1), data.(t_tail)...; kwargs...)
+    return mapreduce(f, op, data(t1), data.(t_tail)...; kwargs...)
 end
 
 Base.fill!(S::TensorStorage, v) = (fill!(data(S), v); S)
@@ -85,7 +85,7 @@ scale!(S::TensorStorage, v::Number) = rmul!(S, v)
 
 norm(S::TensorStorage) = norm(data(S))
 
-Base.convert(::Type{T}, S::T) where {T<:TensorStorage} = S
+Base.convert(::Type{T}, S::T) where {T <: TensorStorage} = S
 
 blockoffsets(S::TensorStorage) = S.blockoffsets
 

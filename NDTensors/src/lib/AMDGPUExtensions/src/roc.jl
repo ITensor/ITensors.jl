@@ -1,4 +1,4 @@
-using TypeParameterAccessors: TypeParameterAccessors, Position
+using ..Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
 using ..GPUArraysCoreExtensions: storagemode
 # Implemented in NDTensorsAMDGPUExt
 function roc end
@@ -10,5 +10,5 @@ function roc end
 struct ROCArrayAdaptor{B} end
 
 function TypeParameterAccessors.position(::Type{<:ROCArrayAdaptor}, ::typeof(storagemode))
-  return Position(1)
+    return Position(1)
 end

@@ -6,14 +6,14 @@ adjoint(E::Exposed) = adjoint(unexpose(E))
 getindex(E::Exposed) = unexpose(E)[]
 
 function setindex!(E::Exposed, x::Number)
-  unexpose(E)[] = x
-  return unexpose(E)
+    unexpose(E)[] = x
+    return unexpose(E)
 end
 
 getindex(E::Exposed, I...) = unexpose(E)[I...]
 
 function copy(E::Exposed)
-  return copy(unexpose(E))
+    return copy(unexpose(E))
 end
 
 any(f, E::Exposed) = any(f, unexpose(E))

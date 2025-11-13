@@ -11,6 +11,7 @@ If practical and applicable, please include a minimal demonstration of the previ
 ```julia
 [YOUR MINIMAL DEMONSTRATION OF PREVIOUS BEHAVIOR]
 ```
+
 </p></details>
 
 <details><summary>Minimal demonstration of new behavior</summary><p>
@@ -18,6 +19,7 @@ If practical and applicable, please include a minimal demonstration of the previ
 ```julia
 [YOUR MINIMAL DEMONSTRATION OF NEW BEHAVIOR]
 ```
+
 </p></details>
 
 # How Has This Been Tested?

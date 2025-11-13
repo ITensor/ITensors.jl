@@ -1,4 +1,4 @@
-using TypeParameterAccessors: TypeParameterAccessors
+using .Vendored.TypeParameterAccessors: TypeParameterAccessors
 
 export dense, dims, dim, mindim, diaglength
 
@@ -18,7 +18,7 @@ dim(::Tuple{}) = 1
 
 dense(ds::Dims) = ds
 
-dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
+dense(::Type{DimsT}) where {DimsT <: Dims} = DimsT
 
 dim(ds::Dims) = prod(ds)
 
@@ -72,7 +72,7 @@ sim(i::Int) = i
 
 # More complicated definition makes Order(Ref(2)[]) faster
 @eval struct Order{N}
-  (OrderT::Type{<:Order})() = $(Expr(:new, :OrderT))
+    (OrderT::Type{<:Order})() = $(Expr(:new, :OrderT))
 end
 
 @doc """

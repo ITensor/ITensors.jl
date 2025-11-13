@@ -1,3 +1,3 @@
 include("settings.jl")
 
-makedocs(; sitename=sitename, settings...)
+makedocs(; sitename = sitename, settings...)

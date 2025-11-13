@@ -1,11 +1,14 @@
 name: "Format Check"
 
 on:
-  push:
-    branches:
-      - 'main'
-    tags: '*'
-  pull_request:
+  pull_request_target:
+    paths: ['**/*.jl']
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: write
 
 jobs:
   format-check:

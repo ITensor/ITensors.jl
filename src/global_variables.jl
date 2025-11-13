@@ -1,11 +1,10 @@
-
 #
 # Warn about the order of the ITensor after contractions
 #
 
 const default_warn_order = 14
 
-const warn_order = Ref{Union{Int,Nothing}}(default_warn_order)
+const warn_order = Ref{Union{Int, Nothing}}(default_warn_order)
 
 """
     ITensors.get_warn_order()
@@ -29,10 +28,10 @@ set to before this function was called).
 You can get the current threshold with the function `ITensors.get_warn_order(N::Int)`. You can reset to the default value with
 `ITensors.reset_warn_order()`.
 """
-function set_warn_order(N::Union{Int,Nothing})
-  N_init = get_warn_order()
-  warn_order[] = N
-  return N_init
+function set_warn_order(N::Union{Int, Nothing})
+    N_init = get_warn_order()
+    warn_order[] = N
+    return N_init
 end
 
 """
@@ -76,12 +75,12 @@ A * B
 ```
 """
 macro disable_warn_order(block)
-  quote
-    local old_order = disable_warn_order()
-    r = $(esc(block))
-    set_warn_order(old_order)
-    r
-  end
+    return quote
+        local old_order = disable_warn_order()
+        r = $(esc(block))
+        set_warn_order(old_order)
+        r
+    end
 end
 
 """
@@ -102,12 +101,12 @@ end
 ```
 """
 macro set_warn_order(new_order, block)
-  quote
-    local old_order = set_warn_order($(esc(new_order)))
-    r = $(esc(block))
-    set_warn_order(old_order)
-    r
-  end
+    return quote
+        local old_order = set_warn_order($(esc(new_order)))
+        r = $(esc(block))
+        set_warn_order(old_order)
+        r
+    end
 end
 
 """
@@ -122,12 +121,12 @@ order in a block of code to the default value $default_warn_order.
 ```
 """
 macro reset_warn_order(block)
-  quote
-    local old_order = reset_warn_order()
-    r = $(esc(block))
-    set_warn_order(old_order)
-    r
-  end
+    return quote
+        local old_order = reset_warn_order()
+        r = $(esc(block))
+        set_warn_order(old_order)
+        r
+    end
 end
 
 #
@@ -154,11 +153,11 @@ operations (equivalent to `enable_threaded_blocksparse()`).
 operations (equivalent to `enable_threaded_blocksparse()`).
 """
 function enable_threaded_blocksparse(enable::Bool)
-  return if enable
-    enable_threaded_blocksparse()
-  else
-    disable_threaded_blocksparse()
-  end
+    return if enable
+        enable_threaded_blocksparse()
+    else
+        disable_threaded_blocksparse()
+    end
 end
 
 """
@@ -175,21 +174,21 @@ const _using_debug_checks = Ref{Bool}(false)
 using_debug_checks() = _using_debug_checks[]
 
 macro debug_check(ex)
-  quote
-    if using_debug_checks()
-      $(esc(ex))
+    return quote
+        if using_debug_checks()
+            $(esc(ex))
+        end
     end
-  end
 end
 
 function enable_debug_checks()
-  _using_debug_checks[] = true
-  return nothing
+    _using_debug_checks[] = true
+    return nothing
 end
 
 function disable_debug_checks()
-  _using_debug_checks[] = false
-  return nothing
+    _using_debug_checks[] = false
+    return nothing
 end
 
 #
@@ -201,11 +200,11 @@ const _using_contraction_sequence_optimization = Ref(false)
 using_contraction_sequence_optimization() = _using_contraction_sequence_optimization[]
 
 function enable_contraction_sequence_optimization()
-  _using_contraction_sequence_optimization[] = true
-  return nothing
+    _using_contraction_sequence_optimization[] = true
+    return nothing
 end
 
 function disable_contraction_sequence_optimization()
-  _using_contraction_sequence_optimization[] = false
-  return nothing
+    _using_contraction_sequence_optimization[] = false
+    return nothing
 end
