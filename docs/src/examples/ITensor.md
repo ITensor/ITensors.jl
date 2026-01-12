@@ -525,16 +525,19 @@ from a calculation. To write it to an HDF5 file named "myfile.h5"
 you can use the following pattern:
 
 ```julia
-using HDF5
-f = h5open("myfile.h5","w")
-write(f,"T",T)
-close(f)
+using ITensors, HDF5
+i = Index(2)
+T = random_itensor(i)
+f = h5open("myfile.h5","w") do f
+    write(f,"T",T)
+end
 ```
 
 Above, the string "T" can actually be any string you want such as "ITensor T"
 or "Result Tensor" and doesn't have to have the same name as the reference `T`.
 Closing the file `f` is optional and you can also write other objects to the same
-file before closing it.
+file before closing it. Note that you can use options like compression by passing
+keyword arguments to `write`/`read`, see the [HDF5.jl documentation](https://juliaio.github.io/HDF5.jl/stable/#Passing-parameters) for more information.
 
 **Reading an ITensor from an HDF5 File**
 
@@ -543,10 +546,9 @@ name "T". (Which would be the situation if you wrote it as in the example above.
 To read this ITensor back from the HDF5 file, use the following pattern:
 
 ```julia
-using HDF5
-f = h5open("myfile.h5","r")
-T = read(f,"T",ITensor)
-close(f)
+T = h5open("myfile.h5","r") do f
+    read(f,"T",ITensor)
+end
 ```
 
 Note the `ITensor` argument to the read function, which tells Julia which read function

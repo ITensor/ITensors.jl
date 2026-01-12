@@ -3,6 +3,22 @@
 This page lists the formats for the HDF5 representations of
 various types in the `ITensors` module.
 
+As a reminder from the examples, you can read and write ITensors to
+the HDF5 file format using the [HDF5.jl](https://juliaio.github.io/HDF5.jl/stable/) library:
+```julia
+using ITensors, HDF5
+i = Index(2)
+T = random_itensor(i)
+f = h5open("myfile.h5","w") do f
+    write(f,"T",T)
+end
+T2 = h5open("myfile.h5","r") do f
+    read(f,"T",ITensor)
+end
+T == T2
+```
+and additionally you can pass compression parameters such as `write(f,"T",T; compress=3)`.
+
 HDF5 is a portable file format which has a directory structure similar
 to a file system. In addition to containing "groups" (= directories)
 and "datasets" (= files), groups can have "attributes"
