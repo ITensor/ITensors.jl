@@ -31,13 +31,17 @@ function array_to_offsets(a, N::Int)
     return boff
 end
 
-function HDF5.write(parent::Union{HDF5.File, HDF5.Group}, name::String, B::BlockSparse)
+function HDF5.write(
+        parent::Union{HDF5.File, HDF5.Group}, name::String, B::BlockSparse; kwargs...
+    )
     g = create_group(parent, name)
     attributes(g)["type"] = "BlockSparse{$(eltype(B))}"
     attributes(g)["version"] = 1
     return if eltype(B) != Nothing
         write(g, "ndims", ndims(B))
-        write(g, "data", data(B))
+        # Use `setindex!` so that chunking happens automatically
+        # when compression is used, see: https://github.com/JuliaIO/HDF5.jl/issues/822
+        setindex!(g, data(B), "data"; kwargs...)
         off_array = offsets_to_array(blockoffsets(B))
         write(g, "offsets", off_array)
     end

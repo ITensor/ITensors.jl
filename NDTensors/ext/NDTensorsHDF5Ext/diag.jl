@@ -2,13 +2,15 @@ using HDF5: HDF5, attributes, create_group, open_group, read, write
 using NDTensors: datatype, Dense, Diag
 
 function HDF5.write(
-        parent::Union{HDF5.File, HDF5.Group}, name::String, D::Store
+        parent::Union{HDF5.File, HDF5.Group}, name::String, D::Store; kwargs...
     ) where {Store <: Diag}
     g = create_group(parent, name)
     attributes(g)["type"] = "Diag{$(eltype(Store)),$(datatype(Store))}"
     attributes(g)["version"] = 1
     return if eltype(D) != Nothing
-        write(g, "data", D.data)
+        # Use `setindex!` so that chunking happens automatically
+        # when compression is used, see: https://github.com/JuliaIO/HDF5.jl/issues/822
+        setindex!(g, D.data, "data"; kwargs...)
     end
 end
 

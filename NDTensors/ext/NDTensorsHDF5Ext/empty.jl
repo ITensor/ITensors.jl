@@ -14,8 +14,10 @@ function HDF5.read(
     return StoreT()
 end
 
+# Trailing `kwargs` are used to capture chunking/compression options,
+# which are ignored for EmptyStorage.
 function HDF5.write(
-        parent::Union{HDF5.File, HDF5.Group}, name::String, ::StoreT
+        parent::Union{HDF5.File, HDF5.Group}, name::String, ::StoreT; kwargs...
     ) where {StoreT <: EmptyStorage}
     g = create_group(parent, name)
     attributes(g)["type"] = string(StoreT)
