@@ -552,6 +552,15 @@ Random.seed!(1234)
         end
     end
 
+    @testset "Permute eltype = $elt" for elt in (BigFloat, Complex{BigFloat})
+        s = [QN(0) => 2, QN(1) => 2]
+        i, j = Index.((s, s))
+        T = ITensor(elt, i, dag(j))
+        T[i => 1, j => 1] = 1
+        Tp = permute(T, (j, i))
+        @test T == Tp
+    end
+
     @testset "Contraction" begin
         i = Index([QN(0) => 1, QN(1) => 2], "i")
         j = Index([QN(0) => 3, QN(1) => 4], "j")

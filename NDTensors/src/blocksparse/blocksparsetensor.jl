@@ -434,9 +434,26 @@ function +(T1::BlockSparseTensor{<:Number, N}, T2::BlockSparseTensor{<:Number, N
     return permutedims!!(R, T2, ntuple(identity, Val(N)), +)
 end
 
+function similar_permutedims(
+        T::BlockSparseTensor{<:Number, N},
+        blockoffsetsR::BlockOffsets{N},
+        indsR,
+    ) where {N}
+    return NDTensors.similar(T, blockoffsetsR, indsR)
+end
+
+const RealOrComplexBigFloat = Union{BigFloat, Complex{BigFloat}}
+function similar_permutedims(
+        T::BlockSparseTensor{<:RealOrComplexBigFloat, N},
+        blockoffsetsR::BlockOffsets{N},
+        indsR,
+    ) where {N}
+    return zeros(T, blockoffsetsR, indsR)
+end
+
 function permutedims(T::BlockSparseTensor{<:Number, N}, perm::NTuple{N, Int}) where {N}
     blockoffsetsR, indsR = permutedims(blockoffsets(T), inds(T), perm)
-    R = NDTensors.similar(T, blockoffsetsR, indsR)
+    R = similar_permutedims(T, blockoffsetsR, indsR)
     permutedims!(R, T, perm)
     return R
 end
