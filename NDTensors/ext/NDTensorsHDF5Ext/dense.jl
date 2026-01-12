@@ -2,18 +2,20 @@ using HDF5: HDF5, attributes, create_group, open_group, read, write
 using NDTensors: Dense
 
 function HDF5.write(
-        parent::Union{HDF5.File, HDF5.Group}, name::String, D::Store
+        parent::Union{HDF5.File, HDF5.Group}, name::String, D::Store; kwargs...
     ) where {Store <: Dense}
     g = create_group(parent, name)
     attributes(g)["type"] = "Dense{$(eltype(Store))}"
     attributes(g)["version"] = 1
     return if eltype(D) != Nothing
-        write(g, "data", D.data)
+        # Use `setindex!` so that chunking happens automatically
+        # when compression is used, see: https://github.com/JuliaIO/HDF5.jl/issues/822
+        setindex!(g, D.data, "data"; kwargs...)
     end
 end
 
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}; kwargs...
     ) where {Store <: Dense}
     g = open_group(parent, name)
     ElT = eltype(Store)
@@ -31,7 +33,7 @@ function HDF5.read(
         nelt = size(M, 1) * size(M, 2)
         data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
     else
-        data = read(g, "data")
+        data = read(g, "data"; kwargs...)
     end
     return Dense{ElT}(data)
 end
