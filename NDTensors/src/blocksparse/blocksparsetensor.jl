@@ -442,6 +442,10 @@ function similar_permutedims(
     return NDTensors.similar(T, blockoffsetsR, indsR)
 end
 
+# Fix for https://github.com/ITensor/ITensors.jl/issues/1690.
+# This makes sure all elements are allocated (not undefined).
+# Undefined BigFloat elements lead to errors when permuting
+# blocks.
 const RealOrComplexBigFloat = Union{BigFloat, Complex{BigFloat}}
 function similar_permutedims(
         T::BlockSparseTensor{<:RealOrComplexBigFloat, N},
