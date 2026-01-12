@@ -306,7 +306,7 @@ function emptyITensor((::Type{ElT}) = EmptyNumber) where {ElT <: Number}
     return itensor(EmptyTensor(ElT, ()))
 end
 
-using NDTensors.TypeParameterAccessors: set_eltype, type_parameters, specify_type_parameters
+using NDTensors: AllowAlias, NeverAlias
 """
     ITensor([ElT::Type, ]A::AbstractArray, inds)
     ITensor([ElT::Type, ]A::AbstractArray, inds::Index...)
@@ -350,17 +350,35 @@ T[i => 1, j => 1] == 3.3
 """
 function ITensor(
         as::AliasStyle,
-        eltype::Type{<:Number},
+        elt::Type{<:Number},
         A::AbstractArray{<:Number},
         inds::Indices;
         kwargs...,
     )
-    length(A) ≠ dim(inds) && throw(
-        DimensionMismatch(
-            "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
-        ),
-    )
-    data = set_eltype(typeof(A), eltype)(as, A)
+    check_dims(A, inds)
+    # Other cases already handle when `elt ≡ eltype(A)`
+    # so here we only need to handle when they differ
+    # (which always involves a copy).
+    # This is equivalent to `copy!(similar(A, elt), A)`.
+    data = AbstractArray{elt}(A)
+    return itensor(Dense(data), inds)
+end
+
+function ITensor(
+        as::AliasStyle,
+        eltype::Type{T},
+        A::AbstractArray{T},
+        inds::Indices;
+        kwargs...,
+    ) where {T <: Number}
+    check_dims(A, inds)
+    data = if as ≡ AllowAlias()
+        A
+    elseif as ≡ NeverAlias()
+        copy(A)
+    else
+        error("Unknown AliasStyle: $as")
+    end
     return itensor(Dense(data), inds)
 end
 
@@ -379,6 +397,15 @@ function ITensor(
         as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
     )
     return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+end
+
+function check_dims(A::AbstractArray, inds::Indices)
+    length(A) ≠ dim(inds) && throw(
+        DimensionMismatch(
+            "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+        ),
+    )
+    return nothing
 end
 
 function ITensor(
@@ -470,13 +497,36 @@ The version `diagitensor` might output an ITensor whose storage data
 is an alias of the input vector data in order to minimize operations.
 """
 function diag_itensor(
-        as::AliasStyle, eltype::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
+        as::AliasStyle, elt::Type{<:Number}, v::AbstractVector{<:Number}, is::Indices
     )
+    check_diag_dims(v, is)
+    # Other cases already handle when `elt ≡ eltype(v)`
+    # so here we only need to handle when they differ
+    # (which always involves a copy).
+    # This is equivalent to `copy!(similar(v, elt), v)`.
+    data = AbstractVector{elt}(v)
+    return itensor(Diag(data), is)
+end
+
+function diag_itensor(
+        as::AliasStyle, elt::Type{T}, v::AbstractVector{T}, is::Indices
+    ) where {T <: Number}
+    check_diag_dims(v, is)
+    data = if as ≡ AllowAlias()
+        v
+    elseif as ≡ NeverAlias()
+        copy(v)
+    else
+        error("Unknown AliasStyle: $as")
+    end
+    return itensor(Diag(data), is)
+end
+
+function check_diag_dims(v::AbstractVector, is::Indices)
     length(v) ≠ mindim(is) && error(
         "Length of vector for diagonal must equal minimum of the dimension of the input indices",
     )
-    data = set_eltype(typeof(v), eltype)(as, v)
-    return itensor(Diag(data), is)
+    return nothing
 end
 
 function diag_itensor(
@@ -670,16 +720,6 @@ zero(T::ITensor)::ITensor = itensor(zero(tensor(T)))
 #
 # Construct from Array
 #
-
-# Helper functions for different view behaviors
-# TODO: Move to NDTensors.jl
-function (arraytype::Type{<:AbstractArray})(::NeverAlias, A::AbstractArray)
-    return specify_type_parameters(arraytype, type_parameters(A))(A)
-end
-
-function (arraytype::Type{<:AbstractArray})(::AllowAlias, A::AbstractArray)
-    return convert(specify_type_parameters(arraytype, type_parameters(A)), A)
-end
 
 """
     Array{ElT, N}(T::ITensor, i:Index...)
