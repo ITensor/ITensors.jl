@@ -106,6 +106,15 @@ using Test
             end
         end
 
+        @testset "diag_itensor constructor from Range" begin
+            t = diag_itensor(1:d, i, j)
+            @test ITensors.data(t) == 1:d
+            @test ITensors.data(t) isa Vector{Float64}
+
+            t = diag_itensor(Int, 1:d, i, j)
+            @test ITensors.data(t) ≡ 1:d
+        end
+
         @testset "reductions (sum, prod)" for elt in (
                 Float32, Float64, Complex{Float32}, Complex{Float64},
             )
