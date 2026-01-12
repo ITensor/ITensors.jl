@@ -19,6 +19,14 @@ function HDF5.read(
     ) where {Store <: Diag}
     g = open_group(parent, name)
     ElT = eltype(Store)
+    DataT = datatype(Store)
+    typestr = "Diag{$ElT,$DataT}"
+    if read(attributes(g)["type"]) != typestr
+        error("HDF5 group or file does not contain $typestr data")
+    end
+    if ElT == Nothing
+        return Dense{Nothing}()
+    end
     # Attribute __complex__ is attached to the "data" dataset
     # by the h5 library used by C++ version of ITensor:
     if haskey(attributes(g["data"]), "__complex__")
