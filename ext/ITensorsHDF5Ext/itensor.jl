@@ -14,7 +14,7 @@ function HDF5.write(
 end
 
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{ITensor}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{ITensor}; kwargs...
     )
     g = open_group(parent, name)
     if read(attributes(g)["type"]) != "ITensor"
@@ -29,7 +29,7 @@ function HDF5.read(
         if haskey(g, key)
             stypestr = read(attributes(open_group(g, key))["type"])
             stype = eval(Meta.parse(stypestr))
-            storage = read(g, key, stype)
+            storage = read(g, key, stype; kwargs...)
             return itensor(storage, inds)
         end
     end

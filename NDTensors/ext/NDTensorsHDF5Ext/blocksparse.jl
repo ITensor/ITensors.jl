@@ -48,7 +48,7 @@ function HDF5.write(
 end
 
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}; kwargs...
     ) where {Store <: BlockSparse}
     g = open_group(parent, name)
     ElT = eltype(Store)
@@ -62,11 +62,11 @@ function HDF5.read(
     # Attribute __complex__ is attached to the "data" dataset
     # by the h5 library used by C++ version of ITensor:
     if haskey(attributes(g["data"]), "__complex__")
-        M = read(g, "data")
+        M = read(g, "data"; kwargs...)
         nelt = size(M, 1) * size(M, 2)
         data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
     else
-        data = read(g, "data")
+        data = read(g, "data"; kwargs...)
     end
     return BlockSparse(data, boff)
 end

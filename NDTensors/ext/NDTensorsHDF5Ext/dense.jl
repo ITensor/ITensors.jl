@@ -15,7 +15,7 @@ function HDF5.write(
 end
 
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}; kwargs...
     ) where {Store <: Dense}
     g = open_group(parent, name)
     ElT = eltype(Store)
@@ -33,7 +33,7 @@ function HDF5.read(
         nelt = size(M, 1) * size(M, 2)
         data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
     else
-        data = read(g, "data")
+        data = read(g, "data"; kwargs...)
     end
     return Dense{ElT}(data)
 end

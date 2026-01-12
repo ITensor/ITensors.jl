@@ -3,8 +3,10 @@ using NDTensors: EmptyStorage
 
 # XXX: this seems a bit strange and fragile?
 # Takes the type very literally.
+# Trailing `kwargs` are used to capture chunking/compression options,
+# which are ignored for EmptyStorage.
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{StoreT}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{StoreT}; kwargs...
     ) where {StoreT <: EmptyStorage}
     g = open_group(parent, name)
     typestr = string(StoreT)
