@@ -44,7 +44,10 @@ function NDTensors._contract!(R::Exposed{<:CuArray, <:BlockSparseTensor},
         grouped_contraction_plan,
         executor,
     )
-    if NDTensors.using_CuTensorBS()
+    N1 = ndims(unexpose(tensor1)) 
+    N2 = ndims(unexpose(tensor2)) 
+    NR = ndims(unexpose(R)) 
+    if NDTensors.using_CuTensorBS() && (N1 > 0) && (N2 > 0) && (NR > 0)
         # println("Using new function")
         cuR = ITensor_to_cuTensorBS(unexpose(R))
         cutensor1 = ITensor_to_cuTensorBS(unexpose(tensor1))
