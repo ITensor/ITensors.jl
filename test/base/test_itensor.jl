@@ -995,6 +995,21 @@ end
         @test storage(T) isa NDTensors.Dense{Float64}
     end
 
+    @testset "Construct from Range" begin
+        # https://github.com/ITensor/ITensors.jl/issues/1691
+
+        # Automatic conversion to float.
+        i, j = Index.((2, 2))
+        t = ITensor(1:4, (i, j))
+        @test ITensors.data(t) == 1:4
+        @test ITensors.data(t) isa Vector{Float64}
+
+        # Preserve integer element type.
+        i, j = Index.((2, 2))
+        t = ITensor(Int, 1:4, (i, j))
+        @test ITensors.data(t) ≡ 1:4
+    end
+
     @testset "ITensor Array constructor view behavior" begin
         d = 2
         i = Index(d)

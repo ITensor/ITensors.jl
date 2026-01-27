@@ -31,20 +31,24 @@ function array_to_offsets(a, N::Int)
     return boff
 end
 
-function HDF5.write(parent::Union{HDF5.File, HDF5.Group}, name::String, B::BlockSparse)
+function HDF5.write(
+        parent::Union{HDF5.File, HDF5.Group}, name::String, B::BlockSparse; kwargs...
+    )
     g = create_group(parent, name)
     attributes(g)["type"] = "BlockSparse{$(eltype(B))}"
     attributes(g)["version"] = 1
     return if eltype(B) != Nothing
         write(g, "ndims", ndims(B))
-        write(g, "data", data(B))
+        # Use `setindex!` so that chunking happens automatically
+        # when compression is used, see: https://github.com/JuliaIO/HDF5.jl/issues/822
+        setindex!(g, data(B), "data"; kwargs...)
         off_array = offsets_to_array(blockoffsets(B))
         write(g, "offsets", off_array)
     end
 end
 
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}; kwargs...
     ) where {Store <: BlockSparse}
     g = open_group(parent, name)
     ElT = eltype(Store)
@@ -58,11 +62,11 @@ function HDF5.read(
     # Attribute __complex__ is attached to the "data" dataset
     # by the h5 library used by C++ version of ITensor:
     if haskey(attributes(g["data"]), "__complex__")
-        M = read(g, "data")
+        M = read(g, "data"; kwargs...)
         nelt = size(M, 1) * size(M, 2)
         data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
     else
-        data = read(g, "data")
+        data = read(g, "data"; kwargs...)
     end
     return BlockSparse(data, boff)
 end

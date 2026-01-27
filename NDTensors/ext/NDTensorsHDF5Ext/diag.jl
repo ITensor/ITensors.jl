@@ -2,18 +2,20 @@ using HDF5: HDF5, attributes, create_group, open_group, read, write
 using NDTensors: datatype, Dense, Diag
 
 function HDF5.write(
-        parent::Union{HDF5.File, HDF5.Group}, name::String, D::Store
+        parent::Union{HDF5.File, HDF5.Group}, name::String, D::Store; kwargs...
     ) where {Store <: Diag}
     g = create_group(parent, name)
     attributes(g)["type"] = "Diag{$(eltype(Store)),$(datatype(Store))}"
     attributes(g)["version"] = 1
     return if eltype(D) != Nothing
-        write(g, "data", D.data)
+        # Use `setindex!` so that chunking happens automatically
+        # when compression is used, see: https://github.com/JuliaIO/HDF5.jl/issues/822
+        setindex!(g, D.data, "data"; kwargs...)
     end
 end
 
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}; kwargs...
     ) where {Store <: Diag}
     g = open_group(parent, name)
     ElT = eltype(Store)
@@ -28,11 +30,11 @@ function HDF5.read(
     # Attribute __complex__ is attached to the "data" dataset
     # by the h5 library used by C++ version of ITensor:
     if haskey(attributes(g["data"]), "__complex__")
-        M = read(g, "data")
+        M = read(g, "data"; kwargs...)
         nelt = size(M, 1) * size(M, 2)
         data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
     else
-        data = read(g, "data")
+        data = read(g, "data"; kwargs...)
     end
     return Diag{ElT, DataT}(data)
 end

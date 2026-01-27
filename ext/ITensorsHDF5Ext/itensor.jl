@@ -3,16 +3,18 @@ using ITensors: inds, itensor, ITensor, storage
 using NDTensors:
     NDTensors, BlockSparse, Combiner, Dense, Diag, DiagBlockSparse, EmptyStorage
 
-function HDF5.write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, T::ITensor)
+function HDF5.write(
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, T::ITensor; kwargs...
+    )
     g = create_group(parent, name)
     attributes(g)["type"] = "ITensor"
     attributes(g)["version"] = 1
     write(g, "inds", inds(T))
-    return write(g, "storage", storage(T))
+    return write(g, "storage", storage(T); kwargs...)
 end
 
 function HDF5.read(
-        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{ITensor}
+        parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{ITensor}; kwargs...
     )
     g = open_group(parent, name)
     if read(attributes(g)["type"]) != "ITensor"
@@ -27,7 +29,7 @@ function HDF5.read(
         if haskey(g, key)
             stypestr = read(attributes(open_group(g, key))["type"])
             stype = eval(Meta.parse(stypestr))
-            storage = read(g, key, stype)
+            storage = read(g, key, stype; kwargs...)
             return itensor(storage, inds)
         end
     end

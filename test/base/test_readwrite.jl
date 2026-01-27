@@ -85,6 +85,18 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
             @test norm(rT - T) / norm(T) < 1.0e-10
         end
 
+        # compress
+        T = random_itensor(i, j, k)
+
+        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
+            write(fo, "T", T; compress = 3)
+        end
+
+        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
+            rT = read(fi, "T", ITensor)
+            @test norm(rT - T) / norm(T) < 1.0e-10
+        end
+
         # complex case
         T = random_itensor(ComplexF64, i, j, k)
 
