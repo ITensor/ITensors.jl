@@ -1,22 +1,11 @@
 @eval module $(gensym())
 using GPUArraysCore: @allowscalar
-using LinearAlgebra:
-    LinearAlgebra,
-    Adjoint,
-    Diagonal,
-    Hermitian,
-    Symmetric,
-    Transpose,
-    eigen,
-    mul!,
-    norm,
-    qr,
-    svd
-using NDTensors: NDTensors, mul!!
+using LinearAlgebra: LinearAlgebra, Adjoint, Diagonal, Hermitian, Symmetric, Transpose, eigen, mul!, norm, qr, svd
 using NDTensors.Expose: Expose, Exposed, expose
 using NDTensors.GPUArraysCoreExtensions: cpu
+using NDTensors: NDTensors, mul!!
 using StableRNGs: StableRNG
-using Test: @testset, @test, @test_broken
+using Test: @test, @test_broken, @testset
 include(joinpath(pkgdir(NDTensors), "test", "NDTensorsTestUtils", "NDTensorsTestUtils.jl"))
 using .NDTensorsTestUtils: devices_list
 

@@ -1,8 +1,7 @@
+using .QuantumNumbers: Arrow, In, Neither, Out, QuantumNumbers
+using .TagSets: @ts_str, TagSet, TagSets, addtags, commontags, hastags, removetags, replacetags
 using NDTensors: NDTensors, sim
-using .QuantumNumbers: QuantumNumbers, Arrow, In, Neither, Out
 using Random: Xoshiro
-using .TagSets:
-    TagSets, TagSet, @ts_str, addtags, commontags, hastags, removetags, replacetags
 
 #const IDType = UInt128
 const IDType = UInt64

@@ -1,4 +1,4 @@
-using .BackendSelection: Algorithm, @Algorithm_str
+using .BackendSelection: @Algorithm_str, Algorithm
 
 function contract(
         tensor1::BlockSparseTensor,

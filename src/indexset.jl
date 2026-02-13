@@ -1,6 +1,6 @@
-using NDTensors: NDTensors, sim
-using .QuantumNumbers: QuantumNumbers, Arrow, removeqn
+using .QuantumNumbers: Arrow, QuantumNumbers, removeqn
 using .TagSets: TagSets, addtags, commontags, hastags, removetags, replacetags
+using NDTensors: NDTensors, sim
 
 # Represents a static order of an ITensor
 @eval struct Order{N}

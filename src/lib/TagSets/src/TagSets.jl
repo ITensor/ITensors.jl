@@ -1,9 +1,8 @@
 module TagSets
-using BitIntegers: UInt256
-using DocStringExtensions: TYPEDSIGNATURES
-# TODO: Move to `Nots` lib.
 using ..ITensors: ITensors, Not, not
 using ..SmallStrings: SmallString, cast_to_uint, isnull
+using BitIntegers: UInt256
+using DocStringExtensions: TYPEDSIGNATURES
 using StaticArrays: MVector, SVector
 
 const IntTag = UInt256  # An integer that can be cast to a Tag

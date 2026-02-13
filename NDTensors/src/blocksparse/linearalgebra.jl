@@ -1,5 +1,5 @@
-using .Vendored.TypeParameterAccessors: unwrap_array_type
 using .Expose: expose
+using .Vendored.TypeParameterAccessors: unwrap_array_type
 const BlockSparseMatrix{ElT, StoreT, IndsT} = BlockSparseTensor{ElT, 2, StoreT, IndsT}
 const DiagBlockSparseMatrix{ElT, StoreT, IndsT} = DiagBlockSparseTensor{ElT, 2, StoreT, IndsT}
 const DiagMatrix{ElT, StoreT, IndsT} = DiagTensor{ElT, 2, StoreT, IndsT}

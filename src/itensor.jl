@@ -1,5 +1,5 @@
-using NDTensors: NDTensors, nnz
 using .TagSets: TagSets, hastags, replacetags
+using NDTensors: NDTensors, nnz
 
 # Private inner constructor
 function _ITensor end

@@ -1,25 +1,6 @@
 module LazyApply
 
-import Base:
-    ==,
-    +,
-    -,
-    *,
-    /,
-    ^,
-    exp,
-    adjoint,
-    copy,
-    show,
-    getindex,
-    length,
-    isless,
-    iterate,
-    firstindex,
-    lastindex,
-    keys,
-    reverse,
-    size
+import Base: *, +, -, /, ==, ^, adjoint, copy, exp, firstindex, getindex, isless, iterate, keys, lastindex, length, reverse, show, size
 
 export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize, terms
 

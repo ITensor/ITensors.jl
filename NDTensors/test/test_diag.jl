@@ -2,22 +2,8 @@
 using Adapt: adapt
 using GPUArraysCore: @allowscalar
 using LinearAlgebra: diagm, dot, norm
-using NDTensors:
-    NDTensors,
-    Dense,
-    Diag,
-    DiagTensor,
-    Tensor,
-    array,
-    contract,
-    data,
-    dense,
-    diaglength,
-    diagindices,
-    matrix,
-    randomTensor,
-    tensor
-using Test: @testset, @test, @test_throws
+using NDTensors: NDTensors, Dense, Diag, DiagTensor, Tensor, array, contract, data, dense, diagindices, diaglength, matrix, randomTensor, tensor
+using Test: @test, @test_throws, @testset
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list, is_supported_eltype
 

@@ -1,7 +1,7 @@
 module TypeParameterAccessorsJLArraysExt
 
 using JLArrays: JLArray
-using NDTensors.Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
+using NDTensors.Vendored.TypeParameterAccessors: Position, TypeParameterAccessors
 
 TypeParameterAccessors.position(::Type{<:JLArray}, ::typeof(eltype)) = Position(1)
 TypeParameterAccessors.position(::Type{<:JLArray}, ::typeof(ndims)) = Position(2)

@@ -1,5 +1,5 @@
 using HDF5: HDF5, attributes, create_group, open_group, read, write
-using ITensors: Arrow, dim, dir, id, Index, plev, QNBlocks, space, tags, TagSet
+using ITensors: Arrow, Index, QNBlocks, TagSet, dim, dir, id, plev, space, tags
 
 function HDF5.write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, I::Index)
     g = create_group(parent, name)

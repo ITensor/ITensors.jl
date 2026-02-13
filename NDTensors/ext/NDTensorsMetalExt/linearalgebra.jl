@@ -1,8 +1,7 @@
+using LinearAlgebra: LinearAlgebra, eigen, qr, svd
 using Metal: MtlMatrix
-using LinearAlgebra: LinearAlgebra, qr, eigen, svd
-using NDTensors.Expose: qr_positive, ql_positive, ql
-using NDTensors.Vendored.TypeParameterAccessors:
-    set_type_parameters, type_parameters, unwrap_array_type
+using NDTensors.Expose: ql, ql_positive, qr_positive
+using NDTensors.Vendored.TypeParameterAccessors: set_type_parameters, type_parameters, unwrap_array_type
 
 function LinearAlgebra.qr(A::Exposed{<:MtlMatrix})
     Q, R = qr(expose(NDTensors.cpu(A)))

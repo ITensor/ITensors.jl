@@ -57,16 +57,16 @@ using .LazyApply
 using .LazyApply: Prod, Scaled, Sum, coefficient
 include("lib/Ops/src/Ops.jl")
 # TODO: `using .Ops: Ops, ...`.
+import .Ops: name, sites
 using .Ops
-using .Ops: Ops, Op, Trotter
-import .Ops: sites, name
+using .Ops: Op, Ops, Trotter
 include("exports.jl")
 include("imports.jl")
 include("global_variables.jl")
 # TODO: Move to `lib/LastVals/src/LastVals.jl`.
 include("lastval.jl")
 include("lib/SmallStrings/src/SmallStrings.jl")
-using .SmallStrings: SmallStrings, IntChar, SmallString, Tag, isint, isnull
+using .SmallStrings: IntChar, SmallString, SmallStrings, Tag, isint, isnull
 include("readwrite.jl")
 export readcpp
 # TODO: Move to `lib/Nots/src/Nots.jl`.
@@ -80,20 +80,7 @@ include("name.jl")
 include("val.jl")
 export val
 include("lib/QuantumNumbers/src/QuantumNumbers.jl")
-using .QuantumNumbers:
-    Arrow,
-    In,
-    Neither,
-    Out,
-    QN,
-    QNVal,
-    hasname,
-    have_same_mods,
-    have_same_qns,
-    isactive,
-    maxQNs,
-    modulus,
-    nactive
+using .QuantumNumbers: Arrow, In, Neither, Out, QN, QNVal, hasname, have_same_mods, have_same_qns, isactive, maxQNs, modulus, nactive
 export QN, isactive, modulus
 include("symmetrystyle.jl")
 include("index.jl")
@@ -107,26 +94,7 @@ include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
 include("lib/SiteTypes/src/SiteTypes.jl")
-using .SiteTypes:
-    SiteTypes,
-    OpName,
-    SiteType,
-    StateName,
-    TagType,
-    ValName,
-    @OpName_str,
-    @SiteType_str,
-    @StateName_str,
-    @TagType_str,
-    @ValName_str,
-    alias,
-    has_fermion_string,
-    op,
-    op!,
-    ops,
-    siteind,
-    siteinds,
-    state
+using .SiteTypes: @OpName_str, @SiteType_str, @StateName_str, @TagType_str, @ValName_str, OpName, SiteType, SiteTypes, StateName, TagType, ValName, alias, has_fermion_string, op, op!, ops, siteind, siteinds, state
 include("lib/ITensorsSiteTypesExt/src/ITensorsSiteTypesExt.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
@@ -144,13 +112,7 @@ include("../ext/ITensorsChainRulesCoreExt/ITensorsChainRulesCoreExt.jl")
 include("lib/ITensorVisualizationCore/src/ITensorVisualizationCore.jl")
 # TODO: `using .ITensorVisualizationCore: ITensorVisualizationCore, ...`.
 using .ITensorVisualizationCore
-using .ITensorVisualizationCore:
-    @visualize,
-    @visualize!,
-    @visualize_noeval,
-    @visualize_noeval!,
-    @visualize_sequence,
-    @visualize_sequence_noeval
+using .ITensorVisualizationCore: @visualize, @visualize!, @visualize_noeval, @visualize_noeval!, @visualize_sequence, @visualize_sequence_noeval
 include("deprecated.jl")
 include("argsdict/argsdict.jl")
 include("packagecompile/compile.jl")

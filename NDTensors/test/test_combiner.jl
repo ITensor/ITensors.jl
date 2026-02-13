@@ -1,21 +1,9 @@
 @eval module $(gensym())
 using GPUArraysCore: @allowscalar
-using NDTensors:
-    NDTensors,
-    Block,
-    BlockOffsets,
-    BlockSparse,
-    BlockSparseTensor,
-    Combiner,
-    Dense,
-    DenseTensor,
-    contract,
-    dim,
-    dims,
-    tensor
+using NDTensors: NDTensors, Block, BlockOffsets, BlockSparse, BlockSparseTensor, Combiner, Dense, DenseTensor, contract, dim, dims, tensor
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list, is_supported_eltype
-using Test: @testset, @test, @test_throws
+using Test: @test, @test_throws, @testset
 
 # Testing generic block indices
 struct Index{Space}

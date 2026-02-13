@@ -1,6 +1,6 @@
 using Base: ReshapedArray
-using NDTensors: NDTensors, DenseTensor, array
 using NDTensors.Expose: Exposed, expose, unexpose
+using NDTensors: NDTensors, DenseTensor, array
 using cuTENSOR: cuTENSOR, CuArray, CuTensor
 
 # Handle cases that can't be handled by `cuTENSOR.jl`

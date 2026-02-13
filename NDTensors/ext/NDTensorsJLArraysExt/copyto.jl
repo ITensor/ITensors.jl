@@ -1,6 +1,6 @@
 using JLArrays: JLArray
-using NDTensors.Expose: Exposed, expose, unexpose
 using LinearAlgebra: Adjoint
+using NDTensors.Expose: Exposed, expose, unexpose
 
 # Same definition as `CuArray`.
 function Base.copy(src::Exposed{<:JLArray, <:Base.ReshapedArray})

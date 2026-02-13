@@ -1,8 +1,7 @@
-using ChainRulesCore: @ignore_derivatives
-using ..ITensors:
-    ITensors, Index, ITensor, itensor, dag, onehot, prime, product, swapprime, tags
+using ..ITensors: ITensor, ITensors, Index, dag, itensor, onehot, prime, product, swapprime, tags
 using ..SmallStrings: SmallString
-using ..TagSets: TagSets, TagSet, addtags, commontags
+using ..TagSets: TagSet, TagSets, addtags, commontags
+using ChainRulesCore: @ignore_derivatives
 
 @eval struct SiteType{T}
     (f::Type{<:SiteType})() = $(Expr(:new, :f))

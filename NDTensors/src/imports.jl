@@ -8,13 +8,13 @@ using Adapt
 using Base.Threads
 using Dictionaries
 using Folds
-using InlineStrings
-using Random
-using LinearAlgebra
-using StaticArrays
 using Functors
+using InlineStrings
+using LinearAlgebra
+using Random
 using SimpleTraits
 using SplitApplyCombine
+using StaticArrays
 using Strided
 using TimerOutputs
 using TupleTools
@@ -36,74 +36,18 @@ end
 # to using `BackendSelection`.
 const AlgorithmSelection = BackendSelection
 
-using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
-
-using Base.Cartesian: @nexprs
-
-using Base.Threads: @spawn
-
+import Adapt: adapt_storage, adapt_structure
+import Base.Broadcast: BroadcastStyle, Broadcasted
+import Base: # Methods
+    checkbounds, # Symbols
+    +, # Types
+    AbstractFloat, *, -, /, Array, CartesianIndex, Complex, IndexStyle, Tuple, complex, conj, convert, copy, copyto!, eachindex, eltype, empty, fill, fill!, getindex, hash, imag, isempty, isless, iterate, length, map, permutedims, permutedims!, print, promote_rule, randn, real, reshape, setindex, setindex!, show, size, stride, strides, summary, to_indices, unsafe_convert, view, zero, zeros
+import LinearAlgebra: diag, exp, mul!, norm, qr, svd
+import TupleTools: isperm
 using .AMDGPUExtensions: roc
 using .CUDAExtensions: cu
 using .GPUArraysCoreExtensions: cpu
 using .MetalExtensions: mtl
-
-import Base:
-    # Types
-    AbstractFloat,
-    Array,
-    CartesianIndex,
-    Complex,
-    IndexStyle,
-    Tuple,
-    # Symbols
-    +,
-    -,
-    *,
-    /,
-    # Methods
-    checkbounds,
-    complex,
-    convert,
-    conj,
-    copy,
-    copyto!,
-    eachindex,
-    eltype,
-    empty,
-    fill,
-    fill!,
-    getindex,
-    hash,
-    imag,
-    isempty,
-    isless,
-    iterate,
-    length,
-    map,
-    permutedims,
-    permutedims!,
-    print,
-    promote_rule,
-    randn,
-    real,
-    reshape,
-    setindex,
-    setindex!,
-    show,
-    size,
-    stride,
-    strides,
-    summary,
-    to_indices,
-    unsafe_convert,
-    view,
-    zero,
-    zeros
-
-import Base.Broadcast: Broadcasted, BroadcastStyle
-
-import Adapt: adapt_structure, adapt_storage
-
-import LinearAlgebra: diag, exp, norm, qr, svd, mul!
-
-import TupleTools: isperm
+using Base.Cartesian: @nexprs
+using Base.Threads: @spawn
+using Base: @propagate_inbounds, DimOrInd, OneTo, ReshapedArray

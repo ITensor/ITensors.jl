@@ -1,4 +1,4 @@
-using .QuantumNumbers: QuantumNumbers, QN
+using .QuantumNumbers: QN, QuantumNumbers
 
 """
     parity_sign(P)

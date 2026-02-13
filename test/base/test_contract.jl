@@ -1,6 +1,6 @@
+using Combinatorics: Combinatorics
 using ITensors
 using Test
-using Combinatorics: Combinatorics
 
 digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
 

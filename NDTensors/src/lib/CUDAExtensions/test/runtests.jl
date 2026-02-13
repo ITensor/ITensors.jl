@@ -1,7 +1,7 @@
 @eval module $(gensym())
-using Test: @testset, @test
-using NDTensors.CUDAExtensions: cu, CuArrayAdaptor
+using NDTensors.CUDAExtensions: CuArrayAdaptor, cu
 using NDTensors.GPUArraysCoreExtensions: storagemode
+using Test: @test, @testset
 @testset "cu function exists" begin
     @test cu isa Function
     @test storagemode(CuArrayAdaptor{1}) == 1

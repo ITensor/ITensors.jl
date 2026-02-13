@@ -1,7 +1,8 @@
 @eval module $(gensym())
-using ITensors, Test
-import ITensors: Out, In
+import ITensors: In, Out
+using ITensors
 using ITensors.SiteTypes: op, siteind, siteinds
+using Test
 
 @testset "Fermions" begin
     ITensors.enable_auto_fermion()

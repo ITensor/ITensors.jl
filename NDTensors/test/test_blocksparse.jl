@@ -1,26 +1,7 @@
 @eval module $(gensym())
 using GPUArraysCore: @allowscalar
 using LinearAlgebra: Hermitian, exp, norm, svd
-using NDTensors:
-    NDTensors,
-    BlockSparseTensor,
-    array,
-    blockdims,
-    blockoffsets,
-    blockview,
-    data,
-    dense,
-    diag,
-    diaglength,
-    dims,
-    eachnzblock,
-    inds,
-    isblocknz,
-    nnz,
-    nnzblocks,
-    randomBlockSparseTensor,
-    store,
-    storage
+using NDTensors: NDTensors, BlockSparseTensor, array, blockdims, blockoffsets, blockview, data, dense, diag, diaglength, dims, eachnzblock, inds, isblocknz, nnz, nnzblocks, randomBlockSparseTensor, storage, store
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
 using Random: randn!

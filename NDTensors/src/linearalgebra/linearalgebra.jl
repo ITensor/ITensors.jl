@@ -1,12 +1,5 @@
+import .Expose: ql, ql_positive, qr_positive
 using .RankFactorization: Spectrum
-
-#
-# Linear Algebra of order 2 NDTensors
-#
-# Even though DenseTensor{_,2} is strided
-# and passable to BLAS/LAPACK, it cannot
-# be made <: StridedArray
-import .Expose: qr_positive, ql, ql_positive
 
 # TODO: Generalize this to any `Tensor` type using:
 # ```julia

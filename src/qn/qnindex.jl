@@ -1,5 +1,4 @@
-using .QuantumNumbers:
-    QuantumNumbers, Arrow, Neither, Out, have_same_mods, have_same_qns, removeqn
+using .QuantumNumbers: Arrow, Neither, Out, QuantumNumbers, have_same_mods, have_same_qns, removeqn
 using .SiteTypes: SiteTypes
 using .TagSets: TagSets
 

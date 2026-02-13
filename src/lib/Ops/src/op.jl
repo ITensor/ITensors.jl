@@ -1,6 +1,5 @@
+import Base: *, +, -, /, ==, adjoint, convert, exp, hash, isless, show
 using ..LazyApply
-
-import Base: ==, +, -, *, /, convert, exp, show, adjoint, isless, hash
 
 export Op, OpSum, which_op, site, sites, params, Applied, expand
 

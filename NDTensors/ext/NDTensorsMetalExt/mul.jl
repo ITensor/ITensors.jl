@@ -1,5 +1,5 @@
-using Metal: MtlArray
 using LinearAlgebra: LinearAlgebra, Adjoint, Transpose, mul!
+using Metal: MtlArray
 # This was calling generic matrix multiplication.
 # TODO: Raise an issue with `Metal.jl`.
 function LinearAlgebra.mul!(

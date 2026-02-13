@@ -1,13 +1,4 @@
-using LinearAlgebra:
-    Adjoint,
-    Diagonal,
-    Hermitian,
-    LowerTriangular,
-    Symmetric,
-    Transpose,
-    UnitLowerTriangular,
-    UnitUpperTriangular,
-    UpperTriangular
+using LinearAlgebra: Adjoint, Diagonal, Hermitian, LowerTriangular, Symmetric, Transpose, UnitLowerTriangular, UnitUpperTriangular, UpperTriangular
 
 for wrapper in [
         :Transpose,

@@ -1,5 +1,5 @@
-using LinearAlgebra: LinearAlgebra
 using .Vendored.TypeParameterAccessors: similartype
+using LinearAlgebra: LinearAlgebra
 
 export DiagBlockSparse, DiagBlockSparseTensor
 

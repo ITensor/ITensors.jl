@@ -1,5 +1,5 @@
-using Metal: MtlArray
 using GPUArraysCore: @allowscalar
+using Metal: MtlArray
 using NDTensors.Expose: Exposed, expose, unexpose
 ## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted using
 ## permutedims (failing in that Metal uses scalar indexing)

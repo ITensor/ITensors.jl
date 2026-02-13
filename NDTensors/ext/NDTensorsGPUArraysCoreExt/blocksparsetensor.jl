@@ -1,6 +1,6 @@
 using GPUArraysCore: @allowscalar, AbstractGPUArray
-using NDTensors: NDTensors, BlockSparseTensor, dense, diag, diaglength, map_diag!
 using NDTensors.Expose: Exposed, unexpose
+using NDTensors: NDTensors, BlockSparseTensor, dense, diag, diaglength, map_diag!
 
 ## TODO to circumvent issues with blocksparse and scalar indexing
 ## convert blocksparse GPU tensors to dense tensors and call diag

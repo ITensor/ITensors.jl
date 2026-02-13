@@ -1,12 +1,8 @@
 @eval module $(gensym())
-using Test: @test, @testset
-using NDTensors: NDTensors
-using NDTensors.BackendSelection:
-    BackendSelection, Algorithm, Backend, @Algorithm_str, @Backend_str
-# TODO: This is defined for backwards compatibility,
-# delete this alias once downstream packages change over
-# to using `BackendSelection`.
 using NDTensors.AlgorithmSelection: AlgorithmSelection
+using NDTensors.BackendSelection: @Algorithm_str, @Backend_str, Algorithm, Backend, BackendSelection
+using NDTensors: NDTensors
+using Test: @test, @testset
 @testset "BackendSelection" begin
     # TODO: This is defined for backwards compatibility,
     # delete this alias once downstream packages change over

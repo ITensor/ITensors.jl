@@ -1,5 +1,7 @@
-using ITensors, LinearAlgebra, Test
+using ITensors
 using ITensors.SiteTypes: siteinds
+using LinearAlgebra
+using Test
 
 #
 #  Decide if rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.

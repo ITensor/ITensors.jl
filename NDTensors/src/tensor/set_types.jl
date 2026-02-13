@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
+using .Vendored.TypeParameterAccessors: Position, TypeParameterAccessors, parenttype
 function TypeParameterAccessors.set_ndims(arraytype::Type{<:Tensor}, ndims)
     # TODO: Implement something like:
     # ```julia
