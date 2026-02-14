@@ -12,7 +12,7 @@ function NDTensors.svd_catch_error(A::CuMatrix; alg::String = "jacobi_algorithm"
         alg = CUDA.CUSOLVER.QRAlgorithm()
     else
         error(
-            "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",
+            "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms."
         )
     end
     return NDTensors.svd_catch_error(A, alg)

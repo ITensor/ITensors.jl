@@ -5,7 +5,7 @@ function contract(
         labelstensor1,
         tensor2::BlockSparseTensor,
         labelstensor2,
-        labelsR = contract_labels(labelstensor1, labelstensor2),
+        labelsR = contract_labels(labelstensor1, labelstensor2)
     )
     R, contraction_plan = contraction_output(
         tensor1, labelstensor1, tensor2, labelstensor2, labelsR
@@ -22,9 +22,10 @@ function contraction_output(
         labelstensor1,
         tensor2::BlockSparseTensor,
         labelstensor2,
-        labelsR,
+        labelsR
     )
-    indsR = contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsR)
+    indsR =
+        contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsR)
     TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
     blockoffsetsR, contraction_plan = contract_blockoffsets(
         blockoffsets(tensor1),
@@ -34,14 +35,15 @@ function contraction_output(
         inds(tensor2),
         labelstensor2,
         indsR,
-        labelsR,
+        labelsR
     )
     R = similar(TensorR, blockoffsetsR, indsR)
     return R, contraction_plan
 end
 
 function contract_blockoffsets(
-        boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
+        boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR,
+        labelsR
     )
     alg = Algorithm"sequential"()
     if using_threaded_blocksparse() && nthreads() > 1
@@ -59,7 +61,7 @@ function contract!(
         labelstensor1,
         tensor2::BlockSparseTensor,
         labelstensor2,
-        contraction_plan,
+        contraction_plan
     )
     if isempty(contraction_plan)
         return R

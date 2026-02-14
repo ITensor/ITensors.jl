@@ -1,6 +1,7 @@
 using HDF5: HDF5, attributes, create_group, open_group, read, write
 using ITensors: ITensor, inds, itensor, storage
-using NDTensors: NDTensors, BlockSparse, Combiner, Dense, Diag, DiagBlockSparse, EmptyStorage
+using NDTensors:
+    NDTensors, BlockSparse, Combiner, Dense, Diag, DiagBlockSparse, EmptyStorage
 
 function HDF5.write(
         parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, T::ITensor; kwargs...

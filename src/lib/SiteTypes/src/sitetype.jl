@@ -1,4 +1,5 @@
-using ..ITensors: ITensor, ITensors, Index, dag, itensor, onehot, prime, product, swapprime, tags
+using ..ITensors:
+    ITensor, ITensors, Index, dag, itensor, onehot, prime, product, swapprime, tags
 using ..SmallStrings: SmallString
 using ..TagSets: TagSet, TagSets, addtags, commontags
 using ChainRulesCore: @ignore_derivatives
@@ -37,14 +38,14 @@ or to create new site types, you can follow the instructions
 
 The current built-in site types are:
 
-- `SiteType"S=1/2"` (or `SiteType"S=½"`)
-- `SiteType"S=1"`
-- `SiteType"Qubit"`
-- `SiteType"Qudit"`
-- `SiteType"Boson"`
-- `SiteType"Fermion"`
-- `SiteType"tJ"`
-- `SiteType"Electron"`
+  - `SiteType"S=1/2"` (or `SiteType"S=½"`)
+  - `SiteType"S=1"`
+  - `SiteType"Qubit"`
+  - `SiteType"Qudit"`
+  - `SiteType"Boson"`
+  - `SiteType"Fermion"`
+  - `SiteType"tJ"`
+  - `SiteType"Electron"`
 
 # Examples
 
@@ -100,10 +101,10 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 
 Many operators are available, for example:
 
-- `SiteType"S=1/2"`: `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
-- `SiteType"Electron"`: `"Nup"`, `"Ndn"`, `"Nupdn"`, `"Ntot"`, `"Cup"`,
-   `"Cdagup"`, `"Cdn"`, `"Cdagdn"`, `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
-- ...
+  - `SiteType"S=1/2"`: `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
+  - `SiteType"Electron"`: `"Nup"`, `"Ndn"`, `"Nupdn"`, `"Ntot"`, `"Cup"`,
+    `"Cdagup"`, `"Cdn"`, `"Cdagdn"`, `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
+  - ...
 
 You can view the internal SiteType definitions and operators
 [here](https://docs.itensor.org/ITensorMPS/stable/IncludedSiteTypes.html).
@@ -183,7 +184,7 @@ function op!(
         ::SiteType,
         ::SiteType,
         sitetypes_inds::Union{SiteType, Index}...;
-        kwargs...,
+        kwargs...
     )
     return nothing
 end
@@ -263,12 +264,14 @@ function op(name::AbstractString, s::Index...; adjoint::Bool = false, kwargs...)
             start = oploc
         end
         opnames = vcat(
-            opnames, [prod([name_split[k] * " " for k in (start + 1):length(name_split)])]
+            opnames,
+            [prod([name_split[k] * " " for k in (start + 1):length(name_split)])]
         )
 
         # build the vector of blocks and sum
         op_list = [
-            coeff * (op(opname, s...; kwargs...)) for (coeff, opname) in zip(coeffs, opnames)
+            coeff * (op(opname, s...; kwargs...)) for
+                (coeff, opname) in zip(coeffs, opnames)
         ]
         return sum(op_list)
     end
@@ -377,8 +380,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool = false, kwargs...)
 
         throw(
             ArgumentError(
-                "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
-            ),
+                "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s))."
+            )
         )
     end
 
@@ -400,8 +403,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool = false, kwargs...)
 
     return throw(
         ArgumentError(
-            "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
-        ),
+            "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s))."
+        )
     )
 end
 
@@ -421,7 +424,7 @@ by M and indices s, s', t, t'
 julia> s = siteind("S=1/2")
 (dim=2|id=575|"S=1/2,Site")
 
-julia> Sz = op([1/2 0; 0 -1/2],s)
+julia> Sz = op([1/2 0; 0 -1/2], s)
 ITensor ord=2 (dim=2|id=575|"S=1/2,Site")' (dim=2|id=575|"S=1/2,Site")
 NDTensors.Dense{Float64, Vector{Float64}}
 
@@ -500,7 +503,7 @@ function op(
         f::Function,
         opname::AbstractString,
         ns::Tuple{Vararg{Integer}};
-        kwargs...,
+        kwargs...
     )
     return f(op(opname, s, ns...; kwargs...))
 end
@@ -585,10 +588,10 @@ to construct product-state MPS and for other purposes.
 
 ```julia
 s = Index(2, "Site,S=1/2")
-sup = state(s,"Up")
-sdn = state(s,"Dn")
-sxp = state(s,"X+")
-sxm = state(s,"X-")
+sup = state(s, "Up")
+sdn = state(s, "Dn")
+sxp = state(s, "X+")
+sxm = state(s, "X-")
 ```
 """
 function state(s::Index, name::AbstractString; kwargs...)::ITensor
@@ -627,8 +630,8 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
 
     return throw(
         ArgumentError(
-            "Overload of \"state\" or \"state!\" functions not found for state name \"$name\" and Index tags $(tags(s))",
-        ),
+            "Overload of \"state\" or \"state!\" functions not found for state name \"$name\" and Index tags $(tags(s))"
+        )
     )
 end
 
@@ -676,12 +679,12 @@ argument that corresponds to the input name.
 
 ```julia
 s = Index(2, "Site,S=1/2")
-val(s,"Up") == 1
-val(s,"Dn") == 2
+val(s, "Up") == 1
+val(s, "Dn") == 2
 
 s = Index(2, "Site,Fermion")
-val(s,"Emp") == 1
-val(s,"Occ") == 2
+val(s, "Emp") == 1
+val(s, "Occ") == 2
 ```
 """
 function val(s::Index, name::AbstractString)::Int
@@ -762,7 +765,7 @@ supported keyword arguments.
 
 ```julia
 N = 10
-s = siteinds("S=1/2", N; conserve_qns=true)
+s = siteinds("S=1/2", N; conserve_qns = true)
 ```
 """
 function siteinds(tag::String, N::Integer; kwargs...)
@@ -794,7 +797,8 @@ end
 Create an array of `N` site indices, each of dimension `d`.
 
 # Keywords
-- `addtags::String`: additional tags to be added to all indices
+
+  - `addtags::String`: additional tags to be added to all indices
 """
 function siteinds(d::Integer, N::Integer; kwargs...)
     return [siteind(d, n; kwargs...) for n in 1:N]
@@ -819,7 +823,10 @@ function has_fermion_string(opname::AbstractString, s::Index; kwargs...)::Bool
     if !isnothing(starpos)
         op1 = opname[1:prevind(opname, starpos)]
         op2 = opname[nextind(opname, starpos):end]
-        return xor(has_fermion_string(op1, s; kwargs...), has_fermion_string(op2, s; kwargs...))
+        return xor(
+            has_fermion_string(op1, s; kwargs...),
+            has_fermion_string(op2, s; kwargs...)
+        )
     end
 
     Ntags = length(tags(s))

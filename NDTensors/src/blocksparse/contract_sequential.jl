@@ -7,7 +7,7 @@ function contract_blockoffsets(
         inds2,
         labels2,
         indsR,
-        labelsR,
+        labelsR
     )
     N1 = length(blocktype(boffs1))
     N2 = length(blocktype(boffs2))
@@ -48,11 +48,12 @@ function contract!(
         labelstensor1,
         tensor2::BlockSparseTensor,
         labelstensor2,
-        contraction_plan,
+        contraction_plan
     )
     executor = SequentialEx()
     return contract!(
-        R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor
+        R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan,
+        executor
     )
 end
 using .Expose: expose
@@ -67,13 +68,21 @@ function contract!(
         labelsT1,
         T2::BlockSparseTensor{ElT2, N2},
         labelsT2,
-        contraction_plan,
+        contraction_plan
     ) where {ElR, ElT1, ElT2, N1, N2, NR}
     if isempty(contraction_plan)
         return R
     end
     if using_threaded_blocksparse() && nthreads() > 1
-        _contract_threaded_deprecated!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
+        _contract_threaded_deprecated!(
+            R,
+            labelsR,
+            T1,
+            labelsT1,
+            T2,
+            labelsT2,
+            contraction_plan
+        )
         return R
     end
     already_written_to = Dict{Block{NR}, Bool}()
@@ -85,7 +94,8 @@ function contract!(
 
         #<fermions>
         α = compute_alpha(
-            ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
+            ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2,
+            indsT2
         )
 
         T1block = T1[block1]
@@ -98,7 +108,8 @@ function contract!(
             β = zero(ElR)
         end
         contract!(
-            expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2, α, β
+            expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2,
+            α, β
         )
     end
     return R

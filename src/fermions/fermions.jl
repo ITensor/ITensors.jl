@@ -147,7 +147,7 @@ end
         indsT1::NTuple{N1, QNIndex},
         labelsT2,
         blockT2,
-        indsT2::NTuple{N2, QNIndex},
+        indsT2::NTuple{N2, QNIndex}
     ) where {N1, N2}
     if !using_auto_fermion()
         !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
@@ -209,7 +209,7 @@ function NDTensors.before_combiner_signs(
         labelsC_,
         indsC::NTuple{NC, QNIndex},
         labelsR,
-        indsR::NTuple{NR, QNIndex},
+        indsR::NTuple{NR, QNIndex}
     ) where {NC, NT, NR}
     if !using_auto_fermion() || !has_fermionic_subspaces(T)
         return T

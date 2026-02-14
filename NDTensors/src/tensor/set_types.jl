@@ -7,7 +7,7 @@ function TypeParameterAccessors.set_ndims(arraytype::Type{<:Tensor}, ndims)
     # However, we will also need to define `set_ndims(indstype(arraytype), ndims)`
     # and use `set_indstype(arraytype, set_ndims(indstype(arraytype), ndims))`.
     return error(
-        "Setting the number dimensions of the array type `$arraytype` (to `$ndims`) is not currently defined.",
+        "Setting the number dimensions of the array type `$arraytype` (to `$ndims`) is not currently defined."
     )
 end
 

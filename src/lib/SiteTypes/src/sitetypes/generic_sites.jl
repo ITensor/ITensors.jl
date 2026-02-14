@@ -36,7 +36,7 @@ function op!(
         s1::Index,
         sn::Index...;
         eltype = ComplexF64,
-        random_matrix = default_random_matrix(eltype, s1, sn...),
+        random_matrix = default_random_matrix(eltype, s1, sn...)
     )
     s = (s1, sn...)
     Q, _ = NDTensors.qr_positive(random_matrix)

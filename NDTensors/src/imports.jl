@@ -41,7 +41,11 @@ import Base.Broadcast: BroadcastStyle, Broadcasted
 import Base: # Methods
     checkbounds, # Symbols
     +, # Types
-    AbstractFloat, *, -, /, Array, CartesianIndex, Complex, IndexStyle, Tuple, complex, conj, convert, copy, copyto!, eachindex, eltype, empty, fill, fill!, getindex, hash, imag, isempty, isless, iterate, length, map, permutedims, permutedims!, print, promote_rule, randn, real, reshape, setindex, setindex!, show, size, stride, strides, summary, to_indices, unsafe_convert, view, zero, zeros
+    AbstractFloat, *, -, /, Array, CartesianIndex, Complex, IndexStyle, Tuple, complex,
+    conj, convert, copy, copyto!, eachindex, eltype, empty, fill, fill!, getindex, hash,
+    imag, isempty, isless, iterate, length, map, permutedims, permutedims!, print,
+    promote_rule, randn, real, reshape, setindex, setindex!, show, size, stride, strides,
+    summary, to_indices, unsafe_convert, view, zero, zeros
 import LinearAlgebra: diag, exp, mul!, norm, qr, svd
 import TupleTools: isperm
 using .AMDGPUExtensions: roc

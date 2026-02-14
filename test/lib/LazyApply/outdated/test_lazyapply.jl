@@ -1,5 +1,5 @@
+using ITensors.LazyApply: Add, LazyApply, Mul, materialize, α, ∏, ∑
 using Test
-using ITensors.LazyApply: LazyApply, Add, Mul, ∑, ∏, α, materialize
 
 @testset "LazyApply general functionality" begin
     @test materialize(∏([1, 2, Add(3, 4)])) == prod([1, 2, 3 + 4])

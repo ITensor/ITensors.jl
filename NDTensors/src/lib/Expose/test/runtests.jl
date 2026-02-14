@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using GPUArraysCore: @allowscalar
-using LinearAlgebra: LinearAlgebra, Adjoint, Diagonal, Hermitian, Symmetric, Transpose, eigen, mul!, norm, qr, svd
+using LinearAlgebra: LinearAlgebra, Adjoint, Diagonal, Hermitian, Symmetric, Transpose,
+    eigen, mul!, norm, qr, svd
 using NDTensors.Expose: Expose, Exposed, expose
 using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors: NDTensors, mul!!

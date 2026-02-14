@@ -112,19 +112,19 @@ end
 
 function strict_tags_error(str, maxlength, nchar)
     return error(
-        "You are trying to make a TagSet from the String \"$(str)\". This has more than the maximum number of allowed tags ($maxlength), or has a tag that is longer than the longest allowed tag ($nchar). Either specify fewer or shorter tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags or tag characters will be ignored.",
+        "You are trying to make a TagSet from the String \"$(str)\". This has more than the maximum number of allowed tags ($maxlength), or has a tag that is longer than the longest allowed tag ($nchar). Either specify fewer or shorter tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags or tag characters will be ignored."
     )
 end
 
 function strict_tags_add_error(ts, tsadd, maxlength)
     return error(
-        "You are trying to add the TagSet $tsadd to the TagSet $ts. The result would have more than the maximum number of allowed tags ($maxlength). Either specify fewer tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags will be ignored.",
+        "You are trying to add the TagSet $tsadd to the TagSet $ts. The result would have more than the maximum number of allowed tags ($maxlength). Either specify fewer tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags will be ignored."
     )
 end
 
 function strict_tags_replace_error(ts, tsremove, tsadd, maxlength)
     return error(
-        "You are trying to replace the TagSet $tsremove with the TagSet $tsadd in the TagSet $ts. The result would have more than the maximum number of allowed tags ($maxlength). Either specify fewer tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags will be ignored.",
+        "You are trying to replace the TagSet $tsremove with the TagSet $tsadd in the TagSet $ts. The result would have more than the maximum number of allowed tags ($maxlength). Either specify fewer tags, or use `ITensors.set_strict_tags!(false)` to disable this error, in which case extra tags will be ignored."
     )
 end
 
@@ -335,12 +335,10 @@ Iterate over the Tag's in a TagSet.
 ```jldoctest
 julia> using ITensors;
 
-
 julia> tagset = TagSet("l, tags");
 
-
 julia> for tag in tagset
-         println(tag)
+           println(tag)
        end
 l
 tags

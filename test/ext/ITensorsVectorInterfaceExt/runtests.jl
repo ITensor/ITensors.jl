@@ -1,18 +1,8 @@
 @eval module $(gensym())
 using ITensors: ITensor, Index, dag, inds, random_itensor
 using Test: @test, @testset
-using VectorInterface:
-    add,
-    add!,
-    add!!,
-    inner,
-    scalartype,
-    scale,
-    scale!,
-    scale!!,
-    zerovector,
-    zerovector!,
-    zerovector!!
+using VectorInterface: add, add!, add!!, inner, scalartype, scale, scale!, scale!!,
+    zerovector, zerovector!, zerovector!!
 
 const elts = (Float32, Float64, Complex{Float32}, Complex{Float64})
 @testset "ITensorsVectorInterfaceExt (eltype=$elt)" for elt in elts

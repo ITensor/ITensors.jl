@@ -5,7 +5,7 @@ using SafeTestsets: @safetestset
     using NDTensors: NDTensors
     @testset "$(@__DIR__)" begin
         filenames = filter(readdir(@__DIR__)) do f
-            startswith("test_")(f) && endswith(".jl")(f)
+            return startswith("test_")(f) && endswith(".jl")(f)
         end
         for dir in ["lib"]
             push!(filenames, joinpath(dir, "runtests.jl"))

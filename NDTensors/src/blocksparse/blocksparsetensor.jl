@@ -38,7 +38,7 @@ function BlockSparseTensor(
         datatype::Type{<:AbstractArray},
         ::UndefInitializer,
         blocks::Vector{<:Union{Block, NTuple}},
-        inds,
+        inds
     )
     boffs, nnz = blockoffsets(blocks, inds)
     storage = BlockSparse(datatype, undef, boffs, nnz)
@@ -101,7 +101,10 @@ end
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
-function BlockSparseTensor(blocks::Vector{BlockT}, inds) where {BlockT <: Union{Block, NTuple}}
+function BlockSparseTensor(
+        blocks::Vector{BlockT},
+        inds
+    ) where {BlockT <: Union{Block, NTuple}}
     return BlockSparseTensor(default_eltype(), blocks, inds)
 end
 
@@ -168,7 +171,7 @@ end
 
 """
 BlockSparseTensor(blocks::Vector{Block{N}},
-                  inds::BlockDims...)
+inds::BlockDims...)
 
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
@@ -226,7 +229,8 @@ function indexoffset(T::BlockSparseTensor{ElT, N}, i::Vararg{Int, N}) where {ElT
     block_dims = blockdims(T, block)
     offset_within_block = LinearIndices(block_dims)[CartesianIndex(index_within_block)]
     offset_of_block = offset(T, block)
-    offset_of_i = isnothing(offset_of_block) ? nothing : offset_of_block + offset_within_block
+    offset_of_i =
+        isnothing(offset_of_block) ? nothing : offset_of_block + offset_within_block
     return offset_of_i, block, offset_within_block
 end
 
@@ -260,7 +264,10 @@ end
 # XXX rename to insertblock!, no need to return offset
 using .Expose: Exposed, expose, unexpose
 using .Vendored.TypeParameterAccessors: unwrap_array_type
-function insertblock_offset!(T::BlockSparseTensor{ElT, N}, newblock::Block{N}) where {ElT, N}
+function insertblock_offset!(
+        T::BlockSparseTensor{ElT, N},
+        newblock::Block{N}
+    ) where {ElT, N}
     newdim = blockdim(T, newblock)
     newoffset = nnz(T)
     insert!(blockoffsets(T), newblock, newoffset)
@@ -413,7 +420,7 @@ end
 function map_diag!(
         f::Function,
         exposed_t_destination::Exposed{<:AbstractArray, <:BlockSparseTensor},
-        exposed_t_source::Exposed{<:AbstractArray, <:BlockSparseTensor},
+        exposed_t_source::Exposed{<:AbstractArray, <:BlockSparseTensor}
     )
     t_destination = unexpose(exposed_t_destination)
     t_source = unexpose(exposed_t_source)
@@ -437,7 +444,7 @@ end
 function similar_permutedims(
         T::BlockSparseTensor{<:Number, N},
         blockoffsetsR::BlockOffsets{N},
-        indsR,
+        indsR
     ) where {N}
     return NDTensors.similar(T, blockoffsetsR, indsR)
 end
@@ -450,7 +457,7 @@ const RealOrComplexBigFloat = Union{BigFloat, Complex{BigFloat}}
 function similar_permutedims(
         T::BlockSparseTensor{<:RealOrComplexBigFloat, N},
         blockoffsetsR::BlockOffsets{N},
-        indsR,
+        indsR
     ) where {N}
     return zeros(T, blockoffsetsR, indsR)
 end
@@ -477,7 +484,11 @@ end
 
 # Note that combdims is expected to be contiguous and ordered
 # smallest to largest
-function combine_dims(blocks::Vector{Block{N}}, inds, combdims::NTuple{NC, Int}) where {N, NC}
+function combine_dims(
+        blocks::Vector{Block{N}},
+        inds,
+        combdims::NTuple{NC, Int}
+    ) where {N, NC}
     nblcks = nblocks(inds, combdims)
     blocks_comb = Vector{Block{N - NC + 1}}(undef, length(blocks))
     for (i, block) in enumerate(blocks)
@@ -529,7 +540,7 @@ function permutedims_combine_output(
         perm::NTuple{N, Int},
         combdims::NTuple{NC, Int},
         blockperm::Vector{Int},
-        blockcomb::Vector{Int},
+        blockcomb::Vector{Int}
     ) where {ElT, N, NC}
     # Permute the indices
     indsT = inds(T)
@@ -563,7 +574,7 @@ function permutedims_combine(
         perm::NTuple{N, Int},
         combdims::NTuple{NC, Int},
         blockperm::Vector{Int},
-        blockcomb::Vector{Int},
+        blockcomb::Vector{Int}
     ) where {ElT, N, NC}
     R = permutedims_combine_output(T, is, perm, combdims, blockperm, blockcomb)
 
@@ -591,7 +602,8 @@ function permutedims_combine(
         offset = 0
         pos_in_new_combined_block = 1
         while b_in_combined_dim - pos_in_new_combined_block > 0 &&
-                blockcomb[b_in_combined_dim - pos_in_new_combined_block] == new_b_in_combined_dim
+                blockcomb[b_in_combined_dim - pos_in_new_combined_block] ==
+                new_b_in_combined_dim
             offset += blockdim(ind_comb, b_in_combined_dim - pos_in_new_combined_block)
             pos_in_new_combined_block += 1
         end
@@ -605,7 +617,7 @@ function permutedims_combine(
             else
                 range(1; stop = dimsRb_tot[i])
             end,
-            N - NC + 1,
+            N - NC + 1
         )
         Rb = @view array(Rb_total)[subind...]
 
@@ -685,7 +697,7 @@ function uncombine_output(
         is_labels,
         combdim::Int,
         blockperm::Vector{Int},
-        blockcomb::Vector{Int},
+        blockcomb::Vector{Int}
     ) where {ElT <: Number, N}
     labels_uncomb_perm = setdiff(is_labels, T_labels)
     ind_uncomb_perm = ⊗(is[map(x -> findfirst(==(x), is_labels), labels_uncomb_perm)]...)
@@ -695,7 +707,8 @@ function uncombine_output(
     blocks_uncomb_perm = perm_blocks(blocks_uncomb, combdim, invperm(blockperm))
     boffs_uncomb_perm, nnz_uncomb_perm = blockoffsets(blocks_uncomb_perm, inds_uncomb_perm)
     T_uncomb_perm = tensor(
-        BlockSparse(unwrap_array_type(T), boffs_uncomb_perm, nnz_uncomb_perm), inds_uncomb_perm
+        BlockSparse(unwrap_array_type(T), boffs_uncomb_perm, nnz_uncomb_perm),
+        inds_uncomb_perm
     )
     R = reshape(T_uncomb_perm, is)
     return R
@@ -717,7 +730,7 @@ function uncombine(
         is_labels,
         combdim::Int,
         blockperm::Vector{Int},
-        blockcomb::Vector{Int},
+        blockcomb::Vector{Int}
     ) where {NT}
     NR = length(is)
     R = uncombine_output(T, T_labels, is, is_labels, combdim, blockperm, blockcomb)
@@ -745,7 +758,11 @@ function uncombine(
             start = offset + 1
             stop = offset + blockdim(ind_uncomb_perm, b_uncomb_in_combined_dim)
             subind = ntuple(
-                i -> i == combdim ? range(start; stop = stop) : range(1; stop = dimsTb_tot[i]), NT
+                i -> if i == combdim
+                    range(start; stop = stop)
+                else
+                    range(1; stop = dimsTb_tot[i])
+                end, NT
             )
             offset = stop
             Tb = @view array(Tb_tot)[subind...]
@@ -786,7 +803,7 @@ function permutedims!!(
         R::BlockSparseTensor{ElR, N},
         T::BlockSparseTensor{ElT, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     RR = convert(promote_type(typeof(R), typeof(T)), R)
     permutedims!(RR, T, perm, f)
@@ -818,7 +835,7 @@ function permutedims!(
         R::BlockSparseTensor{<:Number, N},
         T::BlockSparseTensor{<:Number, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {N}
     blocks_R = keys(blockoffsets(R))
     perm_blocks_T = map(b -> permute(b, perm), keys(blockoffsets(T)))
@@ -840,13 +857,15 @@ function permutedims!(
             # Rblock doesn't exist
             block_size = permute(size(Tblock), perm)
             # TODO: Make GPU friendly.
-            DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(R), datatype(R)))
+            DenseT =
+                set_type_parameters(Dense, (eltype, parenttype), (eltype(R), datatype(R)))
             Rblock = tensor(generic_zeros(DenseT, prod(block_size)), block_size)
         elseif !Tblock_exists
             # Tblock doesn't exist
             block_size = permute(size(Rblock), invperm(perm))
             # TODO: Make GPU friendly.
-            DenseT = set_type_parameters(Dense, (eltype, parenttype), (eltype(T), datatype(T)))
+            DenseT =
+                set_type_parameters(Dense, (eltype, parenttype), (eltype(T), datatype(T)))
             Tblock = tensor(generic_zeros(DenseT, prod(block_size)), block_size)
         end
         permutedims!(Rblock, Tblock, perm, f_fac)

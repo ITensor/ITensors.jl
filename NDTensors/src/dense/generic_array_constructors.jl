@@ -1,4 +1,5 @@
-using .Vendored.TypeParameterAccessors: default_type_parameters, parenttype, set_eltype, specify_default_type_parameters, specify_type_parameters, type_parameters
+using .Vendored.TypeParameterAccessors: default_type_parameters, parenttype, set_eltype,
+    specify_default_type_parameters, specify_type_parameters, type_parameters
 ##TODO replace randn in ITensors with generic_randn
 ## and replace zeros with generic_zeros
 

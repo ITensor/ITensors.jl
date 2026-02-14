@@ -1,15 +1,7 @@
-using ITensors, Test
-using ITensors.SiteTypes:
-    @OpName_str,
-    @SiteType_str,
-    @StateName_str,
-    OpName,
-    StateName,
-    op,
-    ops,
-    siteind,
-    siteinds,
-    state
+using ITensors
+using ITensors.SiteTypes: @OpName_str, @SiteType_str, @StateName_str, OpName, StateName, op,
+    ops, siteind, siteinds, state
+using Test
 
 function is_unitary(U::ITensor; kwargs...)
     s = noprime(filterinds(U; plev = 1))
@@ -226,7 +218,8 @@ end
 
             o = op("$(ot)_op_1", s, 1, 2)
             @test o ≈ itensor(
-                [i * j for i in 1:(d^2), j in 1:(d^2)], s[2]', s[1]', dag(s[2]), dag(s[1])
+                [i * j for i in 1:(d^2), j in 1:(d^2)], s[2]', s[1]', dag(s[2]),
+                dag(s[1])
             )
 
             d = 4
@@ -263,7 +256,7 @@ end
                 ::SiteType"_Custom1",
                 ::SiteType"_Custom2",
                 s1::Index,
-                s2::Index,
+                s2::Index
             )
             Op[s1' => 1, s2' => 2, s1 => 1, s2 => 2] = +5 / 2
             Op[s1' => 2, s2' => 1, s1 => 2, s2 => 2] = +3 / 2

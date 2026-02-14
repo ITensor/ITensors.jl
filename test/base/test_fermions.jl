@@ -601,9 +601,11 @@ using Test
 
         #Factorize SVD Test. Specifying arrows on S.
         let
-            l1, l2 = Index(QN("Nf", -1) => 1, QN("Nf", 1) => 1; tags = "l1", dir = ITensors.In),
+            l1, l2 =
+                Index(QN("Nf", -1) => 1, QN("Nf", 1) => 1; tags = "l1", dir = ITensors.In),
                 Index(QN("Nf", 2) => 1, QN("Nf", 1) => 1; tags = "l2", dir = ITensors.Out)
-            r1, r2, r3 = Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags = "r1", dir = ITensors.Out),
+            r1, r2, r3 =
+                Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags = "r1", dir = ITensors.Out),
                 Index(QN("Nf", 2) => 1, QN("Nf", 1) => 1; tags = "r2", dir = ITensors.In),
                 Index(QN("Nf", -2) => 1, QN("Nf", 1) => 1; tags = "r3", dir = ITensors.In)
             A = random_itensor(l1, l2, r1, r2, r3)
@@ -733,7 +735,13 @@ using Test
             A = ITensor(QN("Nf", 2, -1), s[1], s[2], s[3])
             A[s[1] => 1, s[2] => 2, s[3] => 2] = 1.0
 
-            U, R = factorize(A, (s[1], s[2]); which_decomp = "eigen", cutoff = 1.0e-18, ortho = "left")
+            U, R = factorize(
+                A,
+                (s[1], s[2]);
+                which_decomp = "eigen",
+                cutoff = 1.0e-18,
+                ortho = "left"
+            )
 
             @test norm(U * R - A) < 1.0e-12
         end
@@ -802,7 +810,9 @@ using Test
         @test id_tensor ≈ exp(0.0 * id_tensor, (dag(s[2]), dag(s[1])), (s[2]', s[1]'))
 
         # Check wrong index ordering fails (i.e. we are actually paying attention to it)
-        @test norm(id_tensor - exp(0.0 * id_tensor, (dag(s[1]), dag(s[2])), (s[2]', s[1]'))) > 1
+        @test norm(
+            id_tensor - exp(0.0 * id_tensor, (dag(s[1]), dag(s[2])), (s[2]', s[1]'))
+        ) > 1
 
         # Test a different, random tensor
         T = random_itensor(s[1]', dag(s[1]))

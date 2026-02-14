@@ -7,7 +7,7 @@ function before_combiner_signs(
         combiner_tensor_labels,
         indscombiner_tensor,
         labelsoutput_tensor,
-        output_tensor_inds,
+        output_tensor_inds
     )
     return tensor
 end
@@ -17,7 +17,7 @@ function after_combiner_signs(
         output_tensor_inds,
         combiner_tensor,
         combiner_tensor_labels,
-        indscombiner_tensor,
+        indscombiner_tensor
     )
     return output_tensor
 end
@@ -26,7 +26,7 @@ function contract(
         tensor::BlockSparseTensor,
         tensor_labels,
         combiner_tensor::CombinerTensor,
-        combiner_tensor_labels,
+        combiner_tensor_labels
     )
     #@timeit_debug timer "Block sparse (un)combiner" begin
     # Get the label marking the combined index
@@ -52,7 +52,7 @@ function contract(
             combiner_tensor_labels,
             inds(tensor),
             tensor_labels,
-            output_tensor_labels,
+            output_tensor_labels
         )
 
         #<fermions>:
@@ -64,7 +64,7 @@ function contract(
             combiner_tensor_labels,
             inds(combiner_tensor),
             output_tensor_labels,
-            output_tensor_inds,
+            output_tensor_inds
         )
 
         perm = getperm(output_tensor_labels_uc, tensor_labels)
@@ -75,7 +75,7 @@ function contract(
             perm,
             ucpos_in_tensor_labels,
             blockperm(combiner_tensor),
-            blockcomb(combiner_tensor),
+            blockcomb(combiner_tensor)
         )
         return output_tensor
     else # Uncombining
@@ -84,7 +84,8 @@ function contract(
         # Move combined index to first position
         if cpos_in_output_tensor_labels != 1
             output_tensor_labels_orig = output_tensor_labels
-            output_tensor_labels = deleteat(output_tensor_labels, cpos_in_output_tensor_labels)
+            output_tensor_labels =
+                deleteat(output_tensor_labels, cpos_in_output_tensor_labels)
             output_tensor_labels = insertafter(output_tensor_labels, clabel, 0)
             cpos_in_output_tensor_labels = 1
             perm = getperm(output_tensor_labels, output_tensor_labels_orig)
@@ -99,7 +100,7 @@ function contract(
             combiner_tensor_labels,
             inds(tensor),
             tensor_labels,
-            output_tensor_labels_uc,
+            output_tensor_labels_uc
         )
 
         # <fermions>:
@@ -111,7 +112,7 @@ function contract(
             combiner_tensor_labels,
             inds(combiner_tensor),
             output_tensor_labels_uc,
-            output_tensor_inds_uc,
+            output_tensor_inds_uc
         )
 
         output_tensor = uncombine(
@@ -121,7 +122,7 @@ function contract(
             output_tensor_labels_uc,
             cpos_in_output_tensor_labels,
             blockperm(combiner_tensor),
-            blockcomb(combiner_tensor),
+            blockcomb(combiner_tensor)
         )
 
         # <fermions>:
@@ -131,7 +132,7 @@ function contract(
             output_tensor_inds_uc,
             combiner_tensor,
             combiner_tensor_labels,
-            inds(combiner_tensor),
+            inds(combiner_tensor)
         )
 
         return output_tensor
@@ -145,7 +146,7 @@ function contract(
         combiner_tensor::CombinerTensor,
         combiner_tensor_labels,
         tensor::BlockSparseTensor,
-        tensor_labels,
+        tensor_labels
     )
     return contract(tensor, tensor_labels, combiner_tensor, combiner_tensor_labels)
 end
@@ -156,7 +157,7 @@ function contract(
         tensor::BlockSparseTensor,
         tensor_labels,
         combiner_tensor::CombinerTensor{<:Any, 0},
-        combiner_tensor_labels,
+        combiner_tensor_labels
     )
     return copy(tensor)
 end

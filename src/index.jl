@@ -1,5 +1,6 @@
 using .QuantumNumbers: Arrow, In, Neither, Out, QuantumNumbers
-using .TagSets: @ts_str, TagSet, TagSets, addtags, commontags, hastags, removetags, replacetags
+using .TagSets:
+    @ts_str, TagSet, TagSets, addtags, commontags, hastags, removetags, replacetags
 using NDTensors: NDTensors, sim
 using Random: Xoshiro
 
@@ -58,7 +59,7 @@ and a prime level `plev`.
 # Examples
 
 ```jldoctest; filter=r"id=[0-9]{1,3}"
-julia> i = Index(2; tags="l", plev=1)
+julia> i = Index(2; tags = "l", plev = 1)
 (dim=2|id=818|"l")'
 
 julia> dim(i)
@@ -233,7 +234,7 @@ Check if an `Index` `i` has the provided prime level.
 # Examples
 
 ```jldoctest; filter=r"id=[0-9]{1,3}"
-julia> i = Index(2; plev=2)
+julia> i = Index(2; plev = 2)
 (dim=2|id=543)''
 
 julia> hasplev(i, 2)
@@ -426,7 +427,7 @@ comma-separated strings of tags, or TagSet objects.
 # Examples
 
 ```jldoctest; filter=r"id=[0-9]{1,3}"
-julia> i = Index(2; tags="l,x", plev=1)
+julia> i = Index(2; tags = "l,x", plev = 1)
 (dim=2|id=83|"l,x")'
 
 julia> replacetags(i, "l", "m")
@@ -483,7 +484,8 @@ Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
 function Base.iterate(i::Index, state::Int = 1)
     Base.depwarn(
-        "iteration of `Index` is deprecated, use `eachindval` or `eachval` instead.", :iterate
+        "iteration of `Index` is deprecated, use `eachindval` or `eachval` instead.",
+        :iterate
     )
     (state > dim(i)) && return nothing
     return (i => state, state + 1)
@@ -633,7 +635,7 @@ function Base.show(io::IO, i::Index)
     return if length(tags(i)) > 0
         print(
             io,
-            "(dim=$(space(i))|id=$(idstr)|\"$(TagSets.tagstring(tags(i)))\")$(primestring(plev(i)))",
+            "(dim=$(space(i))|id=$(idstr)|\"$(TagSets.tagstring(tags(i)))\")$(primestring(plev(i)))"
         )
     else
         print(io, "(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")

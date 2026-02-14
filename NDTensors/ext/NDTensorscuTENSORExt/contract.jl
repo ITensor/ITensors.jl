@@ -20,7 +20,7 @@ function NDTensors.contract!(
         exposedT2::Exposed{<:CuArray, <:DenseTensor},
         labelsT2,
         α::Number = one(Bool),
-        β::Number = zero(Bool),
+        β::Number = zero(Bool)
     )
     R, T1, T2 = unexpose.((exposedR, exposedT1, exposedT2))
     zoffR = iszero(array(R).offset)
@@ -34,7 +34,7 @@ function NDTensors.contract!(
     elt = promote_type(eltype.((arrayR, arrayT1, arrayT2))...)
     if elt !== eltype(arrayR)
         return error(
-            "In cuTENSOR contraction, input tensors have element types `$(eltype(arrayT1))` and `$(eltype(arrayT2))` while the output has element type `$(eltype(arrayR))`.",
+            "In cuTENSOR contraction, input tensors have element types `$(eltype(arrayT1))` and `$(eltype(arrayT2))` while the output has element type `$(eltype(arrayR))`."
         )
     end
     arrayT1 = convert(CuArray{elt}, arrayT1)

@@ -14,7 +14,7 @@ end
 function NDTensors.map_diag!(
         f::Function,
         exposed_t_destination::Exposed{<:AbstractGPUArray, <:BlockSparseTensor},
-        exposed_t_source::Exposed{<:AbstractGPUArray, <:BlockSparseTensor},
+        exposed_t_source::Exposed{<:AbstractGPUArray, <:BlockSparseTensor}
     )
     t_destination = unexpose(exposed_t_destination)
     t_source = unexpose(exposed_t_source)

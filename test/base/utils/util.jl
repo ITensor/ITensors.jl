@@ -10,7 +10,11 @@ function make_illconditioned_matrix(T = 5000)
         zerofreq = findfirst(iszero, f)
         zerofreq !== nothing &&
             zerofreq != 1 &&
-            throw(ArgumentError("If zero frequency is included it must be the first frequency"))
+            throw(
+            ArgumentError(
+                "If zero frequency is included it must be the first frequency"
+            )
+        )
         return zerofreq
     end
     function get_fourier_regressor(t, f)

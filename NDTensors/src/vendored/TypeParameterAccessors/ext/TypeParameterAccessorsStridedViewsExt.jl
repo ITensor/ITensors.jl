@@ -1,6 +1,7 @@
 module TypeParameterAccessorsStridedViewsExt
 
-using NDTensors.Vendored.TypeParameterAccessors: Position, TypeParameterAccessors, parenttype
+using NDTensors.Vendored.TypeParameterAccessors:
+    Position, TypeParameterAccessors, parenttype
 using StridedViews: StridedView
 
 TypeParameterAccessors.position(::Type{<:StridedView}, ::typeof(eltype)) = Position(1)

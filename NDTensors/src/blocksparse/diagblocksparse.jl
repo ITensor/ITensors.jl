@@ -20,7 +20,10 @@ struct DiagBlockSparse{ElT, VecT, N} <: TensorStorage{ElT}
     end
 
     # Uniform case
-    function DiagBlockSparse(data::VecT, blockoffsets::BlockOffsets{N}) where {VecT <: Number, N}
+    function DiagBlockSparse(
+            data::VecT,
+            blockoffsets::BlockOffsets{N}
+        ) where {VecT <: Number, N}
         return new{VecT, VecT, N}(data, blockoffsets)
     end
 end
@@ -69,7 +72,7 @@ function DiagBlockSparse(
         datatype::Type{<:AbstractArray},
         ::UndefInitializer,
         boffs::BlockOffsets,
-        diaglength::Integer,
+        diaglength::Integer
     )
     return DiagBlockSparse(datatype(undef, diaglength), boffs)
 end
@@ -79,7 +82,8 @@ function DiagBlockSparse(::UndefInitializer, boffs::BlockOffsets, diaglength::In
 end
 
 function findblock(
-        D::DiagBlockSparse{<:Number, <:Union{Number, AbstractVector}, N}, block::Block{N}; vargs...
+        D::DiagBlockSparse{<:Number, <:Union{Number, AbstractVector}, N}, block::Block{N};
+        vargs...
     ) where {N}
     return findblock(diagblockoffsets(D), block; vargs...)
 end
@@ -161,7 +165,7 @@ end
 
 function promote_rule(
         ::Type{<:NonuniformDiagBlockSparse{ElT1, VecT1}},
-        ::Type{<:NonuniformDiagBlockSparse{ElT2, VecT2}},
+        ::Type{<:NonuniformDiagBlockSparse{ElT2, VecT2}}
     ) where {ElT1, VecT1 <: AbstractVector, ElT2, VecT2 <: AbstractVector}
     ElR = promote_type(ElT1, ElT2)
     VecR = promote_type(VecT1, VecT2)
@@ -181,7 +185,7 @@ end
 # Make a similartype(AbstractVector{S2},T1) -> AbstractVector{T1} function?
 function promote_rule(
         ::Type{<:UniformDiagBlockSparse{ElT1, VecT1}},
-        ::Type{<:NonuniformDiagBlockSparse{ElT2, Vector{ElT2}}},
+        ::Type{<:NonuniformDiagBlockSparse{ElT2, Vector{ElT2}}}
     ) where {ElT1, VecT1 <: Number, ElT2}
     ElR = promote_type(ElT1, ElT2)
     VecR = Vector{ElR}
@@ -280,13 +284,15 @@ end
 # These are rules for determining the output of a pairwise contraction of NDTensors
 # (given the indices of the output tensors)
 function contraction_output_type(
-        TensorT1::Type{<:DiagBlockSparseTensor}, TensorT2::Type{<:BlockSparseTensor}, indsR::Tuple
+        TensorT1::Type{<:DiagBlockSparseTensor}, TensorT2::Type{<:BlockSparseTensor},
+        indsR::Tuple
     )
     return similartype(promote_type(TensorT1, TensorT2), indsR)
 end
 
 function contraction_output_type(
-        TensorT1::Type{<:BlockSparseTensor}, TensorT2::Type{<:DiagBlockSparseTensor}, indsR::Tuple
+        TensorT1::Type{<:BlockSparseTensor}, TensorT2::Type{<:DiagBlockSparseTensor},
+        indsR::Tuple
     )
     return contraction_output_type(TensorT2, TensorT1, indsR)
 end
@@ -300,7 +306,7 @@ end
 function contraction_output_type(
         TensorT1::Type{<:DiagBlockSparseTensor{<:Number, N1}},
         TensorT2::Type{<:DiagBlockSparseTensor{<:Number, N2}},
-        indsR::Tuple,
+        indsR::Tuple
     ) where {N1, N2}
     if ValLength(indsR) === Val{N1 + N2}
         # Turn into is_outer(inds1,inds2,indsR) function?
@@ -328,9 +334,10 @@ function contraction_output(
         labelstensor1,
         tensor2::DiagBlockSparseTensor,
         labelstensor2,
-        labelsR,
+        labelsR
     )
-    indsR = contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsR)
+    indsR =
+        contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsR)
     TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
     blockoffsetsR, contraction_plan = contract_blockoffsets(
         blockoffsets(tensor1),
@@ -340,7 +347,7 @@ function contraction_output(
         inds(tensor2),
         labelstensor2,
         indsR,
-        labelsR,
+        labelsR
     )
     R = similar(TensorR, blockoffsetsR, indsR)
     return R # , contraction_plan
@@ -466,7 +473,7 @@ end
 function outer!(
         R::DenseTensor{<:Number, NR},
         T1::DiagBlockSparseTensor{<:Number, N1},
-        T2::DiagBlockSparseTensor{<:Number, N2},
+        T2::DiagBlockSparseTensor{<:Number, N2}
     ) where {NR, N1, N2}
     for i1 in 1:diaglength(T1), i2 in 1:diaglength(T2)
         indsR = CartesianIndex{NR}(ntuple(r -> r ≤ N1 ? i1 : i2, Val(NR)))
@@ -502,7 +509,7 @@ function permutedims!(
         R::DiagBlockSparseTensor{<:Number, N},
         T::DiagBlockSparseTensor{<:Number, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {N}
     # TODO: check that inds(R)==permute(inds(T),perm)?
     for i in 1:diaglength(R)
@@ -523,7 +530,7 @@ function permutedims!!(
         R::NonuniformDiagBlockSparseTensor{<:Number, N},
         T::NonuniformDiagBlockSparseTensor{<:Number, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {N}
     RR = convert(promote_type(typeof(R), typeof(T)), R)
     permutedims!(RR, T, perm, f)
@@ -534,7 +541,7 @@ function permutedims!!(
         R::UniformDiagBlockSparseTensor{ElR, N},
         T::UniformDiagBlockSparseTensor{ElT, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     RR = convert(promote_type(typeof(R), typeof(T)), R)
     RR = tensor(DiagBlockSparse(f(getdiagindex(RR, 1), getdiagindex(T, 1))), inds(RR))
@@ -545,7 +552,7 @@ function permutedims!(
         R::DenseTensor{ElR, N},
         T::DiagBlockSparseTensor{ElT, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     for i in 1:diaglength(T)
         @inbounds setdiagindex!(R, f(getdiagindex(R, i), getdiagindex(T, i)), i)
@@ -557,7 +564,7 @@ function permutedims!!(
         R::DenseTensor{ElR, N},
         T::DiagBlockSparseTensor{ElT, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     permutedims!(R, T, perm, f)
     return R
@@ -569,7 +576,7 @@ function _contract!!(
         T1::UniformDiagBlockSparseTensor{<:Number, N1},
         labelsT1,
         T2::UniformDiagBlockSparseTensor{<:Number, N2},
-        labelsT2,
+        labelsT2
     ) where {ElR, NR, N1, N2}
     if NR == 0  # If all indices of A and B are contracted
         # all indices are summed over, just add the product of the diagonal
@@ -604,7 +611,7 @@ function contraction_output(
         inds(T2),
         labelsT2,
         indsR,
-        labelsR,
+        labelsR
     )
     R = zeros(TensorR, blockoffsetsR, indsR)
     return R, contraction_plan
@@ -615,7 +622,7 @@ function contract(
         labelsT1,
         T2::DiagBlockSparseTensor,
         labelsT2,
-        labelsR = contract_labels(labelsT1, labelsT2),
+        labelsR = contract_labels(labelsT1, labelsT2)
     )
     R, contraction_plan = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
     R = contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
@@ -627,7 +634,7 @@ function contract(
         labelsT1,
         T2::BlockSparseTensor,
         labelsT2,
-        labelsR = contract_labels(labelsT2, labelsT1),
+        labelsR = contract_labels(labelsT2, labelsT1)
     )
     return contract(T2, labelsT2, T1, labelsT1, labelsR)
 end
@@ -639,11 +646,11 @@ function contract!(
         labelsT1,
         T2::DiagBlockSparseTensor,
         labelsT2,
-        contraction_plan,
+        contraction_plan
     ) where {ElR <: Number, NR}
     if any(b -> !allequal(Tuple(b)), nzblocks(T2))
         return error(
-            "When contracting a BlockSparse tensor with a DiagBlockSparse tensor, the DiagBlockSparse tensor must be block diagonal for the time being.",
+            "When contracting a BlockSparse tensor with a DiagBlockSparse tensor, the DiagBlockSparse tensor must be block diagonal for the time being."
         )
     end
     already_written_to = Dict{Block{NR}, Bool}()
@@ -659,7 +666,8 @@ function contract!(
 
         # <fermions>
         α = compute_alpha(
-            ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
+            ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2,
+            indsT2
         )
 
         β = one(ElR)
@@ -669,7 +677,8 @@ function contract!(
             β = zero(ElR)
         end
         contract!(
-            expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2, α, β
+            expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2,
+            α, β
         )
     end
     return R
@@ -681,7 +690,7 @@ function contract!(
         A::BlockSparseTensor,
         Alabels,
         B::DiagBlockSparseTensor,
-        Blabels,
+        Blabels
     )
     return contract!(C, Clabels, B, Blabels, A, Alabels)
 end

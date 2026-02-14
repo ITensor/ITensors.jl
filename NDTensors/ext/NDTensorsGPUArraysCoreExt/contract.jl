@@ -13,13 +13,14 @@ function NDTensors.contract!(
         labelstensor2,
         α::Number = one(Bool),
         β::Number = zero(Bool);
-        convert_to_dense::Bool = true,
+        convert_to_dense::Bool = true
     )
     # Convert tensor1 to dense.
     # TODO: Define `Exposed` overload for `dense`.
     tensor1 = expose(dense(unexpose(tensor1)))
     contract!(
-        output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2, α, β
+        output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2,
+        α, β
     )
     return output_tensor
 end
@@ -32,10 +33,11 @@ function NDTensors.contract!(
         tensor2::Exposed{<:AbstractGPUArray, <:DiagTensor},
         labelstensor2,
         α::Number = one(Bool),
-        β::Number = zero(Bool),
+        β::Number = zero(Bool)
     )
     contract!(
-        output_tensor, labelsoutput_tensor, tensor2, labelstensor2, tensor1, labelstensor1, α, β
+        output_tensor, labelsoutput_tensor, tensor2, labelstensor2, tensor1, labelstensor1,
+        α, β
     )
     return output_tensor
 end
@@ -50,7 +52,7 @@ function NDTensors.contract!(
         tensor2::Exposed{<:AbstractGPUArray, <:DenseTensor},
         labelstensor2,
         α::Number = one(Bool),
-        β::Number = zero(Bool),
+        β::Number = zero(Bool)
     )
     # Convert tensor1 to dense.
     # TODO: Define `Exposed` overload for `dense`.
@@ -59,7 +61,8 @@ function NDTensors.contract!(
         adapt(set_ndims(parenttype(typeof(tensor2)), 1), dense(unexpose(tensor1)))
     )
     contract!(
-        output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2, α, β
+        output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2,
+        α, β
     )
     return output_tensor
 end
@@ -72,10 +75,11 @@ function NDTensors.contract!(
         tensor2::Exposed{<:Number, <:DiagTensor},
         labelstensor2,
         α::Number = one(Bool),
-        β::Number = zero(Bool),
+        β::Number = zero(Bool)
     )
     contract!(
-        output_tensor, labelsoutput_tensor, tensor2, labelstensor2, tensor1, labelstensor1, α, β
+        output_tensor, labelsoutput_tensor, tensor2, labelstensor2, tensor1, labelstensor1,
+        α, β
     )
     return output_tensor
 end

@@ -50,7 +50,7 @@ end
 ## end
 
 struct Op
-    which_op
+    which_op::Any
     sites::Tuple
     params::NamedTuple
     function Op(which_op, site...; kwargs...)
@@ -314,7 +314,11 @@ function show(io::IO, ::MIME"text/plain", o::Prod{Op})
 end
 show(io::IO, o::Prod{Op}) = show(io, MIME("text/plain"), o)
 
-function show(io::IO, m::MIME"text/plain", o::Scaled{C, O}) where {C, O <: Union{Op, Prod{Op}}}
+function show(
+        io::IO,
+        m::MIME"text/plain",
+        o::Scaled{C, O}
+    ) where {C, O <: Union{Op, Prod{Op}}}
     c = coefficient(o)
     if isreal(c)
         c = real(c)

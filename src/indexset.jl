@@ -13,7 +13,7 @@ A value type representing the order of an ITensor.
 """ Order
 
 """
-   Order(N) = Order{N}()
+Order(N) = Order{N}()
 Create an instance of the value type Order representing
 the order of an ITensor.
 """
@@ -459,11 +459,11 @@ of the provided `Index` objects.
 # Example
 
 ```julia
-i = Index(3; tags="i")
-j = Index(2; tags="j")
+i = Index(3; tags = "i")
+j = Index(2; tags = "j")
 T = random_itensor(j, i)
 for iv in eachindval(i, j)
-  @show T[iv...]
+    @show T[iv...]
 end
 ```
 """
@@ -620,7 +620,9 @@ replaceind(is::Indices, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
 
 function replaceind(is::Indices, i1::Index, i2::Indices)
     length(i2) != 1 &&
-        throw(ArgumentError("cannot use replaceind with an Indices of length $(length(i2))"))
+        throw(
+        ArgumentError("cannot use replaceind with an Indices of length $(length(i2))")
+    )
     return replaceinds(is, (i1,), i2)
 end
 
@@ -656,8 +658,8 @@ mergeblocks(is::Indices) = map(mergeblocks, is)
 function permute(is1::Indices, is2::Indices)
     length(is1) != length(is2) && throw(
         ArgumentError(
-            "length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))",
-        ),
+            "length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))"
+        )
     )
     perm = getperm(is1, is2)
     return is1[invperm(perm)]
@@ -681,7 +683,7 @@ function compute_contraction_labels(Ais::Tuple, Bis::Tuple)
         if Ais_i == Bis_j
             if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
                 error(
-                    "Attempting to contract IndexSet:\n\n$(Ais)\n\nwith IndexSet:\n\n$(Bis)\n\nQN indices must have opposite direction to contract, but indices:\n\n$(Ais_i)\n\nand:\n\n$(Bis_j)\n\ndo not have opposite directions.",
+                    "Attempting to contract IndexSet:\n\n$(Ais)\n\nwith IndexSet:\n\n$(Bis)\n\nQN indices must have opposite direction to contract, but indices:\n\n$(Ais_i)\n\nand:\n\n$(Bis_j)\n\ndo not have opposite directions."
                 )
             end
             Alabels[i] = Blabels[j] = -(1 + ncont)
@@ -908,8 +910,8 @@ is subject to change.
 ```julia
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
-ITensors.block(is, 3, 1) == (2,1)
-ITensors.block(is, 1, 2) == (1,1)
+ITensors.block(is, 3, 1) == (2, 1)
+ITensors.block(is, 1, 2) == (1, 1)
 ```
 """
 block(inds::Indices, vals::Integer...) = blockindex(inds, vals...)[2]

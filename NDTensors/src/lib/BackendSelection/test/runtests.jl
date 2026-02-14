@@ -1,6 +1,7 @@
 @eval module $(gensym())
 using NDTensors.AlgorithmSelection: AlgorithmSelection
-using NDTensors.BackendSelection: @Algorithm_str, @Backend_str, Algorithm, Backend, BackendSelection
+using NDTensors.BackendSelection:
+    @Algorithm_str, @Backend_str, Algorithm, Backend, BackendSelection
 using NDTensors: NDTensors
 using Test: @test, @testset
 @testset "BackendSelection" begin

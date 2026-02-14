@@ -14,8 +14,8 @@ end
 function LinearAlgebra.dot(x::Tensor, y::Tensor)
     size(x) == size(y) || throw(
         DimensionMismatch(
-            "dimensions must match in `dot(x::Tensor, y::Tensor)`: `x` has size `$(size(x))` while `y` has size `$(size(y))`.",
-        ),
+            "dimensions must match in `dot(x::Tensor, y::Tensor)`: `x` has size `$(size(x))` while `y` has size `$(size(y))`."
+        )
     )
     labels = ntuple(dim -> -dim, ndims(x))
     return contract(conj(x), labels, y, labels)[]
@@ -86,7 +86,7 @@ function svd(
         use_relative_cutoff = nothing,
         alg = nothing,
         # Only used by BlockSparse svd
-        min_blockdim = nothing,
+        min_blockdim = nothing
     ) where {ElT, IndsT}
     alg = replace_nothing(alg, default_svd_alg(T))
     if alg == "divide_and_conquer"
@@ -114,7 +114,7 @@ function svd(
         MUSV = svd_catch_error(matrix(T); alg)
     else
         error(
-            "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",
+            "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms."
         )
     end
     if isnothing(MUSV)
@@ -165,7 +165,7 @@ function LinearAlgebra.eigen(
         maxdim = nothing,
         cutoff = nothing,
         use_absolute_cutoff = nothing,
-        use_relative_cutoff = nothing,
+        use_relative_cutoff = nothing
     ) where {ElT <: Union{Real, Complex}, IndsT}
     matrixT = matrix(T)
     ## TODO Here I am calling parent to ensure that the correct `any` function
@@ -175,7 +175,7 @@ function LinearAlgebra.eigen(
         throw(
             ArgumentError(
                 "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
-            ),
+            )
         )
     end
 
@@ -273,14 +273,14 @@ function LinearAlgebra.eigen(
         maxdim = nothing,
         cutoff = nothing,
         use_absolute_cutoff = nothing,
-        use_relative_cutoff = nothing,
+        use_relative_cutoff = nothing
     ) where {ElT <: Union{Real, Complex}, IndsT}
     matrixT = matrix(T)
     if any(!isfinite, matrixT)
         throw(
             ArgumentError(
                 "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
-            ),
+            )
         )
     end
 

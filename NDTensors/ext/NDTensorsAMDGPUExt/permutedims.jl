@@ -15,7 +15,7 @@ function Base.permutedims!(
         Edest::Exposed{<:ROCArray, <:Base.ReshapedArray{<:Any, <:Any, <:Adjoint}},
         Esrc::Exposed{<:ROCArray},
         perm,
-        f,
+        f
     )
     Aperm = reshape(permutedims(Esrc, perm), size(parent(Edest)))
     parent(Edest) .= f.(parent(Edest), Aperm)

@@ -57,7 +57,7 @@ function argsdict(
         default_named_type::Type = AutoType,
         save_positional::Bool = true,
         default_positional_type::Type = String,
-        prefix::String = "_arg",
+        prefix::String = "_arg"
     )
     KeyType = as_symbols ? Symbol : String
     parsed = Dict{KeyType, Any}()

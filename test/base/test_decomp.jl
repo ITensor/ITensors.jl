@@ -154,7 +154,8 @@ end
         l = commonind(x, y)
         @test dim(l) == dj
         xδ, yδ = factorize(
-            a, i; ortho = "left", which_decomp = "eigen", eigen_perturbation = δ², maxdim
+            a, i; ortho = "left", which_decomp = "eigen", eigen_perturbation = δ²,
+            maxdim
         )
         lδ = commonind(xδ, yδ)
         @test dim(lδ) == maxdim
@@ -474,7 +475,7 @@ end
                 QN("Sz", -2) => 4,
                 QN("Sz", -4) => 1,
             ],
-            "i",
+            "i"
         )
         j = sim(i)
         X = random_itensor(QN("Sz", 0), i, j)
