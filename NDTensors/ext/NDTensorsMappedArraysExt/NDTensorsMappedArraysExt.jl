@@ -17,12 +17,9 @@ using MappedArrays: ReadonlyMappedArray
 using NDTensors: AllowAlias
 # It is a bit unfortunate that we have to define this, it fixes an ambiguity
 # error with MappedArrays.
-function (
-        arraytype::Type{ReadonlyMappedArray{T, N, A, F}} where {T, N, A <: AbstractArray, F},
-    )
-    (
-        ::AllowAlias, a::AbstractArray,
-    )
+const _ReadonlyMappedArray =
+    ReadonlyMappedArray{T, N, A, F} where {T, N, A <: AbstractArray, F}
+function (::_ReadonlyMappedArray)(::AllowAlias, a::AbstractArray)
     return a
 end
 end
