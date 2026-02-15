@@ -9,7 +9,7 @@ function LinearAlgebra.mul!(
         AM::Exposed{<:CuArray},
         BM::Exposed{<:CuArray},
         α,
-        β,
+        β
     )
     mul!(transpose(CM), transpose(BM), transpose(AM), α, β)
     return unexpose(CM)
@@ -22,7 +22,7 @@ function LinearAlgebra.mul!(
         AM::Exposed{<:CuArray},
         BM::Exposed{<:CuArray},
         α,
-        β,
+        β
     )
     mul!(CM', BM', AM', α, β)
     return unexpose(CM)
@@ -40,7 +40,7 @@ function LinearAlgebra.mul!(
             },
         },
         α,
-        β,
+        β
     )
     mul!(CM, AM, expose(transpose(copy(expose(parent(BM))))), α, β)
     return unexpose(CM)

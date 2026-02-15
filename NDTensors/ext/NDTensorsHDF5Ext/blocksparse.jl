@@ -1,5 +1,5 @@
 using HDF5: HDF5, attributes, create_group, open_group, read, write
-using NDTensors: data, Block, blockoffsets, BlockOffsets, BlockSparse
+using NDTensors: Block, BlockOffsets, BlockSparse, blockoffsets, data
 
 # Helper function for HDF5 write/read of BlockSparse
 function offsets_to_array(boff::BlockOffsets{N}) where {N}

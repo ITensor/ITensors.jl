@@ -1,6 +1,6 @@
+using ..ITensors: ITensor, itensor, settensor!
 using LinearAlgebra: I
 using NDTensors: NDTensors, dim, tensor
-using ..ITensors: ITensor, itensor, settensor!
 
 function op!(
         o::ITensor, ::OpName"Id", ::SiteType"Generic", s1::Index, sn::Index...; eltype = Float64
@@ -36,7 +36,7 @@ function op!(
         s1::Index,
         sn::Index...;
         eltype = ComplexF64,
-        random_matrix = default_random_matrix(eltype, s1, sn...),
+        random_matrix = default_random_matrix(eltype, s1, sn...)
     )
     s = (s1, sn...)
     Q, _ = NDTensors.qr_positive(random_matrix)

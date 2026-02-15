@@ -1,6 +1,6 @@
 using ITensors
-using Test
 using Random
+using Test
 
 Random.seed!(12345)
 

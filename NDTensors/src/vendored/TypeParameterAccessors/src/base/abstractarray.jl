@@ -44,7 +44,7 @@ is_wrapped_array(arraytype::Type{<:AbstractArray}) = (parenttype(arraytype) ≠ 
 @inline is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
 @inline is_wrapped_array(object) = false
 
-using SimpleTraits: Not, @traitfn
+using SimpleTraits: @traitfn, Not
 
 @traitfn function unwrap_array_type(
         arraytype::Type{ArrayType}

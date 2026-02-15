@@ -1,6 +1,6 @@
-using ITensors, Test
-
-import ITensors: In, Out, Neither
+import ITensors: In, Neither, Out
+using ITensors
+using Test
 
 @testset "QN Index" begin
     @testset "hasqns function" begin

@@ -22,7 +22,7 @@ function space(
         qnname_sz = "Sz",
         conserve_sz = false,
         # Deprecated
-        conserve_parity = nothing,
+        conserve_parity = nothing
     )
     if !isnothing(conserve_parity)
         conserve_nfparity = conserve_parity

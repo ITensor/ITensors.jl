@@ -38,7 +38,8 @@ using Test
     Aqn = random_itensor(iqn', dag(iqn))
 
     @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(A)) == ITensors.NonQN()
-    @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(Aqn)) == ITensors.HasQNs()
+    @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(Aqn)) ==
+        ITensors.HasQNs()
 
     T = Tensor(A)
     Tqn = Tensor(Aqn)

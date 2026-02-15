@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
+using .Vendored.TypeParameterAccessors: Position, TypeParameterAccessors, parenttype
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
     return Dense{eltype(datatype), datatype}
@@ -6,7 +6,7 @@ end
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray})
     return error(
-        "Setting the `datatype` of the storage type `$storagetype` to a $(ndims(datatype))-dimsional array of type `$datatype` is not currently supported, use an `AbstractVector` instead.",
+        "Setting the `datatype` of the storage type `$storagetype` to a $(ndims(datatype))-dimsional array of type `$datatype` is not currently supported, use an `AbstractVector` instead."
     )
 end
 

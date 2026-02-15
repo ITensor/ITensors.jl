@@ -3,7 +3,9 @@
 abstract type SymmetryStyle end
 
 function symmetrystyle(T)
-    return error("No SymmetryStyle defined for the specified object $T of type $(typeof(T))")
+    return error(
+        "No SymmetryStyle defined for the specified object $T of type $(typeof(T))"
+    )
 end
 
 symmetrystyle(T, S, U, V...)::SymmetryStyle =
