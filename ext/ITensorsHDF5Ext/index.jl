@@ -1,5 +1,5 @@
 using HDF5: HDF5, attributes, create_group, open_group, read, write
-using ITensors: Arrow, dim, dir, id, Index, plev, QNBlocks, space, tags, TagSet
+using ITensors: Arrow, Index, QNBlocks, TagSet, dim, dir, id, plev, space, tags
 
 function HDF5.write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, I::Index)
     g = create_group(parent, name)
@@ -20,7 +20,11 @@ function HDF5.write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, 
     end
 end
 
-function HDF5.read(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Index})
+function HDF5.read(
+        parent::Union{HDF5.File, HDF5.Group},
+        name::AbstractString,
+        ::Type{Index}
+    )
     g = open_group(parent, name)
     if read(attributes(g)["type"]) != "Index"
         error("HDF5 group or file does not contain Index data")

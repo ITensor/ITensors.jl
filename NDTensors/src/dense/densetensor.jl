@@ -4,7 +4,8 @@ using SparseArrays: nnz
 # DenseTensor (Tensor using Dense storage)
 #
 
-const DenseTensor{ElT, N, StoreT, IndsT} = Tensor{ElT, N, StoreT, IndsT} where {StoreT <: Dense}
+const DenseTensor{ElT, N, StoreT, IndsT} =
+    Tensor{ElT, N, StoreT, IndsT} where {StoreT <: Dense}
 
 DenseTensor(::Type{ElT}, inds) where {ElT} = tensor(Dense(ElT, dim(inds)), inds)
 
@@ -167,13 +168,15 @@ end
 # Reshape a DenseTensor using the specified dimensions
 # This returns a view into the same Tensor data
 function reshape(T::DenseTensor, dims)
-    dim(T) == dim(dims) || error("Total new dimension must be the same as the old dimension")
+    dim(T) == dim(dims) ||
+        error("Total new dimension must be the same as the old dimension")
     return tensor(storage(T), dims)
 end
 
 # This version fixes method ambiguity with AbstractArray reshape
 function reshape(T::DenseTensor, dims::Dims)
-    dim(T) == dim(dims) || error("Total new dimension must be the same as the old dimension")
+    dim(T) == dim(dims) ||
+        error("Total new dimension must be the same as the old dimension")
     return tensor(storage(T), dims)
 end
 
@@ -185,7 +188,7 @@ end
 # If the storage data are regular Vectors, use Base.copyto!
 function copyto!(
         R::Tensor{<:Number, N, <:Dense{<:Number, <:Vector}},
-        T::Tensor{<:Number, N, <:Dense{<:Number, <:Vector}},
+        T::Tensor{<:Number, N, <:Dense{<:Number, <:Vector}}
     ) where {N}
     RA = array(R)
     TA = array(T)
@@ -222,7 +225,8 @@ end
 
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function permutedims!(
-        R::DenseTensor{<:Number, N, StoreT}, T::DenseTensor{<:Number, N, StoreT}, perm::NTuple{N, Int}
+        R::DenseTensor{<:Number, N, StoreT}, T::DenseTensor{<:Number, N, StoreT},
+        perm::NTuple{N, Int}
     ) where {N, StoreT <: StridedArray}
     RA = array(R)
     TA = array(T)
@@ -243,7 +247,7 @@ end
 function apply!(
         R::DenseTensor{<:Number, N, StoreT},
         T::DenseTensor{<:Number, N, StoreT},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {N, StoreT <: StridedArray}
     RA = array(R)
     TA = array(T)

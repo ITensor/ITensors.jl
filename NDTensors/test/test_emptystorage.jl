@@ -1,6 +1,6 @@
 @eval module $(gensym())
 using NDTensors
-using Test: @testset, @test
+using Test: @test, @testset
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list
 

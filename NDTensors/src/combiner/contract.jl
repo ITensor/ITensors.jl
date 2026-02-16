@@ -17,7 +17,7 @@ function contract!!(
         combiner_tensor::CombinerTensor,
         combiner_tensor_labels,
         tensor::Tensor,
-        tensor_labels,
+        tensor_labels
     )
     if ndims(combiner_tensor) ≤ 1
         # Empty combiner, acts as multiplying by 1
@@ -79,7 +79,7 @@ function contract!!(
         tensor::Tensor,
         tensor_labels,
         combiner_tensor::CombinerTensor,
-        combiner_tensor_labels,
+        combiner_tensor_labels
     )
     return contract!!(
         output_tensor,
@@ -87,7 +87,7 @@ function contract!!(
         combiner_tensor,
         combiner_tensor_labels,
         tensor,
-        tensor_labels,
+        tensor_labels
     )
 end
 
@@ -95,7 +95,7 @@ function contract(
         diag_tensor::DiagTensor,
         diag_tensor_labels,
         combiner_tensor::CombinerTensor,
-        combiner_tensor_labels,
+        combiner_tensor_labels
     )
     return contract(
         dense(diag_tensor), diag_tensor_labels, combiner_tensor, combiner_tensor_labels

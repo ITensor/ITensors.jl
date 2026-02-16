@@ -49,11 +49,17 @@ end
 function Tensor{ElT, N, StoreT, IndsT}(
         x::S, inds::Tuple
     ) where {S, ElT, N, StoreT <: TensorStorage, IndsT}
-    return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), fill!(similar(StoreT, inds), x), inds)
+    return Tensor{ElT, N, StoreT, IndsT}(
+        AllowAlias(),
+        fill!(similar(StoreT, inds), x),
+        inds
+    )
 end
 
 # constructs with zeros
-function Tensor{ElT, N, StoreT, IndsT}(inds::Tuple) where {ElT, N, StoreT <: TensorStorage, IndsT}
+function Tensor{ElT, N, StoreT, IndsT}(
+        inds::Tuple
+    ) where {ElT, N, StoreT <: TensorStorage, IndsT}
     return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), StoreT(dim(inds)), inds)
 end
 
@@ -122,7 +128,10 @@ end
 # end
 
 function randomTensor(::Type{ElT}, inds::Tuple) where {ElT}
-    return tensor(generic_randn(default_storagetype(default_datatype(ElT)), dim(inds)), inds)
+    return tensor(
+        generic_randn(default_storagetype(default_datatype(ElT)), dim(inds)),
+        inds
+    )
 end
 
 randomTensor(inds::Tuple) = randomDenseTensor(default_eltype(), inds)
@@ -265,7 +274,9 @@ function zeros(TensorT::Type{<:Tensor{ElT, N, StoreT}}, inds) where {ElT, N, Sto
 end
 
 function promote_rule(
-        ::Type{<:Tensor{ElT1, N1, StoreT1, IndsT1}}, ::Type{<:Tensor{ElT2, N2, StoreT2, IndsT2}}
+        ::Type{<:Tensor{ElT1, N1, StoreT1, IndsT1}}, ::Type{
+            <:Tensor{ElT2, N2, StoreT2, IndsT2},
+        }
     ) where {ElT1, ElT2, N1, N2, StoreT1, StoreT2, IndsT1, IndsT2}
     StoreR = promote_type(StoreT1, StoreT2)
     ElR = eltype(StoreR)
@@ -331,7 +342,7 @@ offset(T::Tensor, block) = offset(storage(T), block)
 
 """
 isblocknz(T::Tensor,
-          block::Block)
+block::Block)
 
 Check if the specified block is non-zero
 """
@@ -476,7 +487,9 @@ function Base.similar(
     return NDTensors.similar(A, ElT)
 end
 
-"`A = find_tensor(As)` returns the first Tensor among the arguments."
+"""
+`A = find_tensor(As)` returns the first Tensor among the arguments.
+"""
 find_tensor(bc::Broadcast.Broadcasted) = find_tensor(bc.args)
 find_tensor(args::Tuple) = find_tensor(find_tensor(args[1]), Base.tail(args))
 find_tensor(x) = x

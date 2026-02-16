@@ -1,4 +1,4 @@
-using ..ITensors: complex!, QN
+using ..ITensors: QN, complex!
 
 alias(::SiteType"SpinOne") = SiteType"S=1"()
 

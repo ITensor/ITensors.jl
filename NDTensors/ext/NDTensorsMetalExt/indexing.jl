@@ -1,6 +1,6 @@
-using Metal: MtlArray
 using GPUArraysCore: @allowscalar
 using LinearAlgebra: Adjoint
+using Metal: MtlArray
 using NDTensors.Expose: Exposed, expose, unexpose
 
 function Base.getindex(E::Exposed{<:MtlArray})

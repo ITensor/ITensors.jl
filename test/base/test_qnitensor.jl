@@ -800,7 +800,7 @@ Random.seed!(1234)
                     QN(("Sz", -1), ("Nf", 1)) => 1,
                     QN(("Sz", 0), ("Nf", 2)) => 1,
                 ],
-                "site,n=1",
+                "site,n=1"
             )
             s2 = replacetags(s1, "n=1", "n=2")
 
@@ -1458,8 +1458,9 @@ Random.seed!(1234)
                 copy!(
                     Random.default_rng(),
                     Xoshiro(
-                        0x4ea8944fb1006ec4, 0xec60c93e7daf5295, 0x7c967091b08e72b3, 0x13bc39357cddea97
-                    ),
+                        0x4ea8944fb1006ec4, 0xec60c93e7daf5295, 0x7c967091b08e72b3,
+                        0x13bc39357cddea97
+                    )
                 )
                 A = random_itensor(ElT, QN(1, 2), i, j, dag(i'), dag(j'))
 
@@ -1552,11 +1553,13 @@ Random.seed!(1234)
 
         @testset "issue #231" begin
             l = Index(
-                QN("Nf", -1, -1) => 2, QN("Nf", 0, -1) => 4, QN("Nf", +1, -1) => 2; tags = "CMB,Link"
+                QN("Nf", -1, -1) => 2, QN("Nf", 0, -1) => 4, QN("Nf", +1, -1) => 2;
+                tags = "CMB,Link"
             )
             s = Index(QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 1; tags = "Fermion,Site,n=4")
             r = Index(
-                QN("Nf", 1, -1) => 2, QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 2; tags = "Link,u"
+                QN("Nf", 1, -1) => 2, QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 2;
+                tags = "Link,u"
             )
 
             A = ITensor(ElT, l, s, dag(r))
@@ -1589,7 +1592,7 @@ Random.seed!(1234)
                 QN("Sz", -2) => 4,
                 QN("Sz", 0) => 6,
                 QN("Sz", 2) => 4,
-                QN("Sz", 4) => 1,
+                QN("Sz", 4) => 1
             )
             A = ITensor(ElT, s, s')
             insertblock!(A, Block(5, 2))
@@ -1607,7 +1610,7 @@ Random.seed!(1234)
                 QN("Sz", -2) => 4,
                 QN("Sz", 0) => 6,
                 QN("Sz", 2) => 4,
-                QN("Sz", 4) => 1,
+                QN("Sz", 4) => 1
             )
             A = ITensor(ElT, s, s')
             insertblock!(A, Block(5, 1))
@@ -1626,7 +1629,7 @@ Random.seed!(1234)
                 QN("Sz", -2) => 4,
                 QN("Sz", 0) => 6,
                 QN("Sz", 2) => 4,
-                QN("Sz", 4) => 1,
+                QN("Sz", 4) => 1
             )
             A = ITensor(ElT, s, s')
             insertblock!(A, Block(5, 1))
@@ -1835,7 +1838,8 @@ Random.seed!(1234)
                 if m ≤ dim(i1) && n ≤ dim(j1)
                     @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
                 elseif m > dim(i1) && n > dim(j1)
-                    @test S_vx[s[1] => m, s[2] => n] == A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
+                    @test S_vx[s[1] => m, s[2] => n] ==
+                        A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
                 else
                     @test S_vx[s[1] => m, s[2] => n] == 0
                 end

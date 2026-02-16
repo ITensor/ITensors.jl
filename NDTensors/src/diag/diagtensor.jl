@@ -1,4 +1,5 @@
-const DiagTensor{ElT, N, StoreT, IndsT} = Tensor{ElT, N, StoreT, IndsT} where {StoreT <: Diag}
+const DiagTensor{ElT, N, StoreT, IndsT} =
+    Tensor{ElT, N, StoreT, IndsT} where {StoreT <: Diag}
 const NonuniformDiagTensor{ElT, N, StoreT, IndsT} =
     Tensor{ElT, N, StoreT, IndsT} where {StoreT <: NonuniformDiag}
 const UniformDiagTensor{ElT, N, StoreT, IndsT} =
@@ -15,7 +16,10 @@ IndexStyle(::Type{<:DiagTensor}) = IndexCartesian()
 
 # TODO: this needs to be better (promote element type, check order compatibility,
 # etc.
-function convert(::Type{<:DenseTensor{ElT, N}}, T::DiagTensor{ElT, N}) where {ElT <: Number, N}
+function convert(
+        ::Type{<:DenseTensor{ElT, N}},
+        T::DiagTensor{ElT, N}
+    ) where {ElT <: Number, N}
     return dense(T)
 end
 
@@ -109,7 +113,9 @@ end
 # TODO: make a fill!! that works for uniform and non-uniform
 #fill!(T::DiagTensor,v) = fill!(storage(T),v)
 
-function dense(::Type{<:Tensor{ElT, N, StoreT, IndsT}}) where {ElT, N, StoreT <: Diag, IndsT}
+function dense(
+        ::Type{<:Tensor{ElT, N, StoreT, IndsT}}
+    ) where {ElT, N, StoreT <: Diag, IndsT}
     return Tensor{ElT, N, dense(StoreT), IndsT}
 end
 
@@ -127,7 +133,7 @@ function permutedims!(
         R::DiagTensor{<:Number, N},
         T::DiagTensor{<:Number, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {N}
     # TODO: check that inds(R)==permute(inds(T),perm)?
     diagview(R) .= f.(diagview(R), diagview(T))
@@ -155,7 +161,7 @@ function permutedims!!(
         R::NonuniformDiagTensor{<:Number, N},
         T::NonuniformDiagTensor{<:Number, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {N}
     R = convert(promote_type(typeof(R), typeof(T)), R)
     permutedims!(R, T, perm, f)
@@ -166,7 +172,7 @@ function permutedims!!(
         R::UniformDiagTensor{ElR, N},
         T::UniformDiagTensor{ElT, N},
         perm::NTuple{N, Int},
-        f::Function = (r, t) -> t,
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     R = convert(promote_type(typeof(R), typeof(T)), R)
     R = tensor(Diag(f(getdiagindex(R, 1), getdiagindex(T, 1))), inds(R))
@@ -174,14 +180,16 @@ function permutedims!!(
 end
 
 function permutedims!(
-        R::DenseTensor{ElR, N}, T::DiagTensor{ElT, N}, perm::NTuple{N, Int}, f::Function = (r, t) -> t
+        R::DenseTensor{ElR, N}, T::DiagTensor{ElT, N}, perm::NTuple{N, Int},
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     diagview(R) .= f.(diagview(R), diagview(T))
     return R
 end
 
 function permutedims!!(
-        R::DenseTensor{ElR, N}, T::DiagTensor{ElT, N}, perm::NTuple{N, Int}, f::Function = (r, t) -> t
+        R::DenseTensor{ElR, N}, T::DiagTensor{ElT, N}, perm::NTuple{N, Int},
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     RR = convert(promote_type(typeof(R), typeof(T)), R)
     permutedims!(RR, T, perm, f)
@@ -192,7 +200,8 @@ end
 # the same as the version with the input types
 # swapped.
 function permutedims!!(
-        R::DiagTensor{ElR, N}, T::DenseTensor{ElT, N}, perm::NTuple{N, Int}, f::Function = (r, t) -> t
+        R::DiagTensor{ElR, N}, T::DenseTensor{ElT, N}, perm::NTuple{N, Int},
+        f::Function = (r, t) -> t
     ) where {ElR, ElT, N}
     RR = convert(promote_type(typeof(R), typeof(T)), R)
     permutedims!(RR, T, perm, f)

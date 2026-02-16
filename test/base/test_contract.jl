@@ -1,6 +1,6 @@
+using Combinatorics: Combinatorics
 using ITensors
 using Test
-using Combinatorics: Combinatorics
 
 digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
 
@@ -141,7 +141,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
             CArray = reshape(
                 reshape(array(permute(Aijk, j, k, i)), dim(j) * dim(k), dim(i)) * array(Ai),
                 dim(j),
-                dim(k),
+                dim(k)
             )
             @test CArray ≈ array(permute(C, j, k))
         end
@@ -152,7 +152,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
                 transpose(array(Aj)) *
                     reshape(array(permute(Aijk, j, i, k)), dim(j), dim(i) * dim(k)),
                 dim(i),
-                dim(k),
+                dim(k)
             )
             @test CArray ≈ array(permute(C, i, k))
         end
@@ -161,7 +161,8 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
             Aik = permute(Aik, i, k)
             C = Aijk * Aik
             CArray =
-                reshape(array(permute(Aijk, j, i, k)), dim(j), dim(i) * dim(k)) * vec(array(Aik))
+                reshape(array(permute(Aijk, j, i, k)), dim(j), dim(i) * dim(k)) *
+                vec(array(Aik))
             @test CArray ≈ array(C)
         end
         @testset "Test contract ITensors (3-Tensor*Matrix -> 3-Tensor)" begin
@@ -169,10 +170,11 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
             Ajl = permute(Ajl, j, l)
             C = Aijk * Ajl
             CArray = reshape(
-                reshape(array(permute(Aijk, i, k, j)), dim(i) * dim(k), dim(j)) * array(Ajl),
+                reshape(array(permute(Aijk, i, k, j)), dim(i) * dim(k), dim(j)) *
+                    array(Ajl),
                 dim(i),
                 dim(k),
-                dim(l),
+                dim(l)
             )
             @test CArray ≈ array(permute(C, i, k, l))
         end
@@ -185,7 +187,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
                     reshape(array(permute(Aijk, k, i, j)), dim(k), dim(i) * dim(j)),
                 dim(l),
                 dim(i),
-                dim(j),
+                dim(j)
             )
             @test CArray ≈ array(permute(C, l, i, j))
         end
@@ -220,7 +222,11 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
                 C = Ajkl * Aijkl
                 CArray =
                     reshape(array(permute(Ajkl, j, k, l)), 1, dim(j) * dim(k) * dim(l)) *
-                    reshape(array(permute(Aijkl, j, k, l, i)), dim(j) * dim(k) * dim(l), dim(i))
+                    reshape(
+                    array(permute(Aijkl, j, k, l, i)),
+                    dim(j) * dim(k) * dim(l),
+                    dim(i)
+                )
                 @test vec(CArray) ≈ array(permute(C, i))
             end
         end
@@ -233,10 +239,14 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
                 C = Aklα * Aijkl
                 CArray = reshape(
                     reshape(array(permute(Aklα, α, k, l)), dim(α), dim(k) * dim(l)) *
-                        reshape(array(permute(Aijkl, k, l, i, j)), dim(k) * dim(l), dim(i) * dim(j)),
+                        reshape(
+                        array(permute(Aijkl, k, l, i, j)),
+                        dim(k) * dim(l),
+                        dim(i) * dim(j)
+                    ),
                     dim(α),
                     dim(i),
-                    dim(j),
+                    dim(j)
                 )
                 @test CArray ≈ array(permute(C, α, i, j))
             end

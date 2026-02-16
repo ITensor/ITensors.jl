@@ -1,12 +1,12 @@
 module ITensorsChainRulesCoreExt
-using ChainRulesCore
 import ChainRulesCore: rrule
+using ChainRulesCore
 using ITensors
-using ITensors: Indices
 using ITensors.Adapt
 using ITensors.NDTensors
 using ITensors.NDTensors: datatype
 using ITensors.Ops
+using ITensors: Indices
 include("utils.jl")
 include("projection.jl")
 include("NDTensors/tensor.jl")

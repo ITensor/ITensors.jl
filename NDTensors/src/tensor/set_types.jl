@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, Position, parenttype
+using .Vendored.TypeParameterAccessors: Position, TypeParameterAccessors, parenttype
 function TypeParameterAccessors.set_ndims(arraytype::Type{<:Tensor}, ndims)
     # TODO: Implement something like:
     # ```julia
@@ -7,7 +7,7 @@ function TypeParameterAccessors.set_ndims(arraytype::Type{<:Tensor}, ndims)
     # However, we will also need to define `set_ndims(indstype(arraytype), ndims)`
     # and use `set_indstype(arraytype, set_ndims(indstype(arraytype), ndims))`.
     return error(
-        "Setting the number dimensions of the array type `$arraytype` (to `$ndims`) is not currently defined.",
+        "Setting the number dimensions of the array type `$arraytype` (to `$ndims`) is not currently defined."
     )
 end
 

@@ -1,7 +1,7 @@
-using ITensors
-using Test
 using Combinatorics
 using Compat
+using ITensors
+using Test
 
 @testset "IndexSet" begin
     idim = 2

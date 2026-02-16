@@ -1,7 +1,7 @@
 @eval module $(gensym())
 using LinearAlgebra: norm
 using NDTensors: EmptyNumber
-using Test: @testset, @test, @test_throws
+using Test: @test, @test_throws, @testset
 
 const 𝟎 = EmptyNumber()
 

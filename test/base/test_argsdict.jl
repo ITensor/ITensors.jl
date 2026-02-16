@@ -23,7 +23,7 @@ using Test
         "1+2im",
         "s = \"use_qr\"",
         "--stringtype",
-        "y",
+        "y"
     )
     args = argsdict(args_copy)
     empty!(args_copy)
@@ -64,7 +64,7 @@ using Test
         "1+2im",
         "s -> \"use_qr\"",
         "--stringtype",
-        "y",
+        "y"
     )
     args = argsdict(
         args_copy;
@@ -73,7 +73,7 @@ using Test
         as_symbols = true,
         default_named_type = String,
         default_positional_type = ITensors.AutoType,
-        prefix = "test",
+        prefix = "test"
     )
     empty!(args_copy)
 

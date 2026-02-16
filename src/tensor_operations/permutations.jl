@@ -16,7 +16,9 @@ returns an alias of the input ITensor.
 # Examples
 
 ```julia
-i = Index(2, "index_i"); j = Index(4, "index_j"); k = Index(3, "index_k");
+i = Index(2, "index_i");
+j = Index(4, "index_j");
+k = Index(3, "index_k");
 T = random_itensor(i, j, k)
 
 pT_1 = permute(T, k, i, j)
@@ -38,7 +40,7 @@ T[1, 1, 1] == pT_alias[1, 1, 1]
 function permute(T::ITensor, new_inds...; kwargs...)
     if !hassameinds(T, indices(new_inds...))
         error(
-            "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds...))",
+            "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds...))"
         )
     end
     allow_alias = deprecated_keyword_argument(
@@ -48,7 +50,7 @@ function permute(T::ITensor, new_inds...; kwargs...)
         old_kw = :always_copy,
         default = false,
         funcsym = :permute,
-        map = !,
+        map = !
     )
     aliasstyle::Union{AllowAlias, NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
     return permute(aliasstyle, T, new_inds...)
@@ -125,6 +127,7 @@ terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
 
 !!! warning
+
     This method is intended for developer use
     only and not recommended for use in ITensor applications
     unless you know what you are doing (for example
@@ -148,6 +151,7 @@ and the indices are already in the specified ordering
 so that no permutation is required.
 
 !!! warning
+
     Note that in the future we may return specialized
     AbstractArray types for certain storage types,
     for example a `LinearAlgebra.Diagonal` type for
@@ -170,6 +174,7 @@ terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
 
 !!! warning
+
     This method is intended for developer use
     only and not recommended for use in ITensor applications
     unless you know what you are doing (for example
@@ -196,6 +201,7 @@ and the indices are already in the specified ordering
 so that no permutation is required.
 
 !!! warning
+
     Note that in the future we may return specialized
     AbstractArray types for certain storage types,
     for example a `LinearAlgebra.Diagonal` type for
@@ -233,6 +239,7 @@ and the indices are already in the specified ordering
 so that no permutation is required.
 
 !!! warning
+
     Note that in the future we may return specialized
     AbstractArray types for certain storage types,
     for example a `LinearAlgebra.Diagonal` type for

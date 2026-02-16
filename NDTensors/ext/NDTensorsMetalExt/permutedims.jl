@@ -1,5 +1,5 @@
-using Metal: MtlArray
 using GPUArraysCore: @allowscalar
+using Metal: MtlArray
 using NDTensors.Expose: Exposed, expose, unexpose
 ## Theres an issue in metal that `ReshapedArray' wrapped arrays cannot be permuted using
 ## permutedims (failing in that Metal uses scalar indexing)
@@ -32,7 +32,7 @@ function Base.permutedims!(
         Edest::Exposed{<:MtlArray, <:Base.ReshapedArray},
         Esrc::Exposed{<:MtlArray, <:Base.ReshapedArray},
         perm,
-        f,
+        f
     )
     Aperm = reshape(permutedims(Esrc, perm), size(parent(Edest)))
     parent(Edest) .= f.(parent(Edest), Aperm)

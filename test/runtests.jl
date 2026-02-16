@@ -11,7 +11,7 @@ ITensors.disable_threaded_blocksparse()
     println("Passed arguments ARGS = $(test_args) to tests.")
     if isempty(test_args) || "all" in test_args || "base" in test_args
         println(
-            """\nArguments ARGS = $(test_args) are empty, or contain `"all"` or `"base"`. Running base (non-MPS/MPO) ITensors tests.""",
+            """\nArguments ARGS = $(test_args) are empty, or contain `"all"` or `"base"`. Running base (non-MPS/MPO) ITensors tests."""
         )
         dirs = [
             "lib/LazyApply",

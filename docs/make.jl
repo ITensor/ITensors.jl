@@ -15,5 +15,5 @@ deploydocs(;
     repo = "github.com/ITensor/ITensors.jl.git",
     devbranch = "main",
     push_preview = true,
-    deploy_config = Documenter.GitHubActions(),
+    deploy_config = Documenter.GitHubActions()
 )

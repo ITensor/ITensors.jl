@@ -44,7 +44,7 @@ function _contract!!(
         T1::UniformDiagTensor{<:Number, N1},
         labelsT1,
         T2::UniformDiagTensor{<:Number, N2},
-        labelsT2,
+        labelsT2
     ) where {ElR, NR, N1, N2}
     if NR == 0  # If all indices of A and B are contracted
         # all indices are summed over, just add the product of the diagonal
@@ -66,7 +66,7 @@ function contract!(
         tensor2::Exposed,
         labelstensor2,
         α::Number = one(Bool),
-        β::Number = zero(Bool),
+        β::Number = zero(Bool)
     )
     @assert isone(α)
     @assert iszero(β)
@@ -76,7 +76,7 @@ function contract!(
         unexpose(tensor1),
         labelstensor1,
         unexpose(tensor2),
-        labelstensor2,
+        labelstensor2
     )
 end
 
@@ -86,7 +86,7 @@ function contract!(
         T1::DiagTensor{<:Number, N1},
         labelsT1,
         T2::DiagTensor{<:Number, N2},
-        labelsT2,
+        labelsT2
     ) where {ElR, NR, N1, N2}
     if NR == 0  # If all indices of A and B are contracted
         # All indices are summed over, just add the product of the diagonal
@@ -109,7 +109,7 @@ function contract!(
         Blabels,
         α::Number = one(ElC),
         β::Number = zero(ElC);
-        convert_to_dense::Bool = true,
+        convert_to_dense::Bool = true
     ) where {ElA, NA, ElB, NB, ElC, NC}
     #@timeit_debug timer "diag-dense contract!" begin
     return if all(i -> i < 0, Blabels)
@@ -131,7 +131,8 @@ function contract!(
             # TODO: should we make this return a Diag storage?
             for i in 1:min_dim
                 setdiagindex!(
-                    C, α * getdiagindex(A, i) * getdiagindex(B, i) + β * getdiagindex(C, i), i
+                    C, α * getdiagindex(A, i) * getdiagindex(B, i) + β * getdiagindex(C, i),
+                    i
                 )
             end
         end
@@ -142,7 +143,7 @@ function contract!(
         else
             if !isone(α) || !iszero(β)
                 error(
-                    "`contract!(::DenseTensor, ::DiagTensor, ::DenseTensor, α, β; convert_to_dense = false)` with `α ≠ 1` or `β ≠ 0` is not currently supported. You can call it with `convert_to_dense = true` instead.",
+                    "`contract!(::DenseTensor, ::DiagTensor, ::DenseTensor, α, β; convert_to_dense = false)` with `α ≠ 1` or `β ≠ 0` is not currently supported. You can call it with `convert_to_dense = true` instead."
                 )
             end
             astarts = zeros(Int, length(Alabels))
@@ -220,7 +221,7 @@ function contract!(
         B::DiagTensor,
         Blabels,
         α::Number = one(eltype(C)),
-        β::Number = zero(eltype(C)),
+        β::Number = zero(eltype(C))
     )
     return contract!(C, Clabels, B, Blabels, A, Alabels, α, β)
 end

@@ -34,7 +34,8 @@ function BlockSparse(
         datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
     )
     return BlockSparse(
-        fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
+        fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets;
+        vargs...
     )
 end
 
@@ -59,7 +60,7 @@ function BlockSparse(
         ::UndefInitializer,
         blockoffsets::BlockOffsets,
         dim::Integer;
-        vargs...,
+        vargs...
     )
     return BlockSparse(datatype(undef, dim), blockoffsets; vargs...)
 end
@@ -159,7 +160,7 @@ end
 
 """
 isblocknz(T::BlockSparse,
-          block::Block)
+block::Block)
 
 Check if the specified block is non-zero.
 """

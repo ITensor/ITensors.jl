@@ -2,19 +2,8 @@
 using Dictionaries: Dictionary
 using GPUArraysCore: @allowscalar
 using LinearAlgebra: norm
-using NDTensors:
-    NDTensors,
-    Block,
-    BlockSparseTensor,
-    Diag,
-    DiagBlockSparse,
-    Tensor,
-    blockoffsets,
-    contract,
-    dense,
-    denseblocks,
-    inds,
-    nzblocks
+using NDTensors: NDTensors, Block, BlockSparseTensor, Diag, DiagBlockSparse, Tensor,
+    blockoffsets, contract, dense, denseblocks, inds, nzblocks
 using Random: randn!
 using Test: @test, @test_broken, @test_throws, @testset
 @testset "UniformDiagBlockSparseTensor basic functionality" begin

@@ -1,6 +1,6 @@
-using ITensors, Test
-
 import ITensors: nactive
+using ITensors
+using Test
 
 @testset "QN" begin
     @testset "QNVal Basics" begin

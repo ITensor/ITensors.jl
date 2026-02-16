@@ -1,9 +1,9 @@
 module ITensorsOpsExt
-using ITensors: ITensors, ITensor, Index, apply, dag, hascommoninds, swapprime
-using ..LazyApply: LazyApply, Applied, Exp, Prod, Scaled, Sum, argument, coefficient
-using LinearAlgebra: UniformScaling, I
+using ..LazyApply: Applied, Exp, LazyApply, Prod, Scaled, Sum, argument, coefficient
 using ..Ops: Op
 using ..SiteTypes: SiteTypes, op
+using ITensors: ITensors, ITensor, Index, apply, dag, hascommoninds, swapprime
+using LinearAlgebra: I, UniformScaling
 
 function SiteTypes.op(I::UniformScaling, s::Index...)
     return I.λ * op("Id", s...)

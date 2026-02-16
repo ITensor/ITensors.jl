@@ -1,5 +1,4 @@
 using ITensors.NDTensors
-
 using ITensors.NDTensors: AllowAlias
 
 function rrule(f::Type{<:Tensor}, x1::AllowAlias, x2::TensorStorage, x3::Tuple)

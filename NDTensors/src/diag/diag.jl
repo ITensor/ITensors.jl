@@ -108,7 +108,9 @@ end
 # TODO: how do we make this work more generally for T2<:AbstractVector{S2}?
 # Make a similartype(AbstractVector{S2},T1) -> AbstractVector{T1} function?
 function promote_rule(
-        ::Type{<:UniformDiag{ElT1, DataT1}}, ::Type{<:NonuniformDiag{ElT2, AbstractArray{ElT2}}}
+        ::Type{<:UniformDiag{ElT1, DataT1}}, ::Type{
+            <:NonuniformDiag{ElT2, AbstractArray{ElT2}},
+        }
     ) where {ElT1, DataT1 <: Number, ElT2}
     ElR = promote_type(ElT1, ElT2)
 

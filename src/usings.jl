@@ -13,6 +13,7 @@ using IsApprox
 using LinearAlgebra
 using NDTensors
 using NDTensors.RankFactorization: Spectrum, eigs, entropy, truncerror
+using NDTensors: scalartype
 using Pkg
 using Printf
 using Random
@@ -21,8 +22,3 @@ using StaticArrays
 using TimerOutputs
 using TupleTools
 using Zeros
-
-# This makes `scalartype` available externally as
-# `ITensors.scalartype`, this isn't be used within
-# the `ITensors` module right now.
-using NDTensors: scalartype
