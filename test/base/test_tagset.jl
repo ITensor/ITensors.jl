@@ -1,4 +1,5 @@
-using ITensors, Test
+using ITensors
+using Test
 
 @testset "TagSet" begin
     ts = TagSet("t3,t2,t1")

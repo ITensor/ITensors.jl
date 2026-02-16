@@ -1,6 +1,6 @@
 using ..ITensors: ITensors, name, val
-using NDTensors: NDTensors
 using ..SmallStrings: SmallString
+using NDTensors: NDTensors
 using StaticArrays: MVector, SVector
 
 const maxQNs = 4

@@ -95,8 +95,8 @@ order in a block of code.
 @set_warn_order 12 A * B
 
 @set_warn_order 15 begin
-  C = A * B
-  E = C * D
+    C = A * B
+    E = C * D
 end
 ```
 """
@@ -116,6 +116,7 @@ Temporarily sets the order threshold for warning about the ITensor
 order in a block of code to the default value $default_warn_order.
 
 # Examples
+
 ```julia
 @reset_warn_order A * B
 ```

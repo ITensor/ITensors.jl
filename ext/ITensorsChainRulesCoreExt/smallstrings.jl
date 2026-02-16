@@ -7,6 +7,6 @@ include(
         "SmallStrings",
         "ext",
         "SmallStringsChainRulesCoreExt",
-        "SmallStringsChainRulesCoreExt.jl",
-    ),
+        "SmallStringsChainRulesCoreExt.jl"
+    )
 )

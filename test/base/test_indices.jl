@@ -1,6 +1,6 @@
-using Test
 using ITensors
 using ITensors.NDTensors
+using Test
 
 @testset "Allow general mixtures of collections of indices" begin
     d = 2

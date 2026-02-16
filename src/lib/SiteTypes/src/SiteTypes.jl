@@ -1,9 +1,7 @@
 module SiteTypes
 # TODO: This is a bit strange, but required for backwards
 # compatibility since `val` is also used by `QNVal`.
-import ..ITensors: val
-# TODO: Use explicit overloading with `NDTensors.space`.
-import ..ITensors: space
+import ..ITensors: space, val
 include("sitetype.jl")
 include("SiteTypesChainRulesCoreExt.jl")
 include("sitetypes/aliases.jl")

@@ -26,7 +26,7 @@ function space(
         conserve_parity = conserve_qns,
         conserve_number = false,
         qnname_parity = "Parity",
-        qnname_number = "Number",
+        qnname_number = "Number"
     )
     if conserve_number && conserve_parity
         return [
@@ -179,7 +179,7 @@ end
 # Rotation around Z-axis
 function op(::OpName"Rz", ::SiteType"Qubit"; θ = nothing, ϕ = nothing)
     isone(count(isnothing, (θ, ϕ))) || error(
-        "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating an Rz gate, but not both.",
+        "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating an Rz gate, but not both."
     )
     isnothing(θ) && (θ = ϕ)
     return [
@@ -259,7 +259,7 @@ op(::OpName"CRY", t::SiteType"Qubit"; kwargs...) = op("CRy", t; kwargs...)
 
 function op(::OpName"CRz", ::SiteType"Qubit"; ϕ = nothing, θ = nothing)
     isone(count(isnothing, (θ, ϕ))) || error(
-        "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating a CRz gate, but not both.",
+        "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating a CRz gate, but not both."
     )
     isnothing(θ) && (θ = ϕ)
     return [

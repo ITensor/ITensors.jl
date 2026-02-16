@@ -14,7 +14,7 @@ function _contract_scalar!(
         T2::Number,
         labelsT2,
         α = one(ElR),
-        β = zero(ElR),
+        β = zero(ElR)
     ) where {ElR}
     if iszero(β)
         R[] = α * T1 * T2
@@ -126,7 +126,7 @@ function _contract_scalar_maybe_perm!(
         T₂::DenseTensor,
         labelsT₂,
         α = one(ElR),
-        β = zero(ElR),
+        β = zero(ElR)
     ) where {ElR, NR}
     if nnz(T₁) == 1
         _contract_scalar_maybe_perm!(R, labelsR, T₂, labelsT₂, α * T₁[], β)
@@ -147,7 +147,7 @@ function _contract_scalar!(
         T2::DenseTensor,
         labelsT2,
         α = one(ElR),
-        β = zero(ElR),
+        β = zero(ElR)
     ) where {ElR}
     if nnz(T1) == nnz(T2) == 1
         _contract_scalar!(R, labelsR, T1[], labelsT1, T2[], labelsT2, α, β)
@@ -165,7 +165,7 @@ function contract!(
         T2::DenseTensor{ElT2, N2},
         labelsT2,
         α::Elα = one(ElR),
-        β::Elβ = zero(ElR),
+        β::Elβ = zero(ElR)
     ) where {Elα, Elβ, ElR, ElT1, ElT2, NR, N1, N2}
     # Special case for scalar tensors
     if nnz(T1) == 1 || nnz(T2) == 1
@@ -221,7 +221,7 @@ function _contract!(
         BT::DenseTensor{El, NB},
         props::ContractionProperties,
         α::Number = one(El),
-        β::Number = zero(El),
+        β::Number = zero(El)
     ) where {El, NC, NA, NB}
     C = array(CT)
     A = array(AT)

@@ -1,10 +1,10 @@
 using Adapt: adapt
 using JLArrays: JLArray, JLMatrix
-using LinearAlgebra: LinearAlgebra, Hermitian, Symmetric, qr, eigen
-using NDTensors: NDTensors
-using NDTensors.Expose: Expose, expose, qr, qr_positive, ql, ql_positive
+using LinearAlgebra: LinearAlgebra, Hermitian, Symmetric, eigen, qr
+using NDTensors.Expose: Expose, expose, ql, ql_positive, qr, qr_positive
 using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors.Vendored.TypeParameterAccessors: unwrap_array_type
+using NDTensors: NDTensors
 
 ## TODO this function exists because of the same issue below. when
 ## that issue is resolved we can rely on the abstractarray version of

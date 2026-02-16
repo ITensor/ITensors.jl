@@ -1,5 +1,5 @@
-using LinearAlgebra: BlasFloat
 using .Expose: expose
+using LinearAlgebra: BlasFloat
 
 # TODO: Delete these exports
 export backend_auto, backend_blas, backend_generic
@@ -26,7 +26,7 @@ end
 @inline function auto_select_backend(
         ::Type{<:StridedVecOrMat{<:BlasFloat}},
         ::Type{<:StridedVecOrMat{<:BlasFloat}},
-        ::Type{<:StridedVecOrMat{<:BlasFloat}},
+        ::Type{<:StridedVecOrMat{<:BlasFloat}}
     )
     return GemmBackend(:BLAS)
 end
@@ -56,7 +56,7 @@ function _gemm!(
         A::AbstractVecOrMat,
         B::AbstractVecOrMat,
         beta,
-        C::AbstractVecOrMat,
+        C::AbstractVecOrMat
     )
     #@timeit_debug timer "BLAS.gemm!" begin
     return BLAS.gemm!(tA, tB, alpha, A, B, beta, C)
@@ -72,14 +72,14 @@ function _gemm!(
         A::AbstractVecOrMat,
         B::AbstractVecOrMat,
         beta::BT,
-        C::AbstractVecOrMat,
+        C::AbstractVecOrMat
     ) where {AT, BT}
     mul!(
         expose(C),
         expose(tA == 'T' ? transpose(A) : A),
         expose(tB == 'T' ? transpose(B) : B),
         alpha,
-        beta,
+        beta
     )
     return C
 end
@@ -118,7 +118,7 @@ function _contract!(
         BT::AbstractArray{El, NB},
         props::ContractionProperties,
         α::Number = one(El),
-        β::Number = zero(El),
+        β::Number = zero(El)
     ) where {El, NC, NA, NB}
     tA = 'N'
     if props.permuteA
@@ -155,7 +155,10 @@ function _contract!(
         # we need to make sure C is permuted to the same
         # ordering as A B which is the inverse of props.PC
         if β ≠ 0
-            CM = reshape(permutedims(expose(CT), invperm(props.PC)), (props.dleft, props.dright))
+            CM = reshape(
+                permutedims(expose(CT), invperm(props.PC)),
+                (props.dleft, props.dright)
+            )
         else
             # Need to copy here since we will be permuting
             # into C later

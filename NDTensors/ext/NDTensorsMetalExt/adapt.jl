@@ -1,11 +1,11 @@
 using Adapt: Adapt, adapt
 using Functors: fmap
-using Metal: MtlArray, MtlVector, DefaultStorageMode
-using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
+using Metal: DefaultStorageMode, MtlArray, MtlVector
 using NDTensors.Expose: Exposed
-using NDTensors.MetalExtensions: MetalExtensions, MtlArrayAdaptor
 using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions
+using NDTensors.MetalExtensions: MetalExtensions, MtlArrayAdaptor
 using NDTensors.Vendored.TypeParameterAccessors: set_type_parameters, type_parameters
+using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
 
 GPUArraysCoreExtensions.cpu(e::Exposed{<:MtlArray}) = adapt(Array, e)
 

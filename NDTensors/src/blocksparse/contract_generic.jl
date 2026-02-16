@@ -9,7 +9,7 @@ function contract_blockoffsets(
         inds2,
         labels2,
         indsR,
-        labelsR,
+        labelsR
     )
     NR = length(labelsR)
     ValNR = ValLength(labelsR)
@@ -17,7 +17,8 @@ function contract_blockoffsets(
         labels1, labels2, labelsR
     )
     contraction_plan = contract_blocks(
-        alg, boffs1, boffs2, labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR, ValNR
+        alg, boffs1, boffs2, labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR,
+        ValNR
     )
     blockoffsetsR = BlockOffsets{NR}()
     nnzR = 0
@@ -41,7 +42,7 @@ function contract!(
         tensor2::BlockSparseTensor,
         labelstensor2,
         contraction_plan,
-        executor,
+        executor
     )
     # Group the contraction plan by the output block,
     # since the sets of contractions into the same block
@@ -65,7 +66,7 @@ function contract!(
         tensor2,
         labelstensor2,
         grouped_contraction_plan,
-        executor,
+        executor
     )
     return R
 end
@@ -82,7 +83,7 @@ function _contract!(
         tensor2::BlockSparseTensor,
         labelstensor2,
         grouped_contraction_plan,
-        executor,
+        executor
     )
     Folds.foreach(grouped_contraction_plan.values, executor) do contraction_plan_group
         # Start by overwriting the block:
@@ -102,7 +103,7 @@ function _contract!(
                 inds(tensor1),
                 labelstensor2,
                 blocktensor2,
-                inds(tensor2),
+                inds(tensor2)
             )
 
             contract!(
@@ -113,7 +114,7 @@ function _contract!(
                 expose(tensor2[blocktensor2]),
                 labelstensor2,
                 α,
-                β,
+                β
             )
 
             if iszero(β)

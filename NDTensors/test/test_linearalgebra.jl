@@ -1,9 +1,9 @@
 @eval module $(gensym())
+using GPUArraysCore: @allowscalar
+using LinearAlgebra: Diagonal, diag, qr
 using NDTensors
 using NDTensors: cpu
-using LinearAlgebra: Diagonal, qr, diag
-using Test: @testset, @test
-using GPUArraysCore: @allowscalar
+using Test: @test, @testset
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list, is_supported_eltype
 

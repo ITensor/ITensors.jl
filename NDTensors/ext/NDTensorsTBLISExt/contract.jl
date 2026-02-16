@@ -7,7 +7,7 @@ function contract!(
         T2::DenseTensor{ElT},
         labelsT2,
         α::ElT,
-        β::ElT,
+        β::ElT
     ) where {ElT <: LinearAlgebra.BlasReal}
     # TBLIS Tensors
     R_tblis = TBLIS.TTensor{ElT}(array(R), β)

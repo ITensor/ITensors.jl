@@ -1,10 +1,10 @@
+using AMDGPU: ROCMatrix
+using Adapt: adapt
+using LinearAlgebra: svd
 using NDTensors.AMDGPUExtensions: roc
 using NDTensors.Expose: Expose, Exposed, expose, ql, ql_positive
 using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors.Vendored.TypeParameterAccessors: unwrap_array_type
-using LinearAlgebra: svd
-using Adapt: adapt
-using AMDGPU: ROCMatrix
 
 function LinearAlgebra.svd(A::Exposed{<:ROCMatrix}; kwargs...)
     U, S, V = svd(cpu(A))

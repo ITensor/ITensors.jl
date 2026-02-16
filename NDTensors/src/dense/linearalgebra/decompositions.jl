@@ -17,7 +17,8 @@ end
 # svd of an order-n tensor according to positions Lpos
 # and Rpos
 function svd(
-        T::DenseTensor{<:Number, N, IndsT}, Lpos::NTuple{NL, Int}, Rpos::NTuple{NR, Int}; kwargs...
+        T::DenseTensor{<:Number, N, IndsT}, Lpos::NTuple{NL, Int}, Rpos::NTuple{NR, Int};
+        kwargs...
     ) where {N, IndsT, NL, NR}
     M = permute_reshape(T, Lpos, Rpos)
     UM, S, VM, spec = svd(M; kwargs...)
@@ -40,7 +41,8 @@ end
 # qr decomposition of an order-n tensor according to
 # positions Lpos and Rpos
 function qr(
-        T::DenseTensor{<:Number, N, IndsT}, Lpos::NTuple{NL, Int}, Rpos::NTuple{NR, Int}; kwargs...
+        T::DenseTensor{<:Number, N, IndsT}, Lpos::NTuple{NL, Int}, Rpos::NTuple{NR, Int};
+        kwargs...
     ) where {N, IndsT, NL, NR}
     M = permute_reshape(T, Lpos, Rpos)
     QM, RM = qr(M; kwargs...)
@@ -82,7 +84,8 @@ function polar(
 end
 
 function LinearAlgebra.exp(
-        T::DenseTensor{ElT, N}, Lpos::NTuple{NL, Int}, Rpos::NTuple{NR, Int}; ishermitian::Bool = false
+        T::DenseTensor{ElT, N}, Lpos::NTuple{NL, Int}, Rpos::NTuple{NR, Int};
+        ishermitian::Bool = false
     ) where {ElT, N, NL, NR}
     M = permute_reshape(T, Lpos, Rpos)
     indsTp = permute(inds(T), (Lpos..., Rpos...))
