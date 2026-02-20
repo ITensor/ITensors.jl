@@ -1,13 +1,11 @@
 name: "Format Pull Request"
-
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: "0 0 * * *"
+  workflow_dispatch: ~
 permissions:
-  contents: write
-  pull-requests: write
-
+  contents: "write"
+  pull-requests: "write"
 jobs:
   format-pull-request:
     name: "Format Pull Request"
