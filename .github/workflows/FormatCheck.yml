@@ -1,15 +1,17 @@
 name: "Format Check"
-
 on:
   pull_request_target:
-    paths: ['**/*.jl']
-    types: [opened, synchronize, reopened, ready_for_review]
-
+    paths:
+      - "**/*.jl"
+    types:
+      - "opened"
+      - "synchronize"
+      - "reopened"
+      - "ready_for_review"
 permissions:
-  contents: read
-  actions: write
-  pull-requests: write
-
+  contents: "read"
+  actions: "write"
+  pull-requests: "write"
 jobs:
   format-check:
     name: "Format Check"
