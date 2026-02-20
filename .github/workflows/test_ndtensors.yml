@@ -1,40 +1,39 @@
-name: Run NDTensors tests
-
+name: "Run NDTensors tests"
 on:
   push:
     branches:
-      - main
-    tags: '*'
-  pull_request:
-
+      - "main"
+    tags: "*"
+  pull_request: ~
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)
-    runs-on: ${{ matrix.os }}
+    name: "Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)"
+    runs-on: "${{ matrix.os }}"
     env:
-      JULIA_NUM_THREADS: ${{ matrix.threads }}
+      JULIA_NUM_THREADS: "${{ matrix.threads }}"
     strategy:
       matrix:
         version:
-          - 'lts'
-          - '1'
+          - "lts"
+          - "1"
         os:
-          - ubuntu-latest
+          - "ubuntu-latest"
         threads:
-          - '1'
+          - "1"
         arch:
-          - x64
+          - "x64"
     steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@latest
+      - uses: "actions/checkout@v6"
+      - uses: "julia-actions/setup-julia@latest"
         with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - name: Install Julia dependencies and run tests
-        shell: julia --depwarn=yes {0}
+          version: "${{ matrix.version }}"
+          arch: "${{ matrix.arch }}"
+      - name: "Install Julia dependencies and run tests"
+        shell: "julia --depwarn=yes {0}"
         run: |
           using Pkg;
           Pkg.activate(temp=true);
           Pkg.develop(path="./NDTensors");
           Pkg.develop(path=".");
           Pkg.test("NDTensors");
+          

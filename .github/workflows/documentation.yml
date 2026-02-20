@@ -1,31 +1,30 @@
-name: Documentation
-
+name: "Documentation"
 on:
   push:
     branches:
-      - main
-    tags: '*'
+      - "main"
+    tags: "*"
   pull_request:
     branches:
-      - main
-    tags: '*'
+      - "main"
+    tags: "*"
   workflow_dispatch:
     branches:
-      - main
-    tags: '*'
-
+      - "main"
+    tags: "*"
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@latest
+      - uses: "actions/checkout@v6"
+      - uses: "julia-actions/setup-julia@latest"
         with:
-          version: '1'
-      - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(path="./NDTensors"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-      - name: Build and deploy
+          version: "1"
+      - name: "Install dependencies"
+        run: |-
+          julia --project=docs/ -e 'using Pkg; Pkg.develop(path="./NDTensors"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+      - name: "Build and deploy"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-        run: julia --project=docs/ docs/make.jl
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          DOCUMENTER_KEY: "${{ secrets.DOCUMENTER_KEY }}"
+        run: "julia --project=docs/ docs/make.jl"

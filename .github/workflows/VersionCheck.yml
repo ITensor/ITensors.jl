@@ -1,11 +1,9 @@
 name: "Version Check"
-
 on:
-  pull_request:
-
+  pull_request: ~
 jobs:
   version-check:
     name: "Version Check"
     uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@main"
     with:
-      localregistry: https://github.com/ITensor/ITensorRegistry.git
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"

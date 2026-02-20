@@ -1,3 +1,4 @@
+
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
@@ -7,8 +8,8 @@ Strided = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
 TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
 
 [compat]
-Documenter = "1.9.0"
+Documenter = "1.9"
 HDF5 = "0.17.2"
-Strided = "2.2.0"
+LinearAlgebra = "1.10"
+Strided = "2.2"
 TensorOperations = "5.1.4"
-LinearAlgebra = "1.10.0"
