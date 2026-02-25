@@ -8,10 +8,12 @@ Manifest.toml
 *.cov
 benchmark/mult
 benchmark/*.json
+dev/
 docs/Manifest.toml
 docs/build/
 docs/src/index.md
 NDTensors/Manifest.toml
+NDTensors/dev/
 NDTensors/test/Manifest.toml
 precompile/tmp
 test/data.h5
