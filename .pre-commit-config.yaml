@@ -12,6 +12,6 @@ repos:
         exclude_types:
           - "markdown"
   - repo: "https://github.com/ITensor/ITensorFormatter.jl"
-    rev: "v0.2.16"
+    rev: "v0.2.19"
     hooks:
       - id: "itensor-formatter"
