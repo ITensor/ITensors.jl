@@ -3,6 +3,9 @@ uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 version = "0.4.20"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>"]
 
+[workspace]
+projects = ["benchmark", "dev", "docs", "examples", "test"]
+
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -90,14 +93,3 @@ TupleTools = "1.2"
 VectorInterface = "0.4.2, 0.5"
 cuTENSOR = "2"
 julia = "1.10"
-
-[extras]
-AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
-HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
-Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
-Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4"
-TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9"
-cuTENSOR = "011b41b2-24ef-40a8-b3eb-fa098493e9e1"
