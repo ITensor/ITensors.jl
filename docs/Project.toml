@@ -12,6 +12,7 @@ path = ".."
 [compat]
 Documenter = "1.9"
 HDF5 = "0.17.2"
+ITensors = "0.9"
 LinearAlgebra = "1.10"
 Strided = "2.2"
 TensorOperations = "5.1.4"
