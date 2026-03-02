@@ -7,10 +7,5 @@ on:
 jobs:
   TagBot:
     if: "github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'"
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: "JuliaRegistries/TagBot@v1"
-        with:
-          token: "${{ secrets.GITHUB_TOKEN }}"
-          registry: "ITensor/ITensorRegistry"
-          ssh: "${{ secrets.DOCUMENTER_KEY }}"
+    uses: "ITensor/ITensorActions/.github/workflows/TagBot.yml@main"
+    secrets: "inherit"
