@@ -23,6 +23,8 @@ jobs:
           - user: "ITensor"
             repo: "ITensorMPS.jl"
           - user: "ITensor"
+            repo: "ITensorNetworks.jl"
+          - user: "ITensor"
             repo: "ITensorUnicodePlots.jl"
           - user: "ITensor"
             repo: "ITensorVisualizationBase.jl"
@@ -42,6 +44,7 @@ jobs:
         shell: "julia --color=yes --project=downstream {0}"
         run: |
           using Pkg
+          Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/ITensor/ITensorRegistry.git"))
           try
             # force it to use this PR's version of the package
             Pkg.develop(PackageSpec(path="."))  # resolver may fail with main deps
