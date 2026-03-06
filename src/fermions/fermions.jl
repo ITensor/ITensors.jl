@@ -1,4 +1,5 @@
 using .QuantumNumbers: QN, QuantumNumbers
+using Bumper: @alloc, @no_escape
 
 """
     parity_sign(P)
@@ -13,11 +14,11 @@ intended for small permutations only.
 """
 function parity_sign(P)::Int
     L = length(P)
-    s = +1
+    s = true
     for i in 1:L, j in (i + 1):L
-        s *= sign(P[j] - P[i])
+        @inbounds s = xor(P[j] < P[i], s)
     end
-    return s
+    return (s ? +1 : -1)
 end
 
 isfermionic(qv::QuantumNumbers.QNVal) = (QuantumNumbers.modulus(qv) < 0)
@@ -77,25 +78,26 @@ if the subset of index vals which are fermion-parity
 odd undergo an odd permutation (odd number of swaps)
 according to p, then return -1. Otherwise return +1.
 """
-function compute_permfactor(p, iv_or_qn...; range = 1:length(iv_or_qn))::Int
+function compute_permfactor(p, iv_or_qn; range = 1:length(iv_or_qn))::Int
     !using_auto_fermion() && return 1
     N = length(iv_or_qn)
-    # XXX: Bug https://github.com/ITensor/ITensors.jl/issues/931
-    # oddp = @MVector zeros(Int, N)
-    oddp = MVector((ntuple(Returns(0), Val(N))))
     n = 0
-    @inbounds for j in range
-        if fparity(iv_or_qn[p[j]]) == 1
-            n += 1
-            oddp[n] = p[j]
+    @no_escape begin
+        oddp = @alloc(Int, N)
+        @inbounds for j in range
+            if fparity(iv_or_qn[p[j]]) == 1
+                n += 1
+                oddp[n] = p[j]
+            end
         end
+        psign = parity_sign(oddp[1:n])
     end
-    return parity_sign(oddp[1:n])
+    return psign
 end
 
 function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex}, N}; kwargs...) where {N}
     !using_auto_fermion() && return 1
-    return compute_permfactor(p, ivs...; kwargs...)
+    return compute_permfactor(p, ivs; kwargs...)
 end
 
 function NDTensors.permfactor(
@@ -103,7 +105,7 @@ function NDTensors.permfactor(
     ) where {N}
     !using_auto_fermion() && return 1
     qns = ntuple(n -> qn(inds[n], block[n]), N)
-    return compute_permfactor(perm, qns...; kwargs...)
+    return compute_permfactor(perm, qns; kwargs...)
 end
 
 NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
