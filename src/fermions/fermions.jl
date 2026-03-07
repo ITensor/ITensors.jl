@@ -99,11 +99,22 @@ function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex}, N}; kwargs...) where
 end
 
 function NDTensors.permfactor(
-        perm, block::NDTensors.Block{N}, inds::QNIndices; kwargs...
+        perm, block::NDTensors.Block{N}, inds::QNIndices; range = 1:N
     ) where {N}
     !using_auto_fermion() && return 1
-    qns = ntuple(n -> qn(inds[n], block[n]), N)
-    return compute_permfactor(perm, qns...; kwargs...)
+    # Inline the loop to avoid building an NTuple{N, QN} intermediate: the splat
+    # qns = ntuple(n -> qn(...), N); compute_permfactor(perm, qns...) heap-allocates
+    # the large QN tuple (N × 192 bytes) when passed as varargs.
+    s = +1
+    @inbounds for ri in range
+        fparity(qn(inds[perm[ri]], block[perm[ri]])) == 0 && continue
+        @inbounds for rj in range
+            rj <= ri && continue
+            fparity(qn(inds[perm[rj]], block[perm[rj]])) == 0 && continue
+            s *= sign(perm[rj] - perm[ri])
+        end
+    end
+    return s
 end
 
 NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
@@ -160,26 +171,21 @@ end
     nlabelsT1 = TupleTools.sort(labelsT1; rev = true)
     nlabelsT2 = TupleTools.sort(labelsT2)
 
-    # Make orig_labelsR from the order of
-    # indices that would result by just
-    # taking the uncontracted indices of
-    # T1 and T2 in their input order.
-    # Use MVector{NR} (NR known at compile time) to avoid heap allocation.
-    orig_labelsR = MVector{NR, Int}(undef)
-    u = 1
-    for ls in (nlabelsT1, nlabelsT2), l in ls
-        if l > 0
-            orig_labelsR[u] = l
-            u += 1
-        end
-    end
+    # Make orig_labelsR from the uncontracted (positive) labels of T1 then T2.
+    # After sorting T1 descending, positive labels occupy the first NP1 positions.
+    # After sorting T2 ascending, positive labels occupy the last NP2 positions.
+    # NP1 and NP2 are compile-time constants (functions of N1, N2, NR).
+    # Build orig_labelsR as a pure NTuple to avoid any heap allocation.
+    NP1 = (NR + N1 - N2) ÷ 2   # uncontracted labels from T1
+    NP2 = NR - NP1               # uncontracted labels from T2
+    orig_labelsR = (
+        ntuple(i -> nlabelsT1[i], Val(NP1))...,
+        ntuple(i -> nlabelsT2[N2 - NP2 + i], Val(NP2))...,
+    )
 
     permT1 = NDTensors.getperm(nlabelsT1, labelsT1)
     permT2 = NDTensors.getperm(nlabelsT2, labelsT2)
-    permR = MVector{NR, Int}(undef)
-    for i in 1:NR
-        @inbounds permR[i] = NDTensors._findfirst(==(labelsR[i]), orig_labelsR)
-    end
+    permR = NDTensors.getperm(labelsR, orig_labelsR)
 
     alpha1 = NDTensors.permfactor(permT1, blockT1, indsT1)
     alpha2 = NDTensors.permfactor(permT2, blockT2, indsT2)
@@ -219,11 +225,10 @@ function NDTensors.before_combiner_signs(
 
     T = copy(T)
 
-    labelsC = [l for l in labelsC_]
-    labelsT = [l for l in labelsT_]
-
-    # number of uncombined indices
-    Nuc = NC - 1
+    # Convert labels to NTuples — NC and NT are compile-time constants, so these
+    # are stack-allocated and avoid the Vector allocation from list comprehensions.
+    labelsC = ntuple(i -> labelsC_[i], Val(NC))
+    labelsT = ntuple(i -> labelsT_[i], Val(NT))
 
     ci = NDTensors.cinds(storage(C))[1]
     combining = (labelsC[ci] > 0)
@@ -233,29 +238,30 @@ function NDTensors.before_combiner_signs(
     if combining
         #println("Combining <<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
-        nlabelsT = Int[]
-
-        if !isconj
-            # Permute uncombined indices to front
-            # in same order as indices passed to the
-            # combiner constructor
-            append!(nlabelsT, labelsC[2:end])
-        else # isconj
-            # If combiner is conjugated, put uncombined
-            # indices in *opposite* order as on combiner
-            append!(nlabelsT, reverse(labelsC[2:end]))
+        # Uncombined index labels from combiner (positions 2:NC, all negative/contracted).
+        # Use MVector to fill nlabelsT without heap allocation (NT is compile-time constant).
+        uc_labels = ntuple(i -> labelsC[i + 1], Val(NC - 1))
+        if isconj
+            uc_labels = reverse(uc_labels)
         end
-        @assert all(l -> l < 0, nlabelsT)
+        @assert all(l -> l < 0, uc_labels)
 
+        nlabelsT = MVector{NT, Int}(undef)
+        u = 1
+        for l in uc_labels
+            nlabelsT[u] = l
+            u += 1
+        end
         for l in labelsT
             if l > 0 #uncontracted
-                append!(nlabelsT, l)
+                nlabelsT[u] = l
+                u += 1
             end
         end
-        @assert length(nlabelsT) == NT
+        @assert u == NT + 1
 
-        # Compute permutation that moves uncombined indices to front
-        permT = vec_getperm(nlabelsT, labelsT)
+        # Compute permutation as NTuple (stack-allocated; Val(NT) is compile-time constant).
+        permT = ntuple(i -> NDTensors._findfirst(==(nlabelsT[i]), labelsT), Val(NT))
 
         for blockT in keys(blockoffsets(T))
             # Compute sign from permuting uncombined indices to front:
@@ -265,7 +271,7 @@ function NDTensors.before_combiner_signs(
             alpha_arrows = 1
             alpha_mixed_arrow = 1
             C_dir = dir(indsC[1])
-            for n in 1:length(indsT)
+            for n in 1:NT
                 i = indsT[n]
                 qi = qn(i, blockT[n])
                 if labelsT[n] < 0 && fparity(qi) == 1
@@ -292,17 +298,28 @@ function NDTensors.before_combiner_signs(
         #
         #println("Uncombining >>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
-        nc = findfirst(l -> l < 0, labelsT)
-        nlabelsT = [labelsT[nc]]
+        nc = 0
+        for n in 1:NT
+            if labelsT[n] < 0
+                nc = n
+                break
+            end
+        end
         ic = indsT[nc]
 
+        nlabelsT = MVector{NT, Int}(undef)
+        nlabelsT[1] = labelsT[nc]
+        u = 2
         for l in labelsT
-            (l > 0) && append!(nlabelsT, l)
+            if l > 0
+                nlabelsT[u] = l
+                u += 1
+            end
         end
 
         # Compute sign for permuting combined index to front
         # (sign alphaT to be computed for each block below):
-        permT = vec_getperm(nlabelsT, labelsT)
+        permT = ntuple(i -> NDTensors._findfirst(==(nlabelsT[i]), labelsT), Val(NT))
 
         #
         # Note: other permutation of labelsT which
