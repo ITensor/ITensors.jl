@@ -68,67 +68,49 @@ fparity(iv::Pair{<:Index}) = fparity(qn(iv))
 Base.isodd(q::QN) = isodd(fparity(q))
 Base.isodd(iv::Pair{<:Index}) = isodd(fparity(iv))
 
-"""
-    compute_permfactor(p,iv_or_qn::Vararg{T,N})
-
-Given a permutation p and a set "s" of QNIndexVals or QNs,
-if the subset of index vals which are fermion-parity
-odd undergo an odd permutation (odd number of swaps)
-according to p, then return -1. Otherwise return +1.
-"""
-function compute_permfactor(p, iv_or_qn...; range = 1:length(iv_or_qn))::Int
+# Given a permutation `p` and a precomputed tuple of parities (0=even, 1=odd),
+# return the sign of `p` restricted to the odd-parity positions: +1 or -1.
+@inline function compute_permfactor_from_parities(
+        p, parity::NTuple{N, Int}; range = 1:N
+    )::Int where {N}
     !using_auto_fermion() && return 1
-    # Compute the parity sign of the permutation restricted to odd-parity
-    # elements, without any intermediate allocation. For each pair (ri, rj)
-    # in range with ri < rj and both odd-parity, multiply by sign(p[rj] - p[ri]).
     s = +1
     @inbounds for ri in range
-        fparity(iv_or_qn[p[ri]]) == 0 && continue
-        @inbounds for rj in range
-            rj <= ri && continue
-            fparity(iv_or_qn[p[rj]]) == 0 && continue
+        parity[p[ri]] == 0 && continue
+        @inbounds for rj in (ri + 1):last(range)
+            parity[p[rj]] == 0 && continue
             s *= sign(p[rj] - p[ri])
         end
     end
     return s
 end
 
+# Given a permutation `p` and a tuple of QNIndexVals or QNs, return the sign
+# of `p` restricted to the fermion-parity-odd elements: +1 or -1.
+function compute_permfactor_from_qns(
+        p, iv_or_qn::NTuple{N}; range = 1:N
+    )::Int where {N}
+    !using_auto_fermion() && return 1
+    parity = ntuple(i -> fparity(iv_or_qn[i]), Val(N))
+    return compute_permfactor_from_parities(p, parity; range)
+end
+
+# Varargs entry point — collects individual QNs/IndexVals into a tuple.
+function compute_permfactor(p, iv_or_qn...; kws...)
+    return compute_permfactor_from_qns(p, iv_or_qn; kws...)
+end
+
 function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex}, N}; kwargs...) where {N}
     !using_auto_fermion() && return 1
-    return compute_permfactor(p, ivs...; kwargs...)
+    return compute_permfactor_from_qns(p, ivs; kwargs...)
 end
 
 function NDTensors.permfactor(
         perm, block::NDTensors.Block{N}, inds::QNIndices; range = 1:N
     ) where {N}
     !using_auto_fermion() && return 1
-    s = +1
-    @inbounds for ri in range
-        fparity(qn(inds[perm[ri]], block[perm[ri]])) == 0 && continue
-        @inbounds for rj in (ri + 1):last(range)
-            fparity(qn(inds[perm[rj]], block[perm[rj]])) == 0 && continue
-            s *= sign(perm[rj] - perm[ri])
-        end
-    end
-    return s
-end
-
-# Compute the parity sign of `perm` restricted to positions with odd parity.
-# `parity[k]` is 0 (even) or 1 (odd); all indices are precomputed to avoid
-# redundant qn lookups when called multiple times for the same block.
-@inline function _perm_sign_from_parities(
-        perm::NTuple{N, Int},
-        parity::NTuple{N, Int}
-    ) where {N}
-    s = +1
-    @inbounds for ri in 1:N
-        parity[perm[ri]] == 0 && continue
-        @inbounds for rj in (ri + 1):N
-            parity[perm[rj]] == 0 && continue
-            s *= sign(perm[rj] - perm[ri])
-        end
-    end
-    return s
+    parity = ntuple(n -> fparity(qn(inds[n], block[n])), Val(N))
+    return compute_permfactor_from_parities(perm, parity; range)
 end
 
 NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
@@ -207,9 +189,9 @@ end
     parityT2 = ntuple(n -> fparity(qn(indsT2[n], blockT2[n])), Val(N2))
     parityR = ntuple(n -> fparity(qn(indsR[n], blockR[n])), Val(NR))
 
-    alpha1 = _perm_sign_from_parities(permT1, parityT1)
-    alpha2 = _perm_sign_from_parities(permT2, parityT2)
-    alphaR = _perm_sign_from_parities(permR, parityR)
+    alpha1 = compute_permfactor_from_parities(permT1, parityT1)
+    alpha2 = compute_permfactor_from_parities(permT2, parityT2)
+    alphaR = compute_permfactor_from_parities(permR, parityR)
 
     alpha_arrows = one(ElR)
     @inbounds for n in 1:N1
