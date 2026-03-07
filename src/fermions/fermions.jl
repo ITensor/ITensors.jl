@@ -133,17 +133,6 @@ function NDTensors.left_arrow_sign(i::QNIndex, block::Integer)
     return 1
 end
 
-# Version of getperm which is type stable
-# and works for Tuple or Vector inputs
-function vec_getperm(s1, s2)
-    N = length(s1)
-    p = Vector{Int}(undef, N)
-    for i in 1:N
-        @inbounds p[i] = NDTensors._findfirst(==(@inbounds s1[i]), s2)
-    end
-    return p
-end
-
 @inline function NDTensors.compute_alpha(
         ElR,
         labelsR,
@@ -258,7 +247,7 @@ function NDTensors.before_combiner_signs(
         @assert u == NT + 1
 
         # Compute permutation as NTuple (stack-allocated; Val(NT) is compile-time constant).
-        permT = ntuple(i -> NDTensors._findfirst(==(nlabelsT[i]), labelsT), Val(NT))
+        permT = ntuple(i -> findfirst(==(nlabelsT[i]), labelsT)::Int, Val(NT))
 
         for blockT in keys(blockoffsets(T))
             # Compute sign from permuting uncombined indices to front:
@@ -316,7 +305,7 @@ function NDTensors.before_combiner_signs(
 
         # Compute sign for permuting combined index to front
         # (sign alphaT to be computed for each block below):
-        permT = ntuple(i -> NDTensors._findfirst(==(nlabelsT[i]), labelsT), Val(NT))
+        permT = ntuple(i -> findfirst(==(nlabelsT[i]), labelsT)::Int, Val(NT))
 
         #
         # Note: other permutation of labelsT which
