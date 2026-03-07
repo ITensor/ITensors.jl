@@ -102,15 +102,29 @@ function NDTensors.permfactor(
         perm, block::NDTensors.Block{N}, inds::QNIndices; range = 1:N
     ) where {N}
     !using_auto_fermion() && return 1
-    # Inline the loop to avoid building an NTuple{N, QN} intermediate: the splat
-    # qns = ntuple(n -> qn(...), N); compute_permfactor(perm, qns...) heap-allocates
-    # the large QN tuple (N × 192 bytes) when passed as varargs.
     s = +1
     @inbounds for ri in range
         fparity(qn(inds[perm[ri]], block[perm[ri]])) == 0 && continue
-        @inbounds for rj in range
-            rj <= ri && continue
+        @inbounds for rj in (ri + 1):last(range)
             fparity(qn(inds[perm[rj]], block[perm[rj]])) == 0 && continue
+            s *= sign(perm[rj] - perm[ri])
+        end
+    end
+    return s
+end
+
+# Compute the parity sign of `perm` restricted to positions with odd parity.
+# `parity[k]` is 0 (even) or 1 (odd); all indices are precomputed to avoid
+# redundant qn lookups when called multiple times for the same block.
+@inline function _perm_sign_from_parities(
+        perm::NTuple{N, Int},
+        parity::NTuple{N, Int}
+    ) where {N}
+    s = +1
+    @inbounds for ri in 1:N
+        parity[perm[ri]] == 0 && continue
+        @inbounds for rj in (ri + 1):N
+            parity[perm[rj]] == 0 && continue
             s *= sign(perm[rj] - perm[ri])
         end
     end
@@ -187,18 +201,19 @@ end
     permT2 = NDTensors.getperm(nlabelsT2, labelsT2)
     permR = NDTensors.getperm(labelsR, orig_labelsR)
 
-    alpha1 = NDTensors.permfactor(permT1, blockT1, indsT1)
-    alpha2 = NDTensors.permfactor(permT2, blockT2, indsT2)
-    alphaR = NDTensors.permfactor(permR, blockR, indsR)
+    # Precompute parities once per block — avoids redundant qn lookups across the
+    # three permfactor calls and the alpha_arrows loop below (each qn call is ~35 ns).
+    parityT1 = ntuple(n -> fparity(qn(indsT1[n], blockT1[n])), Val(N1))
+    parityT2 = ntuple(n -> fparity(qn(indsT2[n], blockT2[n])), Val(N2))
+    parityR = ntuple(n -> fparity(qn(indsR[n], blockR[n])), Val(NR))
+
+    alpha1 = _perm_sign_from_parities(permT1, parityT1)
+    alpha2 = _perm_sign_from_parities(permT2, parityT2)
+    alphaR = _perm_sign_from_parities(permR, parityR)
 
     alpha_arrows = one(ElR)
-    for n in 1:length(indsT1)
-        l = labelsT1[n]
-        i = indsT1[n]
-        qi = qn(i, blockT1[n])
-        if l < 0 && dir(i) == Out && fparity(qi) == 1
-            alpha_arrows *= -1
-        end
+    @inbounds for n in 1:N1
+        labelsT1[n] < 0 && dir(indsT1[n]) == Out && parityT1[n] == 1 && (alpha_arrows *= -1)
     end
 
     α = alpha1 * alpha2 * alphaR * alpha_arrows
