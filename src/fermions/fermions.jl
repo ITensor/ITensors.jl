@@ -15,7 +15,7 @@ function parity_sign(P)::Int
     L = length(P)
     s = +1
     for i in 1:L, j in (i + 1):L
-        s *= sign(P[j] - P[i])
+        @inbounds s *= sign(P[j] - P[i])
     end
     return s
 end
@@ -70,32 +70,37 @@ Base.isodd(q::QN) = isodd(fparity(q))
 Base.isodd(iv::Pair{<:Index}) = isodd(fparity(iv))
 
 """
-    compute_permfactor(p,iv_or_qn::Vararg{T,N})
+    compute_permfactor(p,iv_or_qn::NTuple{N,T})
 
 Given a permutation p and a set "s" of QNIndexVals or QNs,
 if the subset of index vals which are fermion-parity
 odd undergo an odd permutation (odd number of swaps)
 according to p, then return -1. Otherwise return +1.
 """
-function compute_permfactor(p, iv_or_qn...; range = 1:length(iv_or_qn))::Int
+function compute_permfactor(
+        p,
+        iv_or_qn::NTuple{N, T};
+        range = 1:length(iv_or_qn)
+    )::Int where {N, T}
     !using_auto_fermion() && return 1
-    N = length(iv_or_qn)
-    # XXX: Bug https://github.com/ITensor/ITensors.jl/issues/931
-    # oddp = @MVector zeros(Int, N)
-    oddp = MVector((ntuple(Returns(0), Val(N))))
+    oddp = MVector(ntuple(Returns(0), Val(N)))
     n = 0
-    @inbounds for j in range
-        if fparity(iv_or_qn[p[j]]) == 1
+    for j in range
+        if (@inbounds fparity(iv_or_qn[p[j]]) == 1)
             n += 1
-            oddp[n] = p[j]
+            @inbounds oddp[n] = p[j]
         end
     end
     return parity_sign(oddp[1:n])
 end
 
+# This version of compute_permfactor
+# is for backwards compatibility with ITensorNetworks
+compute_permfactor(p, iv_or_qn...; kws...) = compute_permfactor(p, iv_or_qn; kws...)
+
 function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex}, N}; kwargs...) where {N}
     !using_auto_fermion() && return 1
-    return compute_permfactor(p, ivs...; kwargs...)
+    return compute_permfactor(p, ivs; kwargs...)
 end
 
 function NDTensors.permfactor(
@@ -103,7 +108,7 @@ function NDTensors.permfactor(
     ) where {N}
     !using_auto_fermion() && return 1
     qns = ntuple(n -> qn(inds[n], block[n]), N)
-    return compute_permfactor(perm, qns...; kwargs...)
+    return compute_permfactor(perm, qns; kwargs...)
 end
 
 NDTensors.block_parity(i::QNIndex, block::Integer) = fparity(qn(i, block))
