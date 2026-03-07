@@ -11,8 +11,7 @@ and +1 for an even number of swaps. This
 implementation uses an O(n^2) algorithm and is
 intended for small permutations only.
 """
-function parity_sign(P)::Int
-    L = length(P)
+function parity_sign(P, L::Int = length(P))::Int
     s = +1
     for i in 1:L, j in (i + 1):L
         s *= sign(P[j] - P[i])
@@ -79,18 +78,19 @@ according to p, then return -1. Otherwise return +1.
 """
 function compute_permfactor(p, iv_or_qn...; range = 1:length(iv_or_qn))::Int
     !using_auto_fermion() && return 1
-    N = length(iv_or_qn)
-    # XXX: Bug https://github.com/ITensor/ITensors.jl/issues/931
-    # oddp = @MVector zeros(Int, N)
-    oddp = MVector((ntuple(Returns(0), Val(N))))
-    n = 0
-    @inbounds for j in range
-        if fparity(iv_or_qn[p[j]]) == 1
-            n += 1
-            oddp[n] = p[j]
+    # Compute the parity sign of the permutation restricted to odd-parity
+    # elements, without any intermediate allocation. For each pair (ri, rj)
+    # in range with ri < rj and both odd-parity, multiply by sign(p[rj] - p[ri]).
+    s = +1
+    @inbounds for ri in range
+        fparity(iv_or_qn[p[ri]]) == 0 && continue
+        @inbounds for rj in range
+            rj <= ri && continue
+            fparity(iv_or_qn[p[rj]]) == 0 && continue
+            s *= sign(p[rj] - p[ri])
         end
     end
-    return parity_sign(oddp[1:n])
+    return s
 end
 
 function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex}, N}; kwargs...) where {N}
@@ -140,7 +140,7 @@ end
 @inline function NDTensors.compute_alpha(
         ElR,
         labelsR,
-        blockR,
+        blockR::NDTensors.Block{NR},
         input_indsR,
         labelsT1,
         blockT1,
@@ -148,15 +148,14 @@ end
         labelsT2,
         blockT2,
         indsT2::NTuple{N2, QNIndex}
-    ) where {N1, N2}
+    ) where {N1, N2, NR}
     if !using_auto_fermion()
         !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
         return one(ElR)
     end
 
-    # the "indsR" argument to compute_alpha from NDTensors
-    # may be a tuple of QNIndex, so convert to a Vector{Index}
-    indsR = collect(input_indsR)
+    # input_indsR is a QNIndices (Tuple{Vararg{QNIndex}}), use it directly.
+    indsR = input_indsR
 
     nlabelsT1 = TupleTools.sort(labelsT1; rev = true)
     nlabelsT2 = TupleTools.sort(labelsT2)
@@ -164,9 +163,9 @@ end
     # Make orig_labelsR from the order of
     # indices that would result by just
     # taking the uncontracted indices of
-    # T1 and T2 in their input order:
-    NR = length(labelsR)
-    orig_labelsR = zeros(Int, NR)
+    # T1 and T2 in their input order.
+    # Use MVector{NR} (NR known at compile time) to avoid heap allocation.
+    orig_labelsR = MVector{NR, Int}(undef)
     u = 1
     for ls in (nlabelsT1, nlabelsT2), l in ls
         if l > 0
@@ -177,7 +176,10 @@ end
 
     permT1 = NDTensors.getperm(nlabelsT1, labelsT1)
     permT2 = NDTensors.getperm(nlabelsT2, labelsT2)
-    permR = vec_getperm(labelsR, orig_labelsR)
+    permR = MVector{NR, Int}(undef)
+    for i in 1:NR
+        @inbounds permR[i] = NDTensors._findfirst(==(labelsR[i]), orig_labelsR)
+    end
 
     alpha1 = NDTensors.permfactor(permT1, blockT1, indsT1)
     alpha2 = NDTensors.permfactor(permT2, blockT2, indsT2)
