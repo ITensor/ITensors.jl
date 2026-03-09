@@ -5,7 +5,7 @@ using ITensors.NDTensors: DenseTensor, NDTensors, array, dim, dims, eigen, facto
 using ITensors: ITensors, ITensor, Index, IndexSet, Order, QN, TagSet, addtags, allhastags,
     anyhastags, commonind, convert_eltype, convert_leaf_eltype, dag, directsum, eachindval,
     eachval, filterinds, firstind, hascommoninds, hasind, hasinds, hassameinds, hastags,
-    inner, itensor, mapprime, noprime, onehot, order, permute, prime, product,
+    inner, itensor, logdot, loginner, mapprime, noprime, onehot, order, permute, prime, product,
     random_itensor, removetags, replaceind, replaceind!, replaceinds, replaceinds!,
     replacetags, scalar, setelt, setprime, settags, sim, swapinds, swapinds!, swapprime,
     uniqueind, uniqueindex, val, δ, ⊕
@@ -20,7 +20,7 @@ ITensors.enable_debug_checks()
 Random.seed!(12345)
 
 function invdigits(::Type{T}, x...) where {T}
-    return T(sum([x[length(x) - k + 1] * 10^(k - 1) for k in 1:length(x)]))
+    return T(sum([x[length(x)-k+1] * 10^(k - 1) for k in 1:length(x)]))
 end
 
 @testset "Dense ITensor basic functionality" begin
@@ -45,26 +45,26 @@ end
         @testset "show" begin
             i = Index{Int}(1, 2, ITensors.Neither, TagSet(), 0)
             a = ITensor([1, 2], i)
-            function res_show(prefix = "")
+            function res_show(prefix="")
                 return "ITensor ord=1\nDim 1: (dim=2|id=1)\n" *
-                    "$(prefix)Dense{Float64, Vector{Float64}}\n" *
-                    " 2-element\n 1.0\n 2.0\n"
+                       "$(prefix)Dense{Float64, Vector{Float64}}\n" *
+                       " 2-element\n 1.0\n 2.0\n"
             end
             @test sprint(show, a) in (res_show(), res_show("NDTensors."))
-            @test sprint(show, a; context = :compact => true) == "((dim=2|id=1),)"
-            function res_show_text(prefix = "")
+            @test sprint(show, a; context=:compact => true) == "((dim=2|id=1),)"
+            function res_show_text(prefix="")
                 return "ITensor ord=1 (dim=2|id=1)\n" *
-                    "$(prefix)Dense{Float64, Vector{Float64}}"
+                       "$(prefix)Dense{Float64, Vector{Float64}}"
             end
             @test sprint(show, MIME"text/plain"(), a) in
-                (res_show_text(), res_show_text("NDTensors."))
+                  (res_show_text(), res_show_text("NDTensors."))
         end
 
         @testset "diag" for ElType in (Float32, Float64, ComplexF32, ComplexF64)
             i, j = Index.(2, ("i", "j"))
             A = random_itensor(ElType, i, j)
             d = diag(A)
-            @test d isa DenseTensor{ElType, 1}
+            @test d isa DenseTensor{ElType,1}
             @test d[1] == A[1, 1]
             @test d[2] == A[2, 2]
         end
@@ -122,8 +122,8 @@ end
         end
 
         @testset "reductions (sum, prod)" for elt in (
-                Float32, Float64, Complex{Float32}, Complex{Float64},
-            )
+            Float32, Float64, Complex{Float32}, Complex{Float64},
+        )
             a = random_itensor(elt, Index(2), Index(2))
             @test sum(a) ≈ sum(array(a))
             @test sum(a) isa elt
@@ -141,15 +141,15 @@ end
             i₁ = Index(2, "S=1/2")
             i₂ = Index(2, "S=1/2")
             v = ITensor(i₁, i₂)
-            v[i₂ => "↑", i₁ => "↓"] = 1.0
+            v[i₂=>"↑", i₁=>"↓"] = 1.0
             @test v[1, 1] == 0.0
             @test v[1, 2] == 0.0
             @test v[2, 1] == 1.0
             @test v[2, 2] == 0.0
-            @test v[i₁ => "↑", i₂ => "↑"] == 0.0
-            @test v[i₁ => "↑", i₂ => "↓"] == 0.0
-            @test v[i₁ => "↓", i₂ => "↑"] == 1.0
-            @test v[i₁ => "↓", i₂ => "↓"] == 0.0
+            @test v[i₁=>"↑", i₂=>"↑"] == 0.0
+            @test v[i₁=>"↑", i₂=>"↓"] == 0.0
+            @test v[i₁=>"↓", i₂=>"↑"] == 1.0
+            @test v[i₁=>"↓", i₂=>"↓"] == 0.0
         end
 
         @testset "getindex with state string" begin
@@ -171,47 +171,47 @@ end
             a = Index(2)
             b = Index(3)
             A = random_itensor(a, b)
-            @test A[end, end] == A[a => 2, b => 3]
-            @test A[end - 1, end] == A[a => 1, b => 3]
-            @test A[end - 1, end - 1] == A[a => 1, b => 2]
-            @test A[end - 1, end - 2] == A[a => 1, b => 1]
-            @test A[end - 1, 2 * (end - 2)] == A[a => 1, b => 2]
-            @test A[2, end] == A[a => 2, b => 3]
-            @test A[2, end - 1] == A[a => 2, b => 2]
-            @test A[1, end] == A[a => 1, b => 3]
-            @test A[1, end - 2] == A[a => 1, b => 1]
-            @test A[end, 2] == A[a => 2, b => 2]
-            @test A[end - 1, 2] == A[a => 1, b => 2]
-            @test A[a => end, b => end] == A[a => 2, b => 3]
-            @test A[a => end - 1, b => end] == A[a => 1, b => 3]
-            @test A[a => end, b => end - 1] == A[a => 2, b => 2]
-            @test A[a => end - 1, b => 2 * (end - 2)] == A[a => 1, b => 2]
-            @test A[a => 2, b => end] == A[a => 2, b => 3]
-            @test A[a => 2, b => end] == A[a => 2, b => 3]
-            @test A[a => 1, b => end] == A[a => 1, b => 3]
-            @test A[a => end, b => 3] == A[a => 2, b => 3]
-            @test A[a => end, b => 2] == A[a => 2, b => 2]
-            @test A[b => end, a => end] == A[a => 2, b => 3]
-            @test A[b => end - 1, a => end] == A[a => 2, b => 2]
-            @test A[b => end - 1, a => end - 1] == A[a => 1, b => 2]
-            @test A[b => end - 2, a => end - 1] == A[a => 1, b => 1]
-            @test A[b => 2 * (end - 2), a => end - 1] == A[a => 1, b => 2]
-            @test A[b => 2, a => end] == A[a => 2, b => 2]
-            @test A[b => 2, a => end - 1] == A[a => 1, b => 2]
-            @test A[b => 1, a => end] == A[a => 2, b => 1]
-            @test A[b => 1, a => end - 1] == A[a => 1, b => 1]
-            @test A[b => end, a => 2] == A[a => 2, b => 3]
-            @test A[b => end - 1, a => 2] == A[a => 2, b => 2]
-            @test A[b => end, a => 1] == A[a => 1, b => 3]
-            @test A[b => end - 2, a => 1] == A[a => 1, b => 1]
-            @test A[b => end^2 - 7, a => 1] == A[a => 1, b => 2]
+            @test A[end, end] == A[a=>2, b=>3]
+            @test A[end-1, end] == A[a=>1, b=>3]
+            @test A[end-1, end-1] == A[a=>1, b=>2]
+            @test A[end-1, end-2] == A[a=>1, b=>1]
+            @test A[end-1, 2*(end-2)] == A[a=>1, b=>2]
+            @test A[2, end] == A[a=>2, b=>3]
+            @test A[2, end-1] == A[a=>2, b=>2]
+            @test A[1, end] == A[a=>1, b=>3]
+            @test A[1, end-2] == A[a=>1, b=>1]
+            @test A[end, 2] == A[a=>2, b=>2]
+            @test A[end-1, 2] == A[a=>1, b=>2]
+            @test A[a=>end, b=>end] == A[a=>2, b=>3]
+            @test A[a=>end-1, b=>end] == A[a=>1, b=>3]
+            @test A[a=>end, b=>end-1] == A[a=>2, b=>2]
+            @test A[a=>end-1, b=>2*(end-2)] == A[a=>1, b=>2]
+            @test A[a=>2, b=>end] == A[a=>2, b=>3]
+            @test A[a=>2, b=>end] == A[a=>2, b=>3]
+            @test A[a=>1, b=>end] == A[a=>1, b=>3]
+            @test A[a=>end, b=>3] == A[a=>2, b=>3]
+            @test A[a=>end, b=>2] == A[a=>2, b=>2]
+            @test A[b=>end, a=>end] == A[a=>2, b=>3]
+            @test A[b=>end-1, a=>end] == A[a=>2, b=>2]
+            @test A[b=>end-1, a=>end-1] == A[a=>1, b=>2]
+            @test A[b=>end-2, a=>end-1] == A[a=>1, b=>1]
+            @test A[b=>2*(end-2), a=>end-1] == A[a=>1, b=>2]
+            @test A[b=>2, a=>end] == A[a=>2, b=>2]
+            @test A[b=>2, a=>end-1] == A[a=>1, b=>2]
+            @test A[b=>1, a=>end] == A[a=>2, b=>1]
+            @test A[b=>1, a=>end-1] == A[a=>1, b=>1]
+            @test A[b=>end, a=>2] == A[a=>2, b=>3]
+            @test A[b=>end-1, a=>2] == A[a=>2, b=>2]
+            @test A[b=>end, a=>1] == A[a=>1, b=>3]
+            @test A[b=>end-2, a=>1] == A[a=>1, b=>1]
+            @test A[b=>end^2-7, a=>1] == A[a=>1, b=>2]
 
             i, j, k, l = Index.(2, ("i", "j", "k", "l"))
             B = random_itensor(i)
-            @test B[i => end] == B[i => dim(i)]
-            @test B[i => end - 1] == B[i => dim(i) - 1]
+            @test B[i=>end] == B[i=>dim(i)]
+            @test B[i=>end-1] == B[i=>dim(i)-1]
             @test B[end] == B[dim(i)]
-            @test B[end - 1] == B[dim(i) - 1]
+            @test B[end-1] == B[dim(i)-1]
         end
         @testset "ITensor equality" begin
             i, j, k, l = Index.(2, ("i", "j", "k", "l"))
@@ -229,20 +229,20 @@ end
             _j = Index(3, "j")
 
             A = ITensor(_i, _j)
-            A[_i => end, _j => end] = 2.5
-            @test A[_i => dim(_i), _j => dim(_j)] == 2.5
+            A[_i=>end, _j=>end] = 2.5
+            @test A[_i=>dim(_i), _j=>dim(_j)] == 2.5
 
             A = ITensor(_i, _j)
-            A[_j => end, _i => end] = 3.5
-            @test A[_i => dim(_i), _j => dim(_j)] == 3.5
+            A[_j=>end, _i=>end] = 3.5
+            @test A[_i=>dim(_i), _j=>dim(_j)] == 3.5
 
             A = ITensor(_i, _j)
-            A[_j => end, _i => 1] = 4.5
-            @test A[_i => 1, _j => dim(_j)] == 4.5
+            A[_j=>end, _i=>1] = 4.5
+            @test A[_i=>1, _j=>dim(_j)] == 4.5
 
             A = ITensor(_i, _j)
-            A[_j => end - 1, _i => 1] = 4.5
-            @test A[_i => 1, _j => dim(_j) - 1] == 4.5
+            A[_j=>end-1, _i=>1] = 4.5
+            @test A[_i=>1, _j=>dim(_j)-1] == 4.5
         end
 
         @testset "Random" begin
@@ -291,13 +291,13 @@ end
         end
 
         @testset "trace (tr) (eltype=$elt)" for elt in (
-                Float32, Float64, Complex{Float32}, Complex{Float64},
-            )
+            Float32, Float64, Complex{Float32}, Complex{Float64},
+        )
             i, j, k, l = Index.((2, 3, 4, 5), ("i", "j", "k", "l"))
             T = random_itensor(elt, j, k', i', k, j', i)
             trT1 = tr(T)
             @test eltype(trT1) === elt
-            trT2 = (T * δ(elt, i, i') * δ(elt, j, j') * δ(elt, k, k'))[]
+            trT2 = (T*δ(elt, i, i')*δ(elt, j, j')*δ(elt, k, k'))[]
             @test trT1 ≈ trT2
 
             T = random_itensor(elt, j, k', i', l, k, j', i)
@@ -357,12 +357,12 @@ end
 
             M1 = matrix(TM)
             for ni in eachval(i), nj in eachval(j)
-                @test M1[ni, nj] ≈ TM[i => ni, j => nj]
+                @test M1[ni, nj] ≈ TM[i=>ni, j=>nj]
             end
 
             M2 = Matrix(TM, j, i)
             for ni in eachval(i), nj in eachval(j)
-                @test M2[nj, ni] ≈ TM[i => ni, j => nj]
+                @test M2[nj, ni] ≈ TM[i=>ni, j=>nj]
             end
 
             T3 = random_itensor(i, j, k)
@@ -408,7 +408,7 @@ end
 
         @testset "From complex matrix" begin
             i, j, k, l = Index.(2, ("i", "j", "k", "l"))
-            M = [1 + 2im 2; 3 4]
+            M = [1+2im 2; 3 4]
             A = itensor(M, i, j)
             @test storage(A) isa NDTensors.Dense{ComplexF64}
         end
@@ -449,7 +449,7 @@ end
         A = random_itensor(i, j)
         B = complex(A)
         for ii in 1:dim(i), jj in 1:dim(j)
-            @test complex(A[i => ii, j => jj]) == B[i => ii, j => jj]
+            @test complex(A[i=>ii, j=>jj]) == B[i=>ii, j=>jj]
         end
     end
 
@@ -544,9 +544,9 @@ end
     end
 
     @testset "mul!" begin
-        i = Index(2; tags = "i")
-        j = Index(2; tags = "j")
-        k = Index(2; tags = "k")
+        i = Index(2; tags="i")
+        j = Index(2; tags="j")
+        k = Index(2; tags="k")
 
         A = random_itensor(i, j)
         B = random_itensor(j, k)
@@ -624,8 +624,8 @@ end
                 is = [Index(n + 1, "i$n") for n in 1:6]
 
                 for ais in permutations((1, 2, 3)),
-                        bis in permutations((2, 3, 4)),
-                        cis in permutations((1, 4))
+                    bis in permutations((2, 3, 4)),
+                    cis in permutations((1, 4))
 
                     A = random_itensor(ntuple(i -> is[ais[i]], Val(length(ais))))
                     B = random_itensor(ntuple(i -> is[bis[i]], Val(length(bis))))
@@ -637,8 +637,8 @@ end
                 end
 
                 for ais in permutations((1, 2, 3)),
-                        bis in permutations((2, 3, 4, 5)),
-                        cis in permutations((1, 4, 5))
+                    bis in permutations((2, 3, 4, 5)),
+                    cis in permutations((1, 4, 5))
 
                     A = random_itensor(ntuple(i -> is[ais[i]], Val(length(ais))))
                     B = random_itensor(ntuple(i -> is[bis[i]], Val(length(bis))))
@@ -708,12 +708,12 @@ end
         Amat = reshape(Amat, 4, 4)
         Amat = reshape(Amat + Amat' + randn(4, 4) * 1.0e-10, 2, 2, 2, 2)
         A = itensor(Amat, i1, i2, s1, s2)
-        Aexp = exp(A, (i1, i2), (s1, s2); ishermitian = true)
+        Aexp = exp(A, (i1, i2), (s1, s2); ishermitian=true)
         Amatexp =
             reshape(parent(exp(LinearAlgebra.Hermitian(reshape(Amat, 4, 4)))), 2, 2, 2, 2)
         Aexp_from_mat = itensor(Amatexp, i1, i2, s1, s2)
         @test Aexp ≈ Aexp_from_mat
-        Aexp = exp(A, (i1, i2), (s1, s2); ishermitian = true)
+        Aexp = exp(A, (i1, i2), (s1, s2); ishermitian=true)
         Amatexp =
             reshape(parent(exp(LinearAlgebra.Hermitian(reshape(Amat, 4, 4)))), 2, 2, 2, 2)
         Aexp_from_mat = itensor(Amatexp, i1, i2, s1, s2)
@@ -725,30 +725,30 @@ end
 
         T = onehot(i => 1)
         @test eltype(T) === Float64
-        @test T[i => 1] ≈ 1.0
-        @test T[i => 2] ≈ 0.0
+        @test T[i=>1] ≈ 1.0
+        @test T[i=>2] ≈ 0.0
 
         T = setelt(i => 2)
-        @test T[i => 1] ≈ 0.0
-        @test T[i => 2] ≈ 1.0
+        @test T[i=>1] ≈ 0.0
+        @test T[i=>2] ≈ 1.0
 
         j = Index(2, "j")
 
         T = onehot(j => 2, i => 1)
-        @test T[j => 1, i => 1] ≈ 0.0
-        @test T[j => 2, i => 1] ≈ 1.0
-        @test T[j => 1, i => 2] ≈ 0.0
-        @test T[j => 2, i => 2] ≈ 0.0
+        @test T[j=>1, i=>1] ≈ 0.0
+        @test T[j=>2, i=>1] ≈ 1.0
+        @test T[j=>1, i=>2] ≈ 0.0
+        @test T[j=>2, i=>2] ≈ 0.0
 
         T = onehot(Float32, i => 1)
         @test eltype(T) === Float32
-        @test T[i => 1] ≈ 1.0
-        @test T[i => 2] ≈ 0.0
+        @test T[i=>1] ≈ 1.0
+        @test T[i=>2] ≈ 0.0
 
         T = onehot(ComplexF32, i => 1)
         @test eltype(T) === ComplexF32
-        @test T[i => 1] ≈ 1.0
-        @test T[i => 2] ≈ 0.0
+        @test T[i=>1] ≈ 1.0
+        @test T[i=>2] ≈ 0.0
     end
 
     @testset "add, subtract, and axpy" begin
@@ -864,9 +864,9 @@ end
             3 4
         ]
         T = itensor(M, i, j)
-        T[i => 1, j => 1] = 3.3
+        T[i=>1, j=>1] = 3.3
         @test M[1, 1] == 3.3
-        @test T[i => 1, j => 1] == 3.3
+        @test T[i=>1, j=>1] == 3.3
         @test storage(T) isa NDTensors.Dense{Float64}
 
         M = [
@@ -874,9 +874,9 @@ end
             3 4
         ]
         T = itensor(M, i, j)
-        T[i => 1, j => 1] = 3.3
+        T[i=>1, j=>1] = 3.3
         @test M[1, 1] == 1
-        @test T[i => 1, j => 1] == 3.3
+        @test T[i=>1, j=>1] == 3.3
         @test storage(T) isa NDTensors.Dense{Float64}
 
         M = [
@@ -884,9 +884,9 @@ end
             3 4
         ]
         T = itensor(Int, M, i, j)
-        T[i => 1, j => 1] = 6
+        T[i=>1, j=>1] = 6
         @test M[1, 1] == 6
-        @test T[i => 1, j => 1] == 6
+        @test T[i=>1, j=>1] == 6
         @test storage(T) isa NDTensors.Dense{Int}
 
         # This version makes a copy
@@ -895,9 +895,9 @@ end
             3 4
         ]
         T = ITensor(M, i, j)
-        T[i => 1, j => 1] = 3.3
+        T[i=>1, j=>1] = 3.3
         @test M[1, 1] == 1
-        @test T[i => 1, j => 1] == 3.3
+        @test T[i=>1, j=>1] == 3.3
 
         # Empty indices
         A = randn(1)
@@ -930,9 +930,9 @@ end
         ]
         M = @view X[1:2, 1:2]
         T = itensor(M, i, j)
-        T[i => 1, j => 1] = 3.3
+        T[i=>1, j=>1] = 3.3
         @test M[1, 1] == 3.3
-        @test T[i => 1, j => 1] == 3.3
+        @test T[i=>1, j=>1] == 3.3
         @test storage(T) isa NDTensors.Dense{Float64}
     end
 
@@ -1055,25 +1055,25 @@ end
         i = Index(2)
         A = ITensor(i, i')
         Ap = permute(A, i, i')
-        A[i => 1, i' => 1] = 1
-        @test A[i => 1, i' => 1] == 1
-        @test Ap[i => 1, i' => 1] == 0
+        A[i=>1, i'=>1] = 1
+        @test A[i=>1, i'=>1] == 1
+        @test Ap[i=>1, i'=>1] == 0
     end
 
     @testset "permute, NeverAlias()/AllowAlias()" begin
         i = Index(2)
         A = ITensor(i, i')
         Ap = permute(A, i, i')
-        A[i => 1, i' => 1] = 1
-        @test A[i => 1, i' => 1] == 1
-        @test Ap[i => 1, i' => 1] == 0
+        A[i=>1, i'=>1] = 1
+        @test A[i=>1, i'=>1] == 1
+        @test Ap[i=>1, i'=>1] == 0
 
         i = Index(2)
         A = ITensor(i, i')
         Ap = permute(ITensors.NeverAlias(), A, i, i')
-        A[i => 1, i' => 1] = 1
-        @test A[i => 1, i' => 1] == 1
-        @test Ap[i => 1, i' => 1] == 0
+        A[i=>1, i'=>1] = 1
+        @test A[i=>1, i'=>1] == 1
+        @test Ap[i=>1, i'=>1] == 0
 
         i = Index(2, "index_i")
         j = Index(4, "index_j")
@@ -1085,12 +1085,12 @@ end
         pT_noalias_1[1, 1, 1] = 12
         @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
-        pT_noalias_2 = permute(T, i, j, k; allow_alias = false)
+        pT_noalias_2 = permute(T, i, j, k; allow_alias=false)
         pT_noalias_2[1, 1, 1] = 12
         @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
         cT = copy(T)
-        pT_alias = permute(cT, i, j, k; allow_alias = true)
+        pT_alias = permute(cT, i, j, k; allow_alias=true)
         pT_alias[1, 1, 1] = 12
         @test cT[1, 1, 1] == pT_alias[1, 1, 1]
 
@@ -1111,20 +1111,20 @@ end
             @test s1 == firstind(A1, "Site")
             @test s1 == firstind(A1, "s=1")
             @test s1 == firstind(A1, "s=1,Site")
-            @test l == firstind(A1; tags = "Link", plev = 0)
-            @test l' == firstind(A1; plev = 1)
-            @test l' == firstind(A1; tags = "Link", plev = 1)
+            @test l == firstind(A1; tags="Link", plev=0)
+            @test l' == firstind(A1; plev=1)
+            @test l' == firstind(A1; tags="Link", plev=1)
             @test s2 == firstind(A2, "Site")
             @test s2 == firstind(A2, "s=2")
             @test s2 == firstind(A2, "Site")
-            @test s2 == firstind(A2; plev = 0)
-            @test s2 == firstind(A2; tags = "s=2", plev = 0)
-            @test s2 == firstind(A2; tags = "Site", plev = 0)
-            @test s2 == firstind(A2; tags = "s=2,Site", plev = 0)
-            @test l' == firstind(A2; plev = 1)
-            @test l' == firstind(A2; tags = "Link", plev = 1)
-            @test l'' == firstind(A2; plev = 2)
-            @test l'' == firstind(A2; tags = "Link", plev = 2)
+            @test s2 == firstind(A2; plev=0)
+            @test s2 == firstind(A2; tags="s=2", plev=0)
+            @test s2 == firstind(A2; tags="Site", plev=0)
+            @test s2 == firstind(A2; tags="s=2,Site", plev=0)
+            @test l' == firstind(A2; plev=1)
+            @test l' == firstind(A2; tags="Link", plev=1)
+            @test l'' == firstind(A2; plev=2)
+            @test l'' == firstind(A2; tags="Link", plev=2)
         end
         @testset "addtags(::ITensor,::String,::String)" begin
             s1u = addtags(s1, "u")
@@ -1136,26 +1136,26 @@ end
             A1u = addtags(A1, "u", "Link")
             @test hasinds(A1u, s1, lu, lu')
 
-            A1u = addtags(A1, "u"; tags = "Link")
+            A1u = addtags(A1, "u"; tags="Link")
             @test hasinds(A1u, s1, lu, lu')
 
-            A1u = addtags(A1, "u"; plev = 0)
+            A1u = addtags(A1, "u"; plev=0)
             @test hasinds(A1u, s1u, lu, l')
 
-            A1u = addtags(A1, "u"; tags = "Link", plev = 0)
+            A1u = addtags(A1, "u"; tags="Link", plev=0)
             @test hasinds(A1u, s1, lu, l')
 
-            A1u = addtags(A1, "u"; tags = "Link", plev = 1)
+            A1u = addtags(A1, "u"; tags="Link", plev=1)
             @test hasinds(A1u, s1, l, lu')
         end
         @testset "removetags(::ITensor,::String,::String)" begin
             A2r = removetags(A2, "Site")
             @test hasinds(A2r, removetags(s2, "Site"), l', l'')
 
-            A2r = removetags(A2, "Link"; plev = 1)
+            A2r = removetags(A2, "Link"; plev=1)
             @test hasinds(A2r, s2, removetags(l, "Link")', l'')
 
-            A2r = replacetags(A2, "Link", "Temp"; plev = 1)
+            A2r = replacetags(A2, "Link", "Temp"; plev=1)
             @test hasinds(A2r, s2, ltmp', l'')
         end
         @testset "replacetags(::ITensor,::String,::String)" begin
@@ -1266,8 +1266,8 @@ end
         end
 
         @testset "replaceinds fixed errors" begin
-            l = Index(3; tags = "l")
-            s = Index(2; tags = "s")
+            l = Index(3; tags="l")
+            s = Index(2; tags="s")
             l̃, s̃ = sim(l), sim(s)
             A = random_itensor(s, l)
             Ã = replaceinds(A, (l, s), (l̃, s̃))
@@ -1301,19 +1301,19 @@ end
             S1 = TC + TR
             S2 = TR + TC
             @test typeof(storage(S1)) ==
-                NDTensors.Dense{complex(eltype), Vector{complex(eltype)}}
+                  NDTensors.Dense{complex(eltype),Vector{complex(eltype)}}
             @test typeof(storage(S2)) ==
-                NDTensors.Dense{complex(eltype), Vector{complex(eltype)}}
+                  NDTensors.Dense{complex(eltype),Vector{complex(eltype)}}
             for ii in 1:dim(i), jj in 1:dim(j)
-                @test S1[i => ii, j => jj] ≈ TC[i => ii, j => jj] + TR[i => ii, j => jj]
-                @test S2[i => ii, j => jj] ≈ TC[i => ii, j => jj] + TR[i => ii, j => jj]
+                @test S1[i=>ii, j=>jj] ≈ TC[i=>ii, j=>jj] + TR[i=>ii, j=>jj]
+                @test S2[i=>ii, j=>jj] ≈ TC[i=>ii, j=>jj] + TR[i=>ii, j=>jj]
             end
         end
     end
 
     @testset "ITensor, NDTensors.Dense{$SType} storage" for SType in (
-            Float32, Float64, ComplexF32, ComplexF64,
-        )
+        Float32, Float64, ComplexF32, ComplexF64,
+    )
         mi, mj, mk, ml, mα = 2, 3, 4, 5, 6, 7
         i = Index(mi, "i")
         j = Index(mj, "j")
@@ -1326,10 +1326,10 @@ end
         @testset "Set and get values with IndexVals" begin
             A = ITensor(SType, i, j, k)
             for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
-                A[k => kk, j => jj, i => ii] = invdigits(SType, ii, jj, kk)
+                A[k=>kk, j=>jj, i=>ii] = invdigits(SType, ii, jj, kk)
             end
             for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
-                @test A[j => jj, k => kk, i => ii] == invdigits(SType, ii, jj, kk)
+                @test A[j=>jj, k=>kk, i=>ii] == invdigits(SType, ii, jj, kk)
             end
             @test A[1] == invdigits(SType, 1, 1, 1)
         end
@@ -1340,10 +1340,10 @@ end
             @test j == inds(permA)[2]
             @test i == inds(permA)[3]
             for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
-                @test A[k => kk, i => ii, j => jj] == permA[i => ii, j => jj, k => kk]
+                @test A[k=>kk, i=>ii, j=>jj] == permA[i=>ii, j=>jj, k=>kk]
             end
             for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
-                @test A[k => kk, i => ii, j => jj] == permA[i => ii, j => jj, k => kk]
+                @test A[k=>kk, i=>ii, j=>jj] == permA[i=>ii, j=>jj, k=>kk]
             end
             # TODO: I think this was doing slicing, but what is the output
             # of slicing an ITensor?
@@ -1394,11 +1394,11 @@ end
             B = random_itensor(SType, k, i, j)
             C = A + B
             for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
-                @test C[i => ii, j => jj, k => kk] ==
-                    A[j => jj, i => ii, k => kk] + B[i => ii, k => kk, j => jj]
+                @test C[i=>ii, j=>jj, k=>kk] ==
+                      A[j=>jj, i=>ii, k=>kk] + B[i=>ii, k=>kk, j=>jj]
             end
             @test array(permute(C, i, j, k)) ==
-                array(permute(A, i, j, k)) + array(permute(B, i, j, k))
+                  array(permute(A, i, j, k)) + array(permute(B, i, j, k))
         end
 
         @testset "Test array" begin
@@ -1425,32 +1425,32 @@ end
 
             @testset "Test SVD of an ITensor" begin
                 U, S, V, spec, u, v = svd(A, (j, l))
-                @test storage(S) isa NDTensors.Diag{real(SType), Vector{real(SType)}}
+                @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
                 @test A ≈ U * S * V
                 @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
                 @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
             end
 
             @testset "Test SVD of an ITensor with different algorithms" begin
-                U, S, V, spec, u, v = svd(A, j, l; alg = "recursive")
-                @test storage(S) isa NDTensors.Diag{real(SType), Vector{real(SType)}}
+                U, S, V, spec, u, v = svd(A, j, l; alg="recursive")
+                @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
                 @test A ≈ U * S * V
                 @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
                 @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
 
-                U, S, V, spec, u, v = svd(A, j, l; alg = "divide_and_conquer")
-                @test storage(S) isa NDTensors.Diag{real(SType), Vector{real(SType)}}
+                U, S, V, spec, u, v = svd(A, j, l; alg="divide_and_conquer")
+                @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
                 @test A ≈ U * S * V
                 @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
                 @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
 
-                U, S, V, spec, u, v = svd(A, j, l; alg = "qr_iteration")
-                @test storage(S) isa NDTensors.Diag{real(SType), Vector{real(SType)}}
+                U, S, V, spec, u, v = svd(A, j, l; alg="qr_iteration")
+                @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
                 @test A ≈ U * S * V
                 @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
                 @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
 
-                @test_throws ErrorException svd(A, j, l; alg = "bad_alg")
+                @test_throws ErrorException svd(A, j, l; alg="bad_alg")
             end
 
             #@testset "Test SVD of a DenseTensor internally" begin
@@ -1475,7 +1475,7 @@ end
                 ii = Index(4)
                 jj = Index(4)
                 T = random_itensor(ComplexF64, ii, jj)
-                U, S, V = svd(T, ii; maxdim = 2)
+                U, S, V = svd(T, ii; maxdim=2)
                 u, s, v = svd(matrix(T))
                 @test norm(U * S * V - T) ≈ sqrt(s[3]^2 + s[4]^2)
             end
@@ -1522,11 +1522,11 @@ end
                 # TODO: use a combiner to combine the u indices to make
                 # this test simpler
                 for ii in 1:dim(u[1]),
-                        jj in 1:dim(u[2]),
-                        iip in 1:dim(u[1]),
-                        jjp in 1:dim(u[2])
+                    jj in 1:dim(u[2]),
+                    iip in 1:dim(u[1]),
+                    jjp in 1:dim(u[2])
 
-                    val = UUᵀ[u[1] => ii, u[2] => jj, u[1]' => iip, u[2]' => jjp]
+                    val = UUᵀ[u[1]=>ii, u[2]=>jj, u[1]'=>iip, u[2]'=>jjp]
                     if ii == iip && jj == jjp
                         @test val ≈ one(SType) atol = atol
                     else
@@ -1539,7 +1539,7 @@ end
                 is = IndexSet(i, j)
                 T = random_itensor(SType, is..., prime(is)...)
                 T = T + swapprime(dag(T), 0, 1)
-                D, U, spec, l, r = eigen(T; ishermitian = true)
+                D, U, spec, l, r = eigen(T; ishermitian=true)
                 @test T ≈ prime(U) * D * dag(U) atol = atol
                 UUᴴ = U * prime(dag(U), r)
                 @test UUᴴ ≈ δ(r, r')
@@ -1555,7 +1555,7 @@ end
                 end
 
                 @testset "factorize ortho left" begin
-                    L, R = factorize(A, (j, l); ortho = "left")
+                    L, R = factorize(A, (j, l); ortho="left")
                     l = commonind(L, R)
                     @test A ≈ L * R
                     @test L * dag(prime(L, l)) ≈ δ(SType, l, l')
@@ -1563,7 +1563,7 @@ end
                 end
 
                 @testset "factorize ortho right" begin
-                    L, R = factorize(A, (j, l); ortho = "right")
+                    L, R = factorize(A, (j, l); ortho="right")
                     l = commonind(L, R)
                     @test A ≈ L * R
                     @test L * dag(prime(L, l)) ≉ δ(SType, l, l')
@@ -1571,7 +1571,7 @@ end
                 end
 
                 @testset "factorize ortho none" begin
-                    L, R = factorize(A, (j, l); ortho = "none")
+                    L, R = factorize(A, (j, l); ortho="none")
                     l = commonind(L, R)
                     @test A ≈ L * R
                     @test L * dag(prime(L, l)) ≉ δ(SType, l, l')
@@ -1589,8 +1589,8 @@ end
                     @test_throws ErrorException factorize(
                         A,
                         i;
-                        which_decomp = "svd",
-                        svd_alg = "bad_alg"
+                        which_decomp="svd",
+                        svd_alg="bad_alg"
                     )
                 end
             end # End factorize tests
@@ -1618,7 +1618,7 @@ end
         @test v2[1] ≈ orig_elt
 
         v2 = random_itensor(i)
-        cv2 = dag(v2; allow_alias = false)
+        cv2 = dag(v2; allow_alias=false)
         orig_elt = v2[1]
         cv2[1] = -1
         @test v2[1] ≈ orig_elt
@@ -1639,11 +1639,11 @@ end
     @testset "filter ITensor indices" begin
         i = Index(2, "i")
         A = random_itensor(i, i')
-        @test hassameinds(filterinds(A; plev = 0), (i,))
-        @test hassameinds(inds(A; plev = 0), (i,))
+        @test hassameinds(filterinds(A; plev=0), (i,))
+        @test hassameinds(inds(A; plev=0), (i,))
         is = inds(A)
-        @test hassameinds(filterinds(is; plev = 0), (i,))
-        @test hassameinds(inds(is; plev = 0), (i,))
+        @test hassameinds(filterinds(is; plev=0), (i,))
+        @test hassameinds(inds(is; plev=0), (i,))
     end
 
     @testset "product/apply" begin
@@ -1662,37 +1662,37 @@ end
         B = random_itensor(s1', s2', dag(s1), dag(s2), lB, rB)
         AB = product(A, B)
         @test hassameinds(AB, (s1', s2', s1, s2, lA, rA, lB, rB))
-        @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+        @test AB ≈ mapprime(prime(A; inds=(s1', s2', s1, s2)) * B, 2 => 1)
 
         # operator * operator, common dangling indices
         A = random_itensor(s1', s2', dag(s1), dag(s2), lA, rA)
         B = random_itensor(s1', s2', dag(s1), dag(s2), dag(lA), dag(rA))
         AB = product(A, B)
         @test hassameinds(AB, (s1', s2', s1, s2))
-        @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+        @test AB ≈ mapprime(prime(A; inds=(s1', s2', s1, s2)) * B, 2 => 1)
 
         # operator * operator, apply_dag, common dangling indices
         A = random_itensor(s1', s2', dag(s1), dag(s2), lA, rA)
         B = random_itensor(s1', s2', dag(s1), dag(s2), lB, rB)
-        ABAdag = product(A, B; apply_dag = true)
-        AB = mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
-        Adag = swapprime(dag(A), 0 => 1; inds = (s1', s2', s1, s2))
+        ABAdag = product(A, B; apply_dag=true)
+        AB = mapprime(prime(A; inds=(s1', s2', s1, s2)) * B, 2 => 1)
+        Adag = swapprime(dag(A), 0 => 1; inds=(s1', s2', s1, s2))
         @test hassameinds(ABAdag, (s1', s2', s1, s2, lB, rB))
-        @test ABAdag ≈ mapprime(prime(AB; inds = (s1', s2', s1, s2)) * Adag, 2 => 1)
+        @test ABAdag ≈ mapprime(prime(AB; inds=(s1', s2', s1, s2)) * Adag, 2 => 1)
 
         # operator * operator, more complicated
         A = random_itensor(s1', s2', dag(s1), dag(s2), lA, rA)
         B = random_itensor(s1', s2', s3', dag(s1), dag(s2), dag(s3), lB, rB, dag(rA))
         AB = product(A, B)
         @test hassameinds(AB, (s1', s2', s3', s1, s2, s3, lA, lB, rB))
-        @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+        @test AB ≈ mapprime(prime(A; inds=(s1', s2', s1, s2)) * B, 2 => 1)
 
         # state * operator (1)
         A = random_itensor(dag(s1), dag(s2), lA, rA)
         B = random_itensor(s1', s2', dag(s1), dag(s2), lB, rB)
         AB = product(A, B)
         @test hassameinds(AB, (s1, s2, lA, rA, lB, rB))
-        @test AB ≈ mapprime(prime(A; inds = (s1, s2)) * B)
+        @test AB ≈ mapprime(prime(A; inds=(s1, s2)) * B)
 
         # state * operator (2)
         A = random_itensor(dag(s1'), dag(s2'), lA, rA)
@@ -1747,10 +1747,38 @@ end
         A = random_itensor(ElType, i', j', i, j)
         x = random_itensor(ElType, i, j)
         y = random_itensor(ElType, i, j)
-        @test inner(x, y) ≈ (dag(x) * y)[]
-        @test inner(x', A, y) ≈ (dag(x)' * A * y)[]
+        @test inner(x, y) ≈ (dag(x)*y)[]
+        @test inner(x', A, y) ≈ (dag(x)'*A*y)[]
         # No automatic priming
         @test_throws DimensionMismatch inner(x, A, y)
+    end
+
+    @testset "inner and loginner ($ElType)" for ElType in (Float64, ComplexF64)
+        i = Index(2)
+        j = Index(2)
+        A = random_itensor(ElType, i', j', i, j)
+        x = random_itensor(ElType, i, j)
+        y = random_itensor(ElType, i, j)
+
+        val2 = inner(x, y)
+        @test val2 ≈ (dag(x)*y)[]
+        val3 = inner(x', A, y)
+        @test val3 ≈ (dag(x)'*A*y)[]
+
+        @test loginner(x, y) ≈ log(complex(val2))
+        @test logdot(x, y) ≈ log(complex(val2))
+
+        @test loginner(x', A, y) ≈ log(complex(val3))
+
+        @test_throws DimensionMismatch loginner(x, A, y)
+
+        if ElType == Float64
+            C = itensor([1.0, 0.0], i)
+            D = itensor([-1.0, 0.0], i)
+            @test loginner(C, D) ≈ log(-1.0 + 0.0im)
+            @test imag(loginner(C, D)) ≈ π
+        end
+        @test loginner(x, y) isa Complex
     end
 
     @testset "hastags" begin
@@ -1764,7 +1792,7 @@ end
     end
 
     @testset "directsum" for space in (identity, d -> [QN(0) => d, QN(1) => d]),
-            index_op in (identity, dag)
+        index_op in (identity, dag)
 
         x = Index(space(2), "x")
         i1 = Index(space(3), "i1")
@@ -1781,12 +1809,12 @@ end
         # https://github.com/ITensor/ITensors.jl/pull/1178.
         S1, s1 = directsum(
             A1 => index_op.((i1, j1)), A2 => index_op.((i2, j2));
-            tags = ["sum_i", "sum_j"]
+            tags=["sum_i", "sum_j"]
         )
 
         # Provide indices
-        i1i2 = directsum(i1, i2; tags = "sum_i")
-        j1j2 = directsum(j1, j2; tags = "sum_j")
+        i1i2 = directsum(i1, i2; tags="sum_i")
+        j1j2 = directsum(j1, j2; tags="sum_j")
         s2 = [i1i2, j1j2]
         S2 = directsum(s2, A1 => index_op.((i1, j1)), A2 => index_op.((i2, j2)))
         for (S, s) in zip((S1, S2), (s1, s2))
@@ -1797,12 +1825,12 @@ end
                 S_vx = S * proj
                 for m in 1:dim(s[1]), n in 1:dim(s[2])
                     if m ≤ dim(i1) && n ≤ dim(j1)
-                        @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
+                        @test S_vx[s[1]=>m, s[2]=>n] == A1_vx[i1=>m, j1=>n]
                     elseif m > dim(i1) && n > dim(j1)
-                        @test S_vx[s[1] => m, s[2] => n] ==
-                            A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
+                        @test S_vx[s[1]=>m, s[2]=>n] ==
+                              A2_vx[i2=>m-dim(i1), j2=>n-dim(j1)]
                     else
-                        @test S_vx[s[1] => m, s[2] => n] == 0
+                        @test S_vx[s[1]=>m, s[2]=>n] == 0
                     end
                 end
             end
@@ -1876,7 +1904,7 @@ end
     end
 
     @testset "convert_eltype, convert_leaf_eltype, $new_eltype" for new_eltype in
-        (Float32, ComplexF64)
+                                                                    (Float32, ComplexF64)
         s = Index(2)
         A = random_itensor(s)
         @test eltype(A) == Float64
@@ -1906,10 +1934,10 @@ end
     end
 
     @testset "nullspace $eltype" for (ss, sl, sr) in [
-                ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3),
-            ],
-            eltype in (Float32, Float64, ComplexF32, ComplexF64),
-            nullspace_kwargs in ((;))
+            ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3),
+        ],
+        eltype in (Float32, Float64, ComplexF32, ComplexF64),
+        nullspace_kwargs in ((;))
         #nullspace_kwargs in ((; atol=eps(real(eltype)) * 100), (;))
 
         s, l, r = Index.((ss, sl, sr), ("s", "l", "r"))
@@ -1921,7 +1949,7 @@ end
         @test hassameinds(N, (s, r, n))
         @test norm(A * N) ≈ 0 atol = eps(real(eltype)) * 100
         @test dim(l) + dim(n) == dim((s, r))
-        A′, (rn,) = ITensors.directsum(A => (l,), dag(N) => (n,); tags = ["⊕"])
+        A′, (rn,) = ITensors.directsum(A => (l,), dag(N) => (n,); tags=["⊕"])
         @test dim(rn) == dim((s, r))
         @test norm(A * dag(prime(A, l))) ≈ norm(A * dag(A′))
     end
