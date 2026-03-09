@@ -1741,18 +1741,6 @@ end
         @test_throws ErrorException product(A, B)
     end
 
-    @testset "inner ($ElType)" for ElType in (Float64, ComplexF64)
-        i = Index(2)
-        j = Index(2)
-        A = random_itensor(ElType, i', j', i, j)
-        x = random_itensor(ElType, i, j)
-        y = random_itensor(ElType, i, j)
-        @test inner(x, y) ≈ (dag(x)*y)[]
-        @test inner(x', A, y) ≈ (dag(x)'*A*y)[]
-        # No automatic priming
-        @test_throws DimensionMismatch inner(x, A, y)
-    end
-
     @testset "inner and loginner ($ElType)" for ElType in (Float64, ComplexF64)
         i = Index(2)
         j = Index(2)
@@ -1770,6 +1758,8 @@ end
 
         @test loginner(x', A, y) ≈ log(complex(val3))
 
+        # No automatic priming
+        @test_throws DimensionMismatch inner(x, A, y)
         @test_throws DimensionMismatch loginner(x, A, y)
 
         if ElType == Float64
