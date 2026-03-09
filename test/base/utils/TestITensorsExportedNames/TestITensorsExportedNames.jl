@@ -102,6 +102,8 @@ const ITENSORS_EXPORTED_NAMES = [
     :isindequal,
     :itensor,
     :linkindex,
+    :logdot,
+    :loginner,
     :lq,
     :mapprime,
     :mapprime!,

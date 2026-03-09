@@ -140,6 +140,8 @@ export
     insertblock!,
     ishermitian,
     itensor,
+    logdot,
+    loginner,
     mul!,
     matrix,
     mapprime!,
