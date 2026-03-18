@@ -6,6 +6,7 @@
 .benchmarkci
 .tmp
 .vscode/
+.worktrees/
 LocalPreferences.toml
 Manifest*.toml
 benchmark/*.json
