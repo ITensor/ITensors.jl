@@ -140,8 +140,7 @@ else
     end
 end
 
-hash(b::Block) = UInt(b.hash)
-hash(b::Block, h::UInt) = h + hash(b)
+hash(b::Block, h::UInt) = hash(b.hash, h)
 
 #
 # Custom NTuple{N, Int} hashes
