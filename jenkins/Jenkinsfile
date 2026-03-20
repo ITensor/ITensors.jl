@@ -23,16 +23,24 @@ pipeline {
             JULIA_NUM_THREADS = 4
           }
           stages {
-            stage('CUDA Diagnostics') {
+            stage('CUDA Setup') {
               steps {
                 sh 'nvidia-smi'
+                sh 'mkdir -p /tmp/cuda-env'
                 sh '''
                   julia -e '
                     using Pkg: Pkg
-                    Pkg.activate(temp=true)
+                    Pkg.activate("/tmp/cuda-env")
                     Pkg.add("CUDA")
                     using CUDA
                     CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                  '
+                '''
+                sh '''
+                  julia -e '
+                    using Pkg: Pkg
+                    Pkg.activate("/tmp/cuda-env")
+                    using CUDA
                     CUDA.versioninfo()
                     println("Allocating CuArray...")
                     x = CUDA.CuArray([1.0, 2.0, 3.0])
@@ -49,14 +57,11 @@ pipeline {
                 sh '''
                   julia -e '
                     using Pkg: Pkg
-                    Pkg.activate(temp=true)
+                    Pkg.activate("/tmp/cuda-env")
                     Pkg.Registry.update()
                     Pkg.update()
                     Pkg.develop(path="./NDTensors")
                     Pkg.develop(path=".")
-                    Pkg.add("CUDA")
-                    using CUDA
-                    CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
                     Pkg.test("NDTensors"; test_args=["cuda"])
                   '
                 '''
@@ -70,14 +75,11 @@ pipeline {
                 sh '''
                   julia -e '
                     using Pkg: Pkg
-                    Pkg.activate(temp=true)
+                    Pkg.activate("/tmp/cuda-env")
                     Pkg.Registry.update()
                     Pkg.update()
                     Pkg.develop(path="./NDTensors")
                     Pkg.develop(path=".")
-                    Pkg.add("CUDA")
-                    using CUDA
-                    CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
                     Pkg.test("NDTensors"; test_args=["cutensor"])
                   '
                 '''
