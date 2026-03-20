@@ -42,7 +42,15 @@ function NDTensors.contract!(
     cuR = CuTensor(arrayR, collect(labelsR))
     cuT1 = CuTensor(arrayT1, collect(labelsT1))
     cuT2 = CuTensor(arrayT2, collect(labelsT2))
-    cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
+    try
+        cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
+    catch e
+        e isa cuTENSOR.CUTENSORError || rethrow()
+        # Fall back to default contraction (cuBLAS) for operations
+        # cuTENSOR doesn't support.
+        NDTensors.contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+        return R
+    end
     if !zoffR
         array(R) .= cuR.data
     end
