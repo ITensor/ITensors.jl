@@ -26,11 +26,12 @@ pipeline {
             stage('CUDA Setup') {
               steps {
                 sh 'nvidia-smi'
-                sh 'mkdir -p /tmp/cuda-env'
                 sh '''
                   julia -e '
                     using Pkg: Pkg
-                    Pkg.activate("/tmp/cuda-env")
+                    # Set CUDA 12.6 preference in the NDTensors test environment
+                    # so Pkg.test picks it up (V100 needs CUDA 12.x, not 13.x)
+                    Pkg.activate("./NDTensors/test")
                     Pkg.add("CUDA")
                     using CUDA
                     CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
@@ -39,7 +40,7 @@ pipeline {
                 sh '''
                   julia -e '
                     using Pkg: Pkg
-                    Pkg.activate("/tmp/cuda-env")
+                    Pkg.activate("./NDTensors/test")
                     using CUDA
                     CUDA.versioninfo()
                     println("Allocating CuArray...")
@@ -55,15 +56,7 @@ pipeline {
               }
               steps {
                 sh '''
-                  julia -e '
-                    using Pkg: Pkg
-                    Pkg.activate("/tmp/cuda-env")
-                    Pkg.Registry.update()
-                    Pkg.update()
-                    Pkg.develop(path="./NDTensors")
-                    Pkg.develop(path=".")
-                    Pkg.test("NDTensors"; test_args=["cuda"])
-                  '
+                  julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
                 '''
               }
             }
@@ -73,15 +66,7 @@ pipeline {
               }
               steps {
                 sh '''
-                  julia -e '
-                    using Pkg: Pkg
-                    Pkg.activate("/tmp/cuda-env")
-                    Pkg.Registry.update()
-                    Pkg.update()
-                    Pkg.develop(path="./NDTensors")
-                    Pkg.develop(path=".")
-                    Pkg.test("NDTensors"; test_args=["cutensor"])
-                  '
+                  julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
                 '''
               }
             }
