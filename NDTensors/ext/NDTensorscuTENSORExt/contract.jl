@@ -48,7 +48,7 @@ function NDTensors.contract!(
         e isa cuTENSOR.CUTENSORError || rethrow()
         # Fall back to default contraction (cuBLAS) for operations
         # cuTENSOR doesn't support.
-        contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+        NDTensors.contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
         return R
     end
     if !zoffR
