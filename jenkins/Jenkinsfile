@@ -29,12 +29,18 @@ pipeline {
                 sh '''
                   julia -e '
                     using Pkg: Pkg
-                    # Set CUDA 12.6 preference in the NDTensors test environment
-                    # so Pkg.test picks it up (V100 needs CUDA 12.x, not 13.x)
+                    # Pin CUDA 12.6 runtime and disable forward-compatible driver
+                    # (V100 is sm_70, not supported by CUDA 13 forward-compat driver)
                     Pkg.activate("./NDTensors/test")
                     Pkg.add("CUDA")
                     using CUDA
                     CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+
+                    # Disable forward-compatible driver (CUDA_Driver_jll 13.2 compat
+                    # driver does not support V100). Use system driver 580 directly.
+                    using Preferences: set_preferences!
+                    using CUDA_Driver_jll
+                    set_preferences!(CUDA_Driver_jll, "compat" => "false")
                   '
                 '''
                 sh '''
