@@ -7,7 +7,10 @@ pipeline {
   stages {
     stage('GPU Testing') {
       parallel {
-        stage('CUDA GPU') {
+        stage('NDTensorsCUDAExt') {
+          options {
+            timeout(time: 45, unit: 'MINUTES')
+          }
           agent {
             dockerfile {
               label 'gpu&&v100'
@@ -22,57 +25,60 @@ pipeline {
             OMP_NUM_THREADS = 4
             JULIA_NUM_THREADS = 4
           }
-          stages {
-            stage('CUDA Setup') {
-              steps {
-                sh 'nvidia-smi'
-                sh '''
-                  julia -e '
-                    using Pkg: Pkg
-                    Pkg.activate("./NDTensors/test")
-                    Pkg.add(["CUDA", "Preferences", "CUDA_Driver_jll"])
-                    using CUDA
-                    CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
-                    # Disable forward-compatible driver (does not support V100/sm_70)
-                    using CUDA_Driver_jll
-                    using Preferences: set_preferences!
-                    set_preferences!(CUDA_Driver_jll, "compat" => "false"; export_prefs=true)
-                  '
-                '''
-                sh 'cat NDTensors/test/LocalPreferences.toml'
-                sh '''
-                  julia -e '
-                    using Pkg: Pkg
-                    Pkg.activate("./NDTensors/test")
-                    using CUDA
-                    CUDA.versioninfo()
-                    println("Allocating CuArray...")
-                    x = CUDA.CuArray([1.0, 2.0, 3.0])
-                    println("Success: ", x)
-                  '
-                '''
-              }
+          steps {
+            sh 'nvidia-smi'
+            sh '''
+              julia -e '
+                using Pkg: Pkg
+                Pkg.activate("./NDTensors/test")
+                Pkg.add(["CUDA", "Preferences", "CUDA_Driver_jll"])
+                using CUDA
+                CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                using CUDA_Driver_jll
+                using Preferences: set_preferences!
+                set_preferences!(CUDA_Driver_jll, "compat" => "false"; export_prefs=true)
+              '
+            '''
+            sh '''
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+            '''
+          }
+        }
+        stage('NDTensorscuTENSORExt') {
+          options {
+            timeout(time: 45, unit: 'MINUTES')
+          }
+          agent {
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.12'
+              args '--gpus "device=0"'
             }
-            stage('NDTensorsCUDAExt') {
-              options {
-                timeout(time: 45, unit: 'MINUTES')
-              }
-              steps {
-                sh '''
-                  julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
-                '''
-              }
-            }
-            stage('NDTensorscuTENSORExt') {
-              options {
-                timeout(time: 45, unit: 'MINUTES')
-              }
-              steps {
-                sh '''
-                  julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
-                '''
-              }
-            }
+          }
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
+          }
+          steps {
+            sh 'nvidia-smi'
+            sh '''
+              julia -e '
+                using Pkg: Pkg
+                Pkg.activate("./NDTensors/test")
+                Pkg.add(["CUDA", "Preferences", "CUDA_Driver_jll"])
+                using CUDA
+                CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                using CUDA_Driver_jll
+                using Preferences: set_preferences!
+                set_preferences!(CUDA_Driver_jll, "compat" => "false"; export_prefs=true)
+              '
+            '''
+            sh '''
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+            '''
           }
         }
         stage('NDTensorsMetalExt'){
