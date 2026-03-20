@@ -7,35 +7,7 @@ pipeline {
   stages {
     stage('GPU Testing') {
       parallel {
-        stage('NDTensorsCUDAExt julia-lts') {
-	        options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            dockerfile {
-              label 'gpu&&v100'
-              filename 'Dockerfile'
-              dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.10'
-              args '--gpus "device=0"'
-            }
-          }
-          environment {
-            HOME = pwd(tmp:true)
-            OMP_NUM_THREADS = 4
-            JULIA_NUM_THREADS = 4
-          }
-          steps {
-            sh 'nvidia-smi'
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.add("CUDA"); using CUDA; CUDA.versioninfo()'
-            '''
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
-            '''
-          }
-        }
-        stage('NDTensorsCUDAExt julia-1') {
+        stage('NDTensorsCUDAExt') {
 	        options {
             timeout(time: 45, unit: 'MINUTES')
           }
@@ -60,32 +32,7 @@ pipeline {
             '''
           }
         }
-        stage('NDTensorscuTENSORExt julia-lts') {
-	        options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            dockerfile {
-              label 'gpu&&v100'
-              filename 'Dockerfile'
-              dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.10'
-              args '--gpus "device=0"'
-            }
-          }
-          environment {
-            HOME = pwd(tmp:true)
-            OMP_NUM_THREADS = 4
-            JULIA_NUM_THREADS = 4
-          }
-          steps {
-            sh 'nvidia-smi'
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
-            '''
-          }
-        }
-        stage('NDTensorscuTENSORExt julia-1') {
+        stage('NDTensorscuTENSORExt') {
 	        options {
             timeout(time: 45, unit: 'MINUTES')
           }
