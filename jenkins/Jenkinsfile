@@ -57,28 +57,7 @@ pipeline {
             '''
           }
         }
-        stage('NDTensorsMetalExt Julia-lts'){
-          options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            label 'm1'
-          }
-          environment{
-            PATH="${env.HOME}/.juliaup/bin:${env.PATH}"
-            PLATFORM = 'macos'
-          }
-          steps{
-            sh '''
-              juliaup add lts
-              juliaup default lts
-            '''
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
-            '''
-          }
-        }
-        stage('NDTensorsMetalExt Julia-1'){
+        stage('NDTensorsMetalExt'){
           options {
             timeout(time: 45, unit: 'MINUTES')
           }
