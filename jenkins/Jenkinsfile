@@ -30,7 +30,18 @@ pipeline {
               steps {
                 sh 'nvidia-smi'
                 sh '''
-                  julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+                  julia -e '
+                    using Pkg: Pkg
+                    Pkg.activate(temp=true)
+                    Pkg.Registry.update()
+                    Pkg.update()
+                    Pkg.develop(path="./NDTensors")
+                    Pkg.develop(path=".")
+                    Pkg.add("CUDA")
+                    using CUDA
+                    CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                    Pkg.test("NDTensors"; test_args=["cuda"])
+                  '
                 '''
               }
             }
@@ -40,7 +51,18 @@ pipeline {
               }
               steps {
                 sh '''
-                  julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+                  julia -e '
+                    using Pkg: Pkg
+                    Pkg.activate(temp=true)
+                    Pkg.Registry.update()
+                    Pkg.update()
+                    Pkg.develop(path="./NDTensors")
+                    Pkg.develop(path=".")
+                    Pkg.add("CUDA")
+                    using CUDA
+                    CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                    Pkg.test("NDTensors"; test_args=["cutensor"])
+                  '
                 '''
               }
             }
