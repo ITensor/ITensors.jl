@@ -35,7 +35,7 @@ pipeline {
                     CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
                   '
                 '''
-                sh 'printf "\n[CUDA_Driver_jll]\ncompat = \"false\"\n" >> NDTensors/test/LocalPreferences.toml'
+                sh "printf '\\n[CUDA_Driver_jll]\\ncompat = \"false\"\\n' >> NDTensors/test/LocalPreferences.toml"
                 sh 'cat NDTensors/test/LocalPreferences.toml'
                 sh '''
                   julia -e '
