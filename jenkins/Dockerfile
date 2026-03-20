@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.6.3-devel-ubuntu22.04
+FROM nvidia/cuda:12-devel-ubuntu22.04
 
 # julia
 RUN apt-get update && \
@@ -6,11 +6,11 @@ RUN apt-get update && \
     apt-get install --yes --no-install-recommends \
                     # basic stuff
                     curl ca-certificates \
-                    libcutensor2 libcutensor-dev \
+                    libcutensor2 \
                     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ARG JULIA=1.10
+ARG JULIA=1.12
 RUN curl -s -L https://julialang-s3.julialang.org/bin/linux/x64/${JULIA}/julia-${JULIA}-latest-linux-x86_64.tar.gz | \
     tar -C /usr/local -x -z --strip-components=1 -f -
