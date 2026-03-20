@@ -26,13 +26,21 @@ pipeline {
             stage('CUDA Setup') {
               steps {
                 sh 'nvidia-smi'
-                sh 'printf "[CUDA_Runtime_jll]\nversion = \"12.6\"\nlocal = \"false\"\n\n[CUDA_Driver_jll]\ncompat = \"false\"\n" > NDTensors/test/LocalPreferences.toml'
-                sh 'cat NDTensors/test/LocalPreferences.toml'
                 sh '''
                   julia -e '
                     using Pkg: Pkg
                     Pkg.activate("./NDTensors/test")
                     Pkg.add("CUDA")
+                    using CUDA
+                    CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                  '
+                '''
+                sh 'printf "\n[CUDA_Driver_jll]\ncompat = \"false\"\n" >> NDTensors/test/LocalPreferences.toml'
+                sh 'cat NDTensors/test/LocalPreferences.toml'
+                sh '''
+                  julia -e '
+                    using Pkg: Pkg
+                    Pkg.activate("./NDTensors/test")
                     using CUDA
                     CUDA.versioninfo()
                     println("Allocating CuArray...")
