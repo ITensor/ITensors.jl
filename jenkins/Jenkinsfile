@@ -30,12 +30,15 @@ pipeline {
                   julia -e '
                     using Pkg: Pkg
                     Pkg.activate("./NDTensors/test")
-                    Pkg.add("CUDA")
+                    Pkg.add(["CUDA", "Preferences"])
                     using CUDA
                     CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                    # Disable forward-compatible driver (does not support V100/sm_70)
+                    using CUDA_Driver_jll
+                    using Preferences: set_preferences!
+                    set_preferences!(CUDA_Driver_jll, "compat" => "false")
                   '
                 '''
-                sh "printf '\\n[CUDA_Driver_jll]\\ncompat = \"false\"\\n' >> NDTensors/test/LocalPreferences.toml"
                 sh 'cat NDTensors/test/LocalPreferences.toml'
                 sh '''
                   julia -e '
