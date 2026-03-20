@@ -28,6 +28,9 @@ pipeline {
           steps {
             sh 'nvidia-smi'
             sh '''
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.add("CUDA"); using CUDA; CUDA.versioninfo()'
+            '''
+            sh '''
               julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
