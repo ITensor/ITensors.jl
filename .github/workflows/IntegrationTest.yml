@@ -11,8 +11,6 @@ on:
       - "reopened"
       - "ready_for_review"
       - "converted_to_draft"
-permissions:
-  pull-requests: "write"
 jobs:
   integration-test:
     name: "IntegrationTest"
