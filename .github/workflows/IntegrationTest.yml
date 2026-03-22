@@ -11,6 +11,8 @@ on:
       - "reopened"
       - "ready_for_review"
       - "converted_to_draft"
+permissions:
+  pull-requests: "write"
 jobs:
   integration-test:
     name: "IntegrationTest"
@@ -28,6 +30,7 @@ jobs:
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
       pkg: "${{ matrix.pkg }}"
+      is-fork-pr: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
   integration-gate:
     name: "IntegrationTest"
     needs: "integration-test"
