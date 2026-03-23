@@ -4,7 +4,7 @@ on:
     branches:
       - "main"
     tags: "*"
-  pull_request:
+  pull_request_target:
     types:
       - "opened"
       - "synchronize"
@@ -15,6 +15,7 @@ jobs:
   integration-test:
     name: "IntegrationTest"
     strategy:
+      fail-fast: false
       matrix:
         pkg:
           - "ITensorGaussianMPS"
@@ -28,7 +29,6 @@ jobs:
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
       pkg: "${{ matrix.pkg }}"
-      is-fork-pr: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
   integration-gate:
     name: "IntegrationTest"
     needs: "integration-test"
