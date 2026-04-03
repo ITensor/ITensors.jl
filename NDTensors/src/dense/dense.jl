@@ -30,7 +30,10 @@ function Dense{ElT, DataT}(dim::Integer) where {ElT, DataT <: AbstractArray}
     return Dense{ElT, DataT}(generic_zeros(DataT, dim))
 end
 
-function Dense{ElT, DataT}(::UndefInitializer, inds::Tuple) where {ElT, DataT <: AbstractArray}
+function Dense{ElT, DataT}(
+        ::UndefInitializer,
+        inds::Tuple
+    ) where {ElT, DataT <: AbstractArray}
     return Dense{ElT, DataT}(similar(DataT, dim(inds)))
 end
 

@@ -1,7 +1,7 @@
 module TypeParameterAccessorsoneAPIExt
 
+using NDTensors.Vendored.TypeParameterAccessors: Position, TypeParameterAccessors
 using oneAPI: oneAPI, oneArray
-using NDTensors.Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
 
 TypeParameterAccessors.position(::Type{<:oneArray}, ::typeof(eltype)) = Position(1)
 TypeParameterAccessors.position(::Type{<:oneArray}, ::typeof(ndims)) = Position(2)

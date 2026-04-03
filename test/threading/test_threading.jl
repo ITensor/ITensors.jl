@@ -1,6 +1,6 @@
 using ITensors
-using Test
 using LinearAlgebra
+using Test
 
 if isone(Threads.nthreads())
     @warn "Testing block sparse multithreading but only one thread is set!"

@@ -1,75 +1,14 @@
 @eval module $(gensym())
 using Combinatorics: permutations
-using ITensors:
-    ITensors,
-    Index,
-    IndexSet,
-    ITensor,
-    Order,
-    QN,
-    TagSet,
-    ⊕,
-    δ,
-    addtags,
-    allhastags,
-    anyhastags,
-    commonind,
-    convert_eltype,
-    convert_leaf_eltype,
-    dag,
-    directsum,
-    eachindval,
-    eachval,
-    filterinds,
-    firstind,
-    hascommoninds,
-    hasind,
-    hasinds,
-    hassameinds,
-    hastags,
-    inner,
-    itensor,
-    mapprime,
-    noprime,
-    onehot,
-    order,
-    permute,
-    prime,
-    product,
-    random_itensor,
-    removetags,
-    replaceind,
-    replaceind!,
-    replaceinds,
-    replaceinds!,
-    replacetags,
-    scalar,
-    setelt,
-    setprime,
-    settags,
-    sim,
-    swapinds,
-    swapinds!,
-    swapprime,
-    uniqueind,
-    uniqueindex,
-    val
-using ITensors.NDTensors:
-    NDTensors,
-    DenseTensor,
-    array,
-    dim,
-    dims,
-    eigen,
-    factorize,
-    ind,
-    inds,
-    matrix,
-    maxdim,
-    mindim,
-    polar,
-    storage,
-    vector
+using ITensors.NDTensors: DenseTensor, NDTensors, array, dim, dims, eigen, factorize, ind,
+    inds, matrix, maxdim, mindim, polar, storage, vector
+using ITensors: ITensors, ITensor, Index, IndexSet, Order, QN, TagSet, addtags, allhastags,
+    anyhastags, commonind, convert_eltype, convert_leaf_eltype, dag, directsum, eachindval,
+    eachval, filterinds, firstind, hascommoninds, hasind, hasinds, hassameinds, hastags,
+    inner, itensor, mapprime, noprime, onehot, order, permute, prime, product,
+    random_itensor, removetags, replaceind, replaceind!, replaceinds, replaceinds!,
+    replacetags, scalar, setelt, setprime, settags, sim, swapinds, swapinds!, swapprime,
+    uniqueind, uniqueindex, val, δ, ⊕
 using LinearAlgebra:
     LinearAlgebra, axpy!, diag, dot, ishermitian, mul!, norm, nullspace, qr, rmul!, svd, tr
 using Random: Random
@@ -770,11 +709,13 @@ end
         Amat = reshape(Amat + Amat' + randn(4, 4) * 1.0e-10, 2, 2, 2, 2)
         A = itensor(Amat, i1, i2, s1, s2)
         Aexp = exp(A, (i1, i2), (s1, s2); ishermitian = true)
-        Amatexp = reshape(parent(exp(LinearAlgebra.Hermitian(reshape(Amat, 4, 4)))), 2, 2, 2, 2)
+        Amatexp =
+            reshape(parent(exp(LinearAlgebra.Hermitian(reshape(Amat, 4, 4)))), 2, 2, 2, 2)
         Aexp_from_mat = itensor(Amatexp, i1, i2, s1, s2)
         @test Aexp ≈ Aexp_from_mat
         Aexp = exp(A, (i1, i2), (s1, s2); ishermitian = true)
-        Amatexp = reshape(parent(exp(LinearAlgebra.Hermitian(reshape(Amat, 4, 4)))), 2, 2, 2, 2)
+        Amatexp =
+            reshape(parent(exp(LinearAlgebra.Hermitian(reshape(Amat, 4, 4)))), 2, 2, 2, 2)
         Aexp_from_mat = itensor(Amatexp, i1, i2, s1, s2)
         @test Aexp ≈ Aexp_from_mat
     end
@@ -1238,7 +1179,7 @@ end
                 A2r,
                 replacetags(s2, "Site" => "Link"),
                 replacetags(l', "Link" => "Site"),
-                replacetags(l'', "Link" => "Site"),
+                replacetags(l'', "Link" => "Site")
             )
         end
         @testset "prime(::ITensor,::String)" begin
@@ -1359,8 +1300,10 @@ end
 
             S1 = TC + TR
             S2 = TR + TC
-            @test typeof(storage(S1)) == NDTensors.Dense{complex(eltype), Vector{complex(eltype)}}
-            @test typeof(storage(S2)) == NDTensors.Dense{complex(eltype), Vector{complex(eltype)}}
+            @test typeof(storage(S1)) ==
+                NDTensors.Dense{complex(eltype), Vector{complex(eltype)}}
+            @test typeof(storage(S2)) ==
+                NDTensors.Dense{complex(eltype), Vector{complex(eltype)}}
             for ii in 1:dim(i), jj in 1:dim(j)
                 @test S1[i => ii, j => jj] ≈ TC[i => ii, j => jj] + TR[i => ii, j => jj]
                 @test S2[i => ii, j => jj] ≈ TC[i => ii, j => jj] + TR[i => ii, j => jj]
@@ -1578,7 +1521,11 @@ end
 
                 # TODO: use a combiner to combine the u indices to make
                 # this test simpler
-                for ii in 1:dim(u[1]), jj in 1:dim(u[2]), iip in 1:dim(u[1]), jjp in 1:dim(u[2])
+                for ii in 1:dim(u[1]),
+                        jj in 1:dim(u[2]),
+                        iip in 1:dim(u[1]),
+                        jjp in 1:dim(u[2])
+
                     val = UUᵀ[u[1] => ii, u[2] => jj, u[1]' => iip, u[2]' => jjp]
                     if ii == iip && jj == jjp
                         @test val ≈ one(SType) atol = atol
@@ -1639,7 +1586,12 @@ end
                     @test L * dag(prime(L, l)) ≈ δ(SType, l, l')
                     @test R * dag(prime(R, l)) ≉ δ(SType, l, l')
 
-                    @test_throws ErrorException factorize(A, i; which_decomp = "svd", svd_alg = "bad_alg")
+                    @test_throws ErrorException factorize(
+                        A,
+                        i;
+                        which_decomp = "svd",
+                        svd_alg = "bad_alg"
+                    )
                 end
             end # End factorize tests
 
@@ -1828,7 +1780,8 @@ end
         # regression test for:
         # https://github.com/ITensor/ITensors.jl/pull/1178.
         S1, s1 = directsum(
-            A1 => index_op.((i1, j1)), A2 => index_op.((i2, j2)); tags = ["sum_i", "sum_j"]
+            A1 => index_op.((i1, j1)), A2 => index_op.((i2, j2));
+            tags = ["sum_i", "sum_j"]
         )
 
         # Provide indices
@@ -1846,7 +1799,8 @@ end
                     if m ≤ dim(i1) && n ≤ dim(j1)
                         @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
                     elseif m > dim(i1) && n > dim(j1)
-                        @test S_vx[s[1] => m, s[2] => n] == A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
+                        @test S_vx[s[1] => m, s[2] => n] ==
+                            A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
                     else
                         @test S_vx[s[1] => m, s[2] => n] == 0
                     end
@@ -1903,7 +1857,8 @@ end
         @test hassameinds(S, (i1, i2, s))
 
         S, ss = directsum(
-            A => index_op.((i2, i1, j)), B => index_op.((i1, i2, k)), C => index_op.((i1, i2, l))
+            A => index_op.((i2, i1, j)), B => index_op.((i1, i2, k)),
+            C => index_op.((i1, i2, l))
         )
         @test length(ss) == 3
         @test dim(ss[1]) == dim(i2) + dim(i1) + dim(i1)

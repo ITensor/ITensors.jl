@@ -16,7 +16,7 @@ function space(
         conserve_sz = conserve_qns,
         conserve_szparity = false,
         qnname_sz = "Sz",
-        qnname_szparity = "SzParity",
+        qnname_szparity = "SzParity"
     )
     if conserve_sz && conserve_szparity
         return [

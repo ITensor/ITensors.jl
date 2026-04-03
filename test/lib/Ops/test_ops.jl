@@ -1,9 +1,8 @@
-using Test
 using ITensors
-using LinearAlgebra
-
-using ITensors.Ops: Ops, Op, OpSum, Prod, Scaled, Sum, coefficient, expand
+using ITensors.Ops: Op, OpSum, Ops, Prod, Scaled, Sum, coefficient, expand
 using ITensors.SiteTypes: op, siteinds
+using LinearAlgebra
+using Test
 
 function heisenberg(N)
     os = Sum{Op}()
@@ -203,7 +202,9 @@ end
     end
 
     @testset "Expand expression, 3 products" begin
-        expr = (Op("X", 1) + Op("Y", 2)) * (Op("Z", 1) + Op("W", 2)) * (Op("A", 1) + Op("B", 2))
+        expr =
+            (Op("X", 1) + Op("Y", 2)) * (Op("Z", 1) + Op("W", 2)) *
+            (Op("A", 1) + Op("B", 2))
         expr_expanded =
             Op("X", 1) * Op("Z", 1) * Op("A", 1) +
             Op("Y", 2) * Op("Z", 1) * Op("A", 1) +

@@ -1,4 +1,5 @@
-using ITensors, Test
+using ITensors
+using Test
 
 @testset "diag_itensor (DiagBlockSparse)" begin
     @testset "diag_itensor get and set elements" begin

@@ -142,7 +142,8 @@ function nullspace(::Order{2}, M::ITensor, left_inds, right_inds; tags = "n", kw
     M² = permute(M², right_inds'..., right_inds...)
     M²ₜ = tensor(M²)
     Nₜ = nullspace(Hermitian(M²ₜ); kwargs...)
-    indsN = (Index(ind(Nₜ, 1); dir = ITensors.Out), Index(ind(Nₜ, 2); dir = ITensors.Out, tags))
+    indsN =
+        (Index(ind(Nₜ, 1); dir = ITensors.Out), Index(ind(Nₜ, 2); dir = ITensors.Out, tags))
     N = itensor(ITensors.setinds(Nₜ, indsN))
     # Make the index match the input index
     Ñ = replaceinds(N, (ind(N, 1),) => right_inds)

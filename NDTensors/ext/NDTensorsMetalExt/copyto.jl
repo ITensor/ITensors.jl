@@ -8,7 +8,7 @@ end
 function Base.copy(
         src::Exposed{
             <:MtlArray, <:SubArray{<:Any, <:Any, <:Base.ReshapedArray{<:Any, <:Any, <:Adjoint}},
-        },
+        }
     )
     return copy(@view copy(expose(parent(src)))[parentindices(unexpose(src))...])
 end

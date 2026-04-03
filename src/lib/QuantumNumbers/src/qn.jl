@@ -1,6 +1,6 @@
 using ..ITensors: ITensors, name, val
-using NDTensors: NDTensors
 using ..SmallStrings: SmallString
+using NDTensors: NDTensors
 using StaticArrays: MVector, SVector
 
 const maxQNs = 4
@@ -52,9 +52,9 @@ named value tuples.
 Examples
 
 ```julia
-q = QN(("Sz",1))
-q = QN(("N",1),("Sz",-1))
-q = QN(("P",0,2),("Sz",0)).
+q = QN(("Sz", 1))
+q = QN(("N", 1), ("Sz", -1))
+q = QN(("P", 0, 2), ("Sz", 0))
 ```
 """
 function QN(qvs...)

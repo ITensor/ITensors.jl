@@ -1,8 +1,8 @@
 using Adapt: adapt
 using ITensors: datatype
 using JLArrays: JLArray
-using Test
 using Suppressor
+using Test
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
 
@@ -189,9 +189,11 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     end
 
     @testset "svd arrow directions" begin
-        l1, l2 = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags = "l1", dir = ITensors.In),
+        l1, l2 =
+            Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags = "l1", dir = ITensors.In),
             Index(QN("Sz", 2) => 1, QN("Sz", 1) => 1; tags = "l2", dir = ITensors.Out)
-        r1, r2, r3 = Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags = "r1", dir = ITensors.Out),
+        r1, r2, r3 =
+            Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags = "r1", dir = ITensors.Out),
             Index(QN("Sz", 2) => 1, QN("Sz", 1) => 1; tags = "r2", dir = ITensors.In),
             Index(QN("Sz", -2) => 1, QN("Sz", 1) => 1; tags = "r3", dir = ITensors.In)
         A = random_itensor(l1, l2, r1, r2, r3)

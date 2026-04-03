@@ -1,5 +1,5 @@
-using SparseArrays: SparseArrays
 using .Vendored.TypeParameterAccessors: TypeParameterAccessors, set_eltype, similartype
+using SparseArrays: SparseArrays
 
 #
 # Represents a tensor order that could be set to any order.

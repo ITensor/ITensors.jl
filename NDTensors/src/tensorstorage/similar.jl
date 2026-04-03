@@ -69,7 +69,10 @@ function TypeParameterAccessors.similartype(
     # TODO: Don't convert to an `AbstractVector` with `set_ndims(datatype, 1)`, once we support
     # more general data types.
     # return set_datatype(storagetype, NDTensors.similartype(datatype(storagetype), eltype))
-    return set_datatype(storagetype, set_ndims(similartype(datatype(storagetype), eltype), 1))
+    return set_datatype(
+        storagetype,
+        set_ndims(similartype(datatype(storagetype), eltype), 1)
+    )
 end
 
 function TypeParameterAccessors.similartype(storagetype::Type{<:TensorStorage}, dims::Tuple)
@@ -78,6 +81,6 @@ function TypeParameterAccessors.similartype(storagetype::Type{<:TensorStorage}, 
     # `similartype` unwraps any wrapped data.
     return set_ndims(
         set_datatype(storagetype, set_ndims(similartype(datatype(storagetype)), 1)),
-        length(dims),
+        length(dims)
     )
 end

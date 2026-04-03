@@ -1,7 +1,7 @@
 module TypeParameterAccessorsFillArraysExt
 
-using NDTensors.Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
-using FillArrays: Fill, Zeros, Ones
+using FillArrays: Fill, Ones, Zeros
+using NDTensors.Vendored.TypeParameterAccessors: Position, TypeParameterAccessors
 
 for T in (:Fill, :Zeros, :Ones)
     @eval begin

@@ -54,7 +54,9 @@ function similartype(
 end
 
 ## Wrapped arrays
-@traitfn function similartype(arraytype::Type{ArrayT}) where {{ArrayT; IsWrappedArray{ArrayT}}}
+@traitfn function similartype(
+        arraytype::Type{ArrayT}
+    ) where {{ArrayT; IsWrappedArray{ArrayT}}}
     return similartype(unwrap_array_type(arraytype), NDims(arraytype))
 end
 

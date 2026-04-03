@@ -1,5 +1,5 @@
-using ..Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
 using ..GPUArraysCoreExtensions: storagemode
+using ..Vendored.TypeParameterAccessors: Position, TypeParameterAccessors
 # Implemented in NDTensorsCUDAExt
 function cu end
 

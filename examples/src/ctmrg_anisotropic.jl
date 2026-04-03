@@ -73,7 +73,7 @@ function calc_κ(iy, ix, T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir = "left"
             Ad[iyp, ix] *
             Cru[iy, ixp] *
             Ar[iy, ixp] *
-            Crd[iyp, ixp],
+            Crd[iyp, ixp]
     )
     return normT, normAlr, normAud, normC
 end
@@ -117,13 +117,15 @@ function normalize!((Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir = "left")
         Ad[iy, ix] /= norm(Ad[iy, ix])
         iyp, ixp = per(iy + 1, ny), per(ix + 1, nx)
         normAlr = scalar(
-            Clu[iy, ix] * Cru[iy, ix] * Al[iy, ix] * Ar[iy, ix] * Cld[iyp, ix] * Crd[iyp, ix]
+            Clu[iy, ix] * Cru[iy, ix] * Al[iy, ix] * Ar[iy, ix] * Cld[iyp, ix] *
+                Crd[iyp, ix]
         )
         normAlr < 0 ? normAl = -abs(normAlr)^(1 / 2) : normAl = normAlr^(1 / 2)
         Al[iy, ix] /= normAl
         Ar[iy, ix] /= abs(normAl)
         normAud = scalar(
-            Clu[iy, ix] * Cld[iy, ix] * Au[iy, ix] * Ad[iy, ix] * Cru[iy, ixp] * Crd[iy, ixp]
+            Clu[iy, ix] * Cld[iy, ix] * Au[iy, ix] * Ad[iy, ix] * Cru[iy, ixp] *
+                Crd[iy, ixp]
         )
         normAud < 0 ? normAu = -abs(normAud)^(1 / 2) : normAu = normAud^(1 / 2)
         Au[iy, ix] /= normAu
@@ -132,7 +134,13 @@ function normalize!((Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir = "left")
     return nothing
 end
 
-function leftright_move!(T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir = "left", maxdim = 5)
+function leftright_move!(
+        T,
+        (Clu, Cru, Cld, Crd),
+        (Al, Ar, Au, Ad);
+        dir = "left",
+        maxdim = 5
+    )
     ny, nx = size(T)
     P = Vector{ITensor}(undef, ny)
     P⁻ = Vector{ITensor}(undef, ny)
@@ -281,12 +289,24 @@ function ctmrg(T::Matrix{ITensor}, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); verbo
         verbose && @show ctmrg_step, dir
 
         if dir == "left" || dir == "right"
-            leftright_move!(T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir = dir, maxdim = maxdim)
+            leftright_move!(
+                T,
+                (Clu, Cru, Cld, Crd),
+                (Al, Ar, Au, Ad);
+                dir = dir,
+                maxdim = maxdim
+            )
         elseif dir == "up" || dir == "down"
             T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad) = rotate_environment(
                 T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad)
             )
-            leftright_move!(T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir = dir, maxdim = maxdim)
+            leftright_move!(
+                T,
+                (Clu, Cru, Cld, Crd),
+                (Al, Ar, Au, Ad);
+                dir = dir,
+                maxdim = maxdim
+            )
             T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad) = rotate_environment(
                 T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad)
             )

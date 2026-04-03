@@ -21,7 +21,7 @@ index_ccq_logo = """
 readme_str = read(joinpath(@__DIR__, "..", "README.md"), String)
 write(
     joinpath(@__DIR__, "src", "index.md"),
-    replace(readme_str, readme_ccq_logo => index_ccq_logo),
+    replace(readme_str, readme_ccq_logo => index_ccq_logo)
 )
 
 sitename = "ITensors.jl"
@@ -42,7 +42,8 @@ settings = Dict(
             "ITensor Development FAQs" => "faq/Development.md",
             "Julia Package Manager FAQs" => "faq/JuliaPkg.md",
         ],
-        "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
+        "Upgrade guides" =>
+            ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
         "Advanced Usage Guide" => [
             "Multithreading" => "Multithreading.md",
             "Running on GPUs" => "RunningOnGPUs.md",
@@ -51,7 +52,10 @@ settings = Dict(
         ],
     ],
     :format =>
-        Documenter.HTML(; assets = ["assets/favicon.ico", "assets/extras.css"], prettyurls = false),
+        Documenter.HTML(;
+        assets = ["assets/favicon.ico", "assets/extras.css"],
+        prettyurls = false
+    ),
     :doctest => true,
-    :checkdocs => :none,
+    :checkdocs => :none
 )

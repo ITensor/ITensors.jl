@@ -7,7 +7,7 @@ function ising_mpo(
         pair_sᵥ::Pair{<:Index, <:Index},
         β::Real,
         J::Real = 1.0;
-        sz::Bool = false,
+        sz::Bool = false
     )
     sₕ, sₕ′ = pair_sₕ
     sᵥ, sᵥ′ = pair_sᵥ

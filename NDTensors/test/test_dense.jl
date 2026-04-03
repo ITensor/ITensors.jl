@@ -1,9 +1,9 @@
 @eval module $(gensym())
-using NDTensors
-using NDTensors: denseblocks
-using NDTensors.MetalExtensions: mtl
-using Test: @testset, @test, @test_throws, @test_broken
 using GPUArraysCore: @allowscalar
+using NDTensors
+using NDTensors.MetalExtensions: mtl
+using NDTensors: denseblocks
+using Test: @test, @test_broken, @test_throws, @testset
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list
 

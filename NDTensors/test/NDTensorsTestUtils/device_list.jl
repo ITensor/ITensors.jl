@@ -1,5 +1,5 @@
-using Pkg: Pkg
 using NDTensors: NDTensors
+using Pkg: Pkg
 
 if "cuda" in ARGS || "all" in ARGS
     ## Right now adding CUDA during Pkg.test results in a

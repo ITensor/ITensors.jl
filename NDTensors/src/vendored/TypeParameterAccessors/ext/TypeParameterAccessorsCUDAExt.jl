@@ -1,7 +1,7 @@
 module TypeParameterAccessorsCUDAExt
 
 using CUDA: CUDA, CuArray
-using NDTensors.Vendored.TypeParameterAccessors: TypeParameterAccessors, Position
+using NDTensors.Vendored.TypeParameterAccessors: Position, TypeParameterAccessors
 
 TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(eltype)) = Position(1)
 TypeParameterAccessors.position(::Type{<:CuArray}, ::typeof(ndims)) = Position(2)

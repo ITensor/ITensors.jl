@@ -1,11 +1,13 @@
-using .Vendored.TypeParameterAccessors: unwrap_array_type
 using .Expose: expose
+using .Vendored.TypeParameterAccessors: unwrap_array_type
 const BlockSparseMatrix{ElT, StoreT, IndsT} = BlockSparseTensor{ElT, 2, StoreT, IndsT}
-const DiagBlockSparseMatrix{ElT, StoreT, IndsT} = DiagBlockSparseTensor{ElT, 2, StoreT, IndsT}
+const DiagBlockSparseMatrix{ElT, StoreT, IndsT} =
+    DiagBlockSparseTensor{ElT, 2, StoreT, IndsT}
 const DiagMatrix{ElT, StoreT, IndsT} = DiagTensor{ElT, 2, StoreT, IndsT}
 
 function _truncated_blockdim(
-        S::DiagMatrix, docut::Real; singular_values = false, truncate = true, min_blockdim = nothing
+        S::DiagMatrix, docut::Real; singular_values = false, truncate = true,
+        min_blockdim = nothing
     )
     min_blockdim = replace_nothing(min_blockdim, 0)
     # TODO: Replace `cpu` with `Expose` dispatch.
@@ -19,7 +21,11 @@ function _truncated_blockdim(
         newdim += 1
         if newdim + 1 ≤ full_dim
             val =
-                singular_values ? getdiagindex(S, newdim + 1)^2 : abs(getdiagindex(S, newdim + 1))
+            if singular_values
+                getdiagindex(S, newdim + 1)^2
+            else
+                abs(getdiagindex(S, newdim + 1))
+            end
         end
     end
     (newdim >= min_blockdim) || (newdim = min_blockdim)
@@ -44,7 +50,7 @@ function svd(
         cutoff = nothing,
         alg = nothing,
         use_absolute_cutoff = nothing,
-        use_relative_cutoff = nothing,
+        use_relative_cutoff = nothing
     ) where {ElT}
     Us = Vector{DenseTensor{ElT, 2}}(undef, nnzblocks(T))
     Ss = Vector{DiagTensor{real(ElT), 2}}(undef, nnzblocks(T))
@@ -213,13 +219,16 @@ _eigen_eltypes(T::Hermitian{ElT, <:BlockSparseMatrix{ElT}}) where {ElT} = real(E
 _eigen_eltypes(T::BlockSparseMatrix{ElT}) where {ElT} = complex(ElT), complex(ElT)
 
 function LinearAlgebra.eigen(
-        T::Union{Hermitian{ElT, <:Tensor{ElT, 2, <:BlockSparse}}, Tensor{ElT, 2, <:BlockSparse}};
+        T::Union{
+            Hermitian{ElT, <:Tensor{ElT, 2, <:BlockSparse}},
+            Tensor{ElT, 2, <:BlockSparse},
+        };
         min_blockdim = nothing,
         mindim = nothing,
         maxdim = nothing,
         cutoff = nothing,
         use_absolute_cutoff = nothing,
-        use_relative_cutoff = nothing,
+        use_relative_cutoff = nothing
     ) where {ElT <: Union{Real, Complex}}
     ElD, ElV = _eigen_eltypes(T)
 

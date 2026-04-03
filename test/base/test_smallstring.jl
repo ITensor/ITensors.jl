@@ -1,9 +1,6 @@
+import ITensors: IntChar, SmallString, Tag, isint, isnull
 using ITensors
 using Test
-
-# TODO: Change to:
-# using ITensors.SmallStrings: SmallString, Tag, isint, isnull, IntChar
-import ITensors: SmallString, Tag, isint, isnull, IntChar
 
 @testset "SmallString" begin
     @testset "ctors" begin

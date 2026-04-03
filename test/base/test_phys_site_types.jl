@@ -1,5 +1,7 @@
-using ITensors, LinearAlgebra, Test
+using ITensors
 using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
+using LinearAlgebra
+using Test
 
 @testset "Physics Sites" begin
     N = 10
@@ -79,7 +81,7 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
         @test hasinds(Z, s[5]', s[5])
 
         @test_throws ArgumentError(
-            "Overload of \"state\" or \"state!\" functions not found for state name \"Fake\" and Index tags $(tags(s[3]))",
+            "Overload of \"state\" or \"state!\" functions not found for state name \"Fake\" and Index tags $(tags(s[3]))"
         ) state("Fake", s[3])
         @test Vector(state("Up", s[3])) ≈ [1, 0]
         @test Vector(state("↑", s[3])) ≈ [1, 0]
@@ -133,9 +135,11 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
             [cos(θ / 2) -im * sin(θ / 2); -im * sin(θ / 2) cos(θ / 2)]
         @test Array(op("Ry", s, 3; θ = θ), s[3]', s[3]) ≈
             [cos(θ / 2) -sin(θ / 2); sin(θ / 2) cos(θ / 2)]
-        @test Array(op("Rz", s, 3; θ = θ), s[3]', s[3]) ≈ [exp(-im * θ / 2) 0; 0 exp(im * θ / 2)]
+        @test Array(op("Rz", s, 3; θ = θ), s[3]', s[3]) ≈
+            [exp(-im * θ / 2) 0; 0 exp(im * θ / 2)]
         # fallback
-        @test Array(op("Rz", s, 3; ϕ = θ), s[3]', s[3]) ≈ [exp(-im * θ / 2) 0; 0 exp(im * θ / 2)]
+        @test Array(op("Rz", s, 3; ϕ = θ), s[3]', s[3]) ≈
+            [exp(-im * θ / 2) 0; 0 exp(im * θ / 2)]
         λ = randn()
         φ = randn()
         @test Array(op("Rn", s, 3; θ = θ, λ = λ, ϕ = φ), s[3]', s[3]) ≈ [
@@ -152,9 +156,19 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
         @test Array(op("Proj0", s, 3), s[3]', s[3]) ≈ [1 0; 0 0]
         @test Array(op("Proj1", s, 3), s[3]', s[3]) ≈ [0 0; 0 1]
         @test reshape(Array(op("√SWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
-            [1 0 0 0; 0 (1 + im) / 2 (1 - im) / 2 0; 0 (1 - im) / 2 (1 + im) / 2 0; 0 0 0 1]
+            [
+            1 0 0 0;
+            0 (1 + im) / 2 (1 - im) / 2 0;
+            0 (1 - im) / 2 (1 + im) / 2 0;
+            0 0 0 1
+        ]
         @test reshape(Array(op("√Swap", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
-            [1 0 0 0; 0 (1 + im) / 2 (1 - im) / 2 0; 0 (1 - im) / 2 (1 + im) / 2 0; 0 0 0 1]
+            [
+            1 0 0 0;
+            0 (1 + im) / 2 (1 - im) / 2 0;
+            0 (1 - im) / 2 (1 + im) / 2 0;
+            0 0 0 1
+        ]
         @test reshape(Array(op("√iSWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
             [1 0 0 0; 0 1 / √2 im / √2 0; 0 im / √2 1 / √2 0; 0 0 0 1]
         @test reshape(Array(op("√iSwap", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
@@ -167,15 +181,20 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
             [1 0 0 0; 0 0 im 0; 0 im 0 0; 0 0 0 1]
         @test reshape(Array(op("iSwap", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
             [1 0 0 0; 0 0 im 0; 0 im 0 0; 0 0 0 1]
-        @test reshape(Array(op("Cphase", s, 3, 5; ϕ = θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+        @test reshape(
+            Array(op("Cphase", s, 3, 5; ϕ = θ), s[3]', s[5]', s[3], s[5]),
+            (4, 4)
+        ) ≈
             [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 exp(im * θ)]
-        @test reshape(Array(op("RXX", s, 3, 5; ϕ = θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈ [
+        @test reshape(Array(op("RXX", s, 3, 5; ϕ = θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+            [
             cos(θ) 0 0 -im * sin(θ)
             0 cos(θ) -im * sin(θ) 0
             0 -im * sin(θ) cos(θ) 0
             -im * sin(θ) 0 0 cos(θ)
         ]
-        @test reshape(Array(op("RYY", s, 3, 5; ϕ = θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈ [
+        @test reshape(Array(op("RYY", s, 3, 5; ϕ = θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+            [
             cos(θ) 0 0 im * sin(θ)
             0 cos(θ) -im * sin(θ) 0
             0 -im * sin(θ) cos(θ) 0
@@ -185,26 +204,32 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
             [1 0 0 0; 0 cos(θ) -im * sin(θ) 0; 0 -im * sin(θ) cos(θ) 0; 0 0 0 1]
         @test reshape(Array(op("RZZ", s, 3, 5; ϕ = θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
             [exp(-im * θ) 0 0 0; 0 exp(im * θ) 0 0; 0 0 exp(im * θ) 0; 0 0 0 exp(-im * θ)]
-        @test reshape(Array(op("CRX", s, 3, 5; θ = θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈ [
+        @test reshape(Array(op("CRX", s, 3, 5; θ = θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈
+            [
             1 0 0 0
             0 1 0 0
             0 0 cos(θ / 2) -im * sin(θ / 2)
             0 0 -im * sin(θ / 2) cos(θ / 2)
         ]
-        @test reshape(Array(op("CRY", s, 3, 5; θ = θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈ [
+        @test reshape(Array(op("CRY", s, 3, 5; θ = θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈
+            [
             1 0 0 0
             0 1 0 0
             0 0 cos(θ / 2) -sin(θ / 2)
             0 0 sin(θ / 2) cos(θ / 2)
         ]
-        @test reshape(Array(op("CRZ", s, 3, 5; θ = θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈ [
+        @test reshape(Array(op("CRZ", s, 3, 5; θ = θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈
+            [
             1 0 0 0
             0 1 0 0
             0 0 exp(-im * θ / 2) 0
             0 0 0 exp(im * θ / 2)
         ]
         @test reshape(
-            Array(op("CRn", s, 3, 5; θ = θ, λ = λ, ϕ = φ), s[5]', s[3]', s[5], s[3]), (4, 4)
+            Array(op("CRn", s, 3, 5; θ = θ, λ = λ, ϕ = φ), s[5]', s[3]', s[5], s[3]), (
+                4,
+                4,
+            )
         ) ≈ [
             1 0 0 0
             0 1 0 0
@@ -212,7 +237,8 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
             0 0 exp(im * φ) * sin(θ / 2) exp(im * (φ + λ)) * cos(θ / 2)
         ]
         @test reshape(
-            Array(op("CRn̂", s, 3, 5; θ = θ, λ = λ, ϕ = φ), s[5]', s[3]', s[5], s[3]), (4, 4)
+            Array(op("CRn̂", s, 3, 5; θ = θ, λ = λ, ϕ = φ), s[5]', s[3]', s[5], s[3]),
+            (4, 4)
         ) ≈ [
             1 0 0 0
             0 1 0 0
@@ -264,9 +290,10 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
         cccn_mat[15:16, 15:16] .= [0 1; 1 0]
         @test reshape(
             Array(
-                op("CCCNOT", s, 2, 3, 4, 5), s[5]', s[4]', s[3]', s[2]', s[5], s[4], s[3], s[2]
+                op("CCCNOT", s, 2, 3, 4, 5), s[5]', s[4]', s[3]', s[2]', s[5], s[4], s[3],
+                s[2]
             ),
-            (16, 16),
+            (16, 16)
         ) ≈ cccn_mat
         # Test obtaining S=1/2 operators using Qubit tag
         @test Matrix(op("X", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 1.0 0.0]
@@ -374,7 +401,8 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
             @test hasinds(Sz5, s[5]', s[5])
 
             @test_throws ArgumentError op(s, "Fake", 2)
-            @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
+            @test Array(op("Id", s, 3), s[3]', s[3]) ≈
+                [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
             @test Array(op("S+", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
             @test Array(op("S⁺", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
             @test Array(op("Sp", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
@@ -383,22 +411,28 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
             @test Array(op("S⁻", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
             @test Array(op("Sm", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
             @test Array(op("Sminus", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
-            @test Array(op("Sx", s, 3), s[3]', s[3]) ≈ [0 1 / √2 0; 1 / √2 0 1 / √2; 0 1 / √2 0]
-            @test Array(op("Sˣ", s, 3), s[3]', s[3]) ≈ [0 1 / √2 0; 1 / √2 0 1 / √2; 0 1 / √2 0]
+            @test Array(op("Sx", s, 3), s[3]', s[3]) ≈
+                [0 1 / √2 0; 1 / √2 0 1 / √2; 0 1 / √2 0]
+            @test Array(op("Sˣ", s, 3), s[3]', s[3]) ≈
+                [0 1 / √2 0; 1 / √2 0 1 / √2; 0 1 / √2 0]
             @test Array(op("iSy", s, 3), s[3]', s[3]) ≈
                 [0 1 / √2 0; -1 / √2 0 1 / √2; 0 -1 / √2 0]
             @test Array(op("iSʸ", s, 3), s[3]', s[3]) ≈
                 [0 1 / √2 0; -1 / √2 0 1 / √2; 0 -1 / √2 0]
-            @test Array(op("Sy", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
-            @test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
+            @test Array(op("Sy", s, 3), s[3]', s[3]) ≈
+                (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
+            @test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈
+                (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
             #@test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ [0 +1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
             @test Array(op("Sz", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
             @test Array(op("Sᶻ", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
             @test Array(op("Sz2", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 +1.0]
             @test Array(op("Sx2", s, 2), s[2]', s[2]) ≈ [0.5 0 0.5; 0 1.0 0; 0.5 0 0.5]
             @test Array(op("Sy2", s, 2), s[2]', s[2]) ≈ [0.5 0 -0.5; 0 1.0 0; -0.5 0 0.5]
-            @test Array(op("S2", s, 2), s[2]', s[2]) ≈ [2.0 0.0 0.0; 0.0 2.0 0.0; 0.0 0.0 2.0]
-            @test Array(op("S²", s, 2), s[2]', s[2]) ≈ [2.0 0.0 0.0; 0.0 2.0 0.0; 0.0 0.0 2.0]
+            @test Array(op("S2", s, 2), s[2]', s[2]) ≈
+                [2.0 0.0 0.0; 0.0 2.0 0.0; 0.0 0.0 2.0]
+            @test Array(op("S²", s, 2), s[2]', s[2]) ≈
+                [2.0 0.0 0.0; 0.0 2.0 0.0; 0.0 0.0 2.0]
         end
     end
 
@@ -813,28 +847,28 @@ using ITensors.SiteTypes: has_fermion_string, op, siteind, siteinds, state
             s[3]',
             s[2]',
             dag(s[3]),
-            dag(s[2]),
+            dag(s[2])
         )
         @test op(s, "a†b", 2, 3) ≈ itensor(
             kron([0 0 0; 1 0 0; 0 √2 0], [0 1 0; 0 0 √2; 0 0 0]),
             s[3]',
             s[2]',
             dag(s[3]),
-            dag(s[2]),
+            dag(s[2])
         )
         @test op(s, "ab†", 2, 3) ≈ itensor(
             kron([0 1 0; 0 0 √2; 0 0 0], [0 0 0; 1 0 0; 0 √2 0]),
             s[3]',
             s[2]',
             dag(s[3]),
-            dag(s[2]),
+            dag(s[2])
         )
         @test op(s, "ab", 2, 3) ≈ itensor(
             kron([0 1 0; 0 0 √2; 0 0 0], [0 1 0; 0 0 √2; 0 0 0]),
             s[3]',
             s[2]',
             dag(s[3]),
-            dag(s[2]),
+            dag(s[2])
         )
         @test_throws ErrorException op(ITensors.OpName("ab"), ITensors.SiteType(st))
 

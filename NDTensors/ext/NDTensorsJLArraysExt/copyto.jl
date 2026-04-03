@@ -1,6 +1,6 @@
 using JLArrays: JLArray
-using NDTensors.Expose: Exposed, expose, unexpose
 using LinearAlgebra: Adjoint
+using NDTensors.Expose: Exposed, expose, unexpose
 
 # Same definition as `CuArray`.
 function Base.copy(src::Exposed{<:JLArray, <:Base.ReshapedArray})
@@ -10,7 +10,7 @@ end
 function Base.copy(
         src::Exposed{
             <:JLArray, <:SubArray{<:Any, <:Any, <:Base.ReshapedArray{<:Any, <:Any, <:Adjoint}},
-        },
+        }
     )
     return copy(@view copy(expose(parent(src)))[parentindices(unexpose(src))...])
 end

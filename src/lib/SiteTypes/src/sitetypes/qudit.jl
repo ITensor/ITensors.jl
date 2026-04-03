@@ -16,7 +16,7 @@ function space(
         dim = 2,
         conserve_qns = false,
         conserve_number = conserve_qns,
-        qnname_number = "Number",
+        qnname_number = "Number"
     )
     if conserve_number
         return [QN(qnname_number, n - 1) => 1 for n in 1:dim]

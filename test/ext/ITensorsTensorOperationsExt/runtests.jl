@@ -1,8 +1,8 @@
 @eval module $(gensym())
 
+import Random: seed!
 using ITensors
 using Test
-import Random: seed!
 
 seed!(12345)
 
@@ -140,7 +140,8 @@ end
 
     # Measure allocations of different interfaces
     allocations_right_associative_1 = @allocated contract(As; sequence = sequence)
-    allocations_right_associative_2 = @allocated contract(As; sequence = "right_associative")
+    allocations_right_associative_2 =
+        @allocated contract(As; sequence = "right_associative")
     allocations_right_associative_3 = @allocated contract(As; sequence = "automatic")
     allocations_right_associative_4 = @allocated contract(As_network)
 
@@ -150,10 +151,14 @@ end
         tmp * As[n]
         allocations_right_associative_pairwise += @allocated tmp = tmp * As[n]
     end
-    @test allocations_right_associative_pairwise ≈ allocations_right_associative_1 rtol = 0.2
-    @test allocations_right_associative_pairwise ≈ allocations_right_associative_2 rtol = 0.2
-    @test allocations_right_associative_pairwise ≈ allocations_right_associative_3 rtol = 0.2
-    @test allocations_right_associative_pairwise ≈ allocations_right_associative_4 rtol = 0.2
+    @test allocations_right_associative_pairwise ≈ allocations_right_associative_1 rtol =
+        0.2
+    @test allocations_right_associative_pairwise ≈ allocations_right_associative_2 rtol =
+        0.2
+    @test allocations_right_associative_pairwise ≈ allocations_right_associative_3 rtol =
+        0.2
+    @test allocations_right_associative_pairwise ≈ allocations_right_associative_4 rtol =
+        0.2
 
     @test allocations_right_associative_1 < allocations_left_associative
     @test allocations_right_associative_2 < allocations_left_associative

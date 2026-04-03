@@ -1,6 +1,6 @@
 @eval module $(gensym())
-using Test: @testset, @test
 using NDTensors.GPUArraysCoreExtensions: storagemode
+using Test: @test, @testset
 @testset "Test Base" begin
     @test storagemode isa Function
 end

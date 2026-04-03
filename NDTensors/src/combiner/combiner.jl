@@ -104,7 +104,7 @@ function check_valid_combiner_contraction(
         tensor::Tensor,
         tensor_labels,
         combiner_tensor::CombinerTensor,
-        combiner_tensor_labels,
+        combiner_tensor_labels
     )
     if !is_valid_combiner_contraction(
             is_combining, tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
@@ -121,7 +121,7 @@ function is_valid_combiner_contraction(
         tensor::Tensor,
         tensor_labels,
         combiner_tensor::CombinerTensor,
-        combiner_tensor_labels,
+        combiner_tensor_labels
     )
     in_tensor_labels_op = is_combining ? ∉(tensor_labels) : ∈(tensor_labels)
     return isone(count(in_tensor_labels_op, combiner_tensor_labels))
@@ -155,7 +155,7 @@ function invalid_combiner_contraction_error(
         If you are uncombining, the combined index of the combiner should be the only one contracted.
 
         By convention, the combined index should be the index in position $(combinedind_position(combiner_tensor)) of the combiner tensor.
-        """,
+        """
     )
 end
 

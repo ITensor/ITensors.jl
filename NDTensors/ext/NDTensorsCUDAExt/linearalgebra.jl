@@ -1,10 +1,10 @@
 using Adapt: adapt
 using CUDA: CUDA, CuMatrix
 using LinearAlgebra: Adjoint, svd
-using NDTensors: NDTensors
 using NDTensors.Expose: Expose, expose, ql, ql_positive
 using NDTensors.GPUArraysCoreExtensions: cpu
 using NDTensors.Vendored.TypeParameterAccessors: unwrap_array_type
+using NDTensors: NDTensors
 function NDTensors.svd_catch_error(A::CuMatrix; alg::String = "jacobi_algorithm")
     if alg == "jacobi_algorithm"
         alg = CUDA.CUSOLVER.JacobiAlgorithm()
@@ -12,7 +12,7 @@ function NDTensors.svd_catch_error(A::CuMatrix; alg::String = "jacobi_algorithm"
         alg = CUDA.CUSOLVER.QRAlgorithm()
     else
         error(
-            "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",
+            "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms."
         )
     end
     return NDTensors.svd_catch_error(A, alg)

@@ -1,8 +1,7 @@
+using ChainRulesCore: rrule_via_ad
 using ITensors
 using ITensors.SiteTypes: siteinds
 using Test
-
-using ChainRulesCore: rrule_via_ad
 
 include("utils/chainrulestestutils.jl")
 
@@ -26,7 +25,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     f = function (x)
@@ -41,7 +40,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     function sometimes_broken_test()
@@ -57,7 +56,7 @@ using Zygote: ZygoteRuleConfig, gradient
             rrule_f = rrule_via_ad,
             check_inferred = false,
             rtol = 1.0e-7,
-            atol = 1.0e-7,
+            atol = 1.0e-7
         )
         return nothing
     end
@@ -80,7 +79,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     f = function (x)
@@ -95,7 +94,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     f = function (x)
@@ -110,7 +109,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     f = function (x)
@@ -125,7 +124,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     f = function (x)
@@ -140,7 +139,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     f = function (x)
@@ -155,7 +154,7 @@ using Zygote: ZygoteRuleConfig, gradient
         rrule_f = rrule_via_ad,
         check_inferred = false,
         rtol = 1.0e-7,
-        atol = 1.0e-7,
+        atol = 1.0e-7
     )
 
     if VERSION ≥ v"1.8"
@@ -164,7 +163,13 @@ using Zygote: ZygoteRuleConfig, gradient
             return norm(y)
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
 
         f = function (x)
             y = exp(-x * Op("X", 1) * Op("X", 2))
@@ -173,7 +178,13 @@ using Zygote: ZygoteRuleConfig, gradient
             return norm(U)
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
     end
 
     U1(θ) = Op("Ry", 1; θ)
@@ -183,31 +194,61 @@ using Zygote: ZygoteRuleConfig, gradient
         return ITensor(U1(x), s)[1, 1]
     end
     args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+    test_rrule(
+        ZygoteRuleConfig(),
+        f,
+        args...;
+        rrule_f = rrule_via_ad,
+        check_inferred = false
+    )
 
     f = function (x)
         return ITensor(U1(x) * U2(x), s)[1, 1]
     end
     args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+    test_rrule(
+        ZygoteRuleConfig(),
+        f,
+        args...;
+        rrule_f = rrule_via_ad,
+        check_inferred = false
+    )
 
     f = function (x)
         return ITensor(1.2 * U1(x), s)[1, 1]
     end
     args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+    test_rrule(
+        ZygoteRuleConfig(),
+        f,
+        args...;
+        rrule_f = rrule_via_ad,
+        check_inferred = false
+    )
 
     f = function (x)
         return ITensor(exp(1.2 * U1(x)), s)[1, 1]
     end
     args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+    test_rrule(
+        ZygoteRuleConfig(),
+        f,
+        args...;
+        rrule_f = rrule_via_ad,
+        check_inferred = false
+    )
 
     f = function (x)
         return ITensor(exp(x * U1(1.2)), s)[1, 1]
     end
     args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+    test_rrule(
+        ZygoteRuleConfig(),
+        f,
+        args...;
+        rrule_f = rrule_via_ad,
+        check_inferred = false
+    )
 
     function H(x1, x2)
         os = Ops.OpSum()
@@ -223,25 +264,49 @@ using Zygote: ZygoteRuleConfig, gradient
             return ITensor(exp(1.5 * H(x, x); alg = Trotter{1}(1)), s)[1, 1]
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
 
         f = function (x)
             return ITensor(exp(1.5 * H(x, x); alg = Trotter{2}(1)), s)[1, 1]
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
 
         f = function (x)
             return ITensor(exp(1.5 * H(x, x); alg = Trotter{2}(2)), s)[1, 1]
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
 
         f = function (x)
             return ITensor(exp(x * H(x, x); alg = Trotter{2}(2)), s)[1, 1]
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
     end
 
     f = function (x)
@@ -250,16 +315,31 @@ using Zygote: ZygoteRuleConfig, gradient
         return norm(U * V)
     end
     args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+    test_rrule(
+        ZygoteRuleConfig(),
+        f,
+        args...;
+        rrule_f = rrule_via_ad,
+        check_inferred = false
+    )
 
     if VERSION ≥ v"1.8"
         f = function (x)
-            y = exp(-x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2)); alg = Trotter{1}(1))
+            y = exp(
+                -x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2));
+                alg = Trotter{1}(1)
+            )
             U = ITensor(y, s)
             return norm(U * V)
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
 
         ## XXX: Fix
         f = function (x)
@@ -269,7 +349,13 @@ using Zygote: ZygoteRuleConfig, gradient
             return norm(U(V))
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
 
         ## XXX: Fix
         f = function (x)
@@ -278,6 +364,12 @@ using Zygote: ZygoteRuleConfig, gradient
             return norm(U(V))
         end
         args = (x,)
-        test_rrule(ZygoteRuleConfig(), f, args...; rrule_f = rrule_via_ad, check_inferred = false)
+        test_rrule(
+            ZygoteRuleConfig(),
+            f,
+            args...;
+            rrule_f = rrule_via_ad,
+            check_inferred = false
+        )
     end
 end

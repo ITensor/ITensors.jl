@@ -1,46 +1,45 @@
-name: Run ITensors base tests (Ubuntu)
-
+name: "Run ITensors base tests (Ubuntu)"
 on:
   push:
     branches:
-      - main
-    tags: '*'
-  pull_request:
-
+      - "main"
+    tags: "*"
+  pull_request: ~
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)
-    runs-on: ${{ matrix.os }}
+    name: "Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)"
+    runs-on: "${{ matrix.os }}"
     env:
-      JULIA_NUM_THREADS: ${{ matrix.threads }}
+      JULIA_NUM_THREADS: "${{ matrix.threads }}"
     strategy:
       matrix:
         version:
-          - 'lts'
-          - '1'
+          - "lts"
+          - "1"
         os:
-          - ubuntu-latest
+          - "ubuntu-latest"
         threads:
-          - '2'
+          - "2"
         arch:
-          - x64
+          - "x64"
         exclude:
-          # MacOS not available on x86
-          - {os: 'macOS-latest', arch: 'x86'}
+          - os: "macOS-latest"
+            arch: "x86"
     steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@latest
+      - uses: "actions/checkout@v6"
+      - uses: "julia-actions/setup-julia@latest"
         with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - name: Install Julia dependencies and run tests
-        shell: julia {0}
+          version: "${{ matrix.version }}"
+          arch: "${{ matrix.arch }}"
+      - name: "Install Julia dependencies and run tests"
+        shell: "julia {0}"
         run: |
           using Pkg;
           Pkg.activate(temp=true);
           Pkg.develop(path="./NDTensors");
           Pkg.develop(path=".");
           Pkg.test("ITensors"; coverage=true, test_args=["base"]);
-      - uses: julia-actions/julia-uploadcodecov@latest
+          
+      - uses: "julia-actions/julia-uploadcodecov@latest"
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"

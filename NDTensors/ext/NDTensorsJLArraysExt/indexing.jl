@@ -1,7 +1,7 @@
-using JLArrays: JLArray
 using GPUArraysCore: @allowscalar
-using NDTensors: NDTensors
+using JLArrays: JLArray
 using NDTensors.Expose: Exposed, expose, unexpose
+using NDTensors: NDTensors
 
 function Base.getindex(E::Exposed{<:JLArray})
     return @allowscalar unexpose(E)[]

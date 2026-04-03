@@ -1,26 +1,9 @@
 @eval module $(gensym())
 using GPUArraysCore: @allowscalar
 using LinearAlgebra: Hermitian, exp, norm, svd
-using NDTensors:
-    NDTensors,
-    BlockSparseTensor,
-    array,
-    blockdims,
-    blockoffsets,
-    blockview,
-    data,
-    dense,
-    diag,
-    diaglength,
-    dims,
-    eachnzblock,
-    inds,
-    isblocknz,
-    nnz,
-    nnzblocks,
-    randomBlockSparseTensor,
-    store,
-    storage
+using NDTensors: NDTensors, BlockSparseTensor, array, blockdims, blockoffsets, blockview,
+    data, dense, diag, diaglength, dims, eachnzblock, inds, isblocknz, nnz, nnzblocks,
+    randomBlockSparseTensor, storage, store
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: default_rtol, devices_list, is_supported_eltype
 using Random: randn!
@@ -162,7 +145,9 @@ using Test: @test, @test_throws, @testset
             @test eltype(T) == elt
             @test norm(T) ≉ 0
 
-            Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+            Tc = dev(
+                randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+            )
             @test nnzblocks(Tc) == 2
             @test nnz(Tc) == 8
             @test eltype(Tc) == complex(elt)
@@ -170,7 +155,9 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "Complex Valued Operations" begin
-            T = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+            T = dev(
+                randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+            )
             rT = real(T)
             @test eltype(rT) == elt
             @test nnzblocks(rT) == nnzblocks(T)
@@ -203,7 +190,9 @@ using Test: @test, @test_throws, @testset
             @test eltype(T) == elt
             @test norm(T) ≉ 0
 
-            Tc = dev(randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2])))
+            Tc = dev(
+                randomBlockSparseTensor(complex(elt), [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+            )
             @test nnzblocks(Tc) == 2
             @test nnz(Tc) == 8
             @test eltype(Tc) == complex(elt)

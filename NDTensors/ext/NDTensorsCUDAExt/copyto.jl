@@ -1,6 +1,6 @@
 using CUDA: CuArray
-using NDTensors.Expose: Exposed, expose, unexpose
 using LinearAlgebra: Adjoint
+using NDTensors.Expose: Exposed, expose, unexpose
 
 # Same definition as `MtlArray`.
 function Base.copy(src::Exposed{<:CuArray, <:Base.ReshapedArray})
@@ -10,7 +10,7 @@ end
 function Base.copy(
         src::Exposed{
             <:CuArray, <:SubArray{<:Any, <:Any, <:Base.ReshapedArray{<:Any, <:Any, <:Adjoint}},
-        },
+        }
     )
     return copy(@view copy(expose(parent(src)))[parentindices(unexpose(src))...])
 end

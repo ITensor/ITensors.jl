@@ -1,5 +1,5 @@
-using NDTensors.Expose: Exposed, expose, parent, unexpose
 using AMDGPU: ROCArray
+using NDTensors.Expose: Exposed, expose, parent, unexpose
 
 function Base.permutedims!(
         Edest::Exposed{<:ROCArray, <:Base.ReshapedArray}, Esrc::Exposed{<:ROCArray}, perm
@@ -15,7 +15,7 @@ function Base.permutedims!(
         Edest::Exposed{<:ROCArray, <:Base.ReshapedArray{<:Any, <:Any, <:Adjoint}},
         Esrc::Exposed{<:ROCArray},
         perm,
-        f,
+        f
     )
     Aperm = reshape(permutedims(Esrc, perm), size(parent(Edest)))
     parent(Edest) .= f.(parent(Edest), Aperm)

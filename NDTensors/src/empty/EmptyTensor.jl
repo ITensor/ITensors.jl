@@ -157,7 +157,10 @@ function promote_rule(
     ) where {T1 <: EmptyStorage{EmptyNumber}, T2 <: TensorStorage}
     return T2
 end
-function promote_rule(::Type{T1}, ::Type{T2}) where {T1 <: EmptyStorage, T2 <: TensorStorage}
+function promote_rule(
+        ::Type{T1},
+        ::Type{T2}
+    ) where {T1 <: EmptyStorage, T2 <: TensorStorage}
     return promote_type(similartype(T2, eltype(T1)), T2)
 end
 
@@ -173,7 +176,12 @@ function permutedims!!(R::EmptyTensor, T::Tensor, perm::Tuple, f::Function = (r,
     return RR
 end
 
-function permutedims!!(R::EmptyTensor, T::EmptyTensor, perm::Tuple, f::Function = (r, t) -> t)
+function permutedims!!(
+        R::EmptyTensor,
+        T::EmptyTensor,
+        perm::Tuple,
+        f::Function = (r, t) -> t
+    )
     RR = convert(promote_type(typeof(R), typeof(T)), R)
     return RR
 end

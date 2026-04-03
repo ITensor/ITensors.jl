@@ -1,5 +1,5 @@
 """
-  struct Position{P} end
+struct Position{P} end
 
 Singleton type to statically represent the type-parameter position.
 This is meant for internal use as a `Val`-like structure to improve type-inference.
@@ -13,7 +13,7 @@ Base.to_index(pos::Position) = Base.to_index(typeof(pos))
 Base.to_index(::Type{P}) where {P <: Position} = Int(P)
 
 """
-  position(type::Type, position_name)::Position
+position(type::Type, position_name)::Position
 
 An optional interface function. Defining this allows accessing a parameter
 at the defined position using the `position_name`.
@@ -89,7 +89,7 @@ function positions(::Type{T}, pos::Tuple) where {T}
 end
 
 """
-  get_type_parameters(type_or_obj, [pos])
+get_type_parameters(type_or_obj, [pos])
 
 Return a tuple containing the type parameters of a given type or object.
 Optionally you can specify a position to just get the parameter for that position,
@@ -110,14 +110,15 @@ end
 @inline get_type_parameters(::Type{T}, pos) where {T} = get_type_parameters(
     T, position(T, pos)
 )
-@inline get_type_parameters(::Type{T}, ::Position{p}) where {T, p} = get_type_parameters(T)[p]
+@inline get_type_parameters(::Type{T}, ::Position{p}) where {T, p} =
+    get_type_parameters(T)[p]
 @inline get_type_parameters(::Type{T}, ::Position{0}) where {T} = T
 @inline get_type_parameters(::Type{T}, pos::Tuple) where {T} = get_type_parameters.(T, pos)
 @inline get_type_parameters(object, pos) = get_type_parameters(typeof(object), pos)
 @inline get_type_parameters(object) = get_type_parameters(typeof(object))
 
 """
-  type_parameters(type_or_obj, [pos])
+type_parameters(type_or_obj, [pos])
 
 Return a tuple containing the type parameters of a given type or object.
 Optionally you can specify a position to just get the parameter for that position,
@@ -144,7 +145,7 @@ end
 @inline type_parameters(object) = type_parameters(typeof(object))
 
 """
-  nparameters(type_or_obj)
+nparameters(type_or_obj)
 
 Return the number of type parameters for a given type or object.
 """
@@ -152,7 +153,7 @@ nparameters(object) = nparameters(typeof(object))
 nparameters(::Type{T}) where {T} = length(get_type_parameters(T))
 
 """
-  is_parameter_specified(type::Type, pos)
+is_parameter_specified(type::Type, pos)
 
 Return whether or not the type parameter at a given position is considered specified.
 """
@@ -161,8 +162,8 @@ function is_parameter_specified(::Type{T}, pos) where {T}
 end
 
 """
-  unspecify_type_parameters(type::Type, [positions::Tuple])
-  unspecify_type_parameters(type::Type, position)
+unspecify_type_parameters(type::Type, [positions::Tuple])
+unspecify_type_parameters(type::Type, position)
 
 Return a new type where the type parameters at the given positions are unset.
 """
@@ -184,8 +185,8 @@ end
 unspecify_type_parameters(::Type{T}, pos) where {T} = unspecify_type_parameters(T, (pos,))
 
 """
-  set_type_parameters(type::Type, positions::Tuple, parameters::Tuple)
-  set_type_parameters(type::Type, position, parameter)
+set_type_parameters(type::Type, positions::Tuple, parameters::Tuple)
+set_type_parameters(type::Type, position, parameter)
 
 Return a new type where the type parameters at the given positions are set to the provided values.
 """
@@ -210,8 +211,8 @@ function set_type_parameters(::Type{T}, pos, param) where {T}
 end
 
 """
-  specify_type_parameters(type::Type, positions::Tuple, parameters::Tuple)
-  specify_type_parameters(type::Type, position, parameter)
+specify_type_parameters(type::Type, positions::Tuple, parameters::Tuple)
+specify_type_parameters(type::Type, position, parameter)
 
 Return a new type where the type parameters at the given positions are set to the provided values,
 only if they were previously unspecified.
@@ -242,7 +243,7 @@ function specify_type_parameters(::Type{T}, pos, param) where {T}
 end
 
 """
-  default_type_parameters(type::Type)::Tuple
+default_type_parameters(type::Type)::Tuple
 
 An optional interface function. Defining this allows filling type parameters
 of the specified type with default values.
@@ -291,15 +292,16 @@ struct UndefinedDefaultTypeParameter end
         if !(supertype_param isa TypeVar)
             continue
         end
-        param_position = findfirst(param -> (param.name == supertype_param.name), type_params)
+        param_position =
+            findfirst(param -> (param.name == supertype_param.name), type_params)
         defaults[param_position] = supertype_default_type_param
     end
     return :(@inline; $(Tuple(defaults)))
 end
 
 """
-  set_default_type_parameters(type::Type, [positions::Tuple])
-  set_default_type_parameters(type::Type, position)
+set_default_type_parameters(type::Type, [positions::Tuple])
+set_default_type_parameters(type::Type, position)
 
 Set the type parameters at the given positions to their default values.
 """
@@ -314,8 +316,8 @@ function set_default_type_parameters(::Type{T}, pos) where {T}
 end
 
 """
-  specify_default_type_parameters(type::Type, [positions::Tuple])
-  specify_default_type_parameters(type::Type, position)
+specify_default_type_parameters(type::Type, [positions::Tuple])
+specify_default_type_parameters(type::Type, position)
 
 Set the type parameters at the given positions to their default values, if they
 had not been specified.

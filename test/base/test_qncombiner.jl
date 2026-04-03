@@ -1,4 +1,5 @@
-using ITensors, Test
+using ITensors
+using Test
 
 @testset "QN Combiner" begin
     d = 1

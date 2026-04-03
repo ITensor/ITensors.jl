@@ -9,7 +9,7 @@ tensor network algorithms.
 
 |**Version**|**Download Statistics**|**Style Guide**|**License**|
 |:---------:|:---------------------:|:-------------:|:---------:|
-|[![version](https://juliahub.com/docs/ITensors/version.svg)](https://juliahub.com/ui/Packages/ITensors/P3pqL)|[![ITensor Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FITensors&query=total_requests&suffix=%2Fmonth&label=Downloads)](http://juliapkgstats.com/pkg/ITensors)|[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|[![license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/ITensor/ITensors.jl/blob/main/LICENSE)|
+|[![version](https://juliahub.com/docs/ITensors/version.svg)](https://juliahub.com/ui/Packages/ITensors/P3pqL)|[![ITensor Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FITensors&query=total_requests&suffix=%2Fmonth&label=Downloads)](http://juliapkgstats.com/pkg/ITensors)|[![Code Style](https://img.shields.io/badge/code_style-ITensor-purple)](https://github.com/ITensor/ITensorFormatter.jl)|[![license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/ITensor/ITensors.jl/blob/main/LICENSE)|
 
 The source code for ITensors.jl can be found [on Github](https://github.com/ITensor/ITensors.jl).
 

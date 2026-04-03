@@ -1,7 +1,7 @@
 module ITensorVisualizationCore
 
-using Compat
 using ..ITensors
+using Compat
 
 export @visualize,
     @visualize!,

@@ -176,7 +176,7 @@ mutable struct ContractionProperties{NA, NB, NC}
             false,
             ntuple(_ -> 0, Val(NA)),
             ntuple(_ -> 0, Val(NB)),
-            ntuple(_ -> 0, Val(NC)),
+            ntuple(_ -> 0, Val(NC))
         )
     end
 end
@@ -384,7 +384,11 @@ function compute_contraction_properties!(
                 #If not in same order,
                 #must permute one of A or B
                 #so permute the smaller one
-                props.dleft < props.dright ? (props.permuteA = true) : (props.permuteB = true)
+                if props.dleft < props.dright
+                    (props.permuteA = true)
+                else
+                    (props.permuteB = true)
+                end
                 break
             end
         end

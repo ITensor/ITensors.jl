@@ -22,7 +22,7 @@ function ctmrg(T::ITensor, Cₗᵤ::ITensor, Aₗ::ITensor; χmax::Int, cutoff =
             cutoff,
             maxdim = χmax,
             lefttags = tags(lₕ),
-            righttags = tags(lᵥ),
+            righttags = tags(lᵥ)
         )
         Cₗᵤ = dense(Cₗᵤ)
         lᵥ = commonind(Cₗᵤ, Uᵥ)

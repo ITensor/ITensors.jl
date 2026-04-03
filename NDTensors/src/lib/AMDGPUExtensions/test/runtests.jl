@@ -1,7 +1,7 @@
 @eval module $(gensym())
-using Test: @testset, @test
-using NDTensors.AMDGPUExtensions: roc, ROCArrayAdaptor
+using NDTensors.AMDGPUExtensions: ROCArrayAdaptor, roc
 using NDTensors.GPUArraysCoreExtensions: storagemode
+using Test: @test, @testset
 @testset "roc and ROCArrayAdaptor" begin
     @test roc isa Function
     @test storagemode(ROCArrayAdaptor{1}) == 1

@@ -1,14 +1,3 @@
-import Base:
-    adjoint,
-    permutedims,
-    permutedims!,
-    copy,
-    copyto!,
-    parent,
-    print_array,
-    transpose,
-    getindex,
-    setindex!,
-    any
-
+import Base: adjoint, any, copy, copyto!, getindex, parent, permutedims, permutedims!,
+    print_array, setindex!, transpose
 import LinearAlgebra: mul!, qr, svd

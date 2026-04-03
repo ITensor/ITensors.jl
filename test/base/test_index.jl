@@ -1,8 +1,8 @@
+import ITensors: In, Neither, Out
 using ITensors
 using ITensors.NDTensors
 using Random
 using Test
-import ITensors: In, Out, Neither
 
 @testset "Index" begin
     @testset "Index with dim" begin

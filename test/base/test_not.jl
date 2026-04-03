@@ -1,4 +1,5 @@
-using ITensors, Test
+using ITensors
+using Test
 
 @testset "not" begin
     i = Index(2, "i")

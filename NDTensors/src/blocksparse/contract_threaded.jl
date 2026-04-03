@@ -6,7 +6,7 @@ function contract_blocks(
         labels1_to_labels2,
         labels1_to_labelsR,
         labels2_to_labelsR,
-        ValNR::Val{NR},
+        ValNR::Val{NR}
     ) where {NR}
     N1 = length(blocktype(boffs1))
     N2 = length(blocktype(boffs2))
@@ -27,7 +27,7 @@ function contract_blocks(
                             labels1_to_labels2,
                             labels1_to_labelsR,
                             labels2_to_labelsR,
-                            ValNR,
+                            ValNR
                         )
                         if !isnothing(block_contraction)
                             push!(block_contractions, block_contraction)
@@ -56,7 +56,7 @@ function contract_blocks(
                             labels1_to_labels2,
                             labels1_to_labelsR,
                             labels2_to_labelsR,
-                            ValNR,
+                            ValNR
                         )
                         if !isnothing(block_contraction)
                             push!(block_contractions, block_contraction)
@@ -82,10 +82,11 @@ function contract!(
         labelstensor1,
         tensor2::BlockSparseTensor,
         labelstensor2,
-        contraction_plan,
+        contraction_plan
     )
     executor = ThreadedEx()
     return contract!(
-        R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor
+        R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan,
+        executor
     )
 end

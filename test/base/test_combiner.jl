@@ -1,5 +1,6 @@
-using ITensors, Test
 using Combinatorics: permutations
+using ITensors
+using Test
 
 @testset "Combiner" begin
     i = Index(2, "i")

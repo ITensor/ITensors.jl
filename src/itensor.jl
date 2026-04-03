@@ -1,5 +1,5 @@
-using NDTensors: NDTensors, nnz
 using .TagSets: TagSets, hastags, replacetags
+using NDTensors: NDTensors, nnz
 
 # Private inner constructor
 function _ITensor end
@@ -24,6 +24,7 @@ julia> i = Index(2, "i")
 #
 # Make an ITensor with random elements:
 #
+
 julia> A = random_itensor(i', i)
 ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
 NDTensors.Dense{Float64,Array{Float64,1}}
@@ -43,6 +44,7 @@ inds(A) = ((dim=2|id=287|"i")', (dim=2|id=287|"i"))
 #
 # Set the i==1, i'==2 element to 1.0:
 #
+
 julia> A[i => 1, i' => 2] = 1;
 
 julia> @show A;
@@ -72,6 +74,7 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 # Can add or subtract ITensors as long as they
 # have the same indices, in any order:
 #
+
 julia> @show A + B;
 A + B = ITensor ord=2
 Dim 1: (dim=2|id=287|"i")'
@@ -83,7 +86,7 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 ```
 """
 mutable struct ITensor
-    tensor
+    tensor::Any
     global @inline _ITensor(parent) = new(parent)
 end
 
@@ -171,12 +174,12 @@ The storage will have `NDTensors.Dense` type.
 # Examples
 
 ```julia
-i = Index(2,"index_i")
-j = Index(4,"index_j")
-k = Index(3,"index_k")
+i = Index(2, "index_i")
+j = Index(4, "index_j")
+k = Index(3, "index_k")
 
-A = ITensor(i,j)
-B = ITensor(ComplexF64,k,j)
+A = ITensor(i, j)
+B = ITensor(ComplexF64, k, j)
 ```
 """
 function ITensor(eltype::Type{<:Number}, is::Indices)
@@ -203,19 +206,19 @@ end
 Construct an ITensor filled with undefined elements having indices `inds` and
 element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 One purpose for using this constructor is that initializing the elements in an
-  undefined way is faster than initializing them to a set value such as zero.
+undefined way is faster than initializing them to a set value such as zero.
 
 The storage will have `NDTensors.Dense` type.
 
 # Examples
 
 ```julia
-i = Index(2,"index_i")
-j = Index(4,"index_j")
-k = Index(3,"index_k")
+i = Index(2, "index_i")
+j = Index(4, "index_j")
+k = Index(3, "index_k")
 
-A = ITensor(undef,i,j)
-B = ITensor(ComplexF64,undef,k,j)
+A = ITensor(undef, i, j)
+B = ITensor(ComplexF64, undef, k, j)
 ```
 """
 function ITensor(::Type{ElT}, ::UndefInitializer, inds::Indices) where {ElT <: Number}
@@ -236,24 +239,27 @@ ITensor(::UndefInitializer, inds...) = ITensor(Float64, undef, indices(inds...))
 
 Construct an ITensor with all elements set to `x` and indices `inds`.
 
-  If `x isa Int` or `x isa Complex{Int}` then the elements will be set to `float(x)`
-  unless specified otherwise by the first input.
+If `x isa Int` or `x isa Complex{Int}` then the elements will be set to `float(x)`
+unless specified otherwise by the first input.
 
-  The storage will have `NDTensors.Dense` type.
+The storage will have `NDTensors.Dense` type.
 
-  # Examples
+# Examples
 
-  ```julia
-  i = Index(2,"index_i"); j = Index(4,"index_j"); k = Index(3,"index_k");
+```julia
+i = Index(2, "index_i");
+j = Index(4, "index_j");
+k = Index(3, "index_k");
 
-  A = ITensor(1.0, i, j)
-  A = ITensor(1, i, j) # same as above
-  B = ITensor(2.0+3.0im, j, k)
-  ```
+A = ITensor(1.0, i, j)
+A = ITensor(1, i, j) # same as above
+B = ITensor(2.0+3.0im, j, k)
+```
 
-  !!! warning
-      In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
-  """
+!!! warning
+
+    In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
+"""
 ITensor(eltype::Type{<:Number}, x::Number, is::Indices) = _ITensor(eltype, x, is)
 
 # For disambiguation with QN version
@@ -325,6 +331,7 @@ the desired element type isn't specified, it will
 be converted to `Float64` or `Complex{Float64}` automatically.
 To keep the element type as an integer, specify it explicitly,
 for example with:
+
 ```julia
 i = Index(2, "i")
 A = [0 1; 1 0]
@@ -334,11 +341,11 @@ T = ITensor(eltype(A), A, i', dag(i))
 # Examples
 
 ```julia
-i = Index(2,"index_i")
-j = Index(2,"index_j")
+i = Index(2, "index_i")
+j = Index(2, "index_j")
 
-M = [1. 2;
-     3 4]
+M = [1.0 2;
+    3 4]
 T = ITensor(M, i, j)
 T[i => 1, j => 1] = 3.3
 M[1, 1] == 3.3
@@ -346,6 +353,7 @@ T[i => 1, j => 1] == 3.3
 ```
 
 !!! warning
+
     In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
 """
 function ITensor(
@@ -353,7 +361,7 @@ function ITensor(
         elt::Type{<:Number},
         A::AbstractArray{<:Number},
         inds::Indices;
-        kwargs...,
+        kwargs...
     )
     check_dims(A, inds)
     # Other cases already handle when `elt ≡ eltype(A)`
@@ -369,7 +377,7 @@ function ITensor(
         eltype::Type{T},
         A::AbstractArray{T},
         inds::Indices;
-        kwargs...,
+        kwargs...
     ) where {T <: Number}
     check_dims(A, inds)
     data = if as ≡ AllowAlias()
@@ -402,8 +410,8 @@ end
 function check_dims(A::AbstractArray, inds::Indices)
     length(A) ≠ dim(inds) && throw(
         DimensionMismatch(
-            "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
-        ),
+            "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"
+        )
     )
     return nothing
 end
@@ -425,7 +433,7 @@ function ITensor(
     )
     if length(A) > 1
         error(
-            "Trying to create an ITensor without any indices from $(typeof(A)) $A of dimensions $(size(A)). Cannot construct an ITensor from an $(typeof(A)) with more than one element without any indices.",
+            "Trying to create an ITensor without any indices from $(typeof(A)) $A of dimensions $(size(A)). Cannot construct an ITensor from an $(typeof(A)) with more than one element without any indices."
         )
     end
     return ITensor(eltype, A[]; kwargs...)
@@ -524,7 +532,7 @@ end
 
 function check_diag_dims(v::AbstractVector, is::Indices)
     length(v) ≠ mindim(is) && error(
-        "Length of vector for diagonal must equal minimum of the dimension of the input indices",
+        "Length of vector for diagonal must equal minimum of the dimension of the input indices"
     )
     return nothing
 end
@@ -647,12 +655,12 @@ it defaults to `Float64`.
 # Examples
 
 ```julia
-i = Index(2,"index_i")
-j = Index(4,"index_j")
-k = Index(3,"index_k")
+i = Index(2, "index_i")
+j = Index(4, "index_j")
+k = Index(3, "index_k")
 
-A = random_itensor(i,j)
-B = random_itensor(ComplexF64,undef,k,j)
+A = random_itensor(i, j)
+B = random_itensor(ComplexF64, undef, k, j)
 ```
 """
 function random_itensor(::Type{S}, is::Indices) where {S <: Number}
@@ -741,7 +749,7 @@ function Array{ElT, N}(T::ITensor, is::Indices) where {ElT, N}
     ndims(T) != N && throw(
         DimensionMismatch(
             "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."
-        ),
+        )
     )
     TT = tensor(permute(T, is))
     return Array{ElT, N}(TT)::Array{ElT, N}
@@ -950,12 +958,12 @@ Dense{Float64,Array{Float64,1}}
 
 julia> C = CartesianIndices(A)
 2×3 CartesianIndices{2,Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}}:
- CartesianIndex(1, 1)  CartesianIndex(1, 2)  CartesianIndex(1, 3)
- CartesianIndex(2, 1)  CartesianIndex(2, 2)  CartesianIndex(2, 3)
+CartesianIndex(1, 1)  CartesianIndex(1, 2)  CartesianIndex(1, 3)
+CartesianIndex(2, 1)  CartesianIndex(2, 2)  CartesianIndex(2, 3)
 
 julia> for c in C
-         @show c, A[c]
-       end
+@show c, A[c]
+end
 (c, A[c]) = (CartesianIndex(1, 1), 0.9867887290267864)
 (c, A[c]) = (CartesianIndex(2, 1), -0.5967323222288754)
 (c, A[c]) = (CartesianIndex(1, 2), 0.9675791778518225)
@@ -964,6 +972,7 @@ julia> for c in C
 (c, A[c]) = (CartesianIndex(2, 3), -0.4877709982071688)
 
 !!! warning
+
     Unlike standard `AbstractArray{T, N}` types, `ITensor`s do not have their
     order as type paramater, and therefore iterating using `CartesianIndices`
     is generally slow. If you are performing operations that use iterating over
@@ -1118,6 +1127,7 @@ Get the specified element of the ITensor, using internal
 Index ordering of the ITensor.
 
 # Example
+
 ```julia
 i = Index(2; tags = "i")
 A = ITensor(2.0, i, i')
@@ -1156,6 +1166,7 @@ Get the specified element of the ITensor, using a list
 of `IndexVal`s or `Pair{<:Index, Int}`.
 
 # Example
+
 ```julia
 i = Index(2; tags = "i")
 A = ITensor(2.0, i, i')
@@ -1172,7 +1183,7 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
         throw(
             DimensionMismatch(
                 "In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."
-            ),
+            )
         )
     end
     return tensor(T)[]
@@ -1234,6 +1245,7 @@ using internal Index ordering of the ITensor (only for advanced usage,
 only use if you know the axact ordering of the indices).
 
 # Example
+
 ```julia
 i = Index(2; tags = "i")
 A = ITensor(i, i')
@@ -1544,7 +1556,8 @@ for (fname, fname!) in [
             return settensor!(A, $fname(f, tensor(A), args...))
         end
 
-        $fname(A::ITensor, args...; kwargs...) = itensor($fname(tensor(A), args...; kwargs...))
+        $fname(A::ITensor, args...; kwargs...) =
+            itensor($fname(tensor(A), args...; kwargs...))
 
         # Inlining makes the ITensor functions slower
         @noinline function $fname(A::Tensor, args...; kwargs...)
@@ -1750,7 +1763,8 @@ allhastags(A::ITensor, ts) = allhastags(inds(A), ts)
 function indpairs(T::ITensor; plev::Pair{Int, Int} = 0 => 1, tags::Pair = ts"" => ts"")
     is1 = filterinds(T; plev = first(plev), tags = first(tags))
     is2 = filterinds(T; plev = last(plev), tags = last(tags))
-    is2to1 = replacetags(mapprime(is2, last(plev) => first(plev)), last(tags) => first(tags))
+    is2to1 =
+        replacetags(mapprime(is2, last(plev) => first(plev)), last(tags) => first(tags))
     is_first = commoninds(is1, is2to1)
     is_last = replacetags(
         mapprime(is_first, first(plev) => last(plev)), first(tags) => last(tags)
@@ -1792,7 +1806,10 @@ norm(T::ITensor) = norm(tensor(T))
 function dag(as::AliasStyle, T::Tensor{ElT, N}) where {ElT, N}
     if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
         CT = conj(NeverAlias(), T)
-        NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(reverse(1:N), block, inds(T)))
+        NDTensors.scale_blocks!(
+            CT,
+            block -> NDTensors.permfactor(reverse(1:N), block, inds(T))
+        )
         return setinds(CT, dag(inds(T)))
     end
     return setinds(conj(as, T), dag(inds(T)))
@@ -1822,7 +1839,7 @@ function dag(T::ITensor; kwargs...)
         old_kw = :always_copy,
         default = true,
         funcsym = :dag,
-        map = !,
+        map = !
     )
     aliasstyle::Union{AllowAlias, NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
     return dag(aliasstyle, T)
@@ -1871,7 +1888,9 @@ function (A::ITensor - B::ITensor)
         return A
     end
     ndims(A) != ndims(B) &&
-        throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
+        throw(
+        DimensionMismatch("cannot subtract ITensors with different numbers of indices")
+    )
     C = copy(A)
     C .-= B
     return C
@@ -1916,6 +1935,7 @@ normalize!(T::ITensor) = (T .*= 1 / norm(T))
     copyto!(B::ITensor, A::ITensor)
 
 Copy the contents of ITensor A into ITensor B.
+
 ```
 B .= A
 ```
@@ -1949,7 +1969,9 @@ function _map!!(f::Function, R::Tensor, T1::Tensor, T2::Tensor)
         for (n, p) in enumerate(perm)
             if dir(inds(R)[n]) != dir(inds(T2)[p])
                 #println("Mismatched Index: \n$(inds(R)[n])")
-                error("Index arrows must be the same to add, subtract, map, or scale QN ITensors")
+                error(
+                    "Index arrows must be the same to add, subtract, map, or scale QN ITensors"
+                )
             end
         end
     end
@@ -1973,6 +1995,7 @@ Base.prod(x::ITensor) = prod(tensor(x))
 
 """
     axpy!(a::Number, v::ITensor, w::ITensor)
+
 ```
 w .+= a .* v
 ```
@@ -1992,6 +2015,7 @@ axpby!(a::Number, v::ITensor, b::Number, w::ITensor) = (w .= a .* v + b .* w)
     scale!(A::ITensor,x::Number) = rmul!(A,x)
 
 Scale the ITensor A by x in-place. May also be written `rmul!`.
+
 ```
 A .*= x
 ```
@@ -2024,11 +2048,12 @@ function deprecated_keyword_argument(
     has_old_kw = haskey(kwargs, old_kw)
     res::T = if has_old_kw
         Base.depwarn(
-            "In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.", func
+            "In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.",
+            func
         )
         if has_new_kw
             println(
-                "Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.",
+                "Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`."
             )
             kwargs[new_kw]
         else
@@ -2118,7 +2143,9 @@ function readcpp(io::IO, ::Type{ITensor}; format = "v3")
             #elseif storage_type==11 # ScalarReal
             #elseif storage_type==12 # ScalarCplx
         else
-            throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+            throw(
+                ErrorException("C++ ITensor storage type $storage_type not yet supported")
+            )
         end
         return itensor(storage, inds)
     else

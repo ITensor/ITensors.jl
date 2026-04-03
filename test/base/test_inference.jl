@@ -32,7 +32,8 @@ end
         DenseTensor{
         Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}},
     }
-    @test @inferred(NDTensors.contract(T1, labelsT1, T2, labelsT2, labelsR)) isa DenseTensor{
+    @test @inferred(NDTensors.contract(T1, labelsT1, T2, labelsT2, labelsR)) isa
+        DenseTensor{
         Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}},
     }
     @test @inferred(NDTensors.contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)) isa
@@ -63,7 +64,8 @@ end
     @test indsR isa Tuple{Index{Vector{Pair{QN, Int}}}, Index{Vector{Pair{QN, Int}}}}
 
     TensorT = @inferred(NDTensors.contraction_output_type(typeof(T1), typeof(T2), indsR))
-    @test TensorT <: Tensor{Float64, 2, BlockSparse{Float64, Vector{Float64}, 2}, typeof(indsR)}
+    @test TensorT <:
+    Tensor{Float64, 2, BlockSparse{Float64, Vector{Float64}, 2}, typeof(indsR)}
 
     blockoffsetsR, contraction_plan = @inferred(
         NDTensors.contract_blockoffsets(
@@ -74,7 +76,7 @@ end
             inds(T2),
             labelsT2,
             indsR,
-            labelsR,
+            labelsR
         )
     )
     @test blockoffsetsR isa BlockOffsets{2}

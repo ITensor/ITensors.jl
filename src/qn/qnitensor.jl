@@ -7,7 +7,7 @@ using NDTensors: sim
     fluxT = flux(T)
     if !isnothing(fluxT) && fluxT != flux(T, I...)
         error(
-            "In `setindex!`, the element $I of ITensor: \n$(T)\n you are trying to set is in a block with flux $(flux(T, I...)), which is different from the flux $fluxT of the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.",
+            "In `setindex!`, the element $I of ITensor: \n$(T)\n you are trying to set is in a block with flux $(flux(T, I...)), which is different from the flux $fluxT of the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux."
         )
     end
     return setindex!!(T, x, I...)
@@ -24,8 +24,9 @@ end
 function zeros_itensor(elt::Type{<:Number}, inds::QNIndex...)
     return itensor(
         tensor(
-            BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)}, Int}(), 0), inds
-        ),
+            BlockSparse(elt, undef, NDTensors.Dictionary{Block{length(inds)}, Int}(), 0),
+            inds
+        )
     )
 end
 
@@ -113,7 +114,9 @@ Block(2, 1)
  0.0
  1.63e-322
 ```
+
 Construction with undefined flux:
+
 ```julia
 julia> A = ITensor(i', dag(i));
 
@@ -127,8 +130,6 @@ Dim 2: (dim=3|id=212|"i") <In>
  2: QN(1) => 2
 NDTensors.EmptyStorage{NDTensors.EmptyNumber, NDTensors.BlockSparse{NDTensors.EmptyNumber, Vector{NDTensors.EmptyNumber}, 2}}
  3×3
-
-
 
 julia> isnothing(flux(A))
 true
@@ -181,7 +182,9 @@ ITensor(::Type{ElT}, inds::QNIndices) where {ElT <: Number} = emptyITensor(ElT, 
 ITensor(inds::QNIndices) = emptyITensor(inds)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-ITensor(::Type{ElT}, is::QNIndex...) where {ElT <: Number} = emptyITensor(ElT, indices(is...))
+function ITensor(::Type{ElT}, is::QNIndex...) where {ElT <: Number}
+    return emptyITensor(ElT, indices(is...))
+end
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
 ITensor(is::QNIndex...) = emptyITensor(indices(is...))
@@ -202,9 +205,9 @@ The storage will have `NDTensors.BlockSparse` type.
 
 ```julia
 i = Index([QN(0)=>1, QN(1)=>2], "i")
-A = ITensor(undef,QN(0),i',dag(i))
-B = ITensor(Float64,undef,QN(0),i',dag(i))
-C = ITensor(ComplexF64,undef,QN(0),i',dag(i))
+A = ITensor(undef, QN(0), i', dag(i))
+B = ITensor(Float64, undef, QN(0), i', dag(i))
+C = ITensor(ComplexF64, undef, QN(0), i', dag(i))
 ```
 """
 function ITensor(
@@ -245,6 +248,7 @@ C = ITensor(ComplexF64, 4, QN(0), i', dag(i))
 ```
 
 !!! warning
+
     In future versions this may not automatically convert integer inputs with
     `float`, and in that case the particular element type should not be relied on.
 """
@@ -293,8 +297,8 @@ setting `checkflux=false`.
 julia> i = Index([QN(0)=>1, QN(1)=>2], "i");
 
 julia> A = [1e-9 0.0 0.0;
-            0.0 2.0 3.0;
-            0.0 1e-10 4.0];
+           0.0 2.0 3.0;
+           0.0 1e-10 4.0];
 
 julia> @show ITensor(A, i', dag(i); tol = 1e-8);
 ITensor(A, i', dag(i); tol = 1.0e-8) = ITensor ord=2
@@ -318,13 +322,13 @@ function ITensor(
         A::AbstractArray{<:Number},
         inds::QNIndices;
         tol = 0.0,
-        checkflux = true,
+        checkflux = true
     )
     is = Tuple(inds)
     length(A) ≠ dim(inds) && throw(
         DimensionMismatch(
-            "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of the indices ($(dim(is)))",
-        ),
+            "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of the indices ($(dim(is)))"
+        )
     )
     blocks = Block{length(is)}[]
     T = BlockSparseTensor(elt, blocks, inds)
@@ -362,7 +366,7 @@ emptyITensor(inds::QNIndices) = emptyITensor(EmptyNumber, inds)
 
 function emptyITensor(eltype::Type{<:Number}, flux::QN, is...)
     return error(
-        "Trying to create an empty ITensor with flux $flux, cannot create empty ITensor with a specified flux.",
+        "Trying to create an empty ITensor with flux $flux, cannot create empty ITensor with a specified flux."
     )
 end
 emptyITensor(flux::QN, is...) = emptyITensor(EmptyNumber, flux, is...)
@@ -392,7 +396,12 @@ function random_itensor(::Type{ElT}, flux::QN, is...) where {ElT <: Number}
     return random_itensor(Random.default_rng(), ElT, flux, is...)
 end
 
-function random_itensor(rng::AbstractRNG, ::Type{ElT}, flux::QN, is...) where {ElT <: Number}
+function random_itensor(
+        rng::AbstractRNG,
+        ::Type{ElT},
+        flux::QN,
+        is...
+    ) where {ElT <: Number}
     return random_itensor(rng, ElT, flux, indices(is...))
 end
 
@@ -400,7 +409,11 @@ function random_itensor(::Type{ElT}, inds::QNIndices) where {ElT <: Number}
     return random_itensor(Random.default_rng(), ElT, inds)
 end
 
-function random_itensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndices) where {ElT <: Number}
+function random_itensor(
+        rng::AbstractRNG,
+        ::Type{ElT},
+        inds::QNIndices
+    ) where {ElT <: Number}
     return random_itensor(rng, ElT, QN(), inds)
 end
 
@@ -426,7 +439,11 @@ function random_itensor(::Type{ElT}, inds::QNIndex...) where {ElT <: Number}
 end
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-function random_itensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndex...) where {ElT <: Number}
+function random_itensor(
+        rng::AbstractRNG,
+        ::Type{ElT},
+        inds::QNIndex...
+    ) where {ElT <: Number}
     return random_itensor(rng, ElT, QN(), inds)
 end
 

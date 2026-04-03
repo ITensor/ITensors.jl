@@ -1,5 +1,6 @@
+using .Vendored.TypeParameterAccessors:
+    IsWrappedArray, set_eltype, similartype, unwrap_array_type
 using Base: DimOrInd, Dims, OneTo
-using .Vendored.TypeParameterAccessors: IsWrappedArray, unwrap_array_type, set_eltype, similartype
 
 ## Custom `NDTensors.similar` implementation.
 ## More extensive than `Base.similar`.
@@ -29,7 +30,7 @@ end
 # NDTensors.similar
 function similar(
         arraytype::Type{<:AbstractArray},
-        shape::Tuple{Union{Integer, OneTo}, Vararg{Union{Integer, OneTo}}},
+        shape::Tuple{Union{Integer, OneTo}, Vararg{Union{Integer, OneTo}}}
     )
     return NDTensors.similar(arraytype, NDTensors.to_shape(shape))
 end

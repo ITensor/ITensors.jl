@@ -1,130 +1,87 @@
 pipeline {
   agent none
   options {
-    disableConcurrentBuilds()
+    disableConcurrentBuilds(abortPrevious: true)
     buildDiscarder(logRotator(numToKeepStr: '8', daysToKeepStr: '20'))
   }
   stages {
     stage('GPU Testing') {
       parallel {
-        stage('NDTensorsCUDAExt julia-lts') {
-	        options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            dockerfile {
-              label 'gpu&&v100'
-              filename 'Dockerfile'
-              dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.10'
-              args '--gpus "device=1"'
-            }
-          }
-          environment {
-            HOME = pwd(tmp:true)
-            OMP_NUM_THREADS = 4
-            JULIA_NUM_THREADS = 4
-          }
-          steps {
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
-            '''
-          }
-        }
-        stage('NDTensorsCUDAExt julia-1') {
-	        options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            dockerfile {
-              label 'gpu&&v100'
-              filename 'Dockerfile'
-              dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.11'
-              args '--gpus "device=1"'
-            }
-          }
-          environment {
-            HOME = pwd(tmp:true)
-            OMP_NUM_THREADS = 4
-            JULIA_NUM_THREADS = 4
-          }
-          steps {
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
-            '''
-          }
-        }
-        stage('NDTensorscuTENSORExt julia-lts') {
-	        options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            dockerfile {
-              label 'gpu&&v100'
-              filename 'Dockerfile'
-              dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.10'
-              args '--gpus "device=1"'
-            }
-          }
-          environment {
-            HOME = pwd(tmp:true)
-            OMP_NUM_THREADS = 4
-            JULIA_NUM_THREADS = 4
-          }
-          steps {
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
-            '''
-          }
-        }
-        stage('NDTensorscuTENSORExt julia-1') {
-	        options {
-            timeout(time: 45, unit: 'MINUTES')
-          }
-          agent {
-            dockerfile {
-              label 'gpu&&v100'
-              filename 'Dockerfile'
-              dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.11'
-              args '--gpus "device=1"'
-            }
-          }
-          environment {
-            HOME = pwd(tmp:true)
-            OMP_NUM_THREADS = 4
-            JULIA_NUM_THREADS = 4
-          }
-          steps {
-            sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
-            '''
-          }
-        }
-        stage('NDTensorsMetalExt Julia-lts'){
+        stage('NDTensorsCUDAExt') {
           options {
             timeout(time: 45, unit: 'MINUTES')
           }
           agent {
-            label 'm1'
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.12'
+              args '--gpus "device=0"'
+            }
           }
-          environment{
-            PATH="${env.HOME}/.juliaup/bin:${env.PATH}"
-            PLATFORM = 'macos'
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
           }
-          steps{
+          steps {
+            sh 'nvidia-smi'
             sh '''
-              juliaup add lts
-              juliaup default lts
+              julia -e '
+                using Pkg: Pkg
+                Pkg.activate("./NDTensors/test")
+                Pkg.add(["CUDA", "Preferences", "CUDA_Driver_jll"])
+                using CUDA
+                CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                using CUDA_Driver_jll
+                using Preferences: set_preferences!
+                set_preferences!(CUDA_Driver_jll, "compat" => "false"; export_prefs=true)
+              '
             '''
             sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
-        stage('NDTensorsMetalExt Julia-1'){
+        stage('NDTensorscuTENSORExt') {
+          options {
+            timeout(time: 45, unit: 'MINUTES')
+          }
+          agent {
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.12'
+              args '--gpus "device=0"'
+            }
+          }
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
+          }
+          steps {
+            sh 'nvidia-smi'
+            sh '''
+              julia -e '
+                using Pkg: Pkg
+                Pkg.activate("./NDTensors/test")
+                Pkg.add(["CUDA", "Preferences", "CUDA_Driver_jll"])
+                using CUDA
+                CUDA.set_runtime_version!(v"12.6"; local_toolkit=false)
+                using CUDA_Driver_jll
+                using Preferences: set_preferences!
+                set_preferences!(CUDA_Driver_jll, "compat" => "false"; export_prefs=true)
+              '
+            '''
+            sh '''
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+            '''
+          }
+        }
+        stage('NDTensorsMetalExt'){
           options {
             timeout(time: 45, unit: 'MINUTES')
           }

@@ -1,7 +1,7 @@
 using Base: ReshapedArray
-using NDTensors: NDTensors, BlockSparseTensor, DenseTensor, 
-array, blockdims, data, eachnzblock, inds, nblocks, nzblocks
 using NDTensors.Expose: Exposed, expose, unexpose
+using NDTensors: NDTensors, BlockSparseTensor, DenseTensor, array,
+blockdims, data, eachnzblock, inds, nblocks, nzblocks
 using cuTENSOR: cuTENSOR, CuArray, CuTensor
 
 # Handle cases that can't be handled by `cuTENSOR.jl`
@@ -81,7 +81,7 @@ function NDTensors.contract!(
         exposedT2::Exposed{<:CuArray, <:DenseTensor},
         labelsT2,
         α::Number = one(Bool),
-        β::Number = zero(Bool),
+        β::Number = zero(Bool)
     )
     R, T1, T2 = unexpose.((exposedR, exposedT1, exposedT2))
     zoffR = iszero(array(R).offset)
@@ -95,7 +95,7 @@ function NDTensors.contract!(
     elt = promote_type(eltype.((arrayR, arrayT1, arrayT2))...)
     if elt !== eltype(arrayR)
         return error(
-            "In cuTENSOR contraction, input tensors have element types `$(eltype(arrayT1))` and `$(eltype(arrayT2))` while the output has element type `$(eltype(arrayR))`.",
+            "In cuTENSOR contraction, input tensors have element types `$(eltype(arrayT1))` and `$(eltype(arrayT2))` while the output has element type `$(eltype(arrayR))`."
         )
     end
     arrayT1 = convert(CuArray{elt}, arrayT1)
@@ -103,7 +103,15 @@ function NDTensors.contract!(
     cuR = CuTensor(arrayR, collect(labelsR))
     cuT1 = CuTensor(arrayT1, collect(labelsT1))
     cuT2 = CuTensor(arrayT2, collect(labelsT2))
-    cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
+    try
+        cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
+    catch e
+        e isa cuTENSOR.CUTENSORError || rethrow()
+        # Fall back to default contraction (cuBLAS) for operations
+        # cuTENSOR doesn't support.
+        NDTensors.contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+        return R
+    end
     if !zoffR
         array(R) .= cuR.data
     end

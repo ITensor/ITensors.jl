@@ -27,8 +27,7 @@ Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` 
 the left index `l` running over all indices in `Linds` and `r` running over all
 indices in `Rinds`.
 
-Only accepts index lists `Linds`,`Rinds` such that: (1) `length(Linds) +
-length(Rinds) == length(inds(A))` (2) `length(Linds) == length(Rinds)` (3) For
+Only accepts index lists `Linds`,`Rinds` such that: (1) `length(Linds) + length(Rinds) == length(inds(A))` (2) `length(Linds) == length(Rinds)` (3) For
 each pair of indices `(Linds[n],Rinds[n])`, `Linds[n]` and `Rinds[n]` represent
 the same Hilbert space (the same QN structure in the QN case, or just the same
 length in the dense case), and appear in `A` with opposite directions.
@@ -80,7 +79,7 @@ function exp(A::ITensor, Linds, Rinds; ishermitian = false)
                 "For fermionic exp, Linds and Rinds must have same directions within each set. Got dir.(Linds)=",
                 dir.(Linds),
                 ", dir.(Rinds)=",
-                dir.(Rinds),
+                dir.(Rinds)
             )
         end
         A = permute(A, ordered_inds)

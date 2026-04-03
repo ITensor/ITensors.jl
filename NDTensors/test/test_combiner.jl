@@ -1,21 +1,10 @@
 @eval module $(gensym())
 using GPUArraysCore: @allowscalar
-using NDTensors:
-    NDTensors,
-    Block,
-    BlockOffsets,
-    BlockSparse,
-    BlockSparseTensor,
-    Combiner,
-    Dense,
-    DenseTensor,
-    contract,
-    dim,
-    dims,
-    tensor
+using NDTensors: NDTensors, Block, BlockOffsets, BlockSparse, BlockSparseTensor, Combiner,
+    Dense, DenseTensor, contract, dim, dims, tensor
 include("NDTensorsTestUtils/NDTensorsTestUtils.jl")
 using .NDTensorsTestUtils: devices_list, is_supported_eltype
-using Test: @testset, @test, @test_throws
+using Test: @test, @test_throws, @testset
 
 # Testing generic block indices
 struct Index{Space}
@@ -29,7 +18,7 @@ function NDTensors.outer(i1::Index, i2::Index)
         vec(
             map(Iterators.product(i1.space, i2.space)) do (b1, b2)
                 return first(b1) + first(b2) => last(b1) * last(b2)
-            end,
+            end
         )
     )
 end
@@ -51,10 +40,12 @@ Base.:+(q1::QN, q2::QN) = QN()
             combiner_tensor_inds = (d^2, d, d)
             output_tensor_inds = (d, d^2)
 
-            input_tensor = dev(tensor(Dense(randn(elt, input_tensor_inds)), input_tensor_inds))
+            input_tensor =
+                dev(tensor(Dense(randn(elt, input_tensor_inds)), input_tensor_inds))
             combiner_tensor = dev(tensor(Combiner([1], [1]), combiner_tensor_inds))
 
-            output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
+            output_tensor =
+                contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
             @test output_tensor isa DenseTensor
             @test dims(output_tensor) == output_tensor_inds
             @allowscalar for i in 1:length(input_tensor)
@@ -67,7 +58,8 @@ Base.:+(q1::QN, q2::QN) = QN()
 
             # Catch invalid combining
             input_tensor_inds = (d,)
-            input_tensor = dev(tensor(Dense(randn(elt, input_tensor_inds)), input_tensor_inds))
+            input_tensor =
+                dev(tensor(Dense(randn(elt, input_tensor_inds)), input_tensor_inds))
             combiner_tensor = dev(tensor(Combiner([1], [1]), combiner_tensor_inds))
             @test_throws Any contract(input_tensor, (-1,), combiner_tensor, (1, -1, -2))
         end
@@ -86,14 +78,16 @@ Base.:+(q1::QN, q2::QN) = QN()
             input_tensor = dev(
                 tensor(
                     BlockSparse(
-                        randn(elt, dim(input_tensor_inds)), BlockOffsets{3}([Block(1, 1, 1)], [0])
+                        randn(elt, dim(input_tensor_inds)),
+                        BlockOffsets{3}([Block(1, 1, 1)], [0])
                     ),
-                    input_tensor_inds,
-                ),
+                    input_tensor_inds
+                )
             )
             combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
 
-            output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
+            output_tensor =
+                contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
             @test output_tensor isa BlockSparseTensor
             @test dims(output_tensor) == dims(output_tensor_inds)
             output_tensor = permutedims(output_tensor, (2, 1))
@@ -111,13 +105,19 @@ Base.:+(q1::QN, q2::QN) = QN()
             invalid_input_tensor = dev(
                 tensor(
                     BlockSparse(
-                        randn(elt, dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])
+                        randn(elt, dim(invalid_input_tensor_inds)),
+                        BlockOffsets{1}([Block(1)], [0])
                     ),
-                    invalid_input_tensor_inds,
-                ),
+                    invalid_input_tensor_inds
+                )
             )
             combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
-            @test_throws Any contract(invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1))
+            @test_throws Any contract(
+                invalid_input_tensor,
+                (-1,),
+                combiner_tensor,
+                (1, 2, -1)
+            )
         end
     end
 end

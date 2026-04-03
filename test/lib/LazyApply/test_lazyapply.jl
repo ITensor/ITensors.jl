@@ -1,5 +1,5 @@
+using ITensors.LazyApply: LazyApply, Prod, Scaled, Sum, materialize
 using Test
-using ITensors.LazyApply: LazyApply, Sum, Prod, Scaled, materialize
 
 @testset "LazyApply general functionality" begin
     @test (materialize ∘ materialize ∘ materialize)(exp(Prod([1, 2, Sum([3, 4])]))) ==

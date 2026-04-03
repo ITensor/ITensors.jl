@@ -1,6 +1,6 @@
 @eval module $(gensym())
-using Test: @testset, @test
 using NDTensors.MetalExtensions: mtl
+using Test: @test, @testset
 @testset "mtl function exists" begin
     @test mtl isa Function
 end

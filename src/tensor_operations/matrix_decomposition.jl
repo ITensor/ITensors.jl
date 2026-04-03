@@ -123,7 +123,7 @@ function svd(
         min_blockdim = nothing,
         # Deprecated
         utags = lefttags,
-        vtags = righttags,
+        vtags = righttags
     )
     lefttags = NDTensors.replace_nothing(lefttags, ts"Link,u")
     righttags = NDTensors.replace_nothing(righttags, ts"Link,v")
@@ -167,7 +167,7 @@ function svd(
         alg,
         use_absolute_cutoff,
         use_relative_cutoff,
-        min_blockdim,
+        min_blockdim
     )
     if isnothing(USVT)
         return nothing
@@ -303,7 +303,7 @@ function eigen(
         righttags = nothing,
         plev = nothing,
         leftplev = nothing,
-        rightplev = nothing,
+        rightplev = nothing
     )
     ishermitian = NDTensors.replace_nothing(ishermitian, false)
     tags = NDTensors.replace_nothing(tags, ts"Link,eigen")
@@ -362,7 +362,7 @@ function eigen(
             L_arrow_dir = In
         else
             error(
-                "With auto_fermion enabled, index sets in eigen must have all arrows the same, and opposite between the sets",
+                "With auto_fermion enabled, index sets in eigen must have all arrows the same, and opposite between the sets"
             )
         end
     end
@@ -380,7 +380,8 @@ function eigen(
 
     AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
 
-    DT, VT, spec = eigen(AT; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff)
+    DT, VT, spec =
+        eigen(AT; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff)
     D, VC = itensor(DT), itensor(VT)
 
     V = VC * dag(CR)
@@ -491,7 +492,8 @@ end
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L.
 #
 function qx(
-        qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags = ts"Link,qx", positive = false
+        qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags = ts"Link,qx",
+        positive = false
     )
     # Strip out any extra indices that are not in A.
     # Unit test test/base/test_itensor.jl line 1469 will fail without this.
@@ -539,7 +541,8 @@ end
 #  with swapping the left and right indices.  The X tensor = R or L.
 #
 function xq(
-        qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags = ts"Link,xq", positive = false
+        qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags = ts"Link,xq",
+        positive = false
     )
     Q, X, q = qx(A, Rinds, Linds; positive)
     #
@@ -566,7 +569,13 @@ function polar(A::ITensor, Linds...)
     return Q, P, commoninds(Q, P)
 end
 
-function factorize_qr(A::ITensor, Linds...; ortho = "left", tags = nothing, positive = false)
+function factorize_qr(
+        A::ITensor,
+        Linds...;
+        ortho = "left",
+        tags = nothing,
+        positive = false
+    )
     if ortho == "left"
         L, R, q = qr(A, Linds...; tags, positive)
     elseif ortho == "right"
@@ -608,7 +617,7 @@ function factorize_svd(
         tags = nothing,
         use_absolute_cutoff = nothing,
         use_relative_cutoff = nothing,
-        min_blockdim = nothing,
+        min_blockdim = nothing
     )
     leftdir, rightdir = dir, dir
     if !isnothing(leftdir)
@@ -630,7 +639,7 @@ function factorize_svd(
         righttags = tags,
         use_absolute_cutoff,
         use_relative_cutoff,
-        min_blockdim,
+        min_blockdim
     )
     if isnothing(USV)
         return nothing
@@ -664,7 +673,7 @@ function factorize_eigen(
         cutoff = nothing,
         tags = nothing,
         use_absolute_cutoff = nothing,
-        use_relative_cutoff = nothing,
+        use_relative_cutoff = nothing
     )
     if ortho == "left"
         Lis = commoninds(A, indices(Linds...))
@@ -693,7 +702,7 @@ $ortho not supported. Supported options are left or right.")
         cutoff,
         tags,
         use_absolute_cutoff,
-        use_relative_cutoff,
+        use_relative_cutoff
     )
     D, _, spec = F
     L = F.Vt
@@ -713,39 +722,39 @@ Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`
 
 # Arguments
 
-- `ortho::String = "left"`: Choose orthogonality
-   properties of the factorization.
-    + `"left"`: the left factor `L` is an orthogonal basis
-       such that `L * dag(prime(L, commonind(L,R))) ≈ I`.
-    + `"right"`: the right factor `R` forms an orthogonal basis.
-    + `"none"`, neither of the factors form an orthogonal basis,
+  - `ortho::String = "left"`: Choose orthogonality
+    properties of the factorization.
+      + `"left"`: the left factor `L` is an orthogonal basis
+        such that `L * dag(prime(L, commonind(L,R))) ≈ I`.
+      + `"right"`: the right factor `R` forms an orthogonal basis.
+      + `"none"`, neither of the factors form an orthogonal basis,
         and in general are made as symmetrically as possible
         (depending on the decomposition used).
-- `which_decomp::Union{String, Nothing} = nothing`: choose what kind
-   of decomposition is used.
-    + `nothing`: choose the decomposition automatically based on
-       the other arguments. For example, when `nothing` is chosen and
-       `ortho = "left"` or `"right"`, and a cutoff is provided, `svd` or
-       `eigen` is used depending on the provided cutoff (`eigen` is only
-       used when the cutoff is greater than `1e-12`, since it has a lower
-       precision). When no truncation is requested `qr` is used for dense
-       ITensors and `svd` for block-sparse ITensors (in the future `qr`
-       will be used also for block-sparse ITensors in this case).
-    + `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S`
-       and `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and
-       `R = sqrt.(S) * V` for `ortho = "none"`. To control which `svd`
-       algorithm is choose, use the `svd_alg` keyword argument. See the
-       documentation for `svd` for the supported algorithms, which are the
-       same as those accepted by the `alg` keyword argument.
-    + `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined
-       from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for
-       `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is
-       not supported for `ortho = "none"`.
-    + `"qr"`: `L=Q` and `R` an upper-triangular matrix when
-       `ortho = "left"`, and `R = Q` and `L` a lower-triangular matrix
-       when `ortho = "right"` (currently supported for dense ITensors only).
-      In the future, other decompositions like QR (for block-sparse ITensors),
-      polar, cholesky, LU, etc. are expected to be supported.
+  - `which_decomp::Union{String, Nothing} = nothing`: choose what kind
+    of decomposition is used.
+      + `nothing`: choose the decomposition automatically based on
+        the other arguments. For example, when `nothing` is chosen and
+        `ortho = "left"` or `"right"`, and a cutoff is provided, `svd` or
+        `eigen` is used depending on the provided cutoff (`eigen` is only
+        used when the cutoff is greater than `1e-12`, since it has a lower
+        precision). When no truncation is requested `qr` is used for dense
+        ITensors and `svd` for block-sparse ITensors (in the future `qr`
+        will be used also for block-sparse ITensors in this case).
+      + `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S`
+        and `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and
+        `R = sqrt.(S) * V` for `ortho = "none"`. To control which `svd`
+        algorithm is choose, use the `svd_alg` keyword argument. See the
+        documentation for `svd` for the supported algorithms, which are the
+        same as those accepted by the `alg` keyword argument.
+      + `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined
+        from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for
+        `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is
+        not supported for `ortho = "none"`.
+      + `"qr"`: `L=Q` and `R` an upper-triangular matrix when
+        `ortho = "left"`, and `R = Q` and `L` a lower-triangular matrix
+        when `ortho = "right"` (currently supported for dense ITensors only).
+        In the future, other decompositions like QR (for block-sparse ITensors),
+        polar, cholesky, LU, etc. are expected to be supported.
 
 For truncation arguments, see: [`svd`](@ref)
 """
@@ -767,7 +776,7 @@ function factorize(
         use_relative_cutoff = nothing,
         min_blockdim = nothing,
         (singular_values!) = nothing,
-        dir = nothing,
+        dir = nothing
     )
     @debug_check checkflux(A)
     if !isnothing(eigen_perturbation)
@@ -826,7 +835,7 @@ function factorize(
             singular_values!,
             use_absolute_cutoff,
             use_relative_cutoff,
-            min_blockdim,
+            min_blockdim
         )
         if isnothing(LR)
             return nothing
@@ -843,7 +852,7 @@ function factorize(
             ortho,
             eigen_perturbation,
             use_absolute_cutoff,
-            use_relative_cutoff,
+            use_relative_cutoff
         )
     elseif which_decomp == "qr"
         L, R = factorize_qr(A, Linds...; ortho, tags)

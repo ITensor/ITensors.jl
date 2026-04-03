@@ -1,7 +1,7 @@
 module ITensorsSiteTypesExt
 using ..ITensors: ITensors, Index, LastVal, dag, prime, val
-using NDTensors: NDTensors, dim, sim
 using ..SiteTypes: SiteTypes
+using NDTensors: NDTensors, dim, sim
 SiteTypes.val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 SiteTypes.val(i::Index, l::LastVal) = l.f(dim(i))
 # TODO:
@@ -17,10 +17,10 @@ function ITensors._vals(is::Indices, I::String...)
     return val.(is, I)
 end
 
-using Adapt: Adapt
-using ..ITensors: ITensors, Index, ITensor, ind, inds
-using NDTensors: NDTensors, Tensor
+using ..ITensors: ITensor, ITensors, Index, ind, inds
 using ..SiteTypes: val
+using Adapt: Adapt
+using NDTensors: NDTensors, Tensor
 Base.@propagate_inbounds @inline function ITensors._getindex(
         T::Tensor, ivs::Vararg{Any, N}
     ) where {N}
@@ -58,16 +58,17 @@ Create an ITensor with all zeros except the specified value,
 which is set to 1.
 
 # Examples
+
 ```julia
-i = Index(2,"i")
+i = Index(2, "i")
 A = onehot(i=>2)
 # A[i=>2] == 1, all other elements zero
 
 # Specify the element type
 A = onehot(Float32, i=>2)
 
-j = Index(3,"j")
-B = onehot(i=>1,j=>3)
+j = Index(3, "j")
+B = onehot(i=>1, j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
