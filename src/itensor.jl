@@ -1916,9 +1916,12 @@ diag(T::ITensor) = diag(tensor(T))
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
 dot(A::ITensor, B::ITensor) = (dag(A) * B)[]
+logdot(A::ITensor, B::ITensor) = log(complex(dot(A, B)))
 
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
+loginner(A::ITensor, B::ITensor) = log(complex(inner(A, B)))
+loginner(y::ITensor, A::ITensor, x::ITensor) = log(complex(inner(y, A, x)))
 
 #
 # In-place operations
