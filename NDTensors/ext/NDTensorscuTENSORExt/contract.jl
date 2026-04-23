@@ -18,7 +18,7 @@ function block_extents(ind)
 end
 
 #### Functions to turn Tensors into BlockSparseCuTensors for contraction
-function ITensor_to_cuTensorBS(T::BlockSparseTensor)
+function to_cuTensorBS(T::BlockSparseTensor)
     blocks_t1 = []
     # T = tensor(target)
     for blockT in eachnzblock(T)
