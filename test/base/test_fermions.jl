@@ -2,6 +2,7 @@
 import ITensors: In, Out
 using ITensors
 using ITensors.SiteTypes: op, siteind, siteinds
+using StableRNGs: StableRNG
 using Test
 
 @testset "Fermions" begin
@@ -815,7 +816,8 @@ using Test
         ) > 1
 
         # Test a different, random tensor
-        T = random_itensor(s[1]', dag(s[1]))
+        rng = StableRNG(1234)
+        T = random_itensor(rng, s[1]', dag(s[1]))
         T = 1 / 2 * (T + swapprime(dag(T), 0 => 1))
         t = 0.01
         eT = exp(t * T)
@@ -830,7 +832,8 @@ using Test
         id_tensor = op("I", j1) * op("I", j2)
         @test id_tensor ≈ exp(0.0 * id_tensor)
 
-        T = random_itensor(j1', dag(j1))
+        rng = StableRNG(5678)
+        T = random_itensor(rng, j1', dag(j1))
         T = 1 / 2 * (T + swapprime(dag(T), 0 => 1))
         t = 0.01
         eT = exp(t * T)
