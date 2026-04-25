@@ -790,8 +790,6 @@ using Test
     end
 
     @testset "Fermion exp Tests" begin
-        rng = StableRNG(1234)
-
         s = siteinds("Fermion", 2; conserve_qns = true)
 
         # Matrix test
@@ -818,6 +816,7 @@ using Test
         ) > 1
 
         # Test a different, random tensor
+        rng = StableRNG(1234)
         T = random_itensor(rng, s[1]', dag(s[1]))
         T = 1 / 2 * (T + swapprime(dag(T), 0 => 1))
         t = 0.01
@@ -833,6 +832,7 @@ using Test
         id_tensor = op("I", j1) * op("I", j2)
         @test id_tensor ≈ exp(0.0 * id_tensor)
 
+        rng = StableRNG(5678)
         T = random_itensor(rng, j1', dag(j1))
         T = 1 / 2 * (T + swapprime(dag(T), 0 => 1))
         t = 0.01
