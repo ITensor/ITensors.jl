@@ -221,6 +221,41 @@ function disable_auto_fermion()
     return nothing
 end
 
+"""
+    NDTensors.with_auto_fermion(f, enable::Bool = true)
+
+Run `f` with the auto-fermion system enabled or disabled (enabled by default),
+restoring the previous state of the auto-fermion system after `f` finishes.
+
+This is the preferred way to temporarily enable or disable the auto-fermion
+system for a code block, because the previous state is restored even if `f`
+throws an exception (unlike a manual call to [`enable_auto_fermion`](@ref) or
+[`disable_auto_fermion`](@ref)).
+
+# Examples
+
+```julia
+using NDTensors: NDTensors
+
+NDTensors.with_auto_fermion() do
+    # code that requires the auto-fermion system to be enabled
+end
+
+NDTensors.with_auto_fermion(false) do
+    # code that requires the auto-fermion system to be disabled
+end
+```
+"""
+function with_auto_fermion(f, enable::Bool = true)
+    previous = using_auto_fermion()
+    enable ? enable_auto_fermion() : disable_auto_fermion()
+    return try
+        f()
+    finally
+        previous ? enable_auto_fermion() : disable_auto_fermion()
+    end
+end
+
 #####################################
 # Optional backends
 #
