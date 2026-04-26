@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, set_ndims, similartype
+using TypeParameterAccessors: TypeParameterAccessors, set_ndims, similartype
 
 # NDTensors.similar
 similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(data(storage)))
@@ -71,7 +71,7 @@ function TypeParameterAccessors.similartype(
     # return set_datatype(storagetype, NDTensors.similartype(datatype(storagetype), eltype))
     return set_datatype(
         storagetype,
-        set_ndims(similartype(datatype(storagetype), eltype), 1)
+        set_ndims(array_similartype(datatype(storagetype), eltype), 1)
     )
 end
 
@@ -80,7 +80,7 @@ function TypeParameterAccessors.similartype(storagetype::Type{<:TensorStorage}, 
     # more general data types beyond `AbstractVector` are supported.
     # `similartype` unwraps any wrapped data.
     return set_ndims(
-        set_datatype(storagetype, set_ndims(similartype(datatype(storagetype)), 1)),
+        set_datatype(storagetype, set_ndims(array_similartype(datatype(storagetype)), 1)),
         length(dims)
     )
 end

@@ -1,5 +1,5 @@
-using .Vendored.TypeParameterAccessors: specify_default_type_parameters,
-    specify_type_parameters, type_parameters, unwrap_array_type
+using TypeParameterAccessors: specify_default_type_parameters, specify_type_parameters,
+    type_parameters, unwrap_array_type
 
 # Convert to Array, avoiding copying if possible
 array(a::AbstractArray) = a

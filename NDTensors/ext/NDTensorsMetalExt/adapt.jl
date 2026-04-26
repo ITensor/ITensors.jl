@@ -4,8 +4,8 @@ using Metal: DefaultStorageMode, MtlArray, MtlVector
 using NDTensors.Expose: Exposed
 using NDTensors.GPUArraysCoreExtensions: GPUArraysCoreExtensions
 using NDTensors.MetalExtensions: MetalExtensions, MtlArrayAdaptor
-using NDTensors.Vendored.TypeParameterAccessors: set_type_parameters, type_parameters
 using NDTensors: NDTensors, EmptyStorage, adapt_storagetype, emptytype
+using TypeParameterAccessors: set_type_parameters, type_parameters
 
 GPUArraysCoreExtensions.cpu(e::Exposed{<:MtlArray}) = adapt(Array, e)
 

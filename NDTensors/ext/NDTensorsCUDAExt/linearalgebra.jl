@@ -3,8 +3,8 @@ using CUDA: CUDA, CuMatrix
 using LinearAlgebra: Adjoint, svd
 using NDTensors.Expose: Expose, expose, ql, ql_positive
 using NDTensors.GPUArraysCoreExtensions: cpu
-using NDTensors.Vendored.TypeParameterAccessors: unwrap_array_type
 using NDTensors: NDTensors
+using TypeParameterAccessors: unwrap_array_type
 function NDTensors.svd_catch_error(A::CuMatrix; alg::String = "jacobi_algorithm")
     if alg == "jacobi_algorithm"
         alg = CUDA.CUSOLVER.JacobiAlgorithm()

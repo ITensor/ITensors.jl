@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors
+using TypeParameterAccessors: TypeParameterAccessors
 
 """
 # Do we still want to define things like this?

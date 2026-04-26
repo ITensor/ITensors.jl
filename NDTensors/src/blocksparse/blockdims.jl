@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors
+using TypeParameterAccessors: TypeParameterAccessors
 
 """
     BlockDim
