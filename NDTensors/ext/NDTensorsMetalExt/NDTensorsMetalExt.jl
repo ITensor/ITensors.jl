@@ -1,14 +1,5 @@
 module NDTensorsMetalExt
 
-module Vendored
-    include(
-        joinpath(
-            "..", "..", "src", "vendored", "TypeParameterAccessors", "ext",
-            "TypeParameterAccessorsMetalExt.jl"
-        )
-    )
-end
-
 include("adapt.jl")
 include("set_types.jl")
 include("indexing.jl")

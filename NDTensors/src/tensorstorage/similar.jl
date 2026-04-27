@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, set_ndims, similartype
+using TypeParameterAccessors: TypeParameterAccessors, set_ndims, similartype
 
 # NDTensors.similar
 similar(storage::TensorStorage) = setdata(storage, NDTensors.similar(data(storage)))
@@ -71,7 +71,7 @@ function TypeParameterAccessors.similartype(
     # return set_datatype(storagetype, NDTensors.similartype(datatype(storagetype), eltype))
     return set_datatype(
         storagetype,
-        set_ndims(similartype(datatype(storagetype), eltype), 1)
+        set_ndims(recursive_similartype(datatype(storagetype), eltype), 1)
     )
 end
 
@@ -80,7 +80,19 @@ function TypeParameterAccessors.similartype(storagetype::Type{<:TensorStorage}, 
     # more general data types beyond `AbstractVector` are supported.
     # `similartype` unwraps any wrapped data.
     return set_ndims(
-        set_datatype(storagetype, set_ndims(similartype(datatype(storagetype)), 1)),
+        set_datatype(
+            storagetype,
+            set_ndims(recursive_similartype(datatype(storagetype)), 1)
+        ),
         length(dims)
     )
 end
+
+# `TensorStorage <: AbstractVector` has `parenttype = datatype`, so the
+# trait-based fallbacks in `abstractarray/similar.jl` would treat
+# `Type{<:TensorStorage}` as a wrapped array and unwrap to the underlying
+# `Array`. Delegate to `TypeParameterAccessors.similartype`, which has the
+# overloads above for the cases NDTensors actually invokes.
+recursive_similartype(t::Type{<:TensorStorage}) = similartype(t)
+recursive_similartype(t::Type{<:TensorStorage}, eltype::Type) = similartype(t, eltype)
+recursive_similartype(t::Type{<:TensorStorage}, dims::Tuple) = similartype(t, dims)

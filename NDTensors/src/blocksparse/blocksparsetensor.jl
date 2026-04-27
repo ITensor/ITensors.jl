@@ -1,5 +1,5 @@
-using .Vendored.TypeParameterAccessors: similartype
 using SparseArrays: nnz
+using TypeParameterAccessors: similartype
 
 #
 # BlockSparseTensor (Tensor using BlockSparse storage)
@@ -263,7 +263,7 @@ end
 # Returns the offset of the new block added.
 # XXX rename to insertblock!, no need to return offset
 using .Expose: Exposed, expose, unexpose
-using .Vendored.TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 function insertblock_offset!(
         T::BlockSparseTensor{ElT, N},
         newblock::Block{N}
@@ -830,7 +830,7 @@ end
 # <fermions>
 permfactor(perm, block, inds) = 1
 
-using .Vendored.TypeParameterAccessors: parenttype, set_type_parameters
+using TypeParameterAccessors: parenttype, set_type_parameters
 function permutedims!(
         R::BlockSparseTensor{<:Number, N},
         T::BlockSparseTensor{<:Number, N},

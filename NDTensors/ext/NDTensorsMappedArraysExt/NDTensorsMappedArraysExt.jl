@@ -12,6 +12,20 @@ function NDTensors.similartype(
     )
     return Array{eltype(storagetype), length(dims)}
 end
+# Mirror the `similartype` overloads above on `recursive_similartype` (the
+# wrapper-aware NDTensors-internal helper). NDTensors's call sites that recurse
+# into a generic `AbstractArray` dispatch through `recursive_similartype`, so the
+# MappedArrays carve-out only applies to those sites if it is also exposed
+# there.
+function NDTensors.recursive_similartype(arraytype::Type{<:AbstractMappedArray})
+    return Array{eltype(arraytype), ndims(arraytype)}
+end
+function NDTensors.recursive_similartype(
+        arraytype::Type{<:AbstractMappedArray},
+        dims::Tuple
+    )
+    return Array{eltype(arraytype), length(dims)}
+end
 
 using MappedArrays: ReadonlyMappedArray
 using NDTensors: AllowAlias

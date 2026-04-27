@@ -119,7 +119,7 @@ function dense(
     return Tensor{ElT, N, dense(StoreT), IndsT}
 end
 
-using .Vendored.TypeParameterAccessors: unwrap_array_type
+using TypeParameterAccessors: unwrap_array_type
 # convert to Dense
 function dense(T::DiagTensor)
     R = zeros(dense(typeof(T)), inds(T))

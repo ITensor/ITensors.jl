@@ -1,4 +1,4 @@
-using .Vendored.TypeParameterAccessors: TypeParameterAccessors, set_indstype, similartype
+using TypeParameterAccessors: TypeParameterAccessors, similartype
 
 # NDTensors.similar
 similar(tensor::Tensor) = setstorage(tensor, similar(storage(tensor)))
@@ -63,9 +63,32 @@ function TypeParameterAccessors.similartype(tensortype::Type{<:Tensor}, eltype::
 end
 
 function TypeParameterAccessors.similartype(tensortype::Type{<:Tensor}, dims::Tuple)
-    tensortype_new_inds = set_indstype(tensortype, dims)
+    tensortype_new_inds = Tensor{
+        eltype(tensortype), length(dims), storagetype(tensortype), typeof(dims),
+    }
     # Need to pass `dims` in case that information is needed to make a storage type,
     # for example `BlockSparse` needs the number of dimensions.
     storagetype_new_inds = similartype(storagetype(tensortype_new_inds), dims)
     return set_storagetype(tensortype_new_inds, storagetype_new_inds)
+end
+
+# 3-arg form: compose the eltype-only and dims-only overloads above. Used by
+# `similar(::Type{<:AbstractArray}, ::Type, ::Tuple)` (the fallback for
+# `Type{<:Tensor}` cases like `_fill!!(::EmptyTensor, ...)`).
+function TypeParameterAccessors.similartype(
+        tensortype::Type{<:Tensor}, eltype::Type, dims::Tuple
+    )
+    return similartype(similartype(tensortype, eltype), dims)
+end
+
+# `Tensor` has `parenttype = TensorStorage`, which classifies it as a wrapped
+# array under `IsWrappedArray`. The trait-based fallbacks in
+# `abstractarray/similar.jl` would therefore unwrap a `Type{<:Tensor}` down to
+# the underlying `Array`. Delegate to `TypeParameterAccessors.similartype`,
+# which has the overloads above.
+recursive_similartype(t::Type{<:Tensor}) = similartype(t)
+recursive_similartype(t::Type{<:Tensor}, eltype::Type) = similartype(t, eltype)
+recursive_similartype(t::Type{<:Tensor}, dims::Tuple) = similartype(t, dims)
+function recursive_similartype(t::Type{<:Tensor}, eltype::Type, dims::Tuple)
+    return similartype(t, eltype, dims)
 end
