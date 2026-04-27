@@ -71,3 +71,24 @@ function TypeParameterAccessors.similartype(tensortype::Type{<:Tensor}, dims::Tu
     storagetype_new_inds = similartype(storagetype(tensortype_new_inds), dims)
     return set_storagetype(tensortype_new_inds, storagetype_new_inds)
 end
+
+# 3-arg form: compose the eltype-only and dims-only overloads above. Used by
+# `similar(::Type{<:AbstractArray}, ::Type, ::Tuple)` (the fallback for
+# `Type{<:Tensor}` cases like `_fill!!(::EmptyTensor, ...)`).
+function TypeParameterAccessors.similartype(
+        tensortype::Type{<:Tensor}, eltype::Type, dims::Tuple
+    )
+    return similartype(similartype(tensortype, eltype), dims)
+end
+
+# `Tensor` has `parenttype = TensorStorage`, which classifies it as a wrapped
+# array under `IsWrappedArray`. The trait-based fallbacks in
+# `abstractarray/similar.jl` would therefore unwrap a `Type{<:Tensor}` down to
+# the underlying `Array`. Delegate to `TypeParameterAccessors.similartype`,
+# which has the overloads above.
+array_similartype(t::Type{<:Tensor}) = similartype(t)
+array_similartype(t::Type{<:Tensor}, eltype::Type) = similartype(t, eltype)
+array_similartype(t::Type{<:Tensor}, dims::Tuple) = similartype(t, dims)
+function array_similartype(t::Type{<:Tensor}, eltype::Type, dims::Tuple)
+    return similartype(t, eltype, dims)
+end

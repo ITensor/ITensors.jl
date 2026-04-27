@@ -84,3 +84,12 @@ function TypeParameterAccessors.similartype(storagetype::Type{<:TensorStorage}, 
         length(dims)
     )
 end
+
+# `TensorStorage <: AbstractVector` has `parenttype = datatype`, so the
+# trait-based fallbacks in `abstractarray/similar.jl` would treat
+# `Type{<:TensorStorage}` as a wrapped array and unwrap to the underlying
+# `Array`. Delegate to `TypeParameterAccessors.similartype`, which has the
+# overloads above for the cases NDTensors actually invokes.
+array_similartype(t::Type{<:TensorStorage}) = similartype(t)
+array_similartype(t::Type{<:TensorStorage}, eltype::Type) = similartype(t, eltype)
+array_similartype(t::Type{<:TensorStorage}, dims::Tuple) = similartype(t, dims)
