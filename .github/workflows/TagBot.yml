@@ -4,6 +4,8 @@ on:
     types:
       - "created"
   workflow_dispatch: ~
+env:
+  REGISTRY_TAGBOT_ACTION: "JuliaRegistries/TagBot"
 jobs:
   TagBot:
     if: "github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'"
