@@ -86,9 +86,9 @@ end
 # `abstractarray/similar.jl` would therefore unwrap a `Type{<:Tensor}` down to
 # the underlying `Array`. Delegate to `TypeParameterAccessors.similartype`,
 # which has the overloads above.
-array_similartype(t::Type{<:Tensor}) = similartype(t)
-array_similartype(t::Type{<:Tensor}, eltype::Type) = similartype(t, eltype)
-array_similartype(t::Type{<:Tensor}, dims::Tuple) = similartype(t, dims)
-function array_similartype(t::Type{<:Tensor}, eltype::Type, dims::Tuple)
+recursive_similartype(t::Type{<:Tensor}) = similartype(t)
+recursive_similartype(t::Type{<:Tensor}, eltype::Type) = similartype(t, eltype)
+recursive_similartype(t::Type{<:Tensor}, dims::Tuple) = similartype(t, dims)
+function recursive_similartype(t::Type{<:Tensor}, eltype::Type, dims::Tuple)
     return similartype(t, eltype, dims)
 end

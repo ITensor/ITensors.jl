@@ -133,7 +133,7 @@ function promote_rule(
     ) where {ElT1, DataT1, ElT2, DataT2}
     ElR = promote_type(ElT1, ElT2)
     VecR = promote_type(unwrap_array_type(DataT1), unwrap_array_type(DataT2))
-    VecR = array_similartype(VecR, ElR)
+    VecR = recursive_similartype(VecR, ElR)
     return Dense{ElR, VecR}
 end
 

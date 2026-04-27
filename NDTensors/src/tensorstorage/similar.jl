@@ -71,7 +71,7 @@ function TypeParameterAccessors.similartype(
     # return set_datatype(storagetype, NDTensors.similartype(datatype(storagetype), eltype))
     return set_datatype(
         storagetype,
-        set_ndims(array_similartype(datatype(storagetype), eltype), 1)
+        set_ndims(recursive_similartype(datatype(storagetype), eltype), 1)
     )
 end
 
@@ -80,7 +80,10 @@ function TypeParameterAccessors.similartype(storagetype::Type{<:TensorStorage}, 
     # more general data types beyond `AbstractVector` are supported.
     # `similartype` unwraps any wrapped data.
     return set_ndims(
-        set_datatype(storagetype, set_ndims(array_similartype(datatype(storagetype)), 1)),
+        set_datatype(
+            storagetype,
+            set_ndims(recursive_similartype(datatype(storagetype)), 1)
+        ),
         length(dims)
     )
 end
@@ -90,6 +93,6 @@ end
 # `Type{<:TensorStorage}` as a wrapped array and unwrap to the underlying
 # `Array`. Delegate to `TypeParameterAccessors.similartype`, which has the
 # overloads above for the cases NDTensors actually invokes.
-array_similartype(t::Type{<:TensorStorage}) = similartype(t)
-array_similartype(t::Type{<:TensorStorage}, eltype::Type) = similartype(t, eltype)
-array_similartype(t::Type{<:TensorStorage}, dims::Tuple) = similartype(t, dims)
+recursive_similartype(t::Type{<:TensorStorage}) = similartype(t)
+recursive_similartype(t::Type{<:TensorStorage}, eltype::Type) = similartype(t, eltype)
+recursive_similartype(t::Type{<:TensorStorage}, dims::Tuple) = similartype(t, dims)
