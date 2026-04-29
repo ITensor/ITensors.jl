@@ -614,21 +614,12 @@ function contraction_output(
         labelsR
     )
     R = zeros(TensorR, blockoffsetsR, indsR)
-    return R, contraction_plan
+    return TensorAndContractionPlan(R, contraction_plan)
 end
 
-function contract(
-        T1::BlockSparseTensor,
-        labelsT1,
-        T2::DiagBlockSparseTensor,
-        labelsT2,
-        labelsR = contract_labels(labelsT1, labelsT2)
-    )
-    R, contraction_plan = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
-    R = contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
-    return R
-end
-
+# DiagBlockSparse × BlockSparse: swap to the BlockSparse × DiagBlockSparse
+# form. (No 5-arg `contraction_output(::DiagBS, ::BS, ...)` is defined, so
+# this also short-circuits dispatch back through the generic `contract`.)
 function contract(
         T1::DiagBlockSparseTensor,
         labelsT1,
@@ -640,14 +631,18 @@ function contract(
 end
 
 function contract!(
-        R::BlockSparseTensor{ElR, NR},
+        ::NativeContract,
+        dest::TensorAndContractionPlan{T},
         labelsR,
         T1::BlockSparseTensor,
         labelsT1,
         T2::DiagBlockSparseTensor,
-        labelsT2,
-        contraction_plan
-    ) where {ElR <: Number, NR}
+        labelsT2
+    ) where {T <: BlockSparseTensor{<:Number}}
+    R = dest.tensor
+    contraction_plan = dest.contraction_plan
+    ElR = eltype(R)
+    NR = ndims(R)
     if any(b -> !allequal(Tuple(b)), nzblocks(T2))
         return error(
             "When contracting a BlockSparse tensor with a DiagBlockSparse tensor, the DiagBlockSparse tensor must be block diagonal for the time being."
@@ -677,22 +672,24 @@ function contract!(
             β = zero(ElR)
         end
         contract!(
-            expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2,
-            α, β
+            Rblock, labelsR, T1block, labelsT1, T2block, labelsT2, α, β
         )
     end
     return R
 end
 
 function contract!(
+        ::NativeContract,
         C::BlockSparseTensor,
         Clabels,
         A::BlockSparseTensor,
         Alabels,
         B::DiagBlockSparseTensor,
-        Blabels
+        Blabels,
+        α::Number = one(eltype(C)),
+        β::Number = zero(eltype(C))
     )
-    return contract!(C, Clabels, B, Blabels, A, Alabels)
+    return contract!(NativeContract(), C, Clabels, B, Blabels, A, Alabels, α, β)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", T::DiagBlockSparseTensor)

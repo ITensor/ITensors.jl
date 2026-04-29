@@ -34,7 +34,7 @@ end
 # A generic version making use of `Folds.jl` which
 # can take various Executor backends.
 # Used for sequential and threaded contract functions.
-function contract!(
+function contract_blocksparse_with_executor!(
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
@@ -42,7 +42,9 @@ function contract!(
         tensor2::BlockSparseTensor,
         labelstensor2,
         contraction_plan,
-        executor
+        executor,
+        α::Number = one(eltype(R)),
+        β::Number = zero(eltype(R))
     )
     # Group the contraction plan by the output block,
     # since the sets of contractions into the same block
@@ -58,24 +60,16 @@ function contract!(
     for block_contraction in contraction_plan
         push!(grouped_contraction_plan[last(block_contraction)], block_contraction)
     end
-    _contract!(
-        R,
-        labelsR,
-        tensor1,
-        labelstensor1,
-        tensor2,
-        labelstensor2,
-        grouped_contraction_plan,
-        executor
+    _contract_blocksparse_grouped!(
+        R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2,
+        grouped_contraction_plan, executor, α, β
     )
     return R
 end
-
-using .Expose: expose
 # Function barrier to improve type stability,
 # since `Folds`/`FLoops` is not type stable:
 # https://discourse.julialang.org/t/type-instability-in-floop-reduction/68598
-function _contract!(
+function _contract_blocksparse_grouped!(
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
@@ -83,17 +77,24 @@ function _contract!(
         tensor2::BlockSparseTensor,
         labelstensor2,
         grouped_contraction_plan,
-        executor
+        executor,
+        α::Number = one(eltype(R)),
+        β::Number = zero(eltype(R))
     )
     Folds.foreach(grouped_contraction_plan.values, executor) do contraction_plan_group
-        # Start by overwriting the block:
-        # R .= α .* (tensor1 * tensor2)
-        β = zero(eltype(R))
+        # On the first write to each output block, scale the existing R
+        # contribution by the outer β (so `R = α * (T1 * T2) + β * R`);
+        # subsequent contributions to the same output block accumulate
+        # (β = 1).
+        β_block = β
         for block_contraction in contraction_plan_group
             blocktensor1, blocktensor2, blockR = block_contraction
 
-            # <fermions>:
-            α = compute_alpha(
+            # <fermions>: per-block fermion sign, multiplied into the
+            # outer `α` so the inner per-block contract scales the
+            # contribution by `α * fermion_sign`.
+            α_block =
+                α * compute_alpha(
                 eltype(R),
                 labelsR,
                 blockR,
@@ -107,22 +108,19 @@ function _contract!(
             )
 
             contract!(
-                expose(R[blockR]),
+                R[blockR],
                 labelsR,
-                expose(tensor1[blocktensor1]),
+                tensor1[blocktensor1],
                 labelstensor1,
-                expose(tensor2[blocktensor2]),
+                tensor2[blocktensor2],
                 labelstensor2,
-                α,
-                β
+                α_block,
+                β_block
             )
 
-            if iszero(β)
-                # After the block has been overwritten,
-                # add into it:
-                # R .= α .* (tensor1 * tensor2) .+ β .* R
-                β = one(eltype(R))
-            end
+            # After the first contribution lands in this output block,
+            # subsequent contributions accumulate.
+            β_block = one(eltype(R))
         end
     end
     return nothing

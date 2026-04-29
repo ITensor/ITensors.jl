@@ -1,13 +1,26 @@
-function contract!(
-        ::Val{:TBLIS},
+# Loading `TBLIS.jl` activates this `is_applicable` overload, which
+# is what gates `with_tblis` scopes from picking `TBLIS()` for inputs
+# the impl can't actually handle. Without the extension loaded, the
+# baseline `is_applicable(::TBLIS, ::Type, ::Type) = false` in
+# NDTensors core keeps `with_tblis` scopes inert.
+function NDTensors.is_applicable(
+        ::NDTensors.TBLIS,
+        T1::Type{<:DenseTensor{<:LinearAlgebra.BlasReal}},
+        T2::Type{<:DenseTensor{<:LinearAlgebra.BlasReal}}
+    )
+    return eltype(T1) === eltype(T2)
+end
+
+function NDTensors.contract!(
+        ::NDTensors.TBLIS,
         R::DenseTensor{ElT},
         labelsR,
         T1::DenseTensor{ElT},
         labelsT1,
         T2::DenseTensor{ElT},
         labelsT2,
-        α::ElT,
-        β::ElT
+        α::Number = one(ElT),
+        β::Number = zero(ElT)
     ) where {ElT <: LinearAlgebra.BlasReal}
     # TBLIS Tensors
     R_tblis = TBLIS.TTensor{ElT}(array(R), β)

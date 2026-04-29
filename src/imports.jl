@@ -18,11 +18,10 @@ import ITensors.NDTensors: # Deprecated
     Strided, # to control threading
     # Types
     AliasStyle, AllowAlias, NeverAlias, array, blockdim, blockoffsets, contract, datatype,
-    dense, denseblocks, diaglength, dim, dims, disable_tblis, eachnzblock, enable_tblis,
-    ind, inds, insert_diag_blocks!, insertblock!, matrix, maxdim, mindim, nblocks, nnz,
-    nnzblocks, nzblock, nzblocks, one, outer, permuteblocks, polar, ql, scale!, setblock!,
-    setblockdim!, setinds, setstorage, sim, storage, storagetype, store, sum, tensor,
-    truncate!, using_tblis, vector
+    dense, denseblocks, diaglength, dim, dims, eachnzblock, ind, inds, insert_diag_blocks!,
+    insertblock!, matrix, maxdim, mindim, nblocks, nnz, nnzblocks, nzblock, nzblocks, one,
+    outer, permuteblocks, polar, ql, scale!, setblock!, setblockdim!, setinds, setstorage,
+    sim, storage, storagetype, store, sum, tensor, truncate!, vector
 import ITensors.Ops: Prod, Sum, terms
 import LinearAlgebra: axpby!, axpy!, diag, dot, eigen, exp, factorize, ishermitian, lmul!,
     lq, mul!, norm, normalize, normalize!, nullspace, qr, rmul!, svd, tr, transpose
