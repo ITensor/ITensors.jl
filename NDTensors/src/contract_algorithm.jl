@@ -1,4 +1,4 @@
-using Base.ScopedValues: @with, ScopedValue
+using ScopedValues: @with, ScopedValue
 
 # The shape of this scaffold borrows from two prior-art conceptual
 # patterns in the Julia tensor / linear-algebra ecosystem:
