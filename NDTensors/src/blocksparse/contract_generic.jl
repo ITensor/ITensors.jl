@@ -35,6 +35,7 @@ end
 # can take various Executor backends.
 # Used for sequential and threaded contract functions.
 function contract_blocksparse_with_executor!(
+        inner::ContractAlgorithm,
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
@@ -61,6 +62,7 @@ function contract_blocksparse_with_executor!(
         push!(grouped_contraction_plan[last(block_contraction)], block_contraction)
     end
     _contract_blocksparse_grouped!(
+        inner,
         R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2,
         grouped_contraction_plan, executor, α, β
     )
@@ -70,6 +72,7 @@ end
 # since `Folds`/`FLoops` is not type stable:
 # https://discourse.julialang.org/t/type-instability-in-floop-reduction/68598
 function _contract_blocksparse_grouped!(
+        inner::ContractAlgorithm,
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
@@ -107,7 +110,10 @@ function _contract_blocksparse_grouped!(
                 inds(tensor2)
             )
 
+            # Per-block dispatch goes through `inner`, the wrapped
+            # per-block algorithm of the outer `BlockSparseContract`.
             contract!(
+                inner,
                 R[blockR],
                 labelsR,
                 tensor1[blocktensor1],

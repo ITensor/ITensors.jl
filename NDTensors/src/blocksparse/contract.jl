@@ -41,8 +41,41 @@ function contract_blockoffsets(
     )
 end
 
-function contract!(
+# `BlockSparseContract` orchestrates the block-pair iteration; per-block
+# dense contractions are delegated to `bsc.inner`. Native default for
+# `BlockSparseTensor × BlockSparseTensor`.
+function is_applicable(
+        ::BlockSparseContract,
+        ::Type{<:BlockSparseTensor},
+        ::Type{<:BlockSparseTensor}
+    )
+    return true
+end
+
+function default_contract_algorithm(
+        ::Type{<:BlockSparseTensor},
+        ::Type{<:BlockSparseTensor}
+    )
+    return BlockSparseContract()
+end
+
+# `NativeContract` is the per-leaf algorithm in this scaffold; it no
+# longer carries the BS orchestration. A `with_contract_algorithm(
+# NativeContract())` scope on a BS×BS pair therefore falls through to
+# `default_contract_algorithm` (i.e. `BlockSparseContract(NativeContract())`)
+# rather than picking `NativeContract()` directly and hitting a method
+# error for the absent `contract!(::NativeContract, ::BlockSparseTensor,
+# ...)`.
+function is_applicable(
         ::NativeContract,
+        ::Type{<:BlockSparseTensor},
+        ::Type{<:BlockSparseTensor}
+    )
+    return false
+end
+
+function contract!(
+        bsc::BlockSparseContract,
         dest::TensorAndContractionPlan{T},
         labelsR,
         tensor1::BlockSparseTensor,
@@ -57,11 +90,13 @@ function contract!(
     isempty(contraction_plan) && return R
     if using_threaded_blocksparse() && nthreads() > 1
         return contract_blocksparse_threaded_folds!(
+            bsc.inner,
             R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan,
             α, β
         )::T
     end
     return contract_blocksparse_sequential!(
+        bsc.inner,
         R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan,
         α, β
     )::T
@@ -73,7 +108,7 @@ end
 # blocks against `R`'s indices, then delegate to the
 # `TensorAndContractionPlan`-keyed method above.
 function contract!(
-        ::NativeContract,
+        bsc::BlockSparseContract,
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
@@ -89,7 +124,7 @@ function contract!(
         inds(R), labelsR
     )
     return contract!(
-        NativeContract(),
+        bsc,
         TensorAndContractionPlan(R, contraction_plan),
         labelsR, tensor1, labelstensor1, tensor2, labelstensor2,
         α, β

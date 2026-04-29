@@ -50,11 +50,43 @@ struct DefaultContract <: ContractAlgorithm end
 """
     NativeContract <: ContractAlgorithm
 
-Tag for the native NDTensors contract path. `contract!` methods
-dispatched on `::NativeContract` carry the existing per-tensor-type
-implementations (block-sparse loop, dense GEMM, diag, ...).
+Tag for the native NDTensors per-leaf contract path. `contract!`
+methods dispatched on `::NativeContract` carry the existing NDTensors
+implementations for the leaf cases (dense GEMM, diag, ...). For
+block-sparse × block-sparse contractions the orchestration is factored
+onto [`BlockSparseContract`](@ref); `NativeContract` is the default
+*per-block* algorithm there.
 """
 struct NativeContract <: ContractAlgorithm end
+
+"""
+    BlockSparseContract{Inner <: ContractAlgorithm}(inner = NativeContract()) <: ContractAlgorithm
+
+Tag for a block-sparse contraction whose orchestration (block-pair plan
+iteration, output-block routing, α/β bookkeeping, threading) is
+provided by NDTensors and whose per-block dense contraction is
+delegated to `inner`.
+
+`BlockSparseContract(NativeContract())` is the default for
+`BlockSparseTensor × BlockSparseTensor` — native block-walking with
+NDTensors' per-block dense kernel. To swap the per-block engine without
+changing the orchestration, wrap a different algorithm:
+
+```julia
+with_contract_algorithm(BlockSparseContract(SomeDenseAlg())) do
+    return A * B    # block-sparse, but each block contraction goes through SomeDenseAlg
+end
+```
+
+Algorithms whose external library handles the entire block-sparse
+contraction in one call (rather than walking blocks themselves) are
+not `BlockSparseContract` instances — they are their own concrete
+`ContractAlgorithm` subtypes.
+"""
+struct BlockSparseContract{Inner <: ContractAlgorithm} <: ContractAlgorithm
+    inner::Inner
+end
+BlockSparseContract() = BlockSparseContract(NativeContract())
 
 """
     CURRENT_CONTRACT_ALGORITHM::ScopedValue{ContractAlgorithm}
@@ -133,6 +165,11 @@ default and skip the per-algorithm reject overload.
 is_applicable(alg::ContractAlgorithm, t1, t2) =
     is_applicable(alg, typeof(t1), typeof(t2))
 is_applicable(::ContractAlgorithm, ::Type, ::Type) = true
+
+# `BlockSparseContract` only ever applies to a block-sparse × block-sparse
+# pair. The positive overload for that pair is registered alongside the
+# block-sparse `contract!` methods.
+is_applicable(::BlockSparseContract, ::Type, ::Type) = false
 
 """
     default_contract_algorithm(t1, t2) -> ContractAlgorithm

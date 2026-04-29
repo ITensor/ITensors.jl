@@ -41,6 +41,7 @@ function contract_blockoffsets(
 end
 
 function contract_blocksparse_sequential!(
+        inner::ContractAlgorithm,
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
@@ -53,6 +54,7 @@ function contract_blocksparse_sequential!(
     )
     executor = SequentialEx()
     return contract_blocksparse_with_executor!(
+        inner,
         R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan,
         executor, α, β
     )
