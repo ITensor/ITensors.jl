@@ -2,7 +2,7 @@ using Adapt: adapt
 using GPUArraysCore: AbstractGPUArray
 using NDTensors: NDTensors, Dense, DenseTensor, Diag, DiagTensor, NativeContract, Tensor,
     contract!, dense, inds
-using TypeParameterAccessors: parenttype, set_ndims
+using TypeParameterAccessors: set_ndims, unwrap_array_type
 
 # GPU dispatch for `Diag × Dense` (and `Dense × Diag`) shapes routed
 # through `NativeContract`. Without these overrides, the inner CPU body
@@ -70,7 +70,7 @@ function NDTensors.contract!(
     )
     # TODO: this allocates on CPU first then moves to GPU; could be
     # optimized by allocating directly on the device.
-    tensor1 = adapt(set_ndims(parenttype(typeof(tensor2)), 1), dense(tensor1))
+    tensor1 = adapt(set_ndims(unwrap_array_type(tensor2), 1), dense(tensor1))
     contract!(
         NativeContract(),
         output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2,
