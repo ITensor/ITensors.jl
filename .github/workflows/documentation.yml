@@ -3,15 +3,15 @@ on:
   push:
     branches:
       - "main"
-    tags: "*"
+    tags: ["v*"]
   pull_request:
     branches:
       - "main"
-    tags: "*"
+    tags: ["v*"]
   workflow_dispatch:
     branches:
       - "main"
-    tags: "*"
+    tags: ["v*"]
 jobs:
   build:
     runs-on: "ubuntu-latest"
