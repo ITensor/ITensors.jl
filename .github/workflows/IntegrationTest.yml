@@ -12,7 +12,9 @@ on:
       - "converted_to_draft"
 jobs:
   integration-test:
-    name: "IntegrationTest"
+    name: "${{ matrix.pkg }}"
+    if: "!github.event.pull_request.draft"
+    runs-on: "ubuntu-latest"
     strategy:
       fail-fast: false
       matrix:
@@ -23,11 +25,62 @@ jobs:
           - "ITensorUnicodePlots"
           - "ITensorVisualizationBase"
           - "https://github.com/ITensor/Tennis.jl"
-    uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@main"
-    secrets: "inherit"
-    with:
-      localregistry: "https://github.com/ITensor/ITensorRegistry.git"
-      pkg: "${{ matrix.pkg }}"
+    steps:
+      - uses: "actions/checkout@v4"
+        with:
+          ref: "${{ github.event.pull_request.head.sha || github.sha }}"
+      - uses: "julia-actions/setup-julia@v2"
+        with:
+          version: "1"
+          arch: "x64"
+      - name: "Configure git authentication for private repository"
+        env:
+          TOKEN: "${{ secrets.INTEGRATIONTEST_PAT }}"
+        run: |
+          pkg="${{ matrix.pkg }}"
+          if [[ "$pkg" == https://* ]] || [[ "$pkg" == git@* ]]; then
+            if [ -n "$TOKEN" ]; then
+              git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+            fi
+          fi
+          
+      - name: "Run the downstream tests"
+        shell: "julia --color=yes --project=downstream {0}"
+        run: |
+          using Pkg
+          Pkg.Registry.add(
+              Pkg.RegistrySpec(; url = "https://github.com/ITensor/ITensorRegistry.git")
+          )
+          pkg = "${{ matrix.pkg }}"
+          try
+              # `develop` the PR's parent package and its in-tree `NDTensors/`
+              # subdirectory together so the downstream resolves against the
+              # PR's sources for both, even when the parent's `[compat]` for
+              # `NDTensors` has been bumped to a version of `NDTensors` that
+              # has not yet been registered.
+              Pkg.develop([
+                  PackageSpec(; path = "."),
+                  PackageSpec(; path = "NDTensors"),
+              ])
+              if startswith(pkg, "https://") || startswith(pkg, "git@")
+                  pkg_name = replace(basename(pkg), r"\.jl$" => "")
+                  Pkg.add(PackageSpec(; url = pkg))
+                  Pkg.update()
+                  Pkg.test(PackageSpec(; name = pkg_name))
+              else
+                  Pkg.add(PackageSpec(; name = pkg))
+                  Pkg.update()
+                  Pkg.test(PackageSpec(; name = pkg))
+              end
+          catch err
+              err isa Pkg.Resolve.ResolverError || rethrow()
+              # An unsatisfiable resolve here means this PR is intentionally
+              # SemVer-breaking against the downstream's registered compat,
+              # so report a non-failure outcome.
+              @info "Not compatible with this release. No problem." exception = err
+              exit(0)
+          end
+          
   integration-gate:
     name: "IntegrationTest"
     needs: "integration-test"
