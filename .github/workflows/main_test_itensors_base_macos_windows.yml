@@ -38,6 +38,6 @@ jobs:
           Pkg.develop(path=".");
           Pkg.test("ITensors"; coverage=true, test_args=["base"]);
           
-      - uses: "julia-actions/julia-uploadcodecov@v1"
+      - uses: "julia-actions/julia-uploadcodecov@v0.1.0"
         env:
           CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
