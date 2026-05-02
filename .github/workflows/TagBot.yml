@@ -9,7 +9,7 @@ env:
 jobs:
   TagBot:
     if: "github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'"
-    uses: "ITensor/ITensorActions/.github/workflows/TagBot.yml@main"
+    uses: "ITensor/ITensorActions/.github/workflows/TagBot.yml@v1"
     with:
       subdirs: '["NDTensors"]'
     secrets: "inherit"

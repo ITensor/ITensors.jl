@@ -1,16 +1,12 @@
 name: "Format Check"
 on:
-  pull_request_target:
+  pull_request:
     types:
       - "opened"
       - "synchronize"
       - "reopened"
       - "ready_for_review"
-permissions:
-  contents: "read"
-  actions: "write"
-  pull-requests: "write"
 jobs:
   format-check:
     name: "Format Check"
-    uses: "ITensor/ITensorActions/.github/workflows/FormatCheck.yml@main"
+    uses: "ITensor/ITensorActions/.github/workflows/FormatCheck.yml@v1"

@@ -11,6 +11,6 @@ jobs:
     permissions:
       contents: "write"
     steps:
-      - uses: "julia-actions/RegisterAction@latest"
+      - uses: "julia-actions/RegisterAction@v0.3.2"
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
