@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - "main"
-  pull_request_target:
+    tags: "*"
+  pull_request:
     types:
       - "opened"
       - "synchronize"
@@ -13,30 +14,11 @@ on:
 jobs:
   integration-test:
     name: "IntegrationTest"
-    strategy:
-      fail-fast: false
-      matrix:
-        pkg:
-          - "ITensorGaussianMPS"
-          - "ITensorMPS"
-          - "ITensorNetworks"
-          - "ITensorUnicodePlots"
-          - "ITensorVisualizationBase"
-          - "https://github.com/ITensor/Tennis.jl"
-    uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@main"
+    uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@v1"
     secrets: "inherit"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
       extra-dev-paths: "NDTensors"
-      pkg: "${{ matrix.pkg }}"
-  integration-gate:
-    name: "IntegrationTest"
-    needs: "integration-test"
-    if: "${{ always() && needs.integration-test.result != 'skipped' }}"
-    runs-on: "ubuntu-latest"
-    steps:
-      - name: "Fail if any downstream integration test failed"
-        run: |
-          echo "integration-test.result = ${{ needs.integration-test.result }}"
-          test "${{ needs.integration-test.result }}" = "success"
+      pkgs: |
+        ["ITensorGaussianMPS", "ITensorMPS", "ITensorNetworks", "ITensorUnicodePlots", "ITensorVisualizationBase", "https://github.com/ITensor/Tennis.jl"]
           
