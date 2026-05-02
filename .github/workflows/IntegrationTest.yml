@@ -20,5 +20,12 @@ jobs:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
       extra-dev-paths: "NDTensors"
       pkgs: |
-        ["ITensorGaussianMPS", "ITensorMPS", "ITensorNetworks", "ITensorUnicodePlots", "ITensorVisualizationBase", "https://github.com/ITensor/Tennis.jl"]
+        [
+          "ITensorGaussianMPS",
+          "ITensorMPS",
+          "ITensorNetworks",
+          "ITensorUnicodePlots",
+          "ITensorVisualizationBase",
+          "https://github.com/ITensor/Tennis.jl"
+        ]
           
