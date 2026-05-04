@@ -26,7 +26,7 @@ pipeline {
             JULIA_NUM_THREADS = 4
           }
           steps {
-            sh 'rm -rf "$HOME" && mkdir -p "$HOME"'
+            sh 'rm -rf "$HOME/.julia"'
             sh 'nvidia-smi'
             sh '''
               julia -e '
@@ -64,7 +64,7 @@ pipeline {
             JULIA_NUM_THREADS = 4
           }
           steps {
-            sh 'rm -rf "$HOME" && mkdir -p "$HOME"'
+            sh 'rm -rf "$HOME/.julia"'
             sh 'nvidia-smi'
             sh '''
               julia -e '
