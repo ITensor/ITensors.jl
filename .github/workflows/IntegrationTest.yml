@@ -11,10 +11,13 @@ on:
       - "reopened"
       - "ready_for_review"
       - "converted_to_draft"
+permissions:
+  actions: "read"
+  contents: "read"
 jobs:
   integration-test:
     name: "IntegrationTest"
-    uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@v1"
+    uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@v2"
     secrets: "inherit"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
@@ -28,4 +31,3 @@ jobs:
           "ITensorVisualizationBase",
           "https://github.com/ITensor/Tennis.jl"
         ]
-          

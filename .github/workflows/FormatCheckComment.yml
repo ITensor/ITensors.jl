@@ -1,16 +1,16 @@
-name: "Format Check Comment"
+name: "FormatCheckComment"
 on:
   workflow_run:
     workflows:
-      - "Format Check"
+      - "FormatCheck"
     types:
       - "completed"
+permissions:
+  pull-requests: "write"
+  actions: "read"
 jobs:
-  comment:
-    name: "Format Check Comment"
+  format-check-comment:
+    name: "FormatCheckComment"
     if: "github.event.workflow_run.event == 'pull_request'"
-    permissions:
-      pull-requests: "write"
-      actions: "read"
-    uses: "ITensor/ITensorActions/.github/workflows/FormatCheckComment.yml@v1"
+    uses: "ITensor/ITensorActions/.github/workflows/FormatCheckComment.yml@v2"
     secrets: "inherit"
