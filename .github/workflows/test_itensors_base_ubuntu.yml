@@ -4,6 +4,8 @@ on:
     branches:
       - "main"
   pull_request: ~
+permissions:
+  contents: "read"
 jobs:
   test:
     name: "Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)"
