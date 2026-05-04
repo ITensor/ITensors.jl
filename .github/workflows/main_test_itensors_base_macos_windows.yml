@@ -3,32 +3,27 @@ on:
   push:
     branches:
       - "main"
+  pull_request: ~
 jobs:
   test:
-    name: "Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)"
+    name: "Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.threads }} thread(s)"
     runs-on: "${{ matrix.os }}"
     env:
       JULIA_NUM_THREADS: "${{ matrix.threads }}"
     strategy:
+      fail-fast: false
       matrix:
-        version:
-          - "lts"
-          - "1"
+        version: ${{ github.event_name == 'pull_request' && fromJSON('["1"]') || fromJSON('["lts","1"]') }}
         os:
           - "macOS-latest"
+          - "windows-latest"
         threads:
           - "2"
-        arch:
-          - "x64"
-        exclude:
-          - os: "macOS-latest"
-            arch: "x86"
     steps:
       - uses: "actions/checkout@v6"
       - uses: "julia-actions/setup-julia@v3"
         with:
           version: "${{ matrix.version }}"
-          arch: "${{ matrix.arch }}"
       - name: "Install Julia dependencies and run tests"
         shell: "julia {0}"
         run: |
@@ -37,7 +32,6 @@ jobs:
           Pkg.develop(path="./NDTensors");
           Pkg.develop(path=".");
           Pkg.test("ITensors"; coverage=true, test_args=["base"]);
-          
       - uses: "codecov/codecov-action@v5"
         with:
           token: "${{ secrets.CODECOV_TOKEN }}"

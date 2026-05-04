@@ -6,10 +6,14 @@ on:
   workflow_dispatch: ~
 env:
   REGISTRY_TAGBOT_ACTION: "JuliaRegistries/TagBot"
+permissions:
+  contents: "write"
+  issues: "read"
 jobs:
-  TagBot:
+  tagbot:
+    name: "TagBot"
     if: "github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'"
-    uses: "ITensor/ITensorActions/.github/workflows/TagBot.yml@v1"
+    uses: "ITensor/ITensorActions/.github/workflows/TagBot.yml@v2"
     with:
       subdirs: '["NDTensors"]'
     secrets: "inherit"

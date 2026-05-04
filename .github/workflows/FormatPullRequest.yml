@@ -1,4 +1,4 @@
-name: "Format Pull Request"
+name: "FormatPullRequest"
 on:
   schedule:
     - cron: "0 0 * * *"
@@ -11,6 +11,6 @@ permissions:
   pull-requests: "write"
 jobs:
   format-pull-request:
-    name: "Format Pull Request"
-    uses: "ITensor/ITensorActions/.github/workflows/FormatPullRequest.yml@v1"
+    name: "FormatPullRequest"
+    uses: "ITensor/ITensorActions/.github/workflows/FormatPullRequest.yml@v2"
     secrets: "inherit"
