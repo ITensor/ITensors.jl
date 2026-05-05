@@ -20,13 +20,11 @@ concurrency:
 permissions:
   contents: "read"
 jobs:
-  tests:
-    name: "Tests"
+  tests-itensors:
+    name: "TestsITensors"
     strategy:
       fail-fast: false
       matrix:
-        project:
-          - "@."
         version:
           - "lts"
           - "1"
@@ -34,37 +32,43 @@ jobs:
           - "ubuntu-latest"
           - "macOS-latest"
           - "windows-latest"
-        test-args:
-          - "base"
-        include:
-          # NDTensors test suite. NDTensors is in ITensors's
-          # `[workspace] projects`, so its in-tree code is resolved
-          # automatically when buildpkg instantiates the workspace.
-          - project: "NDTensors"
-            version: "lts"
-            os: "ubuntu-latest"
-            test-args: ""
-          - project: "NDTensors"
-            version: "1"
-            os: "ubuntu-latest"
-            test-args: ""
     uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@mf/subdir-inputs"
     with:
-      project: "${{ matrix.project }}"
       julia-version: "${{ matrix.version }}"
       os: "${{ matrix.os }}"
       nthreads: 2
-      test-args: "${{ matrix.test-args }}"
+      test-args: "base"
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"
+    secrets:
+      CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
+  tests-ndtensors:
+    name: "TestsNDTensors"
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - "lts"
+          - "1"
+    uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@mf/subdir-inputs"
+    with:
+      project: "NDTensors"
+      julia-version: "${{ matrix.version }}"
+      os: "ubuntu-latest"
+      nthreads: 2
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:
       CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
   tests-gate:
     name: "Tests"
-    needs: "tests"
-    if: "${{ always() && needs.tests.result != 'skipped' }}"
+    needs:
+      - "tests-itensors"
+      - "tests-ndtensors"
+    if: "${{ always() && needs.tests-itensors.result != 'skipped' && needs.tests-ndtensors.result != 'skipped' }}"
     runs-on: "ubuntu-latest"
     steps:
       - name: "Fail if any matrix leg failed"
         run: |
-          echo "tests.result = ${{ needs.tests.result }}"
-          test "${{ needs.tests.result }}" = "success"
+          echo "tests-itensors.result = ${{ needs.tests-itensors.result }}"
+          echo "tests-ndtensors.result = ${{ needs.tests-ndtensors.result }}"
+          test "${{ needs.tests-itensors.result }}" = "success"
+          test "${{ needs.tests-ndtensors.result }}" = "success"
