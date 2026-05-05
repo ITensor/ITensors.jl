@@ -55,14 +55,24 @@ using Test
         @test norm(dense(NDTensors.tensor(A)) - dense(NDTensors.tensor(B))) ≈ 0
     end
 
-    @testset "delta Tuple constructor" begin
+    @testset "delta constructors" begin
         i = Index(QN(0) => 2, QN(1) => 3; tags = "i")
         ĩ = sim(i; tags = "i_sim")
 
-        δiĩ = δ((dag(i), ĩ))
+        @testset "$label" for (label, args, expected_inds) in (
+                ("varargs", (dag(i), ĩ), (dag(i), ĩ)),
+                ("Tuple", ((dag(i), ĩ),), (dag(i), ĩ)),
+                ("flux and QNIndices", (QN(), [i, dag(i)]), (i, dag(i))),
+            )
+            δiĩ = delta(args...)
 
-        for b in eachnzblock(δiĩ)
-            @test flux(δiĩ, b) == QN()
+            @test hassameinds(δiĩ, expected_inds)
+            @test storage(δiĩ) isa
+                NDTensors.DiagBlockSparse{ElT, ElT} where {ElT <: Number}
+            @test δiĩ[1, 1] == 1
+            for b in eachnzblock(δiĩ)
+                @test flux(δiĩ, b) == QN()
+            end
         end
     end
 
