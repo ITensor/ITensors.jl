@@ -39,11 +39,15 @@ jobs:
         version:
           - "lts"
           - "1"
+        os:
+          - "ubuntu-latest"
+          - "macOS-latest"
+          - "windows-latest"
     uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@mf/subdir-inputs"
     with:
       subdir: "NDTensors"
       julia-version: "${{ matrix.version }}"
-      os: "ubuntu-latest"
+      os: "${{ matrix.os }}"
       nthreads: 2
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:
