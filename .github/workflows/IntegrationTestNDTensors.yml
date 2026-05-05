@@ -1,10 +1,10 @@
-name: "IntegrationTest"
+name: "IntegrationTestNDTensors"
 on:
   push:
     branches:
       - "main"
     tags: "*"
-    paths-ignore:
+    paths:
       - "NDTensors/**"
   pull_request:
     types:
@@ -13,21 +13,22 @@ on:
       - "reopened"
       - "ready_for_review"
       - "converted_to_draft"
-    paths-ignore:
+    paths:
       - "NDTensors/**"
 permissions:
   actions: "read"
   contents: "read"
 jobs:
   integration-test:
-    name: "IntegrationTest"
+    name: "IntegrationTestNDTensors"
     uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@mf/subdir-inputs"
     secrets: "inherit"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
-      exclude-subdirs: "NDTensors"
+      subdir: "NDTensors"
       pkgs: |
         [
+          "ITensors",
           "ITensorGaussianMPS",
           "ITensorMPS",
           "ITensorNetworks",
