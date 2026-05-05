@@ -543,7 +543,7 @@ function delta(::Type{ElT}, flux::QN, is...) where {ElT <: Number}
     return delta(ElT, flux, indices(is...))
 end
 
-delta(flux::QN, inds::Indices) = delta(Float64, flux, is)
+delta(flux::QN, inds::Indices) = delta(Float64, flux, inds)
 
 delta(flux::QN, is...) = delta(Float64, flux, indices(is...))
 
