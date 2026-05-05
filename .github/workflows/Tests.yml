@@ -38,7 +38,6 @@ jobs:
       os: "${{ matrix.os }}"
       nthreads: 2
       test-args: "base"
-      extra-dev-paths: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:
       CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
