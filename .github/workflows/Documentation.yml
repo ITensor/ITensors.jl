@@ -4,7 +4,13 @@ on:
     branches:
       - "main"
     tags: ["v*"]
-  pull_request: ~
+  pull_request:
+    types:
+      - "opened"
+      - "synchronize"
+      - "reopened"
+      - "ready_for_review"
+      - "converted_to_draft"
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: "${{ github.ref_name != github.event.repository.default_branch || github.ref != 'refs/tags/v*' }}"

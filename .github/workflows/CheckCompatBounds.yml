@@ -1,6 +1,12 @@
 name: "CheckCompatBounds"
 on:
-  pull_request: ~
+  pull_request:
+    types:
+      - "opened"
+      - "synchronize"
+      - "reopened"
+      - "ready_for_review"
+      - "converted_to_draft"
 permissions:
   contents: "read"
 jobs:
