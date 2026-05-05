@@ -4,13 +4,9 @@ on:
     branches:
       - "main"
     tags: ["v*"]
-  pull_request:
-    types:
-      - "opened"
-      - "synchronize"
-      - "reopened"
-      - "ready_for_review"
-      - "converted_to_draft"
+  pull_request: ~
+  schedule:
+    - cron: "1 4 * * 4"
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: "${{ github.ref_name != github.event.repository.default_branch || github.ref != 'refs/tags/v*' }}"
@@ -20,4 +16,7 @@ jobs:
   documentation:
     name: "Documentation"
     uses: "ITensor/ITensorActions/.github/workflows/Documentation.yml@mf/subdir-inputs"
-    secrets: "inherit"
+    with:
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"
+    secrets:
+      CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"

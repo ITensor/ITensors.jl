@@ -55,6 +55,7 @@ jobs:
       os: "${{ matrix.os }}"
       nthreads: 2
       test-args: "${{ matrix.test-args }}"
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:
       CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
   tests-gate:

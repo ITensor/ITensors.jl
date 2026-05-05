@@ -1,15 +1,11 @@
 name: "CheckCompatBounds"
 on:
-  pull_request:
-    types:
-      - "opened"
-      - "synchronize"
-      - "reopened"
-      - "ready_for_review"
-      - "converted_to_draft"
+  pull_request: ~
 permissions:
   contents: "read"
 jobs:
   check-compat-bounds:
     name: "CheckCompatBounds"
     uses: "ITensor/ITensorActions/.github/workflows/CheckCompatBounds.yml@mf/subdir-inputs"
+    with:
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"
