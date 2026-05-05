@@ -12,7 +12,7 @@ jobs:
     uses: "ITensor/ITensorActions/.github/workflows/CompatHelper.yml@mf/subdir-inputs"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
-      subdirs: |2-
+      subdirs: |-
 
         docs
         examples
