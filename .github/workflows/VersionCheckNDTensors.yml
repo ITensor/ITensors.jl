@@ -1,4 +1,4 @@
-name: "VersionCheck"
+name: "VersionCheckNDTensors"
 on:
   pull_request:
     types:
@@ -6,15 +6,15 @@ on:
       - "synchronize"
       - "reopened"
       - "ready_for_review"
-    paths-ignore:
+    paths:
       - "NDTensors/**"
 permissions:
   contents: "read"
   pull-requests: "read"
 jobs:
   version-check:
-    name: "VersionCheck"
+    name: "VersionCheckNDTensors"
     uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@mf/subdir-inputs"
     with:
-      exclude-subdirs: "NDTensors"
+      subdir: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"

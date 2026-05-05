@@ -1,4 +1,4 @@
-name: "CompatHelper"
+name: "CompatHelperNDTensors"
 on:
   schedule:
     - cron: "0 0 * * *"
@@ -8,8 +8,9 @@ permissions:
   pull-requests: "write"
 jobs:
   compathelper:
-    name: "CompatHelper"
+    name: "CompatHelperNDTensors"
     uses: "ITensor/ITensorActions/.github/workflows/CompatHelper.yml@mf/subdir-inputs"
     with:
+      subdir: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets: "inherit"

@@ -1,13 +1,14 @@
-name: "CheckCompatBounds"
+name: "CheckCompatBoundsNDTensors"
 on:
   pull_request:
-    paths-ignore:
+    paths:
       - "NDTensors/**"
 permissions:
   contents: "read"
 jobs:
   check-compat-bounds:
-    name: "CheckCompatBounds"
+    name: "CheckCompatBoundsNDTensors"
     uses: "ITensor/ITensorActions/.github/workflows/CheckCompatBounds.yml@mf/subdir-inputs"
     with:
+      subdir: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
