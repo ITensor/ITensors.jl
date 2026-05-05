@@ -1,11 +1,10 @@
-name: "Tests"
+name: "TestsNDTensors"
 on:
   push:
     branches:
       - "main"
     tags: "*"
-    paths-ignore:
-      - "docs/**"
+    paths:
       - "NDTensors/**"
   pull_request:
     types:
@@ -14,7 +13,7 @@ on:
       - "reopened"
       - "ready_for_review"
       - "converted_to_draft"
-    paths-ignore:
+    paths:
       - "NDTensors/**"
   workflow_dispatch: ~
 concurrency:
@@ -24,29 +23,24 @@ permissions:
   contents: "read"
 jobs:
   tests:
-    name: "Tests Matrix"
+    name: "TestsNDTensors Matrix"
     strategy:
       fail-fast: false
       matrix:
         version:
           - "lts"
           - "1"
-        os:
-          - "ubuntu-latest"
-          - "macOS-latest"
-          - "windows-latest"
     uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@mf/subdir-inputs"
     with:
+      subdir: "NDTensors"
       julia-version: "${{ matrix.version }}"
-      os: "${{ matrix.os }}"
+      os: "ubuntu-latest"
       nthreads: 2
-      test-args: "base"
-      exclude-subdirs: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:
       CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
   tests-gate:
-    name: "Tests"
+    name: "TestsNDTensors"
     needs: "tests"
     if: "${{ always() && needs.tests.result != 'skipped' }}"
     runs-on: "ubuntu-latest"
