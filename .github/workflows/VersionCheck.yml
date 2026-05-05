@@ -6,8 +6,6 @@ on:
       - "synchronize"
       - "reopened"
       - "ready_for_review"
-    paths-ignore:
-      - "NDTensors/**"
 permissions:
   contents: "read"
   pull-requests: "read"

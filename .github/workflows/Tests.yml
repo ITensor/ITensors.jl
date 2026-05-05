@@ -6,7 +6,6 @@ on:
     tags: "*"
     paths-ignore:
       - "docs/**"
-      - "NDTensors/**"
   pull_request:
     types:
       - "opened"
@@ -14,8 +13,6 @@ on:
       - "reopened"
       - "ready_for_review"
       - "converted_to_draft"
-    paths-ignore:
-      - "NDTensors/**"
   workflow_dispatch: ~
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"

@@ -1,8 +1,6 @@
 name: "CheckCompatBounds"
 on:
-  pull_request:
-    paths-ignore:
-      - "NDTensors/**"
+  pull_request: ~
 permissions:
   contents: "read"
 jobs:
