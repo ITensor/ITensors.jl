@@ -1,0 +1,19 @@
+name: "Documentation"
+on:
+  push:
+    branches:
+      - "main"
+    tags: ["v*"]
+  pull_request: ~
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: "${{ github.ref_name != github.event.repository.default_branch || github.ref != 'refs/tags/v*' }}"
+permissions:
+  contents: "write"
+jobs:
+  documentation:
+    name: "Documentation"
+    uses: "ITensor/ITensorActions/.github/workflows/Documentation.yml@mf/subdir-inputs"
+    with:
+      extra-dev-paths: "NDTensors"
+    secrets: "inherit"

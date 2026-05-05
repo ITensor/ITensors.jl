@@ -1,0 +1,17 @@
+name: "VersionCheck"
+on:
+  pull_request:
+    types:
+      - "opened"
+      - "synchronize"
+      - "reopened"
+      - "ready_for_review"
+permissions:
+  contents: "read"
+  pull-requests: "read"
+jobs:
+  version-check:
+    name: "VersionCheck"
+    uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@mf/subdir-inputs"
+    with:
+      subdirs: "NDTensors"

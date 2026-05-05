@@ -1,0 +1,74 @@
+name: "Tests"
+on:
+  push:
+    branches:
+      - "main"
+    tags: "*"
+    paths-ignore:
+      - "docs/**"
+  pull_request:
+    types:
+      - "opened"
+      - "synchronize"
+      - "reopened"
+      - "ready_for_review"
+      - "converted_to_draft"
+  workflow_dispatch: ~
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: "${{ startsWith(github.ref, 'refs/pull/') }}"
+permissions:
+  contents: "read"
+jobs:
+  tests:
+    name: "Tests"
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - "@."
+        version:
+          - "lts"
+          - "1"
+        os:
+          - "ubuntu-latest"
+          - "macOS-latest"
+          - "windows-latest"
+        test-args:
+          - "base"
+        extra-dev-paths:
+          - "NDTensors"
+        include:
+          # NDTensors test suite — runs with NDTensors's own project so
+          # its [sources.NDTensors] path=".." resolves the in-tree
+          # subpackage.
+          - project: "NDTensors"
+            version: "lts"
+            os: "ubuntu-latest"
+            test-args: ""
+            extra-dev-paths: ""
+          - project: "NDTensors"
+            version: "1"
+            os: "ubuntu-latest"
+            test-args: ""
+            extra-dev-paths: ""
+    uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@mf/subdir-inputs"
+    with:
+      project: "${{ matrix.project }}"
+      julia-version: "${{ matrix.version }}"
+      os: "${{ matrix.os }}"
+      nthreads: 2
+      test-args: "${{ matrix.test-args }}"
+      extra-dev-paths: "${{ matrix.extra-dev-paths }}"
+    secrets:
+      CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
+  tests-gate:
+    name: "Tests"
+    needs: "tests"
+    if: "${{ always() && needs.tests.result != 'skipped' }}"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Fail if any matrix leg failed"
+        run: |
+          echo "tests.result = ${{ needs.tests.result }}"
+          test "${{ needs.tests.result }}" = "success"
