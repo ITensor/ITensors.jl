@@ -4,7 +4,7 @@ version = "0.9.26"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
 
 [workspace]
-projects = ["benchmark", "dev", "docs", "examples", "test"]
+projects = ["benchmark", "dev", "docs", "examples", "test", "NDTensors"]
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"

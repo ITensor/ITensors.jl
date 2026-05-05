@@ -36,22 +36,18 @@ jobs:
           - "windows-latest"
         test-args:
           - "base"
-        extra-dev-paths:
-          - "NDTensors"
         include:
-          # NDTensors test suite — runs with NDTensors's own project so
-          # its [sources.NDTensors] path=".." resolves the in-tree
-          # subpackage.
+          # NDTensors test suite. NDTensors is in ITensors's
+          # `[workspace] projects`, so its in-tree code is resolved
+          # automatically when buildpkg instantiates the workspace.
           - project: "NDTensors"
             version: "lts"
             os: "ubuntu-latest"
             test-args: ""
-            extra-dev-paths: ""
           - project: "NDTensors"
             version: "1"
             os: "ubuntu-latest"
             test-args: ""
-            extra-dev-paths: ""
     uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@mf/subdir-inputs"
     with:
       project: "${{ matrix.project }}"
@@ -59,7 +55,6 @@ jobs:
       os: "${{ matrix.os }}"
       nthreads: 2
       test-args: "${{ matrix.test-args }}"
-      extra-dev-paths: "${{ matrix.extra-dev-paths }}"
     secrets:
       CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
   tests-gate:

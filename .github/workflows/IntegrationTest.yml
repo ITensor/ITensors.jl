@@ -21,7 +21,6 @@ jobs:
     secrets: "inherit"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
-      extra-dev-paths: "NDTensors"
       pkgs: |
         [
           "ITensorGaussianMPS",

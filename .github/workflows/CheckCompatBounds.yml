@@ -6,18 +6,4 @@ permissions:
 jobs:
   check-compat-bounds:
     name: "CheckCompatBounds"
-    strategy:
-      fail-fast: false
-      matrix:
-        project:
-          - "@."
-        workspace-root:
-          - "."
-        include:
-          # NDTensors's own Project.toml + Manifest.toml.
-          - project: "NDTensors"
-            workspace-root: "NDTensors"
     uses: "ITensor/ITensorActions/.github/workflows/CheckCompatBounds.yml@mf/subdir-inputs"
-    with:
-      project: "${{ matrix.project }}"
-      workspace-root: "${{ matrix.workspace-root }}"
