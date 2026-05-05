@@ -1,0 +1,13 @@
+name: "CodeQL"
+on:
+  pull_request:
+    branches:
+      - "main"
+permissions:
+  contents: "read"
+  security-events: "write"
+  actions: "read"
+jobs:
+  codeql:
+    name: "CodeQL"
+    uses: "ITensor/ITensorActions/.github/workflows/CodeQL.yml@v2"
