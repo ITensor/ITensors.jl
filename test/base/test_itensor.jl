@@ -5,8 +5,8 @@ using ITensors.NDTensors: DenseTensor, NDTensors, array, dim, dims, eigen, facto
 using ITensors: ITensors, ITensor, Index, IndexSet, Order, QN, TagSet, addtags, allhastags,
     anyhastags, commonind, convert_eltype, convert_leaf_eltype, dag, directsum, eachindval,
     eachval, filterinds, firstind, hascommoninds, hasind, hasinds, hassameinds, hastags,
-    inner, itensor, mapprime, noprime, onehot, order, permute, prime, product,
-    random_itensor, removetags, replaceind, replaceind!, replaceinds, replaceinds!,
+    inner, itensor, logdot, loginner, mapprime, noprime, onehot, order, permute, prime,
+    product, random_itensor, removetags, replaceind, replaceind!, replaceinds, replaceinds!,
     replacetags, scalar, setelt, setprime, settags, sim, swapinds, swapinds!, swapprime,
     uniqueind, uniqueindex, val, δ, ⊕
 using LinearAlgebra:
@@ -1741,16 +1741,34 @@ end
         @test_throws ErrorException product(A, B)
     end
 
-    @testset "inner ($ElType)" for ElType in (Float64, ComplexF64)
+    @testset "inner and loginner ($ElType)" for ElType in (Float64, ComplexF64)
         i = Index(2)
         j = Index(2)
         A = random_itensor(ElType, i', j', i, j)
         x = random_itensor(ElType, i, j)
         y = random_itensor(ElType, i, j)
-        @test inner(x, y) ≈ (dag(x) * y)[]
-        @test inner(x', A, y) ≈ (dag(x)' * A * y)[]
+
+        val2 = inner(x, y)
+        @test val2 ≈ (dag(x) * y)[]
+        val3 = inner(x', A, y)
+        @test val3 ≈ (dag(x)' * A * y)[]
+
+        @test loginner(x, y) ≈ log(complex(val2))
+        @test logdot(x, y) ≈ log(complex(val2))
+
+        @test loginner(x', A, y) ≈ log(complex(val3))
+
         # No automatic priming
         @test_throws DimensionMismatch inner(x, A, y)
+        @test_throws DimensionMismatch loginner(x, A, y)
+
+        if ElType == Float64
+            C = itensor([1.0, 0.0], i)
+            D = itensor([-1.0, 0.0], i)
+            @test loginner(C, D) ≈ log(-1.0 + 0.0im)
+            @test imag(loginner(C, D)) ≈ π
+        end
+        @test loginner(x, y) isa Complex
     end
 
     @testset "hastags" begin
