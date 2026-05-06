@@ -6,6 +6,9 @@ on:
       - "synchronize"
       - "reopened"
       - "ready_for_review"
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: "${{ startsWith(github.ref, 'refs/pull/') }}"
 permissions:
   contents: "read"
   pull-requests: "read"
