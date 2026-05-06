@@ -1,0 +1,12 @@
+name: "CheckCompatBoundsNDTensors"
+on:
+  pull_request: ~
+permissions:
+  contents: "read"
+jobs:
+  check-compat-bounds:
+    name: "CheckCompatBoundsNDTensors"
+    uses: "ITensor/ITensorActions/.github/workflows/CheckCompatBounds.yml@v2"
+    with:
+      subdir: "NDTensors"
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"

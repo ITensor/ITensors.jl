@@ -1,0 +1,11 @@
+name: "CheckCompatBounds"
+on:
+  pull_request: ~
+permissions:
+  contents: "read"
+jobs:
+  check-compat-bounds:
+    name: "CheckCompatBounds"
+    uses: "ITensor/ITensorActions/.github/workflows/CheckCompatBounds.yml@v2"
+    with:
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"

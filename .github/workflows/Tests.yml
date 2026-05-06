@@ -1,0 +1,55 @@
+name: "Tests"
+on:
+  push:
+    branches:
+      - "main"
+    tags: "*"
+    paths-ignore:
+      - "docs/**"
+  pull_request:
+    types:
+      - "opened"
+      - "synchronize"
+      - "reopened"
+      - "ready_for_review"
+      - "converted_to_draft"
+  workflow_dispatch: ~
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: "${{ startsWith(github.ref, 'refs/pull/') }}"
+permissions:
+  contents: "read"
+  pull-requests: "read"
+jobs:
+  tests:
+    name: "Tests"
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - "lts"
+          - "1"
+        os:
+          - "ubuntu-latest"
+          - "macOS-latest"
+          - "windows-latest"
+    uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@v2"
+    with:
+      julia-version: "${{ matrix.version }}"
+      os: "${{ matrix.os }}"
+      nthreads: 2
+      test-args: "base"
+      exclude-paths: "NDTensors"
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"
+    secrets:
+      CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
+  tests-gate:
+    name: "Tests"
+    needs: "tests"
+    if: "${{ always() && needs.tests.result != 'skipped' }}"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Fail if any matrix leg failed"
+        run: |
+          echo "tests.result = ${{ needs.tests.result }}"
+          test "${{ needs.tests.result }}" = "success"

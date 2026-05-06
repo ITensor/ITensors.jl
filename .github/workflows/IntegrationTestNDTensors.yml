@@ -1,4 +1,4 @@
-name: "IntegrationTest"
+name: "IntegrationTestNDTensors"
 on:
   push:
     branches:
@@ -16,14 +16,16 @@ permissions:
   contents: "read"
 jobs:
   integration-test:
-    name: "IntegrationTest"
+    name: "IntegrationTestNDTensors"
     uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@v2"
     secrets: "inherit"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
-      exclude-paths: "NDTensors"
+      subdir: "NDTensors"
+      paths: ".github"
       pkgs: |
         [
+          "ITensors",
           "ITensorGaussianMPS",
           "ITensorMPS",
           "ITensorNetworks",

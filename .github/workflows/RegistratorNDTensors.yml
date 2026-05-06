@@ -1,0 +1,22 @@
+name: "RegistratorNDTensors"
+on:
+  workflow_dispatch: ~
+  push:
+    branches:
+      - "main"
+    paths:
+      - "NDTensors/Project.toml"
+  issue_comment:
+    types:
+      - "created"
+permissions:
+  contents: "write"
+  pull-requests: "write"
+  issues: "write"
+jobs:
+  registrator:
+    name: "RegistratorNDTensors"
+    uses: "ITensor/ITensorActions/.github/workflows/Registrator.yml@v2"
+    with:
+      subdir: "NDTensors"
+    secrets: "inherit"

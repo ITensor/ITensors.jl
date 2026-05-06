@@ -1,0 +1,22 @@
+name: "VersionCheck"
+on:
+  pull_request:
+    types:
+      - "opened"
+      - "synchronize"
+      - "reopened"
+      - "ready_for_review"
+permissions:
+  contents: "read"
+  pull-requests: "read"
+jobs:
+  version-check:
+    name: "VersionCheck"
+    uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@v2"
+    with:
+      exclude-paths: |
+        NDTensors
+        .github
+        .gitignore
+        .pre-commit-config.yaml
+      localregistry: "https://github.com/ITensor/ITensorRegistry.git"
