@@ -12,7 +12,7 @@ permissions:
 jobs:
   version-check:
     name: "VersionCheckNDTensors"
-    uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@mf/subdir-inputs"
+    uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@v2"
     with:
       subdir: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"

@@ -6,7 +6,7 @@ permissions:
 jobs:
   check-compat-bounds:
     name: "CheckCompatBoundsNDTensors"
-    uses: "ITensor/ITensorActions/.github/workflows/CheckCompatBounds.yml@mf/subdir-inputs"
+    uses: "ITensor/ITensorActions/.github/workflows/CheckCompatBounds.yml@v2"
     with:
       subdir: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"

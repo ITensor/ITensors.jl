@@ -17,7 +17,7 @@ permissions:
 jobs:
   integration-test:
     name: "IntegrationTest"
-    uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@mf/subdir-inputs"
+    uses: "ITensor/ITensorActions/.github/workflows/IntegrationTest.yml@v2"
     secrets: "inherit"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"

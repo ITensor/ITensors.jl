@@ -15,7 +15,7 @@ permissions:
 jobs:
   documentation:
     name: "Documentation"
-    uses: "ITensor/ITensorActions/.github/workflows/Documentation.yml@mf/subdir-inputs"
+    uses: "ITensor/ITensorActions/.github/workflows/Documentation.yml@v2"
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:

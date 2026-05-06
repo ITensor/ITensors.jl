@@ -33,7 +33,7 @@ jobs:
           - "ubuntu-latest"
           - "macOS-latest"
           - "windows-latest"
-    uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@mf/subdir-inputs"
+    uses: "ITensor/ITensorActions/.github/workflows/Tests.yml@v2"
     with:
       julia-version: "${{ matrix.version }}"
       os: "${{ matrix.os }}"

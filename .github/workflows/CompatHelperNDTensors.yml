@@ -9,7 +9,7 @@ permissions:
 jobs:
   compathelper:
     name: "CompatHelperNDTensors"
-    uses: "ITensor/ITensorActions/.github/workflows/CompatHelper.yml@mf/subdir-inputs"
+    uses: "ITensor/ITensorActions/.github/workflows/CompatHelper.yml@v2"
     with:
       subdir: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
