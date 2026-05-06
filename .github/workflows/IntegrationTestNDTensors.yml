@@ -11,6 +11,9 @@ on:
       - "reopened"
       - "ready_for_review"
       - "converted_to_draft"
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: "${{ startsWith(github.ref, 'refs/pull/') }}"
 permissions:
   actions: "read"
   contents: "read"
