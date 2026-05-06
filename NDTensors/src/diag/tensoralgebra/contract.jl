@@ -59,35 +59,24 @@ function _contract!!(
 end
 
 function contract!(
-        output_tensor::Exposed{<:AbstractArray, <:DiagTensor},
-        labelsoutput_tensor,
-        tensor1::Exposed,
-        labelstensor1,
-        tensor2::Exposed,
-        labelstensor2,
-        α::Number = one(Bool),
-        β::Number = zero(Bool)
-    )
-    @assert isone(α)
-    @assert iszero(β)
-    return contract!(
-        unexpose(output_tensor),
-        labelsoutput_tensor,
-        unexpose(tensor1),
-        labelstensor1,
-        unexpose(tensor2),
-        labelstensor2
-    )
-end
-
-function contract!(
+        ::NativeContract,
         R::DiagTensor{ElR, NR},
         labelsR,
         T1::DiagTensor{<:Number, N1},
         labelsT1,
         T2::DiagTensor{<:Number, N2},
-        labelsT2
+        labelsT2,
+        α::Number = one(Bool),
+        β::Number = zero(Bool)
     ) where {ElR, NR, N1, N2}
+    if !isone(α) || !iszero(β)
+        throw(
+            ArgumentError(
+                "contract!(::NativeContract, R::DiagTensor, ..., T1::DiagTensor, ..., T2::DiagTensor, ...) " *
+                    "is only implemented for `α = 1` and `β = 0`; got `α = $α`, `β = $β`."
+            )
+        )
+    end
     if NR == 0  # If all indices of A and B are contracted
         # All indices are summed over, just add the product of the diagonal
         # elements of A and B.
@@ -101,6 +90,7 @@ function contract!(
 end
 
 function contract!(
+        ::NativeContract,
         C::DenseTensor{ElC, NC},
         Clabels,
         A::DiagTensor{ElA, NA},
@@ -112,7 +102,7 @@ function contract!(
         convert_to_dense::Bool = true
     ) where {ElA, NA, ElB, NB, ElC, NC}
     #@timeit_debug timer "diag-dense contract!" begin
-    return if all(i -> i < 0, Blabels)
+    if all(i -> i < 0, Blabels)
         # If all of B is contracted
         # TODO: can also check NC+NB==NA
         min_dim = min(minimum(dims(A)), minimum(dims(B)))
@@ -211,9 +201,11 @@ function contract!(
         end
     end
     #end # @timeit
+    return C
 end
 
 function contract!(
+        ::NativeContract,
         C::DenseTensor,
         Clabels,
         A::DenseTensor,
@@ -223,5 +215,5 @@ function contract!(
         α::Number = one(eltype(C)),
         β::Number = zero(eltype(C))
     )
-    return contract!(C, Clabels, B, Blabels, A, Alabels, α, β)
+    return contract!(NativeContract(), C, Clabels, B, Blabels, A, Alabels, α, β)
 end

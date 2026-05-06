@@ -117,7 +117,6 @@ function contract(
     return output_tensor
 end
 
-using .Expose: Exposed, expose, unexpose
 # Overload this function for immutable storage types
 function _contract!!(
         output_tensor::Tensor,
@@ -129,49 +128,30 @@ function _contract!!(
         α::Number = 1,
         β::Number = 0
     )
-    if α ≠ 1 || β ≠ 0
-        contract!(
-            expose(output_tensor),
-            labelsoutput_tensor,
-            expose(tensor1),
-            labelstensor1,
-            expose(tensor2),
-            labelstensor2,
-            α,
-            β
-        )
-    else
-        contract!(
-            expose(output_tensor),
-            labelsoutput_tensor,
-            expose(tensor1),
-            labelstensor1,
-            expose(tensor2),
-            labelstensor2
-        )
-    end
+    contract!(
+        output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2,
+        α, β
+    )
     return output_tensor
 end
 
-function contract!(
-        output_tensor::Exposed,
+# When the output is a `TensorAndContractionPlan` (only the block-sparse path
+# allocates this, via its `contraction_output` overload), there is no
+# outer-product / immutable-output handling to do — go straight to the
+# algorithm-selecting in-place `contract!`.
+function contract!!(
+        dest::TensorAndContractionPlan,
         labelsoutput_tensor,
-        tensor1::Exposed,
+        tensor1::Tensor,
         labelstensor1,
-        tensor2::Exposed,
+        tensor2::Tensor,
         labelstensor2,
-        α::Number = one(Bool),
-        β::Number = zero(Bool)
+        α::Number = one(eltype(dest.tensor)),
+        β::Number = zero(eltype(dest.tensor))
     )
     return contract!(
-        unexpose(output_tensor),
-        labelsoutput_tensor,
-        unexpose(tensor1),
-        labelstensor1,
-        unexpose(tensor2),
-        labelstensor2,
-        α,
-        β
+        dest, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2,
+        α, β
     )
 end
 
