@@ -19,20 +19,8 @@ permissions:
   contents: "read"
   pull-requests: "read"
 jobs:
-  classify:
-    name: "Classify"
-    runs-on: "ubuntu-latest"
-    outputs:
-      substantive: "${{ steps.classify.outputs.substantive }}"
-    steps:
-      - uses: "ITensor/ITensorActions/.github/actions/classify-pr@mf/subdir-inputs"
-        id: "classify"
-        with:
-          subdir: "NDTensors"
   tests:
     name: "TestsNDTensors"
-    needs: "classify"
-    if: "${{ needs.classify.outputs.substantive == 'true' }}"
     strategy:
       fail-fast: false
       matrix:
@@ -49,23 +37,19 @@ jobs:
       julia-version: "${{ matrix.version }}"
       os: "${{ matrix.os }}"
       nthreads: 2
+      paths: |
+        NDTensors
+        .github
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
     secrets:
       CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
   tests-gate:
     name: "TestsNDTensors"
-    needs:
-      - "classify"
-      - "tests"
-    if: "${{ always() }}"
+    needs: "tests"
+    if: "${{ always() && needs.tests.result != 'skipped' }}"
     runs-on: "ubuntu-latest"
     steps:
-      - name: "Verify result"
+      - name: "Fail if any matrix leg failed"
         run: |
-          echo "classify.substantive = ${{ needs.classify.outputs.substantive }}"
           echo "tests.result = ${{ needs.tests.result }}"
-          if [ "${{ needs.classify.outputs.substantive }}" != "true" ]; then
-            echo "Non-substantive PR for NDTensors's scope; TestsNDTensors skipped (not run). Reporting success."
-            exit 0
-          fi
           test "${{ needs.tests.result }}" = "success"
