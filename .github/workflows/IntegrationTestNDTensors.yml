@@ -22,9 +22,7 @@ jobs:
     with:
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
       subdir: "NDTensors"
-      paths: |
-        NDTensors
-        .github
+      paths: ".github"
       pkgs: |
         [
           "ITensors",

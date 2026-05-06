@@ -15,5 +15,4 @@ jobs:
     uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@mf/subdir-inputs"
     with:
       subdir: "NDTensors"
-      paths: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
