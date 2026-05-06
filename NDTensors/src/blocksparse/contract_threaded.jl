@@ -74,19 +74,22 @@ function contract_blocks(
     end
 end
 
-function contract!(
-        ::Algorithm"threaded_folds",
+function contract_blocksparse_threaded_folds!(
+        inner::ContractAlgorithm,
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
         labelstensor1,
         tensor2::BlockSparseTensor,
         labelstensor2,
-        contraction_plan
+        contraction_plan,
+        α::Number = one(eltype(R)),
+        β::Number = zero(eltype(R))
     )
     executor = ThreadedEx()
-    return contract!(
+    return contract_blocksparse_with_executor!(
+        inner,
         R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan,
-        executor
+        executor, α, β
     )
 end
