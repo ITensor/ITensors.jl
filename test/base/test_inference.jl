@@ -83,7 +83,9 @@ end
     @test contraction_plan isa Vector{Tuple{Block{2}, Block{2}, Block{2}}}
 
     @test @inferred(NDTensors.contraction_output(T1, labelsT1, T2, labelsT2, labelsR)) isa
-        Tuple{BlockSparseTensor, Vector{Tuple{Block{2}, Block{2}, Block{2}}}}
+        NDTensors.TensorAndContractionPlan{
+        <:BlockSparseTensor, Vector{Tuple{Block{2}, Block{2}, Block{2}}},
+    }
 
     if VERSION ≥ v"1.7"
         # Only properly inferred in Julia 1.7 and later
