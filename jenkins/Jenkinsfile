@@ -41,7 +41,7 @@ pipeline {
               '
             '''
             sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["cuda"])'
             '''
           }
         }
@@ -79,7 +79,7 @@ pipeline {
               '
             '''
             sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["cutensor"])'
             '''
           }
         }
@@ -100,7 +100,7 @@ pipeline {
               juliaup default release
             '''
             sh '''
-              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
+              julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.test("NDTensors"; test_args=["metal"])'
             '''
           }
         }
