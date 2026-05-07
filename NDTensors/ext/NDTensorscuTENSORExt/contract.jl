@@ -1,35 +1,61 @@
 using Base: ReshapedArray
-using NDTensors.Expose: Exposed, expose, unexpose
-using NDTensors: NDTensors, DenseTensor, array
+using NDTensors.Expose: expose
+using NDTensors: NDTensors, ContractAlgorithm, Dense, DenseTensor, NativeContract, array,
+    contract!, default_contract_algorithm, is_applicable
 using cuTENSOR: cuTENSOR, CuArray, CuTensor
 
-# Handle cases that can't be handled by `cuTENSOR.jl`
-# right now.
-function to_zero_offset_cuarray(a::CuArray)
-    return iszero(a.offset) ? a : copy(a)
-end
-function to_zero_offset_cuarray(a::ReshapedArray)
-    return copy(expose(a))
+"""
+    cuTENSORDense <: NDTensors.ContractAlgorithm
+
+Algorithm tag for cuTENSOR's dense contraction path. Applies to two
+`DenseTensor`s whose backing data type is a `CuArray`. Set as the
+default for that input shape when this extension is loaded (via the
+`default_contract_algorithm` overload below), so dense CUDA contractions
+automatically use cuTENSOR.
+"""
+struct cuTENSORDense <: ContractAlgorithm end
+
+NDTensors.is_applicable(::cuTENSORDense, ::Type, ::Type) = false
+function NDTensors.is_applicable(
+        ::cuTENSORDense,
+        T1::Type{<:DenseTensor{<:Any, <:Any, <:Dense{<:Any, <:CuArray}}},
+        T2::Type{<:DenseTensor{<:Any, <:Any, <:Dense{<:Any, <:CuArray}}}
+    )
+    return true
 end
 
-function NDTensors.contract!(
-        exposedR::Exposed{<:CuArray, <:DenseTensor},
-        labelsR,
-        exposedT1::Exposed{<:CuArray, <:DenseTensor},
-        labelsT1,
-        exposedT2::Exposed{<:CuArray, <:DenseTensor},
-        labelsT2,
-        α::Number = one(Bool),
-        β::Number = zero(Bool)
+# Loading this extension makes `cuTENSORDense` the default for dense CUDA
+# contractions (matching the behavior of the previous
+# `Exposed{<:CuArray, <:DenseTensor}` direct-dispatch method).
+function NDTensors.default_contract_algorithm(
+        ::Type{<:DenseTensor{<:Any, <:Any, <:Dense{<:Any, <:CuArray}}},
+        ::Type{<:DenseTensor{<:Any, <:Any, <:Dense{<:Any, <:CuArray}}}
     )
-    R, T1, T2 = unexpose.((exposedR, exposedT1, exposedT2))
+    return cuTENSORDense()
+end
+
+# Handle CuArrays cuTENSOR.jl can't accept directly (non-zero offsets,
+# reshaped views).
+to_zero_offset_cuarray(a::CuArray) = iszero(a.offset) ? a : copy(a)
+to_zero_offset_cuarray(a::ReshapedArray) = copy(expose(a))
+
+function NDTensors.contract!(
+        ::cuTENSORDense,
+        R::DenseTensor,
+        labelsR,
+        T1::DenseTensor,
+        labelsT1,
+        T2::DenseTensor,
+        labelsT2,
+        α::Number = one(eltype(R)),
+        β::Number = zero(eltype(R))
+    )
     zoffR = iszero(array(R).offset)
     arrayR = zoffR ? array(R) : copy(array(R))
     arrayT1 = to_zero_offset_cuarray(array(T1))
     arrayT2 = to_zero_offset_cuarray(array(T2))
-    # Promote to a common type. This is needed because as of
-    # cuTENSOR.jl v5.4.2, cuTENSOR contraction only performs
-    # limited sets of type promotions of inputs, see:
+    # Promote inputs to a common type. cuTENSOR contraction only performs
+    # limited promotions of input element types, see e.g.
     # https://github.com/JuliaGPU/CUDA.jl/blob/v5.4.2/lib/cutensor/src/types.jl#L11-L19
     elt = promote_type(eltype.((arrayR, arrayT1, arrayT2))...)
     if elt !== eltype(arrayR)
@@ -46,9 +72,16 @@ function NDTensors.contract!(
         cuTENSOR.mul!(cuR, cuT1, cuT2, α, β)
     catch e
         e isa cuTENSOR.CUTENSORError || rethrow()
-        # Fall back to default contraction (cuBLAS) for operations
-        # cuTENSOR doesn't support.
-        NDTensors.contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+        # cuTENSOR couldn't run this contraction (typically an unsupported
+        # operation). Surface what was suppressed, then fall back to the
+        # native (cuBLAS-loop) path. Non-CUTENSORError exceptions (OOM,
+        # driver mismatch, version regression, internal bugs) propagate.
+        @warn "cuTENSOR dense contract failed; falling back to NativeContract." exception =
+            (
+            e,
+            catch_backtrace(),
+        )
+        contract!(NativeContract(), R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
         return R
     end
     if !zoffR

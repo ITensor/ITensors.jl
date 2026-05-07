@@ -1,9 +1,8 @@
 module NDTensorsTBLISExt
 
-import NDTensors.contract!
-using LinearAlgebra
-using NDTensors
-using TBLIS
+using LinearAlgebra: LinearAlgebra
+using NDTensors: NDTensors, DenseTensor, array, contract!
+using TBLIS: TBLIS
 
 include("contract.jl")
 end

@@ -158,6 +158,7 @@ function _contract_scalar!(
 end
 
 function contract!(
+        ::NativeContract,
         R::DenseTensor{ElR, NR},
         labelsR,
         T1::DenseTensor{ElT1, N1},
@@ -170,13 +171,6 @@ function contract!(
     # Special case for scalar tensors
     if nnz(T1) == 1 || nnz(T2) == 1
         _contract_scalar!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-        return R
-    end
-
-    if using_tblis() && ElR <: LinearAlgebra.BlasReal && (ElR == ElT1 == ElT2 == Elα == Elβ)
-        #@timeit_debug timer "TBLIS contract!" begin
-        contract!(Val(:TBLIS), R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-        #end
         return R
     end
 

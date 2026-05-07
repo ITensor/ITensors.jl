@@ -614,21 +614,12 @@ function contraction_output(
         labelsR
     )
     R = zeros(TensorR, blockoffsetsR, indsR)
-    return R, contraction_plan
+    return TensorAndContractionPlan(R, contraction_plan)
 end
 
-function contract(
-        T1::BlockSparseTensor,
-        labelsT1,
-        T2::DiagBlockSparseTensor,
-        labelsT2,
-        labelsR = contract_labels(labelsT1, labelsT2)
-    )
-    R, contraction_plan = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
-    R = contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
-    return R
-end
-
+# DiagBlockSparse × BlockSparse: swap to the BlockSparse × DiagBlockSparse
+# form. (No 5-arg `contraction_output(::DiagBS, ::BS, ...)` is defined, so
+# this also short-circuits dispatch back through the generic `contract`.)
 function contract(
         T1::DiagBlockSparseTensor,
         labelsT1,
@@ -640,14 +631,20 @@ function contract(
 end
 
 function contract!(
-        R::BlockSparseTensor{ElR, NR},
+        ::NativeContract,
+        dest::TensorAndContractionPlan{T},
         labelsR,
         T1::BlockSparseTensor,
         labelsT1,
         T2::DiagBlockSparseTensor,
         labelsT2,
-        contraction_plan
-    ) where {ElR <: Number, NR}
+        α::Number = one(eltype(dest.tensor)),
+        β::Number = zero(eltype(dest.tensor))
+    ) where {T <: BlockSparseTensor{<:Number}}
+    R = dest.tensor
+    contraction_plan = dest.contraction_plan
+    ElR = eltype(R)
+    NR = ndims(R)
     if any(b -> !allequal(Tuple(b)), nzblocks(T2))
         return error(
             "When contracting a BlockSparse tensor with a DiagBlockSparse tensor, the DiagBlockSparse tensor must be block diagonal for the time being."
@@ -657,42 +654,43 @@ function contract!(
     indsR = inds(R)
     indsT1 = inds(T1)
     indsT2 = inds(T2)
-    # In R .= α .* (T1 * T2) .+ β .* R
-    α = one(ElR)
+    # In R .= α_outer .* (T1 * T2) .+ β_outer .* R
     for (block1, block2, blockR) in contraction_plan
         T1block = T1[block1]
         T2block = T2[block2]
         Rblock = R[blockR]
 
-        # <fermions>
-        α = compute_alpha(
+        # <fermions>: per-block fermion sign multiplied into outer α.
+        α_block =
+            α * compute_alpha(
             ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2,
             indsT2
         )
 
-        β = one(ElR)
-        if !haskey(already_written_to, blockR)
-            already_written_to[blockR] = true
-            # Overwrite the block of R
-            β = zero(ElR)
-        end
+        # First contribution to a given output block scales by the outer
+        # β; subsequent contributions accumulate.
+        β_block = haskey(already_written_to, blockR) ? one(ElR) : β
+        already_written_to[blockR] = true
+
         contract!(
-            expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2,
-            α, β
+            Rblock, labelsR, T1block, labelsT1, T2block, labelsT2, α_block, β_block
         )
     end
     return R
 end
 
 function contract!(
+        ::NativeContract,
         C::BlockSparseTensor,
         Clabels,
         A::BlockSparseTensor,
         Alabels,
         B::DiagBlockSparseTensor,
-        Blabels
+        Blabels,
+        α::Number = one(eltype(C)),
+        β::Number = zero(eltype(C))
     )
-    return contract!(C, Clabels, B, Blabels, A, Alabels)
+    return contract!(NativeContract(), C, Clabels, B, Blabels, A, Alabels, α, β)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", T::DiagBlockSparseTensor)

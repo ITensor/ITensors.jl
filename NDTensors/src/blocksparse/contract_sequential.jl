@@ -40,77 +40,22 @@ function contract_blockoffsets(
     return blockoffsetsR, contraction_plan
 end
 
-function contract!(
-        ::Algorithm"sequential",
+function contract_blocksparse_sequential!(
+        inner::ContractAlgorithm,
         R::BlockSparseTensor,
         labelsR,
         tensor1::BlockSparseTensor,
         labelstensor1,
         tensor2::BlockSparseTensor,
         labelstensor2,
-        contraction_plan
+        contraction_plan,
+        α::Number = one(eltype(R)),
+        β::Number = zero(eltype(R))
     )
     executor = SequentialEx()
-    return contract!(
+    return contract_blocksparse_with_executor!(
+        inner,
         R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan,
-        executor
+        executor, α, β
     )
-end
-using .Expose: expose
-###########################################################################
-# Old version
-# TODO: DELETE, keeping around for now for testing/benchmarking.
-function contract!(
-        ::Algorithm"sequential_deprecated",
-        R::BlockSparseTensor{ElR, NR},
-        labelsR,
-        T1::BlockSparseTensor{ElT1, N1},
-        labelsT1,
-        T2::BlockSparseTensor{ElT2, N2},
-        labelsT2,
-        contraction_plan
-    ) where {ElR, ElT1, ElT2, N1, N2, NR}
-    if isempty(contraction_plan)
-        return R
-    end
-    if using_threaded_blocksparse() && nthreads() > 1
-        _contract_threaded_deprecated!(
-            R,
-            labelsR,
-            T1,
-            labelsT1,
-            T2,
-            labelsT2,
-            contraction_plan
-        )
-        return R
-    end
-    already_written_to = Dict{Block{NR}, Bool}()
-    indsR = inds(R)
-    indsT1 = inds(T1)
-    indsT2 = inds(T2)
-    # In R .= α .* (T1 * T2) .+ β .* R
-    for (block1, block2, blockR) in contraction_plan
-
-        #<fermions>
-        α = compute_alpha(
-            ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2,
-            indsT2
-        )
-
-        T1block = T1[block1]
-        T2block = T2[block2]
-        Rblock = R[blockR]
-        β = one(ElR)
-        if !haskey(already_written_to, blockR)
-            already_written_to[blockR] = true
-            # Overwrite the block of R
-            β = zero(ElR)
-        end
-        contract!(
-            expose(Rblock), labelsR, expose(T1block), labelsT1, expose(T2block), labelsT2,
-            α, β
-        )
-    end
-    return R
 end

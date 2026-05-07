@@ -342,4 +342,31 @@ using Test: @test, @test_throws, @testset
         @test_throws ErrorException exp(A)
     end
 end
+
+# Regression for ITensor/ITensors.jl#1747: `contract!!` with explicit `α, β`
+# on `BlockSparseTensor`s used to dispatch to a buggy method that interpreted
+# the scalars as positional `contraction_plan, executor` arguments and failed
+# inside `map(_ -> empty(contraction_plan), …)` with `MethodError: empty(::Bool)`.
+@testset "BlockSparseTensor contract!! with α, β" begin
+    A = BlockSparseTensor{Float64}([(1, 2), (2, 1)], [2, 3], [4, 5])
+    randn!(A)
+    B = BlockSparseTensor{Float64}([(1, 2), (2, 1)], [4, 5], [2, 3])
+    randn!(B)
+    labels_A = (1, -1)
+    labels_B = (-1, 2)
+    labels_R = (1, 2)
+
+    R_ref = NDTensors.contract(A, labels_A, B, labels_B, labels_R)
+
+    R = zero(R_ref)
+    R = NDTensors.contract!!(R, labels_R, A, labels_A, B, labels_B, 1.0, 0.0)
+    @test R ≈ R_ref
+
+    R_initial = copy(R_ref)
+    randn!(NDTensors.data(R_initial))
+    α, β = 0.5, 0.25
+    R = copy(R_initial)
+    R = NDTensors.contract!!(R, labels_R, A, labels_A, B, labels_B, α, β)
+    @test R ≈ α * R_ref + β * R_initial
+end
 end
