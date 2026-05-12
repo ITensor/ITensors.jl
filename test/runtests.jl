@@ -19,6 +19,7 @@ ITensors.disable_threaded_blocksparse()
             "base",
             "threading",
             "ext/ITensorsChainRulesCoreExt",
+            "ext/ITensorsJLD2Ext",
             "ext/ITensorsTensorOperationsExt",
             "ext/ITensorsVectorInterfaceExt",
             "ext/NDTensorsMappedArraysExt",

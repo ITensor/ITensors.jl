@@ -1,6 +1,6 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-version = "0.9.27"
+version = "0.9.28"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
 
 [workspace]
@@ -32,12 +32,14 @@ Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 
 [weakdeps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
 ITensorsHDF5Ext = "HDF5"
+ITensorsJLD2Ext = "JLD2"
 ITensorsTensorOperationsExt = "TensorOperations"
 ITensorsVectorInterfaceExt = "VectorInterface"
 ITensorsZygoteRulesExt = "ZygoteRules"
@@ -52,8 +54,9 @@ DocStringExtensions = "0.9.3"
 Functors = "0.2, 0.3, 0.4, 0.5"
 HDF5 = "0.14, 0.15, 0.16, 0.17"
 IsApprox = "0.1, 1, 2"
+JLD2 = "0.6"
 LinearAlgebra = "1.10"
-NDTensors = "0.4.17"
+NDTensors = "0.4.28"
 Pkg = "1.10"
 Printf = "1.10"
 Random = "1.10"
