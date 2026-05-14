@@ -9,6 +9,9 @@ function JLD2.wconvert(::Type{SerializedQN}, qn::QN)
     return SerializedQN(version, qnvals)
 end
 
+# Workaround for a JLD2 bug where rconvert is called twice for types with custom
+# serialization that appear as fields inside other compound types.
+# TODO: Remove this idempotent method once the JLD2 bug is fixed.
 JLD2.rconvert(::Type{QN}, qn::QN) = qn
 
 function JLD2.rconvert(::Type{QN}, s)
