@@ -1,12 +1,8 @@
 using JLD2: JLD2
-using NDTensors: NDTensors, Diag, NonuniformDiag, UniformDiag
+using NDTensors:
+    NDTensors, Diag, NonuniformDiag, SerializedDiag, SerializedUniformDiag, UniformDiag
 
 # --- Diag (nonuniform) ---
-
-struct SerializedDiag{T}
-    version::Int
-    data::Vector{T}
-end
 
 JLD2.writeas(::Type{<:NonuniformDiag{T}}) where {T} = SerializedDiag{T}
 
@@ -25,11 +21,6 @@ function JLD2.rconvert(::Type{S}, s) where {T, S <: NonuniformDiag{T}}
 end
 
 # --- Diag (uniform) ---
-
-struct SerializedUniformDiag{T}
-    version::Int
-    value::T
-end
 
 JLD2.writeas(::Type{<:UniformDiag{T}}) where {T} = SerializedUniformDiag{T}
 

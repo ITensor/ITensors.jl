@@ -1,10 +1,5 @@
 using JLD2: JLD2
-using NDTensors: NDTensors, Dense
-
-struct SerializedDense{T}
-    version::Int
-    data::Vector{T}
-end
+using NDTensors: NDTensors, Dense, SerializedDense
 
 JLD2.writeas(::Type{<:Dense{T}}) where {T} = SerializedDense{T}
 

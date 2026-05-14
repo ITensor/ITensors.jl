@@ -1,19 +1,9 @@
 using JLD2: JLD2
-using NDTensors:
-    NDTensors, DiagBlockSparse, NonuniformDiagBlockSparse, UniformDiagBlockSparse
-
-# `_serialize_blockoffsets` / `_deserialize_blockoffsets` are defined in blocksparse.jl
-# and reused here.
+using NDTensors: NDTensors, DiagBlockSparse, NonuniformDiagBlockSparse,
+    SerializedDiagBlockSparse, SerializedUniformDiagBlockSparse, UniformDiagBlockSparse,
+    _deserialize_blockoffsets, _serialize_blockoffsets
 
 # --- DiagBlockSparse (nonuniform) ---
-
-struct SerializedDiagBlockSparse{T}
-    version::Int
-    ndims::Int
-    data::Vector{T}
-    block_indices::Vector{Vector{Int}}
-    block_offsets::Vector{Int}
-end
 
 function JLD2.writeas(::Type{<:NonuniformDiagBlockSparse{T}}) where {T}
     return SerializedDiagBlockSparse{T}
@@ -39,14 +29,6 @@ function JLD2.rconvert(::Type{S}, s) where {T, S <: NonuniformDiagBlockSparse{T}
 end
 
 # --- DiagBlockSparse (uniform) ---
-
-struct SerializedUniformDiagBlockSparse{T}
-    version::Int
-    ndims::Int
-    value::T
-    block_indices::Vector{Vector{Int}}
-    block_offsets::Vector{Int}
-end
 
 function JLD2.writeas(::Type{<:UniformDiagBlockSparse{T}}) where {T}
     return SerializedUniformDiagBlockSparse{T}

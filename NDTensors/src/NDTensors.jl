@@ -88,6 +88,11 @@ include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
 
 #####################################
+# Serialization types (used by NDTensorsJLD2Ext)
+#
+include("serialization_types.jl")
+
+#####################################
 # Deprecations
 #
 include("deprecated.jl")
