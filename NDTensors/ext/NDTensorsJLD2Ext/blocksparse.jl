@@ -1,6 +1,22 @@
 using JLD2: JLD2
-using NDTensors: NDTensors, BlockSparse, SerializedBlockSparse, _deserialize_blockoffsets,
-    _serialize_blockoffsets
+using NDTensors: NDTensors, Block, BlockOffsets, BlockSparse, SerializedBlockSparse
+
+# Shared block-offset (de)serialization helpers, used here for BlockSparse and reused
+# from diagblocksparse.jl for DiagBlockSparse.
+function _serialize_blockoffsets(storage)
+    boffs = NDTensors.blockoffsets(storage)
+    block_indices = Vector{Int}[collect(Int, Tuple(block)) for block in keys(boffs)]
+    block_offsets = collect(Int, values(boffs))
+    return (; block_indices, block_offsets)
+end
+
+function _deserialize_blockoffsets(ndims, s)
+    boffs = BlockOffsets{ndims}()
+    for (block_idx, offset) in zip(s.block_indices, s.block_offsets)
+        insert!(boffs, Block(NTuple{ndims, UInt}(block_idx)), offset)
+    end
+    return boffs
+end
 
 JLD2.writeas(::Type{<:BlockSparse{T}}) where {T} = SerializedBlockSparse{T}
 

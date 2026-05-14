@@ -46,19 +46,3 @@ struct SerializedEmptyStorage{T}
     version::Int
     eltype::Type{T}
 end
-
-# Shared block-offset (de)serialization helpers, used by BlockSparse and DiagBlockSparse.
-function _serialize_blockoffsets(storage)
-    boffs = blockoffsets(storage)
-    block_indices = Vector{Int}[collect(Int, Tuple(block)) for block in keys(boffs)]
-    block_offsets = collect(Int, values(boffs))
-    return (; block_indices, block_offsets)
-end
-
-function _deserialize_blockoffsets(ndims, s)
-    boffs = BlockOffsets{ndims}()
-    for (block_idx, offset) in zip(s.block_indices, s.block_offsets)
-        insert!(boffs, Block(NTuple{ndims, UInt}(block_idx)), offset)
-    end
-    return boffs
-end
