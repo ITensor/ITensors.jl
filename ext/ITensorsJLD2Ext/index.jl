@@ -1,14 +1,6 @@
-using ITensors: Arrow, Index, QNIndex, dir, id, plev, space, tags
+using ITensors: Arrow, Index, QNIndex, SerializedIndex, SerializedQNSpace, SerializedTagSet,
+    TagSet, dir, id, plev, space, tags
 using JLD2: JLD2
-
-struct SerializedIndex{Space}
-    version::Int
-    id::UInt64
-    space::Space
-    dir::Int
-    tags::SerializedTagSet
-    plev::Int
-end
 
 JLD2.writeas(::Type{<:Index{Int}}) = SerializedIndex{Int}
 JLD2.writeas(::Type{<:QNIndex}) = SerializedIndex{SerializedQNSpace}

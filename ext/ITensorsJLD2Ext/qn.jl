@@ -1,10 +1,5 @@
-using ITensors: QN, nactive
+using ITensors: QN, SerializedQN, SerializedQNVal, nactive
 using JLD2: JLD2
-
-struct SerializedQN
-    version::Int
-    qnvals::Vector{SerializedQNVal}
-end
 
 JLD2.writeas(::Type{QN}) = SerializedQN
 

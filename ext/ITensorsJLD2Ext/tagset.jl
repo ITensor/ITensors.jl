@@ -1,10 +1,5 @@
-using ITensors: TagSet
+using ITensors: SerializedTagSet, TagSet
 using JLD2: JLD2
-
-struct SerializedTagSet
-    version::Int
-    tags::Vector{String}
-end
 
 JLD2.writeas(::Type{<:TagSet}) = SerializedTagSet
 

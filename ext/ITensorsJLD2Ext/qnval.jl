@@ -1,12 +1,5 @@
-using ITensors: ITensors, QNVal, modulus
+using ITensors: ITensors, QNVal, SerializedQNVal, modulus
 using JLD2: JLD2
-
-struct SerializedQNVal
-    version::Int
-    name::String
-    val::Int
-    modulus::Int
-end
 
 JLD2.writeas(::Type{QNVal}) = SerializedQNVal
 

@@ -1,11 +1,5 @@
-using ITensors: ITensor, inds, itensor, storage
+using ITensors: ITensor, SerializedITensor, inds, itensor, storage
 using JLD2: JLD2
-
-struct SerializedITensor
-    version::Int
-    storage::Any
-    inds::Vector
-end
 
 JLD2.writeas(::Type{ITensor}) = SerializedITensor
 

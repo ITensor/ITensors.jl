@@ -1,15 +1,9 @@
-using ITensors: QN
+using ITensors: QN, SerializedQN, SerializedQNSpace
 using JLD2: JLD2
 
-# Lives separately from SerializedIndex so that an `Index` with `space::Vector{Pair{QN,Int}}`
-# (i.e. a QNIndex) can carry a concrete `SerializedQNSpace` as the `space` parameter rather
-# than fall back to `Any`.
-
-struct SerializedQNSpace
-    version::Int
-    qns::Vector{SerializedQN}
-    dims::Vector{Int}
-end
+# Helpers for the space field of `Index` / `QNIndex`. Live in the extension because they
+# call `JLD2.wconvert` / `JLD2.rconvert`; the struct itself (`SerializedQNSpace`) is in
+# `ITensors` proper.
 
 _wconvert_space(sp::Int) = sp
 
