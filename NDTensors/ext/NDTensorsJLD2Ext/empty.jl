@@ -1,10 +1,5 @@
 using JLD2: JLD2
-using NDTensors: EmptyStorage
-
-struct SerializedEmptyStorage{T}
-    version::Int
-    eltype::Type{T}
-end
+using NDTensors: EmptyStorage, SerializedEmptyStorage
 
 JLD2.writeas(::Type{<:EmptyStorage{T}}) where {T} = SerializedEmptyStorage{T}
 
