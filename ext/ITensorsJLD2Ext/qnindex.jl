@@ -5,6 +5,9 @@ using JLD2: JLD2
 # call `JLD2.wconvert` / `JLD2.rconvert`; the struct itself (`SerializedQNSpace`) lives in
 # `ITensors` proper.
 
+_writeas_space(::Type{Int}) = Int
+_writeas_space(::Type{Vector{Pair{QN, Int}}}) = SerializedQNSpace
+
 _wconvert_space(sp::Int) = sp
 
 function _wconvert_space(qnblocks::Vector{Pair{QN, Int}})

@@ -1,9 +1,8 @@
-using ITensors: Arrow, Index, QNIndex, SerializedIndex, SerializedQNSpace, SerializedTagSet,
-    TagSet, dir, id, plev, space, tags
+using ITensors:
+    Arrow, Index, SerializedIndex, SerializedTagSet, TagSet, dir, id, plev, space, tags
 using JLD2: JLD2
 
-JLD2.writeas(::Type{<:Index{Int}}) = SerializedIndex{Int}
-JLD2.writeas(::Type{<:QNIndex}) = SerializedIndex{SerializedQNSpace}
+JLD2.writeas(::Type{<:Index{S}}) where {S} = SerializedIndex{_writeas_space(S)}
 
 function JLD2.wconvert(::Type{<:SerializedIndex}, i::Index)
     version = 1
