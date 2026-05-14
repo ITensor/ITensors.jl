@@ -1,7 +1,9 @@
 using JLD2: JLD2
 using NDTensors: NDTensors, DiagBlockSparse, NonuniformDiagBlockSparse,
-    SerializedDiagBlockSparse, SerializedUniformDiagBlockSparse, UniformDiagBlockSparse,
-    _deserialize_blockoffsets, _serialize_blockoffsets
+    SerializedDiagBlockSparse, SerializedUniformDiagBlockSparse, UniformDiagBlockSparse
+
+# `_serialize_blockoffsets` / `_deserialize_blockoffsets` are defined in blocksparse.jl
+# and visible here via the shared NDTensorsJLD2Ext module scope.
 
 # --- DiagBlockSparse (nonuniform) ---
 
