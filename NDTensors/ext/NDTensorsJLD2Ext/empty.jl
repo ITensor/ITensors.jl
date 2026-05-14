@@ -8,6 +8,9 @@ function JLD2.wconvert(::Type{SerializedEmptyStorage{T}}, e::EmptyStorage{T}) wh
     return SerializedEmptyStorage{T}(version, T)
 end
 
+# Workaround for a JLD2 bug where rconvert is called twice for types with custom
+# serialization that appear as fields inside other compound types.
+# TODO: Remove this idempotent method once the JLD2 bug is fixed.
 JLD2.rconvert(::Type{S}, e::S) where {T, S <: EmptyStorage{T}} = e
 
 function JLD2.rconvert(::Type{S}, s) where {T, S <: EmptyStorage{T}}

@@ -21,6 +21,9 @@ function JLD2.wconvert(
     )
 end
 
+# Workaround for a JLD2 bug where rconvert is called twice for types with custom
+# serialization that appear as fields inside other compound types.
+# TODO: Remove this idempotent method once the JLD2 bug is fixed.
 JLD2.rconvert(::Type{S}, d::S) where {T, S <: NonuniformDiagBlockSparse{T}} = d
 
 # Uses unparameterized DiagBlockSparse constructor because S(...) doesn't exist in NDTensors.
@@ -47,6 +50,9 @@ function JLD2.wconvert(
     )
 end
 
+# Workaround for a JLD2 bug where rconvert is called twice for types with custom
+# serialization that appear as fields inside other compound types.
+# TODO: Remove this idempotent method once the JLD2 bug is fixed.
 JLD2.rconvert(::Type{S}, d::S) where {T, S <: UniformDiagBlockSparse{T}} = d
 
 # Uses unparameterized DiagBlockSparse constructor because S(...) doesn't exist in NDTensors.

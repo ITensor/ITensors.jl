@@ -9,9 +9,8 @@ function JLD2.wconvert(::Type{SerializedDense{T}}, d::Dense{T}) where {T}
 end
 
 # Workaround for a JLD2 bug where rconvert is called twice for types with custom
-# serialization that appear as fields inside other compound types. Unrelated to loading
-# legacy (pre-extension) files, which don't have a :written_type attribute and are handled
-# by JLD2 directly without calling rconvert.
+# serialization that appear as fields inside other compound types.
+# TODO: Remove this idempotent method once the JLD2 bug is fixed.
 JLD2.rconvert(::Type{S}, d::S) where {T, S <: Dense{T}} = d
 
 function JLD2.rconvert(::Type{S}, s) where {T, S <: Dense{T}}
