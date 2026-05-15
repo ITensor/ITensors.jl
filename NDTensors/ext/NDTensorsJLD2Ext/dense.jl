@@ -4,7 +4,7 @@ using NDTensors: NDTensors, Dense, SerializedDense
 JLD2.writeas(::Type{<:Dense{T}}) where {T} = SerializedDense{T}
 
 function JLD2.wconvert(::Type{SerializedDense{T}}, d::Dense{T}) where {T}
-    version = 1
+    version = UInt32(1)
     return SerializedDense{T}(version, convert(Vector{T}, NDTensors.data(d)))
 end
 

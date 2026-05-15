@@ -7,7 +7,7 @@ using NDTensors:
 JLD2.writeas(::Type{<:NonuniformDiag{T}}) where {T} = SerializedDiag{T}
 
 function JLD2.wconvert(::Type{SerializedDiag{T}}, d::NonuniformDiag{T}) where {T}
-    version = 1
+    version = UInt32(1)
     return SerializedDiag{T}(version, convert(Vector{T}, NDTensors.data(d)))
 end
 
@@ -28,7 +28,7 @@ end
 JLD2.writeas(::Type{<:UniformDiag{T}}) where {T} = SerializedUniformDiag{T}
 
 function JLD2.wconvert(::Type{SerializedUniformDiag{T}}, d::UniformDiag{T}) where {T}
-    version = 1
+    version = UInt32(1)
     return SerializedUniformDiag{T}(version, convert(T, NDTensors.data(d)))
 end
 

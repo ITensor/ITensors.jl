@@ -14,10 +14,10 @@ end
 function JLD2.wconvert(
         ::Type{SerializedDiagBlockSparse{T}}, dbs::DiagBlockSparse{T, <:AbstractVector, N}
     ) where {T, N}
-    version = 1
-    (; block_indices, block_offsets) = _serialize_blockoffsets(dbs)
+    version = UInt32(1)
+    (; block_indices, block_offsets) = _serialize_blockoffsets(Val(N), dbs)
     return SerializedDiagBlockSparse{T}(
-        version, N, convert(Vector{T}, NDTensors.data(dbs)), block_indices, block_offsets
+        version, convert(Vector{T}, NDTensors.data(dbs)), block_indices, block_offsets
     )
 end
 
@@ -30,7 +30,8 @@ JLD2.rconvert(::Type{S}, d::S) where {T, S <: NonuniformDiagBlockSparse{T}} = d
 function JLD2.rconvert(::Type{S}, s) where {T, S <: NonuniformDiagBlockSparse{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
-    return DiagBlockSparse(s.data, _deserialize_blockoffsets(s.ndims, s))::S
+    N = size(s.block_indices, 1)
+    return DiagBlockSparse(s.data, _deserialize_blockoffsets(Val(N), s))::S
 end
 
 # --- DiagBlockSparse (uniform) ---
@@ -43,10 +44,10 @@ function JLD2.wconvert(
         ::Type{SerializedUniformDiagBlockSparse{T}},
         dbs::DiagBlockSparse{T, <:Number, N}
     ) where {T, N}
-    version = 1
-    (; block_indices, block_offsets) = _serialize_blockoffsets(dbs)
+    version = UInt32(1)
+    (; block_indices, block_offsets) = _serialize_blockoffsets(Val(N), dbs)
     return SerializedUniformDiagBlockSparse{T}(
-        version, N, convert(T, NDTensors.data(dbs)), block_indices, block_offsets
+        version, convert(T, NDTensors.data(dbs)), block_indices, block_offsets
     )
 end
 
@@ -59,5 +60,6 @@ JLD2.rconvert(::Type{S}, d::S) where {T, S <: UniformDiagBlockSparse{T}} = d
 function JLD2.rconvert(::Type{S}, s) where {T, S <: UniformDiagBlockSparse{T}}
     s.value isa T ||
         throw(ArgumentError("value type mismatch: expected $T, got $(typeof(s.value))"))
-    return DiagBlockSparse(s.value, _deserialize_blockoffsets(s.ndims, s))::S
+    N = size(s.block_indices, 1)
+    return DiagBlockSparse(s.value, _deserialize_blockoffsets(Val(N), s))::S
 end
