@@ -5,7 +5,7 @@ using NDTensors: NDTensors, Block, BlockOffsets, BlockSparse, SerializedBlockSpa
 # from diagblocksparse.jl for DiagBlockSparse. Block positions are written as the
 # columns of a `(ndims, num_blocks)` `Matrix{Int64}` (COO sparse-tensor convention).
 
-function _serialize_blockoffsets(::Val{N}, storage) where {N}
+function _serialize_blockoffsets(storage, ::Val{N}) where {N}
     boffs = NDTensors.blockoffsets(storage)
     nblocks = length(boffs)
     block_indices = Matrix{Int64}(undef, N, nblocks)
@@ -17,7 +17,7 @@ function _serialize_blockoffsets(::Val{N}, storage) where {N}
     return (; block_indices, block_offsets)
 end
 
-function _deserialize_blockoffsets(::Val{N}, s) where {N}
+function _deserialize_blockoffsets(s, ::Val{N}) where {N}
     boffs = BlockOffsets{N}()
     for j in 1:size(s.block_indices, 2)
         block_tuple = NTuple{N, UInt}(@view s.block_indices[:, j])
@@ -32,7 +32,7 @@ function JLD2.wconvert(
         ::Type{SerializedBlockSparse{T}}, bs::BlockSparse{T, <:Any, N}
     ) where {T, N}
     version = UInt32(1)
-    (; block_indices, block_offsets) = _serialize_blockoffsets(Val(N), bs)
+    (; block_indices, block_offsets) = _serialize_blockoffsets(bs, Val(N))
     return SerializedBlockSparse{T}(
         version, convert(Vector{T}, NDTensors.data(bs)), block_indices, block_offsets
     )
@@ -48,5 +48,5 @@ function JLD2.rconvert(::Type{S}, s) where {T, S <: BlockSparse{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
     N = size(s.block_indices, 1)
-    return BlockSparse(s.data, _deserialize_blockoffsets(Val(N), s))::S
+    return BlockSparse(s.data, _deserialize_blockoffsets(s, Val(N)))::S
 end

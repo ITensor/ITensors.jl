@@ -15,7 +15,7 @@ function JLD2.wconvert(
         ::Type{SerializedDiagBlockSparse{T}}, dbs::DiagBlockSparse{T, <:AbstractVector, N}
     ) where {T, N}
     version = UInt32(1)
-    (; block_indices, block_offsets) = _serialize_blockoffsets(Val(N), dbs)
+    (; block_indices, block_offsets) = _serialize_blockoffsets(dbs, Val(N))
     return SerializedDiagBlockSparse{T}(
         version, convert(Vector{T}, NDTensors.data(dbs)), block_indices, block_offsets
     )
@@ -31,7 +31,7 @@ function JLD2.rconvert(::Type{S}, s) where {T, S <: NonuniformDiagBlockSparse{T}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
     N = size(s.block_indices, 1)
-    return DiagBlockSparse(s.data, _deserialize_blockoffsets(Val(N), s))::S
+    return DiagBlockSparse(s.data, _deserialize_blockoffsets(s, Val(N)))::S
 end
 
 # --- DiagBlockSparse (uniform) ---
@@ -45,7 +45,7 @@ function JLD2.wconvert(
         dbs::DiagBlockSparse{T, <:Number, N}
     ) where {T, N}
     version = UInt32(1)
-    (; block_indices, block_offsets) = _serialize_blockoffsets(Val(N), dbs)
+    (; block_indices, block_offsets) = _serialize_blockoffsets(dbs, Val(N))
     return SerializedUniformDiagBlockSparse{T}(
         version, convert(T, NDTensors.data(dbs)), block_indices, block_offsets
     )
@@ -61,5 +61,5 @@ function JLD2.rconvert(::Type{S}, s) where {T, S <: UniformDiagBlockSparse{T}}
     s.value isa T ||
         throw(ArgumentError("value type mismatch: expected $T, got $(typeof(s.value))"))
     N = size(s.block_indices, 1)
-    return DiagBlockSparse(s.value, _deserialize_blockoffsets(Val(N), s))::S
+    return DiagBlockSparse(s.value, _deserialize_blockoffsets(s, Val(N)))::S
 end
