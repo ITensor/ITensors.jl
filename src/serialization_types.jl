@@ -42,6 +42,11 @@ struct SerializedIndex{Space}
     plev::Int64
 end
 
+# Conceptually `SerializedITensor{Storage, Space}` to match the Serialized-fields-of-
+# Serialized-types convention, but blocked: `JLD2.writeas` dispatches on `Type{ITensor}`
+# and requires a fully concrete return whose fields it can introspect at type level. It
+# can't see the runtime storage / index-space types, and a `UnionAll` return errors.
+# Revisit if JLD2 changes that design.
 struct SerializedITensor
     version::UInt32
     storage::Any
