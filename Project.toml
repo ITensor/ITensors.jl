@@ -37,6 +37,11 @@ TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
 VectorInterface = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
+[sources.NDTensors]
+rev = "mf/ndtensors-jld2-ext"
+subdir = "NDTensors"
+url = "https://github.com/ITensor/ITensors.jl.git"
+
 [extensions]
 ITensorsHDF5Ext = "HDF5"
 ITensorsJLD2Ext = "JLD2"
