@@ -2,41 +2,48 @@
 # to be reusable by other serialization backends in the future). Kept in the main package
 # so that the type names recorded in serialized files do not encode the extension
 # module's namespace.
+#
+# Integer-width conventions for cross-language readability:
+#   * `version::UInt32` matches `Base.VersionNumber`'s field width.
+#   * `Int64` is used for any logically-signed quantity that could in principle be
+#     negative (`QN` charge values, modulus sentinel, prime level).
+#   * `Int8` for `Arrow` direction, with values `In=-1`, `Neither=0`, `Out=+1`.
+#   * `UInt64` for `Index` identifiers.
 
 struct SerializedQNVal
-    version::Int
+    version::UInt32
     name::String
-    val::Int
-    modulus::Int
+    val::Int64
+    modulus::Int64
 end
 
 struct SerializedQN
-    version::Int
+    version::UInt32
     qnvals::Vector{SerializedQNVal}
 end
 
 struct SerializedTagSet
-    version::Int
+    version::UInt32
     tags::Vector{String}
 end
 
 struct SerializedQNSpace
-    version::Int
+    version::UInt32
     qns::Vector{SerializedQN}
-    dims::Vector{Int}
+    dims::Vector{Int64}
 end
 
 struct SerializedIndex{Space}
-    version::Int
+    version::UInt32
     id::UInt64
     space::Space
-    dir::Int
+    dir::Int8
     tags::SerializedTagSet
-    plev::Int
+    plev::Int64
 end
 
 struct SerializedITensor
-    version::Int
+    version::UInt32
     storage::Any
     inds::Vector
 end

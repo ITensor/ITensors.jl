@@ -4,7 +4,7 @@ using JLD2: JLD2
 JLD2.writeas(::Type{<:TagSet}) = SerializedTagSet
 
 function JLD2.wconvert(::Type{SerializedTagSet}, ts::TagSet)
-    version = 1
+    version = UInt32(1)
     return SerializedTagSet(version, String[String(ts[n]) for n in 1:length(ts)])
 end
 

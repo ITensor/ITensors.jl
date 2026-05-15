@@ -4,7 +4,7 @@ using JLD2: JLD2
 JLD2.writeas(::Type{ITensor}) = SerializedITensor
 
 function JLD2.wconvert(::Type{SerializedITensor}, it::ITensor)
-    version = 1
+    version = UInt32(1)
     return SerializedITensor(version, storage(it), collect(inds(it)))
 end
 

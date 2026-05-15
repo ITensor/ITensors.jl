@@ -11,9 +11,9 @@ _writeas_space(::Type{Vector{Pair{QN, Int}}}) = SerializedQNSpace
 _wconvert_space(sp::Int) = sp
 
 function _wconvert_space(qnblocks::Vector{Pair{QN, Int}})
-    version = 1
+    version = UInt32(1)
     qns = SerializedQN[JLD2.wconvert(SerializedQN, first(p)) for p in qnblocks]
-    dims = Int[last(p) for p in qnblocks]
+    dims = Int64[last(p) for p in qnblocks]
     return SerializedQNSpace(version, qns, dims)
 end
 

@@ -5,9 +5,9 @@ using JLD2: JLD2
 JLD2.writeas(::Type{<:Index{S}}) where {S} = SerializedIndex{_writeas_space(S)}
 
 function JLD2.wconvert(::Type{<:SerializedIndex}, i::Index)
-    version = 1
+    version = UInt32(1)
     return SerializedIndex(
-        version, id(i), _wconvert_space(space(i)), Int(dir(i)),
+        version, id(i), _wconvert_space(space(i)), Int8(dir(i)),
         JLD2.wconvert(SerializedTagSet, tags(i)), plev(i)
     )
 end

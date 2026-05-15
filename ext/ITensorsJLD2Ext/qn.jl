@@ -4,7 +4,7 @@ using JLD2: JLD2
 JLD2.writeas(::Type{QN}) = SerializedQN
 
 function JLD2.wconvert(::Type{SerializedQN}, qn::QN)
-    version = 1
+    version = UInt32(1)
     qnvals = SerializedQNVal[JLD2.wconvert(SerializedQNVal, qn[i]) for i in 1:nactive(qn)]
     return SerializedQN(version, qnvals)
 end
