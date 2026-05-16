@@ -91,6 +91,13 @@ include("empty/adapt.jl")
 # Serialization types (used by NDTensorsJLD2Ext)
 #
 include("serialization_types.jl")
+# Mark the Serialized* on-disk schema types as public API (per Julia docs recommendation
+# for backwards-compatible `public` declarations on pre-1.11 Julia).
+VERSION >= v"1.11.0-DEV.469" && eval(
+    Meta.parse(
+        "public SerializedDense, SerializedBlockSparse, SerializedDiag, SerializedUniformDiag, SerializedDiagBlockSparse, SerializedUniformDiagBlockSparse, SerializedEmptyStorage"
+    )
+)
 
 #####################################
 # Deprecations
