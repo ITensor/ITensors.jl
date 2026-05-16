@@ -49,6 +49,7 @@ settings = Dict(
             "Running on GPUs" => "RunningOnGPUs.md",
             "Contraction sequence optimization" => "ContractionSequenceOptimization.md",
             "HDF5 File Formats" => "HDF5FileFormats.md",
+            "JLD2 File Format" => "JLD2FileFormat.md",
         ],
     ],
     :format =>
