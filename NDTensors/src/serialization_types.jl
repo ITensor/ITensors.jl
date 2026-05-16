@@ -11,11 +11,35 @@
 #     and is preserved even when `num_blocks == 0` because HDF5 stores both matrix
 #     dimensions.
 
+"""
+    SerializedDense{T}
+
+On-disk schema for `Dense{T}` storage. Version 1.
+
+Fields:
+
+  - `version::UInt32`
+  - `data::Vector{T}`
+"""
 struct SerializedDense{T}
     version::UInt32
     data::Vector{T}
 end
 
+"""
+    SerializedBlockSparse{T}
+
+On-disk schema for `BlockSparse{T}` storage. Version 1.
+
+Fields:
+
+  - `version::UInt32`
+  - `data::Vector{T}` — flat element buffer.
+  - `block_indices::Matrix{Int64}` — shape `(ndims, num_blocks)`, each column a block
+    position (COO convention; tensor rank is `size(block_indices, 1)`).
+  - `block_offsets::Vector{Int64}` — length `num_blocks`, the offset into `data` for each
+    block.
+"""
 struct SerializedBlockSparse{T}
     version::UInt32
     data::Vector{T}
@@ -23,16 +47,49 @@ struct SerializedBlockSparse{T}
     block_offsets::Vector{Int64}
 end
 
+"""
+    SerializedDiag{T}
+
+On-disk schema for non-uniform `Diag{T}` storage. Version 1.
+
+Fields:
+
+  - `version::UInt32`
+  - `data::Vector{T}` — the diagonal entries.
+"""
 struct SerializedDiag{T}
     version::UInt32
     data::Vector{T}
 end
 
+"""
+    SerializedUniformDiag{T}
+
+On-disk schema for uniform `Diag{T}` storage (all diagonal entries equal). Version 1.
+
+Fields:
+
+  - `version::UInt32`
+  - `value::T` — the shared diagonal value.
+"""
 struct SerializedUniformDiag{T}
     version::UInt32
     value::T
 end
 
+"""
+    SerializedDiagBlockSparse{T}
+
+On-disk schema for non-uniform `DiagBlockSparse{T}` storage. Version 1. Layout matches
+[`SerializedBlockSparse`](@ref).
+
+Fields:
+
+  - `version::UInt32`
+  - `data::Vector{T}`
+  - `block_indices::Matrix{Int64}` shape `(ndims, num_blocks)`
+  - `block_offsets::Vector{Int64}` length `num_blocks`
+"""
 struct SerializedDiagBlockSparse{T}
     version::UInt32
     data::Vector{T}
@@ -40,6 +97,18 @@ struct SerializedDiagBlockSparse{T}
     block_offsets::Vector{Int64}
 end
 
+"""
+    SerializedUniformDiagBlockSparse{T}
+
+On-disk schema for uniform `DiagBlockSparse{T}` storage. Version 1.
+
+Fields:
+
+  - `version::UInt32`
+  - `value::T` — the shared diagonal value.
+  - `block_indices::Matrix{Int64}` shape `(ndims, num_blocks)`
+  - `block_offsets::Vector{Int64}` length `num_blocks`
+"""
 struct SerializedUniformDiagBlockSparse{T}
     version::UInt32
     value::T
@@ -47,6 +116,16 @@ struct SerializedUniformDiagBlockSparse{T}
     block_offsets::Vector{Int64}
 end
 
+"""
+    SerializedEmptyStorage{T}
+
+On-disk schema for `EmptyStorage{T}`. Version 1. The element type `T` is carried in the
+parametric type name on disk, so no data field is needed.
+
+Fields:
+
+  - `version::UInt32`
+"""
 struct SerializedEmptyStorage{T}
     version::UInt32
 end
