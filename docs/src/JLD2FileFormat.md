@@ -25,11 +25,28 @@ The same call works for `QN`, `TagSet`, `Index`, `QNIndex`, and ITensors with `D
 ## The on-disk schema
 
 The format is defined by a set of plain Julia structs in the main packages — one per
-core type — and the JLD2 extension is a thin layer that maps each user-facing type
-through `JLD2.writeas` / `JLD2.wconvert` / `JLD2.rconvert` to the corresponding schema
-struct. Keeping the structs in the main packages means the type names recorded inside
-the JLD2 file do not encode an extension module namespace, which keeps the file readable
-even when no extension is loaded.
+core type — and the JLD2 extension is a thin layer that bridges JLD2's `writeas`
+mechanism to the backend-agnostic `serialized_type` mapping defined in the main package.
+Keeping the structs and the conversion logic in the main packages means the type names
+recorded inside the JLD2 file do not encode an extension module namespace, and other
+serialization backends can reuse the same machinery without depending on JLD2.
+
+### Backend-agnostic layer
+
+  - [`ITensors.serialized_type`](@ref) and [`NDTensors.serialized_type`](@ref): type-level
+    map from an in-memory type to its [`SerializedX`](@ref) schema struct.
+  - `Base.convert` overloads (defined alongside `serialized_type`) do the value-level
+    transform between the in-memory and `Serialized*` representations in both directions.
+
+JLD2's default `wconvert` / `rconvert` already delegate to `Base.convert`, so the
+extension itself only needs to provide the `JLD2.writeas` declarations bridging the
+two namespaces:
+
+```julia
+JLD2.writeas(::Type{T}) where {T <: NDTensors.TensorStorage} = NDTensors.serialized_type(T)
+JLD2.writeas(::Type{T}) where {T <: ITensors.Index}          = ITensors.serialized_type(T)
+# ...
+```
 
 ### Core ITensors types
 
@@ -43,6 +60,7 @@ Defined in `ITensors`:
   - [`ITensors.SerializedITensor`](@ref)
 
 ```@docs
+ITensors.serialized_type
 ITensors.SerializedQNVal
 ITensors.SerializedQN
 ITensors.SerializedTagSet
@@ -64,6 +82,7 @@ Defined in `NDTensors`:
   - [`NDTensors.SerializedEmptyStorage`](@ref)
 
 ```@docs
+NDTensors.serialized_type
 NDTensors.SerializedDense
 NDTensors.SerializedBlockSparse
 NDTensors.SerializedDiag
@@ -103,9 +122,9 @@ Every schema struct carries a `version::UInt32` field. The current version is `1
 every struct.
 
 When a struct's layout needs to change in a backwards-incompatible way, the version is
-incremented and the rconvert path branches on `s.version` to migrate older files. New
-schema versions should be additive whenever possible (extra fields with defaults) so
-that older readers can ignore unknown fields.
+incremented and the `Base.convert(::Type{InMemoryT}, ::SerializedT)` method branches on
+`s.version` to migrate older files. New schema versions should be additive whenever
+possible (extra fields with defaults) so older readers can ignore unknown fields.
 
 ## Future direction: other backends
 

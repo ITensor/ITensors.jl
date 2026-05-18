@@ -89,11 +89,13 @@ include("set_operations.jl")
 include("indexset.jl")
 include("itensor.jl")
 include("serialization_types.jl")
-# Mark the Serialized* on-disk schema types as public API (per Julia docs recommendation
-# for backwards-compatible `public` declarations on pre-1.11 Julia).
+include("serialization.jl")
+# Mark the on-disk schema types and the `serialized_type` mapping as public API (per
+# Julia docs recommendation for backwards-compatible `public` declarations on pre-1.11
+# Julia).
 VERSION >= v"1.11.0-DEV.469" && eval(
     Meta.parse(
-        "public SerializedQNVal, SerializedQN, SerializedTagSet, SerializedQNSpace, SerializedIndex, SerializedITensor"
+        "public serialized_type, SerializedQNVal, SerializedQN, SerializedTagSet, SerializedQNSpace, SerializedIndex, SerializedITensor"
     )
 )
 include("qn/flux.jl")
