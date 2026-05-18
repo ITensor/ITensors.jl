@@ -88,7 +88,6 @@ include("index.jl")
 include("set_operations.jl")
 include("indexset.jl")
 include("itensor.jl")
-include("serialization_types.jl")
 include("serialization.jl")
 # Mark the on-disk schema types and the `serialized_type` mapping as public API (per
 # Julia docs recommendation for backwards-compatible `public` declarations on pre-1.11
