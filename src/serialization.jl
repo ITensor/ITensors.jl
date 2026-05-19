@@ -1,15 +1,24 @@
 # Backend-agnostic serialization layer for ITensors core types.
 #
-# Each section below defines, for one in-memory type:
-#   1. The [`SerializedX`](@ref) schema struct (the on-disk layout).
-#   2. The [`serialized_type`](@ref) declaration mapping the in-memory type to the
-#      schema struct, used by serialization backends to bridge into their own writeas /
-#      type-mapping mechanism.
-#   3. `Base.convert` overloads for the value-level transform in both directions.
+# Three layers, defined once per in-memory type:
 #
-# JLD2's default `wconvert` / `rconvert` already delegate to `Base.convert`, so backends
-# (today only `ITensorsJLD2Ext`) only need to register `JLD2.writeas` declarations
-# pointing at `serialized_type` — no JLD2-specific value-conversion code is required.
+#   1. The [`SerializedX`](@ref) schema struct (the on-disk layout) plus the
+#      [`serialized_type`](@ref) type-level mapping.
+#   2. Permissive named functions [`serialize_convert`](@ref) and
+#      [`deserialize_convert`](@ref) — the source of truth for the value-level
+#      transform. `deserialize_convert` is duck-typed on its second argument so
+#      it absorbs JLD2's `AbstractReconstructedType` (returned when an on-disk
+#      schema struct's field layout differs from the current definition) and
+#      any other shape that exposes the expected fields.
+#   3. `Base.convert` overloads with typed signatures, which delegate to the
+#      named functions above. These give Julia-idiomatic conversion for
+#      non-JLD2 callers without polluting `Base.convert`'s namespace with the
+#      permissive form.
+#
+# The JLD2 extension (`ITensorsJLD2Ext`) bridges `serialized_type` into
+# `JLD2.writeas` and reintroduces `JLD2.rconvert` with the permissive signature
+# (delegating to `deserialize_convert`) plus a JLD2-bug idempotency workaround.
+# The `JLD2.wconvert` direction uses JLD2's default delegation to `Base.convert`.
 #
 # Integer-width conventions for cross-language readability:
 #   * `version::UInt32` matches `Base.VersionNumber`'s field width.
@@ -31,6 +40,32 @@ ITensors.serialized_type(Index{Int}) # => ITensors.SerializedIndex{Int}
 ```
 """
 function serialized_type end
+
+"""
+    ITensors.serialize_convert(::Type{SchemaT}, x) -> SchemaT
+
+Convert an in-memory ITensors value `x` to its on-disk schema representation
+`SchemaT`. The source of truth for the value-level write transform; the
+matching `Base.convert(::Type{SchemaT}, x)` overload is a thin shim that
+delegates here.
+"""
+function serialize_convert end
+
+"""
+    ITensors.deserialize_convert(::Type{InMemoryT}, s) -> InMemoryT
+
+Convert a serialized value `s` to its in-memory form, dispatched on the target
+type `InMemoryT`. The source of truth for the value-level read transform; the
+matching `Base.convert(::Type{InMemoryT}, ::SerializedX)` overload is a thin
+shim that delegates here.
+
+`s` is intentionally duck-typed: in addition to the canonical `SerializedX`
+schema struct, it may be a `JLD2.AbstractReconstructedType` (produced when an
+on-disk schema struct's field layout differs from the current code's
+definition) or any other value exposing the expected fields. Callers should
+not assume `s isa SerializedX`.
+"""
+function deserialize_convert end
 
 # --- QNVal ---
 
@@ -56,11 +91,14 @@ end
 
 serialized_type(::Type{QNVal}) = SerializedQNVal
 
-function Base.convert(::Type{SerializedQNVal}, qv::QNVal)
+function serialize_convert(::Type{SerializedQNVal}, qv::QNVal)
     return SerializedQNVal(UInt32(1), String(name(qv)), val(qv), modulus(qv))
 end
 
-Base.convert(::Type{QNVal}, s::SerializedQNVal) = QNVal(s.name, s.val, s.modulus)
+deserialize_convert(::Type{QNVal}, s) = QNVal(s.name, s.val, s.modulus)
+
+Base.convert(::Type{SerializedQNVal}, qv::QNVal) = serialize_convert(SerializedQNVal, qv)
+Base.convert(::Type{QNVal}, s::SerializedQNVal) = deserialize_convert(QNVal, s)
 
 # --- QN ---
 
@@ -81,14 +119,18 @@ end
 
 serialized_type(::Type{QN}) = SerializedQN
 
-function Base.convert(::Type{SerializedQN}, qn::QN)
-    qnvals = SerializedQNVal[convert(SerializedQNVal, qn[i]) for i in 1:nactive(qn)]
+function serialize_convert(::Type{SerializedQN}, qn::QN)
+    qnvals =
+        SerializedQNVal[serialize_convert(SerializedQNVal, qn[i]) for i in 1:nactive(qn)]
     return SerializedQN(UInt32(1), qnvals)
 end
 
-function Base.convert(::Type{QN}, s::SerializedQN)
+function deserialize_convert(::Type{QN}, s)
     return QN([(qv.name, qv.val, qv.modulus) for qv in s.qnvals]...)
 end
+
+Base.convert(::Type{SerializedQN}, qn::QN) = serialize_convert(SerializedQN, qn)
+Base.convert(::Type{QN}, s::SerializedQN) = deserialize_convert(QN, s)
 
 # --- TagSet ---
 
@@ -109,11 +151,14 @@ end
 
 serialized_type(::Type{<:TagSet}) = SerializedTagSet
 
-function Base.convert(::Type{SerializedTagSet}, ts::TagSet)
+function serialize_convert(::Type{SerializedTagSet}, ts::TagSet)
     return SerializedTagSet(UInt32(1), String[String(ts[n]) for n in 1:length(ts)])
 end
 
-Base.convert(::Type{TagSet}, s::SerializedTagSet) = TagSet(join(s.tags, ","))
+deserialize_convert(::Type{TagSet}, s) = TagSet(join(s.tags, ","))
+
+Base.convert(::Type{SerializedTagSet}, ts::TagSet) = serialize_convert(SerializedTagSet, ts)
+Base.convert(::Type{TagSet}, s::SerializedTagSet) = deserialize_convert(TagSet, s)
 
 # --- QN space (the `space` field of a `QNIndex`) ---
 
@@ -143,14 +188,21 @@ end
 # is invoked explicitly by the `Index` conversion below via the private helper
 # `_serialized_space_type`.
 
-function Base.convert(::Type{SerializedQNSpace}, qnblocks::Vector{Pair{QN, Int}})
-    qns = SerializedQN[convert(SerializedQN, first(p)) for p in qnblocks]
+function serialize_convert(::Type{SerializedQNSpace}, qnblocks::Vector{Pair{QN, Int}})
+    qns = SerializedQN[serialize_convert(SerializedQN, first(p)) for p in qnblocks]
     dims = Int64[last(p) for p in qnblocks]
     return SerializedQNSpace(UInt32(1), qns, dims)
 end
 
+function deserialize_convert(::Type{Vector{Pair{QN, Int}}}, s)
+    return Pair.(QN[deserialize_convert(QN, sqn) for sqn in s.qns], s.dims)
+end
+
+function Base.convert(::Type{SerializedQNSpace}, qnblocks::Vector{Pair{QN, Int}})
+    return serialize_convert(SerializedQNSpace, qnblocks)
+end
 function Base.convert(::Type{Vector{Pair{QN, Int}}}, s::SerializedQNSpace)
-    return Pair.(QN[convert(QN, sqn) for sqn in s.qns], s.dims)
+    return deserialize_convert(Vector{Pair{QN, Int}}, s)
 end
 
 # --- Index ---
@@ -180,23 +232,36 @@ struct SerializedIndex{Space}
 end
 
 # Internal mapping from the in-memory `Index.space` type to the on-disk space type.
-# Used by `serialized_type(::Type{<:Index})` and `Base.convert(::Type{<:SerializedIndex}, ::Index)`.
+# Used by `serialized_type(::Type{<:Index})` and the Index conversion functions below.
 _serialized_space_type(::Type{Int}) = Int
 _serialized_space_type(::Type{Vector{Pair{QN, Int}}}) = SerializedQNSpace
 
 serialized_type(::Type{<:Index{S}}) where {S} = SerializedIndex{_serialized_space_type(S)}
 
-function Base.convert(::Type{<:SerializedIndex}, i::Index)
+function serialize_convert(::Type{<:SerializedIndex}, i::Index)
     SP = _serialized_space_type(typeof(space(i)))
+    # `convert` rather than `serialize_convert` here because the space type can
+    # be a primitive (`Int` for a non-QN index) for which there is no
+    # `serialize_convert` method but Julia Base has the identity `convert`.
     sp = convert(SP, space(i))
     return SerializedIndex(
-        UInt32(1), id(i), sp, Int8(dir(i)), convert(SerializedTagSet, tags(i)), plev(i)
+        UInt32(1), id(i), sp, Int8(dir(i)), serialize_convert(SerializedTagSet, tags(i)),
+        plev(i)
     )
 end
 
-function Base.convert(::Type{I}, s::SerializedIndex) where {T, I <: Index{T}}
+function deserialize_convert(::Type{I}, s) where {T, I <: Index{T}}
+    # `convert` rather than `deserialize_convert` for the nested space:
+    # primitive on-disk spaces (`Int`) hit Julia Base's identity, while
+    # `SerializedQNSpace` dispatches through the `Base.convert` shim into
+    # `deserialize_convert(Vector{Pair{QN, Int}}, ...)`.
     sp = convert(T, s.space)
-    return I(s.id, sp, Arrow(s.dir), convert(TagSet, s.tags), s.plev)
+    return I(s.id, sp, Arrow(s.dir), deserialize_convert(TagSet, s.tags), s.plev)
+end
+
+Base.convert(::Type{<:SerializedIndex}, i::Index) = serialize_convert(SerializedIndex, i)
+function Base.convert(::Type{I}, s::SerializedIndex) where {T, I <: Index{T}}
+    return deserialize_convert(I, s)
 end
 
 # --- ITensor ---
@@ -233,8 +298,13 @@ end
 
 serialized_type(::Type{ITensor}) = SerializedITensor
 
-function Base.convert(::Type{SerializedITensor}, it::ITensor)
+function serialize_convert(::Type{SerializedITensor}, it::ITensor)
     return SerializedITensor(UInt32(1), storage(it), collect(inds(it)))
 end
 
-Base.convert(::Type{ITensor}, s::SerializedITensor) = itensor(s.storage, Tuple(s.inds))
+deserialize_convert(::Type{ITensor}, s) = itensor(s.storage, Tuple(s.inds))
+
+function Base.convert(::Type{SerializedITensor}, it::ITensor)
+    return serialize_convert(SerializedITensor, it)
+end
+Base.convert(::Type{ITensor}, s::SerializedITensor) = deserialize_convert(ITensor, s)

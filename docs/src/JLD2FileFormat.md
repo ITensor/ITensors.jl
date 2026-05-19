@@ -4,6 +4,22 @@ This page documents the on-disk format used when reading and writing ITensors co
 types and NDTensors storage types through the [JLD2.jl](https://github.com/JuliaIO/JLD2.jl)
 backend, provided by the `ITensorsJLD2Ext` and `NDTensorsJLD2Ext` package extensions.
 
+## Why a schema layer
+
+JLD2's default behaviour is to serialize an object using its in-memory struct layout —
+each field is written under its current Julia field name and type. That works for one-off
+storage, but it ties the file format to the in-memory type definitions: renaming a field,
+splitting a type, or moving a struct between modules invalidates older files.
+
+The JLD2 extension shipped here interposes a stable on-disk schema between in-memory types
+and the file. Each user-facing type (`ITensor`, `Index`, `QN`, `TagSet`, and the NDTensors
+storage types) is written through a `Serialized*` struct that owns the on-disk layout.
+Every schema struct carries an explicit `version::UInt32`, so when an in-memory type's
+representation changes the loader can migrate older files instead of failing to
+reconstruct them. The schema structs are kept deliberately simple — plain fixed-width
+integers, strings, and arrays — so the file is portable across host word sizes and easy
+for future readers to consume.
+
 ## Round-tripping an ITensor
 
 JLD2 is enabled automatically by loading JLD2 alongside ITensors:
@@ -119,8 +135,8 @@ flat `data` buffer for each block.
 
 ## Versioning
 
-Every schema struct carries a `version::UInt32` field. The current version is `1` for
-every struct.
+Every schema struct carries a `version::UInt32` field. Versions for each struct start at
+`1` and are bumped independently as that struct's layout evolves.
 
 When a struct's layout needs to change in a backwards-incompatible way, the version is
 incremented and the `Base.convert(::Type{InMemoryT}, ::SerializedT)` method branches on
@@ -130,10 +146,7 @@ possible (extra fields with defaults) so older readers can ignore unknown fields
 ## Future direction: other backends
 
 The `Serialized*` structs are intentionally backend-agnostic — they describe the on-disk
-layout, not the JLD2-specific encoding mechanics. A future native HDF5 backend (using
-[HDF5.jl](https://juliaio.github.io/HDF5.jl/stable/) directly) or a cross-language
-reader (h5py, C++) can target the same schema by walking the struct fields and emitting
-or parsing the obvious HDF5 datatype for each field (primitives, strings, 1-D and 2-D
-integer arrays, named groups for nested structs). Today JLD2 is the only backend
-shipped, and a separate, legacy HDF5 format documented on the
-[HDF5 File Formats](@ref) page predates this schema; the two are not interchangeable.
+layout, not the JLD2-specific encoding mechanics. In the future, we may use them as a
+reference schema for cross-language reading or writing of ITensor types (for example
+from h5py or C++). Additionally, we may use them to aid with interoperability between
+ITensor objects saved with JLD2 and the separate ITensor [HDF5 File Formats](@ref).
