@@ -1,15 +1,24 @@
 # Backend-agnostic serialization layer for NDTensors storage types.
 #
-# Each section below defines, for one in-memory storage type:
-#   1. The [`SerializedX`](@ref) schema struct (the on-disk layout).
-#   2. The [`serialized_type`](@ref) declaration mapping the in-memory type to the
-#      schema struct, used by serialization backends to bridge into their own writeas /
-#      type-mapping mechanism.
-#   3. `Base.convert` overloads for the value-level transform in both directions.
+# Three layers, defined once per in-memory storage type:
 #
-# JLD2's default `wconvert` / `rconvert` already delegate to `Base.convert`, so backends
-# (today only `NDTensorsJLD2Ext`) only need to register a `JLD2.writeas` declaration
-# pointing at `serialized_type` — no JLD2-specific value-conversion code is required.
+#   1. The [`SerializedX`](@ref) schema struct (the on-disk layout) plus the
+#      [`serialized_type`](@ref) type-level mapping.
+#   2. Permissive named functions [`serialize_convert`](@ref) and
+#      [`deserialize_convert`](@ref) — the source of truth for the value-level
+#      transform. `deserialize_convert` is duck-typed on its second argument so
+#      it absorbs JLD2's `AbstractReconstructedType` (returned when an on-disk
+#      schema struct's field layout differs from the current definition) and
+#      any other shape that exposes the expected fields.
+#   3. `Base.convert` overloads with typed signatures, which delegate to the
+#      named functions above. These give Julia-idiomatic conversion for
+#      non-JLD2 callers without polluting `Base.convert`'s namespace with the
+#      permissive form.
+#
+# The JLD2 extension (`NDTensorsJLD2Ext`) bridges `serialized_type` into
+# `JLD2.writeas` and reintroduces `JLD2.rconvert` with the permissive signature
+# (delegating to `deserialize_convert`) plus a JLD2-bug idempotency workaround.
+# The `JLD2.wconvert` direction uses JLD2's default delegation to `Base.convert`.
 #
 # Integer-width conventions for cross-language readability:
 #   * `version::UInt32` matches `Base.VersionNumber`'s field width.
@@ -31,6 +40,32 @@ NDTensors.serialized_type(Dense{Float64})  # => NDTensors.SerializedDense{Float6
 """
 function serialized_type end
 
+"""
+    NDTensors.serialize_convert(::Type{SchemaT}, x) -> SchemaT
+
+Convert an in-memory storage value `x` to its on-disk schema representation
+`SchemaT`. The source of truth for the value-level write transform; the
+matching `Base.convert(::Type{SchemaT}, x)` overload is a thin shim that
+delegates here.
+"""
+function serialize_convert end
+
+"""
+    NDTensors.deserialize_convert(::Type{InMemoryT}, s) -> InMemoryT
+
+Convert a serialized value `s` to its in-memory form, dispatched on the target
+type `InMemoryT`. The source of truth for the value-level read transform; the
+matching `Base.convert(::Type{InMemoryT}, ::SerializedX)` overload is a thin
+shim that delegates here.
+
+`s` is intentionally duck-typed: in addition to the canonical `SerializedX`
+schema struct, it may be a `JLD2.AbstractReconstructedType` (produced when an
+on-disk schema struct's field layout differs from the current code's
+definition) or any other value exposing the expected fields. Callers should
+not assume `s isa SerializedX`.
+"""
+function deserialize_convert end
+
 # --- Dense ---
 
 """
@@ -50,14 +85,21 @@ end
 
 serialized_type(::Type{<:Dense{T}}) where {T} = SerializedDense{T}
 
-function Base.convert(::Type{SerializedDense{T}}, d::Dense{T}) where {T}
+function serialize_convert(::Type{SerializedDense{T}}, d::Dense{T}) where {T}
     return SerializedDense{T}(UInt32(1), convert(Vector{T}, data(d)))
 end
 
-function Base.convert(::Type{S}, s::SerializedDense) where {T, S <: Dense{T}}
+function deserialize_convert(::Type{S}, s) where {T, S <: Dense{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
     return S(s.data)
+end
+
+function Base.convert(::Type{SerializedDense{T}}, d::Dense{T}) where {T}
+    return serialize_convert(SerializedDense{T}, d)
+end
+function Base.convert(::Type{S}, s::SerializedDense) where {T, S <: Dense{T}}
+    return deserialize_convert(S, s)
 end
 
 # --- BlockSparse ---
@@ -109,7 +151,7 @@ end
 
 serialized_type(::Type{<:BlockSparse{T}}) where {T} = SerializedBlockSparse{T}
 
-function Base.convert(
+function serialize_convert(
         ::Type{SerializedBlockSparse{T}}, bs::BlockSparse{T, <:Any, N}
     ) where {T, N}
     (; block_indices, block_offsets) = _serialize_blockoffsets(bs, Val(N))
@@ -119,11 +161,20 @@ function Base.convert(
 end
 
 # Uses unparameterized BlockSparse constructor because S(...) doesn't exist in NDTensors.
-function Base.convert(::Type{S}, s::SerializedBlockSparse) where {T, S <: BlockSparse{T}}
+function deserialize_convert(::Type{S}, s) where {T, S <: BlockSparse{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
     N = size(s.block_indices, 2)
     return BlockSparse(s.data, _deserialize_blockoffsets(s, Val(N)))::S
+end
+
+function Base.convert(
+        ::Type{SerializedBlockSparse{T}}, bs::BlockSparse{T, <:Any, N}
+    ) where {T, N}
+    return serialize_convert(SerializedBlockSparse{T}, bs)
+end
+function Base.convert(::Type{S}, s::SerializedBlockSparse) where {T, S <: BlockSparse{T}}
+    return deserialize_convert(S, s)
 end
 
 # --- Diag (nonuniform) ---
@@ -145,15 +196,22 @@ end
 
 serialized_type(::Type{<:NonuniformDiag{T}}) where {T} = SerializedDiag{T}
 
-function Base.convert(::Type{SerializedDiag{T}}, d::NonuniformDiag{T}) where {T}
+function serialize_convert(::Type{SerializedDiag{T}}, d::NonuniformDiag{T}) where {T}
     return SerializedDiag{T}(UInt32(1), convert(Vector{T}, data(d)))
 end
 
 # Uses Diag{T} constructor because S(...) doesn't exist in NDTensors.
-function Base.convert(::Type{S}, s::SerializedDiag) where {T, S <: NonuniformDiag{T}}
+function deserialize_convert(::Type{S}, s) where {T, S <: NonuniformDiag{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
     return Diag{T}(s.data)::S
+end
+
+function Base.convert(::Type{SerializedDiag{T}}, d::NonuniformDiag{T}) where {T}
+    return serialize_convert(SerializedDiag{T}, d)
+end
+function Base.convert(::Type{S}, s::SerializedDiag) where {T, S <: NonuniformDiag{T}}
+    return deserialize_convert(S, s)
 end
 
 # --- Diag (uniform) ---
@@ -175,15 +233,22 @@ end
 
 serialized_type(::Type{<:UniformDiag{T}}) where {T} = SerializedUniformDiag{T}
 
-function Base.convert(::Type{SerializedUniformDiag{T}}, d::UniformDiag{T}) where {T}
+function serialize_convert(::Type{SerializedUniformDiag{T}}, d::UniformDiag{T}) where {T}
     return SerializedUniformDiag{T}(UInt32(1), convert(T, data(d)))
 end
 
 # Uses unparameterized Diag constructor because S(...) doesn't exist in NDTensors.
-function Base.convert(::Type{S}, s::SerializedUniformDiag) where {T, S <: UniformDiag{T}}
+function deserialize_convert(::Type{S}, s) where {T, S <: UniformDiag{T}}
     s.value isa T ||
         throw(ArgumentError("value type mismatch: expected $T, got $(typeof(s.value))"))
     return Diag(s.value)::S
+end
+
+function Base.convert(::Type{SerializedUniformDiag{T}}, d::UniformDiag{T}) where {T}
+    return serialize_convert(SerializedUniformDiag{T}, d)
+end
+function Base.convert(::Type{S}, s::SerializedUniformDiag) where {T, S <: UniformDiag{T}}
+    return deserialize_convert(S, s)
 end
 
 # --- DiagBlockSparse (nonuniform) ---
@@ -212,7 +277,7 @@ function serialized_type(::Type{<:NonuniformDiagBlockSparse{T}}) where {T}
     return SerializedDiagBlockSparse{T}
 end
 
-function Base.convert(
+function serialize_convert(
         ::Type{SerializedDiagBlockSparse{T}},
         dbs::DiagBlockSparse{T, <:AbstractVector, N}
     ) where {T, N}
@@ -223,13 +288,23 @@ function Base.convert(
 end
 
 # Uses unparameterized DiagBlockSparse constructor because S(...) doesn't exist in NDTensors.
-function Base.convert(
-        ::Type{S}, s::SerializedDiagBlockSparse
-    ) where {T, S <: NonuniformDiagBlockSparse{T}}
+function deserialize_convert(::Type{S}, s) where {T, S <: NonuniformDiagBlockSparse{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
     N = size(s.block_indices, 2)
     return DiagBlockSparse(s.data, _deserialize_blockoffsets(s, Val(N)))::S
+end
+
+function Base.convert(
+        ::Type{SerializedDiagBlockSparse{T}},
+        dbs::DiagBlockSparse{T, <:AbstractVector, N}
+    ) where {T, N}
+    return serialize_convert(SerializedDiagBlockSparse{T}, dbs)
+end
+function Base.convert(
+        ::Type{S}, s::SerializedDiagBlockSparse
+    ) where {T, S <: NonuniformDiagBlockSparse{T}}
+    return deserialize_convert(S, s)
 end
 
 # --- DiagBlockSparse (uniform) ---
@@ -257,7 +332,7 @@ function serialized_type(::Type{<:UniformDiagBlockSparse{T}}) where {T}
     return SerializedUniformDiagBlockSparse{T}
 end
 
-function Base.convert(
+function serialize_convert(
         ::Type{SerializedUniformDiagBlockSparse{T}},
         dbs::DiagBlockSparse{T, <:Number, N}
     ) where {T, N}
@@ -268,13 +343,23 @@ function Base.convert(
 end
 
 # Uses unparameterized DiagBlockSparse constructor because S(...) doesn't exist in NDTensors.
-function Base.convert(
-        ::Type{S}, s::SerializedUniformDiagBlockSparse
-    ) where {T, S <: UniformDiagBlockSparse{T}}
+function deserialize_convert(::Type{S}, s) where {T, S <: UniformDiagBlockSparse{T}}
     s.value isa T ||
         throw(ArgumentError("value type mismatch: expected $T, got $(typeof(s.value))"))
     N = size(s.block_indices, 2)
     return DiagBlockSparse(s.value, _deserialize_blockoffsets(s, Val(N)))::S
+end
+
+function Base.convert(
+        ::Type{SerializedUniformDiagBlockSparse{T}},
+        dbs::DiagBlockSparse{T, <:Number, N}
+    ) where {T, N}
+    return serialize_convert(SerializedUniformDiagBlockSparse{T}, dbs)
+end
+function Base.convert(
+        ::Type{S}, s::SerializedUniformDiagBlockSparse
+    ) where {T, S <: UniformDiagBlockSparse{T}}
+    return deserialize_convert(S, s)
 end
 
 # --- EmptyStorage ---
@@ -295,8 +380,15 @@ end
 
 serialized_type(::Type{<:EmptyStorage{T}}) where {T} = SerializedEmptyStorage{T}
 
-function Base.convert(::Type{SerializedEmptyStorage{T}}, ::EmptyStorage{T}) where {T}
+function serialize_convert(::Type{SerializedEmptyStorage{T}}, ::EmptyStorage{T}) where {T}
     return SerializedEmptyStorage{T}(UInt32(1))
 end
 
-Base.convert(::Type{S}, ::SerializedEmptyStorage) where {T, S <: EmptyStorage{T}} = S()
+deserialize_convert(::Type{S}, _) where {T, S <: EmptyStorage{T}} = S()
+
+function Base.convert(::Type{SerializedEmptyStorage{T}}, e::EmptyStorage{T}) where {T}
+    return serialize_convert(SerializedEmptyStorage{T}, e)
+end
+function Base.convert(::Type{S}, s::SerializedEmptyStorage) where {T, S <: EmptyStorage{T}}
+    return deserialize_convert(S, s)
+end
