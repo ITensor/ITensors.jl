@@ -13,11 +13,10 @@
 #
 # Integer-width conventions for cross-language readability:
 #   * `version::UInt32` matches `Base.VersionNumber`'s field width.
-#   * Block-sparse layouts use `block_indices::Matrix{Int64}` shaped `(ndims, num_blocks)`,
-#     following the COO sparse-tensor convention used by Apache Arrow, PyData Sparse, and
-#     PyTorch's sparse format. The tensor rank is implicit in `size(block_indices, 1)`
-#     and is preserved even when `num_blocks == 0` because HDF5 stores both matrix
-#     dimensions.
+#   * Block-sparse layouts use `block_indices::Matrix{Int64}` shaped `(num_blocks, ndims)`,
+#     i.e. each row is one block's position tuple. The tensor rank is implicit in
+#     `size(block_indices, 2)` and is preserved even when `num_blocks == 0` because HDF5
+#     stores both matrix dimensions.
 
 """
     NDTensors.serialized_type(::Type{T}) -> Type
@@ -72,8 +71,8 @@ Fields:
 
   - `version::UInt32`
   - `data::Vector{T}` — flat element buffer.
-  - `block_indices::Matrix{Int64}` — shape `(ndims, num_blocks)`, each column a block
-    position (COO convention; tensor rank is `size(block_indices, 1)`).
+  - `block_indices::Matrix{Int64}` — shape `(num_blocks, ndims)`, each row a block
+    position. Tensor rank is `size(block_indices, 2)`.
   - `block_offsets::Vector{Int64}` — length `num_blocks`, the offset into `data` for each
     block.
 """
@@ -90,10 +89,10 @@ end
 function _serialize_blockoffsets(storage, ::Val{N}) where {N}
     boffs = blockoffsets(storage)
     nblocks = length(boffs)
-    block_indices = Matrix{Int64}(undef, N, nblocks)
+    block_indices = Matrix{Int64}(undef, nblocks, N)
     block_offsets = Vector{Int64}(undef, nblocks)
     for (i, (block, offset)) in enumerate(pairs(boffs))
-        block_indices[:, i] .= Tuple(block)
+        block_indices[i, :] .= Tuple(block)
         block_offsets[i] = offset
     end
     return (; block_indices, block_offsets)
@@ -101,9 +100,9 @@ end
 
 function _deserialize_blockoffsets(s, ::Val{N}) where {N}
     boffs = BlockOffsets{N}()
-    for j in 1:size(s.block_indices, 2)
-        block_tuple = NTuple{N, UInt}(@view s.block_indices[:, j])
-        insert!(boffs, Block(block_tuple), s.block_offsets[j])
+    for i in 1:size(s.block_indices, 1)
+        block_tuple = NTuple{N, UInt}(@view s.block_indices[i, :])
+        insert!(boffs, Block(block_tuple), s.block_offsets[i])
     end
     return boffs
 end
@@ -123,7 +122,7 @@ end
 function Base.convert(::Type{S}, s::SerializedBlockSparse) where {T, S <: BlockSparse{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
-    N = size(s.block_indices, 1)
+    N = size(s.block_indices, 2)
     return BlockSparse(s.data, _deserialize_blockoffsets(s, Val(N)))::S
 end
 
@@ -199,7 +198,7 @@ Fields:
 
   - `version::UInt32`
   - `data::Vector{T}`
-  - `block_indices::Matrix{Int64}` shape `(ndims, num_blocks)`
+  - `block_indices::Matrix{Int64}` shape `(num_blocks, ndims)`
   - `block_offsets::Vector{Int64}` length `num_blocks`
 """
 struct SerializedDiagBlockSparse{T}
@@ -229,7 +228,7 @@ function Base.convert(
     ) where {T, S <: NonuniformDiagBlockSparse{T}}
     eltype(s.data) === T ||
         throw(ArgumentError("data eltype mismatch: expected $T, got $(eltype(s.data))"))
-    N = size(s.block_indices, 1)
+    N = size(s.block_indices, 2)
     return DiagBlockSparse(s.data, _deserialize_blockoffsets(s, Val(N)))::S
 end
 
@@ -244,7 +243,7 @@ Fields:
 
   - `version::UInt32`
   - `value::T` — the shared diagonal value.
-  - `block_indices::Matrix{Int64}` shape `(ndims, num_blocks)`
+  - `block_indices::Matrix{Int64}` shape `(num_blocks, ndims)`
   - `block_offsets::Vector{Int64}` length `num_blocks`
 """
 struct SerializedUniformDiagBlockSparse{T}
@@ -274,7 +273,7 @@ function Base.convert(
     ) where {T, S <: UniformDiagBlockSparse{T}}
     s.value isa T ||
         throw(ArgumentError("value type mismatch: expected $T, got $(typeof(s.value))"))
-    N = size(s.block_indices, 1)
+    N = size(s.block_indices, 2)
     return DiagBlockSparse(s.value, _deserialize_blockoffsets(s, Val(N)))::S
 end
 
