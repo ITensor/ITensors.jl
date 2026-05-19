@@ -9,7 +9,7 @@ using JLD2: JLD2
 
 JLD2.writeas(::Type{QNVal}) = ITensors.serialized_type(QNVal)
 JLD2.writeas(::Type{QN}) = ITensors.serialized_type(QN)
-JLD2.writeas(::Type{<:TagSet}) = ITensors.serialized_type(TagSet)
+JLD2.writeas(::Type{TagSet}) = ITensors.serialized_type(TagSet)
 JLD2.writeas(::Type{T}) where {T <: Index} = ITensors.serialized_type(T)
 JLD2.writeas(::Type{ITensor}) = ITensors.serialized_type(ITensor)
 
@@ -26,7 +26,7 @@ JLD2.writeas(::Type{ITensor}) = ITensors.serialized_type(ITensor)
 # concrete schema struct or a reconstructed placeholder.
 JLD2.rconvert(::Type{QNVal}, s) = ITensors.deserialize_convert(QNVal, s)
 JLD2.rconvert(::Type{QN}, s) = ITensors.deserialize_convert(QN, s)
-JLD2.rconvert(::Type{T}, s) where {T <: TagSet} = ITensors.deserialize_convert(TagSet, s)
+JLD2.rconvert(::Type{TagSet}, s) = ITensors.deserialize_convert(TagSet, s)
 JLD2.rconvert(::Type{T}, s) where {T <: Index} = ITensors.deserialize_convert(T, s)
 JLD2.rconvert(::Type{ITensor}, s) = ITensors.deserialize_convert(ITensor, s)
 
@@ -38,7 +38,7 @@ JLD2.rconvert(::Type{ITensor}, s) = ITensors.deserialize_convert(ITensor, s)
 # TODO: Remove once the JLD2 double-`rconvert` bug is fixed.
 JLD2.rconvert(::Type{QNVal}, x::QNVal) = x
 JLD2.rconvert(::Type{QN}, x::QN) = x
-JLD2.rconvert(::Type{T}, x::T) where {T <: TagSet} = x
+JLD2.rconvert(::Type{TagSet}, x::TagSet) = x
 JLD2.rconvert(::Type{T}, x::T) where {T <: Index} = x
 JLD2.rconvert(::Type{ITensor}, x::ITensor) = x
 

@@ -149,7 +149,7 @@ struct SerializedTagSet
     tags::Vector{String}
 end
 
-serialized_type(::Type{<:TagSet}) = SerializedTagSet
+serialized_type(::Type{TagSet}) = SerializedTagSet
 
 function serialize_convert(::Type{SerializedTagSet}, ts::TagSet)
     return SerializedTagSet(UInt32(1), String[String(ts[n]) for n in 1:length(ts)])
