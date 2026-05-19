@@ -32,29 +32,6 @@ NDTensors.serialized_type(Dense{Float64})  # => NDTensors.SerializedDense{Float6
 """
 function serialized_type end
 
-# Shared block-offset (de)serialization helpers, used by `BlockSparse` and `DiagBlockSparse`.
-
-function _serialize_blockoffsets(storage, ::Val{N}) where {N}
-    boffs = blockoffsets(storage)
-    nblocks = length(boffs)
-    block_indices = Matrix{Int64}(undef, N, nblocks)
-    block_offsets = Vector{Int64}(undef, nblocks)
-    for (i, (block, offset)) in enumerate(pairs(boffs))
-        block_indices[:, i] .= Tuple(block)
-        block_offsets[i] = offset
-    end
-    return (; block_indices, block_offsets)
-end
-
-function _deserialize_blockoffsets(s, ::Val{N}) where {N}
-    boffs = BlockOffsets{N}()
-    for j in 1:size(s.block_indices, 2)
-        block_tuple = NTuple{N, UInt}(@view s.block_indices[:, j])
-        insert!(boffs, Block(block_tuple), s.block_offsets[j])
-    end
-    return boffs
-end
-
 # --- Dense ---
 
 """
@@ -105,6 +82,30 @@ struct SerializedBlockSparse{T}
     data::Vector{T}
     block_indices::Matrix{Int64}
     block_offsets::Vector{Int64}
+end
+
+# Block-offset (de)serialization helpers, defined here next to `SerializedBlockSparse`
+# (the first user) and reused by the `DiagBlockSparse` sections below.
+
+function _serialize_blockoffsets(storage, ::Val{N}) where {N}
+    boffs = blockoffsets(storage)
+    nblocks = length(boffs)
+    block_indices = Matrix{Int64}(undef, N, nblocks)
+    block_offsets = Vector{Int64}(undef, nblocks)
+    for (i, (block, offset)) in enumerate(pairs(boffs))
+        block_indices[:, i] .= Tuple(block)
+        block_offsets[i] = offset
+    end
+    return (; block_indices, block_offsets)
+end
+
+function _deserialize_blockoffsets(s, ::Val{N}) where {N}
+    boffs = BlockOffsets{N}()
+    for j in 1:size(s.block_indices, 2)
+        block_tuple = NTuple{N, UInt}(@view s.block_indices[:, j])
+        insert!(boffs, Block(block_tuple), s.block_offsets[j])
+    end
+    return boffs
 end
 
 serialized_type(::Type{<:BlockSparse{T}}) where {T} = SerializedBlockSparse{T}
