@@ -108,10 +108,11 @@ to expect:
 ## Block-sparse coordinates
 
 `SerializedBlockSparse`, `SerializedDiagBlockSparse`, and `SerializedUniformDiagBlockSparse`
-store block positions as a `Matrix{Int64}` named `block_indices` shaped `(ndims, num_blocks)`,
-each column a block position. This is the COO convention used by Apache Arrow, PyData Sparse,
-and PyTorch's sparse format. The tensor rank is implicit in `size(block_indices, 1)` and is
-preserved by HDF5 even when `num_blocks == 0`, so a separate rank field is not stored.
+store block positions as a `Matrix{Int64}` named `block_indices` shaped
+`(num_blocks, ndims)`. Each row is one block's position tuple; column `j` holds that
+block's position along axis `j`. The tensor rank is implicit in `size(block_indices, 2)`
+and is preserved by HDF5 even when `num_blocks == 0`, so a separate rank field is not
+stored.
 
 `block_offsets` is a `Vector{Int64}` of length `num_blocks`, giving the offset into the
 flat `data` buffer for each block.
