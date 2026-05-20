@@ -47,22 +47,16 @@ Keeping the structs and the conversion logic in the main packages means the type
 recorded inside the JLD2 file do not encode an extension module namespace, and other
 serialization backends can reuse the same machinery without depending on JLD2.
 
-### Backend-agnostic layer
-
-  - [`ITensors.serialized_type`](@ref) and [`NDTensors.serialized_type`](@ref): type-level
-    map from an in-memory type to its [`SerializedX`](@ref) schema struct.
-  - `Base.convert` overloads (defined alongside `serialized_type`) do the value-level
-    transform between the in-memory and `Serialized*` representations in both directions.
-
-JLD2's default `wconvert` / `rconvert` already delegate to `Base.convert`, so the
-extension itself only needs to provide the `JLD2.writeas` declarations bridging the
-two namespaces:
-
-```julia
-JLD2.writeas(::Type{T}) where {T <: NDTensors.TensorStorage} = NDTensors.serialized_type(T)
-JLD2.writeas(::Type{T}) where {T <: ITensors.Index}          = ITensors.serialized_type(T)
-# ...
-```
+Internally the extension is structured around two unexported helper functions per
+package — a type-level `serialized_type` that maps an in-memory type to its
+schema struct, and a value-level pair `serialize_convert` / `deserialize_convert`
+that owns the field-by-field transform. `Base.convert` overloads delegate to
+these helpers so non-JLD2 callers can also reach the schema, and the JLD2
+extension itself only needs to register a few `JLD2.writeas` declarations
+plus permissive `JLD2.rconvert` overloads to bridge into JLD2's machinery.
+These helpers are public-but-internal: they may evolve and are not part of the
+stable public API surface — only the [`SerializedX`](@ref) schema structs
+themselves are.
 
 ### Core ITensors types
 
