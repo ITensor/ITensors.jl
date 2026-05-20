@@ -88,6 +88,12 @@ include("index.jl")
 include("set_operations.jl")
 include("indexset.jl")
 include("itensor.jl")
+include("serialization.jl")
+VERSION >= v"1.11.0-DEV.469" && eval(
+    Meta.parse(
+        "public SerializedQNVal, SerializedQN, SerializedTagSet, SerializedQNSpace, SerializedIndex, SerializedITensor"
+    )
+)
 include("qn/flux.jl")
 include("oneitensor.jl")
 include("tensor_operations/contraction_cost.jl")

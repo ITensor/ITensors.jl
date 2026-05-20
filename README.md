@@ -37,6 +37,8 @@ ITensors.jl is supported by the Flatiron Institute, a division of the Simons Fou
 
 ## News
 
+- May 18, 2026: ITensors.jl v0.9.28 ships a new [JLD2.jl](https://github.com/JuliaIO/JLD2.jl) weak-dep extension for saving and loading `ITensor`, `Index`, `QN`, `TagSet`, and NDTensors storage types (`Dense`, `BlockSparse`, `Diag`, etc.) through JLD2's `jldsave`/`load`. The point of the extension is to decouple the on-disk format from the in-memory type definitions, so a file saved today keeps loading after the in-memory types are refactored. Each type is written through a small `Serialized*` struct (public but not exported, defined in `ITensors` and `NDTensors`) carrying an explicit `version::UInt32`; when an in-memory layout changes, the loader migrates from the older schema version instead of failing. See the new [JLD2 File Format](https://docs.itensor.org/ITensors/dev/JLD2FileFormat.html) documentation page for the full schema. JLD2 files written before this release continue to load via JLD2's built-in fallback for objects that were saved without a custom serialization.
+
 - March 26, 2025: ITensors.jl v0.9 has been released. This is a minor breaking change since the `optimal_contraction_sequence` function now passes to the `optimaltree` function from [TensorOperations.jl](https://github.com/Jutho/TensorOperations.jl). The `TensorOperations` package therefore needs to be loaded in order for `optimal_contraction_sequence` to be used or if the flag `ITensors.enable_contraction_sequence_optimization()` is switched on.
 
 - March 22, 2025: As part of the latest release of ITensors.jl (v0.8.3), all documentation related to MPS/MPO functionality has been moved to the [ITensorMPS.jl documentation](https://docs.itensor.org/ITensorMPS).

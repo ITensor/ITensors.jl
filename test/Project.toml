@@ -9,6 +9,7 @@ FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MappedArrays = "dbb5928d-eab1-5f90-85c2-b9b0edb7c900"
 NDTensors = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
@@ -25,6 +26,11 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 [sources.ITensors]
 path = ".."
 
+[sources.NDTensors]
+rev = "mf/ndtensors-jld2-ext"
+subdir = "NDTensors"
+url = "https://github.com/ITensor/ITensors.jl.git"
+
 [compat]
 Adapt = "4.4"
 BlockArrays = "1.9"
@@ -36,6 +42,7 @@ FiniteDifferences = "0.12"
 HDF5 = "0.17"
 ITensors = "0.9"
 JLArrays = "0.3"
+JLD2 = "0.6"
 LinearAlgebra = "1.10"
 MappedArrays = "0.4"
 NDTensors = "0.4"
