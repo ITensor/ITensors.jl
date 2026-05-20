@@ -91,12 +91,9 @@ include("empty/adapt.jl")
 # Serialization (schema types + backend-agnostic conversions, used by NDTensorsJLD2Ext)
 #
 include("serialization.jl")
-# Mark the on-disk schema types and the serialization conversion entry points as
-# public API (per Julia docs recommendation for backwards-compatible `public`
-# declarations on pre-1.11 Julia).
 VERSION >= v"1.11.0-DEV.469" && eval(
     Meta.parse(
-        "public serialized_type, serialize_convert, deserialize_convert, SerializedDense, SerializedBlockSparse, SerializedDiag, SerializedUniformDiag, SerializedDiagBlockSparse, SerializedUniformDiagBlockSparse, SerializedEmptyStorage"
+        "public SerializedDense, SerializedBlockSparse, SerializedDiag, SerializedUniformDiag, SerializedDiagBlockSparse, SerializedUniformDiagBlockSparse, SerializedEmptyStorage"
     )
 )
 
