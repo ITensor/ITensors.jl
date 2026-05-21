@@ -37,7 +37,7 @@ println("X =\n", X, "\n")
 println("Y =\n", Y, "\n")
 println("R = Z * X =\n", R, "\n")
 println("S = Y + X =\n", S, "\n")
-println("S = Y - X =\n", T, "\n")
+println("T = Y - X =\n", T, "\n")
 
 # Check that adding incompatible tensors cause an error
 try
