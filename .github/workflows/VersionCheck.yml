@@ -17,9 +17,5 @@ jobs:
     name: "VersionCheck"
     uses: "ITensor/ITensorActions/.github/workflows/VersionCheck.yml@v2"
     with:
-      exclude-paths: |
-        NDTensors
-        .github
-        .gitignore
-        .pre-commit-config.yaml
+      additional-exclude-paths: "NDTensors"
       localregistry: "https://github.com/ITensor/ITensorRegistry.git"
