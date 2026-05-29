@@ -1,6 +1,6 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-version = "0.9.29"
+version = "0.9.30"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
 
 [workspace]
@@ -66,7 +66,7 @@ Strided = "1.1, 2"
 TensorOperations = "5.1.4"
 TimerOutputs = "0.5.5"
 TupleTools = "1.2"
-VectorInterface = "0.4, 0.5"
+VectorInterface = "0.4, 0.5, 0.6"
 Zeros = "0.3, 0.4, 0.5"
 ZygoteRules = "0.2.2"
 julia = "1.10"
