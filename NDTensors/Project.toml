@@ -1,6 +1,6 @@
 name = "NDTensors"
 uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
-version = "0.4.27"
+version = "0.4.28"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>"]
 
 [workspace]
@@ -92,6 +92,6 @@ TBLIS = "0.2"
 TimerOutputs = "0.5.5"
 TupleTools = "1.2"
 TypeParameterAccessors = "0.4.23"
-VectorInterface = "0.4.2, 0.5"
+VectorInterface = "0.4.2, 0.5, 0.6"
 cuTENSOR = "2, 6"
 julia = "1.10"
