@@ -7,7 +7,7 @@ using SafeTestsets: @safetestset
         filenames = filter(readdir(@__DIR__)) do f
             return startswith("test_")(f) && endswith(".jl")(f)
         end
-        for dir in ["lib"]
+        for dir in ["lib", "jld2ext"]
             push!(filenames, joinpath(dir, "runtests.jl"))
         end
         @testset "Test $(@__DIR__)/$filename" for filename in filenames

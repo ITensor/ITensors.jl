@@ -88,6 +88,16 @@ include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
 
 #####################################
+# Serialization (schema types + backend-agnostic conversions, used by NDTensorsJLD2Ext)
+#
+include("serialization.jl")
+VERSION >= v"1.11.0-DEV.469" && eval(
+    Meta.parse(
+        "public SerializedDense, SerializedBlockSparse, SerializedDiag, SerializedUniformDiag, SerializedDiagBlockSparse, SerializedUniformDiagBlockSparse, SerializedEmptyStorage"
+    )
+)
+
+#####################################
 # Deprecations
 #
 include("deprecated.jl")
