@@ -322,3 +322,41 @@ end
         @test array(permute(C, i, j)) ≈ kron(array(A), transpose(array(B)))
     end
 end
+
+using ITensors.NDTensors: ContractScratch
+@testset "Allocation-free contraction ($T)" for T in (Float64, ComplexF64)
+    i = Index(3, "i")
+    j = Index(4, "j")
+    k = Index(5, "k")
+    l = Index(2, "l")
+    A = random_itensor(T, i, j, k)
+    B = random_itensor(T, k, l)
+    D = random_itensor(T, l, j)
+    ref = A * B
+
+    @testset "contract_prealloc! matches * and reuses scratch" begin
+        C = ITensor(zero(T), (i, j, l))
+        scr = ContractScratch()
+        ITensors.contract_prealloc!(scr, C, A, B)
+        @test C ≈ ref
+        ITensors.contract_prealloc!(scr, C, A, B)   # reuse buffers
+        @test C ≈ ref
+    end
+
+    @testset "contract_prealloc! permuteC path" begin
+        C = ITensor(zero(T), (l, i, j))             # non-canonical order -> permuteC
+        ITensors.contract_prealloc!(ContractScratch(), C, A, B)
+        @test C ≈ ref
+    end
+
+    @testset "ContractionPlan replay" begin
+        As = ITensor[A, B, D]
+        expected = (A * B) * D
+        out = ITensor(zero(T), inds(expected))
+        plan = ITensors.contraction_plan([[1, 2], 3])
+        ITensors.contract!(out, As, plan)
+        @test out ≈ expected
+        ITensors.contract!(out, As, plan)           # allocation-free replay
+        @test out ≈ expected
+    end
+end
