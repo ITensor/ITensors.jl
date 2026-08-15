@@ -590,13 +590,16 @@ function permutedims_combine(
     inds_to_combine = getindices(inds_perm, combdims_perm)
     ind_comb = ⊗(inds_to_combine...)
     ind_comb = permuteblocks(ind_comb, blockperm)
+    invblockperm = invperm(blockperm)
 
     for bof in pairs(blockoffsets(T))
         Tb = blockview(T, bof)
         b = nzblock(bof)
         b_perm = permute(b, perm)
         b_perm_comb = combine_dims(b_perm, inds_perm, combdims_perm)
-        b_perm_comb = perm_block(b_perm_comb, comb_ind_loc, blockperm)
+        b_perm_comb = setindex(
+            b_perm_comb, invblockperm[b_perm_comb[comb_ind_loc]], comb_ind_loc
+        )
         b_in_combined_dim = b_perm_comb[comb_ind_loc]
         new_b_in_combined_dim = blockcomb[b_in_combined_dim]
         offset = 0
@@ -637,24 +640,13 @@ function permutedims_combine(
     return R
 end
 
-# TODO: optimize by avoiding findfirst
 function _number_uncombined(blockval::Integer, blockcomb::Vector)
-    if blockval == blockcomb[end]
-        return length(blockcomb) - findfirst(==(blockval), blockcomb) + 1
-    end
-    return findfirst(==(blockval + 1), blockcomb) - findfirst(==(blockval), blockcomb)
+    return searchsortedlast(blockcomb, blockval) -
+        searchsortedfirst(blockcomb, blockval) + 1
 end
 
-# TODO: optimize by avoiding findfirst
 function _number_uncombined_shift(blockval::Integer, blockcomb::Vector)
-    if blockval == 1
-        return 0
-    end
-    ncomb_shift = 0
-    for i in 1:(blockval - 1)
-        ncomb_shift += findfirst(==(i + 1), blockcomb) - findfirst(==(i), blockcomb) - 1
-    end
-    return ncomb_shift
+    return searchsortedfirst(blockcomb, blockval) - blockval
 end
 
 # Uncombine the blocks along the dimension dim
@@ -734,7 +726,6 @@ function uncombine(
     ) where {NT}
     NR = length(is)
     R = uncombine_output(T, T_labels, is, is_labels, combdim, blockperm, blockcomb)
-    invblockperm = invperm(blockperm)
     # This is needed for reshaping the block
     # TODO: It is already calculated in uncombine_output, use it from there
     labels_uncomb_perm = setdiff(is_labels, T_labels)
@@ -751,7 +742,9 @@ function uncombine(
         offset = 0
         for i in 1:length(bs_uncomb)
             b_uncomb = bs_uncomb[i]
-            b_uncomb_perm = perm_block(b_uncomb, combdim, invblockperm)
+            b_uncomb_perm = setindex(
+                b_uncomb, blockperm[b_uncomb[combdim]], combdim
+            )
             b_uncomb_perm_reshape = reshape(b_uncomb_perm, inds_uncomb_perm, is)
             Rb = blockview(R, b_uncomb_perm_reshape)
             b_uncomb_in_combined_dim = b_uncomb_perm[combdim]
