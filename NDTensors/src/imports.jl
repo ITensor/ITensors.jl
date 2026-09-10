@@ -9,7 +9,6 @@ using Base.Threads
 using Dictionaries
 using Folds
 using Functors
-using InlineStrings
 using LinearAlgebra
 using Random
 using SimpleTraits
