@@ -55,8 +55,14 @@ using TensorOperations: TensorOperations
     ITensors.disable_contraction_sequence_optimization()
     @test !ITensors.using_contraction_sequence_optimization()
 
-    # This is not the only sequence
-    @test ITensors.optimal_contraction_sequence([A, A'', A']) == Any[1, Any[3, 2]]
+    # The network is the chain 1-3-2, so contracting either adjacent pair first
+    # costs the same and four trees tie for cheapest. Which one comes back depends
+    # on iteration order, so accept any of them rather than pinning one. Pairing 1
+    # with 2 first is the outer product and costs 100 times more, so this still
+    # catches an optimizer that stops finding the cheap trees.
+    optimal_sequence = ITensors.optimal_contraction_sequence([A, A'', A'])
+    @test optimal_sequence in ([1, [2, 3]], [1, [3, 2]], [[1, 3], 2], [2, [1, 3]])
+    @test contract([A, A'', A']; sequence = optimal_sequence) ≈ A3
 
     time_without_opt = @elapsed A * A'' * A'
 
