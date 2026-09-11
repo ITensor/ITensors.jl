@@ -338,7 +338,8 @@ end
             @test size(A, 1) == size(M, 1) == 2
             @test_throws BoundsError size(A, 3)
             @test_throws BoundsError size(A, 0)
-            @test_throws ErrorException size(M, 0)
+            # Julia 1.13 throws `BoundsError` here where earlier versions threw `ErrorException`.
+            @test_throws Union{ErrorException, BoundsError} size(M, 0)
             # setstorage changes the internal data but not indices
             N = [5 6; 7 8]
             A = itensor(M, i, j)
