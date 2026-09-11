@@ -9,11 +9,6 @@ function contract!(
         α::ElT,
         β::ElT
     ) where {ElT <: LinearAlgebra.BlasReal}
-    # TBLIS Tensors
-    R_tblis = TBLIS.TTensor{ElT}(array(R), β)
-    T1_tblis = TBLIS.TTensor{ElT}(array(T1), α)
-    T2_tblis = TBLIS.TTensor{ElT}(array(T2))
-
     function label_to_char(label)
         # Start at 'a'
         char_start = Char(96)
@@ -36,7 +31,12 @@ function contract!(
     labelsT2_tblis = labels_to_tblis(labelsT2)
     labelsR_tblis = labels_to_tblis(labelsR)
 
-    TBLIS.mul!(R_tblis, T1_tblis, T2_tblis, labelsT1_tblis, labelsT2_tblis, labelsR_tblis)
+    # `R := β R + α T1 T2`
+    TBLIS.tblis_tensor_mult(
+        α, array(T1), labelsT1_tblis,
+        array(T2), labelsT2_tblis,
+        β, array(R), labelsR_tblis
+    )
 
     return R
 end
