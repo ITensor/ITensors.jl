@@ -27,6 +27,20 @@ NDTensors.permuteblocks(i::Index, perm::Vector{Int}) = Index(i.space[perm])
 struct QN end
 Base.:+(q1::QN, q2::QN) = QN()
 
+@testset "number uncombined invariants" begin
+    for runs in ([1], [1, 2, 1], [3, 1, 2], [2, 4, 3, 1])
+        blockcomb = Int[]
+        for (blockval, count) in enumerate(runs)
+            append!(blockcomb, fill(blockval, count))
+        end
+        for blockval in eachindex(runs)
+            @test NDTensors._number_uncombined(blockval, blockcomb) == runs[blockval]
+            @test NDTensors._number_uncombined_shift(blockval, blockcomb) ==
+                sum(runs[1:(blockval - 1)] .- 1)
+        end
+    end
+end
+
 @testset "CombinerTensor basic functionality" begin
     @testset "test device: $dev, eltype: $elt" for dev in devices_list(copy(ARGS)),
             elt in (Float64, Float32)
