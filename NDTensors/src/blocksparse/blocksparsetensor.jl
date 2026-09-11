@@ -516,12 +516,6 @@ function perm_blocks(blocks::Blocks{N}, dim::Int, perm) where {N}
     return blocks_perm
 end
 
-# In the dimension dim, permute the block
-function perm_block(block::Block, dim::Int, perm)
-    iperm = invperm(perm)
-    return setindex(block, iperm[block[dim]], dim)
-end
-
 # In the dimension dim, combine the specified blocks
 function combine_blocks(blocks::Blocks, dim::Int, blockcomb::Vector{Int})
     blocks_comb = copy(blocks)
