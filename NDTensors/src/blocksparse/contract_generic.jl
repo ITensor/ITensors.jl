@@ -34,6 +34,7 @@ end
 # A generic version making use of `Folds.jl` which
 # can take various Executor backends.
 # Used for sequential and threaded contract functions.
+using .Expose: Exposed, expose, unexpose
 function contract!(
         R::BlockSparseTensor,
         labelsR,
@@ -59,19 +60,32 @@ function contract!(
         push!(grouped_contraction_plan[last(block_contraction)], block_contraction)
     end
     _contract!(
-        R,
+        expose(R),
         labelsR,
-        tensor1,
+        expose(tensor1),
         labelstensor1,
-        tensor2,
+        expose(tensor2),
         labelstensor2,
         grouped_contraction_plan,
         executor
     )
     return R
 end
-
-using .Expose: expose
+function _contract!(R::Exposed,
+        labelsR,
+        tensor1::Exposed,
+        labelstensor1,
+        tensor2::Exposed,
+        labelstensor2,
+        grouped_contraction_plan,
+        executor,
+    )
+    _contract!(unexpose(R), labelsR, 
+    unexpose(tensor1), labelstensor1,
+    unexpose(tensor2), labelstensor2,
+    grouped_contraction_plan,executor
+    )
+end
 # Function barrier to improve type stability,
 # since `Folds`/`FLoops` is not type stable:
 # https://discourse.julialang.org/t/type-instability-in-floop-reduction/68598
