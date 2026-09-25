@@ -4,3 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "julia"
+    directories:
+      - "/"
+      - "/NDTensors"
+    schedule:
+      interval: "weekly"
