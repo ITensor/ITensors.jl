@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using HDF5: h5open, read, write
+using HDF5: HDF5, h5open, read, write
 using ITensors: Index, prime, random_itensor
 using Test: @test, @testset
 
@@ -187,6 +187,32 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
             # whereas v >= 0.2 uses `storage` as key
             @test haskey(read(fi, ITensorName), "store")
             @test read(fi, ITensorName, ITensor) isa ITensor
+        end
+    end
+
+    @testset "No leaked HDF5 handles" begin
+        nopen(file) = HDF5.API.h5f_get_obj_count(file, HDF5.API.H5F_OBJ_ALL)
+        qi = Index(QN("A", -1) => 3, QN("A", 0) => 4, QN("A", +1) => 3; tags = "i")
+        qj = Index(QN("A", -2) => 2, QN("A", 0) => 3, QN("A", +2) => 2; tags = "j")
+        qk = Index(QN("A", -1) => 1, QN("A", 0) => 1, QN("A", +1) => 1; tags = "k")
+        tensors = [
+            random_itensor(i, j, k),
+            random_itensor(ComplexF64, i, j, k),
+            diag_itensor(randn(dim(k)), k, k'),
+            ITensor(),
+            random_itensor(QN("A", 1), qi, qj, qk),
+        ]
+        # Finalizers left over from earlier testsets would otherwise skew the counts.
+        GC.gc()
+        for T in tensors
+            h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
+                write(fo, "T", T)
+                @test nopen(fo) == 1
+            end
+            h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
+                read(fi, "T", ITensor)
+                @test nopen(fi) == 1
+            end
         end
     end
 
