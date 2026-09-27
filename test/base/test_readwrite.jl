@@ -1,199 +1,223 @@
 @eval module $(gensym())
-using HDF5: h5open, read, write
+using HDF5: HDF5, h5open, read, write
 using ITensors: Index, prime, random_itensor
 using Test: @test, @testset
 
 include(joinpath(@__DIR__, "utils", "util.jl"))
 
 @testset "HDF5 Read and Write" begin
-    i = Index(2, "i")
-    j = Index(3, "j")
-    k = Index(4, "k")
+    mktempdir() do dir
+        fn = joinpath(dir, "data.h5")
+        i = Index(2, "i")
+        j = Index(3, "j")
+        k = Index(4, "k")
 
-    @testset "TagSet" begin
-        ts = TagSet("A,Site,n=2")
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "tags", ts)
+        @testset "TagSet" begin
+            ts = TagSet("A,Site,n=2")
+            h5open(fn, "w") do fo
+                return write(fo, "tags", ts)
+            end
+
+            h5open(fn, "r") do fi
+                rts = read(fi, "tags", TagSet)
+                @test rts == ts
+            end
         end
 
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rts = read(fi, "tags", TagSet)
-            @test rts == ts
+        @testset "Index" begin
+            i = Index(3, "Site,S=1")
+            h5open(fn, "w") do fo
+                return write(fo, "index", i)
+            end
+
+            h5open(fn, "r") do fi
+                ri = read(fi, "index", Index)
+                @test ri == i
+            end
+
+            # primed Index
+            i = Index(3, "Site,S=1")
+            i = prime(i, 2)
+            h5open(fn, "w") do fo
+                return write(fo, "index", i)
+            end
+
+            h5open(fn, "r") do fi
+                ri = read(fi, "index", Index)
+                @test ri == i
+            end
+        end
+
+        @testset "IndexSet" begin
+            is = IndexSet(i, j, k)
+
+            h5open(fn, "w") do fo
+                return write(fo, "inds", is)
+            end
+
+            h5open(fn, "r") do fi
+                ris = read(fi, "inds", IndexSet)
+                @test ris == is
+            end
+        end
+
+        @testset "Dense ITensor" begin
+
+            # default constructed case
+            T = ITensor()
+
+            h5open(fn, "w") do fo
+                return write(fo, "defaultT", T)
+            end
+
+            h5open(fn, "r") do fi
+                rT = read(fi, "defaultT", ITensor)
+                @test typeof(storage(T)) == typeof(storage(ITensor()))
+            end
+
+            # real case
+            T = random_itensor(i, j, k)
+
+            h5open(fn, "w") do fo
+                return write(fo, "T", T)
+            end
+
+            h5open(fn, "r") do fi
+                rT = read(fi, "T", ITensor)
+                @test norm(rT - T) / norm(T) < 1.0e-10
+            end
+
+            # compress
+            T = random_itensor(i, j, k)
+
+            h5open(fn, "w") do fo
+                return write(fo, "T", T; compress = 3)
+            end
+
+            h5open(fn, "r") do fi
+                rT = read(fi, "T", ITensor)
+                @test norm(rT - T) / norm(T) < 1.0e-10
+            end
+
+            # complex case
+            T = random_itensor(ComplexF64, i, j, k)
+
+            h5open(fn, "w") do fo
+                return write(fo, "complexT", T)
+            end
+
+            h5open(fn, "r") do fi
+                rT = read(fi, "complexT", ITensor)
+                @test norm(rT - T) / norm(T) < 1.0e-10
+            end
+        end
+
+        @testset "Delta ITensor" begin
+            #
+            # Delta ITensor
+            #
+            Δ = δ(i, i')
+            cΔ = δ(ComplexF64, i, i')
+            h5open(fn, "w") do fo
+                fo["delta_tensor"] = Δ
+                return fo["c_delta_tensor"] = cΔ
+            end
+
+            h5open(fn, "r") do fi
+                rΔ = read(fi, "delta_tensor", ITensor)
+                rcΔ = read(fi, "c_delta_tensor", ITensor)
+                @test rΔ ≈ Δ
+                @test rcΔ ≈ cΔ
+            end
+        end
+        @testset "Diag ITensor" begin
+
+            #
+            # Diag ITensor
+            #
+            dk = dim(k)
+            D = diag_itensor(randn(dk), k, k')
+            C = diag_itensor(randn(ComplexF64, dk), k, k')
+            h5open(fn, "w") do fo
+                fo["diag_tensor"] = D
+                return fo["c_diag_tensor"] = C
+            end
+
+            h5open(fn, "r") do fi
+                rD = read(fi, "diag_tensor", ITensor)
+                rC = read(fi, "c_diag_tensor", ITensor)
+                @test rD ≈ D
+                @test rC ≈ C
+            end
+        end
+
+        @testset "QN ITensor" begin
+            i = Index(QN("A", -1) => 3, QN("A", 0) => 4, QN("A", +1) => 3; tags = "i")
+            j = Index(QN("A", -2) => 2, QN("A", 0) => 3, QN("A", +2) => 2; tags = "j")
+            k = Index(QN("A", -1) => 1, QN("A", 0) => 1, QN("A", +1) => 1; tags = "k")
+
+            # real case
+            T = random_itensor(QN("A", 1), i, j, k)
+
+            h5open(fn, "w") do fo
+                return write(fo, "T", T)
+            end
+
+            h5open(fn, "r") do fi
+                rT = read(fi, "T", ITensor)
+                @test rT ≈ T
+            end
+
+            # complex case
+            T = random_itensor(ComplexF64, i, j, k)
+
+            h5open(fn, "w") do fo
+                return write(fo, "complexT", T)
+            end
+
+            h5open(fn, "r") do fi
+                rT = read(fi, "complexT", ITensor)
+                @test rT ≈ T
+            end
+        end
+
+        @testset "DownwardCompat" begin
+            h5open(joinpath(@__DIR__, "utils", "testfilev0.1.41.h5"), "r") do fi
+                ITensorName = "ITensorv0.1.41"
+
+                # ITensor version <= v0.1.41 uses the `store` key for ITensor data storage
+                # whereas v >= 0.2 uses `storage` as key
+                @test haskey(read(fi, ITensorName), "store")
+                @test read(fi, ITensorName, ITensor) isa ITensor
+            end
+        end
+
+        @testset "No leaked HDF5 handles" begin
+            nopen(file) = HDF5.API.h5f_get_obj_count(file, HDF5.API.H5F_OBJ_ALL)
+            qi = Index(QN("A", -1) => 3, QN("A", 0) => 4, QN("A", +1) => 3; tags = "i")
+            qj = Index(QN("A", -2) => 2, QN("A", 0) => 3, QN("A", +2) => 2; tags = "j")
+            qk = Index(QN("A", -1) => 1, QN("A", 0) => 1, QN("A", +1) => 1; tags = "k")
+            tensors = [
+                random_itensor(i, j, k),
+                random_itensor(ComplexF64, i, j, k),
+                diag_itensor(randn(dim(k)), k, k'),
+                ITensor(),
+                random_itensor(QN("A", 1), qi, qj, qk),
+            ]
+            # Finalizers left over from earlier testsets would otherwise skew the counts.
+            GC.gc()
+            for T in tensors
+                h5open(fn, "w") do fo
+                    write(fo, "T", T)
+                    @test nopen(fo) == 1
+                end
+                h5open(fn, "r") do fi
+                    read(fi, "T", ITensor)
+                    @test nopen(fi) == 1
+                end
+            end
         end
     end
-
-    @testset "Index" begin
-        i = Index(3, "Site,S=1")
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "index", i)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            ri = read(fi, "index", Index)
-            @test ri == i
-        end
-
-        # primed Index
-        i = Index(3, "Site,S=1")
-        i = prime(i, 2)
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "index", i)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            ri = read(fi, "index", Index)
-            @test ri == i
-        end
-    end
-
-    @testset "IndexSet" begin
-        is = IndexSet(i, j, k)
-
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "inds", is)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            ris = read(fi, "inds", IndexSet)
-            @test ris == is
-        end
-    end
-
-    @testset "Dense ITensor" begin
-
-        # default constructed case
-        T = ITensor()
-
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "defaultT", T)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rT = read(fi, "defaultT", ITensor)
-            @test typeof(storage(T)) == typeof(storage(ITensor()))
-        end
-
-        # real case
-        T = random_itensor(i, j, k)
-
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "T", T)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rT = read(fi, "T", ITensor)
-            @test norm(rT - T) / norm(T) < 1.0e-10
-        end
-
-        # compress
-        T = random_itensor(i, j, k)
-
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "T", T; compress = 3)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rT = read(fi, "T", ITensor)
-            @test norm(rT - T) / norm(T) < 1.0e-10
-        end
-
-        # complex case
-        T = random_itensor(ComplexF64, i, j, k)
-
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "complexT", T)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rT = read(fi, "complexT", ITensor)
-            @test norm(rT - T) / norm(T) < 1.0e-10
-        end
-    end
-
-    @testset "Delta ITensor" begin
-        #
-        # Delta ITensor
-        #
-        Δ = δ(i, i')
-        cΔ = δ(ComplexF64, i, i')
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            fo["delta_tensor"] = Δ
-            return fo["c_delta_tensor"] = cΔ
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rΔ = read(fi, "delta_tensor", ITensor)
-            rcΔ = read(fi, "c_delta_tensor", ITensor)
-            @test rΔ ≈ Δ
-            @test rcΔ ≈ cΔ
-        end
-    end
-    @testset "Diag ITensor" begin
-
-        #
-        # Diag ITensor
-        #
-        dk = dim(k)
-        D = diag_itensor(randn(dk), k, k')
-        C = diag_itensor(randn(ComplexF64, dk), k, k')
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            fo["diag_tensor"] = D
-            return fo["c_diag_tensor"] = C
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rD = read(fi, "diag_tensor", ITensor)
-            rC = read(fi, "c_diag_tensor", ITensor)
-            @test rD ≈ D
-            @test rC ≈ C
-        end
-    end
-
-    @testset "QN ITensor" begin
-        i = Index(QN("A", -1) => 3, QN("A", 0) => 4, QN("A", +1) => 3; tags = "i")
-        j = Index(QN("A", -2) => 2, QN("A", 0) => 3, QN("A", +2) => 2; tags = "j")
-        k = Index(QN("A", -1) => 1, QN("A", 0) => 1, QN("A", +1) => 1; tags = "k")
-
-        # real case
-        T = random_itensor(QN("A", 1), i, j, k)
-
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "T", T)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rT = read(fi, "T", ITensor)
-            @test rT ≈ T
-        end
-
-        # complex case
-        T = random_itensor(ComplexF64, i, j, k)
-
-        h5open(joinpath(@__DIR__, "data.h5"), "w") do fo
-            return write(fo, "complexT", T)
-        end
-
-        h5open(joinpath(@__DIR__, "data.h5"), "r") do fi
-            rT = read(fi, "complexT", ITensor)
-            @test rT ≈ T
-        end
-    end
-
-    @testset "DownwardCompat" begin
-        h5open(joinpath(@__DIR__, "utils", "testfilev0.1.41.h5"), "r") do fi
-            ITensorName = "ITensorv0.1.41"
-
-            # ITensor version <= v0.1.41 uses the `store` key for ITensor data storage
-            # whereas v >= 0.2 uses `storage` as key
-            @test haskey(read(fi, ITensorName), "store")
-            @test read(fi, ITensorName, ITensor) isa ITensor
-        end
-    end
-
-    #
-    # Clean up the test hdf5 file
-    #
-    rm(joinpath(@__DIR__, "data.h5"); force = true)
 end
 
 end
