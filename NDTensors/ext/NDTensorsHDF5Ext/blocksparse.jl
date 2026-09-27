@@ -1,4 +1,5 @@
-using HDF5: HDF5, attributes, create_group, open_group, read, write
+using HDF5:
+    HDF5, attributes, create_group, open_dataset, open_group, read, read_attribute, write
 using NDTensors: Block, BlockOffsets, BlockSparse, blockoffsets, data
 
 # Helper function for HDF5 write/read of BlockSparse
@@ -34,39 +35,44 @@ end
 function HDF5.write(
         parent::Union{HDF5.File, HDF5.Group}, name::String, B::BlockSparse; kwargs...
     )
-    g = create_group(parent, name)
-    attributes(g)["type"] = "BlockSparse{$(eltype(B))}"
-    attributes(g)["version"] = 1
-    return if eltype(B) != Nothing
-        write(g, "ndims", ndims(B))
-        # Use `setindex!` so that chunking happens automatically
-        # when compression is used, see: https://github.com/JuliaIO/HDF5.jl/issues/822
-        setindex!(g, data(B), "data"; kwargs...)
-        off_array = offsets_to_array(blockoffsets(B))
-        write(g, "offsets", off_array)
+    return closeafter(create_group(parent, name)) do g
+        attributes(g)["type"] = "BlockSparse{$(eltype(B))}"
+        attributes(g)["version"] = 1
+        return if eltype(B) != Nothing
+            write(g, "ndims", ndims(B))
+            # Use `setindex!` so that chunking happens automatically
+            # when compression is used, see: https://github.com/JuliaIO/HDF5.jl/issues/822
+            setindex!(g, data(B), "data"; kwargs...)
+            off_array = offsets_to_array(blockoffsets(B))
+            write(g, "offsets", off_array)
+        end
     end
 end
 
 function HDF5.read(
         parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, ::Type{Store}; kwargs...
     ) where {Store <: BlockSparse}
-    g = open_group(parent, name)
-    ElT = eltype(Store)
-    typestr = "BlockSparse{$ElT}"
-    if read(attributes(g)["type"]) != typestr
-        error("HDF5 group or file does not contain $typestr data")
+    return closeafter(open_group(parent, name)) do g
+        ElT = eltype(Store)
+        typestr = "BlockSparse{$ElT}"
+        if read_attribute(g, "type") != typestr
+            error("HDF5 group or file does not contain $typestr data")
+        end
+        N = read(g, "ndims")
+        off_array = read(g, "offsets")
+        boff = array_to_offsets(off_array, N)
+        # Attribute __complex__ is attached to the "data" dataset
+        # by the h5 library used by C++ version of ITensor:
+        iscomplex = closeafter(open_dataset(g, "data")) do d
+            return haskey(attributes(d), "__complex__")
+        end
+        if iscomplex
+            M = read(g, "data"; kwargs...)
+            nelt = size(M, 1) * size(M, 2)
+            data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
+        else
+            data = read(g, "data"; kwargs...)
+        end
+        return BlockSparse(data, boff)
     end
-    N = read(g, "ndims")
-    off_array = read(g, "offsets")
-    boff = array_to_offsets(off_array, N)
-    # Attribute __complex__ is attached to the "data" dataset
-    # by the h5 library used by C++ version of ITensor:
-    if haskey(attributes(g["data"]), "__complex__")
-        M = read(g, "data"; kwargs...)
-        nelt = size(M, 1) * size(M, 2)
-        data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
-    else
-        data = read(g, "data"; kwargs...)
-    end
-    return BlockSparse(data, boff)
 end
