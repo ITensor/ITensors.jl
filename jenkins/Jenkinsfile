@@ -27,7 +27,7 @@ parallel cudaext: {
             '
           '''
           sh '''
-            julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
+            julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cuda"])'
           '''
         }
       }
@@ -57,7 +57,7 @@ tensorext: {
             '
           '''
           sh '''
-            julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
+            julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["cutensor"])'
           '''
         }
       }
@@ -70,6 +70,7 @@ metalext: {
       timeout(time: 45, unit: 'MINUTES') {
         withEnv([
           "PATH=${env.HOME}/.juliaup/bin:${env.PATH}",
+          "JULIA_DEPOT_PATH=$WORKSPACE_TMP/.julia:${env.HOME}/.julia",
           "PLATFORM=macos"
         ]) {
           checkout scm
@@ -78,7 +79,7 @@ metalext: {
             juliaup default release
           '''
           sh '''
-            julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
+            julia -e 'using Pkg: Pkg; Pkg.activate(temp=true); Pkg.Registry.update(); Pkg.develop(path="./NDTensors"); Pkg.develop(path="."); Pkg.test("NDTensors"; test_args=["metal"])'
           '''
         }
       }
