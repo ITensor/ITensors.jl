@@ -215,6 +215,31 @@ function contract!(
     #end
 end
 
+# Allocation-free contraction into a pre-allocated R using permute scratch `scr`. Restricted to
+# the generic matmul path with matching eltypes (guaranteed by the caller). `props` may be
+# passed in to avoid recomputation.
+function contract_prealloc!(
+        scr::ContractScratch,
+        R::DenseTensor{ElR, NR},
+        labelsR,
+        T1::DenseTensor{El, N1},
+        labelsT1,
+        T2::DenseTensor{El, N2},
+        labelsT2,
+        props::ContractionProperties = _contract_props(R, labelsR, T1, labelsT1, T2, labelsT2),
+        α::Number = one(ElR),
+        β::Number = zero(ElR)
+    ) where {ElR, El, NR, N1, N2}
+    _contract_prealloc!(scr, array(R), array(T1), array(T2), props, α, β)
+    return R
+end
+
+function _contract_props(R, labelsR, T1, labelsT1, T2, labelsT2)
+    props = ContractionProperties(labelsT1, labelsT2, labelsR)
+    compute_contraction_properties!(props, T1, T2, R)
+    return props
+end
+
 function _contract!(
         CT::DenseTensor{El, NC},
         AT::DenseTensor{El, NA},

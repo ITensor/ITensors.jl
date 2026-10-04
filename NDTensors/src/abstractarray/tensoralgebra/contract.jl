@@ -186,3 +186,60 @@ function _contract!(
 
     return CT
 end
+
+# --- Allocation-free contraction --------------------------------------------------------
+# Pre-allocated permute scratch reused across calls: `Ap`/`Bp` hold permuted A/B, `Cp` the GEMM
+# output before the C permute. Lazily sized on first use, then reused. Fields are untyped (Ap/Bp
+# can differ in ndims); dispatch cost is negligible next to the permute/GEMM kernels.
+mutable struct ContractScratch
+    Ap::Any
+    Bp::Any
+    Cp::Any
+end
+ContractScratch() = ContractScratch(nothing, nothing, nothing)
+
+_perm_size(T::AbstractArray, perm) = ntuple(i -> size(T, perm[i]), length(perm))
+
+# In-place, allocation-free variant of `_contract!` using pre-allocated `scr`. Only the
+# β == 0 case is supported for the permuteC path (the only case BP needs); it errors otherwise.
+function _contract_prealloc!(
+        scr::ContractScratch,
+        CT::AbstractArray{El, NC},
+        AT::AbstractArray{El, NA},
+        BT::AbstractArray{El, NB},
+        props::ContractionProperties,
+        α::Number = one(El),
+        β::Number = zero(El)
+    ) where {El, NC, NA, NB}
+    if props.permuteA
+        scr.Ap === nothing && (scr.Ap = similar(AT, _perm_size(AT, props.PA)))
+        permutedims!(expose(scr.Ap), expose(AT), props.PA)
+        AM = transpose(reshape(scr.Ap, (props.dmid, props.dleft)))
+    else
+        AM = Atrans(props) ? transpose(reshape(AT, (props.dmid, props.dleft))) :
+             reshape(AT, (props.dleft, props.dmid))
+    end
+
+    if props.permuteB
+        scr.Bp === nothing && (scr.Bp = similar(BT, _perm_size(BT, props.PB)))
+        permutedims!(expose(scr.Bp), expose(BT), props.PB)
+        BM = reshape(scr.Bp, (props.dmid, props.dright))
+    else
+        BM = Btrans(props) ? transpose(reshape(BT, (props.dright, props.dmid))) :
+             reshape(BT, (props.dmid, props.dright))
+    end
+
+    if props.permuteC
+        iszero(β) || error("_contract_prealloc! supports permuteC only for β == 0")
+        scr.Cp === nothing && (scr.Cp = similar(CT, (props.dleft * props.dright,)))
+        CM = reshape(scr.Cp, (props.dleft, props.dright))
+        CM = mul!!(CM, AM, BM, El(α), zero(El))
+        Cr = reshape(CM, props.newCrange)
+        permutedims!(expose(CT), expose(Cr), props.PC)
+    else
+        CM = Ctrans(props) ? transpose(reshape(CT, (props.dright, props.dleft))) :
+             reshape(CT, (props.dleft, props.dright))
+        CM = mul!!(CM, AM, BM, El(α), El(β))
+    end
+    return CT
+end

@@ -185,6 +185,71 @@ function contract!(C::ITensor, A::ITensor, B::ITensor)::ITensor
     return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B)))
 end
 
+# Allocation-free pairwise contraction into C's existing storage using pre-allocated permute
+# scratch `scr`. C must already have the correct inds/storage; its identity/storage are kept.
+function contract_prealloc!(scr, C::ITensor, A::ITensor, B::ITensor)
+    labelsC, labelsA, labelsB = compute_contraction_labels(inds(C), inds(A), inds(B))
+    NDTensors.contract_prealloc!(
+        scr, tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB)
+    )
+    return C
+end
+
+# --- Cached sequenced contraction plan (allocation-free replay) ----------------------------
+# Mirrors a binary contraction `sequence`. The first execution allocates the per-node
+# intermediate buffers; later executions reuse them via `contract_prealloc!` and are
+# device-allocation-free. The result is written into a caller-provided output buffer.
+abstract type _CPlan end
+struct _CLeaf <: _CPlan
+    idx::Int
+end
+mutable struct _CBranch <: _CPlan
+    a::_CPlan
+    b::_CPlan
+    out::Union{Nothing, ITensor}
+    scr::NDTensors.ContractScratch
+end
+
+_build_cplan(seq::Integer) = _CLeaf(seq)
+function _build_cplan(seq)
+    length(seq) == 2 ||
+        error("ContractionPlan supports binary sequences only (got arity $(length(seq)))")
+    return _CBranch(_build_cplan(seq[1]), _build_cplan(seq[2]), nothing, NDTensors.ContractScratch())
+end
+
+struct ContractionPlan
+    root::_CPlan
+end
+# Factory (a separate name, not a constructor overload, to avoid colliding with the
+# struct's auto-generated `ContractionPlan(::Any)` since `root` has an abstract type).
+contraction_plan(sequence) = ContractionPlan(_build_cplan(sequence))
+
+# Resolve an intermediate node to its (buffer) ITensor; allocate on first call, reuse after.
+_resolve!(n::_CLeaf, As) = As[n.idx]
+function _resolve!(n::_CBranch, As)
+    A = _resolve!(n.a, As)
+    B = _resolve!(n.b, As)
+    if n.out === nothing
+        n.out = A * B
+    else
+        contract_prealloc!(n.scr, n.out, A, B)
+    end
+    return n.out
+end
+
+# Contract `As` per `plan`, writing the final result into the caller-provided `C`.
+function contract!(C::ITensor, As::AbstractVector{ITensor}, plan::ContractionPlan)
+    root = plan.root
+    if root isa _CLeaf
+        C .= As[root.idx]
+        return C
+    end
+    A = _resolve!(root.a, As)
+    B = _resolve!(root.b, As)
+    contract_prealloc!(root.scr, C, A, B)
+    return C
+end
+
 """
     hadamard_product!(C::ITensor, A::ITensor, B::ITensor)
     hadamard_product(A::ITensor, B::ITensor)
